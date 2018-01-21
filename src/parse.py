@@ -10,6 +10,8 @@ class Tag(object):
     tag_type = None
     tag_content = None
 
+    html_empty_element = False
+
     def __init__(self, tag_type, tag_content):
         self.tag_type = tag_type
         if isinstance(tag_content, list) and len(tag_content) == 1:
@@ -20,6 +22,18 @@ class Tag(object):
     def __repr__(self):
         return "{type}{{{content}}}".format(type=self.tag_type,
                                               content=self.tag_content)
+
+    def html(self):
+        """The html string for the tag, if the output target is html."""
+        if self.html_empty_element:
+            return "<{tag} />"
+        else:
+            return "<{tag}>{content}</{tag}>".format(tag=self.tag_type,
+                                                     content=self.tag_content)
+
+    def default(self):
+        """The default string for the tag, if no other format matches."""
+        return self.tag_content
 
 
 def process_ast(s):
@@ -89,8 +103,8 @@ test = """
 This is my test document. It has multiple paragraphs.
 
 Here is a new one with @b{bolded} text as an example.
-@marginfig{
-  @src{media/files}
+@marginfig[offset=-1.0em]{
+  @img{media/files}
   @caption{This is my @i{first} figure.}
   }
 
