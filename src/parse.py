@@ -1,18 +1,9 @@
 import regex
+from pprint import pprint
 
 
-# def parse_string(s):
-#     """Parses a string into an AST comprising a list of lists with strings and
-#     tags."""
-#     return regex.sub(r'((?P<tag>@[A-Za-z]\w*)'
-#                      r'{(?P<content>(?>[^{}@]+|(?R))*)})', parse_tag, s)
-#
-#
-# def parse_tag(m):
-#     """Process a tag regex match."""
-#     content = parse_string(m.groupdict()['content'])
-#     return [content, ]
-
+class TagFactory(object):
+    pass
 
 class Tag(object):
 
@@ -31,7 +22,7 @@ class Tag(object):
                                               content=self.tag_content)
 
 
-def parse_ast(s):
+def process_ast(s):
     """Parses a string into an AST comprising a list of lists with strings and
     tags."""
     ast = []
@@ -50,7 +41,7 @@ def parse_ast(s):
         # Parse the match's content
         d = m.groupdict()
         tag_type = m['tag']
-        tag_content = parse_ast(m['content'])
+        tag_content = process_ast(m['content'])
         ast.append(Tag(tag_type, tag_content))
 
     # Add the end of the string
@@ -59,13 +50,40 @@ def parse_ast(s):
     return ast
 
 
-class Parser(object):
+class Processor(object):
     """A general class to parse text files."""
 
-    parsers = None
+    processors = None
 
     def __init__(self):
-        self.parsers = [parse_ast, ]
+        self.processors = [process_ast, ]
+
+    def _preprocess(self):
+        """The preprocess step comprises, effectively, the lexing and
+        conversion of tags for a string."""
+        return None
+
+    def _process(self):
+        """The process step comprises the parsing of tags."""
+        return None
+
+    def _postprocess(self):
+        """The post-process step comprises any formatting needed for the final
+        format."""
+
+    def format(self, input):
+        """Convert the input to a formatted string.
+
+        Parameters
+        ----------
+        input: str
+            A string or filename with text to convert.
+
+        Returns
+        -------
+        formatted_str: str
+            The lexed and parsed string.
+        """
 
 test = """
 This is my test document. It has multiple paragraphs.
@@ -80,4 +98,4 @@ Here is a new one with @b{bolded} text as an example.
 Here is a new paragraph.
 """
 
-print(parse_ast(test))
+pprint(process_ast(test))
