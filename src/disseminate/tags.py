@@ -4,6 +4,11 @@ Core classes and functions for tags.
 from html import escape
 
 from lxml.builder import E
+from lxml import etree
+
+
+html_root_tag = 'body'
+html_pretty = True
 
 
 class TagError(Exception): pass
@@ -13,7 +18,7 @@ class TagFactory(object):
     pass
 
 
-def convert_html(element):
+def convert_html(element, root_tag=html_root_tag, pretty_print=html_pretty):
     """Converts an element to html."""
 
     if isinstance(element, Tag):
@@ -22,7 +27,10 @@ def convert_html(element):
                      *[convert_html(i) for i in element.tag_content])
         else:
             return E(element.tag_type,
-                     element.type_content)
+                     element.tag_content)
+    elif isinstance(element, list):
+        return etree.tostring(E(root_tag, *[convert_html(i) for i in element]),
+                              pretty_print=pretty_print).decode("utf-8")
     else:
         return element
 

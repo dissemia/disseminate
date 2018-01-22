@@ -4,13 +4,11 @@ import pytest
 
 from disseminate import process_ast
 from disseminate import Tag
+from disseminate.tags import convert_html
 from disseminate.ast import print_ast
 
 
-def test_ast_basic_string():
-    """Test the parsing of a basic string into an AST."""
-
-    test = """
+test = """
     This is my test document. It has multiple paragraphs.
 
     Here is a new one with @b{bolded} text as an example.
@@ -21,8 +19,12 @@ def test_ast_basic_string():
 
     This is a @13C variable, but this is an email address: justin@lorieau.com
 
-    Here is a new paragraph.
-    """
+    Here is a new paragraph."""
+
+
+def test_ast_basic_string():
+    """Test the parsing of a basic string into an AST."""
+
     ast = process_ast(test)
 
     test_pieces = test.splitlines()
@@ -57,3 +59,14 @@ def test_ast_basic_string():
     assert isinstance(ast[4], str)  # string
 
     assert len(ast) == 5
+
+
+def test_html_conversion():
+    """Test the generation of html strings from tags."""
+
+    ast = process_ast(test)
+
+    html = convert_html(ast)
+
+    with open('tmp.html', 'w') as f:
+        f.write(html)
