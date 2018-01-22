@@ -2,7 +2,7 @@
 #: --------------
 
 #: The maximum depth of the AST
-ast_max_depth = 20
+ast_max_depth = 30
 
 
 #: HTML Rendering
