@@ -36,22 +36,23 @@ def test_ast_basic_string():
 
     assert isinstance(ast[2], str) # string
 
-    assert isinstance(ast[3], Tag) and ast[3].tag_type == 'marginfig'  # margin tag
-    assert isinstance(ast[3].tag_content, list)  # margin tag has subtags in a list
+    assert isinstance(ast[3], Tag) and ast[3].tag_type == 'marginfig'
+    assert isinstance(ast[3].tag_content, list)  # margin tag has subtags
 
     assert isinstance(ast[3][0], str) # string
 
-    assert isinstance(ast[3][1], Tag) and ast[3][1].tag_type == 'img'  # img tag
-    assert ast[3][1].tag_content == "media/files"  # img contents
+    assert isinstance(ast[3][1], Tag) and ast[3][1].tag_type == 'img'
+    assert not ast[3][1].tag_content  # img contents should be parsed and emptu
 
     assert isinstance(ast[3][2], str)  # string
 
-    assert isinstance(ast[3][3], Tag) and ast[3][3].tag_type == 'caption'  # caption tag
-    assert isinstance(ast[3][3].tag_content, list)  # contents includes strings and tags
+    assert isinstance(ast[3][3], Tag) and ast[3][3].tag_type == 'caption'
+    assert isinstance(ast[3][3].tag_content, list)  # contents includes
+                                                    # strings and tags
 
     assert isinstance(ast[3][3][0], str) # string
 
-    assert isinstance(ast[3][3][1], Tag) and ast[3][3][1].tag_type == 'i'  # i tag
+    assert isinstance(ast[3][3][1], Tag) and ast[3][3][1].tag_type == 'i'
     assert ast[3][3][1].tag_content == "first"  # i contents
 
     assert isinstance(ast[3][3][2], str)  # string
