@@ -138,5 +138,4 @@ class Img(Tag):
             self.tag_attributes = set_attribute(self.tag_attributes,
                                                 ('src', contents),
                                                 method='r')
-        print(self.tag_attributes)
 
