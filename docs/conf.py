@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # disseminate documentation build configuration file, created by
-# sphinx-quickstart on Mon Jan 22 06:57:45 2018.
+# sphinx-quickstart on Mon Jan 22 07:43:45 2018.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
