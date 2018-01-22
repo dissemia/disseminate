@@ -1,5 +1,9 @@
 import regex
 
+
+class TagAttributeError(Exception): pass
+
+
 re_attrs = regex.compile(r'((?P<key>\w+)'
                          r'\s*=\s*'
                          r'(?P<value>("[^"]*"'
@@ -106,3 +110,94 @@ def set_attribute(attrs, attribute, method='r'):
             if attribute not in new_attrs:
                 new_attrs.append(attribute)
             return new_attrs
+
+
+def filter_attributes(attrs, attribute_names, raise_error=False):
+    """Filter a list of attributes (attrs) to only include those that match
+    names (or positional attributes) in the given list.
+
+    Parameters
+    ----------
+    attrs: list
+        A list of attributes comprising either 2-ple strings (key, value) or
+        strings (positional arguments)
+    attribute_names: list of str
+        A list of attribute names and positional arguments to include in the
+        returned result. Matches are case-sensitive.
+    raise_error: bool, optional
+        If an attribute has been included that is not recognized, raise an
+        TagAttributeError.
+
+    Returns
+    -------
+    attrs: list
+        A fileterslist of attributes comprising either 2-ple strings
+        (key, value) or strings (positional arguments)
+
+    Raises
+    ------
+    TagAttributeError
+        If raise_error and an attribute is given that is not in the list of
+        attribute_names.
+
+    Examples
+    --------
+    >>> filter_attributes([('class', 'base'), ('style', 'media'), 'red'],
+    ...                   ['class', 'red'])
+    [('class', 'base'), 'red']
+    >>>
+    """
+    new_attrs = []
+    for attr in attrs:
+        if (hasattr(attr, '__iter__')
+           and len(attr) == 2
+           and attr[0] in attribute_names):
+
+            new_attrs.append(attr)
+        elif attr in attribute_names:
+            new_attrs.append(attr)
+        elif raise_error:
+            msg = "The attribute '{}' is not a valid attribute."
+            raise TagAttributeError(msg.format(attr))
+    return new_attrs
+
+
+def kwargs_attributes(attrs, attribute_names=None, raise_error=False):
+    """Produce a dict of attributes {key: value} suitable to be used
+    as kwargs.
+
+    .. note:: This function ignores positional arguments.
+
+    Parameters
+    ----------
+    attrs: list
+        A list of attributes comprising either 2-ple strings (key, value) or
+        strings (positional arguments)
+    attribute_names: list of str, optional
+        A list of attribute names and positional arguments to include in the
+        returned result. Matches are case-sensitive.
+    raise_error: bool, optional
+        If an attribute has been included that is not recognized, raise an
+        TagAttributeError.
+
+    Returns
+    -------
+    kwargs: dict
+        A dict with {key: value} pairs for the attributes.
+
+    Examples
+    --------
+    >>> kwargs_attributes([('class', 'base'), ('style', 'media'), 'red'])
+    {'class': 'base', 'style': 'media'}
+    """
+    if hasattr(attribute_names, '__iter__'):
+        processed_attrs = filter_attributes(attrs, attribute_names, raise_error)
+    else:
+        processed_attrs = attrs
+
+    kwargs = dict()
+    for attr in attrs:
+        if hasattr(attr, '__iter__') and len(attr) == 2:
+            kwargs[attr[0]] = attr[1]
+
+    return kwargs
