@@ -1,18 +1,48 @@
 """
-Functions and classes for document tags.
+Functions for processing abstract syntax trees (ASTs).
 """
 import regex
 
 from .tags import TagFactory
+from . import settings
+
+
+class AstException(Exception): pass
 
 
 re_tag = regex.compile(r'(@(?P<tag>[A-Za-z]\w*)'
                        r'(?P<attributes>\[[^\]]+\])?'
                        r'{(?P<content>(?>[^{}@]+|(?R))*)})')
 
-def process_ast(s):
+def process_ast(s, level=1):
     """Parses a string into an AST comprising a list of lists with strings and
-    tags."""
+    tags.
+
+    Parameters
+    ----------
+    s: str
+        The string to process.
+    level: int, optional
+        The current level of the ast.
+
+    Returns
+    -------
+    ast: list of str or list
+        The AST is a list of string or nested lists, which may themselves
+        containt strings or nested lists.
+
+    Raises
+    ------
+    AstException
+        Raises an AstException if the max depth has been achieved
+        (settings.ast_max_depth). This is an attempt to foil the Billion Laughs
+        attack.
+    """
+    if level >= settings.ast_max_depth:
+        msg = ("The maximum depth of '{}' has been reached in the AST. "
+               "Additional levels can be set by the 'settings.ast_max_depth'.")
+        raise AstException(msg.format(settings.ast_max_depth))
+
     ast = []
     current_pos = 0
     factory = TagFactory()
@@ -30,7 +60,7 @@ def process_ast(s):
         # Parse the match's content
         d = m.groupdict()
         tag_type = m['tag']
-        tag_content = process_ast(m['content'])
+        tag_content = process_ast(m['content'], level + 1)
         tag_attributes = m['attributes']
         ast.append(factory.tag(tag_type, tag_content, tag_attributes))
 
