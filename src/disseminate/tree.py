@@ -85,7 +85,7 @@ class Tree(object):
         file (index.tree).
 
         ex: {'src/': 'src/index.tree'
-             'src/sub1': 'src/index.tree'
+             'src/sub1': 'src/index.tree'}
     """
 
     subpath = None
