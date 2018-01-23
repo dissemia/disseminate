@@ -3,7 +3,7 @@ Classes and functions for generating trees of markup files.
 """
 import glob
 import os.path
-import re
+import regex
 
 #from .document import Document
 from . import settings
@@ -132,14 +132,15 @@ class Tree(object):
 
         # Go directory-by-directory to see if they're common to all paths
         reference_path = paths[0]
-        regex_string = r'([.\w]+/?){'
+        regex_string = r'([.\w\s]+/?){'
 
         # Start with the first path (i.e. the current path, '.')
         best_path = '.'
 
         # Build the path directory-by-directory
         for i in range(1,15):
-            base_path = re.match(regex_string + repr(i) + r'}', reference_path)
+            base_path = regex.match(regex_string + repr(i) + r'}',
+                                    reference_path)
             base_path = base_path.group() if base_path is not None else None
 
             if base_path and all(i.startswith(base_path) for i in paths):
@@ -192,7 +193,7 @@ class Tree(object):
         # alphabetically
         index_paths = sorted(glob.glob(search_glob, recursive=True),
                              key=lambda i: (len(i), i))
-
+        
         # Go through each tree index file and mark its directory and
         # sub-directories as managed
         for index_path in index_paths:

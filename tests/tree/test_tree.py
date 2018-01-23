@@ -223,6 +223,16 @@ def test_find_documents():
     assert tree6.documents[2] == 'tests/tree/examples6/index.dm'
     assert tree6.documents[3] == 'tests/tree/examples6/sub3/index.dm'
 
+    # The 'éxample 7' directory contains a unicode character and a space.
+    # In the root folder, it has an index.tree file pointing to an index.dm
+    # file
+    tree7 = Tree(subpath='tests/tree/éxample 7')
+    tree7.find_documents()
+
+    # The tree should have 1 documents in the root
+    assert len(tree7.documents) == 1
+    assert tree7.documents[0] == 'tests/tree/éxample 7/index.dm'
+
 
 def test_project_root():
     """Tests that the project root path is correctly identified."""
@@ -244,3 +254,12 @@ def test_project_root():
 
     project_root = tree1.project_root()
     assert project_root == 'tests/tree/examples1/sub1'
+
+    # The 'éxample\ 7" directory contains a space and a unicode character.
+    # It contains an index.tree file.
+    # See if this path is properly recognized.
+    tree7 = Tree(subpath="tests/tree/éxample 7")
+    tree7.find_documents()
+
+    project_root = tree7.project_root()
+    assert project_root == 'tests/tree/éxample 7'
