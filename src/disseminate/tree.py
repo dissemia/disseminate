@@ -70,10 +70,11 @@ class Tree(object):
           further contain other index.tree files. If an index.tree file exists
           in a directory, it is assumed that this file *manages* the tree index
           files and document files in its own directory and all subdirectories.
-        - If an 'index.tree' is not available, one is generated using the
-          default document (markup) extension (see settings.document_extension).
-          For all *unmanaged* directories and subdirectories.
-          These will be sorted by filename.
+        - If an 'index.tree' is not available, then the directory is considered
+          unmanaged. A list of documents is constructed for files matching the
+          default document extenstion ('.dm' by default, see
+          settings.document_extension).
+          These will be sorted by filename and added after the indexed files.
 
     Attributes
     ----------
@@ -97,6 +98,8 @@ class Tree(object):
     def find_managed_dirs(self, subpath=None, reload=False):
         """Populate the managed directories (self.managed_dirs) by locate index
         treefiles (e.g. index.tree).
+
+        This method sets the self.managed_dirs attribute.
 
         .. note:: The presence of an index.tree file in a directory implies
                   that the directory and all its subdirectories are managed by
@@ -162,6 +165,8 @@ class Tree(object):
         and populate the document (markup) source
         files in order.
 
+        This method populates the self.documents attribute
+
         .. note:: This function only looks at index.tree files that are in
                   managed directories. See the :meth:`find_managed_dirs` above.
 
@@ -219,6 +224,8 @@ class Tree(object):
         Only files with the document extension (settings.document_extension)
         are returned. (ex: .dm)
 
+        This method populates the self.documents attribute.
+
         Parameters
         ----------
         subpath: str, optional
@@ -266,3 +273,30 @@ class Tree(object):
         assert len(self.documents) == len(set(self.documents))
 
         return None
+
+    def find_documents(self, subpath=None):
+        """Finds all the document (source markup) files in the tree by first
+        looking up tree index files, then finding documents in unmanaged
+        directories.
+
+        Since tree index files are searched first, these documents appear in
+        the tree *before* files from unmanaged directories.
+
+        This method resets and populates the self.documents attribute.
+
+        Parameters
+        ----------
+        subpath: str, optional
+            If specified, only look in the given subpath directory. If this is
+            not specified, the value of self.subpath will be searched as well.
+
+        Returns
+        -------
+        None
+        """
+        self.documents = []
+        self.find_documents_in_indexes(subpath=subpath)
+        self.find_documents_by_type(subpath=subpath)
+
+    #def get_targets
+

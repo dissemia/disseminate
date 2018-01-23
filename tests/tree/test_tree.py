@@ -171,25 +171,54 @@ def test_unmanaged_dirs():
     assert tree6.documents[0] == 'tests/tree/examples6/index.dm'
     assert tree6.documents[1] == 'tests/tree/examples6/sub3/index.dm'
 
-# def test_basic_document_search():
-#     """Tests the find_document_files method."""
-#     tree = Tree()
-#
-#     # The 'examples1' directory contains document (markup) files in the root
-#     # directory and in the 'sub1' directory
-#     index = tree.find_document_files(subpath='tests/tree/examples1')
-#
-#     # The 'examples1' directory has 3 document files. 1 in the root, and 2 in
-#     # the 'sub1' sub-directory
-#     assert len(index) == 2
-#
-#     key1 = 'tests/tree/examples1'
-#     assert key1 in index
-#     assert len(index[key1]) == 1
-#     assert 'tests/tree/examples1/index.dm' in index[key1]
-#
-#     key2 = 'tests/tree/examples1/sub1'
-#     assert key2 in index
-#     assert len(index[key2]) == 2
-#     assert 'tests/tree/examples1/sub1/intro.dm' in index[key2]
-#     assert 'tests/tree/examples1/sub1/appendix.dm' in index[key2]
+def test_find_documents():
+    """Tests the find_documents method to locate files from tree index files
+    and unmanaged directories together."""
+
+    # The 'examples1' directory contains an index.tree in the 'examples1/sub1'
+    # directory and no index.tree in the root directory 'examples1'.
+    # Consequently, 'examples1/sub' is considered managed and 'examples1' is
+    # not. The 'examples1/' directory only contains on document (source markup)
+    # file.
+    tree1 = Tree(subpath="tests/tree/examples1")
+    tree1.find_documents()
+
+    # There should by 2 managed documents in 'sub1' and 1 unmanaged document
+    # in the root. The unmanaged document comes last.
+    assert len(tree1.documents) == 3
+    assert tree1.documents[0] == 'tests/tree/examples1/sub1/intro.dm'
+    assert tree1.documents[1] == 'tests/tree/examples1/sub1/appendix.dm'
+    assert tree1.documents[2] == 'tests/tree/examples1/index.dm'
+
+    # The 'examples5' directory contains an index.tree file in the root
+    # directory (tests/tree/examples5). This file includes a pointer to
+    # the index.tree files in 'sub1' and 'sub2' but not 'sub3'. The index.tree
+    # files point to a single document file in sub1, but it points to a document
+    # and an index.tree in sub2. However, 'sub3' is managed, so it shouldn't
+    # show up in the results of documents.
+    tree5 = Tree(subpath='tests/tree/examples5')
+    tree5.find_documents()
+
+    # The tree should have 4 documents from the root, sub1 and sub2 directories
+    # (but not sub3)
+    assert len(tree5.documents) == 4
+    assert tree5.documents[0] == 'tests/tree/examples5/index.dm'
+    assert tree5.documents[1] == 'tests/tree/examples5/sub2/index.dm'
+    assert tree5.documents[2] == 'tests/tree/examples5/sub2/subsub2/index.dm'
+    assert tree5.documents[3] == 'tests/tree/examples5/sub1/index.dm'
+
+    # The 'examples6' directory contains an index.tree file in the 'sub1' and
+    # 'sub2' directories but not 'sub3'. The documents read in from the tree
+    # index files should include those listed in the the 'sub1' directory
+    # (1 file), and the 'sub2' directory (1 file). The unmanaged directories,
+    # the root directory and 'sub3', each contain 1 file and they will be
+    # included last.
+    tree6 = Tree(subpath='tests/tree/examples6')
+    tree6.find_documents()
+
+    # The tree should have 2 documents, one from each sub1 and sub2.
+    assert len(tree6.documents) == 4
+    assert tree6.documents[0] == 'tests/tree/examples6/sub1/index.dm'
+    assert tree6.documents[1] == 'tests/tree/examples6/sub2/index.dm'
+    assert tree6.documents[2] == 'tests/tree/examples6/index.dm'
+    assert tree6.documents[3] == 'tests/tree/examples6/sub3/index.dm'
