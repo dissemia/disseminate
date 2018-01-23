@@ -1,3 +1,12 @@
+#: Document Defaults
+#: -----------------
+
+#: The default extension of markup files
+document_extension = '.dm'
+
+#: The default filename for index trees
+index_filename = 'index.tree'
+
 #: AST Processing
 #: --------------
 
