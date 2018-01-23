@@ -3,7 +3,9 @@ Classes and functions for generating trees of markup files.
 """
 import glob
 import os.path
+import re
 
+#from .document import Document
 from . import settings
 
 
@@ -94,6 +96,60 @@ class Tree(object):
 
     def __init__(self, subpath=None):
         self.subpath = subpath
+
+    def project_root(self, subpath=None):
+        """Evaluate the path (directory) of the project root.
+
+        This function depends on settings.strip_base_project_path. If the
+        settings.strip_base_project_path is True, then this function will
+        attempt to find the 'common denominator' path for all the documents
+        and return this path. Otherwise it will return the current directory.
+
+        Parameters
+        ----------
+        subpath: str, optional
+            If specified, only look in the given subpath directory. If this is
+            not specified, the value of self.subpath will be searched as well.
+
+        Returns
+        -------
+        project_root: str
+            The string for the project root
+        """
+        # The project_root is simply the current path if strip_base_project_path
+        # is not True
+        if not settings.strip_base_project_path:
+            return '.'
+
+        # Load the working directories
+        self.find_managed_dirs(subpath)
+
+        # Get all of the unique paths for the documents
+        paths = sorted(set([os.path.split(i)[0] for i in self.documents]),
+                       key=len)
+        if len(paths) == 0:
+            return '.'
+
+        # Go directory-by-directory to see if they're common to all paths
+        reference_path = paths[0]
+        regex_string = r'([.\w]+/?){'
+
+        # Start with the first path (i.e. the current path, '.')
+        best_path = '.'
+
+        # Build the path directory-by-directory
+        for i in range(1,15):
+            base_path = re.match(regex_string + repr(i) + r'}', reference_path)
+            base_path = base_path.group() if base_path is not None else None
+
+            if base_path and all(i.startswith(base_path) for i in paths):
+                # A new base path is found
+                best_path = base_path
+            else:
+                break
+
+        return best_path
+
 
     def find_managed_dirs(self, subpath=None, reload=False):
         """Populate the managed directories (self.managed_dirs) by locate index
@@ -297,6 +353,13 @@ class Tree(object):
         self.documents = []
         self.find_documents_in_indexes(subpath=subpath)
         self.find_documents_by_type(subpath=subpath)
+
+    def render_documents(self):
+        """Converts files"""
+
+    #def html(self):
+
+    #def_get_global_contexts
 
     #def get_targets
 

@@ -222,3 +222,25 @@ def test_find_documents():
     assert tree6.documents[1] == 'tests/tree/examples6/sub2/index.dm'
     assert tree6.documents[2] == 'tests/tree/examples6/index.dm'
     assert tree6.documents[3] == 'tests/tree/examples6/sub3/index.dm'
+
+
+def test_project_root():
+    """Tests that the project root path is correctly identified."""
+
+    # The 'examples1' directory contains files in the root directory and
+    # in sub1. By using find_documents, we find both kinds.
+    tree1 = Tree(subpath="tests/tree/examples1")
+    tree1.find_documents()
+
+    project_root = tree1.project_root()
+    assert project_root == 'tests/tree/examples1'
+
+
+    # The 'examples1' directory contains a tree index file only in the 'sub1'
+    # directory. Therefore, if we only search for tree index files, the project
+    # root should be the path with 'sub1'
+    tree1 = Tree(subpath="tests/tree/examples1")
+    tree1.find_documents_in_indexes()
+
+    project_root = tree1.project_root()
+    assert project_root == 'tests/tree/examples1/sub1'

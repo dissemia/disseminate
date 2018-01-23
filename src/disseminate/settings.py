@@ -4,8 +4,15 @@
 #: The default extension of markup files
 document_extension = '.dm'
 
+#: Tree Defaults
+#: -------------
+
 #: The default filename for index trees
 index_filename = 'index.tree'
+
+#: When document (markup source) files are in sub-directories, the
+#: project root directory will have these paths stripped.
+strip_base_project_path = True
 
 #: AST Processing
 #: --------------
