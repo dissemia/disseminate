@@ -8,3 +8,4 @@ API Documentation
     :maxdepth: 2
 
     tree
+    document

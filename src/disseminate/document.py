@@ -1,28 +1,70 @@
+"""
+Classes and functions for rendering documents.
+"""
+import os.path
+
 import regex
 
 #from attributes import parse_attributes
-from .ast import process_ast
+#from .ast import process_ast
+from . import settings
+
+
+class DocumentError(Exception): pass
 
 
 class Document(object):
-    """A general class to generate documents."""
+    """A document rendered from a source file or string.
 
-    ast_postprocessors = None
+    Attributes
+    ----------
+    src_filepath : str, optional
+        A filename for a document (markup source) file.
+        Either the src_filepath of src attribute should be set when creating
+        documents.
+    src : str, optional
+        A string to render.
+        Either the src_filepath of src attribute should be set when creating
+        documents.
+    target : str
+        The extension of the target type to use (ex: '.html')
 
-    def __init__(self, input, template, context=None, target_format='d'):
-        self.ast_postprocessors = []
+    string_processors : list of str, **class attribute**
+        A list of functions to process the string before conversion to the
+        AST. These functions simply accept a string argument and are executed
+        in sequence.
+    """
 
-    @property
-    def input(self):
-        pass
+    src_filepath = None
+    src = None
+    target = None
 
-    def preprocess(self):
-        """The preprocess step comprises, effectively, the lexing and
-        conversion of tags for a string."""
-        return None
+    string_processors = []
+    ast_processors = []
+    ast_post_processors = []
+
+    def __init__(self, src=None, filepath=None, target=settings.default_target):
+        """Initialize a document from the given input.
+
+        Parameters
+        ----------
+        input: str
+            A filepath for a document (markup source) file or a string
+            comprising markup source data.
+        target: str, optional
+            The target extension of the rendered document. (ex: '.html')
+        """
+        assert src is not None or filepath is not None
+
+        self.src = src
+        self.src_filepath = filepath
+        self.target = target if target.startswith(".") else "." + target
 
     def process_string(self):
         "Process the string before conversion to the ast"
+        pass
+
+    def process_ast(self):
         pass
 
     def postprocess_ast(self):
@@ -35,10 +77,10 @@ class Document(object):
     def validate_ast(self):
         return None
 
-    def generate_context(self):
+    def context(self):
         pass
 
-    def render(self, input, template, context=None, format='default'):
+    def render(self, input, context=None, template=None):
         """Convert the input to a formatted string.
 
         Parameters
