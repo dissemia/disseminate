@@ -46,7 +46,7 @@ def load_index_files(index_path):
 
     document_paths = []
 
-    # If any of the files are tree index files (index.tree), then parse those
+    # If any of the files are tree index files (index.tree), then ast those
     # as well
     for filepath in filepaths:
         path, filename = os.path.split(filepath)

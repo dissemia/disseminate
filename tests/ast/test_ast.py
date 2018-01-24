@@ -1,11 +1,11 @@
-from pprint import pprint
-
+"""
+Tests for the ast sub-module.
+"""
 import pytest
+from lxml import etree
 
-from disseminate import process_ast
+from disseminate.ast import process_ast, convert_html, print_ast
 from disseminate import Tag
-from disseminate.tags import convert_html
-from disseminate.ast import print_ast
 
 
 test = """
@@ -62,12 +62,48 @@ def test_ast_basic_string():
     assert len(ast) == 5
 
 
-def test_html_conversion():
+def test_basic_html_conversion():
     """Test the generation of html strings from tags."""
 
+    # Generate the html string
     ast = process_ast(test)
-
     html = convert_html(ast)
 
-    with open('tmp.html', 'w') as f:
-        f.write(html)
+    # Validate the html
+    root = etree.fromstring(html)
+    root_iter = root.iter()
+
+    # verify each element
+    e1 = next(root_iter)
+    assert e1.tag == 'body'
+    assert isinstance(e1.text, str) and len(e1.text) > 0
+    assert e1.attrib == {}
+
+    e2 = next(root_iter)
+    assert e2.tag == 'b'
+    assert isinstance(e2.text, str) and e2.text == 'bolded'
+    assert e2.attrib == {}
+
+    e3 = next(root_iter)
+    assert e3.tag == 'marginfig'
+    assert isinstance(e3.text, str) and e3.text.strip() == ''
+    assert e3.attrib == {}
+
+    e4 = next(root_iter)
+    assert e4.tag == 'img'
+    assert e4.text is None
+    assert e4.attrib == {'src': 'media/files'}
+
+    e5 = next(root_iter)
+    assert e5.tag == 'caption'
+    assert isinstance(e5.text, str) and e5.text == 'This is my '
+    assert e5.attrib == {}
+
+    e6 = next(root_iter)
+    assert e6.tag == 'i'
+    assert isinstance(e6.text, str) and e6.text == 'first'
+    assert e6.attrib == {}
+
+    with pytest.raises(StopIteration):
+        e7 = next(root_iter)
+    
