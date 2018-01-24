@@ -44,7 +44,7 @@ def load_index_files(index_path):
     # tree index file are relative to the tree index path.
     filepaths = [os.path.join(index_dir, i) for i in filenames]
 
-    documents = []
+    document_paths = []
 
     # If any of the files are tree index files (index.tree), then parse those
     # as well
@@ -52,11 +52,11 @@ def load_index_files(index_path):
         path, filename = os.path.split(filepath)
 
         if filename == settings.index_filename:
-            documents += load_index_files(filepath)
+            document_paths += load_index_files(filepath)
         else:
-            documents.append(filepath)
+            document_paths.append(filepath)
 
-    return documents
+    return document_paths
 
 
 class Tree(object):
@@ -92,7 +92,7 @@ class Tree(object):
 
     subpath = None
     managed_dirs = None
-    documents = None
+    document_paths = None
 
     def __init__(self, subpath=None):
         self.subpath = subpath
@@ -125,7 +125,7 @@ class Tree(object):
         self.find_managed_dirs(subpath)
 
         # Get all of the unique paths for the documents
-        paths = sorted(set([os.path.split(i)[0] for i in self.documents]),
+        paths = sorted(set([os.path.split(i)[0] for i in self.document_paths]),
                        key=len)
         if len(paths) == 0:
             return '.'
@@ -193,7 +193,7 @@ class Tree(object):
         # alphabetically
         index_paths = sorted(glob.glob(search_glob, recursive=True),
                              key=lambda i: (len(i), i))
-        
+
         # Go through each tree index file and mark its directory and
         # sub-directories as managed
         for index_path in index_paths:
@@ -237,8 +237,8 @@ class Tree(object):
         -------
         None
         """
-        if not isinstance(self.documents, list):
-            self.documents = []
+        if not isinstance(self.document_paths, list):
+            self.document_paths = []
 
         # Populate the managed_dirs
         self.find_managed_dirs(subpath)
@@ -254,14 +254,14 @@ class Tree(object):
 
         for index_file in index_files:
             new_documents = load_index_files(index_file)
-            self.documents += new_documents
+            self.document_paths += new_documents
 
             # Check for duplicates
-            documents_set = set(self.documents)
-            if len(documents_set) < len(self.documents):  # a dupe exists
+            documents_set = set(self.document_paths)
+            if len(documents_set) < len(self.document_paths):  # a dupe exists
                 # Find and report the duplicate
                 seen = set()
-                for i in self.documents:
+                for i in self.document_paths:
                     if i in seen:
                         msg = "The file '{}' in index tree '{}' is duplicated."
                         raise TreeException(msg.format(i, index_file))
@@ -294,8 +294,8 @@ class Tree(object):
         None
         """
         subpath = subpath if subpath is not None else self.subpath
-        if not isinstance(self.documents, list):
-            self.documents = []
+        if not isinstance(self.document_paths, list):
+            self.document_paths = []
 
         # Populate the managed_dirs
         self.find_managed_dirs(subpath)
@@ -324,10 +324,10 @@ class Tree(object):
         # Join the filepaths and add them to the documents
         filepaths = [os.path.join(*i) for i in filepaths]
 
-        self.documents += filepaths
+        self.document_paths += filepaths
 
         # Check to make sure there are no duplicates. (sanity check)
-        assert len(self.documents) == len(set(self.documents))
+        assert len(self.document_paths) == len(set(self.document_paths))
 
         return None
 
@@ -351,7 +351,7 @@ class Tree(object):
         -------
         None
         """
-        self.documents = []
+        self.document_paths = []
         self.find_documents_in_indexes(subpath=subpath)
         self.find_documents_by_type(subpath=subpath)
 

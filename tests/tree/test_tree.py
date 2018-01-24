@@ -82,9 +82,9 @@ def test_basic_index():
     tree1.find_documents_in_indexes()
 
     # The tree's documents should have 2 documents (markup source files)
-    assert len(tree1.documents) == 2
-    assert tree1.documents[0] == 'tests/tree/examples1/sub1/intro.dm'
-    assert tree1.documents[1] == 'tests/tree/examples1/sub1/appendix.dm'
+    assert len(tree1.document_paths) == 2
+    assert tree1.document_paths[0] == 'tests/tree/examples1/sub1/intro.dm'
+    assert tree1.document_paths[1] == 'tests/tree/examples1/sub1/appendix.dm'
 
     # The 'examples5' directory contains an index.tree file in the root
     # directory (tests/tree/examples5). This file includes a pointer to
@@ -96,11 +96,11 @@ def test_basic_index():
 
     # The tree should have 4 documents from the root, sub1 and sub2 directories
     # (but not sub3)
-    assert len(tree5.documents) == 4
-    assert tree5.documents[0] == 'tests/tree/examples5/index.dm'
-    assert tree5.documents[1] == 'tests/tree/examples5/sub2/index.dm'
-    assert tree5.documents[2] == 'tests/tree/examples5/sub2/subsub2/index.dm'
-    assert tree5.documents[3] == 'tests/tree/examples5/sub1/index.dm'
+    assert len(tree5.document_paths) == 4
+    assert tree5.document_paths[0] == 'tests/tree/examples5/index.dm'
+    assert tree5.document_paths[1] == 'tests/tree/examples5/sub2/index.dm'
+    assert tree5.document_paths[2] == 'tests/tree/examples5/sub2/subsub2/index.dm'
+    assert tree5.document_paths[3] == 'tests/tree/examples5/sub1/index.dm'
 
     # The 'examples6' directory contains an index.tree file in the 'sub1' and
     # 'sub2' directories but not 'sub3'. The documents read in from the tree
@@ -110,9 +110,9 @@ def test_basic_index():
     tree6.find_documents_in_indexes()
 
     # The tree should have 2 documents, one from each sub1 and sub2.
-    assert len(tree6.documents) == 2
-    assert tree6.documents[0] == 'tests/tree/examples6/sub1/index.dm'
-    assert tree6.documents[1] == 'tests/tree/examples6/sub2/index.dm'
+    assert len(tree6.document_paths) == 2
+    assert tree6.document_paths[0] == 'tests/tree/examples6/sub1/index.dm'
+    assert tree6.document_paths[1] == 'tests/tree/examples6/sub2/index.dm'
 
 
 def test_duplicate_index():
@@ -124,7 +124,7 @@ def test_duplicate_index():
     subpath = 'tests/tree/examples2/'
     with pytest.raises(TreeException):
         tree.find_documents_in_indexes(subpath=subpath)
-        print(tree.documents)
+        print(tree.document_paths)
 
 def test_missing_file():
     """Tests an index tree file with a missing entry."""
@@ -147,8 +147,8 @@ def test_unmanaged_dirs():
     tree1.find_documents_by_type()
 
     # There should only be 1 unmanaged document
-    assert len(tree1.documents) == 1
-    assert tree1.documents[0] == 'tests/tree/examples1/index.dm'
+    assert len(tree1.document_paths) == 1
+    assert tree1.document_paths[0] == 'tests/tree/examples1/index.dm'
 
     # The 'examples5' directory has an index.tree file in the root 'examples5'
     # directory.
@@ -157,7 +157,7 @@ def test_unmanaged_dirs():
     tree5.find_documents_by_type('tests/tree/examples5')
 
     # There should be no unmanaged documents
-    assert len(tree5.documents) == 0
+    assert len(tree5.document_paths) == 0
 
     # The 'examples6' directory has an index.tree file in the 'sub1' and 'sub2'
     # directories. The root 'examples6' directory, which contains 1 source file,
@@ -167,9 +167,9 @@ def test_unmanaged_dirs():
     tree6.find_documents_by_type()
 
     # There should be 2 unmanaged documents. The root file comes first.
-    assert len(tree6.documents) == 2
-    assert tree6.documents[0] == 'tests/tree/examples6/index.dm'
-    assert tree6.documents[1] == 'tests/tree/examples6/sub3/index.dm'
+    assert len(tree6.document_paths) == 2
+    assert tree6.document_paths[0] == 'tests/tree/examples6/index.dm'
+    assert tree6.document_paths[1] == 'tests/tree/examples6/sub3/index.dm'
 
 def test_find_documents():
     """Tests the find_documents method to locate files from tree index files
@@ -185,10 +185,10 @@ def test_find_documents():
 
     # There should by 2 managed documents in 'sub1' and 1 unmanaged document
     # in the root. The unmanaged document comes last.
-    assert len(tree1.documents) == 3
-    assert tree1.documents[0] == 'tests/tree/examples1/sub1/intro.dm'
-    assert tree1.documents[1] == 'tests/tree/examples1/sub1/appendix.dm'
-    assert tree1.documents[2] == 'tests/tree/examples1/index.dm'
+    assert len(tree1.document_paths) == 3
+    assert tree1.document_paths[0] == 'tests/tree/examples1/sub1/intro.dm'
+    assert tree1.document_paths[1] == 'tests/tree/examples1/sub1/appendix.dm'
+    assert tree1.document_paths[2] == 'tests/tree/examples1/index.dm'
 
     # The 'examples5' directory contains an index.tree file in the root
     # directory (tests/tree/examples5). This file includes a pointer to
@@ -201,11 +201,11 @@ def test_find_documents():
 
     # The tree should have 4 documents from the root, sub1 and sub2 directories
     # (but not sub3)
-    assert len(tree5.documents) == 4
-    assert tree5.documents[0] == 'tests/tree/examples5/index.dm'
-    assert tree5.documents[1] == 'tests/tree/examples5/sub2/index.dm'
-    assert tree5.documents[2] == 'tests/tree/examples5/sub2/subsub2/index.dm'
-    assert tree5.documents[3] == 'tests/tree/examples5/sub1/index.dm'
+    assert len(tree5.document_paths) == 4
+    assert tree5.document_paths[0] == 'tests/tree/examples5/index.dm'
+    assert tree5.document_paths[1] == 'tests/tree/examples5/sub2/index.dm'
+    assert tree5.document_paths[2] == 'tests/tree/examples5/sub2/subsub2/index.dm'
+    assert tree5.document_paths[3] == 'tests/tree/examples5/sub1/index.dm'
 
     # The 'examples6' directory contains an index.tree file in the 'sub1' and
     # 'sub2' directories but not 'sub3'. The documents read in from the tree
@@ -217,11 +217,11 @@ def test_find_documents():
     tree6.find_documents()
 
     # The tree should have 2 documents, one from each sub1 and sub2.
-    assert len(tree6.documents) == 4
-    assert tree6.documents[0] == 'tests/tree/examples6/sub1/index.dm'
-    assert tree6.documents[1] == 'tests/tree/examples6/sub2/index.dm'
-    assert tree6.documents[2] == 'tests/tree/examples6/index.dm'
-    assert tree6.documents[3] == 'tests/tree/examples6/sub3/index.dm'
+    assert len(tree6.document_paths) == 4
+    assert tree6.document_paths[0] == 'tests/tree/examples6/sub1/index.dm'
+    assert tree6.document_paths[1] == 'tests/tree/examples6/sub2/index.dm'
+    assert tree6.document_paths[2] == 'tests/tree/examples6/index.dm'
+    assert tree6.document_paths[3] == 'tests/tree/examples6/sub3/index.dm'
 
     # The 'éxample 7' directory contains a unicode character and a space.
     # In the root folder, it has an index.tree file pointing to an index.dm
@@ -230,8 +230,8 @@ def test_find_documents():
     tree7.find_documents()
 
     # The tree should have 1 documents in the root
-    assert len(tree7.documents) == 1
-    assert tree7.documents[0] == 'tests/tree/éxample 7/index.dm'
+    assert len(tree7.document_paths) == 1
+    assert tree7.document_paths[0] == 'tests/tree/éxample 7/index.dm'
 
 
 def test_project_root():
