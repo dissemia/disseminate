@@ -80,17 +80,17 @@ class Tree(object):
 
     Attributes
     ----------
-    subpath: str, optional
+    subpath : str, optional
         The subpath (sub-directory) of the current directory to search.
-    managed_dirs: dict of str
+    managed_dirs : dict of str
         The subpaths (directories and subdirectories) managed by an index tree
         file (index.tree).
 
         ex: {'src/': 'src/index.tree'
              'src/sub1': 'src/index.tree'}
-    target: str
+    target : str
         The extension of the target documents. (ex: 'html')
-    documents: dict
+    documents : dict
         A dict with the documents. The keys are target paths and the values
         are the document objects themselves (:obj:`disseminate.Document`).
     """
@@ -115,13 +115,13 @@ class Tree(object):
 
         Parameters
         ----------
-        subpath: str, optional
+        subpath : str, optional
             If specified, only look in the given subpath directory. If this is
             not specified, the value of self.subpath will be searched as well.
 
         Returns
         -------
-        project_root: str
+        project_root : str
             The string for the project root
         """
         # The project_root is simply the current path if strip_base_project_path
@@ -173,13 +173,14 @@ class Tree(object):
 
         Parameters
         ----------
-        subpath: str, optional
+        subpath : str, optional
             If specified, only look in the given subpath directory. If this is
             not specified, the value of self.subpath will be searched as well.
-        reload: bool, optional
+        reload : bool, optional
             If True, the managed directories will be re-evaluated, regardless
             of whether they were evaluated before. Otherwise, the result
             from a previous evaluation (if available) are used.
+
         Returns
         -------
         None
@@ -236,7 +237,7 @@ class Tree(object):
 
         Parameters
         ----------
-        subpath: str, optional
+        subpath : str, optional
             If specified, only look in the given subpath directory. If this is
             not specified, the value of self.subpath will be searched as well.
 
@@ -292,7 +293,7 @@ class Tree(object):
 
         Parameters
         ----------
-        subpath: str, optional
+        subpath : str, optional
             If specified, only look in the given subpath directory. If this is
             not specified, the value of self.subpath will be searched as well.
 
@@ -350,7 +351,7 @@ class Tree(object):
 
         Parameters
         ----------
-        subpath: str, optional
+        subpath : str, optional
             If specified, only look in the given subpath directory. If this is
             not specified, the value of self.subpath will be searched as well.
 
@@ -372,18 +373,20 @@ class Tree(object):
 
         Returns
         -------
-        template: :obj:`jinga2.environment.Template`
+        template : :obj:`jinga2.environment.Template`
             A template object.
         """
 
-    def render_documents(self, *documents):
+    def render(self, *documents):
         """Render documents.
 
         This function function renders one, multiple or all documents.
 
+        ..note: This function populates the self.documents attribute.
+
         Parameters
         ----------
-        documents: list
+        documents : list
             Documents can either be:
             - A document_path for a document (markup source) file. (i.e. .dm
               extension)
@@ -392,6 +395,10 @@ class Tree(object):
             - (empty) In this case, all the documents in the document_path
               will be rendered.
         """
+        # Get contexts for each document
+        # Get templates
+        # render documents
+        pass
 
     #def render_documents(self):
         """Converts documents.
