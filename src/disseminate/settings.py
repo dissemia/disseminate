@@ -14,6 +14,9 @@ index_filename = 'index.tree'
 #: project root directory will have these paths stripped.
 strip_base_project_path = True
 
+#: The default target format of rendered files
+default_target = 'html'
+
 #: AST Processing
 #: --------------
 

@@ -88,14 +88,22 @@ class Tree(object):
 
         ex: {'src/': 'src/index.tree'
              'src/sub1': 'src/index.tree'}
+    target: str
+        The extension of the target documents. (ex: 'html')
+    documents: dict
+        A dict with the documents. The keys are target paths and the values
+        are the document objects themselves (:obj:`disseminate.Document`).
     """
 
     subpath = None
     managed_dirs = None
+    target = None
     document_paths = None
+    documents = None
 
-    def __init__(self, subpath=None):
+    def __init__(self, subpath=None, target=None):
         self.subpath = subpath
+        self.target = target if target is not None else settings.default_target
 
     def project_root(self, subpath=None):
         """Evaluate the path (directory) of the project root.
@@ -132,7 +140,7 @@ class Tree(object):
 
         # Go directory-by-directory to see if they're common to all paths
         reference_path = paths[0]
-        regex_string = r'([.\w\s]+/?){'
+        regex_string = r'([^/]+/?){'
 
         # Start with the first path (i.e. the current path, '.')
         best_path = '.'
@@ -150,7 +158,6 @@ class Tree(object):
                 break
 
         return best_path
-
 
     def find_managed_dirs(self, subpath=None, reload=False):
         """Populate the managed directories (self.managed_dirs) by locate index
@@ -355,8 +362,42 @@ class Tree(object):
         self.find_documents_in_indexes(subpath=subpath)
         self.find_documents_by_type(subpath=subpath)
 
-    def render_documents(self):
-        """Converts files"""
+    def find_template(self, document):
+        """Locate the template for a given document.
+
+        Parameters
+        ----------
+        document: :obj:`disseminate.Document`
+            A document object.
+
+        Returns
+        -------
+        template: :obj:`jinga2.environment.Template`
+            A template object.
+        """
+
+    def render_documents(self, *documents):
+        """Render documents.
+
+        This function function renders one, multiple or all documents.
+
+        Parameters
+        ----------
+        documents: list
+            Documents can either be:
+            - A document_path for a document (markup source) file. (i.e. .dm
+              extension)
+            - A target_path for a document. (i.e. .html extension)
+            - A document object (:obj:`disseminate.Document`)
+            - (empty) In this case, all the documents in the document_path
+              will be rendered.
+        """
+
+    #def render_documents(self):
+        """Converts documents.
+
+        Processes self.document_paths into self.documents.
+        """
 
     #def html(self):
 
