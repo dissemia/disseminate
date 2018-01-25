@@ -5,12 +5,41 @@ import os.path
 
 import regex
 
-#from attributes import parse_attributes
-#from .ast import process_ast
+from .ast import process_ast
+from .tags import Tag
 from . import settings
 
 
-class DocumentError(Exception): pass
+def process_tag_ast(ast, target):
+    """Invoke the 'process_ast' method of tags, if available.
+
+    Parameters
+    ----------
+    ast: list of str and :obj:`disseminate.Tag` objects.
+        An Abstract Syntax Tree (AST) to process in place.
+
+    Returns
+    -------
+    processed_ast : list of str and :obj:`disseminate.Tag` objects.
+        A processed AST.
+    """
+    processed_ast = []
+    for item in processed_ast:
+        if (isinstance(item, Tag) and
+           getattr(item, 'process_ast', None) is not None):
+            new_item = item.process_ast(target)
+            processed_ast += [new_item, ]
+        elif isinstance(item, list):
+            processed_ast += process_tag_ast(item, target)
+        else:
+            processed_ast.append(item)
+
+    return processed_ast
+
+
+class DocumentError(Exception):
+    """An error generated while loading and processing a document."""
+    pass
 
 
 class Document(object):
@@ -60,25 +89,75 @@ class Document(object):
         self.src_filepath = filepath
         self.target = target if target.startswith(".") else "." + target
 
-    def process_string(self):
-        "Process the string before conversion to the ast"
-        pass
+    def process_string(self, string, target, **kwargs):
+        """Process the string before conversion to the AST.
 
-    def process_ast(self):
-        pass
+        Parameters
+        ----------
+        string : str
+            The pre-processed string in document (markup source) format to
+            further process.
+        **kwargs : dict
+            Keyword arguments to pass to the string_processor functions.
 
-    def postprocess_ast(self):
-        "Process the ast, after conversion from the string"
+        Returns
+        -------
+        processed_string : str
+            The processed string.
+        """
+        processed_string = string
+        for func in self.string_processors:
+            processed_string = func(processed_string, target, **kwargs)
+        return processed_string
+
+    def process_ast(self, string):
+        """Process a string into an Abstract Syntax Tree (AST).
+
+        Parameters
+        ----------
+        string : str
+            The string in document (markup source) format to convert into an
+            AST.
+
+        Returns
+        -------
+        ast: list of str and :obj:`disseminate.Tag` objects.
+            The generated AST.
+        """
+        ast = process_ast(string)
+        return ast
+
+    def context(self):
+        """
+
+        Returns
+        -------
+        global_context, local_context : dict, dict
+            A dict that is accessible from the root context (global) and a
+            dict that is accessible from a local context.
+        """
+        return None, None
+
+    def postprocess_ast(self, ast, target, context):
+        """Post-process the ast with target-specific options.
+
+        Parameters
+        ----------
+        ast: list of str and :obj:`disseminate.Tag` objects.
+            The AST.
+        target: str, optional
+            The target extension of the rendered document. (ex: '.html')
+
+        Returns
+        -------
+        ast: list of str and :obj:`disseminate.Tag` objects.
+            The post-processed AST.
+        """
         # Run each tag's process_ast
         # post-process of ast (create new paragraphs,
         # cleanup newlines, prevent paragraphs before equations.)
-        pass
-
-    def validate_ast(self):
-        return None
-
-    def context(self):
-        pass
+        ast = process_tag_ast(ast, target)
+        return ast
 
     def render(self, input, context=None, template=None):
         """Convert the input to a formatted string.
