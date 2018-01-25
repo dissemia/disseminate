@@ -5,7 +5,7 @@ import pytest
 from lxml import etree
 
 from disseminate.ast import process_ast, convert_html, print_ast
-from disseminate import Tag
+from disseminate.tags import Tag
 
 
 test = """
