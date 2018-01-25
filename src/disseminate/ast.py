@@ -2,17 +2,24 @@
 Functions for processing abstract syntax trees (ASTs).
 """
 import regex
+from lxml.builder import E
+from lxml import etree
 
-from .tags import TagFactory
+from .tags import TagFactory, Tag
+from .attributes import kwargs_attributes
 from . import settings
 
 
 class AstException(Exception): pass
 
 
+control_char = r'@'
+
+
 re_tag = regex.compile(r'(@(?P<tag>[A-Za-z]\w*)'
                        r'(?P<attributes>\[[^\]]+\])?'
                        r'{(?P<content>(?>[^{}@]+|(?R))*)})')
+
 
 def process_ast(s, level=1):
     """Parses a string into an AST comprising a list of lists with strings and
@@ -20,14 +27,14 @@ def process_ast(s, level=1):
 
     Parameters
     ----------
-    s: str
+    s : str
         The string to process.
-    level: int, optional
+    level : int, optional
         The current level of the ast.
 
     Returns
     -------
-    ast: list of str or list
+    ast : list of str or list
         The AST is a list of string or nested lists, which may themselves
         containt strings or nested lists.
 
@@ -70,9 +77,68 @@ def process_ast(s, level=1):
     return ast
 
 
+def convert_html(ast, root_tag=settings.html_root_tag,
+                 pretty_print=settings.html_pretty):
+    """Converts an ast to html.
+
+    Parameters
+    ----------
+    root_tag : str, optional
+        The tag to use to wrap the html. (ex: 'body')
+    pretty_print : bool, optional
+        Add newlines and indentation to html tags.
+
+    Returns
+    -------
+    html_str : str
+        A processed html string.
+    """
+
+    if isinstance(ast, Tag):
+        if isinstance(ast.content, list):
+            return E(ast.name,
+                     *[convert_html(i) for i in ast.content])
+        else:
+            # Only include content is the content is not None or the empty
+            # string
+            content = (ast.content.strip()
+                       if isinstance(ast.content, str)
+                       else ast.content)
+            content = [content, ] if content else []
+
+            # Prepare the attributes
+            kwargs = (kwargs_attributes(ast.attributes)
+                      if ast.attributes
+                      else dict())
+            return E(ast.name,
+                     *content,
+                     **kwargs)
+
+    elif isinstance(ast, list):
+        # Add a new line to the end, if needed
+        elements = [convert_html(i) for i in ast]
+        if (not isinstance(elements[-1], str) or
+            elements[-1] and elements[-1][-1] != '\n'):
+            elements.append('\n')
+
+        return etree.tostring(E(root_tag, *elements),
+                              pretty_print=pretty_print).decode("utf-8")
+    else:
+        return ast
+
+
 def print_ast(ast, level=1):
     """Pretty print an AST with one entry per line and indentation for nested
-    levels."""
+    levels.
+
+    Parameters
+    ----------
+    ast : list of str or list
+        The AST is a list of string or nested lists, which may themselves
+        containt strings or nested lists.
+    level : int, optional
+        The current level of the ast.
+    """
     assert isinstance(ast, list)
 
     print()
@@ -82,17 +148,17 @@ def print_ast(ast, level=1):
                   "  " * level, repr(item))
             continue
 
-        if (hasattr(item, 'tag_content')
-            and not isinstance(item.tag_content, list)):
+        if (hasattr(item, 'content')
+            and not isinstance(item.content, list)):
 
             print("{}.{}:".format(level, count),
                   "  " * level, item)
 
-        if (hasattr(item, 'tag_content')
-            and isinstance(item.tag_content, list)):
+        if (hasattr(item, 'content')
+            and isinstance(item.content, list)):
 
             print("{}.{}:".format(level, count),
-                  "  " * level, item.tag_type, "{")
-            print_ast(item.tag_content, level + 1)
+                  "  " * level, item.name, "{")
+            print_ast(item.content, level + 1)
             print("    " + "  " * level + "}")
 
