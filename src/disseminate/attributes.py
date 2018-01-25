@@ -83,6 +83,8 @@ def set_attribute(attrs, attribute, method='r'):
     ...                'red', method='a')
     [('class', 'base bttnred'), ('style', 'media'), 'red', 'red']
     """
+    attrs = [] if attrs is None else attrs
+
     if method == 'a':
         new_attrs = list(attrs)
         new_attrs.append(attribute)

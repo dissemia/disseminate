@@ -32,28 +32,28 @@ def test_ast_basic_string():
     # Check the AST piece-by-piece
     assert ast[0] == test[0:len(ast[0])] # string
 
-    assert isinstance(ast[1], Tag) and ast[1].tag_type == 'b' # b tag
+    assert isinstance(ast[1], Tag) and ast[1].name == 'b' # b tag
 
     assert isinstance(ast[2], str) # string
 
-    assert isinstance(ast[3], Tag) and ast[3].tag_type == 'marginfig'
-    assert isinstance(ast[3].tag_content, list)  # margin tag has subtags
+    assert isinstance(ast[3], Tag) and ast[3].name == 'marginfig'
+    assert isinstance(ast[3].content, list)  # margin tag has subtags
 
     assert isinstance(ast[3][0], str) # string
 
-    assert isinstance(ast[3][1], Tag) and ast[3][1].tag_type == 'img'
-    assert not ast[3][1].tag_content  # img contents should be parsed and emptu
+    assert isinstance(ast[3][1], Tag) and ast[3][1].name == 'img'
+    assert not ast[3][1].content  # img contents should be parsed and empty
 
     assert isinstance(ast[3][2], str)  # string
 
-    assert isinstance(ast[3][3], Tag) and ast[3][3].tag_type == 'caption'
-    assert isinstance(ast[3][3].tag_content, list)  # contents includes
+    assert isinstance(ast[3][3], Tag) and ast[3][3].name == 'caption'
+    assert isinstance(ast[3][3].content, list)  # contents includes
                                                     # strings and tags
 
     assert isinstance(ast[3][3][0], str) # string
 
-    assert isinstance(ast[3][3][1], Tag) and ast[3][3][1].tag_type == 'i'
-    assert ast[3][3][1].tag_content == "first"  # i contents
+    assert isinstance(ast[3][3][1], Tag) and ast[3][3][1].name == 'i'
+    assert ast[3][3][1].content == "first"  # i contents
 
     assert isinstance(ast[3][3][2], str)  # string
 
@@ -106,4 +106,3 @@ def test_basic_html_conversion():
 
     with pytest.raises(StopIteration):
         e7 = next(root_iter)
-    
