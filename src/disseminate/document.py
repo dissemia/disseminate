@@ -3,11 +3,8 @@ Classes and functions for rendering documents.
 """
 import os.path
 
-import regex
-
 from .ast import process_ast
 from .tags import Tag
-from . import settings
 
 
 def process_tag_ast(ast, target):
@@ -43,7 +40,16 @@ class DocumentError(Exception):
 
 
 class Document(object):
-    """A document rendered from a source file or string.
+    """A document rendered from a source file to a target file.
+
+    Parameters
+    ----------
+    src_filepath : str
+        The path (relative to the current directory) for the document (markup
+        source) file of this document.
+    target_filepath : str
+        The path (relative to the project_root directory) for the formatted
+        document.
 
     Attributes
     ----------
@@ -65,29 +71,21 @@ class Document(object):
     """
 
     src_filepath = None
-    src = None
+    target_filepath = None
     target = None
 
     string_processors = []
     ast_processors = []
     ast_post_processors = []
 
-    def __init__(self, src=None, filepath=None, target=settings.default_target):
-        """Initialize a document from the given input.
+    def __init__(self, src_filepath, target_filepath):
+        self.src_filepath = src_filepath
+        self.target_filepath = target_filepath
+        self.target = os.path.splitext(target_filepath)[-1]  # ex: '.html'
 
-        Parameters
-        ----------
-        input: str
-            A filepath for a document (markup source) file or a string
-            comprising markup source data.
-        target: str, optional
-            The target extension of the rendered document. (ex: '.html')
-        """
-        assert src is not None or filepath is not None
-
-        self.src = src
-        self.src_filepath = filepath
-        self.target = target if target.startswith(".") else "." + target
+        if self.target == "":  # can't be the empty string
+            msg = "The document '{}' must have a valid extension."
+            raise DocumentError(msg.format(src_filepath))
 
     def process_string(self, string, target, **kwargs):
         """Process the string before conversion to the AST.
