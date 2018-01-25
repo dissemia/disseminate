@@ -412,6 +412,7 @@ class Tree(object):
         template : :obj:`jinga2.environment.Template`
             A template object.
         """
+        raise NotImplementedError
 
     def render(self, *documents):
         """Render documents.
@@ -434,7 +435,7 @@ class Tree(object):
         # Get contexts for each document
         # Get templates
         # render documents
-        pass
+        raise NotImplementedError
 
     #def render_documents(self):
         """Converts documents.
