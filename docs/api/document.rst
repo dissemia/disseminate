@@ -4,4 +4,4 @@ Document
 .. autoclass:: disseminate.Document
     :members:
 
-.. autoclass:: disseminate.DocumentError
+.. autoclass:: disseminate.document.DocumentError
