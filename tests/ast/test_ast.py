@@ -4,7 +4,7 @@ Tests for the ast sub-module.
 import pytest
 from lxml import etree
 
-from disseminate.ast import process_ast, convert_html, print_ast
+from disseminate.ast import process_ast, convert_html, print_ast, ParseError
 from disseminate.tags import Tag
 
 
@@ -20,6 +20,15 @@ test = """
     This is a @13C variable, but this is an email address: justin@lorieau.com
 
     Here is a new paragraph."""
+
+test_invalid = """
+    This is my test document. It has multiple paragraphs.
+
+    Here is a new one with @b{bolded} text as an example.
+    @marginfig[offset=-1.0em]{
+      @img{media/files}
+      @caption{This is my @i{first} figure.}
+"""
 
 
 def test_ast_basic_string():
@@ -106,3 +115,16 @@ def test_basic_html_conversion():
 
     with pytest.raises(StopIteration):
         e7 = next(root_iter)
+
+
+def test_ast_validation():
+    """Test the correct validation when parsing an AST."""
+
+    # Process a string with an open tag
+    with pytest.raises(ParseError) as e:
+        ast = process_ast(test_invalid)
+
+    # The error should pop up in line 4
+    assert "line 4" in str(e.value)
+
+    # Validate closing bracket
