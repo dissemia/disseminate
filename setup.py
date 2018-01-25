@@ -39,9 +39,9 @@ setup(
 #    packages=find_packages('src',),
 #                           exclude=['contrib', 'docs', 'tests']),
     #package_dir={'': 'src'},
-    install_requires=['regex'],
+    install_requires=['regex', 'jinja2'],
     extras_require={  # Optional
-        'dev': ['sphinx'],
+        'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc'],
         'test': ['pytest'],
     },
     # package_data={  # Optional
