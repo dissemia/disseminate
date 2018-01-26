@@ -5,7 +5,7 @@ import glob
 import os.path
 import regex
 
-#from .document import Document
+from .document import Document
 from . import settings
 
 
@@ -90,9 +90,9 @@ class Tree(object):
              'src/sub1': 'src/index.tree'}
     target : str
         The extension of the target documents. (ex: 'html')
-    src_paths : list of str
+    src_filepaths : list of str
         The document (markup source) paths, including filenames.
-    target_paths : list of str
+    target_filepaths : list of str
         The target paths, including filenames, of the generated documents.
     documents : dict
         A dict with the documents. The keys are target paths and the values
@@ -102,17 +102,20 @@ class Tree(object):
     subpath = None
     managed_dirs = None
     target = None
-    src_paths = None
-    target_paths = None
+    template = None
+    src_filepaths = None
+    target_filepaths = None
     documents = None
     global_context = None
 
     def __init__(self, subpath=None, target=None):
         self.subpath = subpath
         self.target = target if target is not None else settings.default_target
-        self.src_paths = []
-        self.target_paths = []
+        self.template = None
+        self.src_filepaths = []
+        self.target_filepaths = []
         self.global_context = {}
+        self._project_root = None
 
     def project_root(self, subpath=None):
         """Evaluate the path (directory) of the project root.
@@ -133,19 +136,25 @@ class Tree(object):
         project_root : str
             The string for the project root
         """
+        # Cache the project_root
+        if getattr(self, '_project_root', None) is not None:
+            return self._project_root
+
         # The project_root is simply the current path if strip_base_project_path
         # is not True
         if not settings.strip_base_project_path:
-            return '.'
+            self._project_root = '.'
+            return self._project_root
 
         # Load the working directories
         self.find_managed_dirs(subpath)
 
         # Get all of the unique paths for the documents
-        paths = sorted(set([os.path.split(i)[0] for i in self.src_paths]),
+        paths = sorted(set([os.path.split(i)[0] for i in self.src_filepaths]),
                        key=len)
         if len(paths) == 0:
-            return '.'
+            self._project_root = '.'
+            return self._project_root
 
         # Go directory-by-directory to see if they're common to all paths
         reference_path = paths[0]
@@ -166,7 +175,8 @@ class Tree(object):
             else:
                 break
 
-        return best_path
+        self._project_root = best_path
+        return self._project_root
 
     def find_managed_dirs(self, subpath=None, reload=False):
         """Populate the managed directories (self.managed_dirs) by locate index
@@ -254,8 +264,8 @@ class Tree(object):
         -------
         None
         """
-        if not isinstance(self.src_paths, list):
-            self.src_paths = []
+        if not isinstance(self.src_filepaths, list):
+            self.src_filepaths = []
 
         # Populate the managed_dirs
         self.find_managed_dirs(subpath)
@@ -270,14 +280,14 @@ class Tree(object):
         # Now load the indexes to get the document (markup) files.
         for index_file in index_files:
             new_documents = load_index_files(index_file)
-            self.src_paths += new_documents
+            self.src_filepaths += new_documents
 
             # Check for duplicates
-            documents_set = set(self.src_paths)
-            if len(documents_set) < len(self.src_paths):  # a dupe exists
+            documents_set = set(self.src_filepaths)
+            if len(documents_set) < len(self.src_filepaths):  # a dupe exists
                 # Find and report the duplicate
                 seen = set()
-                for i in self.src_paths:
+                for i in self.src_filepaths:
                     if i in seen:
                         msg = "The file '{}' in index tree '{}' is duplicated."
                         raise TreeException(msg.format(i, index_file))
@@ -310,8 +320,8 @@ class Tree(object):
         None
         """
         subpath = subpath if subpath is not None else self.subpath
-        if not isinstance(self.src_paths, list):
-            self.src_paths = []
+        if not isinstance(self.src_filepaths, list):
+            self.src_filepaths = []
 
         # Populate the managed_dirs
         self.find_managed_dirs(subpath)
@@ -340,10 +350,10 @@ class Tree(object):
         # Join the filepaths and add them to the documents
         filepaths = [os.path.join(*i) for i in filepaths]
 
-        self.src_paths += filepaths
+        self.src_filepaths += filepaths
 
         # Check to make sure there are no duplicates. (sanity check)
-        assert len(self.src_paths) == len(set(self.src_paths))
+        assert len(self.src_filepaths) == len(set(self.src_filepaths))
 
         return None
 
@@ -367,22 +377,28 @@ class Tree(object):
         -------
         None
         """
-        self.src_paths = []
+        self.src_filepaths = []
         self.find_documents_in_indexes(subpath=subpath)
         self.find_documents_by_type(subpath=subpath)
-        self.convert_target_paths(subpath=subpath)
 
-    def convert_target_paths(self, subpath=None):
-        """Converts the src_filepaths to the target_filepaths using the
-        project_root method (:meth:`Tree.project_root`) and the target type.
+    def convert_target_path(self, src_filepath, subpath=None):
+        """Converts the src_filepath to a target_filepath using the
+        project_root (:meth:`Tree.project_root`) and the target type.
 
+        Parameters
+        ----------
+        src_filepath : str
+            A filename for a document (markup source) file. This file should
+            exist.
         subpath : str, optional
             If specified, only look in the given subpath directory. If this is
             not specified, the value of self.subpath will be searched as well.
-        """
-        if not isinstance(self.target_paths, list):
-            self.target_paths = []
 
+        Returns
+        -------
+        target_filepath : str
+            The target_filepath of the target file to render.
+        """
         # Get the project root
         project_root = self.project_root(subpath=subpath)
 
@@ -390,16 +406,14 @@ class Tree(object):
         target = (self.target if self.target.startswith('.') else
                   '.' + self.target)
 
-        for i in self.src_paths:
-            # Get a new path relative to the project_root
-            relative_path = os.path.relpath(i, project_root)
+        # Get a new path relative to the project_root
+        relative_path = os.path.relpath(src_filepath, project_root)
 
-            # Replace the extension with the target extension
-            split_ext = list(os.path.splitext(relative_path)[:-1])
-            split_ext.append(target)
-            new_path = ''.join(split_ext)
-            if new_path not in self.target_paths:
-                self.target_paths.append(new_path)
+        # Replace the extension with the target extension
+        split_ext = list(os.path.splitext(relative_path)[:-1])
+        split_ext.append(target)
+        new_path = ''.join(split_ext)
+        return new_path
 
     def find_template(self, document):
         """Locate the template for a given document.
@@ -416,42 +430,28 @@ class Tree(object):
         """
         raise NotImplementedError
 
-    def render(self, *documents):
+    def render(self):
         """Render documents.
 
-        This function function renders one, multiple or all documents.
+        This function function renders the src_filepaths documents.
 
-        ..note: This function populates the self.documents attribute.
-
-        Parameters
-        ----------
-        documents : list
-            Documents can either be:
-            - A document_path for a document (markup source) file. (i.e. .dm
-              extension)
-            - A target_path for a document. (i.e. .html extension)
-            - A document object (:obj:`disseminate.Document`)
-            - (empty) In this case, all the documents in the document_path
-              will be rendered.
+        ..note: This function populates the self.target_filepaths attribute.
         """
-        # Generate the global context, if needed
+        # Generate the global context
         self.global_context = (self.global_context
                                if isinstance(self.global_context, dict)
                                else dict())
 
         # Get templates
+
         # render documents
-        raise NotImplementedError
+        for src_filepath in self.src_filepaths:
+            target_filepath = self.convert_target_path(src_filepath)
+            doc = Document(src_filepath, target_filepath,
+                           template=self.template,
+                           global_context=self.global_context)
+            doc.render()
+            self.target_filepaths.append(target_filepath)
 
-    #def render_documents(self):
-        """Converts documents.
-
-        Processes self.src_paths into self.documents.
-        """
-
-    #def html(self):
-
-    #def_get_global_contexts
-
-    #def get_targets
+        return True
 
