@@ -24,7 +24,8 @@ re_tag = regex.compile(r'(@(?P<tag>[A-Za-z]\w*)'
                        r'{(?P<content>(?>[^{}@]+|(?R))*)})')
 
 
-def process_ast(s, local_context=None, global_context=None, level=1):
+def process_ast(s, local_context=None, global_context=None,
+                src_filepath=None, level=1):
     """Parses a string into an AST comprising a list of lists with strings and
     tags.
 
@@ -32,6 +33,12 @@ def process_ast(s, local_context=None, global_context=None, level=1):
     ----------
     s : str
         The string to process.
+    local_context : dict, optional
+        The context with values for the current document. (local)
+    global_context : dict, optional
+        The context with values for all documents in a project. (global)
+    src_filepath : str, optional
+        The path for the document (source markup) file being processed.
     level : int, optional
         The current level of the ast.
 
@@ -60,7 +67,7 @@ def process_ast(s, local_context=None, global_context=None, level=1):
     ast = []
     current_pos = 0
     factory = TagFactory()
-    validator = ASTValidator()
+    validator = ASTValidator(src_filepath=src_filepath)
 
     for m in re_tag.finditer(s):
         # Find the match's start and end positions in the string
@@ -82,7 +89,7 @@ def process_ast(s, local_context=None, global_context=None, level=1):
         d = m.groupdict()
         tag_name = m['tag']
         tag_content = process_ast(m['content'], local_context, global_context,
-                                  level + 1)
+                                  src_filepath, level + 1)
         tag_attributes = m['attributes']
         ast.append(factory.tag(tag_name=tag_name,
                                tag_content=tag_content,
@@ -101,7 +108,8 @@ def process_ast(s, local_context=None, global_context=None, level=1):
 class ASTValidator:
     """A class to validate ASTs."""
 
-    def __init__(self, line_no=1):
+    def __init__(self, src_filepath, line_no=1):
+        self.src_filepath = src_filepath
         self.line_no = line_no
 
     def validate(self, string, match=None):
@@ -156,9 +164,16 @@ class ASTValidator:
             # Find its line number
             self.line_no += problem_string.count("\n")
 
-            # Raise an exception
-            return "Tag not closed on line {}: {}".format(self.line_no,
-                                                          problem_string)
+            # Return the error message
+            if isinstance(self.src_filepath, str):
+                msg = "({}) Tag not closed on line {}: {}"
+                msg = msg.format(self.src_filepath, self.line_no,
+                                 problem_string)
+            else:
+                msg = "Tag not closed on line {}: {}"
+                msg = msg.format(self.line_no, problem_string)
+
+            return msg
         else:
             return True
 

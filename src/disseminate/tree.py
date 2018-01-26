@@ -94,23 +94,23 @@ class Tree(object):
         The document (markup source) paths, including filenames.
     target_filepaths : list of str
         The target paths, including filenames, of the generated documents.
-    documents : dict
-        A dict with the documents. The keys are target paths and the values
-        are the document objects themselves (:obj:`disseminate.Document`).
+    global_context : dict
+        The global context to store variables shared between all documents.
     """
 
     subpath = None
     managed_dirs = None
     target = None
+    output_dir = None
     template = None
     src_filepaths = None
     target_filepaths = None
-    documents = None
     global_context = None
 
-    def __init__(self, subpath=None, target=None):
+    def __init__(self, subpath=None, target=None, output_dir=None):
         self.subpath = subpath
         self.target = target if target is not None else settings.default_target
+        self.output_dir = output_dir
         self.template = None
         self.src_filepaths = []
         self.target_filepaths = []
@@ -208,6 +208,10 @@ class Tree(object):
             return None
         self.managed_dirs = dict()
         subpath = subpath if subpath is not None else self.subpath
+
+        # expand the user for the subpath directory
+        if isinstance(subpath, str):
+            subpath = os.path.expanduser(subpath)
 
         # Construct the glob pattern to search for index.tree files
         if subpath:
@@ -320,6 +324,11 @@ class Tree(object):
         None
         """
         subpath = subpath if subpath is not None else self.subpath
+
+        # expand the user for the subpath directory
+        if isinstance(subpath, str):
+            subpath = os.path.expanduser(subpath)
+
         if not isinstance(self.src_filepaths, list):
             self.src_filepaths = []
 
@@ -382,6 +391,7 @@ class Tree(object):
         self.find_documents_by_type(subpath=subpath)
 
     def convert_target_path(self, src_filepath, target=None,
+                            output_dir = None,
                             segregate_target=settings.segregate_targets,
                             subpath=None):
         """Converts the src_filepath to a target_filepath using the
@@ -394,6 +404,8 @@ class Tree(object):
             exist.
         target : str, optional
             The extension of the target documents. (ex: '.html')
+        output_dir : str, optional
+            If specified, files will be saved in this directory.
         segregate_target : bool, optional
             If True, rendered target documents will be saved in a subdirectory
             with the target extension's name (ex: 'html' 'tex')
@@ -410,8 +422,16 @@ class Tree(object):
         project_root = self.project_root(subpath=subpath)
 
         # Get the target format. ex: '.html'
-        target = (self.target if self.target.startswith('.') else
-                  '.' + self.target)
+        target = target if isinstance(target, str) else self.target
+        target = target if target.startswith('.') else '.' + target
+
+        # Get the output_directory, if specified
+        output_dir = (output_dir if isinstance(output_dir, str) else
+                      self.output_dir)
+
+        # expand the user for the output directory
+        if output_dir is not None:
+            output_dir = os.path.expanduser(output_dir)
 
         # Get a new path relative to the project_root
         relative_path = os.path.relpath(src_filepath, project_root)
@@ -420,10 +440,15 @@ class Tree(object):
         if segregate_target:
             relative_path = os.path.join(target.strip('.'), relative_path)
 
+        # Set path to output_dir, if specified
+        if output_dir is not None:
+            relative_path = os.path.join(output_dir, relative_path)
+
         # Replace the extension with the target extension
         split_ext = list(os.path.splitext(relative_path)[:-1])
         split_ext.append(target)
         new_path = ''.join(split_ext)
+
         return new_path
 
     def find_template(self, document):
@@ -441,12 +466,17 @@ class Tree(object):
         """
         raise NotImplementedError
 
-    def render(self):
+    def render(self, output_dir=None):
         """Render documents.
 
-        This function function renders the src_filepaths documents.
+        This function renders the src_filepaths documents.
 
         ..note: This function populates the self.target_filepaths attribute.
+
+        Parameters
+        ----------
+        output_dir : str, optional
+            If specified, files will be saved in this directory.
         """
         # Generate the global context
         self.global_context = (self.global_context
@@ -457,7 +487,8 @@ class Tree(object):
 
         # render documents
         for src_filepath in self.src_filepaths:
-            target_filepath = self.convert_target_path(src_filepath)
+            target_filepath = self.convert_target_path(src_filepath,
+                                                       output_dir=output_dir)
             doc = Document(src_filepath, target_filepath,
                            template=self.template,
                            global_context=self.global_context)

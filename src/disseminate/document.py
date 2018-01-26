@@ -6,6 +6,7 @@ import os.path
 
 from .ast import process_ast, conversions
 from .tags import Tag
+from .utils import mkdir_p
 from . import settings
 
 
@@ -163,7 +164,8 @@ class Document(object):
         ast = process_tag_ast(ast, target)
         return ast
 
-    def render(self, update_only=settings.update_only):
+    def render(self, update_only=settings.update_only,
+               create_dirs=settings.create_dirs):
         """Convert the src_filepath to a rendered document at target_filepath.
 
         Parameters
@@ -171,6 +173,9 @@ class Document(object):
         update_only : bool, optional
             Only render the file if the target doesn't exist or the target file
             is older than the source file.
+        create_dirs : bool, optional
+            Create directories for the rendered target files, if the directories
+            don't exist.
 
         Returns
         -------
@@ -195,6 +200,10 @@ class Document(object):
                  os.stat(self.target_filepath).st_mtime)):
             return True
 
+        # Check to see if the target directory needs to be created
+        if create_dirs:
+            mkdir_p(self.target_filepath)
+
         # Load the string from the src_filepath,
         with open(self.src_filepath) as f:
             string = f.read()
@@ -205,7 +214,8 @@ class Document(object):
 
         # Process and validate the AST
         ast = process_ast(s=string, local_context=self.local_context,
-                          global_context=self.global_context)
+                          global_context=self.global_context,
+                          src_filepath=self.src_filepath)
 
         # Run individual tag process functions
 

@@ -2,6 +2,7 @@
 Tests for the index tree
 """
 import pytest
+import os.path
 
 from disseminate import Tree
 from disseminate.tree import TreeException, load_index_files
@@ -333,3 +334,56 @@ def test_target_paths():
         converted_path = tree1.convert_target_path(src_filepath,
                                                    segregate_target=True)
         assert converted_path == target_filepath
+
+    # Now test a customized output directory without target segregation
+    tree1 = Tree(subpath="tests/tree/examples1",
+                 output_dir="tests/tree/examples1")
+    tree1.find_documents()
+
+    # There should be 3 src_filepath files. The following target_filepaths are:
+    target_filepaths = ('tests/tree/examples1/sub1/intro.html',
+                        'tests/tree/examples1/sub1/appendix.html',
+                        'tests/tree/examples1/index.html')
+    for src_filepath, target_filepath in zip(tree1.src_filepaths,
+                                             target_filepaths):
+        converted_path = tree1.convert_target_path(src_filepath,
+                                                   segregate_target=False)
+        assert converted_path == target_filepath
+
+    # And test a customized output directory with target segregation
+    tree1 = Tree(subpath="tests/tree/examples1",
+                 output_dir="tests/tree/examples1")
+    tree1.find_documents()
+
+    # There should be 3 src_filepath files. The following target_filepaths are:
+    target_filepaths = ('tests/tree/examples1/html/sub1/intro.html',
+                        'tests/tree/examples1/html/sub1/appendix.html',
+                        'tests/tree/examples1/html/index.html')
+    for src_filepath, target_filepath in zip(tree1.src_filepaths,
+                                             target_filepaths):
+        converted_path = tree1.convert_target_path(src_filepath,
+                                                   segregate_target=True)
+        assert converted_path == target_filepath
+
+
+def test_render(tmpdir):
+    """Tests the render method."""
+    output_dir = tmpdir.realpath()
+
+    # The 'examples1' directory contains an index.tree in the 'examples1/sub1'
+    # directory and no index.tree in the root directory 'examples1'.
+    # Consequently, 'examples1/sub' is considered managed and 'examples1' is
+    # not. The 'examples1/' directory only contains on document (source markup)
+    # file.
+    subpath = "tests/tree/examples1"
+    tree1 = Tree(subpath=subpath, output_dir=output_dir)
+    tree1.find_documents()
+    tree1.render()
+
+    # Check to see that the targets were all rendered
+    target_filepaths = (output_dir + '/html/sub1/intro.html',
+                        output_dir + '/html/sub1/appendix.html',
+                        output_dir + '/html/index.html')
+    for path1, path2 in zip(tree1.target_filepaths, target_filepaths):
+        assert path1 == path2
+        assert os.path.isfile(path1)

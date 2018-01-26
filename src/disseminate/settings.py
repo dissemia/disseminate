@@ -11,6 +11,10 @@ document_max_size = 204800  # 200kB
 #: files will be rendered.
 update_only = True
 
+#: If True, directories for target files will be created, if they not already
+#: exist
+create_dirs = True
+
 #: Tree Defaults
 #: -------------
 
