@@ -163,18 +163,19 @@ class Document(object):
         ast = process_tag_ast(ast, target)
         return ast
 
-    def render(self):
+    def render(self, update_only=settings.update_only):
         """Convert the src_filepath to a rendered document at target_filepath.
 
         Parameters
         ----------
-        input: str
-            A string or filename with text to convert.
+        update_only : bool, optional
+            Only render the file if the target doesn't exist or the target file
+            is older than the source file.
 
         Returns
         -------
-        formatted_str: str
-            The lexed and parsed string.
+        bool
+            True, if the render was successful.
         """
         # Check to make sure the file is reasonable
         if not os.path.isfile(self.src_filepath):  # file must exist
@@ -187,6 +188,12 @@ class Document(object):
             raise DocumentError(msg.format(self.src_filepath,
                                            filesize / 1024,
                                            settings.document_max_size / 1024))
+
+        # Check to see if the file needs to be updated
+        if (update_only and os.path.isfile(self.target_filepath) and
+                (os.stat(self.src_filepath).st_mtime >
+                 os.stat(self.target_filepath).st_mtime)):
+            return True
 
         # Load the string from the src_filepath,
         with open(self.src_filepath) as f:

@@ -18,7 +18,11 @@ index_filename = 'index.tree'
 strip_base_project_path = True
 
 #: The default target format of rendered files
-default_target = 'html'
+default_target = '.html'
+
+#: If True, only target files that don't exist or are older than the source
+#: files will be rendered.
+update_only = True
 
 #: AST Processing
 #: --------------
