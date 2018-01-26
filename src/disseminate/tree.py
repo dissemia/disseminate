@@ -89,7 +89,7 @@ class Tree(object):
         ex: {'src/': 'src/index.tree'
              'src/sub1': 'src/index.tree'}
     target : str
-        The extension of the target documents. (ex: 'html')
+        The extension of the target documents. (ex: '.html')
     src_filepaths : list of str
         The document (markup source) paths, including filenames.
     target_filepaths : list of str
@@ -381,7 +381,9 @@ class Tree(object):
         self.find_documents_in_indexes(subpath=subpath)
         self.find_documents_by_type(subpath=subpath)
 
-    def convert_target_path(self, src_filepath, subpath=None):
+    def convert_target_path(self, src_filepath, target=None,
+                            segregate_target=settings.segregate_targets,
+                            subpath=None):
         """Converts the src_filepath to a target_filepath using the
         project_root (:meth:`Tree.project_root`) and the target type.
 
@@ -390,6 +392,11 @@ class Tree(object):
         src_filepath : str
             A filename for a document (markup source) file. This file should
             exist.
+        target : str, optional
+            The extension of the target documents. (ex: '.html')
+        segregate_target : bool, optional
+            If True, rendered target documents will be saved in a subdirectory
+            with the target extension's name (ex: 'html' 'tex')
         subpath : str, optional
             If specified, only look in the given subpath directory. If this is
             not specified, the value of self.subpath will be searched as well.
@@ -408,6 +415,10 @@ class Tree(object):
 
         # Get a new path relative to the project_root
         relative_path = os.path.relpath(src_filepath, project_root)
+
+        # Segregate the targets, if specified
+        if segregate_target:
+            relative_path = os.path.join(target.strip('.'), relative_path)
 
         # Replace the extension with the target extension
         split_ext = list(os.path.splitext(relative_path)[:-1])

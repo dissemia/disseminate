@@ -268,6 +268,8 @@ def test_project_root():
 def test_target_paths():
     """Tests the the target paths are correctly set."""
 
+    # First we try getting paths without the segregate_targets option
+
     # The 'examples1' directory contains an index.tree in the 'examples1/sub1'
     # directory and no index.tree in the root directory 'examples1'.
     # Consequently, 'examples1/sub' is considered managed and 'examples1' is
@@ -282,7 +284,9 @@ def test_target_paths():
                         'index.html')
     for src_filepath, target_filepath in zip(tree1.src_filepaths,
                                              target_filepaths):
-        assert tree1.convert_target_path(src_filepath) == target_filepath
+        converted_path = tree1.convert_target_path(src_filepath,
+                                                   segregate_target=False)
+        assert converted_path == target_filepath
 
     # This time we'll try the same thing, but with a '.tex' target
     tree1 = Tree(subpath="tests/tree/examples1", target='tex')
@@ -295,4 +299,37 @@ def test_target_paths():
                         'index.tex')
     for src_filepath, target_filepath in zip(tree1.src_filepaths,
                                              target_filepaths):
-        assert tree1.convert_target_path(src_filepath) == target_filepath
+        converted_path = tree1.convert_target_path(src_filepath,
+                                                   segregate_target=False)
+        assert converted_path == target_filepath
+
+    # Next we try the same thing, but with the segregated_target option
+
+    # examples1
+    tree1 = Tree(subpath="tests/tree/examples1")
+    tree1.find_documents()
+
+    # There should be 3 src_filepath files. The following target_filepaths are:
+    target_filepaths = ('html/sub1/intro.html',
+                        'html/sub1/appendix.html',
+                        'html/index.html')
+    for src_filepath, target_filepath in zip(tree1.src_filepaths,
+                                             target_filepaths):
+        converted_path = tree1.convert_target_path(src_filepath,
+                                                   segregate_target=True)
+        assert converted_path == target_filepath
+
+    # This time we'll try the same thing, but with a '.tex' target
+    tree1 = Tree(subpath="tests/tree/examples1", target='tex')
+    tree1.find_documents()
+
+    # There should be 3 target_path files, relative to the project root
+    # 'tests/tree/examples/'
+    target_filepaths = ('tex/sub1/intro.tex',
+                        'tex/sub1/appendix.tex',
+                        'tex/index.tex')
+    for src_filepath, target_filepath in zip(tree1.src_filepaths,
+                                             target_filepaths):
+        converted_path = tree1.convert_target_path(src_filepath,
+                                                   segregate_target=True)
+        assert converted_path == target_filepath

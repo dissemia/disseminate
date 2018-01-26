@@ -7,6 +7,10 @@ document_extension = '.dm'
 #: Maximum file size
 document_max_size = 204800  # 200kB
 
+#: If True, only target files that don't exist or are older than the source
+#: files will be rendered.
+update_only = True
+
 #: Tree Defaults
 #: -------------
 
@@ -20,9 +24,10 @@ strip_base_project_path = True
 #: The default target format of rendered files
 default_target = '.html'
 
-#: If True, only target files that don't exist or are older than the source
-#: files will be rendered.
-update_only = True
+#: If True, rendered target documents will be saved in a subdirectory with
+#: the target extension's name (ex: 'html' 'tex')
+segregate_targets = True
+
 
 #: AST Processing
 #: --------------
