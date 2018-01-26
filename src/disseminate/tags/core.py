@@ -22,7 +22,8 @@ class TagFactory(object):
         # Initialize the tag types dict
         self.tag_types = {c.__name__.lower():c for c in Tag.__subclasses__()}
 
-    def tag(self, tag_name, tag_content, tag_attributes):
+    def tag(self, tag_name, tag_content, tag_attributes,
+                  local_context, global_context):
         """Return the approriate tag, give a tag_type and tag_content"""
         # Just return the content if it's an unallowed tag type
         if (isinstance(self.allowed_tags, list)
@@ -35,7 +36,10 @@ class TagFactory(object):
             cls = self.tag_types[small_tag_type]
         else:
             cls = Tag
-        return cls(tag_name, tag_content, tag_attributes)
+
+        return cls(name=tag_name, content=tag_content,
+                   attributes=tag_attributes,
+                   local_context=local_context, global_context=global_context)
 
 
 class Tag(object):
@@ -56,23 +60,32 @@ class Tag(object):
     process_ast
         If specified, the tag will be replace by the one (or list of) tags and
         strings returned.
+    html
+        If specified, using this function to generate the html element
+        (:obj:`lxml.builder.E`) instead of the default.
     """
 
     name = None
     content = None
     attributes = None
+    local_context = None
 
     process_ast = None # takes target, returns a tag or list of tags.
+    html = None
+    tex = None
 
     html_required_attributes = None
 
-    def __init__(self, name, content, attributes):
+    def __init__(self, name, content, attributes,
+                 local_context, global_context):
         self.name = name
         self.attributes = attributes
         if isinstance(content, list) and len(content) == 1:
             self.content = content[0]
         else:
             self.content = content
+        self.local_context = local_context
+        self.global_context = global_context
 
     def __repr__(self):
         return "{type}{{{content}}}".format(type=self.name,
@@ -87,7 +100,7 @@ class Tag(object):
         return self.content[item]
 
     def context(self):
-        """
+        """Sets the global_context and returns a local context for this tag.
 
         Returns
         -------

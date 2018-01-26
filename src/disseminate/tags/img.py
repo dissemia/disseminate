@@ -8,8 +8,10 @@ from disseminate.attributes import set_attribute
 class Img(Tag):
     """The img tag for inserting images."""
 
-    def __init__(self, name, content, attributes, local_context):
-        super(Img, self).__init__(name, content, attributes, local_context)
+    def __init__(self, name, content, attributes,
+                 local_context, global_context):
+        super(Img, self).__init__(name, content, attributes, local_context,
+                                  global_context)
 
         # Place the image location in the src attribute
         if self.attributes is None:

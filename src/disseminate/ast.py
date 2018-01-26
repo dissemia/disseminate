@@ -24,7 +24,7 @@ re_tag = regex.compile(r'(@(?P<tag>[A-Za-z]\w*)'
                        r'{(?P<content>(?>[^{}@]+|(?R))*)})')
 
 
-def process_ast(s, local_context=None, level=1):
+def process_ast(s, local_context=None, global_context=None, level=1):
     """Parses a string into an AST comprising a list of lists with strings and
     tags.
 
@@ -52,8 +52,10 @@ def process_ast(s, local_context=None, level=1):
         msg = ("The maximum depth of '{}' has been reached in the AST. "
                "Additional levels can be set by the 'settings.ast_max_depth'.")
         raise AstException(msg.format(settings.ast_max_depth))
-    if not isinstance(local_context, dict):
-        local_context = dict()
+    local_context = (local_context if isinstance(local_context, dict)
+                     else dict())
+    global_context = (global_context if isinstance(global_context, dict)
+                      else dict())
 
     ast = []
     current_pos = 0
@@ -79,12 +81,14 @@ def process_ast(s, local_context=None, level=1):
         # Parse the match's content
         d = m.groupdict()
         tag_name = m['tag']
-        tag_content = process_ast(m['content'], local_context, level + 1)
+        tag_content = process_ast(m['content'], local_context, global_context,
+                                  level + 1)
         tag_attributes = m['attributes']
         ast.append(factory.tag(tag_name=tag_name,
                                tag_content=tag_content,
                                tag_attributes=tag_attributes,
-                               local_context=local_context))
+                               local_context=local_context,
+                               global_context=global_context))
 
     # Add the end of the string, if it's valid
     string = s[current_pos:]
@@ -178,30 +182,6 @@ class ASTValidator:
     #     """
 
 
-
-def validate_closed_tags(string):
-    """Validates that all tags are closed in a given string.
-
-    Parameters
-    -------
-    string : str
-        A string in an AST that should be validated
-
-    Return
-    ------
-    bool or span
-        If True is returned, then the string is validated
-        If a span is returns (start, end), then the following range in
-        the string is malformed.
-    """
-    # Look for malformed tags (i.e. tags with open braces)
-    m = e_opentag.search(string)
-    if m:
-        return m.span()
-    else:
-        return True
-
-
 def convert_html(ast, root_tag=settings.html_root_tag,
                  pretty_print=settings.html_pretty):
     """Converts an ast to html.
@@ -254,6 +234,10 @@ def convert_html(ast, root_tag=settings.html_root_tag,
                               pretty_print=pretty_print).decode("utf-8")
     else:
         return ast
+
+
+conversions = {'.html': convert_html}
+
 
 
 def print_ast(ast, level=1):

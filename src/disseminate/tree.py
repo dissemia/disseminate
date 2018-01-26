@@ -105,12 +105,14 @@ class Tree(object):
     src_paths = None
     target_paths = None
     documents = None
+    global_context = None
 
     def __init__(self, subpath=None, target=None):
         self.subpath = subpath
         self.target = target if target is not None else settings.default_target
         self.src_paths = []
         self.target_paths = []
+        self.global_context = {}
 
     def project_root(self, subpath=None):
         """Evaluate the path (directory) of the project root.
@@ -432,7 +434,11 @@ class Tree(object):
             - (empty) In this case, all the documents in the document_path
               will be rendered.
         """
-        # Get contexts for each document
+        # Generate the global context, if needed
+        self.global_context = (self.global_context
+                               if isinstance(self.global_context, dict)
+                               else dict())
+
         # Get templates
         # render documents
         raise NotImplementedError
