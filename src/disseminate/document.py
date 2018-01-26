@@ -214,7 +214,7 @@ class Document(object):
 
         # Run individual tag process functions
         # At this stage, the tags may depend on other documents through the
-        # global_context
+        # global_context. (i.e. it must be done synchronously
 
         # Run the AST processing functions
         for processor in self.ast_processors:
@@ -226,7 +226,8 @@ class Document(object):
         convert_func = conversions.get(self.target, None)
         output_string = convert_func(ast)
 
-        # get a template file template
+        # get a template file template. The following can be done
+        # asynchronously.
         template = get_template(self.src_filepath, target=self.target)
 
         if template is not None:
