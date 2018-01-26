@@ -4,6 +4,9 @@
 #: The default extension of markup files
 document_extension = '.dm'
 
+#: Maximum file size
+document_max_size = 204800  # 200kB
+
 #: Tree Defaults
 #: -------------
 

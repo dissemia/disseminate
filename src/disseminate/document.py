@@ -1,10 +1,12 @@
 """
 Classes and functions for rendering documents.
 """
+import os
 import os.path
 
-from .ast import process_ast
+from .ast import process_ast, conversions
 from .tags import Tag
+from . import settings
 
 
 def process_tag_ast(ast, target):
@@ -50,38 +52,53 @@ class Document(object):
     target_filepath : str
         The path (relative to the project_root directory) for the formatted
         document.
+    template : A template object
 
     Attributes
     ----------
-    src_filepath : str, optional
-        A filename for a document (markup source) file.
-        Either the src_filepath of src attribute should be set when creating
-        documents.
-    src : str, optional
-        A string to render.
-        Either the src_filepath of src attribute should be set when creating
-        documents.
+    src_filepath : str
+        A filename for a document (markup source) file. This file should exist.
+    target_filepath : str
+        A filename to save the rendered document.
     target : str
         The extension of the target type to use (ex: '.html')
+    template : template obj, optional
+        A template to use for the rendered document.
+    local_context : dict
+        The context with values for the current document. (local)
+    global_context : dict
+        The context with values for all documents in a project. (global)
 
-    string_processors : list of str, **class attribute**
+    string_processors : list of functions, **class attribute**
         A list of functions to process the string before conversion to the
-        AST. These functions simply accept a string argument and are executed
-        in sequence.
+        AST. These functions are executed in sequence and simply accept a
+        string argument and return a processed string.
+    ast_processors : list of functions, **class attribute**
+        A list of functions to process the AST. These functions are executed in
+        sequence and simply accept a AST argument and return a processed AST.
+
     """
 
     src_filepath = None
     target_filepath = None
     target = None
+    template = None
+    local_context = None
+    global_context = None
 
     string_processors = []
     ast_processors = []
     ast_post_processors = []
 
-    def __init__(self, src_filepath, target_filepath):
+    def __init__(self, src_filepath, target_filepath,
+                 template=None, global_context=None):
         self.src_filepath = src_filepath
         self.target_filepath = target_filepath
         self.target = os.path.splitext(target_filepath)[-1]  # ex: '.html'
+        self.template = template
+        self.local_context = dict()
+        self.global_context = (global_context
+                               if isinstance(global_context, dict) else dict())
 
         if self.target == "":  # can't be the empty string
             msg = "The document '{}' must have a valid extension."
@@ -125,17 +142,6 @@ class Document(object):
         ast = process_ast(string)
         return ast
 
-    def context(self):
-        """
-
-        Returns
-        -------
-        global_context, local_context : dict, dict
-            A dict that is accessible from the root context (global) and a
-            dict that is accessible from a local context.
-        """
-        return None, None
-
     def postprocess_ast(self, ast, target, context):
         """Post-process the ast with target-specific options.
 
@@ -157,8 +163,8 @@ class Document(object):
         ast = process_tag_ast(ast, target)
         return ast
 
-    def render(self, input, context=None, template=None):
-        """Convert the input to a formatted string.
+    def render(self):
+        """Convert the src_filepath to a rendered document at target_filepath.
 
         Parameters
         ----------
@@ -170,13 +176,48 @@ class Document(object):
         formatted_str: str
             The lexed and parsed string.
         """
-        # get global contexts
-        # process_string
-        # process_ast
-        # validate_ast
-        # get contexts from tags
+        # Check to make sure the file is reasonable
+        if not os.path.isfile(self.src_filepath):  # file must exist
+            msg = "The source document '{}' must exist."
+            raise DocumentError(msg.format(self.src_filepath))
+        filesize = os.stat(self.src_filepath).st_size
+        if filesize > settings.document_max_size:
+            msg = ("The source document '{}' has a file size ({} kB) "
+                   "that exceeds the maximum setting size of {} kB.")
+            raise DocumentError(msg.format(self.src_filepath,
+                                           filesize / 1024,
+                                           settings.document_max_size / 1024))
+
+        # Load the string from the src_filepath,
+        with open(self.src_filepath) as f:
+            string = f.read()
+
+        # Process the string
+        for processor in self.string_processors:
+            string = processor(string)
+
+        # Process and validate the AST
+        ast = process_ast(s=string, local_context=self.local_context,
+                          global_context=self.global_context)
+
+        # Run individual tag process functions
+
+        # Run the AST processing functions
+        for processor in self.ast_processors:
+            ast = processor(ast)
+
         # postprocess_ast
+
         # render and save to output file
+        convert_func = conversions.get(self.target, None)
+        output_string = convert_func(ast)
+
+        with open(self.target_filepath, 'w') as f:
+            f.write(output_string)
+
+        return True
+
+
 
 """
 # Initialize documents
