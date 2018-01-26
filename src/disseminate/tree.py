@@ -102,7 +102,6 @@ class Tree(object):
     managed_dirs = None
     target = None
     output_dir = None
-    template = None
     src_filepaths = None
     target_filepaths = None
     global_context = None
@@ -111,7 +110,6 @@ class Tree(object):
         self.subpath = subpath
         self.target = target if target is not None else settings.default_target
         self.output_dir = output_dir
-        self.template = None
         self.src_filepaths = []
         self.target_filepaths = []
         self.global_context = {}
@@ -451,21 +449,6 @@ class Tree(object):
 
         return new_path
 
-    def find_template(self, document):
-        """Locate the template for a given document.
-
-        Parameters
-        ----------
-        document: :obj:`disseminate.Document`
-            A document object.
-
-        Returns
-        -------
-        template : :obj:`jinga2.environment.Template`
-            A template object.
-        """
-        raise NotImplementedError
-
     def render(self, output_dir=None):
         """Render documents.
 
@@ -483,14 +466,11 @@ class Tree(object):
                                if isinstance(self.global_context, dict)
                                else dict())
 
-        # Get templates
-
         # render documents
         for src_filepath in self.src_filepaths:
             target_filepath = self.convert_target_path(src_filepath,
                                                        output_dir=output_dir)
             doc = Document(src_filepath, target_filepath,
-                           template=self.template,
                            global_context=self.global_context)
             doc.render()
             self.target_filepaths.append(target_filepath)

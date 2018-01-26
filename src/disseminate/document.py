@@ -6,6 +6,7 @@ import os.path
 
 from .ast import process_ast, conversions
 from .tags import Tag
+from .templates import get_template
 from .utils import mkdir_p
 from . import settings
 
@@ -53,7 +54,6 @@ class Document(object):
     target_filepath : str
         The path (relative to the project_root directory) for the formatted
         document.
-    template : A template object
 
     Attributes
     ----------
@@ -63,8 +63,6 @@ class Document(object):
         A filename to save the rendered document.
     target : str
         The extension of the target type to use (ex: '.html')
-    template : template obj, optional
-        A template to use for the rendered document.
     local_context : dict
         The context with values for the current document. (local)
     global_context : dict
@@ -83,7 +81,6 @@ class Document(object):
     src_filepath = None
     target_filepath = None
     target = None
-    template = None
     local_context = None
     global_context = None
 
@@ -91,12 +88,10 @@ class Document(object):
     ast_processors = []
     ast_post_processors = []
 
-    def __init__(self, src_filepath, target_filepath,
-                 template=None, global_context=None):
+    def __init__(self, src_filepath, target_filepath, global_context=None):
         self.src_filepath = src_filepath
         self.target_filepath = target_filepath
         self.target = os.path.splitext(target_filepath)[-1]  # ex: '.html'
-        self.template = template
         self.local_context = dict()
         self.global_context = (global_context
                                if isinstance(global_context, dict) else dict())
@@ -218,6 +213,8 @@ class Document(object):
                           src_filepath=self.src_filepath)
 
         # Run individual tag process functions
+        # At this stage, the tags may depend on other documents through the
+        # global_context
 
         # Run the AST processing functions
         for processor in self.ast_processors:
@@ -228,6 +225,22 @@ class Document(object):
         # render and save to output file
         convert_func = conversions.get(self.target, None)
         output_string = convert_func(ast)
+
+        # get a template file template
+        template = get_template(self.src_filepath, target=self.target)
+
+        if template is not None:
+            # copy the local_context
+            context = dict(self.local_context)
+
+            # add the global context
+            context['_global'] = self.global_context
+
+            # set additional variables needed for the template
+            context['body'] = output_string
+
+            # generate a new ouput_string
+            output_string = template.render(**context)
 
         with open(self.target_filepath, 'w') as f:
             f.write(output_string)
