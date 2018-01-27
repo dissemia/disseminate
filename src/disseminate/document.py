@@ -114,7 +114,7 @@ class Document(object):
         asynchronously. (i.e. the local_context and global_context may not be
         completed populated while the AST is processed.)
 
-        The cached ast is updated if the source file is updated
+        The cached AST is updated if the source file is updated.
         """
         # Check to make sure the file exists
         if not os.path.isfile(self.src_filepath):  # file must exist
@@ -125,8 +125,8 @@ class Document(object):
         time = stat.st_mtime
 
         if (getattr(self, '_ast', None) is None or
-            getattr(self, '_ast_mtime', None) is None or
-            time > self._ast_mtime):
+           getattr(self, '_ast_mtime', None) is None or
+           time > self._ast_mtime):
             # Check to make sure the file is reasonable
             filesize = stat.st_size
             if filesize > settings.document_max_size:
