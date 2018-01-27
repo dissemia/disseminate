@@ -174,6 +174,11 @@ class Document(object):
         update_only : bool, optional
             Only render the file if the target doesn't exist or the target file
             is older than the source file.
+
+            .. warning:: This function will fail if this document's source
+                         hasn't been updated but it depends on the
+                         global_context of another file that is updated.
+
         create_dirs : bool, optional
             Create directories for the rendered target files, if the directories
             don't exist.
