@@ -13,7 +13,8 @@ def test_basic_conversion_html(tmpdir):
     temp_path = temp_file.strpath
 
     # Load the document and render it with no template
-    doc = Document("tests/document/example1/dummy.dm", temp_path)
+    doc = Document("tests/document/example1/dummy.dm",
+                   {'.html': temp_path})
     doc.render()
 
     # Make sure the output matches the answer key
@@ -22,6 +23,7 @@ def test_basic_conversion_html(tmpdir):
         assert f.read() == g.read()
 
     # An invalid file raises an error
-    doc = Document("tests/document/missing.dm", "missing.html")
-    with pytest.raises(DocumentError):
+    doc = Document("tests/document/missing.dm",
+                   {'.html': temp_path})
+    with pytest.raises(FileNotFoundError):
         doc.render()

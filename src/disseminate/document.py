@@ -51,18 +51,19 @@ class Document(object):
     src_filepath : str
         The path (relative to the current directory) for the document (markup
         source) file of this document.
-    target_filepath : str
-        The path (relative to the project_root directory) for the formatted
-        document.
+    targets : dict
+        A dict with the target extension as keys (ex: '.html') and the value
+        is the target_filepath for that target. (ex: 'html/index.html')
+    global_context : dict, optional
+        The global context to store variables shared between all documents.
 
     Attributes
     ----------
     src_filepath : str
         A filename for a document (markup source) file. This file should exist.
-    target_filepath : str
-        A filename to save the rendered document.
-    target : str
-        The extension of the target type to use (ex: '.html')
+    targets : dict
+        A dict with the target extension as keys (ex: '.html') and the value
+        is the output directory for that target. (ex: 'html/')
     local_context : dict
         The context with values for the current document. (local)
     global_context : dict
@@ -72,15 +73,22 @@ class Document(object):
         A list of functions to process the string before conversion to the
         AST. These functions are executed in sequence and simply accept a
         string argument and return a processed string.
+
+        .. note:: String processors are run asynchronously, and the
+                  local_context and global_context dicts may not be fully
+                  populated.
+
     ast_processors : list of functions, **class attribute**
         A list of functions to process the AST. These functions are executed in
         sequence and simply accept a AST argument and return a processed AST.
 
+        .. note:: AST processors are run asynchronously, and the
+                  local_context and global_context dicts may not be fully
+                  populated.
     """
 
     src_filepath = None
-    target_filepath = None
-    target = None
+    targets = None
     local_context = None
     global_context = None
 
@@ -88,83 +96,69 @@ class Document(object):
     ast_processors = []
     ast_post_processors = []
 
-    def __init__(self, src_filepath, target_filepath, global_context=None):
+    def __init__(self, src_filepath, targets, global_context=None):
         self.src_filepath = src_filepath
-        self.target_filepath = target_filepath
-        self.target = os.path.splitext(target_filepath)[-1]  # ex: '.html'
+        self.targets = targets
         self.local_context = dict()
         self.global_context = (global_context
                                if isinstance(global_context, dict) else dict())
 
-        if self.target == "":  # can't be the empty string
-            msg = "The document '{}' must have a valid extension."
-            raise DocumentError(msg.format(src_filepath))
+        # Private variables
+        self._ast = None
 
-    def process_string(self, string, target, **kwargs):
-        """Process the string before conversion to the AST.
+    def get_ast(self):
+        """Process and return the AST.
 
-        Parameters
-        ----------
-        string : str
-            The pre-processed string in document (markup source) format to
-            further process.
-        **kwargs : dict
-            Keyword arguments to pass to the string_processor functions.
-
-        Returns
-        -------
-        processed_string : str
-            The processed string.
+        This method generates and caches the AST. This step is conducted
+        asynchronously. (i.e. the local_context and global_context may not be
+        completed populated while the AST is processed.)
         """
-        processed_string = string
-        for func in self.string_processors:
-            processed_string = func(processed_string, target, **kwargs)
-        return processed_string
+        if getattr(self, '_ast', None) is None:
+            # Check to make sure the file is reasonable
+            if not os.path.isfile(self.src_filepath):  # file must exist
+                msg = "The source document '{}' must exist."
+                raise DocumentError(msg.format(self.src_filepath))
+            filesize = os.stat(self.src_filepath).st_size
+            if filesize > settings.document_max_size:
+                msg = ("The source document '{}' has a file size ({} kB) "
+                       "that exceeds the maximum setting size of {} kB.")
+                raise DocumentError(msg.format(self.src_filepath,
+                                            filesize / 1024,
+                                            settings.document_max_size / 1024))
 
-    def process_ast(self, string):
-        """Process a string into an Abstract Syntax Tree (AST).
+            # Load the string from the src_filepath,
+            with open(self.src_filepath) as f:
+                string = f.read()
 
-        Parameters
-        ----------
-        string : str
-            The string in document (markup source) format to convert into an
-            AST.
+            # Process the string
+            for processor in self.string_processors:
+                string = processor(string)
 
-        Returns
-        -------
-        ast: list of str and :obj:`disseminate.Tag` objects.
-            The generated AST.
-        """
-        ast = process_ast(string)
-        return ast
+            # Process and validate the AST
+            ast = process_ast(s=string, local_context=self.local_context,
+                              global_context=self.global_context,
+                              src_filepath=self.src_filepath)
 
-    def postprocess_ast(self, ast, target, context):
-        """Post-process the ast with target-specific options.
+            # Run the AST processing functions
+            for processor in self.ast_processors:
+                ast = processor(ast)
 
-        Parameters
-        ----------
-        ast: list of str and :obj:`disseminate.Tag` objects.
-            The AST.
-        target: str, optional
-            The target extension of the rendered document. (ex: '.html')
+            self._ast = ast
 
-        Returns
-        -------
-        ast: list of str and :obj:`disseminate.Tag` objects.
-            The post-processed AST.
-        """
-        # Run each tag's process_ast
-        # post-process of ast (create new paragraphs,
-        # cleanup newlines, prevent paragraphs before equations.)
-        ast = process_tag_ast(ast, target)
-        return ast
+        return self._ast
 
-    def render(self, update_only=settings.update_only,
+    def render(self, targets=None,
+               update_only=settings.update_only,
                create_dirs=settings.create_dirs):
         """Convert the src_filepath to a rendered document at target_filepath.
 
+        .. note:: This function is run synchronously.
+
         Parameters
         ----------
+        targets : str or list of str
+            If specified, only the specified targets will be rendered.
+            Otherwise all targets in self.targets will be rendered.
         update_only : bool, optional
             Only render the file if the target doesn't exist or the target file
             is older than the source file.
@@ -177,90 +171,65 @@ class Document(object):
         bool
             True, if the render was successful.
         """
-        # Check to make sure the file is reasonable
-        if not os.path.isfile(self.src_filepath):  # file must exist
-            msg = "The source document '{}' must exist."
-            raise DocumentError(msg.format(self.src_filepath))
-        filesize = os.stat(self.src_filepath).st_size
-        if filesize > settings.document_max_size:
-            msg = ("The source document '{}' has a file size ({} kB) "
-                   "that exceeds the maximum setting size of {} kB.")
-            raise DocumentError(msg.format(self.src_filepath,
-                                           filesize / 1024,
-                                           settings.document_max_size / 1024))
+        # Workup the targets into a dict, like self.targets
+        if targets is None:
+            targets = self.targets
+        elif isinstance(targets, str):
+            if targets not in self.targets:
+                msg = ("The target format '{}' is not available in this "
+                       "document's available targets.")
+                raise DocumentError(msg.format(targets))
+            targets = {targets: self.targets[targets]}
+        elif isinstance(targets, list):
+            targets = {t: self.targets[t] for t in targets}
+        else:
+            msg = "Specified targets '{}' must be a string or a list of strings"
+            raise DocumentError(msg.format(targets))
 
-        # Check to see if the file needs to be updated
-        if (update_only and os.path.isfile(self.target_filepath) and
-                (os.stat(self.src_filepath).st_mtime >
-                 os.stat(self.target_filepath).st_mtime)):
-            return True
+        # Process each specified target
+        for target, target_filepath in targets.items():
+            target = target if target.startswith('.') else '.' + target
 
-        # Check to see if the target directory needs to be created
-        if create_dirs:
-            mkdir_p(self.target_filepath)
+            # Check to see if the source file needs to be updated
+            if (update_only and os.path.isfile(target_filepath) and
+                    (os.stat(self.src_filepath).st_mtime >
+                     os.stat(target_filepath).st_mtime)):
+                return True
 
-        # Load the string from the src_filepath,
-        with open(self.src_filepath) as f:
-            string = f.read()
+            # Check to see if the target directory needs to be created
+            if create_dirs:
+                mkdir_p(target_filepath)
 
-        # Process the string
-        for processor in self.string_processors:
-            string = processor(string)
+            # get the ast
+            ast = self.get_ast()
 
-        # Process and validate the AST
-        ast = process_ast(s=string, local_context=self.local_context,
-                          global_context=self.global_context,
-                          src_filepath=self.src_filepath)
+            # Run individual tag process functions
+            # At this stage, the tags may depend on other documents through the
+            # global_context. (i.e. it must be done synchronously
 
-        # Run individual tag process functions
-        # At this stage, the tags may depend on other documents through the
-        # global_context. (i.e. it must be done synchronously
+            # postprocess_ast
 
-        # Run the AST processing functions
-        for processor in self.ast_processors:
-            ast = processor(ast)
+            # render and save to output file
+            convert_func = conversions.get(target, None)
+            output_string = convert_func(ast)
 
-        # postprocess_ast
+            # get a template. The following can be done asynchronously.
+            template = get_template(self.src_filepath, target=target)
 
-        # render and save to output file
-        convert_func = conversions.get(self.target, None)
-        output_string = convert_func(ast)
+            if template is not None:
+                # copy the local_context
+                context = dict(self.local_context)
 
-        # get a template file template. The following can be done
-        # asynchronously.
-        template = get_template(self.src_filepath, target=self.target)
+                # add the global context
+                context['_global'] = self.global_context
 
-        if template is not None:
-            # copy the local_context
-            context = dict(self.local_context)
+                # set additional variables needed for the template
+                context['body'] = output_string
 
-            # add the global context
-            context['_global'] = self.global_context
+                # generate a new ouput_string
+                output_string = template.render(**context)
 
-            # set additional variables needed for the template
-            context['body'] = output_string
-
-            # generate a new ouput_string
-            output_string = template.render(**context)
-
-        with open(self.target_filepath, 'w') as f:
-            f.write(output_string)
+                with open(target_filepath, 'w') as f:
+                    f.write(output_string)
 
         return True
-
-
-
-"""
-# Initialize documents
-tree = Tree()
-documents = tree.documents()
-
-# get global contexts
-context = tree.context()
-for document in documents:
-    context.update(document.context())
-
-# render documents
-for document in documents:
-    document.render(format=None) # do not save to file.
-"""
