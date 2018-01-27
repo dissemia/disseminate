@@ -402,15 +402,22 @@ def test_render(tmpdir):
         assert os.path.isfile(path1)
 
 
-# def test_html(tmpdir):
-#     """Tests the html method."""
-#     # The 'examples1' directory contains an index.tree in the 'examples1/sub1'
-#     # directory and no index.tree in the root directory 'examples1'.
-#     # Consequently, 'examples1/sub' is considered managed and 'examples1' is
-#     # not. The 'examples1/' directory only contains on document (source markup)
-#     # file.
-#     subpath = "tests/tree/examples1"
-#     tree1 = Tree(subpath=subpath)
-#     tree1.find_documents()
-#
-#     print(tree1.html())
+def test_html(tmpdir):
+    """Tests the html method."""
+    # The 'examples1' directory contains an index.tree in the 'examples1/sub1'
+    # directory and no index.tree in the root directory 'examples1'.
+    # Consequently, 'examples1/sub' is considered managed and 'examples1' is
+    # not. The 'examples1/' directory only contains on document (source markup)
+    # file.
+    subpath = "tests/tree/examples1"
+    tree1 = Tree(subpath=subpath)
+    tree1.find_documents()
+
+    html = tree1.html()
+
+    # The result html string should have the subpath as the project root
+    assert subpath in html
+
+    # The result html string should have 3 list items for each of the documents
+    assert html.count("<li>") == 3
+

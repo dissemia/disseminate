@@ -499,38 +499,73 @@ class Tree(object):
 
         return True
 
-    # def html(self, target=settings.default_target,
-    #          output_dir=None,
-    #          segregate_target=settings.segregate_targets,
-    #          subpath=None):
-    #     """Renders an html stub string for the target_paths of the current
-    #     tree.
-    #
-    #     Parameters
-    #     ----------
-    #     target : str, optional
-    #         The extension of the target documents. (ex: '.html')
-    #     output_dir : str, optional
-    #         If specified, files will be saved in this directory.
-    #     segregate_target : bool, optional
-    #         If True, rendered target documents will be saved in a subdirectory
-    #         with the target extension's name (ex: 'html' 'tex')
-    #     subpath : str, optional
-    #         If specified, only look in the given subpath directory. If this is
-    #         not specified, the value of self.subpath will be searched as well.
-    #
-    #     Returns
-    #     -------
-    #     html : str
-    #         An html stub of this tree.
-    #     """
-    #     paths = [self.convert_target_path(i, target=target,
-    #                                       segregate_target=segregate_target,
-    #                                       output_dir=output_dir,
-    #                                       subpath=subpath)
-    #              for i in self.src_filepaths]
-    #     elem_str = "  <li><a href=\"{}\">{}</a></li>"
-    #     elems = [html.escape(s) for s in paths]
-    #     elems = list(elem_str.format(s, s) for s in elems)
-    #
-    #     return "\n".join(("<ul>", *elems, "</ul>"))
+    def html(self, target_list=settings.default_target_list,
+             output_dir=None,
+             segregate_target=settings.segregate_targets,
+             subpath=None):
+        """Renders an html stub string for the target_paths of the current
+        tree.
+
+        Parameters
+        ----------
+        target_list : list of str, optional
+            If specified, the list of target extensions with be rendered.
+            If not specified, the value of self.target_list will be used.
+        output_dir : str, optional
+            If specified, files will be saved in this directory.
+        segregate_target : bool, optional
+            If True, rendered target documents will be saved in a subdirectory
+            with the target extension's name (ex: 'html' 'tex')
+        subpath : str, optional
+            If specified, only look in the given subpath directory. If this is
+            not specified, the value of self.subpath will be searched as well.
+
+        Returns
+        -------
+        html : str
+            An html stub of this tree.
+        """
+        target_list = target_list if target_list is not None else target_list
+        project_root = self.project_root(subpath=subpath)
+
+        result_str = "<p><em>Project Directory</em>: {}</p>\n"
+        result_str = result_str.format(project_root)
+
+        # Add an entry for each src_filepath
+        elem_strs = []
+        for src_filepath in self.src_filepaths:
+            # Get the src_filepath relative to the project_root
+            relative_src_filepath = os.path.relpath(src_filepath, project_root)
+
+            # Get the target file paths
+            kwargs = {'src_filepath': src_filepath,
+                      'target_list': target_list,
+                      'segregate_target': segregate_target,
+                      'output_dir': output_dir,
+                      'subpath': subpath}
+            targets = self.convert_target_path(**kwargs)
+
+            # Create an entry and link for the source file
+            elem_str = "  <li><a href=\"{}\">{}</a> "
+            elem_str = elem_str.format(html.escape(src_filepath),
+                                       html.escape(relative_src_filepath))
+
+            # Add links for the targets
+            if isinstance(target_list, list):
+                elem_str += "("
+                target_str = []
+                for target in target_list:
+                    if target not in targets:
+                        continue
+                    str = "<a href=\"{}\">{}</a>"
+                    str = str.format(html.escape(targets[target]),
+                                                 html.escape(target.strip('.')))
+                    target_str.append(str)
+                elem_str += " ".join(target_str) + ")"
+
+            # Terminate the tag for this item
+            elem_str += "</li>"
+            elem_strs.append(elem_str)
+
+        result_str += "\n".join(("<ul>", *elem_strs, "</ul>"))
+        return result_str
