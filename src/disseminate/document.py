@@ -105,6 +105,7 @@ class Document(object):
 
         # Private variables
         self._ast = None
+        self._ast_mtime = None
 
     def get_ast(self):
         """Process and return the AST.
@@ -112,13 +113,22 @@ class Document(object):
         This method generates and caches the AST. This step is conducted
         asynchronously. (i.e. the local_context and global_context may not be
         completed populated while the AST is processed.)
+
+        The cached ast is updated if the source file is updated
         """
-        if getattr(self, '_ast', None) is None:
+        # Check to make sure the file exists
+        if not os.path.isfile(self.src_filepath):  # file must exist
+            msg = "The source document '{}' must exist."
+            raise DocumentError(msg.format(self.src_filepath))
+
+        stat = os.stat(self.src_filepath)
+        time = stat.st_mtime
+
+        if (getattr(self, '_ast', None) is None or
+            getattr(self, '_ast_mtime', None) is None or
+            time > self._ast_mtime):
             # Check to make sure the file is reasonable
-            if not os.path.isfile(self.src_filepath):  # file must exist
-                msg = "The source document '{}' must exist."
-                raise DocumentError(msg.format(self.src_filepath))
-            filesize = os.stat(self.src_filepath).st_size
+            filesize = stat.st_size
             if filesize > settings.document_max_size:
                 msg = ("The source document '{}' has a file size ({} kB) "
                        "that exceeds the maximum setting size of {} kB.")
@@ -143,7 +153,9 @@ class Document(object):
             for processor in self.ast_processors:
                 ast = processor(ast)
 
+            # cache the ast
             self._ast = ast
+            self._ast_mtime = time
 
         return self._ast
 
