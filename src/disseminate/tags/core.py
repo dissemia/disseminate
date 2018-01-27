@@ -45,6 +45,12 @@ class TagFactory(object):
 class Tag(object):
     """A tag to format text in the markup document.
 
+    .. note:: Tags are created asynchroneously, so the creation of a tag
+              should not depend on the local_context or global_context. These
+              will only be partially populated at creation time. Only the
+              target specific methods (html, tex, ...) should return new tags
+              that depend on these contexts.
+
     Attributes
     ----------
     name : str
@@ -99,27 +105,6 @@ class Tag(object):
             raise TagError(msg.format(self.__repr__()))
         return self.content[item]
 
-    def context(self):
-        """Sets the global_context and returns a local context for this tag.
-
-        Returns
-        -------
-        global_context, local_context : dict, dict
-            A dict that is accessible from the root context (global) and a
-            dict that is accessible from a local context.
-        """
-        pass
-
-    # def latex(self, context=None):
-    #     pass
-    #
-    # def html(self, context=None):
-    #     """The html string for the tag, if the output target is html."""
-    #     return convert_html(self)
-    #
-    # def default(self, context=None):
-    #     """The default string for the tag, if no other format matches."""
-    #     return self.tag_content
 
 
 class Script(Tag):
