@@ -56,3 +56,8 @@ html_allowed_tags = True
 
 #: Only render allowed HTML attributes
 html_allowed_attributes = True
+
+#: HTTP Server
+
+#: default port on the localhost to listen for http requests
+default_port = 8899
