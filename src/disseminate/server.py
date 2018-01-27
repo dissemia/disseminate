@@ -4,6 +4,7 @@ The localhost http server for managing trees and documents.
 import http.server
 import os.path
 
+from disseminate import __path__
 from .tree import Tree
 from .templates import get_template
 from . import settings
@@ -35,6 +36,10 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header(b"Content-type", "text/html")
             self.end_headers()
             self.wfile.write(html.encode("utf-8"))
+        elif os.path.exists(os.path.join(self.module_path, self.path[1:])):
+            self.path = os.path.join(self.module_path, self.path[1:])
+            print(self.path)
+            super(RequestHandler, self).do_GET()
         else:
             super(RequestHandler, self).do_GET()
 
@@ -50,12 +55,18 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
 
 def run(in_dir, out_dir,
         server_class=http.server.HTTPServer, handler_class=RequestHandler):
+    # Setup the tree
     tree1 = Tree(subpath=in_dir, output_dir=out_dir)
     tree1.find_documents()
+
+
 
     class MyHandler(handler_class):
         tree = tree1
         subdirectory = tree1.project_root()
+        # Setup the module path to serve css files
+        module_path = os.path.relpath(os.path.join(__path__[0], "templates"),
+                                      os.path.curdir)
 
     MyHandler.extensions_map[settings.document_extension] = "text/plain"
 

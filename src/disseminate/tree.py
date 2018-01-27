@@ -528,7 +528,7 @@ class Tree(object):
         target_list = target_list if target_list is not None else target_list
         project_root = self.project_root(subpath=subpath)
 
-        result_str = "<p><em>Project Directory</em>: {}</p>\n"
+        result_str = "<p><em>Project Directory:</em> {}</p>\n"
         result_str = result_str.format(project_root)
 
         # Add an entry for each src_filepath
@@ -546,13 +546,13 @@ class Tree(object):
             targets = self.convert_target_path(**kwargs)
 
             # Create an entry and link for the source file
-            elem_str = "  <li><a href=\"{}\">{}</a> "
+            elem_str = "  <tr><td class=\"src\"><a href=\"{}\">{}</a></td>"
             elem_str = elem_str.format(html.escape(src_filepath),
                                        html.escape(relative_src_filepath))
 
             # Add links for the targets
             if isinstance(target_list, list):
-                elem_str += "("
+                elem_str += "<td class=\"tgt\">("
                 target_str = []
                 for target in target_list:
                     if target not in targets:
@@ -561,11 +561,14 @@ class Tree(object):
                     str = str.format(html.escape(targets[target]),
                                                  html.escape(target.strip('.')))
                     target_str.append(str)
-                elem_str += " ".join(target_str) + ")"
+                elem_str += " ".join(target_str) + ")</td>"
+            else:
+                elem_str += "<td class=\"tgt\"></td>"
 
             # Terminate the tag for this item
-            elem_str += "</li>"
+            elem_str += "</tr>"
             elem_strs.append(elem_str)
 
-        result_str += "\n".join(("<ul>", *elem_strs, "</ul>"))
+        result_str += "\n".join(("<table>\n<tbody>", *elem_strs,
+                                 "</tbody>\n</table>"))
         return result_str
