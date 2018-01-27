@@ -27,11 +27,14 @@ strip_base_project_path = True
 
 #: The default target format of rendered files
 default_target = '.html'
+default_targets = ('.html', '.tex')
 
 #: If True, rendered target documents will be saved in a subdirectory with
 #: the target extension's name (ex: 'html' 'tex')
 segregate_targets = True
 
+#: The template base file for rendering the tree.
+tree_template_basefilename = "tree"
 
 #: AST Processing
 #: --------------

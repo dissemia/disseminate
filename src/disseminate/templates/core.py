@@ -12,7 +12,7 @@ environments = {}
 
 
 def get_template(src_filepath, target,
-                 template_basename=settings.default_basefilename,):
+                 template_basename=settings.default_basefilename):
     """Fetch the best template for rendering a document.
 
     A template must implement a render method that takes kwargs to render

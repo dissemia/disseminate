@@ -387,3 +387,17 @@ def test_render(tmpdir):
     for path1, path2 in zip(tree1.target_filepaths, target_filepaths):
         assert path1 == path2
         assert os.path.isfile(path1)
+
+
+def test_html(tmpdir):
+    """Tests the html method."""
+    # The 'examples1' directory contains an index.tree in the 'examples1/sub1'
+    # directory and no index.tree in the root directory 'examples1'.
+    # Consequently, 'examples1/sub' is considered managed and 'examples1' is
+    # not. The 'examples1/' directory only contains on document (source markup)
+    # file.
+    subpath = "tests/tree/examples1"
+    tree1 = Tree(subpath=subpath)
+    tree1.find_documents()
+
+    print(tree1.html())

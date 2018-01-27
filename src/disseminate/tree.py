@@ -4,8 +4,10 @@ Classes and functions for generating trees of markup files.
 import glob
 import os.path
 import regex
+import html
 
 from .document import Document
+from .templates import get_template
 from . import settings
 
 
@@ -477,3 +479,38 @@ class Tree(object):
 
         return True
 
+    def html(self, target=settings.default_target,
+             output_dir=None,
+             segregate_target=settings.segregate_targets,
+             subpath=None):
+        """Renders an html stub string for the target_paths of the current
+        tree.
+
+        Parameters
+        ----------
+        target : str, optional
+            The extension of the target documents. (ex: '.html')
+        output_dir : str, optional
+            If specified, files will be saved in this directory.
+        segregate_target : bool, optional
+            If True, rendered target documents will be saved in a subdirectory
+            with the target extension's name (ex: 'html' 'tex')
+        subpath : str, optional
+            If specified, only look in the given subpath directory. If this is
+            not specified, the value of self.subpath will be searched as well.
+
+        Returns
+        -------
+        html : str
+            An html stub of this tree.
+        """
+        paths = [self.convert_target_path(i, target=target,
+                                          segregate_target=segregate_target,
+                                          output_dir=output_dir,
+                                          subpath=subpath)
+                 for i in self.src_filepaths]
+        elem_str = "  <li><a href=\"{}\">{}</a></li>"
+        elems = [html.escape(s) for s in paths]
+        elems = list(elem_str.format(s, s) for s in elems)
+
+        return "\n".join(("<ul>", *elems, "</ul>"))
