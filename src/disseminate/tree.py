@@ -90,30 +90,33 @@ class Tree(object):
 
         ex: {'src/': 'src/index.tree'
              'src/sub1': 'src/index.tree'}
-    target : str
-        The extension of the target documents. (ex: '.html')
+    target_list : list of str
+        A list of target extensions to render documents to.
+        ex: ['.html', '.tex', '.txt']
     src_filepaths : list of str
         The document (markup source) paths, including filenames.
-    target_filepaths : list of str
-        The target paths, including filenames, of the generated documents.
+    documents : :obj:`disseminate.Document`
+        The documents for this tree.
     global_context : dict
         The global context to store variables shared between all documents.
     """
 
     subpath = None
     managed_dirs = None
-    target = None
+    target_list = None
     output_dir = None
     src_filepaths = None
-    target_filepaths = None
+    documents = None
     global_context = None
 
-    def __init__(self, subpath=None, target=None, output_dir=None):
+    def __init__(self, subpath=None, target_list=settings.default_target_list,
+                 output_dir=None):
+        assert isinstance(target_list, list) or isinstance(target_list, tuple)
         self.subpath = subpath
-        self.target = target if target is not None else settings.default_target
+        self.target_list = target_list
         self.output_dir = output_dir
         self.src_filepaths = []
-        self.target_filepaths = []
+        self.documents = []
         self.global_context = {}
         self._project_root = None
 
@@ -390,20 +393,24 @@ class Tree(object):
         self.find_documents_in_indexes(subpath=subpath)
         self.find_documents_by_type(subpath=subpath)
 
-    def convert_target_path(self, src_filepath, target=None,
+    def convert_target_path(self, src_filepath, target_list=None,
                             output_dir = None,
                             segregate_target=settings.segregate_targets,
                             subpath=None):
-        """Converts the src_filepath to a target_filepath using the
-        project_root (:meth:`Tree.project_root`) and the target type.
+        """Converts the src_filepath to a dict of targets.
+
+        .. note:: The method uses the project_root (:meth:`Tree.project_root`)
+                  method to find the project root.
 
         Parameters
         ----------
         src_filepath : str
             A filename for a document (markup source) file. This file should
             exist.
-        target : str, optional
-            The extension of the target documents. (ex: '.html')
+        target_list : list, optional
+            A list of target extension of the rendered document.
+            (ex: ['.html', ]) If None is specified, then self.target_list will
+            be used.
         output_dir : str, optional
             If specified, files will be saved in this directory.
         segregate_target : bool, optional
@@ -415,15 +422,19 @@ class Tree(object):
 
         Returns
         -------
-        target_filepath : str
-            The target_filepath of the target file to render.
+        targets : dict
+            A dict with the target extension as keys (ex: '.html') and the
+            value is the target_filepath for that target.
+            (ex: 'html/index.html')
         """
         # Get the project root
         project_root = self.project_root(subpath=subpath)
 
         # Get the target format. ex: '.html'
-        target = target if isinstance(target, str) else self.target
-        target = target if target.startswith('.') else '.' + target
+        target_list = (target_list if target_list is not None
+                       else self.target_list)
+        target_list = [t if t.startswith('.') else '.' + t
+                       for t in target_list]
 
         # Get the output_directory, if specified
         output_dir = (output_dir if isinstance(output_dir, str) else
@@ -436,22 +447,25 @@ class Tree(object):
         # Get a new path relative to the project_root
         relative_path = os.path.relpath(src_filepath, project_root)
 
-        # Segregate the targets, if specified
-        if segregate_target:
-            relative_path = os.path.join(target.strip('.'), relative_path)
+        returned_targets = {}
+        for target in target_list:
+            # Segregate the targets, if specified
+            if segregate_target:
+                relative_path = os.path.join(target.strip('.'), relative_path)
 
-        # Set path to output_dir, if specified
-        if output_dir is not None:
-            relative_path = os.path.join(output_dir, relative_path)
+            # Set path to output_dir, if specified
+            if output_dir is not None:
+                relative_path = os.path.join(output_dir, relative_path)
 
-        # Replace the extension with the target extension
-        split_ext = list(os.path.splitext(relative_path)[:-1])
-        split_ext.append(target)
-        new_path = ''.join(split_ext)
+            # Replace the extension with the target extension
+            split_ext = list(os.path.splitext(relative_path)[:-1])
+            split_ext.append(target)
+            new_path = ''.join(split_ext)
+            returned_targets[target] = new_path
 
-        return new_path
+        return returned_targets
 
-    def render(self, output_dir=None):
+    def render(self, output_dir=None, target_list=None):
         """Render documents.
 
         This function renders the src_filepaths documents.
@@ -462,6 +476,9 @@ class Tree(object):
         ----------
         output_dir : str, optional
             If specified, files will be saved in this directory.
+        target_list : list of str, optional
+            If specified, the list of target extensions with be rendered.
+            If not specified, the value of self.target_list will be used.
         """
         # Generate the global context
         self.global_context = (self.global_context
@@ -470,47 +487,50 @@ class Tree(object):
 
         # render documents
         for src_filepath in self.src_filepaths:
-            target_filepath = self.convert_target_path(src_filepath,
-                                                       output_dir=output_dir)
-            doc = Document(src_filepath, target_filepath,
+            targets = self.convert_target_path(src_filepath,
+                                               target_list=target_list,
+                                               output_dir=output_dir)
+
+            doc = Document(src_filepath=src_filepath,
+                           targets=targets,
                            global_context=self.global_context)
             doc.render()
-            self.target_filepaths.append(target_filepath)
+            self.documents.append(doc)
 
         return True
 
-    def html(self, target=settings.default_target,
-             output_dir=None,
-             segregate_target=settings.segregate_targets,
-             subpath=None):
-        """Renders an html stub string for the target_paths of the current
-        tree.
-
-        Parameters
-        ----------
-        target : str, optional
-            The extension of the target documents. (ex: '.html')
-        output_dir : str, optional
-            If specified, files will be saved in this directory.
-        segregate_target : bool, optional
-            If True, rendered target documents will be saved in a subdirectory
-            with the target extension's name (ex: 'html' 'tex')
-        subpath : str, optional
-            If specified, only look in the given subpath directory. If this is
-            not specified, the value of self.subpath will be searched as well.
-
-        Returns
-        -------
-        html : str
-            An html stub of this tree.
-        """
-        paths = [self.convert_target_path(i, target=target,
-                                          segregate_target=segregate_target,
-                                          output_dir=output_dir,
-                                          subpath=subpath)
-                 for i in self.src_filepaths]
-        elem_str = "  <li><a href=\"{}\">{}</a></li>"
-        elems = [html.escape(s) for s in paths]
-        elems = list(elem_str.format(s, s) for s in elems)
-
-        return "\n".join(("<ul>", *elems, "</ul>"))
+    # def html(self, target=settings.default_target,
+    #          output_dir=None,
+    #          segregate_target=settings.segregate_targets,
+    #          subpath=None):
+    #     """Renders an html stub string for the target_paths of the current
+    #     tree.
+    #
+    #     Parameters
+    #     ----------
+    #     target : str, optional
+    #         The extension of the target documents. (ex: '.html')
+    #     output_dir : str, optional
+    #         If specified, files will be saved in this directory.
+    #     segregate_target : bool, optional
+    #         If True, rendered target documents will be saved in a subdirectory
+    #         with the target extension's name (ex: 'html' 'tex')
+    #     subpath : str, optional
+    #         If specified, only look in the given subpath directory. If this is
+    #         not specified, the value of self.subpath will be searched as well.
+    #
+    #     Returns
+    #     -------
+    #     html : str
+    #         An html stub of this tree.
+    #     """
+    #     paths = [self.convert_target_path(i, target=target,
+    #                                       segregate_target=segregate_target,
+    #                                       output_dir=output_dir,
+    #                                       subpath=subpath)
+    #              for i in self.src_filepaths]
+    #     elem_str = "  <li><a href=\"{}\">{}</a></li>"
+    #     elems = [html.escape(s) for s in paths]
+    #     elems = list(elem_str.format(s, s) for s in elems)
+    #
+    #     return "\n".join(("<ul>", *elems, "</ul>"))

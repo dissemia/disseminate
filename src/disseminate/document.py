@@ -63,7 +63,7 @@ class Document(object):
         A filename for a document (markup source) file. This file should exist.
     targets : dict
         A dict with the target extension as keys (ex: '.html') and the value
-        is the output directory for that target. (ex: 'html/')
+        is the target_filepath for that target. (ex: 'html/index.html')
     local_context : dict
         The context with values for the current document. (local)
     global_context : dict

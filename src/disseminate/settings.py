@@ -25,9 +25,8 @@ index_filename = 'index.tree'
 #: project root directory will have these paths stripped.
 strip_base_project_path = True
 
-#: The default target format of rendered files
-default_target = '.html'
-default_targets = ('.html', '.tex')
+#: A list of the default target formats of rendered files
+default_target_list = ['.html', '.tex']
 
 #: If True, rendered target documents will be saved in a subdirectory with
 #: the target extension's name (ex: 'html' 'tex')
