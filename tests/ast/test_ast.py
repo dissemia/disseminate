@@ -4,7 +4,7 @@ Tests for the ast sub-module.
 import pytest
 from lxml import etree
 
-from disseminate.ast import process_ast, convert_html, print_ast, ParseError
+from disseminate.ast import process_ast, conversions, print_ast, ParseError
 from disseminate.tags import Tag
 
 
@@ -76,7 +76,7 @@ def test_basic_html_conversion():
 
     # Generate the html string
     ast = process_ast(test)
-    html = convert_html(ast)
+    html = conversions['.html'](ast)
 
     # Validate the html
     root = etree.fromstring(html)
