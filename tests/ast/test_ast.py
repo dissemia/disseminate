@@ -21,6 +21,34 @@ test = """
 
     Here is a new paragraph."""
 
+test_txt = """
+    This is my test document. It has multiple paragraphs.
+
+    Here is a new one with bolded text as an example.
+    
+      
+      This is my first figure.
+    
+
+    This is a @13C variable, but this is an email address: justin@lorieau.com
+
+    Here is a new paragraph."""
+
+test_html = """<body>
+    This is my test document. It has multiple paragraphs.
+
+    Here is a new one with <b>bolded</b> text as an example.
+    <marginfig>
+      <img src="media/files"/>
+      <caption>This is my <i>first</i> figure.</caption>
+    </marginfig>
+
+    This is a @13C variable, but this is an email address: justin@lorieau.com
+
+    Here is a new paragraph.
+</body>
+"""
+
 test_invalid = """
     This is my test document. It has multiple paragraphs.
 
@@ -73,12 +101,36 @@ def test_ast_basic_string():
     assert len(content) == 5
 
 
+def test_ast_validation():
+    """Test the correct validation when parsing an AST."""
+
+    # Process a string with an open tag
+    with pytest.raises(ParseError) as e:
+        ast = process_ast(test_invalid)
+
+    # The error should pop up in line 4
+    assert "line 4" in str(e.value)
+
+    # Validate closing bracket
+
+
+def test_default_conersion():
+    """Test the default conversion of an AST into a text string."""
+
+    # Generate the txt string
+    ast = process_ast(test)
+    txt = ast.default()
+
+    assert txt == test_txt
+
+
 def test_basic_html_conversion():
     """Test the generation of html strings from tags."""
 
     # Generate the html string
     ast = process_ast(test)
     html = ast.html()
+    assert html == test_html
 
     # Validate the html
     root = etree.fromstring(html)
@@ -119,14 +171,3 @@ def test_basic_html_conversion():
         e7 = next(root_iter)
 
 
-def test_ast_validation():
-    """Test the correct validation when parsing an AST."""
-
-    # Process a string with an open tag
-    with pytest.raises(ParseError) as e:
-        ast = process_ast(test_invalid)
-
-    # The error should pop up in line 4
-    assert "line 4" in str(e.value)
-
-    # Validate closing bracket

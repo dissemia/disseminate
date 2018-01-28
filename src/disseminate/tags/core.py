@@ -117,7 +117,30 @@ class Tag(object):
             raise TagError(msg.format(self.__repr__()))
         return self.content[item]
 
+    def default(self):
+        """Strip the tag information and return the content of the tag.
+
+        Returns
+        -------
+        text_string : str
+            A text string with the tags stripped.
+        """
+        if isinstance(self.content, list):
+            items = [i.default() if hasattr(i, 'default') else i
+                            for i in self.content]
+            items = filter(bool, items)
+            return "".join(items)
+        else:
+            return self.content
+
     def html(self, level=1):
+        """Convert the tag to an html string or html element.
+
+        Returns
+        -------
+        html : str or html element
+            A string in HTML format or an HTML element (:obj:`lxml.builder.E`).
+        """
         if isinstance(self.content, list):
             if level == 1:
                 # Before converting the AST to an etree, check to see that
