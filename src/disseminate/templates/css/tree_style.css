@@ -44,6 +44,16 @@ table a {
     color: #808080;
 }
 
+thead {
+    background-color: #efefef;
+}
+
+th {
+    text-align: left;
+    padding: 0.4rem 0.8rem;
+    color: #888;
+}
+
 tbody {
     border-top: 1px solid #f2f2f2;
 }
@@ -57,12 +67,16 @@ td {
     padding: 0.8rem;
 }
 
+td.num {
+    mid-width: 2.0rem;
+    text-align: center;
+}
+
 td.src {
-    min-width: 30.0rem;
+    min-width: 25.0rem;
 } 
 
 td.tgt {
     min-width: 10.0rem;
-    text-align: right;
 } 
 
