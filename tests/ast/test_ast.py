@@ -4,7 +4,7 @@ Tests for the ast sub-module.
 import pytest
 from lxml import etree
 
-from disseminate.ast import process_ast, conversions, print_ast, ParseError
+from disseminate.ast import process_ast, print_ast, ParseError
 from disseminate.tags import Tag
 
 
@@ -39,36 +39,38 @@ def test_ast_basic_string():
     test_pieces = test.splitlines()
 
     # Check the AST piece-by-piece
-    assert ast[0] == test[0:len(ast[0])] # string
+    assert isinstance(ast, Tag) and ast.name == 'root' # root tag
 
-    assert isinstance(ast[1], Tag) and ast[1].name == 'b' # b tag
+    content = ast.content
 
-    assert isinstance(ast[2], str) # string
+    assert isinstance(content[1], Tag) and content[1].name == 'b' # b tag
 
-    assert isinstance(ast[3], Tag) and ast[3].name == 'marginfig'
-    assert isinstance(ast[3].content, list)  # margin tag has subtags
+    assert isinstance(content[2], str) # string
 
-    assert isinstance(ast[3][0], str) # string
+    assert isinstance(content[3], Tag) and content[3].name == 'marginfig'
+    assert isinstance(content[3].content, list)  # margin tag has subtags
 
-    assert isinstance(ast[3][1], Tag) and ast[3][1].name == 'img'
-    assert not ast[3][1].content  # img contents should be parsed and empty
+    assert isinstance(content[3][0], str) # string
 
-    assert isinstance(ast[3][2], str)  # string
+    assert isinstance(content[3][1], Tag) and content[3][1].name == 'img'
+    assert not content[3][1].content  # img contents should be parsed and empty
 
-    assert isinstance(ast[3][3], Tag) and ast[3][3].name == 'caption'
-    assert isinstance(ast[3][3].content, list)  # contents includes
+    assert isinstance(content[3][2], str)  # string
+
+    assert isinstance(content[3][3], Tag) and content[3][3].name == 'caption'
+    assert isinstance(content[3][3].content, list)  # contents includes
                                                     # strings and tags
 
-    assert isinstance(ast[3][3][0], str) # string
+    assert isinstance(content[3][3][0], str) # string
 
-    assert isinstance(ast[3][3][1], Tag) and ast[3][3][1].name == 'i'
-    assert ast[3][3][1].content == "first"  # i contents
+    assert isinstance(content[3][3][1], Tag) and content[3][3][1].name == 'i'
+    assert content[3][3][1].content == "first"  # i contents
 
-    assert isinstance(ast[3][3][2], str)  # string
+    assert isinstance(content[3][3][2], str)  # string
 
-    assert isinstance(ast[4], str)  # string
+    assert isinstance(content[4], str)  # string
 
-    assert len(ast) == 5
+    assert len(content) == 5
 
 
 def test_basic_html_conversion():
@@ -76,7 +78,7 @@ def test_basic_html_conversion():
 
     # Generate the html string
     ast = process_ast(test)
-    html = conversions['.html'](ast)
+    html = ast.html()
 
     # Validate the html
     root = etree.fromstring(html)

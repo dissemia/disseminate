@@ -44,9 +44,9 @@ def process_ast(s, local_context=None, global_context=None,
 
     Returns
     -------
-    ast : list of str or list
-        The AST is a list of string or nested lists, which may themselves
-        containt strings or nested lists.
+    ast : :obj:`disseminate.Tag`
+        The AST is a root tag with a content comprising a list of tags or
+        strings.
 
     Raises
     ------
@@ -64,10 +64,12 @@ def process_ast(s, local_context=None, global_context=None,
     global_context = (global_context if isinstance(global_context, dict)
                       else dict())
 
-    ast = []
     current_pos = 0
     factory = TagFactory()
     validator = ASTValidator(src_filepath=src_filepath)
+
+    # Create the root ast
+    ast = []
 
     for m in re_tag.finditer(s):
         # Find the match's start and end positions in the string
@@ -102,4 +104,11 @@ def process_ast(s, local_context=None, global_context=None,
     validator.validate(string, None)
     ast.append(string)
 
-    return ast
+    if level == 1:  # root level
+        return factory.tag(tag_name='root',
+                           tag_content=ast,
+                           tag_attributes=None,
+                           local_context=local_context,
+                           global_context=global_context)
+    else:
+        return ast

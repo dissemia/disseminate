@@ -4,7 +4,7 @@ Classes and functions for rendering documents.
 import os
 import os.path
 
-from .ast import process_ast, conversions
+from .ast import process_ast
 from .tags import Tag
 from .templates import get_template
 from .utils import mkdir_p
@@ -258,8 +258,11 @@ class Document(object):
             # postprocess_ast
 
             # render and save to output file
-            convert_func = conversions.get(target, None)
-            output_string = convert_func(ast)
+            target_name = target.strip('.')
+            if hasattr(ast, target_name):
+                output_string = getattr(ast, target_name)()
+            else:
+                output_string = ast.default()
 
             # get a template. The following can be done asynchronously.
             template = get_template(self.src_filepath, target=target)

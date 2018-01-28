@@ -25,5 +25,5 @@ def test_basic_conversion_html(tmpdir):
     # An invalid file raises an error
     doc = Document("tests/document/missing.dm",
                    {'.html': temp_path})
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(DocumentError):
         doc.render()

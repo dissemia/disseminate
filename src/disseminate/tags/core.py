@@ -3,7 +3,11 @@ Core classes and functions for tags.
 """
 from html import escape
 
+from lxml.builder import E
+from lxml import etree
+
 from disseminate.attributes import set_attribute, kwargs_attributes
+from . import settings
 
 
 class TagError(Exception): pass
@@ -46,10 +50,10 @@ class Tag(object):
     """A tag to format text in the markup document.
 
     .. note:: Tags are created asynchroneously, so the creation of a tag
-              should not depend on the local_context or global_context. These
-              will only be partially populated at creation time. Only the
-              target specific methods (html, tex, ...) should return new tags
-              that depend on these contexts.
+              should not read and depend on the `local_context` or
+              `global_context`. These will only be partially populated at
+              creation time. Only the target specific methods (html, tex, ...)
+              should return new tags that depend on these contexts.
 
     Attributes
     ----------
@@ -60,6 +64,13 @@ class Tag(object):
         of tags and strings. (i.e. a sub-ast)
     attributes : list of tuples
         The attributes of the tag.
+    local_context : dict
+        The context with values for the current document. The values in this
+        dict do not depend on values from other documents. (local)
+    global_context : dict
+        The context with values for all documents in a project. The
+        `global_context` is constructed with the `src_filepath` as a key and
+        the `local_context` as a value.
 
     Methods
     -------
@@ -75,6 +86,7 @@ class Tag(object):
     content = None
     attributes = None
     local_context = None
+    global_context = None
 
     process_ast = None # takes target, returns a tag or list of tags.
     html = None
@@ -82,8 +94,8 @@ class Tag(object):
 
     html_required_attributes = None
 
-    def __init__(self, name, content, attributes,
-                 local_context, global_context):
+    def __init__(self, name, content, attributes, local_context,
+                 global_context):
         self.name = name
         self.attributes = attributes
         if isinstance(content, list) and len(content) == 1:
@@ -105,11 +117,46 @@ class Tag(object):
             raise TagError(msg.format(self.__repr__()))
         return self.content[item]
 
+    def html(self, level=1):
+        if isinstance(self.content, list):
+            if level == 1:
+                # Before converting the AST to an etree, check to see that
+                # the root document ends with a newline
+                if (self.content and
+                   isinstance(self.content[-1], str) and
+                   not self.content[-1].endswith('\n')):
+                    self.content[-1] += "\n"
+
+                # Convert the AST to an etree
+                element =  E(settings.html_root_tag,
+                             *[i.html(level + 1) if hasattr(i, 'html') else i
+                               for i in self.content])
+
+                # Convert the etree to an html string
+                return (etree.tostring(element,
+                                       pretty_print=settings.html_pretty)
+                        .decode("utf-8"))
+            else:
+                return  E(self.name,
+                         *[i.html(level + 1) if hasattr(i, 'html') else i
+                            for i in self.content])
+        else:
+
+            # Only include content i the content is not None or the empty
+            # string
+            content = (self.content.strip() if isinstance(self.content, str)
+                       else self.content)
+            content = [content, ] if content else []
+
+            # Prepare the attributes
+            kwargs = (kwargs_attributes(self.attributes) if self.attributes
+                      else dict())
+            return E(self.name, *content, **kwargs)
 
 
 class Script(Tag):
 
-    def html(self):
+    def html(self, local_context, global_context):
         """Escape the output of script tags."""
         return escape(super(Script, self).html())
 
