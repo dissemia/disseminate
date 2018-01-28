@@ -120,6 +120,7 @@ class Tree(object):
         self.documents = []
         self.global_context = {}
         self._project_root = None
+        self._last_rendered_src_filepaths = None
 
     def project_root(self, subpath=None):
         """Evaluate the path (directory) of the project root.
@@ -529,39 +530,48 @@ class Tree(object):
                                if isinstance(self.global_context, dict)
                                else dict())
 
+        # Wrap the src_filepaths in a list if needed
+        if isinstance(src_filepaths, str):
+            src_filepaths = [src_filepaths, ]
+
         # Check to see if the tree needs to be updated. The tree is updated
         # when:
         # - No src_filepaths are specified. In this case, all src_filepaths
         #   are used.
         # The tree doesn't need to be updated when:
-        # - src_filepaths points to one or more files that was previously
-        #   rendered alone. This is because the rest of the tree hasn't changed.
-        if src_filepaths is None:
-            src_filepaths = self.src_filepaths
+        # - src_filepaths is the same as those rendered last time
+        #   (self._last_rendered_src_filepaths) because the global_context is
+        #   not invalidated.
 
-        # Check to see if it matches the last request src_filepaths and targets
-        # If so, just render these documents
-        #if (src_filepaths == getattr(self, 'last_src_filepaths', None) and
-        #    target_list == getattr(self, '_last_target_list', None)):
-        #    pass
-        #else:
-        #    src_filepaths = self.src_filepaths
+        if (src_filepaths is None or src_filepaths !=
+            getattr(self, '_last_rendered_src_filepaths', None)):
+            # In this case, render all the documents
+            src_filepaths = self.src_filepaths
+            # TODO: invalidate the global_context?
 
         # render documents
-        for src_filepath in self.src_filepaths:
+        for src_filepath in src_filepaths:
             targets = self.convert_src_filepath(src_filepath,
                                                 target_list=target_list,
                                                 output_dir=output_dir)
 
-            doc = Document(src_filepath=src_filepath,
-                           targets=targets,
-                           global_context=self.global_context)
+            # See if the document already exists
+            doc = None
+            for i in self.documents:
+                if i.src_filepath == src_filepath:
+                    doc = i
+
+            # Create a document if needed
+            if doc is None:
+                doc = Document(src_filepath=src_filepath,
+                               targets=targets,
+                               global_context=self.global_context)
+                self.documents.append(doc)
             doc.render()
-            self.documents.append(doc)
 
         return True
 
-    def html(self, target_list=settings.default_target_list,
+    def html(self, target_list=None,
              output_dir=None,
              segregate_target=settings.segregate_targets,
              subpath=None):
@@ -587,7 +597,8 @@ class Tree(object):
         html : str
             An html stub of this tree.
         """
-        target_list = target_list if target_list is not None else target_list
+        target_list = (target_list if target_list is not None else
+                       self.target_list)
         project_root = self.project_root(subpath=subpath)
 
         result_str = "<p><em>Project Directory:</em> {}</p>\n"
