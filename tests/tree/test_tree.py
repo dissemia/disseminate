@@ -265,6 +265,45 @@ def test_project_root():
     assert project_root == 'tests/tree/éxample 7'
 
 
+def test_convert_src_path(tmpdir):
+    """Tests the conversion of target paths to source paths."""
+    output_dir = tmpdir.realpath()
+
+    target_list = ['.html']
+    # First we try getting paths without the segregate_targets option
+
+    # The 'examples1' directory contains an index.tree in the 'examples1/sub1'
+    # directory and no index.tree in the root directory 'examples1'.
+    # Consequently, 'examples1/sub' is considered managed and 'examples1' is
+    # not. The 'examples1/' directory only contains on document (source markup)
+    # file.
+    tree1 = Tree(subpath="tests/tree/examples1", target_list=target_list,
+                 output_dir=output_dir)
+
+    # There should be 3 src_filepath files. The following target_filepaths are:
+    target_filepaths = (output_dir + '/html/sub1/intro.html',
+                        output_dir + '/html/sub1/appendix.html',
+                        output_dir + '/html/index.html')
+
+    # The target paths can't be converted without finding documents first and
+    # rendering them
+    with pytest.raises(TreeException):
+        tree1.convert_src_path(target_filepaths[0])
+
+    # Now find the documents and see if the source paths can be converted.
+    source_filepaths = ("tests/tree/examples1/sub1/intro.dm",
+                        "tests/tree/examples1/sub1/appendix.dm",
+                        "tests/tree/examples1/index.dm")
+
+    tree1.find_documents()
+    tree1.render()
+
+    for src_filepath, target_filepath in zip(source_filepaths,
+                                             target_filepaths):
+        converted_src_filepath, target = tree1.convert_src_path(target_filepath)
+        assert converted_src_filepath == src_filepath
+
+
 def test_target_paths():
     """Tests the the target paths are correctly set."""
 
@@ -418,6 +457,7 @@ def test_html(tmpdir):
     # The result html string should have the subpath as the project root
     assert subpath in html
 
-    # The result html string should have 3 list items for each of the documents
-    assert html.count("<li>") == 3
+    # The result html string should have 3 table rows: one for each of the
+    # documents
+    assert html.count("<tr>") == 3
 

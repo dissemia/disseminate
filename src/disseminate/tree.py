@@ -96,7 +96,7 @@ class Tree(object):
         ex: ['.html', '.tex', '.txt']
     src_filepaths : list of str
         The document (markup source) paths, including filenames.
-    documents : :obj:`disseminate.Document`
+    documents : list of :obj:`disseminate.Document`
         The documents for this tree.
     global_context : dict
         The global context to store variables shared between all documents.
@@ -394,6 +394,24 @@ class Tree(object):
         self.find_documents_in_indexes(subpath=subpath)
         self.find_documents_by_type(subpath=subpath)
 
+    def convert_src_path(self, target_filepath):
+        """Converts a target_filepath to a src_filepath."""
+        base, target = os.path.splitext(target_filepath)
+
+        # First look in the documents to see if a match can be found.
+        if isinstance(self.documents, list):
+            for doc in self.documents:
+                doc_target_filepath = doc.targets.get(target, None)
+
+                if (doc_target_filepath is not None and
+                   doc_target_filepath == target_filepath):
+                    return doc.src_filepath, target
+
+        # A source document was not found, raise an exception
+        msg = ("The source document for the '{}' target filepath could not "
+               "be found.")
+        raise TreeException(msg.format(target_filepath))
+
     def convert_target_path(self, src_filepath, target_list=None,
                             output_dir = None,
                             segregate_target=settings.segregate_targets,
@@ -466,7 +484,8 @@ class Tree(object):
 
         return returned_targets
 
-    def render(self, target_list=None, output_dir=None, ):
+    def render(self, src_filepaths=None,
+               target_list=None, output_dir=None, ):
         """Render documents.
 
         This function renders the src_filepaths documents.
@@ -488,6 +507,24 @@ class Tree(object):
         self.global_context = (self.global_context
                                if isinstance(self.global_context, dict)
                                else dict())
+
+        # Check to see if the tree needs to be updated. The tree is updated
+        # when:
+        # - No src_filepaths are specified. In this case, all src_filepaths
+        #   are used.
+        # The tree doesn't need to be updated when:
+        # - src_filepaths points to one or more files that was previously
+        #   rendered alone. This is because the rest of the tree hasn't changed.
+        if src_filepaths is None:
+            src_filepaths = self.src_filepaths
+
+        # Check to see if it matches the last request src_filepaths and targets
+        # If so, just render these documents
+        #if (src_filepaths == getattr(self, 'last_src_filepaths', None) and
+        #    target_list == getattr(self, '_last_target_list', None)):
+        #    pass
+        #else:
+        #    src_filepaths = self.src_filepaths
 
         # render documents
         for src_filepath in self.src_filepaths:
