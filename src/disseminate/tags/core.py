@@ -118,7 +118,9 @@ class Tag(object):
         return self.content[item]
 
     def default(self):
-        """Strip the tag information and return the content of the tag.
+        """Convert the tag to a text string.
+
+        Strips the tag information and simply return the content of the tag.
 
         Returns
         -------
@@ -179,7 +181,7 @@ class Tag(object):
 
 class Script(Tag):
 
-    def html(self, local_context, global_context):
+    def html(self):
         """Escape the output of script tags."""
         return escape(super(Script, self).html())
 
