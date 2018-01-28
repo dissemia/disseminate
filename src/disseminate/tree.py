@@ -5,6 +5,7 @@ import glob
 import os.path
 import regex
 import html
+from datetime import datetime
 
 from .document import Document
 from .templates import get_template
@@ -465,7 +466,7 @@ class Tree(object):
 
         return returned_targets
 
-    def render(self, output_dir=None, target_list=None):
+    def render(self, target_list=None, output_dir=None, ):
         """Render documents.
 
         This function renders the src_filepaths documents.
@@ -474,13 +475,16 @@ class Tree(object):
 
         Parameters
         ----------
-        output_dir : str, optional
-            If specified, files will be saved in this directory.
+        src_filepath : list of str or str, optional
+            A filename for a document (markup source) file. This file should
+            exist.
         target_list : list of str, optional
             If specified, the list of target extensions with be rendered.
             If not specified, the value of self.target_list will be used.
+        output_dir : str, optional
+            If specified, files will be saved in this directory.
         """
-        # Generate the global context
+        # Generate the global context, if needed
         self.global_context = (self.global_context
                                if isinstance(self.global_context, dict)
                                else dict())
@@ -533,7 +537,11 @@ class Tree(object):
 
         # Add an entry for each src_filepath
         elem_strs = []
-        for src_filepath in self.src_filepaths:
+        for count, src_filepath in enumerate(self.src_filepaths, 1):
+            # Add the count
+            elem_str = "<tr><td class=\"num\">{}.</td>"
+            elem_str = elem_str.format(count)
+
             # Get the src_filepath relative to the project_root
             relative_src_filepath = os.path.relpath(src_filepath, project_root)
 
@@ -546,7 +554,7 @@ class Tree(object):
             targets = self.convert_target_path(**kwargs)
 
             # Create an entry and link for the source file
-            elem_str = "  <tr><td class=\"src\"><a href=\"{}\">{}</a></td>"
+            elem_str += "<td class=\"src\"><a href=\"{}\">{}</a></td>"
             elem_str = elem_str.format(html.escape(src_filepath),
                                        html.escape(relative_src_filepath))
 
@@ -565,10 +573,23 @@ class Tree(object):
             else:
                 elem_str += "<td class=\"tgt\"></td>"
 
+            # Add the modification time and date
+            date = datetime.fromtimestamp(os.path.getmtime(src_filepath))
+            date = date.strftime("%b %d, %Y at %I:%M%p").replace(" 0", " ")
+            elem_str += "<td class=\"date\">" + date + "</td>"
+
             # Terminate the tag for this item
             elem_str += "</tr>"
             elem_strs.append(elem_str)
 
-        result_str += "\n".join(("<table>\n<tbody>", *elem_strs,
-                                 "</tbody>\n</table>"))
+        top = "<table>\n  "
+        top += ("<thead>"
+                "<th>num</th>"
+                "<th>source</th>"
+                "<th>targets</th>"
+                "<th>last saved</th>"
+                "</thead>\n")
+        top += "<tbody>"
+        bottom = "</tbody>\n</table>"
+        result_str += "\n".join((top, *elem_strs, bottom))
         return result_str
