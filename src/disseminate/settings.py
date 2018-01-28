@@ -7,10 +7,6 @@ document_extension = '.dm'
 #: Maximum file size
 document_max_size = 204800  # 200kB
 
-#: If True, only target files that don't exist or are older than the source
-#: files will be rendered.
-update_only = True
-
 #: If True, directories for target files will be created, if they not already
 #: exist
 create_dirs = True
