@@ -394,28 +394,10 @@ class Tree(object):
         self.find_documents_in_indexes(subpath=subpath)
         self.find_documents_by_type(subpath=subpath)
 
-    def convert_src_path(self, target_filepath):
-        """Converts a target_filepath to a src_filepath."""
-        base, target = os.path.splitext(target_filepath)
-
-        # First look in the documents to see if a match can be found.
-        if isinstance(self.documents, list):
-            for doc in self.documents:
-                doc_target_filepath = doc.targets.get(target, None)
-
-                if (doc_target_filepath is not None and
-                   doc_target_filepath == target_filepath):
-                    return doc.src_filepath, target
-
-        # A source document was not found, raise an exception
-        msg = ("The source document for the '{}' target filepath could not "
-               "be found.")
-        raise TreeException(msg.format(target_filepath))
-
-    def convert_target_path(self, src_filepath, target_list=None,
-                            output_dir = None,
-                            segregate_target=settings.segregate_targets,
-                            subpath=None):
+    def convert_src_filepath(self, src_filepath, target_list=None,
+                             output_dir = None,
+                             segregate_target=settings.segregate_targets,
+                             subpath=None):
         """Converts the src_filepath to a dict of targets.
 
         .. note:: The method uses the project_root (:meth:`Tree.project_root`)
@@ -484,6 +466,45 @@ class Tree(object):
 
         return returned_targets
 
+    def convert_target_filepath(self, target_filepath):
+        """Converts a target_filepath to a src_filepath.
+
+        .. note:: This method looks up the src_filepath based on rendered
+                  documents. Consequently, the documents should have been found
+                  and rendered, before using this method.
+
+        Parameters
+        ----------
+        target_filepath : str
+            A filepath for a target. ex: 'html/index.html'
+
+        Returns
+        -------
+        src_filepath, target : str, str
+            The corresponding src_filepath (ex: 'src/index.dm') and the target
+            of the given target_filepath (ex: '.html).
+
+        Raises
+        ------
+        TreeException
+            If the document and src_filepath could not be found.
+        """
+        base, target = os.path.splitext(target_filepath)
+
+        # First look in the documents to see if a match can be found.
+        if isinstance(self.documents, list):
+            for doc in self.documents:
+                doc_target_filepath = doc.targets.get(target, None)
+
+                if (doc_target_filepath is not None and
+                   doc_target_filepath == target_filepath):
+                    return doc.src_filepath, target
+
+        # A source document was not found, raise an exception
+        msg = ("The source document for the '{}' target filepath could not "
+               "be found.")
+        raise TreeException(msg.format(target_filepath))
+
     def render(self, src_filepaths=None,
                target_list=None, output_dir=None, ):
         """Render documents.
@@ -494,7 +515,7 @@ class Tree(object):
 
         Parameters
         ----------
-        src_filepath : list of str or str, optional
+        src_filepaths : list of str or str, optional
             A filename for a document (markup source) file. This file should
             exist.
         target_list : list of str, optional
@@ -528,9 +549,9 @@ class Tree(object):
 
         # render documents
         for src_filepath in self.src_filepaths:
-            targets = self.convert_target_path(src_filepath,
-                                               target_list=target_list,
-                                               output_dir=output_dir)
+            targets = self.convert_src_filepath(src_filepath,
+                                                target_list=target_list,
+                                                output_dir=output_dir)
 
             doc = Document(src_filepath=src_filepath,
                            targets=targets,
@@ -588,7 +609,7 @@ class Tree(object):
                       'segregate_target': segregate_target,
                       'output_dir': output_dir,
                       'subpath': subpath}
-            targets = self.convert_target_path(**kwargs)
+            targets = self.convert_src_filepath(**kwargs)
 
             # Create an entry and link for the source file
             elem_str += "<td class=\"src\"><a href=\"{}\">{}</a></td>"
