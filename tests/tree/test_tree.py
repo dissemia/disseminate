@@ -524,6 +524,21 @@ def test_update_render(tmpdir):
     assert mtime2 < os.stat(target_paths[1]).st_mtime
 
     # Try adding a new file
+    f3 = src_path.join("index3.dm")
+    f3.write("@{index3}")
+    tree.render()
+
+    assert len(tree.src_filepaths) == 3
+    assert len(tree.documents) == 3
+
+    # Now delete it
+    f3.remove()
+    tree.render()
+
+    assert len(tree.src_filepaths) == 2
+    assert len(tree.documents) == 2
+    assert [newast1, newast2] == [tree.documents[s]._ast
+                                  for s in tree.src_filepaths]
 
 
 def test_html(tmpdir):
