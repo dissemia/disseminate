@@ -26,6 +26,7 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         # The root path is special because it renders the tree
         if self.path == "/":
+            self.tree.render()
             template = get_template(src_filepath="",
                                     template_basename="tree",
                                     target=".html",
@@ -36,10 +37,22 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header(b"Content-type", "text/html")
             self.end_headers()
             self.wfile.write(html.encode("utf-8"))
+        # The following fetches template documents from the module, like css
+        # files
         elif os.path.exists(os.path.join(self.module_path, self.path[1:])):
             self.path = os.path.join(self.module_path, self.path[1:])
             print(self.path)
             super(RequestHandler, self).do_GET()
+
+        # The following checks to see if a target_filepath is requested and it
+        # will render the file
+        elif os.path.splitext(self.path)[1] in self.target_list:
+            self.tree.render()
+            #src_filepath = self.tree.convert_target_filepath(self.path[1:])
+            #self.tree.render(src_filepaths=src_filepath)
+            super(RequestHandler, self).do_GET()
+
+        # Otherwise just try to serve the file
         else:
             super(RequestHandler, self).do_GET()
 
@@ -56,13 +69,12 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
 def run(in_dir, out_dir,
         server_class=http.server.HTTPServer, handler_class=RequestHandler):
     # Setup the tree
-    tree1 = Tree(subpath=in_dir, output_dir=out_dir)
-    tree1.find_documents()
-
-
+    tree1 = Tree(subpath=in_dir, output_dir=out_dir, target_list=['.html'])
+    tree1.render()
 
     class MyHandler(handler_class):
         tree = tree1
+        target_list = tree1.target_list
         subdirectory = tree1.project_root()
         # Setup the module path to serve css files
         module_path = os.path.relpath(os.path.join(__path__[0], "templates"),
