@@ -522,7 +522,9 @@ def test_update_render(tmpdir):
     # The document2 should have changed, but not document1
     assert mtime1 == os.stat(target_paths[0]).st_mtime
     assert mtime2 < os.stat(target_paths[1]).st_mtime
-    
+
+    # Try adding a new file
+
 
 def test_html(tmpdir):
     """Tests the html method."""

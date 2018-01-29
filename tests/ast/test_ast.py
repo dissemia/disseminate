@@ -2,7 +2,7 @@
 Tests for the ast sub-module.
 """
 import pytest
-from lxml import etree
+import lxml.html
 
 from disseminate.ast import process_ast, print_ast, ParseError
 from disseminate.tags import Tag
@@ -38,15 +38,14 @@ test_html = """<body>
     This is my test document. It has multiple paragraphs.
 
     Here is a new one with <b>bolded</b> text as an example.
-    <marginfig>
-      <img src="media/files"/>
+    <span class=\"marginfig\">
+      <img src="media/files">
       <caption>This is my <i>first</i> figure.</caption>
-    </marginfig>
+    </span>
 
     This is a @13C variable, but this is an email address: justin@lorieau.com
 
-    Here is a new paragraph.
-</body>
+    Here is a new paragraph.</body>
 """
 
 test_invalid = """
@@ -133,7 +132,7 @@ def test_basic_html_conversion():
     assert html == test_html
 
     # Validate the html
-    root = etree.fromstring(html)
+    root = lxml.html.fragment_fromstring(html, create_parent='body')
     root_iter = root.iter()
 
     # verify each element
@@ -148,9 +147,9 @@ def test_basic_html_conversion():
     assert e2.attrib == {}
 
     e3 = next(root_iter)
-    assert e3.tag == 'marginfig'
+    assert e3.tag == 'span'
     assert isinstance(e3.text, str) and e3.text.strip() == ''
-    assert e3.attrib == {}
+    assert e3.attrib == {'class': 'marginfig'}
 
     e4 = next(root_iter)
     assert e4.tag == 'img'

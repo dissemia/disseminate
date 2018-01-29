@@ -12,3 +12,6 @@ html_allowed_tags = True
 
 #: Only render allowed HTML attributes
 html_allowed_attributes = True
+
+#: Excluded tags. These will be rendered as spans.
+html_excluded = ["SCRIPT", ]

@@ -1,9 +1,9 @@
 """
 Core classes and functions for tags.
 """
-from html import escape
-
-from lxml.builder import E
+from lxml.html import builder as E
+import lxml.html
+from lxml.builder import E as Exml
 from lxml import etree
 
 from disseminate.attributes import set_attribute, kwargs_attributes
@@ -132,51 +132,43 @@ class Tag(object):
         html : str or html element
             A string in HTML format or an HTML element (:obj:`lxml.builder.E`).
         """
-
+        # Collect the content elements
         if isinstance(self.content, list):
-            if level == 1:
-                # Before converting the AST to an etree, check to see that
-                # the root document ends with a newline
-                if (self.content and
-                   isinstance(self.content[-1], str) and
-                   not self.content[-1].endswith('\n')):
-                    self.content[-1] += "\n"
-
-                # Convert the AST to an etree
-                element =  E(settings.html_root_tag,
-                             *[i.html(level + 1) if hasattr(i, 'html') else i
-                               for i in self.content])
-
-                # Convert the etree to an html string
-                return (etree.tostring(element,
-                                       pretty_print=settings.html_pretty)
-                        .decode("utf-8"))
-            else:
-                return  E(self.name,
-                         *[i.html(level + 1) if hasattr(i, 'html') else i
-                            for i in self.content])
+            elements = [i.html(level + 1) if hasattr(i, 'html') else i
+                        for i in self.content]
+        elif isinstance(self.content, str):
+            elements = self.content
         else:
-            if level == 1:
-                element = E(settings.html_root_tag, self.content)
-                return (etree.tostring(element,
-                                      pretty_print=settings.html_pretty)
-                        .decode("utf-8"))
+            elements = None
+
+        # Render the root tag if this is the first level
+        if level == 1:
+            if elements:
+                html = lxml.html.tostring(E.BODY(*elements),
+                                           pretty_print=settings.html_pretty)
             else:
-                # Only include content i the content is not None or the empty
-                # string
-                content = (self.content.strip() if isinstance(self.content, str)
-                           else self.content)
-                content = [content, ] if content else []
+                html = lxml.html.tostring(E.BODY(),
+                                          pretty_print=settings.html_pretty)
+            return html.decode("utf-8")
 
-                # Prepare the attributes
-                kwargs = (kwargs_attributes(self.attributes) if self.attributes
-                          else dict())
-                return E(self.name, *content, **kwargs)
+        # Otherwise just render the element
+        upper_name = self.name.upper()
+        if hasattr(E, upper_name) and upper_name not in settings.html_excluded:
+            # Construct from a valid html tag that isn't an excluded tag
+            builder = getattr(E, upper_name)
 
+            # Prepare the attributes
+            kwargs = (kwargs_attributes(self.attributes) if self.attributes
+                      else dict())
 
-class Script(Tag):
+            return (builder(*elements, **kwargs) if elements else \
+                    builder(**kwargs))
+        else:
+            # For non-valid and non-allowed tags, render them as spans
 
-    def html(self):
-        """Escape the output of script tags."""
-        return escape(super(Script, self).html())
+            # Add the tag type to the class attribute
+            attrs = self.attributes if self.attributes else ()
+            attrs = set_attribute(attrs, ('class', self.name), 'a')
+            kwargs = kwargs_attributes(attrs)
 
+            return E.SPAN(*elements, **kwargs) if elements else E.SPAN(**kwargs)
