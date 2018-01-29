@@ -161,7 +161,7 @@ class Tag(object):
             kwargs = (kwargs_attributes(self.attributes) if self.attributes
                       else dict())
 
-            return (builder(*elements, **kwargs) if elements else \
+            return (builder(*elements, **kwargs) if elements else
                     builder(**kwargs))
         else:
             # For non-valid and non-allowed tags, render them as spans
