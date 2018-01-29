@@ -39,7 +39,7 @@ test_html = """<body>
 
     Here is a new one with <b>bolded</b> text as an example.
     <span class=\"marginfig\">
-      <img src="media/files">
+      <img src="media/files"/>
       <caption>This is my <i>first</i> figure.</caption>
     </span>
 

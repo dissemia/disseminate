@@ -50,3 +50,17 @@ def test_html_excluded_tag():
                            "string</body>\n")
 
 
+def test_html_unsafe_tag():
+    """Test the rendering of an unsafe tag in the string content of a tag."""
+
+    # The <script> tag is excluded in settings.html_excluded
+    # Generate a simple root tag with an invalid tag in its content
+    eqn = Tag(name='script', content='<script>', attributes=None,
+              local_context=None, global_context=None)
+    elements = ["my first", eqn, "string"]
+    root = Tag(name='root', content=elements, attributes=None,
+               local_context=None, global_context=None)
+    assert root.html() == ("<body>my first"
+                           "<span class=\"script\">&lt;script&gt;</span>"
+                           "string</body>\n")
+

@@ -1,9 +1,9 @@
 """
 Core classes and functions for tags.
 """
-from lxml.html import builder as E
-import lxml.html
-from lxml.builder import E as Exml
+#from lxml.html import builder as E
+#import lxml.html
+from lxml.builder import E
 from lxml import etree
 
 from disseminate.attributes import set_attribute, kwargs_attributes
@@ -141,34 +141,63 @@ class Tag(object):
         else:
             elements = None
 
-        # Render the root tag if this is the first level
-        if level == 1:
-            if elements:
-                html = lxml.html.tostring(E.BODY(*elements),
-                                           pretty_print=settings.html_pretty)
-            else:
-                html = lxml.html.tostring(E.BODY(),
-                                          pretty_print=settings.html_pretty)
-            return html.decode("utf-8")
+        # Construct the tag
+        lower_name = (self.name.lower() if level > 1
+                      else settings.html_root_tag)
 
-        # Otherwise just render the element
-        upper_name = self.name.upper()
-        if hasattr(E, upper_name) and upper_name not in settings.html_excluded:
-            # Construct from a valid html tag that isn't an excluded tag
-            builder = getattr(E, upper_name)
+        if (settings.html_valid_tags and
+           lower_name in settings.html_valid_tags):
 
-            # Prepare the attributes
             kwargs = (kwargs_attributes(self.attributes) if self.attributes
                       else dict())
-
-            return (builder(*elements, **kwargs) if elements else
-                    builder(**kwargs))
+            e = (E(lower_name, *elements, **kwargs) if elements else
+                 E(lower_name, **kwargs))
         else:
-            # For non-valid and non-allowed tags, render them as spans
-
+            # Create a span element if it not an allowed element
             # Add the tag type to the class attribute
             attrs = self.attributes if self.attributes else ()
             attrs = set_attribute(attrs, ('class', self.name), 'a')
             kwargs = kwargs_attributes(attrs)
+            e = (E('span', *elements, **kwargs) if elements else
+                 E('span', **kwargs))
 
-            return E.SPAN(*elements, **kwargs) if elements else E.SPAN(**kwargs)
+        # Render the root tag if this is the first level
+        if level == 1:
+            return (etree
+                    .tostring(e, pretty_print=settings.html_pretty)
+                    .decode("utf-8"))
+        else:
+            return e
+
+
+        # # Render the root tag if this is the first level
+        # if level == 1:
+        #     if elements:
+        #         html = lxml.html.tostring(E.BODY(*elements),
+        #                                    pretty_print=settings.html_pretty)
+        #     else:
+        #         html = lxml.html.tostring(E.BODY(),
+        #                                   pretty_print=settings.html_pretty)
+        #     return html.decode("utf-8")
+        #
+        # # Otherwise just render the element
+        # upper_name = self.name.upper()
+        # if hasattr(E, upper_name) and upper_name not in settings.html_excluded:
+        #     # Construct from a valid html tag that isn't an excluded tag
+        #     builder = getattr(E, upper_name)
+        #
+        #     # Prepare the attributes
+        #     kwargs = (kwargs_attributes(self.attributes) if self.attributes
+        #               else dict())
+        #
+        #     return (builder(*elements, **kwargs) if elements else
+        #             builder(**kwargs))
+        # else:
+        #     # For non-valid and non-allowed tags, render them as spans
+        #
+        #     # Add the tag type to the class attribute
+        #     attrs = self.attributes if self.attributes else ()
+        #     attrs = set_attribute(attrs, ('class', self.name), 'a')
+        #     kwargs = kwargs_attributes(attrs)
+        #
+        #     return E.SPAN(*elements, **kwargs) if elements else E.SPAN(**kwargs)
