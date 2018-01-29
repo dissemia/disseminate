@@ -10,9 +10,8 @@ html_pretty = True
 #: Only render allowed HTML attributes
 html_allowed_attributes = True
 
-#: Excluded tags. These will be rendered as spans.
-html_excluded = ["SCRIPT", ]
-
+#: Allowed HTML tags. Tags that don't match these values will be rendered as
+#: span tags in html
 html_valid_tags = {"a",
                    "b", "blockquote", "body",
                    "caption",
