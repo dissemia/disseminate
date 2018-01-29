@@ -273,6 +273,9 @@ class Document(object):
             # get a template. The following can be done asynchronously.
             template = get_template(self.src_filepath, target=target)
 
+            # If a template is available, use it to render the string.
+            # Otherwise, just write the string
+
             if template is not None:
                 # copy the local_context
                 context = dict(self.local_context)
@@ -286,16 +289,16 @@ class Document(object):
                 # generate a new ouput_string
                 output_string = template.render(**context)
 
-                # determine whether the file contents are new
-                if not os.path.isfile(target_filepath):
-                    new = True
-                else:
-                    with open(target_filepath, 'r') as f:
-                        new = output_string != f.read()
+            # determine whether the file contents are new
+            if not os.path.isfile(target_filepath):
+                new = True
+            else:
+                with open(target_filepath, 'r') as f:
+                    new = output_string != f.read()
 
-                # if the contents are new, write it to the file
-                if new:
-                    with open(target_filepath, 'w') as f:
-                        f.write(output_string)
+            # if the contents are new, write it to the file
+            if new:
+                with open(target_filepath, 'w') as f:
+                    f.write(output_string)
 
         return True

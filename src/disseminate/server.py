@@ -69,7 +69,8 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
 def run(in_dir, out_dir,
         server_class=http.server.HTTPServer, handler_class=RequestHandler):
     # Setup the tree
-    tree1 = Tree(subpath=in_dir, output_dir=out_dir, target_list=['.html'])
+    tree1 = Tree(subpath=in_dir, output_dir=out_dir,
+                 target_list=settings.default_target_list)
     tree1.render()
 
     class MyHandler(handler_class):
