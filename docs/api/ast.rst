@@ -2,4 +2,7 @@ AST
 ===
 
 .. automodule:: disseminate.ast
-    :members:
+    :members: process_ast, print_ast, ParseError
+    :imported-members:
+
+
