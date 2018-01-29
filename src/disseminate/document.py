@@ -106,8 +106,11 @@ class Document(object):
                                if isinstance(global_context, dict) else dict())
         self.local_context = self.global_context.setdefault(src_filepath,
                                                             dict())
-        # Private variables
+        # The cached AST
         self._ast = None
+
+        # The last modification time of the document since its AST was last
+        # processed
         self._mtime = None
 
     def get_ast(self):
@@ -129,9 +132,11 @@ class Document(object):
         stat = os.stat(self.src_filepath)
         time = stat.st_mtime
 
+
         if (getattr(self, '_ast', None) is None or
            getattr(self, '_mtime', None) is None or
            time > self._mtime):
+
             # Check to make sure the file is reasonable
             filesize = stat.st_size
             if filesize > settings.document_max_size:
@@ -259,6 +264,7 @@ class Document(object):
 
             # render and save to output file
             target_name = target.strip('.')
+
             if hasattr(ast, target_name):
                 output_string = getattr(ast, target_name)()
             else:
@@ -280,7 +286,16 @@ class Document(object):
                 # generate a new ouput_string
                 output_string = template.render(**context)
 
-                with open(target_filepath, 'w') as f:
-                    f.write(output_string)
+                # determine whether the file contents are new
+                if not os.path.isfile(target_filepath):
+                    new = True
+                else:
+                    with open(target_filepath, 'r') as f:
+                        new = output_string != f.read()
+
+                # if the contents are new, write it to the file
+                if new:
+                    with open(target_filepath, 'w') as f:
+                        f.write(output_string)
 
         return True

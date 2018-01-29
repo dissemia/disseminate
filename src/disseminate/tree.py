@@ -5,9 +5,11 @@ import glob
 import os.path
 import regex
 import html
+import time
 from datetime import datetime
 
 from .document import Document
+from .utils import find_basestring
 from .templates import get_template
 from . import settings
 
@@ -96,8 +98,9 @@ class Tree(object):
         ex: ['.html', '.tex', '.txt']
     src_filepaths : list of str
         The document (markup source) paths, including filenames.
-    documents : list of :obj:`disseminate.Document`
-        The documents for this tree.
+    documents : dict of :obj:`disseminate.Document`
+        The documents for this tree. The keys are src_filepaths and the
+        values are documents.
     global_context : dict
         The global context to store variables shared between all documents.
     """
@@ -117,13 +120,18 @@ class Tree(object):
         self.target_list = target_list
         self.output_dir = output_dir
         self.src_filepaths = []
-        self.documents = []
+        self.documents = {}
         self.global_context = {}
+
+        # A cached project_root
         self._project_root = None
-        self._last_rendered_src_filepaths = None
+
+        # The time of the last render
+        self._last_render = None
 
     def project_root(self, subpath=None):
-        """Evaluate the path (directory) of the project root.
+        """Evaluate the path (directory) of the project root relative to the
+        current directory.
 
         This function depends on settings.strip_base_project_path. If the
         settings.strip_base_project_path is True, then this function will
@@ -148,7 +156,7 @@ class Tree(object):
         # The project_root is simply the current path if strip_base_project_path
         # is not True
         if not settings.strip_base_project_path:
-            self._project_root = '.'
+            self._project_root = "."
             return self._project_root
 
         # Load the working directories
@@ -157,36 +165,22 @@ class Tree(object):
         # Get all of the unique paths for the documents
         paths = sorted(set([os.path.split(i)[0] for i in self.src_filepaths]),
                        key=len)
-        if len(paths) == 0:
-            self._project_root = '.'
-            return self._project_root
 
-        # Go directory-by-directory to see if they're common to all paths
-        reference_path = paths[0]
-        regex_string = r'([^/]+/?){'
+        # Find the longest base string
+        base_string = find_basestring(paths)
 
-        # Start with the first path (i.e. the current path, '.')
-        best_path = '.'
-
-        # Build the path directory-by-directory
-        for i in range(1,15):
-            base_path = regex.match(regex_string + repr(i) + r'}',
-                                    reference_path)
-            base_path = base_path.group() if base_path is not None else None
-
-            if base_path and all(i.startswith(base_path) for i in paths):
-                # A new base path is found
-                best_path = base_path
-            else:
-                break
-
-        self._project_root = best_path
+        if len(paths) == 0 or paths == "":
+            self._project_root = "."
+        else:
+            self._project_root = os.path.relpath(base_string, ".")
         return self._project_root
 
     def find_managed_dirs(self, subpath=None, reload=False):
         """Populate the managed directories (self.managed_dirs) by locate index
         treefiles (e.g. index.tree).
 
+        These are directories with document (source markup) files relative to
+        the current directory.
         This method sets the self.managed_dirs attribute.
 
         .. note:: The presence of an index.tree file in a directory implies
@@ -209,7 +203,7 @@ class Tree(object):
         -------
         None
         """
-        if not reload and isinstance(self.find_managed_dirs, dict):
+        if not reload and isinstance(self.managed_dirs, dict):
             return None
         self.managed_dirs = dict()
         subpath = subpath if subpath is not None else self.subpath
@@ -255,10 +249,9 @@ class Tree(object):
 
     def find_documents_in_indexes(self, subpath=None):
         """Find the document (markup source) files listed in the index files
-        and populate the document (markup) source
-        files in order.
+        and populate the document (markup) source files in order.
 
-        This method populates the self.documents attribute
+        This method populates the self.src_filepaths attributes.
 
         .. note:: This function only looks at index.tree files that are in
                   managed directories. See the :meth:`find_managed_dirs` above.
@@ -399,7 +392,8 @@ class Tree(object):
                              output_dir = None,
                              segregate_target=settings.segregate_targets,
                              subpath=None):
-        """Converts the src_filepath to a dict of targets.
+        """Converts the src_filepath to a dict of targets, relative to the
+        current directory.
 
         .. note:: The method uses the project_root (:meth:`Tree.project_root`)
                   method to find the project root.
@@ -430,7 +424,15 @@ class Tree(object):
             (ex: 'html/index.html')
         """
         # Get the project root
+        # ex: "src"
         project_root = self.project_root(subpath=subpath)
+
+        # Parse the source filename
+        src_path, src_filename = os.path.split(src_filepath)
+        src_filebase, src_ext = os.path.splitext(src_filename)
+
+        assert src_filename != ""
+        assert src_ext != ""
 
         # Get the target format. ex: '.html'
         target_list = (target_list if target_list is not None
@@ -439,30 +441,34 @@ class Tree(object):
                        for t in target_list]
 
         # Get the output_directory, if specified
+        # ex: "."
         output_dir = (output_dir if isinstance(output_dir, str) else
                       self.output_dir)
+
+        # Set the output dir to the project_root, if an output_dir is not
+        # specified
+        output_dir = project_root if output_dir is None else output_dir
 
         # expand the user for the output directory
         if output_dir is not None:
             output_dir = os.path.expanduser(output_dir)
 
-        # Get a new path relative to the project_root
-        relative_path = os.path.relpath(src_filepath, project_root)
-
         returned_targets = {}
         for target in target_list:
+            # Get the src_filepath relative to the project_root
+            rel_src_filepath = os.path.relpath(src_filepath, project_root)
+
             # Segregate the targets, if specified
             if segregate_target:
-                relative_path = os.path.join(target.strip('.'), relative_path)
+                outpath = os.path.join(output_dir, target.strip('.'))
+            else:
+                outpath = output_dir
 
-            # Set path to output_dir, if specified
-            if output_dir is not None:
-                relative_path = os.path.join(output_dir, relative_path)
-
-            # Replace the extension with the target extension
-            split_ext = list(os.path.splitext(relative_path)[:-1])
-            split_ext.append(target)
-            new_path = ''.join(split_ext)
+            # Get the target_filepath by constructing the filename from the
+            # output_dir and the rel_src_filepath, to maintain the directory
+            # structure of rel_src_filepath
+            base, ext = os.path.splitext(rel_src_filepath)
+            new_path = os.path.join(outpath, base + target)
             returned_targets[target] = new_path
 
         return returned_targets
@@ -493,21 +499,19 @@ class Tree(object):
         base, target = os.path.splitext(target_filepath)
 
         # First look in the documents to see if a match can be found.
-        if isinstance(self.documents, list):
-            for doc in self.documents:
-                doc_target_filepath = doc.targets.get(target, None)
+        for doc in self.documents.values():
+            doc_target_filepath = doc.targets.get(target, None)
 
-                if (doc_target_filepath is not None and
-                   doc_target_filepath == target_filepath):
-                    return doc.src_filepath, target
+            if (doc_target_filepath is not None and
+               doc_target_filepath == target_filepath):
+                return doc.src_filepath, target
 
         # A source document was not found, raise an exception
         msg = ("The source document for the '{}' target filepath could not "
                "be found.")
         raise TreeException(msg.format(target_filepath))
 
-    def render(self, src_filepaths=None,
-               target_list=None, output_dir=None, ):
+    def render(self, target_list=None, output_dir=None, ):
         """Render documents.
 
         This function renders the src_filepaths documents.
@@ -525,48 +529,57 @@ class Tree(object):
         output_dir : str, optional
             If specified, files will be saved in this directory.
         """
+        target_list = (target_list if target_list is not None else
+                       self.target_list)
+
         # Generate the global context, if needed
         self.global_context = (self.global_context
                                if isinstance(self.global_context, dict)
                                else dict())
 
-        # Wrap the src_filepaths in a list if needed
-        if isinstance(src_filepaths, str):
-            src_filepaths = [src_filepaths, ]
+        # Update the documents in this tree. Remove any documents from
+        # self.documents that are no longer managed or don't exist.
+        self.find_documents()
+        self.documents = {k: v for k, v in self.documents.items()
+                          if k in self.src_filepaths}
 
-        # Check to see if the tree needs to be updated. The tree is updated
-        # when:
-        # - No src_filepaths are specified. In this case, all src_filepaths
-        #   are used.
-        # The tree doesn't need to be updated when:
-        # - src_filepaths is the same as those rendered last time
-        #   (self._last_rendered_src_filepaths) because the global_context is
-        #   not invalidated.
+        # Run and update the AST for each document that needs updating or each
+        # new document. Running the `get_ast` method for each document
+        # guarantees that the `local_context` and  `global_context` are up to
+        # date.
+        last_render = self._last_render
+        current_render = time.time()
 
-        if (src_filepaths is None or src_filepaths !=
-            getattr(self, '_last_rendered_src_filepaths', None)):
-            # In this case, render all the documents
-            src_filepaths = self.src_filepaths
-            # TODO: invalidate the global_context?
+        src_filepaths_to_render = []  # keep track of which docs to render
 
-        # render documents
-        for src_filepath in src_filepaths:
-            targets = self.convert_src_filepath(src_filepath,
-                                                target_list=target_list,
-                                                output_dir=output_dir)
+        for src_filepath in self.src_filepaths:
+            doc = self.documents.get(src_filepath, None)
 
-            # See if the document already exists
-            doc = None
-            for i in self.documents:
-                if i.src_filepath == src_filepath:
-                    doc = i
+            # Update if any of the following applies
+            if (doc is None or  # the document hasn't been created yet
+               last_render is None or  # documents haven't been rendered yet
+               (os.path.isfile(src_filepath) and  # the file was recently saved
+               os.stat(src_filepath).st_mtime > current_render)):
+                # Create new document, if needed
+                if doc is None:
+                    targets = self.convert_src_filepath(src_filepath,
+                                                        target_list=target_list,
+                                                        output_dir=output_dir)
 
-            # Create a document if needed
-            if doc is None:
-                doc = Document(src_filepath=src_filepath,
-                               targets=targets,
-                               global_context=self.global_context)
-                self.documents.append(doc)
+                    doc = Document(src_filepath=src_filepath,
+                                   targets=targets,
+                                   global_context=self.global_context)
+                    self.documents[src_filepath] = doc
+
+                # Update the AST
+                doc.get_ast()
+
+                src_filepaths_to_render.append(src_filepath)
+
+        # Render the documents. At this point, all of the documents should
+        # have been created and populated in the self.documents
+        for src_filepath in src_filepaths_to_render:
+            doc = self.documents[src_filepath]
             doc.render()
 
         return True

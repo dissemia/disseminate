@@ -1,1 +1,2 @@
-from .file import mkdir_p
+from .file import *
+from .string import *

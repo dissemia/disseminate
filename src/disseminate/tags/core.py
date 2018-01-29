@@ -71,15 +71,6 @@ class Tag(object):
         The context with values for all documents in a project. The
         `global_context` is constructed with the `src_filepath` as a key and
         the `local_context` as a value.
-
-    Methods
-    -------
-    process_ast
-        If specified, the tag will be replace by the one (or list of) tags and
-        strings returned.
-    html
-        If specified, using this function to generate the html element
-        (:obj:`lxml.builder.E`) instead of the default.
     """
 
     name = None
@@ -89,8 +80,6 @@ class Tag(object):
     global_context = None
 
     process_ast = None # takes target, returns a tag or list of tags.
-    html = None
-    tex = None
 
     html_required_attributes = None
 
@@ -143,6 +132,7 @@ class Tag(object):
         html : str or html element
             A string in HTML format or an HTML element (:obj:`lxml.builder.E`).
         """
+
         if isinstance(self.content, list):
             if level == 1:
                 # Before converting the AST to an etree, check to see that
@@ -166,17 +156,22 @@ class Tag(object):
                          *[i.html(level + 1) if hasattr(i, 'html') else i
                             for i in self.content])
         else:
+            if level == 1:
+                element = E(settings.html_root_tag, self.content)
+                return (etree.tostring(element,
+                                      pretty_print=settings.html_pretty)
+                        .decode("utf-8"))
+            else:
+                # Only include content i the content is not None or the empty
+                # string
+                content = (self.content.strip() if isinstance(self.content, str)
+                           else self.content)
+                content = [content, ] if content else []
 
-            # Only include content i the content is not None or the empty
-            # string
-            content = (self.content.strip() if isinstance(self.content, str)
-                       else self.content)
-            content = [content, ] if content else []
-
-            # Prepare the attributes
-            kwargs = (kwargs_attributes(self.attributes) if self.attributes
-                      else dict())
-            return E(self.name, *content, **kwargs)
+                # Prepare the attributes
+                kwargs = (kwargs_attributes(self.attributes) if self.attributes
+                          else dict())
+                return E(self.name, *content, **kwargs)
 
 
 class Script(Tag):

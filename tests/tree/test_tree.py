@@ -280,11 +280,11 @@ def test_convert_src_filepath():
     tree1.find_documents()
 
     # There should be 3 src_filepath files. The following target_filepaths are:
-    target_filepaths = ('sub1/intro.html',
-                        'sub1/appendix.html',
-                        'index.html')
+    target_paths = ('tests/tree/examples1/sub1/intro.html',
+                    'tests/tree/examples1/sub1/appendix.html',
+                    'tests/tree/examples1/index.html')
     for src_filepath, target_filepath in zip(tree1.src_filepaths,
-                                             target_filepaths):
+                                             target_paths):
         targets = tree1.convert_src_filepath(src_filepath,
                                              target_list=['.html'],
                                              segregate_target=False)
@@ -297,9 +297,9 @@ def test_convert_src_filepath():
 
     # There should be 3 target_path files, relative to the project root
     # 'tests/tree/examples/'
-    target_filepaths = ('sub1/intro.tex',
-                        'sub1/appendix.tex',
-                        'index.tex')
+    target_filepaths = ('tests/tree/examples1/sub1/intro.tex',
+                        'tests/tree/examples1/sub1/appendix.tex',
+                        'tests/tree/examples1/index.tex')
     for src_filepath, target_filepath in zip(tree1.src_filepaths,
                                              target_filepaths):
         targets = tree1.convert_src_filepath(src_filepath,
@@ -315,9 +315,9 @@ def test_convert_src_filepath():
     tree1.find_documents()
 
     # There should be 3 src_filepath files. The following target_filepaths are:
-    target_filepaths = ('html/sub1/intro.html',
-                        'html/sub1/appendix.html',
-                        'html/index.html')
+    target_filepaths = ('tests/tree/examples1/html/sub1/intro.html',
+                        'tests/tree/examples1/html/sub1/appendix.html',
+                        'tests/tree/examples1/html/index.html')
     for src_filepath, target_filepath in zip(tree1.src_filepaths,
                                              target_filepaths):
         targets = tree1.convert_src_filepath(src_filepath,
@@ -332,9 +332,9 @@ def test_convert_src_filepath():
 
     # There should be 3 target_path files, relative to the project root
     # 'tests/tree/examples/'
-    target_filepaths = ('tex/sub1/intro.tex',
-                        'tex/sub1/appendix.tex',
-                        'tex/index.tex')
+    target_filepaths = ('tests/tree/examples1/tex/sub1/intro.tex',
+                        'tests/tree/examples1/tex/sub1/appendix.tex',
+                        'tests/tree/examples1/tex/index.tex')
     for src_filepath, target_filepath in zip(tree1.src_filepaths,
                                              target_filepaths):
         targets = tree1.convert_src_filepath(src_filepath,
@@ -345,14 +345,14 @@ def test_convert_src_filepath():
 
     # Now test a customized output directory without target segregation
     tree1 = Tree(subpath="tests/tree/examples1",
-                 output_dir="tests/tree/examples1",
+                 output_dir=".",
                  target_list=target_list)
     tree1.find_documents()
 
     # There should be 3 src_filepath files. The following target_filepaths are:
-    target_filepaths = ('tests/tree/examples1/sub1/intro.html',
-                        'tests/tree/examples1/sub1/appendix.html',
-                        'tests/tree/examples1/index.html')
+    target_filepaths = ('./sub1/intro.html',
+                        './sub1/appendix.html',
+                        './index.html')
     for src_filepath, target_filepath in zip(tree1.src_filepaths,
                                              target_filepaths):
         targets = tree1.convert_src_filepath(src_filepath,
@@ -362,20 +362,60 @@ def test_convert_src_filepath():
 
     # And test a customized output directory with target segregation
     tree1 = Tree(subpath="tests/tree/examples1",
-                 output_dir="tests/tree/examples1",
+                 output_dir=".",
                  target_list=target_list)
     tree1.find_documents()
 
     # There should be 3 src_filepath files. The following target_filepaths are:
-    target_filepaths = ('tests/tree/examples1/html/sub1/intro.html',
-                        'tests/tree/examples1/html/sub1/appendix.html',
-                        'tests/tree/examples1/html/index.html')
+    target_filepaths = ('./html/sub1/intro.html',
+                        './html/sub1/appendix.html',
+                        './html/index.html')
     for src_filepath, target_filepath in zip(tree1.src_filepaths,
                                              target_filepaths):
         targets = tree1.convert_src_filepath(src_filepath,
                                              segregate_target=True)
         converted_path = targets['.html']
         assert converted_path == target_filepath
+
+
+def test_convert_src_filepath_absolute(tmpdir):
+    """Tests the conversion of src_filepaths to target_filepaths with
+    absolute directories."""
+    # Create a series of src documents
+    src_path = tmpdir.mkdir("src")
+    f1 = src_path.join("index1.dm")
+    f2 = src_path.join("index2.dm")
+
+    # Save text and create new fieles
+    f1.write("@{index1}")
+    f2.write("@{index2}")
+
+    target_list = ['.html', ".tex"]
+    # First we try getting paths without the segregate_targets option
+
+    # The 'examples1' directory contains an index.tree in the 'examples1/sub1'
+    # directory and no index.tree in the root directory 'examples1'.
+    # Consequently, 'examples1/sub' is considered managed and 'examples1' is
+    # not. The 'examples1/' directory only contains on document (source markup)
+    # file.
+    tree = Tree(subpath=src_path, target_list=target_list)
+    tree.find_documents()
+
+    # Test the correct population of the src_filepaths
+    assert tree.src_filepaths[0] == f1
+    assert tree.src_filepaths[1] == f2
+
+    # Test the correct idenfication of the project_root
+    assert tree.project_root() == os.path.relpath(src_path, ".")
+
+    # Test the convert of src_filepaths to target_filepaths
+    project_root = tree.project_root()
+    target_paths = (project_root + '/html/index1.html',
+                    project_root + '/html/index2.html',)
+    for src_filepath, target_filepath in zip(tree.src_filepaths, target_paths):
+        converted_html = tree.convert_src_filepath(src_filepath)['.html']
+        assert target_filepath == converted_html
+
 
 def test_convert_target_filepath(tmpdir):
     """Tests the conversion of target paths to source paths."""
@@ -412,8 +452,8 @@ def test_convert_target_filepath(tmpdir):
 
     for src_filepath, target_filepath in zip(source_filepaths,
                                              target_filepaths):
-        converted_src_filepath, target = tree1.convert_target_filepath(target_filepath)
-        assert converted_src_filepath == src_filepath
+        filepath, target = tree1.convert_target_filepath(target_filepath)
+        assert filepath == src_filepath
 
 
 def test_render(tmpdir):
@@ -427,18 +467,62 @@ def test_render(tmpdir):
     # file.
     subpath = "tests/tree/examples1"
     tree1 = Tree(subpath=subpath, output_dir=output_dir)
-    tree1.find_documents()
     tree1.render(target_list=['.html'])
 
     # Check to see that the targets were all rendered
     target_filepaths = (output_dir + '/html/sub1/intro.html',
                         output_dir + '/html/sub1/appendix.html',
                         output_dir + '/html/index.html')
-    for doc, path2 in zip(tree1.documents, target_filepaths):
+    for src_path, target_path in zip(tree1.src_filepaths, target_filepaths):
+        doc = tree1.documents[src_path]
         path1 = doc.targets['.html']
-        assert path1 == path2
+        assert path1 == target_path
         assert os.path.isfile(path1)
 
+
+def test_update_render(tmpdir):
+    """Tests that new and updated files only are rendered."""
+    # Create a series of src documents
+    src_path = tmpdir.mkdir("src")
+    f1 = src_path.join("index1.dm")
+    f2 = src_path.join("index2.dm")
+
+    # Save text and create new fieles
+    f1.write("@{index1}")
+    f2.write("@{index2}")
+
+    # Create a tree and render
+    tree = Tree(subpath=str(src_path))
+    tree.render()
+
+    # Check that the target files have been created
+    target_paths = (os.path.relpath(src_path + "/html/index1.html", "."),
+                    os.path.relpath(src_path + "/html/index2.html", "."))
+    for src_filepath, target_path in zip(tree.src_filepaths, target_paths):
+        doc = tree.documents[src_filepath]
+        assert doc.targets['.html'] == target_path
+        assert os.path.isfile(target_path)
+
+    # Get the mtimes for the documents
+    mtime1 = os.stat(target_paths[0]).st_mtime
+    mtime2 = os.stat(target_paths[1]).st_mtime
+
+    # Update one of the files, and see which is rendered.
+    ast1, ast2 = [tree.documents[s]._ast for s in tree.src_filepaths]
+
+    f2.write("@{new index2}")
+    tree.render()
+
+    newast1, newast2 = [tree.documents[s]._ast for s in tree.src_filepaths]
+
+    # The ast for document 2 should change, but not the one for document 1
+    assert ast1 == newast1
+    assert ast2 != newast2
+
+    # The document2 should have changed, but not document1
+    assert mtime1 == os.stat(target_paths[0]).st_mtime
+    assert mtime2 < os.stat(target_paths[1]).st_mtime
+    
 
 def test_html(tmpdir):
     """Tests the html method."""
