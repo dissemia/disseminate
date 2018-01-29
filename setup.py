@@ -22,7 +22,7 @@ setup(
     long_description=long_description,
     # url='https://github.com/pypa/sampleproject',
     author='Justin L Lorieau',
-    classifiers=[  # Optional
+    classifiers=[  
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 2',
@@ -35,21 +35,9 @@ setup(
     # keywords='sample setuptools development',  # Optional
     packages=find_packages("src"),
     package_dir={"": "src"},
-
-#    packages=find_packages('src',),
-#                           exclude=['contrib', 'docs', 'tests']),
-    #package_dir={'': 'src'},
-    install_requires=['regex', 'jinja2'],
+    install_requires=['regex', 'jinja2',  'pyyaml'],
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc'],
-        'test': ['pytest'],
+        'test': ['pytest', 'tox'],
     },
-    # package_data={  # Optional
-    #     'sample': ['package_data.dat'],
-    # },
-    # entry_points={  # Optional
-    #     'console_scripts': [
-    #         'sample=sample:main',
-    #     ],
-    # },
 )
