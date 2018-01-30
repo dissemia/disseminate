@@ -72,7 +72,8 @@ def get_template(src_filepath, target,
             cl = dl
 
         # Create the environment
-        env = jinja2.Environment(loader=cl)
+        ae = jinja2.select_autoescape(['html', 'htm', 'xml'])
+        env = jinja2.Environment(autoescape=ae, loader=cl)
         environments[top_dir] = env
 
     # Now return the template from the environment
