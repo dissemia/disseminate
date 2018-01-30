@@ -32,7 +32,7 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],
-    # keywords='sample setuptools development',  # Optional
+    keywords='document processor academic publishing',
     packages=find_packages("src"),
     package_dir={"": "src"},
     install_requires=['regex', 'jinja2',  'pyyaml'],
@@ -40,4 +40,9 @@ setup(
         'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc'],
         'test': ['pytest', 'tox'],
     },
+    scripts=['scripts/dm', ],
+    entry_points={
+        'console_scripts': [
+            'dm = dm.main:main'
+          ],}
 )
