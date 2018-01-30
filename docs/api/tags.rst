@@ -2,7 +2,7 @@ Tags
 ====
 
 .. automodule:: disseminate.tags
-    :members: Tag, TagFactory
+    :members: Tag, TagFactory, TagError
     :imported-members:
 
 Specific Tags

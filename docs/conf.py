@@ -20,7 +20,12 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+theme = 'guzzle'
 
+if theme == 'guzzle':
+    import guzzle_sphinx_theme
+if theme == 'nameko':
+    import sphinx_nameko_theme
 
 # -- General configuration ------------------------------------------------
 
@@ -95,7 +100,22 @@ todo_include_todos = True
 # a list of builtin themes.
 #
 #html_theme = 'nature'
-html_theme = 'sphinx_rtd_theme'
+#html_theme = 'alabaster'
+
+if theme == 'guzzle':
+    html_theme_path = guzzle_sphinx_theme.html_theme_path()
+    html_theme = 'guzzle_sphinx_theme'
+
+    extensions.append("guzzle_sphinx_theme")
+    html_theme_options = {
+        # Set the name of the project to appear in the sidebar
+        "project_nav_name": "disseminate",
+    }
+elif theme == 'nameko':
+    html_theme_path = [sphinx_nameko_theme.get_html_theme_path()]
+    html_theme = 'nameko'
+else:
+    html_theme = theme
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -119,12 +139,21 @@ html_context = {
 #
 # This is required for the alabaster theme
 # refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
-html_sidebars = {
-    '**': [
-        'relations.html',  # needs 'show_related': True theme option to display
-        'searchbox.html',
-    ]
-}
+
+if theme == 'guzzle':
+    html_sidebars = {
+        '**': ['logo-text.html',
+               'globaltoc.html',
+               'searchbox.html']
+    }
+else:
+    html_sidebars = {
+        '**': [
+            'globaltoc.html',
+            #'relations.html',  # needs 'show_related': True theme option to display
+            'searchbox.html',
+        ]
+    }
 
 
 # -- Options for HTMLHelp output ------------------------------------------

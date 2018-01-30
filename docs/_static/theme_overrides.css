@@ -12,3 +12,45 @@
       overflow: visible !important;
    }
 }
+
+/* Namako modifications **/
+/*
+div.document {
+    max-width: 1024px;
+    font-size: 19px;
+}
+*/
+
+/* Guzzle modifications */
+
+body {
+    font-size: 16px;
+}
+
+h1 {
+    font-size: 34px;
+}
+
+h2 {
+    font-size: 28px;
+}
+
+dl {
+    margin-top: 1.25rem;
+}
+
+.sidebar-toc {
+    margin: 0 1.2rem;
+}
+
+code.descclassname {
+    font-size: 110%;
+    padding: 0px;
+    color: #bb6f82;
+}
+
+code.descname {
+    font-size: 110%;
+    padding: 0px;
+    color: #8D1A38;
+}

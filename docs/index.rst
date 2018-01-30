@@ -1,3 +1,5 @@
+:tocdepth: 2
+           
 ###########
 Disseminate
 ###########
@@ -10,15 +12,28 @@ webpages. It uses a simplified markup system as well as extensive and
 extensible tag functions.
 
 
+Table of Contents
+-----------------
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Command-Line Usage
 
-   api/api
+   api/document
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Documentation
+             
+   api/tags
+   api/ast
+   api/document
+   api/tree
+   api/server
+
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
