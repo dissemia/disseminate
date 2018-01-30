@@ -57,6 +57,13 @@ test_invalid = """
       @caption{This is my @i{first} figure.}
 """
 
+test_header = """
+---
+title: My first title
+author: Justin L Lorieau
+---
+"""
+
 
 def test_ast_basic_string():
     """Test the parsing of a basic string into an AST."""
@@ -113,7 +120,7 @@ def test_ast_validation():
     # Validate closing bracket
 
 
-def test_default_conersion():
+def test_default_conversion():
     """Test the default conversion of an AST into a text string."""
 
     # Generate the txt string
@@ -170,3 +177,19 @@ def test_basic_html_conversion():
         e7 = next(root_iter)
 
 
+def test_ast_with_header():
+    """Tests the correct parsing of a header."""
+
+    combined_test = test_header + test
+    ast = process_ast(combined_test)
+
+    # Check the contents  of the local_context
+    assert 'title' in ast.local_context
+    assert ast.local_context['title'] == 'My first title'
+
+    assert 'author' in ast.local_context
+    assert ast.local_context['author'] == 'Justin L Lorieau'
+
+    # Check the correct rendering of the AST html
+    html = ast.html()
+    assert html == test_html

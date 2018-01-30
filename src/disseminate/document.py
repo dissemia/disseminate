@@ -262,6 +262,18 @@ class Document(object):
 
             # postprocess_ast
 
+            # Prepare the context
+            # Add non-private variables from the global context
+            # context['_global'] = self.global_context
+            context = {k: v for k, v in self.global_context.items()
+                       if not k.startswith("_")}
+
+            # Add non-private variables from the local_context
+            # These intentionally overwrite overlapping variables from the
+            # global_context
+            context.update({k: v for k, v in self.local_context.items()
+                            if not k.startswith("_")})
+
             # render and save to output file
             target_name = target.strip('.')
 
@@ -270,6 +282,9 @@ class Document(object):
             else:
                 output_string = ast.default()
 
+            # Add the output string to the context
+            context['body'] = output_string
+
             # get a template. The following can be done asynchronously.
             template = get_template(self.src_filepath, target=target)
 
@@ -277,15 +292,6 @@ class Document(object):
             # Otherwise, just write the string
 
             if template is not None:
-                # copy the local_context
-                context = dict(self.local_context)
-
-                # add the global context
-                context['_global'] = self.global_context
-
-                # set additional variables needed for the template
-                context['body'] = output_string
-
                 # generate a new ouput_string
                 output_string = template.render(**context)
 

@@ -3,6 +3,12 @@ Functions for processing Abstract Syntax Trees (ASTs) from strings.
 """
 import regex
 
+from yaml import load, dump
+try:
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
+
 from disseminate.tags import TagFactory, Tag
 from .validate import ASTValidator
 from . import settings
@@ -13,6 +19,10 @@ class AstException(Exception): pass
 
 control_char = r'@'
 
+
+re_header = regex.compile(r'[\s\n]*[\n]?-{3,}\n'
+                          r'(?P<yaml>[^-]+)'
+                          r'\n-{3,}\n')
 
 re_tag = regex.compile(r'(@(?P<tag>[A-Za-z]\w*)'
                        r'(?P<attributes>\[[^\]]+\])?'
@@ -63,9 +73,22 @@ def process_ast(s, local_context=None, global_context=None,
     global_context = (global_context if isinstance(global_context, dict)
                       else dict())
 
+    # Setup the parsing
     current_pos = 0
     factory = TagFactory()
     validator = ASTValidator(src_filepath=src_filepath)
+
+    # get the header if present
+    if level == 1:
+        m = re_header.match(s)
+        if m:
+            header_str = m.groupdict()['yaml']
+            header = load(header_str, Loader=Loader)
+            local_context.update(header)
+
+            # Advance the string by the amount of the header
+            _, end = m.span()
+            s = s[end:]
 
     # Create the root ast
     ast = []
@@ -104,10 +127,11 @@ def process_ast(s, local_context=None, global_context=None,
     ast.append(string)
 
     if level == 1:  # root level
-        return factory.tag(tag_name='root',
-                           tag_content=ast,
-                           tag_attributes=None,
-                           local_context=local_context,
-                           global_context=global_context)
+        root =  factory.tag(tag_name='root',
+                            tag_content=ast,
+                            tag_attributes=None,
+                            local_context=local_context,
+                            global_context=global_context)
+        return root
     else:
         return ast
