@@ -60,4 +60,4 @@ def main():
                         level=logging.INFO)
 
     if args.command == 'serve':
-        run(in_dir=args.i, out_dir=args.o)
+        run(in_directory=args.i, out_directory=args.o)

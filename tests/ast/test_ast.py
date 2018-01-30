@@ -4,7 +4,8 @@ Tests for the ast sub-module.
 import pytest
 import lxml.html
 
-from disseminate.ast import process_ast, print_ast, ParseError
+from disseminate.ast import process_ast
+from disseminate.ast.validate import ParseError
 from disseminate.tags import Tag
 
 

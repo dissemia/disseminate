@@ -391,7 +391,8 @@ class Tree(object):
     def convert_src_filepath(self, src_filepath, target_list=None,
                              output_dir = None,
                              segregate_target=settings.segregate_targets,
-                             subpath=None):
+                             subpath=None,
+                             relative_root=None):
         """Converts the src_filepath to a dict of targets, relative to the
         current directory.
 
@@ -415,6 +416,13 @@ class Tree(object):
         subpath : str, optional
             If specified, only look in the given subpath directory. If this is
             not specified, the value of self.subpath will be searched as well.
+        relative_root : str, optional
+            If specified, the returned paths will be relative to the given
+            output root directory.This is useful for constructing web links to
+            the target.
+
+            ex: 'out/html/main.html' becomes 'main.html' if relative_root=''
+
 
         Returns
         -------
@@ -458,11 +466,14 @@ class Tree(object):
             # Get the src_filepath relative to the project_root
             rel_src_filepath = os.path.relpath(src_filepath, project_root)
 
-            # Segregate the targets, if specified
-            if segregate_target:
-                outpath = os.path.join(output_dir, target.strip('.'))
+            if relative_root is None:
+                # Segregate the targets, if specified
+                if segregate_target:
+                    outpath = os.path.join(output_dir, target.strip('.'))
+                else:
+                    outpath = output_dir
             else:
-                outpath = output_dir
+                outpath = relative_root
 
             # Get the target_filepath by constructing the filename from the
             # output_dir and the rel_src_filepath, to maintain the directory
@@ -584,6 +595,7 @@ class Tree(object):
 
         return True
 
+    # TODO: strip root path and segregated paths from targets.
     def html(self, target_list=None,
              output_dir=None,
              segregate_target=settings.segregate_targets,
@@ -630,14 +642,13 @@ class Tree(object):
             # Get the target file paths
             kwargs = {'src_filepath': src_filepath,
                       'target_list': target_list,
-                      'segregate_target': segregate_target,
-                      'output_dir': output_dir,
-                      'subpath': subpath}
+                      'subpath': subpath,
+                      'relative_root': '/'}
             targets = self.convert_src_filepath(**kwargs)
 
             # Create an entry and link for the source file
             elem_str += "<td class=\"src\"><a href=\"{}\">{}</a></td>"
-            elem_str = elem_str.format(html.escape(src_filepath),
+            elem_str = elem_str.format(html.escape('/' + relative_src_filepath),
                                        html.escape(relative_src_filepath))
 
             # Add links for the targets

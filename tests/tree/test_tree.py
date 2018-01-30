@@ -417,6 +417,54 @@ def test_convert_src_filepath_absolute(tmpdir):
         assert target_filepath == converted_html
 
 
+def test_convert_src_filepath_relative_root():
+    """Tests the conver_src_filepath method with a relative root."""
+    """Tests the conversion of src_filepaths to target_filepaths."""
+
+    target_list = ['.html', ".tex"]
+    # First we try getting paths without the segregate_targets option
+
+    # The 'examples1' directory contains an index.tree in the 'examples1/sub1'
+    # directory and no index.tree in the root directory 'examples1'.
+    # Consequently, 'examples1/sub' is considered managed and 'examples1' is
+    # not. The 'examples1/' directory only contains on document (source markup)
+    # file.
+    tree1 = Tree(subpath="tests/tree/examples1", target_list=target_list)
+    tree1.find_documents()
+
+    # There should be 3 src_filepath files. The following target_filepaths are:
+    target_paths = ('sub1/intro.html',
+                    'sub1/appendix.html',
+                    'index.html')
+    for src_filepath, target_filepath in zip(tree1.src_filepaths,
+                                             target_paths):
+        targets = tree1.convert_src_filepath(src_filepath,
+                                             target_list=['.html'],
+                                             segregate_target=True,
+                                             relative_root='')
+        converted_path = targets['.html']
+        assert converted_path == target_filepath
+
+    # This time we'll try the same thing, but with a '.tex' target and a
+    # relative_root of '/'
+    tree1 = Tree(subpath="tests/tree/examples1", target_list=target_list)
+    tree1.find_documents()
+
+    # There should be 3 target_path files, relative to the project root
+    # 'tests/tree/examples/'
+    target_filepaths = ('/sub1/intro.tex',
+                        '/sub1/appendix.tex',
+                        '/index.tex')
+    for src_filepath, target_filepath in zip(tree1.src_filepaths,
+                                             target_filepaths):
+        targets = tree1.convert_src_filepath(src_filepath,
+                                             target_list=['.tex'],
+                                             segregate_target=True,
+                                             relative_root='/')
+        converted_path = targets['.tex']
+        assert converted_path == target_filepath
+
+
 def test_convert_target_filepath(tmpdir):
     """Tests the conversion of target paths to source paths."""
     output_dir = tmpdir.realpath()
