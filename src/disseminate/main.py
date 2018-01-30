@@ -4,8 +4,17 @@ The main disseminate program.
 
 import logging
 import argparse
+import os.path
 
 from .server import run
+
+
+def is_directory(value):
+    if not os.path.isdir(value):
+         raise argparse.ArgumentTypeError("'{}' is not a directory. The input "
+                                          "and output must be "
+                                          "directories".format(value))
+    return value
 
 
 def main():
@@ -23,10 +32,13 @@ def main():
     for p in (render, serve):
         p.add_argument('-i',
                        action='store', default='.',
+                       type=is_directory,
                        help="the directory for the input source files")
         p.add_argument('-o',
                        action='store', default='.',
-                       help="the directory for the generated documents")
+                       type=is_directory,
+                       help="the directory for the generated output "
+                            "documents")
 
     # Parse the commands
     args = parser.parse_args()
