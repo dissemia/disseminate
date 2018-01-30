@@ -5,37 +5,9 @@ import os
 import os.path
 
 from .ast import process_ast
-from .tags import Tag
 from .templates import get_template
 from .utils import mkdir_p
 from . import settings
-
-
-def process_tag_ast(ast, target):
-    """Invoke the 'process_ast' method of tags, if available.
-
-    Parameters
-    ----------
-    ast: list of str and :obj:`disseminate.Tag` objects.
-        An Abstract Syntax Tree (AST) to process in place.
-
-    Returns
-    -------
-    processed_ast : list of str and :obj:`disseminate.Tag` objects.
-        A processed AST.
-    """
-    processed_ast = []
-    for item in processed_ast:
-        if (isinstance(item, Tag) and
-           getattr(item, 'process_ast', None) is not None):
-            new_item = item.process_ast(target)
-            processed_ast += [new_item, ]
-        elif isinstance(item, list):
-            processed_ast += process_tag_ast(item, target)
-        else:
-            processed_ast.append(item)
-
-    return processed_ast
 
 
 class DocumentError(Exception):
@@ -123,6 +95,11 @@ class Document(object):
         The cached AST is updated if the source file is updated.
 
         See the :meth:`render` method for more details.
+
+        Returns
+        -------
+        :obj:`disseminate.tag.Tag`
+            A root tag object for the AST.
         """
         # Check to make sure the file exists
         if not os.path.isfile(self.src_filepath):  # file must exist
