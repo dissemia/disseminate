@@ -7,6 +7,7 @@ import argparse
 import os.path
 
 from .server import run
+from . import settings
 
 
 def is_directory(value):
@@ -29,6 +30,8 @@ def main():
     serve = base_parser.add_parser('serve',
                                    help="serve documents with a local "
                                         "webserver")
+
+    # Arguments common to sub-parsers
     for p in (render, serve):
         p.add_argument('-i',
                        action='store', default='.',
@@ -40,11 +43,21 @@ def main():
                        help="the directory for the generated output "
                             "documents")
 
+    # Serve arguments
+    serve.add_argument('-p', '--port',
+                       action='store', default=settings.default_port,
+                       help="The port to listen to for the webserver "
+                            "(default: {})".format(settings.default_port))
+
     # Parse the commands
     args = parser.parse_args()
     if args.command not in ('serve', 'render'):
         parser.print_help()
         exit()
+
+    # Set the default logging level to info
+    logging.basicConfig(format='%(levelname)-9s:  %(message)s',
+                        level=logging.INFO)
 
     if args.command == 'serve':
         run(in_dir=args.i, out_dir=args.o)
