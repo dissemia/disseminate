@@ -33,9 +33,13 @@ class Document(object):
     ----------
     src_filepath : str
         A filename for a document (markup source) file. This file should exist.
+        This path is an absolute path or a path relative to the current
+        directory.
     targets : dict
         A dict with the target extension as keys (ex: '.html') and the value
         is the target_filepath for that target. (ex: 'html/index.html')
+        These paths are an absolute path or a path relative to the current
+        directory.
     local_context : dict
         The context with values for the current document. The values in this
         dict do not depend on values from other documents. (local)

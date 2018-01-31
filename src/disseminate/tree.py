@@ -17,23 +17,26 @@ from . import settings
 class TreeException(Exception): pass
 
 
-def load_index_files(index_path):
-    """Return a list of documents (source markup) files identified by an index
-    tree file (index.tree).
+def load_index_files(index_path, project_root=''):
+    """Return a list of documents (source markup) files, relative to the
+    project_root, identified by an index tree file (index.tree).
 
-    The search is recursive, in index.tree files in sub-directories are
-    listed.
+    The search is recursive. The index.tree files listed from sub-directories
+    are included recursively.
 
     Parameters
     ----------
-    index_path: str
+    index_path : str
         The path of an index tree file (index.tree).
+    project_root : str, optional
+        The project_root path. All files returned will be relative to this path.
 
     Returns
     -------
-    documents: list
-        An ordered list of documents (source markup) filenames and paths. These
-        respect the ordering in the tree index file given by index_path.
+    src_filepaths: list of str
+        An ordered list of documents (source markup) filenames and paths,
+        relative to the project_root. These respect the ordering in the tree
+        index file given by index_path.
     """
     # Check that the index_path exists
     if not os.path.exists(index_path):
@@ -49,7 +52,7 @@ def load_index_files(index_path):
     # tree index file are relative to the tree index path.
     filepaths = [os.path.join(index_dir, i) for i in filenames]
 
-    document_paths = []
+    src_filepaths = []
 
     # If any of the files are tree index files (index.tree), then ast those
     # as well
@@ -57,11 +60,12 @@ def load_index_files(index_path):
         path, filename = os.path.split(filepath)
 
         if filename == settings.index_filename:
-            document_paths += load_index_files(filepath)
+            src_filepaths += load_index_files(filepath)
         else:
-            document_paths.append(filepath)
+            src_filepaths.append(filepath)
 
-    return document_paths
+    # Return the src_filepaths, relative to project_root
+    return [os.path.relpath(i, project_root) for i in src_filepaths]
 
 
 class Tree(object):
@@ -83,21 +87,36 @@ class Tree(object):
           settings.document_extension).
           These will be sorted by filename and added after the indexed files.
 
+    .. note:: The tree src_filepaths and target_filepaths are relative to the
+              project_root and target_root, respectively. However, when creating
+              documents, the paths used for those are either absolute or
+              relative to the current directory.
+
     Attributes
     ----------
-    subpath : str, optional
-        The subpath (sub-directory) of the current directory to search.
-    managed_dirs : dict of str
-        The subpaths (directories and subdirectories) managed by an index tree
-        file (index.tree).
-
-        ex: {'src/': 'src/index.tree'
-             'src/sub1': 'src/index.tree'}
+    project_root : str
+        The root directory for the document (source markup) files. (i.e. the
+        input directory)
+        ex: 'src/'
+    target_root : str
+        The target directory for the output documents (i.e. the output
+        directory). Depending on the segregate_targets, option
+        ex: 'out/'
+    segregate_targets : bool
+        If True, the processed output documents for each target type will be
+        place in its directory named for the target.
+        ex: 'out/html'
     target_list : list of str
         A list of target extensions to render documents to.
         ex: ['.html', '.tex', '.txt']
+    managed_dirs : dict of str
+        The directories and subdirectories managed by an index tree file
+        (i.e. they contain an index.tree).
+        ex: {'src/': 'src/index.tree'
+             'src/sub1': 'src/index.tree'}
     src_filepaths : list of str
-        The document (markup source) paths, including filenames.
+        The document (markup source) paths, including filenames, relative to
+        the target root.
     documents : dict of :obj:`disseminate.Document`
         The documents for this tree. The keys are src_filepaths and the
         values are documents.
@@ -105,83 +124,48 @@ class Tree(object):
         The global context to store variables shared between all documents.
     """
 
-    subpath = None
-    managed_dirs = None
+    project_root = None
+    target_root = None
+    segregate_targets = None
     target_list = None
-    output_dir = None
+    managed_dirs = None
     src_filepaths = None
     documents = None
     global_context = None
 
-    def __init__(self, subpath=None, target_list=settings.default_target_list,
-                 output_dir=None):
+    def __init__(self, project_root, target_root,
+                 segregate_targets=settings.segregate_targets,
+                 target_list=settings.default_target_list):
         assert isinstance(target_list, list) or isinstance(target_list, tuple)
-        self.subpath = subpath
+        self.project_root = project_root
+        if target_root == '.' or target_root == './':
+            self.target_root = ''
+        else:
+            self.target_root = target_root
+        self.segregate_targets = segregate_targets
         self.target_list = target_list
-        self.output_dir = output_dir
         self.src_filepaths = []
         self.documents = {}
         self.global_context = {}
 
-        # A cached project_root
-        self._project_root = None
-
         # The time of the last render
         self._last_render = None
 
-    def project_root(self, subpath=None):
-        """Evaluate the path (directory) of the project root relative to the
-        current directory.
+    def find_managed_dirs(self, reload=False):
+        """Populate the managed directories (self.managed_dirs) by locating
+        index treefiles (e.g. index.tree).
 
-        This function depends on settings.strip_base_project_path. If the
-        settings.strip_base_project_path is True, then this function will
-        attempt to find the 'common denominator' path for all the documents
-        and return this path. Otherwise it will return the current directory.
+        This method sets the self.managed_dirs attribute. This attribute
+        contains managed directories (relative to the project_root) as keys and
+        the corresponding tree index file path (index.tree, relative to the
+        project root) as values.
 
-        Parameters
-        ----------
-        subpath : str, optional
-            If specified, only look in the given subpath directory. If this is
-            not specified, the value of self.subpath will be searched as well.
+        ex: {'': 'index.tree',
+             'sub1': 'index.tree',
+             'sub1/sub12': 'index.tree'}
 
-        Returns
-        -------
-        project_root : str
-            The string for the project root
-        """
-        # Cache the project_root
-        if getattr(self, '_project_root', None) is not None:
-            return self._project_root
-
-        # The project_root is simply the current path if strip_base_project_path
-        # is not True
-        if not settings.strip_base_project_path:
-            self._project_root = "."
-            return self._project_root
-
-        # Load the working directories
-        self.find_managed_dirs(subpath)
-
-        # Get all of the unique paths for the documents
-        paths = sorted(set([os.path.split(i)[0] for i in self.src_filepaths]),
-                       key=len)
-
-        # Find the longest base string
-        base_string = find_basestring(paths)
-
-        if len(paths) == 0 or paths == "":
-            self._project_root = "."
-        else:
-            self._project_root = os.path.relpath(base_string, ".")
-        return self._project_root
-
-    def find_managed_dirs(self, subpath=None, reload=False):
-        """Populate the managed directories (self.managed_dirs) by locate index
-        treefiles (e.g. index.tree).
-
-        These are directories with document (source markup) files relative to
-        the current directory.
-        This method sets the self.managed_dirs attribute.
+             In this case, the index.tree in the project root manages the '',
+             'sub1' and 'sub2' directories.
 
         .. note:: The presence of an index.tree file in a directory implies
                   that the directory and all its subdirectories are managed by
@@ -191,9 +175,6 @@ class Tree(object):
 
         Parameters
         ----------
-        subpath : str, optional
-            If specified, only look in the given subpath directory. If this is
-            not specified, the value of self.subpath will be searched as well.
         reload : bool, optional
             If True, the managed directories will be re-evaluated, regardless
             of whether they were evaluated before. Otherwise, the result
@@ -206,17 +187,15 @@ class Tree(object):
         if not reload and isinstance(self.managed_dirs, dict):
             return None
         self.managed_dirs = dict()
-        subpath = subpath if subpath is not None else self.subpath
+        project_root = self.project_root
 
         # expand the user for the subpath directory
-        if isinstance(subpath, str):
-            subpath = os.path.expanduser(subpath)
+        if isinstance(project_root, str):
+            project_root = os.path.expanduser(project_root)
 
         # Construct the glob pattern to search for index.tree files
-        if subpath:
-            search_glob = os.path.join(subpath, '**', settings.index_filename)
-        else:
-            search_glob = os.path.join('**', settings.index_filename)
+        search_glob = os.path.join(project_root, '**',
+                                   settings.index_filename)
 
         # Get the glob list and sort it by length so that root paths come up
         # first. If two strings have the same length, then they will be sorted
@@ -228,10 +207,12 @@ class Tree(object):
         # sub-directories as managed
         for index_path in index_paths:
             index_dir, index_filename = os.path.split(index_path)
+            rel_index_path = os.path.relpath(index_path, project_root)
+            rel_index_dir = os.path.relpath(index_dir, project_root)
 
             # Do nothing if this directory is already managed by another
             # index tree file.
-            if index_dir in self.managed_dirs:
+            if rel_index_dir in self.managed_dirs:
                 continue
 
             # Find all subdirectories to index_dir and mark these as managed
@@ -243,11 +224,14 @@ class Tree(object):
                         glob.glob(glob_search, recursive=True)]
 
             for sub_dir in sub_dirs:
-                self.managed_dirs[sub_dir] = index_path
+                # Set sub_dir relative to the project root
+                sub_dir = os.path.relpath(sub_dir, project_root)
+                sub_dir = sub_dir if sub_dir != '.' else ''
+                self.managed_dirs[sub_dir] = rel_index_path
 
         return None
 
-    def find_documents_in_indexes(self, subpath=None):
+    def find_documents_in_indexes(self):
         """Find the document (markup source) files listed in the index files
         and populate the document (markup) source files in order.
 
@@ -255,12 +239,6 @@ class Tree(object):
 
         .. note:: This function only looks at index.tree files that are in
                   managed directories. See the :meth:`find_managed_dirs` above.
-
-        Parameters
-        ----------
-        subpath : str, optional
-            If specified, only look in the given subpath directory. If this is
-            not specified, the value of self.subpath will be searched as well.
 
         Returns
         -------
@@ -270,7 +248,7 @@ class Tree(object):
             self.src_filepaths = []
 
         # Populate the managed_dirs
-        self.find_managed_dirs(subpath)
+        self.find_managed_dirs()
 
         # Get a list of all index files. These are sorted by length so that
         # root directories are presented first, then they are sorted
@@ -279,9 +257,14 @@ class Tree(object):
         index_files = sorted(index_files,
                              key=lambda i: (len(i), i))
 
+        # The index_files have to be translated from the project_root to the
+        # current directory
+        index_files = [os.path.join(self.project_root, i) for i in index_files]
+
         # Now load the indexes to get the document (markup) files.
         for index_file in index_files:
-            new_documents = load_index_files(index_file)
+            new_documents = load_index_files(index_file,
+                                             project_root=self.project_root)
             self.src_filepaths += new_documents
 
             # Check for duplicates
@@ -296,13 +279,15 @@ class Tree(object):
                     else:
                         seen.add(i)
 
-            # Check that the new documents all exist
+            # Check that the new documents all exist.
             for i in new_documents:
-                if not os.path.exists(i):
+                # These must be translated from the project_root
+                i_current_dir = os.path.join(self.project_root, i)
+                if not os.path.exists(i_current_dir):
                     msg = "The file '{}' in index tree '{}' does not exist."
-                    raise TreeException(msg.format(i, index_file))
+                    raise TreeException(msg.format(i_current_dir, index_file))
 
-    def find_documents_by_type(self, subpath=None):
+    def find_documents_by_type(self):
         """Find the document (markup source) files that are not managed by
         index tree files.
 
@@ -311,40 +296,32 @@ class Tree(object):
 
         This method populates the self.documents attribute.
 
-        Parameters
-        ----------
-        subpath : str, optional
-            If specified, only look in the given subpath directory. If this is
-            not specified, the value of self.subpath will be searched as well.
-
         Returns
         -------
         None
         """
-        subpath = subpath if subpath is not None else self.subpath
+        project_root = self.project_root
 
         # expand the user for the subpath directory
-        if isinstance(subpath, str):
-            subpath = os.path.expanduser(subpath)
+        if isinstance(project_root, str):
+            project_root = os.path.expanduser(project_root)
 
         if not isinstance(self.src_filepaths, list):
             self.src_filepaths = []
 
         # Populate the managed_dirs
-        self.find_managed_dirs(subpath)
+        self.find_managed_dirs(project_root)
 
         # Find all dirs with document files that are not managed
-        if subpath:
-            search_glob = os.path.join(subpath, '**',
-                                       '*' + settings.document_extension)
-        else:
-            search_glob = os.path.join('**',
-                                       '*' + settings.document_extension)
+        search_glob = os.path.join(project_root, '**',
+                                   '*' + settings.document_extension)
 
-        # Find the files and separate them into ('directory', 'filename')
-        # tuples
-        filepaths = [os.path.split(i) for i in
+        # Find the files and convert filepaths relative to the project_root
+        filepaths = [os.path.relpath(i, project_root) for i in
                      glob.glob(search_glob, recursive=True)]
+
+        # and separate them into ('directory', 'filename') tuples
+        filepaths = [os.path.split(i) for i in filepaths]
 
         # Remove any paths that are managed (i.e. whose directory is already
         # in the self.managed_dirs
@@ -364,7 +341,7 @@ class Tree(object):
 
         return None
 
-    def find_documents(self, subpath=None):
+    def find_documents(self):
         """Finds all the document (source markup) files in the tree by first
         looking up tree index files, then finding documents in unmanaged
         directories.
@@ -374,24 +351,15 @@ class Tree(object):
 
         This method resets and populates the self.documents attribute.
 
-        Parameters
-        ----------
-        subpath : str, optional
-            If specified, only look in the given subpath directory. If this is
-            not specified, the value of self.subpath will be searched as well.
-
         Returns
         -------
         None
         """
         self.src_filepaths = []
-        self.find_documents_in_indexes(subpath=subpath)
-        self.find_documents_by_type(subpath=subpath)
+        self.find_documents_in_indexes()
+        self.find_documents_by_type()
 
     def convert_src_filepath(self, src_filepath, target_list=None,
-                             output_dir = None,
-                             segregate_target=settings.segregate_targets,
-                             subpath=None,
                              relative_root=None):
         """Converts the src_filepath to a dict of targets, relative to the
         current directory.
@@ -408,21 +376,12 @@ class Tree(object):
             A list of target extension of the rendered document.
             (ex: ['.html', ]) If None is specified, then self.target_list will
             be used.
-        output_dir : str, optional
-            If specified, files will be saved in this directory.
-        segregate_target : bool, optional
-            If True, rendered target documents will be saved in a subdirectory
-            with the target extension's name (ex: 'html' 'tex')
-        subpath : str, optional
-            If specified, only look in the given subpath directory. If this is
-            not specified, the value of self.subpath will be searched as well.
         relative_root : str, optional
             If specified, the returned paths will be relative to the given
             output root directory.This is useful for constructing web links to
             the target.
 
             ex: 'out/html/main.html' becomes 'main.html' if relative_root=''
-
 
         Returns
         -------
@@ -431,54 +390,36 @@ class Tree(object):
             value is the target_filepath for that target.
             (ex: 'html/index.html')
         """
-        # Get the project root
-        # ex: "src"
-        project_root = self.project_root(subpath=subpath)
-
-        # Parse the source filename
-        src_path, src_filename = os.path.split(src_filepath)
-        src_filebase, src_ext = os.path.splitext(src_filename)
-
-        assert src_filename != ""
-        assert src_ext != ""
-
         # Get the target format. ex: '.html'
         target_list = (target_list if target_list is not None
                        else self.target_list)
         target_list = [t if t.startswith('.') else '.' + t
                        for t in target_list]
 
-        # Get the output_directory, if specified
-        # ex: "."
-        output_dir = (output_dir if isinstance(output_dir, str) else
-                      self.output_dir)
-
-        # Set the output dir to the project_root, if an output_dir is not
-        # specified
-        output_dir = project_root if output_dir is None else output_dir
+        target_root = self.target_root
 
         # expand the user for the output directory
-        if output_dir is not None:
-            output_dir = os.path.expanduser(output_dir)
+        if target_root is not None:
+            target_root = os.path.expanduser(target_root)
 
         returned_targets = {}
         for target in target_list:
-            # Get the src_filepath relative to the project_root
-            rel_src_filepath = os.path.relpath(src_filepath, project_root)
 
+            # Get the outpath relative to the target_root
             if relative_root is None:
                 # Segregate the targets, if specified
-                if segregate_target:
-                    outpath = os.path.join(output_dir, target.strip('.'))
+                if self.segregate_targets:
+                    #outpath = os.path.join(target_root, target.strip('.'))
+                    outpath = target.strip('.')
                 else:
-                    outpath = output_dir
+                    outpath = ''
             else:
                 outpath = relative_root
 
             # Get the target_filepath by constructing the filename from the
             # output_dir and the rel_src_filepath, to maintain the directory
             # structure of rel_src_filepath
-            base, ext = os.path.splitext(rel_src_filepath)
+            base, ext = os.path.splitext(os.path.join(src_filepath))
             new_path = os.path.join(outpath, base + target)
             returned_targets[target] = new_path
 
@@ -490,6 +431,12 @@ class Tree(object):
         .. note:: This method looks up the src_filepath based on rendered
                   documents. Consequently, the documents should have been found
                   and rendered, before using this method.
+
+        .. note:: The tree uses src and target filepaths relative to the
+                  project_root and target_root, respectively, yet documents use
+                  src and target filepaths that are either absolute or relative
+                  to the current directory. Consequently, this method must
+                  translate tree paths and directory paths.
 
         Parameters
         ----------
@@ -507,38 +454,44 @@ class Tree(object):
         TreeException
             If the document and src_filepath could not be found.
         """
-        base, target = os.path.splitext(target_filepath)
+        # Get the target_filepath relative to the current directory
+        target_filepath_for_doc = os.path.join(self.target_root,
+                                               target_filepath)
+        base, target = os.path.splitext(target_filepath_for_doc)
 
         # First look in the documents to see if a match can be found.
+        # The document src_filepath and targets paths are either absolute or
+        # relative to the current_directory
         for doc in self.documents.values():
             doc_target_filepath = doc.targets.get(target, None)
 
             if (doc_target_filepath is not None and
-               doc_target_filepath == target_filepath):
-                return doc.src_filepath, target
+               doc_target_filepath == target_filepath_for_doc):
+                src_filepath_for_tree = os.path.relpath(doc.src_filepath,
+                                                        self.project_root)
+                return src_filepath_for_tree, target
 
         # A source document was not found, raise an exception
         msg = ("The source document for the '{}' target filepath could not "
                "be found.")
         raise TreeException(msg.format(target_filepath))
 
-    def render(self, target_list=None, output_dir=None, ):
+    def render(self, target_list=None):
         """Render documents.
 
-        This function renders the src_filepaths documents.
+        .. note:: This function populates the self.documents attribute.
 
-        ..note: This function populates the self.target_filepaths attribute.
+        .. note:: The tree uses src and target filepaths relative to the
+                  project_root and target_root, respectively, yet documents use
+                  src and target filepaths that are either absolute or relative
+                  to the current directory. Consequently, this method must
+                  translate tree paths and directory paths.
 
         Parameters
         ----------
-        src_filepaths : list of str or str, optional
-            A filename for a document (markup source) file. This file should
-            exist.
         target_list : list of str, optional
             If specified, the list of target extensions with be rendered.
             If not specified, the value of self.target_list will be used.
-        output_dir : str, optional
-            If specified, files will be saved in this directory.
         """
         target_list = (target_list if target_list is not None else
                        self.target_list)
@@ -574,11 +527,17 @@ class Tree(object):
                 # Create new document, if needed
                 if doc is None:
                     targets = self.convert_src_filepath(src_filepath,
-                                                        target_list=target_list,
-                                                        output_dir=output_dir)
+                                                        target_list=target_list)
 
-                    doc = Document(src_filepath=src_filepath,
-                                   targets=targets,
+                    # Convert the source and target paths relative to the
+                    # current directory
+                    src_filepath_for_doc = os.path.join(self.project_root,
+                                                        src_filepath)
+                    targets_for_doc = {k: os.path.join(self.target_root, v)
+                                       for k,v in targets.items()}
+
+                    doc = Document(src_filepath=src_filepath_for_doc,
+                                   targets=targets_for_doc,
                                    global_context=self.global_context)
                     self.documents[src_filepath] = doc
 
@@ -596,10 +555,7 @@ class Tree(object):
         return True
 
     # TODO: strip root path and segregated paths from targets.
-    def html(self, target_list=None,
-             output_dir=None,
-             segregate_target=settings.segregate_targets,
-             subpath=None):
+    def html(self, target_list=None):
         """Renders an html stub string for the target_paths of the current
         tree.
 
@@ -608,14 +564,6 @@ class Tree(object):
         target_list : list of str, optional
             If specified, the list of target extensions with be rendered.
             If not specified, the value of self.target_list will be used.
-        output_dir : str, optional
-            If specified, files will be saved in this directory.
-        segregate_target : bool, optional
-            If True, rendered target documents will be saved in a subdirectory
-            with the target extension's name (ex: 'html' 'tex')
-        subpath : str, optional
-            If specified, only look in the given subpath directory. If this is
-            not specified, the value of self.subpath will be searched as well.
 
         Returns
         -------
@@ -624,10 +572,9 @@ class Tree(object):
         """
         target_list = (target_list if target_list is not None else
                        self.target_list)
-        project_root = self.project_root(subpath=subpath)
 
         result_str = "<p><em>Project Directory:</em> {}</p>\n"
-        result_str = result_str.format(project_root)
+        result_str = result_str.format(self.project_root)
 
         # Add an entry for each src_filepath
         elem_strs = []
@@ -636,20 +583,17 @@ class Tree(object):
             elem_str = "<tr><td class=\"num\">{}.</td>"
             elem_str = elem_str.format(count)
 
-            # Get the src_filepath relative to the project_root
-            relative_src_filepath = os.path.relpath(src_filepath, project_root)
-
             # Get the target file paths
             kwargs = {'src_filepath': src_filepath,
                       'target_list': target_list,
-                      'subpath': subpath,
                       'relative_root': '/'}
+
             targets = self.convert_src_filepath(**kwargs)
 
             # Create an entry and link for the source file
             elem_str += "<td class=\"src\"><a href=\"{}\">{}</a></td>"
-            elem_str = elem_str.format(html.escape('/' + relative_src_filepath),
-                                       html.escape(relative_src_filepath))
+            elem_str = elem_str.format(html.escape('/' + src_filepath),
+                                       html.escape(src_filepath))
 
             # Add links for the targets
             if isinstance(target_list, list):
@@ -666,8 +610,12 @@ class Tree(object):
             else:
                 elem_str += "<td class=\"tgt\"></td>"
 
-            # Add the modification time and date
-            date = datetime.fromtimestamp(os.path.getmtime(src_filepath))
+            # Add the modification time and date. To do this, we need to
+            # get the path absolute path or path relative to the current
+            # directory
+            current_src_filepath = os.path.join(self.project_root, src_filepath)
+            mtime = os.path.getmtime(current_src_filepath)
+            date = datetime.fromtimestamp(mtime)
             date = date.strftime("%b %d, %Y at %I:%M%p").replace(" 0", " ")
             elem_str += "<td class=\"date\">" + date + "</td>"
 

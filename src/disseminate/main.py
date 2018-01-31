@@ -24,6 +24,9 @@ def main():
     base_parser = parser.add_subparsers(description='processor commands',
                                         dest='command')
 
+    init = base_parser.add_parser('init',
+                                  help="Initialize a new project")
+
     render = base_parser.add_parser('render',
                                     help="render documents")
 
