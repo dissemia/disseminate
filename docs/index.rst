@@ -16,9 +16,9 @@ Table of Contents
 -----------------
 .. toctree::
    :maxdepth: 2
-   :caption: Command-Line Usage
+   :caption: Development
 
-   api/document
+   development/development
 
 .. toctree::
    :maxdepth: 2
