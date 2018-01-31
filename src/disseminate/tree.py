@@ -71,8 +71,8 @@ def load_index_files(index_path, project_root=''):
 class Tree(object):
     """A tree of documents.
 
-    Trees are simply a flat list of documents (markup source) files. Trees are
-    constructed in one of two ways:
+    Trees are simply a flat list of documents (markup source) files. There is
+    one tree for each project. Trees are constructed in one of two ways:
 
         - (Preferable) If tree index files (index.tree by default, see
           settings.index_filename) files are available, these are used to
