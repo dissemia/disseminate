@@ -31,7 +31,21 @@ segregate_targets = True
 #: The template base file for rendering the tree.
 tree_template_basefilename = "tree"
 
+#: Prepend links with the following
+#url_root = "/"
+
+#: Dependency Defaults
+#: -------------------
+
+
+#: Any tracked files that are in the target dependency directory ("media") but
+#: that are no longer used are deleted.
+delete_unused_tracked_files = True
+
+#media_url_root
+
 #: HTTP Server
+#: -----------
 
 #: default port on the localhost to listen for http requests
 default_port = 8899
