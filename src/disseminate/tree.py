@@ -87,10 +87,11 @@ class Tree(object):
           settings.document_extension).
           These will be sorted by filename and added after the indexed files.
 
-    .. note:: The tree src_filepaths and target_filepaths are relative to the
-              project_root and target_root, respectively. However, when creating
-              documents, the paths used for those are either absolute or
-              relative to the current directory.
+    .. note:: **tree paths**. The tree src_filepaths and target_filepaths are
+              relative to the project_root and target_root, respectively.
+              **render paths**. However, when creating documents, the paths
+              are render_paths. These are either absolute or relative to the
+              current directory.
 
     Attributes
     ----------
@@ -100,7 +101,8 @@ class Tree(object):
         ex: 'src/'
     target_root : str
         The target directory for the output documents (i.e. the output
-        directory). Depending on the segregate_targets, option
+        directory). The file output directory also depends on the
+        segregate_targets option.
         ex: 'out/'
     segregate_targets : bool
         If True, the processed output documents for each target type will be
@@ -193,7 +195,8 @@ class Tree(object):
         if isinstance(project_root, str):
             project_root = os.path.expanduser(project_root)
 
-        # Construct the glob pattern to search for index.tree files
+        # Construct the glob pattern to search for index.tree files. These are
+        # render paths
         search_glob = os.path.join(project_root, '**',
                                    settings.index_filename)
 
@@ -257,8 +260,8 @@ class Tree(object):
         index_files = sorted(index_files,
                              key=lambda i: (len(i), i))
 
-        # The index_files have to be translated from the project_root to the
-        # current directory
+        # The index_files have to be translated to render paths. i.e. they have
+        # to be converted from the project_root to the current directory
         index_files = [os.path.join(self.project_root, i) for i in index_files]
 
         # Now load the indexes to get the document (markup) files.
@@ -281,7 +284,8 @@ class Tree(object):
 
             # Check that the new documents all exist.
             for i in new_documents:
-                # These must be translated from the project_root
+                # These must be translated to render paths. i.e. from the
+                # project_root
                 i_current_dir = os.path.join(self.project_root, i)
                 if not os.path.exists(i_current_dir):
                     msg = "The file '{}' in index tree '{}' does not exist."
@@ -312,7 +316,8 @@ class Tree(object):
         # Populate the managed_dirs
         self.find_managed_dirs(project_root)
 
-        # Find all dirs with document files that are not managed
+        # Find all dirs with document files that are not managed. These are
+        # render paths
         search_glob = os.path.join(project_root, '**',
                                    '*' + settings.document_extension)
 
@@ -361,8 +366,8 @@ class Tree(object):
 
     def convert_src_filepath(self, src_filepath, target_list=None,
                              relative_root=None):
-        """Converts the src_filepath to a dict of targets, relative to the
-        current directory.
+        """Converts the src_filepath to a dict of targets and their target
+        paths (relative to target_root).
 
         .. note:: The method uses the project_root (:meth:`Tree.project_root`)
                   method to find the project root.
@@ -396,12 +401,6 @@ class Tree(object):
         target_list = [t if t.startswith('.') else '.' + t
                        for t in target_list]
 
-        target_root = self.target_root
-
-        # expand the user for the output directory
-        if target_root is not None:
-            target_root = os.path.expanduser(target_root)
-
         returned_targets = {}
         for target in target_list:
 
@@ -409,16 +408,15 @@ class Tree(object):
             if relative_root is None:
                 # Segregate the targets, if specified
                 if self.segregate_targets:
-                    #outpath = os.path.join(target_root, target.strip('.'))
                     outpath = target.strip('.')
                 else:
                     outpath = ''
             else:
                 outpath = relative_root
 
-            # Get the target_filepath by constructing the filename from the
-            # output_dir and the rel_src_filepath, to maintain the directory
-            # structure of rel_src_filepath
+            # Get the target_filepath (relative to target_root) by constructing
+            # the filename from the output_dir and the src_filepath, to
+            # maintain the directory structure of src_filepath
             base, ext = os.path.splitext(os.path.join(src_filepath))
             new_path = os.path.join(outpath, base + target)
             returned_targets[target] = new_path
@@ -426,7 +424,8 @@ class Tree(object):
         return returned_targets
 
     def convert_target_filepath(self, target_filepath):
-        """Converts a target_filepath to a src_filepath.
+        """Converts a target_filepath (relative to target_root) to a
+        src_filepath (relative to project_root).
 
         .. note:: This method looks up the src_filepath based on rendered
                   documents. Consequently, the documents should have been found
@@ -434,9 +433,9 @@ class Tree(object):
 
         .. note:: The tree uses src and target filepaths relative to the
                   project_root and target_root, respectively, yet documents use
-                  src and target filepaths that are either absolute or relative
-                  to the current directory. Consequently, this method must
-                  translate tree paths and directory paths.
+                  render src and target filepaths that are either absolute or
+                  relative to the current directory. Consequently, this method
+                  must translate tree paths and directory paths.
 
         Parameters
         ----------
@@ -455,9 +454,9 @@ class Tree(object):
             If the document and src_filepath could not be found.
         """
         # Get the target_filepath relative to the current directory
-        target_filepath_for_doc = os.path.join(self.target_root,
-                                               target_filepath)
-        base, target = os.path.splitext(target_filepath_for_doc)
+        render_target_filepath = os.path.join(self.target_root,
+                                              target_filepath)
+        base, target = os.path.splitext(render_target_filepath)
 
         # First look in the documents to see if a match can be found.
         # The document src_filepath and targets paths are either absolute or
@@ -466,10 +465,12 @@ class Tree(object):
             doc_target_filepath = doc.targets.get(target, None)
 
             if (doc_target_filepath is not None and
-               doc_target_filepath == target_filepath_for_doc):
-                src_filepath_for_tree = os.path.relpath(doc.src_filepath,
-                                                        self.project_root)
-                return src_filepath_for_tree, target
+               doc_target_filepath == render_target_filepath):
+
+                # Get src_filepath relative to project_root
+                src_filepath = os.path.relpath(doc.src_filepath,
+                                               self.project_root)
+                return src_filepath, target
 
         # A source document was not found, raise an exception
         msg = ("The source document for the '{}' target filepath could not "
@@ -529,15 +530,16 @@ class Tree(object):
                     targets = self.convert_src_filepath(src_filepath,
                                                         target_list=target_list)
 
-                    # Convert the source and target paths relative to the
-                    # current directory
-                    src_filepath_for_doc = os.path.join(self.project_root,
-                                                        src_filepath)
-                    targets_for_doc = {k: os.path.join(self.target_root, v)
-                                       for k,v in targets.items()}
+                    # Convert the source and target paths, which are relative
+                    # to the project_root and target_root, to render paths,
+                    # which are absolute or relative to the current directory
+                    render_src_filepath = os.path.join(self.project_root,
+                                                       src_filepath)
+                    render_targets = {k: os.path.join(self.target_root, v)
+                                      for k,v in targets.items()}
 
-                    doc = Document(src_filepath=src_filepath_for_doc,
-                                   targets=targets_for_doc,
+                    doc = Document(src_filepath=render_src_filepath,
+                                   targets=render_targets,
                                    global_context=self.global_context)
                     self.documents[src_filepath] = doc
 
@@ -554,7 +556,6 @@ class Tree(object):
 
         return True
 
-    # TODO: strip root path and segregated paths from targets.
     def html(self, target_list=None):
         """Renders an html stub string for the target_paths of the current
         tree.
