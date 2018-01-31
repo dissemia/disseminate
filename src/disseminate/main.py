@@ -39,12 +39,13 @@ def main():
         p.add_argument('-i',
                        action='store', default='.',
                        type=is_directory,
-                       help="the directory for the input source files")
+                       help="the project root directory for the input source "
+                            "files")
         p.add_argument('-o',
                        action='store', default='.',
                        type=is_directory,
-                       help="the directory for the generated output "
-                            "documents")
+                       help="the target root directory for the generated "
+                            "output documents")
 
     # Serve arguments
     serve.add_argument('-p', '--port',

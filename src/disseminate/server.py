@@ -63,8 +63,6 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
             else:
                 self.path = os.path.join(self.out_dir, path)
 
-            #super(RequestHandler, self).do_GET()
-
         super(RequestHandler, self).do_GET()
 
 
@@ -72,7 +70,7 @@ def run(in_directory, out_directory,
         server_class=http.server.HTTPServer, handler_class=RequestHandler,
         port=settings.default_port):
     # Setup the index tree
-    tree1 = Tree(subpath=in_directory, output_dir=out_directory,
+    tree1 = Tree(project_root=in_directory, target_root=out_directory,
                  target_list=settings.default_target_list)
     tree1.render()
 
@@ -82,7 +80,6 @@ def run(in_directory, out_directory,
         out_dir = out_directory
         tree = tree1
         target_list = tree1.target_list
-        subdirectory = tree1.project_root()
         # Setup the module path to serve css files
         module_path = os.path.relpath(os.path.join(__path__[0], "templates"),
                                       os.path.curdir)
