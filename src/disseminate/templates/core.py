@@ -17,7 +17,8 @@ def get_template(src_filepath, target,
     """Fetch the best template for rendering a document.
 
     A template must implement a render method that takes kwargs to render
-    the template.
+    the template and a filename attribute with the location of the
+    template
 
     Parameters
     ----------
@@ -49,9 +50,9 @@ def get_template(src_filepath, target,
     if top_dir in environments:
         env = environments[top_dir]
     else:
-        fsl=None
 
-        if module_only:
+        fsl = None
+        if not module_only:
             # An environment hasn't been created yet. Make one.
             # Create a jinja2 FileSystemLoader that checks the directory of
             # src_filepath
@@ -64,12 +65,9 @@ def get_template(src_filepath, target,
                 parent_dir = os.path.dirname(parent_dir)
 
             fsl = jinja2.FileSystemLoader(dir_tree)
-        dl = jinja2.PackageLoader('disseminate', 'templates/template_files')
 
-        if fsl is not None:
-            cl = jinja2.ChoiceLoader([fsl, dl])
-        else:
-            cl = dl
+        dl = jinja2.PackageLoader('disseminate', 'templates/template_files')
+        cl = jinja2.ChoiceLoader([fsl, dl]) if fsl is not None else dl
 
         # Create the environment
         ae = jinja2.select_autoescape(['html', 'htm', 'xml'])
