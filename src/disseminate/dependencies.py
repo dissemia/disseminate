@@ -3,6 +3,7 @@ Classes and functions for managing dependencies like static files (.css) and
 images.
 """
 import os
+import glob
 
 import regex
 
@@ -55,8 +56,11 @@ class Dependencies(object):
                               r'|\w+))'
                               r'|(?P<position>\w+))')
 
-    def __init__(self, target_root=None, media_root=media_root):
+    def __init__(self, target_root=None,
+                 segregate_targets=settings.segregate_targets,
+                 media_root=media_root):
         self.target_root = target_root
+        self.segregate_targets = segregate_targets
         self.media_root = media_root
         self.dependencies = dict()
 
@@ -97,8 +101,13 @@ class Dependencies(object):
                'href' in attrs and
                not attrs['href'].startswith('http')):
 
+                # Get the file. It's the value of the 'href' attribute
                 key = attrs['href']
-                dependent_files[key] = None
+                ext = os.path.splitext(key)[1]
+
+                # Check to make sure it's one of the tracked types of extensions
+                if ext in settings.tracked_types:
+                    dependent_files[key] = None
 
         # Now try to find the dependent files and their render paths
         for key in dependent_files.keys():
@@ -112,8 +121,8 @@ class Dependencies(object):
                 test_path = os.path.join(search_path, cleaned_path)
 
                 if os.path.isfile(test_path):
-                    # match found! Add it. The key has to be a path relative
-                    # to media root
+                    # match found! Add it if it exists. The key has to be a
+                    # path relative to media root
                     dependent_files[key] = test_path
                     break
 
@@ -135,8 +144,7 @@ class Dependencies(object):
         d.update(dependent_files)
         return None
 
-    def link_files(self, target_root=None,
-                   segregate_targets=settings.segregate_targets):
+    def link_files(self, target_root=None, segregate_targets=None):
         """Links files to the target output directories.
 
         Parameters
@@ -153,6 +161,8 @@ class Dependencies(object):
         """
         target_root = (target_root if target_root is not None else
                        self.target_root)
+        segregate_targets = (segregate_targets if segregate_targets is not None
+                             else self.segregate_targets)
 
         # Cycle through each target type
         for target, dep_dict in self.dependencies.items():
@@ -175,6 +185,74 @@ class Dependencies(object):
                 # Create the directory for the render_path
                 mkdir_p(render_path)
 
-                # And link if the target doesn't exist
+                # And link if the target. Overwrite if neccessary
                 if not os.path.isfile(render_path):
                     os.link(abs_path, render_path)
+
+    def clean(self, target_root=None, segregate_targets=None):
+        """Removes unused dependencies and empty directories in the target
+        media_root.
+
+        Parameters
+        ----------
+        target_root : str
+            The target directory for the output documents (i.e. the output
+            directory). The final output directory also depends on the
+            segregate_targets option.
+            ex: 'out/'
+        segregate_targets : bool
+            If True, the processed output documents for each target type will be
+            place in its directory named for the target.
+            ex: 'out/html'
+        """
+        target_root = (target_root if target_root is not None else
+                       self.target_root)
+        segregate_targets = (segregate_targets if segregate_targets is not None
+                             else self.segregate_targets)
+
+        # Construct a set of managed files in render paths and find which files
+        # are not managed by this dependencies object
+        render_paths = set()
+        for target, dep_dict in self.dependencies.items():
+            # Strip the leading period from the target extention
+            # ".html" -> "html"
+            target_name = target.strip('.')
+
+            # Construct the root media path into a render path
+            media_root = (os.path.join(target_root, target_name)
+                          if segregate_targets else
+                          target_root)
+
+            # Add all of the media files as render paths
+            for media_path in dep_dict.keys():
+                # Remove the leading '/' from media_path so that we can
+                # join its path
+                media_path = (media_path if not media_path.startswith('/')
+                              else media_path[1:])
+
+                render_paths.add(os.path.join(media_root, media_path))
+
+            # Now find all the files and directories in the media path and see
+            # which ones aren't managed by this dependencies object
+            glob_paths = glob.glob(os.path.join(media_root, '**'),
+                                  recursive=True)
+
+            # Process files first, then directories, so that empty directories
+            # can be removed after untracked files are removed.
+            glob_files = [i for i in glob_paths if os.path.isfile(i)]
+            glob_dirs = [i for i in glob_paths if os.path.isdir(i)]
+
+            # Remove untracked files that suppose to be tracked (i.e. are in
+            # the tracked_types list
+            for file in glob_files:
+                file_ext = os.path.splitext(file)[1]
+                if (file not in render_paths and
+                   file_ext in settings.tracked_types):
+
+                    os.remove(file)
+
+            # Remove empty dirs
+            for dir in glob_dirs:
+                if not os.listdir(dir):  # test if dir is empty
+                    os.rmdir(dir)
+

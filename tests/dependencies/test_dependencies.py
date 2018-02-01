@@ -53,7 +53,7 @@ def test_add_html_missing():
 
 
 def test_link_files(tmpdir):
-    """Tests the link files method"""
+    """Tests the link_files method"""
 
     # Create a dependencies object
     dep = Dependencies()
@@ -77,3 +77,35 @@ def test_link_files(tmpdir):
     assert os.path.isfile(new_file_path)  # file exists
     assert (os.stat(new_file_path).st_ino ==
             os.stat(src_file_path).st_ino)
+
+
+def test_clean(tmpdir):
+    """Tests the clean method"""
+
+    # Create a dependencies object
+    dep = Dependencies(target_root=str(tmpdir), segregate_targets=True)
+
+    # Render an html string from a template. This template should have a
+    # dependency on /css/default.css
+    t = get_template("template", target='.html')
+    html = t.render(body="")
+
+    # Find the css/default.css dependency. We'll start by looking in the
+    # template's directory
+    dep.add_html(html, path=t.filename)
+
+    # Link files to a temporary directory
+    dep.link_files()
+
+    # Clean files. the default.css file should still be present, since it is
+    # tracketd
+    dep.clean()
+
+    new_file_path = os.path.join(tmpdir, 'html/media/css/default.css')
+    assert os.path.isfile(new_file_path)  # file exists
+
+    # Now untrack the default.css, and it should be removed
+    dep.dependencies['.html'] = {}
+    dep.clean()
+
+    assert not os.path.isfile(new_file_path)  # file does not exist

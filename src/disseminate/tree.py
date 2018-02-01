@@ -152,7 +152,8 @@ class Tree(object):
         self.global_context = {}
 
         # Populate the dependencies in the global context
-        dep = Dependencies(target_root=self.target_root)
+        dep = Dependencies(target_root=self.target_root,
+                           segregate_targets=segregate_targets)
         self.global_context['_dependencies'] = dep
 
         # The time of the last render

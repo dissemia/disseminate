@@ -37,10 +37,15 @@ tree_template_basefilename = "tree"
 #: Dependency Defaults
 #: -------------------
 
+#: The following are the file extensions which are tracked by dependencies
+tracked_types = ['.css']
+
+#: If a dependency exists in the target, overwrite it
+#overwrite_dependencies = True
 
 #: Any tracked files that are in the target dependency directory ("media") but
 #: that are no longer used are deleted.
-delete_unused_tracked_files = True
+#delete_unused_tracked_files = True
 
 #media_url_root
 
