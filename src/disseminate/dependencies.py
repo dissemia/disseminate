@@ -7,6 +7,7 @@ import glob
 
 import regex
 
+from disseminate.attributes import re_attrs
 from .utils.file import mkdir_p
 from . import settings
 
@@ -20,7 +21,7 @@ class DependencyError(Exception):
 
 
 class Dependencies(object):
-    """A class to keep track of the dependency files for each target type.
+    """Track and handle dependency files for each target type.
 
     Attributes
     ----------
@@ -49,12 +50,7 @@ class Dependencies(object):
     _re_link = regex.compile(r'\<[\n\s]*link[\n\s]+'
                              r'(?P<contents>[^\>]+)'
                              r'\>')
-    _re_attrs = regex.compile(r'((?P<key>\w+)'
-                              r'\s*=\s*'
-                              r'(?P<value>("[^"]*"'
-                              r'|\'[^\']*\''
-                              r'|\w+))'
-                              r'|(?P<position>\w+))')
+    _re_attrs = re_attrs
 
     def __init__(self, target_root=None,
                  segregate_targets=settings.segregate_targets,
@@ -76,6 +72,10 @@ class Dependencies(object):
         path : str
             A path to start searching. The search will traverse from the bottom
             directory to the top, looking for the dependencies.
+
+        Returns
+        -------
+        None
         """
         if self.dependencies is None:
             self.dependencies = dict()
@@ -105,8 +105,9 @@ class Dependencies(object):
                 key = attrs['href']
                 ext = os.path.splitext(key)[1]
 
-                # Check to make sure it's one of the tracked types of extensions
-                if ext in settings.tracked_types:
+                # Check to make sure it's one of the tracked types of
+                # extensions for html
+                if ext in settings.tracked_deps['.html']:
                     dependent_files[key] = None
 
         # Now try to find the dependent files and their render paths
@@ -144,8 +145,12 @@ class Dependencies(object):
         d.update(dependent_files)
         return None
 
-    def link_files(self, target_root=None, segregate_targets=None):
-        """Links files to the target output directories.
+    def translate_files(self, target_root=None, segregate_targets=None):
+        """Translate files to the target output directories.
+
+        In most cases, the files will be linked if the files are already in a
+        usable format. If the file isn't in a usable format for the target,
+        a translator function
 
         Parameters
         ----------
@@ -158,6 +163,10 @@ class Dependencies(object):
             If True, the processed output documents for each target type will be
             place in its directory named for the target.
             ex: 'out/html'
+
+        Returns
+        -------
+        None
         """
         target_root = (target_root if target_root is not None else
                        self.target_root)
@@ -185,9 +194,15 @@ class Dependencies(object):
                 # Create the directory for the render_path
                 mkdir_p(render_path)
 
-                # And link if the target. Overwrite if neccessary
-                if not os.path.isfile(render_path):
-                    os.link(abs_path, render_path)
+                # Translate the file
+                dep_ext = os.path.splitext(render_path)[1]
+                translator = settings.tracked_deps['.html'][dep_ext]
+
+                if translator is None:
+                    # And link if the target. Overwrite if neccessary
+                    # TODO: implement overwrite
+                    if not os.path.isfile(render_path):
+                        os.link(abs_path, render_path)
 
     def clean(self, target_root=None, segregate_targets=None):
         """Removes unused dependencies and empty directories in the target
@@ -204,6 +219,10 @@ class Dependencies(object):
             If True, the processed output documents for each target type will be
             place in its directory named for the target.
             ex: 'out/html'
+
+        Returns
+        -------
+        None
         """
         target_root = (target_root if target_root is not None else
                        self.target_root)
@@ -247,7 +266,7 @@ class Dependencies(object):
             for file in glob_files:
                 file_ext = os.path.splitext(file)[1]
                 if (file not in render_paths and
-                   file_ext in settings.tracked_types):
+                   file_ext in settings.tracked_deps[target]):
 
                     os.remove(file)
 

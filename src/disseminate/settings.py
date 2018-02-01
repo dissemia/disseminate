@@ -37,8 +37,16 @@ tree_template_basefilename = "tree"
 #: Dependency Defaults
 #: -------------------
 
-#: The following are the file extensions which are tracked by dependencies
-tracked_types = ['.css']
+#: A series of allowed tracked extensions for each target type with information
+#: to translate these files to a useable form, if needed.
+#: The keys are the targets. The values are dicts whose keys are the allowed
+#: extension types of tracked dependencies, and the values are translators.
+#: Translator are either None, in which case, they will be linked or copied to
+#: the dependencies directory, or the name of a translator function to convert
+#: the file to a usable form.
+tracked_deps = {'.html':
+                {'.css': None},
+                }
 
 #: If a dependency exists in the target, overwrite it
 #overwrite_dependencies = True

@@ -563,7 +563,7 @@ class Tree(object):
         # Create dependencies
         if '_dependencies' in self.global_context:
             dep = self.global_context['_dependencies']
-            dep.link_files()
+            dep.translate_files()
 
         return True
 
