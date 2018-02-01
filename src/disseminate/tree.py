@@ -101,7 +101,7 @@ class Tree(object):
         ex: 'src/'
     target_root : str
         The target directory for the output documents (i.e. the output
-        directory). The file output directory also depends on the
+        directory). The final output directory also depends on the
         segregate_targets option.
         ex: 'out/'
     segregate_targets : bool
