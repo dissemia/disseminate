@@ -11,6 +11,7 @@ from datetime import datetime
 from .document import Document
 from .utils import find_basestring
 from .templates import get_template
+from .dependencies import Dependencies
 from . import settings
 
 
@@ -149,6 +150,10 @@ class Tree(object):
         self.src_filepaths = []
         self.documents = {}
         self.global_context = {}
+
+        # Populate the dependencies in the global context
+        dep = Dependencies(target_root=self.target_root)
+        self.global_context['_dependencies'] = dep
 
         # The time of the last render
         self._last_render = None
@@ -553,6 +558,11 @@ class Tree(object):
         for src_filepath in src_filepaths_to_render:
             doc = self.documents[src_filepath]
             doc.render()
+
+        # Create dependencies
+        if '_dependencies' in self.global_context:
+            dep = self.global_context['_dependencies']
+            dep.link_files()
 
         return True
 

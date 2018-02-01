@@ -276,6 +276,16 @@ class Document(object):
                 # generate a new ouput_string
                 output_string = template.render(**context)
 
+                # Add template dependencies, if able
+                if ('_dependencies' in self.global_context and
+                    hasattr(template, 'filename')):
+                    dep = self.global_context['_dependencies']
+
+                    # See if the dependencies has a method for this target
+                    meth = getattr(dep, 'add_' + target_name, None)
+                    if meth is not None:
+                        meth(output_string, path=template.filename)
+
             # determine whether the file contents are new
             if not os.path.isfile(target_filepath):
                 new = True

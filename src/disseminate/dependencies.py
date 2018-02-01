@@ -23,6 +23,11 @@ class Dependencies(object):
 
     Attributes
     ----------
+    target_root : str
+        The target directory for the output documents (i.e. the output
+        directory). The final output directory also depends on the
+        segregate_targets option.
+        ex: 'out/'
     media_root : str
         The path to lookup and store media files. The dependencies paths are
         relative to media_root, and the media_root path is relative to the
@@ -36,6 +41,7 @@ class Dependencies(object):
                  {'css/default.css': '/var/www/css/default.css'}}
     """
 
+    target_root = None
     media_root = None
     dependencies = None
 
@@ -49,7 +55,8 @@ class Dependencies(object):
                               r'|\w+))'
                               r'|(?P<position>\w+))')
 
-    def __init__(self, media_root=media_root):
+    def __init__(self, target_root=None, media_root=media_root):
+        self.target_root = target_root
         self.media_root = media_root
         self.dependencies = dict()
 
@@ -128,7 +135,7 @@ class Dependencies(object):
         d.update(dependent_files)
         return None
 
-    def link_files(self, target_root,
+    def link_files(self, target_root=None,
                    segregate_targets=settings.segregate_targets):
         """Links files to the target output directories.
 
@@ -144,6 +151,9 @@ class Dependencies(object):
             place in its directory named for the target.
             ex: 'out/html'
         """
+        target_root = (target_root if target_root is not None else
+                       self.target_root)
+
         # Cycle through each target type
         for target, dep_dict in self.dependencies.items():
             # strip the leading period from the target extension.

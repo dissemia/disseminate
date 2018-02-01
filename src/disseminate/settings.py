@@ -49,3 +49,6 @@ delete_unused_tracked_files = True
 
 #: default port on the localhost to listen for http requests
 default_port = 8899
+
+#: A list of extensions that will be sent with the 'text/plain' MIME type
+text_extensions = ['.tex', ]

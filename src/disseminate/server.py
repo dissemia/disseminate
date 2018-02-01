@@ -20,6 +20,9 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
         if '?' in self.path:
             self.path, _ = self.path.split('?', 1)
 
+        # Parse the self.path
+        path_ext = os.path.splitext(self.path)[1]
+
         # The root path is special because it renders the tree
         if self.path == "/":
             self.tree.render()
@@ -34,35 +37,63 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(html.encode("utf-8"))
             return
-        # The following fetches template documents from the module, like css
-        # files
-        elif os.path.exists(os.path.join(self.module_path, self.path[1:])):
-            self.path = os.path.join(self.module_path, self.path[1:])
-            #super(RequestHandler, self).do_GET()
 
-        # Point the following requests to the source file path
-        elif os.path.splitext(self.path)[1] in settings.document_extension:
-            path = self.path if not self.path.startswith('/') else self.path[1:]
+        # strip the path of a leading '/', if needed
+        path = self.path if not self.path.startswith('/') else self.path[1:]
 
-            # Switch the path to the source project directory
-            self.path = os.path.join(self.in_dir, path)
-            #super(RequestHandler, self).do_GET()
+        # See if it exists in the project_root
+        project_path = os.path.join(self.tree.project_root, path)
+        print("project_path:", project_path)
+        if os.path.isfile(project_path):
+            self.path = project_path
+            super(RequestHandler, self).do_GET()
 
-        # Point the following requests to the target file paths
-        elif os.path.splitext(self.path)[1] in self.target_list:
-            # Get the target and path without leading '/'
-            target = os.path.splitext(self.path)[1].strip('.')
-            path = self.path if not self.path.startswith('/') else self.path[1:]
+        # See if it exists in the target_root
+        if self.tree.segregate_targets:
+            target_path = None
 
-            # Render the tree
-            self.tree.render()
+            # Strip the '.' from the target
+            target_list = [t.strip('.') for t in self.tree.target_list]
 
-            # Switch the path to the root of the target
-            if settings.segregate_targets:
-                self.path = os.path.join(self.out_dir, target, path)
-            else:
-                self.path = os.path.join(self.out_dir, path)
+            for target in target_list:
+                test_path = os.path.join(self.tree.target_root, target,
+                                         path)
+                if os.path.isfile(test_path):
+                    target_path = test_path
+                    break
+        else:
+            target_path = os.path.join(self.tree.target_root, path)
+            target_path = target_path if os.path.isfile(target_path) else None
+        print("target_path:", target_path)
+        if target_path:
+            self.path = target_path
+            super(RequestHandler, self).do_GET()
 
+
+        # # Point the following requests to the source file path
+        # elif path_ext in settings.document_extension:
+        #     path = self.path if not self.path.startswith('/') else self.path[1:]
+        #
+        #     # Switch the path to the source project directory
+        #     self.path = os.path.join(self.in_dir, path)
+        #     super(RequestHandler, self).do_GET()
+        #     return
+        #
+        # # Point the following requests to the target file paths
+        # elif os.path.splitext(self.path)[1] in self.target_list:
+        #     # Get the target and path without leading '/' or './
+        #     target = os.path.splitext(self.path)[1].strip('.')
+        #     path = self.path if not self.path.startswith('/') else self.path[1:]
+        #
+        #     # Render the tree
+        #     self.tree.render()
+        #
+        #     # Switch the path to the root of the target
+        #     if self.tree.segregate_targets:
+        #         self.path = os.path.join(self.out_dir, target, path)
+        #     else:
+        #         self.path = os.path.join(self.out_dir, path)
+        #
         super(RequestHandler, self).do_GET()
 
 
@@ -85,7 +116,8 @@ def run(in_directory, out_directory,
                                       os.path.curdir)
 
     # Serve the following files as plain text files
-    MyHandler.extensions_map[settings.document_extension] = "text/plain"
+    for ext in [settings.document_extension, ] + settings.text_extensions:
+        MyHandler.extensions_map[ext] = "text/plain"
 
     server_address = ('', port)
     httpd = server_class(server_address, MyHandler)
