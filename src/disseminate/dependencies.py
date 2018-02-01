@@ -2,10 +2,12 @@
 Classes and functions for managing dependencies like static files (.css) and
 images.
 """
-import os.path
+import os
 
 import regex
 
+from .utils.file import mkdir_p
+from . import settings
 
 # This variable is effectively hard coded since this path is the one used
 # by the module templates
@@ -81,10 +83,14 @@ class Dependencies(object):
             for n in self._re_attrs.finditer(contents):
                 d = n.groupdict()
                 if isinstance(d['value'], str):
-                    attrs[d['key']] = d['value'].strip('"').strip("'")
+                    attrs[d['key']] = d['value'].strip('"').strip("'").strip()
 
-            if attrs.get('rel', None) in allowed_attrs and 'href' in attrs:
-                key = attrs['href'].strip()
+            # Check to see if it's a valid file
+            if (attrs.get('rel', None) in allowed_attrs and
+               'href' in attrs and
+               not attrs['href'].startswith('http')):
+
+                key = attrs['href']
                 dependent_files[key] = None
 
         # Now try to find the dependent files and their render paths
@@ -121,3 +127,44 @@ class Dependencies(object):
         d = self.dependencies.setdefault('.html', dict())
         d.update(dependent_files)
         return None
+
+    def link_files(self, target_root,
+                   segregate_targets=settings.segregate_targets):
+        """Links files to the target output directories.
+
+        Parameters
+        ----------
+        target_root : str
+            The target directory for the output documents (i.e. the output
+            directory). The final output directory also depends on the
+            segregate_targets option.
+            ex: 'out/'
+        segregate_targets : bool
+            If True, the processed output documents for each target type will be
+            place in its directory named for the target.
+            ex: 'out/html'
+        """
+        # Cycle through each target type
+        for target, dep_dict in self.dependencies.items():
+            # strip the leading period from the target extension.
+            # '.html' -> 'html'
+            target = target if not target.startswith('.') else target[1:]
+
+            # cycle each dependency for this target
+            for media_path, abs_path in dep_dict.items():
+                # Strip leading '/'
+                media_path = (media_path if not media_path.startswith('/') else
+                              media_path[1:])
+
+                # Construct the render path form the media_path
+                if segregate_targets:
+                    render_path = os.path.join(target_root, target, media_path)
+                else:
+                    render_path = os.path.join(target_root, media_path)
+
+                # Create the directory for the render_path
+                mkdir_p(render_path)
+
+                # And link if the target doesn't exist
+                if not os.path.isfile(render_path):
+                    os.link(abs_path, render_path)
