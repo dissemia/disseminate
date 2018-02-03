@@ -98,7 +98,7 @@ class CompiledDocument(object):
                 # src_filepath (.tex) in the temp directory
                 src_filename = os.path.split(src_filepath)[1]
                 src_basefilename = os.path.splitext(src_filename)[0]
-                path = os.path.join(self._temp_dir, src_basefilename +  target)
+                path = os.path.join(self._temp_dir, src_basefilename + target)
                 compiled_intermediary_target_filepath = path
 
                 # Setup and execute the command

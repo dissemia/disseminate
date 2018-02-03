@@ -22,6 +22,8 @@ Features
 - **Dependency management**. Include images, stylesheets and other dependencies
   and have them automatically included in the generated documents in the
   correct format.
+- **Extensive tag library**. An extensive set of tags for generating specialize
+  output in specific formats, including html, LaTeX and PDF.
 - **Customizable tags**. The behavior of any tag can be customized and behave
   differently depending on the format (target).
 - **Fast**
