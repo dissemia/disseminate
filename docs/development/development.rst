@@ -79,6 +79,12 @@ example of media_root:
 url_root
 ~~~~~~~~
 
+Rendering Philosophy
+--------------------
+The objective of output files is that they're self-contained (i.e. they have
+everything they need to generate the needed import) and that they're
+independent. For LaTeX files, for example, these are generated so that they
+can be compiled alone and only once.
 
 Rendering Steps
 ---------------
