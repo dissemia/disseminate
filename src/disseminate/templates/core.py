@@ -60,7 +60,7 @@ def get_template(src_filepath, target,
             dir_tree = []
 
             parent_dir = top_dir
-            while parent_dir != "":
+            while parent_dir != "" and parent_dir != "/":
                 dir_tree.append(parent_dir)
                 parent_dir = os.path.dirname(parent_dir)
 
