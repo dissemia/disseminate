@@ -64,9 +64,8 @@ class CompiledDocument(object):
 
     def __del__(self):
         """Clean up any temp directories no longer in use."""
-        #if self._temp_dir is not None:
-        #    rmtree(self._temp_dir, ignore_errors=True)
-        pass
+        if self._temp_dir is not None:
+            rmtree(self._temp_dir, ignore_errors=True)
 
     def get_ast(self, *args, **kwargs):
         return self.document.get_ast(*args, **kwargs)

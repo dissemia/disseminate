@@ -58,3 +58,31 @@ def test_bad_pdflatex(tmpdir):
     assert e.value.exit_code != 0  # unsuccessful run
     assert "! Undefined control sequence." in e.value.shell_out
     assert "l.6 This is my \\bad" in e.value.shell_out
+
+
+def test_compiled_with_existing_source(tmpdir):
+    """A special case of CompiledDocument is when the source file format
+    (ex: tex) is already a target for a compiled file format (ex: pdf). This
+    tests that pattern. This is possibly buggy since the file is compiled in
+    a separate test directory.
+    """
+    # Create a src document
+    src_path = tmpdir.mkdir("src")
+    f1 = src_path.join("index3.dm")
+
+    # Save text and create a new file
+    f1.write("This is my third document")
+
+    # Get the target_filepath for the pdf file
+
+    # Generate a CompiledDocument for this file
+    doc = CompiledDocument(src_filepath=str(f1),
+                           targets={'.pdf': str(src_path) + '/index3.pdf',
+                                    '.tex': str(src_path) + '/index3.tex'})
+
+    # Render the document
+    doc.render()
+
+    # See if the PDF was succesfully generated
+    assert os.path.exists(str(src_path) + '/index3.tex')
+    assert os.path.exists(str(src_path) + '/index3.pdf')
