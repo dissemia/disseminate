@@ -31,6 +31,8 @@ def test_pdflatex(tmpdir):
     # See if the PDF was succesfully generated
     assert os.path.exists(target_filepath)
 
+    # Test that rendering it again doesn't create a new pdf
+
 
 def test_bad_pdflatex(tmpdir):
     """Tests the compilation of a PDF from a tex file with an error."""
@@ -40,7 +42,7 @@ def test_bad_pdflatex(tmpdir):
     f1 = src_path.join("index1.dm")
 
     # Save text and create a new file
-    f1.write("This is my \bad{first} document")
+    f1.write("This is my \\bad{first} document")
 
     # Get the target_filepath for the pdf file
     target_filepath = str(src_path) + '/index1.pdf'
@@ -52,7 +54,7 @@ def test_bad_pdflatex(tmpdir):
     # Render the document. This will raise a CompiledDocumentError
     with pytest.raises(CompiledDocumentError) as e:
         doc.render()
-
     assert e.match(target_filepath)
     assert e.value.exit_code != 0  # unsuccessful run
-    assert "! Text line contains an invalid character." in e.value.shell_out
+    assert "! Undefined control sequence." in e.value.shell_out
+    assert "l.6 This is my \\bad" in e.value.shell_out
