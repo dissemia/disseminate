@@ -8,7 +8,7 @@ import html
 import time
 from datetime import datetime
 
-from .document import Document
+from .document import DocumentFactory
 from .utils import find_basestring
 from .templates import get_template
 from .dependencies import Dependencies
@@ -148,6 +148,7 @@ class Tree(object):
         self.segregate_targets = segregate_targets
         self.target_list = target_list
         self.src_filepaths = []
+        self.document_factory = DocumentFactory()
         self.documents = {}
         self.global_context = {}
 
@@ -544,9 +545,11 @@ class Tree(object):
                     render_targets = {k: os.path.join(self.target_root, v)
                                       for k,v in targets.items()}
 
-                    doc = Document(src_filepath=render_src_filepath,
-                                   targets=render_targets,
-                                   global_context=self.global_context)
+                    # Create the Document object
+                    kwargs = {'src_filepath': render_src_filepath,
+                              'targets': render_targets,
+                              'global_context': self.global_context}
+                    doc = self.document_factory.document(**kwargs)
                     self.documents[src_filepath] = doc
 
                 # Update the AST

@@ -4,10 +4,10 @@ Classes and functions for rendering documents.
 import os
 import os.path
 
-from .ast import process_ast
-from .templates import get_template
-from .utils import mkdir_p
-from . import settings
+from ..ast import process_ast
+from ..templates import get_template
+from ..utils import mkdir_p
+from .. import settings
 
 
 class DocumentError(Exception):
@@ -16,7 +16,7 @@ class DocumentError(Exception):
 
 
 class Document(object):
-    """A document rendered from a source file to a target file.
+    """A base class document rendered from a source file to a target file.
 
     Parameters
     ----------
@@ -242,18 +242,17 @@ class Document(object):
             # global_context. (i.e. it must be done synchronously
 
             # postprocess_ast
-
             # Prepare the context
             # Add non-private variables from the global context
             # context['_global'] = self.global_context
             context = {k: v for k, v in self.global_context.items()
-                       if not k.startswith("_")}
+                       if not str(k).startswith("_")}
 
             # Add non-private variables from the local_context
             # These intentionally overwrite overlapping variables from the
             # global_context
             context.update({k: v for k, v in self.local_context.items()
-                            if not k.startswith("_")})
+                            if not str(k).startswith("_")})
 
             # render and save to output file
             target_name = target.strip('.')
