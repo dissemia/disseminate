@@ -1,16 +1,3 @@
-#: Document Defaults
-#: -----------------
-
-#: The default extension of markup files
-document_extension = '.dm'
-
-#: Maximum file size
-document_max_size = 204800  # 200kB
-
-#: If True, directories for target files will be created, if they not already
-#: exist
-create_dirs = True
-
 #: Tree Defaults
 #: -------------
 
@@ -33,6 +20,22 @@ tree_template_basefilename = "tree"
 
 #: Prepend links with the following
 #url_root = "/"
+
+#: Document Defaults
+#: -----------------
+
+#: The default extension of markup files
+document_extension = '.dm'
+
+#: Maximum file size
+document_max_size = 204800  # 200kB
+
+#: If True, directories for target files will be created, if they not already
+#: exist
+create_dirs = True
+
+#: A set of extensions that are compiled from other extensions
+compiled_exts = {'.pdf': ('.tex', 'pdflatex -output-dir={out} {in}')}
 
 #: Dependency Defaults
 #: -------------------
