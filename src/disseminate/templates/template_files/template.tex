@@ -1,9 +1,9 @@
 \documentclass[12pt]{article}
 
-{% if author %}
-  \author{ {{ author}} }
-{% endif %}
+{% if title %} \title{ {{ title }} } {% endif %}
+{% if author %} \author{ {{ author }} } {% endif %}
 
 \begin{document}
+{% if title and author %}\maketitle{% endif %}
 {{ body }}
 \end{document}

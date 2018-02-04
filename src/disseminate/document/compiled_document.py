@@ -119,6 +119,7 @@ class CompiledDocument(object):
 
                     msg = "Could not compile file '{}'".format(target_filepath)
                     e = CompiledDocumentError(msg)
+                    e.command = cmd
                     e.exit_code = p.returncode
                     e.shell_out = shell_out.decode("utf-8")
                     raise e

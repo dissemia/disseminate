@@ -72,10 +72,18 @@
     </svg>
     <span class="name">{{ name }}:</span><span class="description">{{ description}}</span>
     <p>{{ exception }}</p>
+
     <details>
-      <summary><span class="traceback">Traceback</span></summary>
+      <summary><span class="details">Traceback</span></summary>
       <pre>{{ traceback }}</pre>
     </details>
+
+    {% if exception.command %}
+    <details>
+      <summary><span class="details">Compilation Command</span></summary>
+      <em>command:<em> {{ exception.command }}
+      <pre>{{ exception.shell_out }}</pre>
+    {% endif %}
   </div>
 </body>
 </html>
