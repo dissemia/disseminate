@@ -246,9 +246,9 @@ class Document(object):
             # First pull out the template, if specified
             template_basename = settings.template_basename
             if 'template' in self.global_context:
-                template_basename = self.global_context.pop('template')
+                template_basename = self.global_context['template']
             if 'template' in self.local_context:
-                template_basename = self.local_context.pop('template')
+                template_basename = self.local_context['template']
 
             # Prepare the context
             # Add non-private variables from the global context
