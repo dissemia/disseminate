@@ -36,65 +36,39 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header(b"Content-type", "text/html")
             self.end_headers()
             self.wfile.write(html.encode("utf-8"))
-            return
+        else:
+            super(RequestHandler, self).do_GET()
+
+    def translate_path(self, path):
+        # Let do_GET handle root requests
+        if path == '/':
+            return path
 
         # strip the path of a leading '/', if needed
-        path = self.path if not self.path.startswith('/') else self.path[1:]
+        stripped_path = path if not path.startswith('/') else path[1:]
+
+        # cut off a query string
+        if '?' in stripped_path:
+            stripped_path, _ = stripped_path.split('?', 1)
 
         # See if it exists in the project_root
-        project_path = os.path.join(self.tree.project_root, path)
-        print("project_path:", project_path)
+        project_path = os.path.join(self.tree.project_root, stripped_path)
         if os.path.isfile(project_path):
-            self.path = project_path
-            super(RequestHandler, self).do_GET()
+            return project_path
 
         # See if it exists in the target_root
         if self.tree.segregate_targets:
-            target_path = None
-
             # Strip the '.' from the target
             target_list = [t.strip('.') for t in self.tree.target_list]
 
             for target in target_list:
                 test_path = os.path.join(self.tree.target_root, target,
-                                         path)
+                                         stripped_path)
                 if os.path.isfile(test_path):
-                    target_path = test_path
-                    break
+                    return test_path
         else:
-            target_path = os.path.join(self.tree.target_root, path)
-            target_path = target_path if os.path.isfile(target_path) else None
-        print("target_path:", target_path)
-        if target_path:
-            self.path = target_path
-            super(RequestHandler, self).do_GET()
-
-
-        # # Point the following requests to the source file path
-        # elif path_ext in settings.document_extension:
-        #     path = self.path if not self.path.startswith('/') else self.path[1:]
-        #
-        #     # Switch the path to the source project directory
-        #     self.path = os.path.join(self.in_dir, path)
-        #     super(RequestHandler, self).do_GET()
-        #     return
-        #
-        # # Point the following requests to the target file paths
-        # elif os.path.splitext(self.path)[1] in self.target_list:
-        #     # Get the target and path without leading '/' or './
-        #     target = os.path.splitext(self.path)[1].strip('.')
-        #     path = self.path if not self.path.startswith('/') else self.path[1:]
-        #
-        #     # Render the tree
-        #     self.tree.render()
-        #
-        #     # Switch the path to the root of the target
-        #     if self.tree.segregate_targets:
-        #         self.path = os.path.join(self.out_dir, target, path)
-        #     else:
-        #         self.path = os.path.join(self.out_dir, path)
-        #
-        super(RequestHandler, self).do_GET()
+            return os.path.join(self.tree.target_root, stripped_path)
+        return path
 
 
 def run(in_directory, out_directory,
@@ -111,6 +85,7 @@ def run(in_directory, out_directory,
         out_dir = out_directory
         tree = tree1
         target_list = tree1.target_list
+
         # Setup the module path to serve css files
         module_path = os.path.relpath(os.path.join(__path__[0], "templates"),
                                       os.path.curdir)
