@@ -79,12 +79,19 @@
 
     td.tgt {
       min-width: 10.0rem;
-    } 
+    }
+
+    .content {
+      display: table;
+      margin: 0 auto;
+    }
   </style>
 
 </head>
 <body>
-<h1>Disseminate Project Index</h1>
-{{ body|safe }}
+  <div class="content">
+    <h1>Disseminate Project Index</h1>
+    {{ body|safe }}
+  </div>
 </body>
 </html>
