@@ -1,0 +1,75 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Disseminate Error Encountered</title>
+  <meta name="description" content="Disseminate Project Index">
+  <meta name="author" content="Disseminate">
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Lato" />
+  <style>    
+    body {
+      font-family: Lato, Verdana, sans-serif;
+      font-size: 18px;
+      padding: 2rem 5rem;
+      color: #555;
+    }
+
+
+    p {
+      padding: 1.0rem;
+      color: #555;
+    }
+    
+    details {
+      padding: 1.0rem;
+      margin: 0 1.0rem;
+      color: #555;
+      background-color: #fbfafa;
+      overflow: scroll;
+      border-radius: 5px;
+    }
+
+    .contents{
+      padding: 2.0rem;
+      border-radius: 10px;
+      background-color: #fbf0f0;
+      border: 2px solid #ffd3d3;
+    }
+    
+    .name {
+      font-size: 26px;
+      padding-right: 1.0rem;
+      position: relative;
+      bottom: 2px;
+      color: #f16060;
+    }
+
+    .description {
+      font-size: 22px;
+      position: relative;
+      bottom: 2px;
+      color: #e28080;
+    }
+  </style>
+
+</head>
+<body>
+  <div class="contents">
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="24" viewBox="0 0 28 24" fill="none" stroke="#e28080" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="alert">
+      <circle cx="11" cy="12" r="10"></circle>
+      <line x1="10" y1="8" x2="11" y2="12"></line>
+      <line x1="10" y1="8" x2="12" y2="8"></line>
+      <line x1="12" y1="8" x2="11" y2="12"></line>
+      <line x1="11" y1="16" x2="11" y2="16" stroke-width="3.0"></line>
+    </svg>
+    <span class="name">{{ name }}:</span><span class="description">{{ description}}</span>
+    <p>{{ exception }}</p>
+    <details>
+      <summary><span class="traceback">Traceback</span></summary>
+      <pre>{{ traceback }}</pre>
+    </details>
+  </div>
+</body>
+</html>

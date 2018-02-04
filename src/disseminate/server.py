@@ -4,6 +4,9 @@ The localhost http server for managing trees and documents.
 import http.server
 import os.path
 import logging
+from traceback import format_exception
+
+import regex
 
 from disseminate import __path__
 from .tree import Tree
@@ -23,9 +26,34 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
         # Parse the self.path
         path_ext = os.path.splitext(self.path)[1]
 
+        # Try the render. If it's unsuccessful, handle the exception
+        try:
+            self.tree.render()
+        except Exception as e:
+            # Get the exception template
+            template = get_template(src_filepath="",
+                                    template_basename="exception",
+                                    target=".html",
+                                    module_only=True)
+
+            # format the context and traceback
+            tb = ''.join(format_exception(type(e), e, e.__traceback__))
+            context = {'name': e.__class__.__name__,
+                       'description': e.__class__.__doc__,
+                       'traceback': tb,
+                       'exception': e}
+
+            # render the html and respond
+            html = template.render(**context)
+            self.send_response(500)
+            self.send_header(b"Content-type", "text/html")
+            self.end_headers()
+            self.wfile.write(html.encode("utf-8"))
+
+            return
+
         # The root path is special because it renders the tree
         if self.path == "/":
-            self.tree.render()
             template = get_template(src_filepath="",
                                     template_basename="tree",
                                     target=".html",
@@ -77,7 +105,7 @@ def run(in_directory, out_directory,
     # Setup the index tree
     tree1 = Tree(project_root=in_directory, target_root=out_directory,
                  target_list=settings.default_target_list)
-    tree1.render()
+    tree1.find_documents()
 
     # Customize the request handler with the tree
     class MyHandler(handler_class):

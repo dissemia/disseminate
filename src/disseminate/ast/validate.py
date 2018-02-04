@@ -5,7 +5,7 @@ import regex
 
 
 class ParseError(Exception):
-    """An error was encountered when parsing an AST."""
+    """An error was encountered when parsing a document source file."""
     pass
 
 class ASTValidator:
