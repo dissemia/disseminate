@@ -506,7 +506,8 @@ def test_update_render(tmpdir):
     f2.write("@{index2}")
 
     # Create a tree and render
-    tree = Tree(project_root=str(src_path), target_root=str(src_path))
+    tree = Tree(project_root=str(src_path), target_root=str(src_path),
+                target_list=['.html'])
     tree.render()
 
     # Check that the target files have been created

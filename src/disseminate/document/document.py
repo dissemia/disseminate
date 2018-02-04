@@ -242,6 +242,14 @@ class Document(object):
             # global_context. (i.e. it must be done synchronously
 
             # postprocess_ast
+
+            # First pull out the template, if specified
+            template_basename = settings.template_basename
+            if 'template' in self.global_context:
+                template_basename = self.global_context.pop('template')
+            if 'template' in self.local_context:
+                template_basename = self.local_context.pop('template')
+
             # Prepare the context
             # Add non-private variables from the global context
             # context['_global'] = self.global_context
@@ -266,7 +274,8 @@ class Document(object):
             context['body'] = output_string
 
             # get a template. The following can be done asynchronously.
-            template = get_template(self.src_filepath, target=target)
+            template = get_template(self.src_filepath, target=target,
+                                    template_basename=template_basename)
 
             # If a template is available, use it to render the string.
             # Otherwise, just write the string

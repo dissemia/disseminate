@@ -5,14 +5,14 @@ import os.path
 
 import jinja2
 
-from . import settings
+from .. import settings
 
 
 environments = {}
 
 
 def get_template(src_filepath, target,
-                 template_basename=settings.default_basefilename,
+                 template_basename=settings.template_basename,
                  module_only=False):
     """Fetch the best template for rendering a document.
 

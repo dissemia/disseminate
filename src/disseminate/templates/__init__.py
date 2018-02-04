@@ -1,4 +1,4 @@
 """
 Templates for rendering the final target files.
 """
-from .core import get_template
+from .template import get_template

@@ -39,6 +39,10 @@ compiled_exts = {'.pdf':
                      ('.tex', ('pdflatex -interaction=nonstopmode '
                                '-output-dir={out_dir} {in_file}'))}
 
+#: Template Defaults
+#: -----------------
+template_basename = 'template'
+
 #: Dependency Defaults
 #: -------------------
 
