@@ -1,0 +1,3 @@
+Initializing a new disseminate project in {dest}.
+The following directories and files have been created:
+
