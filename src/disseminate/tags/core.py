@@ -1,8 +1,6 @@
 """
 Core classes and functions for tags.
 """
-#from lxml.html import builder as E
-#import lxml.html
 from lxml.builder import E
 from lxml import etree
 
@@ -12,6 +10,11 @@ from . import settings
 
 class TagError(Exception): pass
 
+
+def _all_subclasses(cls):
+    """Retrieve all subclasses, sub-subclasses and so on for a class"""
+    return cls.__subclasses__() + [g for s in cls.__subclasses__()
+                                   for g in _all_subclasses(s)]
 
 class TagFactory(object):
     """Generates the appropriate tag for a given tag type.
@@ -24,7 +27,7 @@ class TagFactory(object):
         self.allowed_tags = allowed_tags
 
         # Initialize the tag types dict
-        self.tag_types = {c.__name__.lower():c for c in Tag.__subclasses__()}
+        self.tag_types = {c.__name__.lower():c for c in _all_subclasses(Tag)}
 
     def tag(self, tag_name, tag_content, tag_attributes,
                   local_context, global_context):
@@ -123,6 +126,9 @@ class Tag(object):
             return "".join(items)
         else:
             return self.content
+
+    def tex(self, level=1):
+        return self.default()
 
     def html(self, level=1):
         """Convert the tag to an html string or html element.
