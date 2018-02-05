@@ -13,6 +13,9 @@ from . import settings
 
 
 def is_directory(value):
+    is_dir = os.path.isdir(value)
+    if not is_dir and value == 'src':
+        value = '.'
     if not os.path.isdir(value):
          raise argparse.ArgumentTypeError("'{}' is not a directory. The input "
                                           "and output must be "
@@ -43,7 +46,7 @@ def main():
     # Arguments common to sub-parsers
     for p in (render, serve):
         p.add_argument('-i',
-                       action='store', default='.',
+                       action='store', default='src',
                        type=is_directory,
                        help="the project root directory for the input source "
                             "files")
