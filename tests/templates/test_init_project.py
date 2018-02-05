@@ -28,7 +28,7 @@ def test_init_project(tmpdir):
         # Initialize a project in the tmpdir
         init_project(dest=dest, overwrite=False)
 
-        # Get a set of diretories and files created
+        # Get a set of directories and files created
         destination_paths = set()
         for i in glob.iglob(os.path.join(dest, '**'),
                             recursive=True):
