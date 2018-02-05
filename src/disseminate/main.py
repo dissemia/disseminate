@@ -34,6 +34,10 @@ def main():
                                    help="serve documents with a local "
                                         "webserver")
 
+    # Arguments to main parser
+    parser.add_argument('--debug', action='store_true',
+                        help='print debug messages to stderr')
+
     # Arguments common to sub-parsers
     for p in (render, serve):
         p.add_argument('-i',
@@ -60,7 +64,11 @@ def main():
         exit()
 
     # Set the default logging level to info
-    logging.basicConfig(format='%(levelname)-9s:  %(message)s',
+    if args.debug:
+        logging.basicConfig(format='%(levelname)-9s:  %(message)s',
+                            level=logging.DEBUG)
+    else:
+        logging.basicConfig(format='%(levelname)-9s:  %(message)s',
                         level=logging.INFO)
 
     if args.command == 'serve':

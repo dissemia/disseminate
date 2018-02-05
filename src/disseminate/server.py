@@ -5,8 +5,8 @@ import http.server
 import os.path
 import logging
 from traceback import format_exception
-
-import regex
+if __debug__:
+    import time
 
 from disseminate import __path__
 from .tree import Tree
@@ -28,7 +28,15 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
 
         # Try the render. If it's unsuccessful, handle the exception
         try:
+            if __debug__: # timing information for debug
+                t0 = time.time()
+
             self.tree.render()
+
+            if __debug__:
+                t1 = time.time()
+                msg = "Render time: {:.1f} ms".format(1000. * (t1-t0))
+                logging.debug(msg)
         except Exception as e:
             # Get the exception template
             template = get_template(src_filepath="",
@@ -37,6 +45,8 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
                                     module_only=True)
 
             # format the context and traceback
+            # TODO: Move the description away from the __doc__ attribute, since
+            # this can be stripped by python optimizations
             tb = ''.join(format_exception(type(e), e, e.__traceback__))
             context = {'name': e.__class__.__name__,
                        'description': e.__class__.__doc__,
