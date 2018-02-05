@@ -194,3 +194,32 @@ def test_ast_with_header():
     # Check the correct rendering of the AST html
     html = ast.html()
     assert html == test_html
+
+
+def test_local_context_update():
+    """Tests that the local_context is properly updated in subsequent
+    process_ast runs"""
+
+    combined_test = test_header + test
+    local_context = dict()
+    global_context = dict()
+    ast = process_ast(combined_test,
+                      local_context=local_context,
+                      global_context=global_context)
+
+    # Check the contents  of the local_context
+    assert 'title' in local_context
+    assert local_context['title'] == 'My first title'
+
+    assert 'author' in local_context
+    assert local_context['author'] == 'Justin L Lorieau'
+
+    # Now remove the header and make sure the 'author' and 'title' entries are
+    # no longer in the context
+    ast = process_ast(test,
+                      local_context=local_context,
+                      global_context=global_context)
+
+    # Check the contents  of the local_context
+    assert 'title' not in local_context
+    assert 'author' not in local_context

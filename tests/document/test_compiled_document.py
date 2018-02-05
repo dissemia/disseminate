@@ -57,7 +57,7 @@ def test_bad_pdflatex(tmpdir):
     assert e.match(target_filepath)
     assert e.value.exit_code != 0  # unsuccessful run
     assert "! Undefined control sequence." in e.value.shell_out
-    assert "l.6 This is my \\bad" in e.value.shell_out
+    assert "This is my \\bad" in e.value.shell_out
 
 
 def test_compiled_with_existing_source(tmpdir):

@@ -53,3 +53,28 @@ def test_ast_caching(tmpdir):
     doc.get_ast()
     assert ast == doc._ast
     assert mtime == doc._mtime
+
+
+def test_custom_template(tmpdir):
+    """Tests the loading of custom templates from the yaml header."""
+    # Write a temporary file. We'll use the tree.html template, which contains
+    # the text "Disseminate Project Index"
+    in_file = tmpdir.join("index.dm")
+    out_file = tmpdir.join("index.html")
+    input = ["---",
+             "template: tree",
+             "---",
+             ""]
+    in_file.write('\n'.join(input))
+
+    # Make document
+    doc = Document(str(in_file), {'.html': str(out_file)})
+    doc.render()
+
+    assert "Disseminate Project Index" in out_file.read()
+
+    # Write to the file again, but don't include the template. This time it
+    # shouldn't contain the text "Disseminate Project Index"
+    in_file.write("test")
+    doc.render()
+    assert "Disseminate Project Index" not in out_file.read()

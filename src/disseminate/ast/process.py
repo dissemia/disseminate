@@ -73,6 +73,12 @@ def process_ast(s, local_context=None, global_context=None,
     global_context = (global_context if isinstance(global_context, dict)
                       else dict())
 
+    # Clear the local_context if this is the root tag. When reloading an AST,
+    # the old local_context is invalidated since some of the entries may have
+    # changed
+    if level == 1:
+        local_context.clear()
+
     # Setup the parsing
     current_pos = 0
     factory = TagFactory()
