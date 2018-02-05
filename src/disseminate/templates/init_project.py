@@ -5,6 +5,8 @@ import os.path
 import shutil
 import glob
 
+from ..utils.file import mkdir_p
+
 
 # Get the current path
 current_filepath = os.path.realpath(__file__)
@@ -28,6 +30,10 @@ def init_project(dest='.', overwrite=False):
     overwrite : bool, optional
         If True, existing files will be overwritten.
     """
+    # Convert dest to a directory, if needed
+    is_dir = os.path.splitext(dest)[1] == ""
+    dest = dest if is_dir else os.path.split(dest)[0]
+
     # Print the info_file
     if dest in ('.', ''):
         dest_string = "the current directory"
@@ -37,6 +43,11 @@ def init_project(dest='.', overwrite=False):
     with open(os.path.join(template_root, info_file), 'r') as f:
         print(f.read().strip().format(dest=dest_string))
     print()
+
+    # Create the destination directory, if needed
+    if dest not in ('', '.', '/') and not os.path.isdir(dest):
+        print("\tcreating project directory: {}".format(dest))
+        mkdir_p(dest)
 
     # glob through the template project
     for i in glob.iglob(os.path.join(template_root, '**'), recursive=True):

@@ -7,6 +7,8 @@ import argparse
 import os.path
 
 from .server import run
+from .templates import init_project
+from .tree import Tree
 from . import settings
 
 
@@ -51,7 +53,12 @@ def main():
                        help="the target root directory for the generated "
                             "output documents")
 
-    # Serve arguments
+    # init arguments
+    init.add_argument('destination', default='', nargs='?',
+                      help="The destination directory to initialize a project "
+                           "(default: {})".format("current directory"))
+
+    # serve arguments
     serve.add_argument('-p', '--port',
                        action='store', default=settings.default_port,
                        help="The port to listen to for the webserver "
@@ -59,7 +66,7 @@ def main():
 
     # Parse the commands
     args = parser.parse_args()
-    if args.command not in ('serve', 'render'):
+    if args.command not in ('init', 'serve', 'render'):
         parser.print_help()
         exit()
 
@@ -70,6 +77,15 @@ def main():
     else:
         logging.basicConfig(format='%(levelname)-9s:  %(message)s',
                         level=logging.INFO)
+
+    # Handle the sub-commands
+    if args.command == 'init':
+        init_project(args.destination)
+
+    if args.command == 'render':
+        tree1 = Tree(project_root=args.i, target_root=args.o,
+                     target_list=settings.default_target_list)
+        tree1.render()
 
     if args.command == 'serve':
         run(in_directory=args.i, out_directory=args.o)
