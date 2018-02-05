@@ -34,6 +34,9 @@ def process_ast(s, local_context=None, global_context=None,
     """Parses a string into an AST comprising a list of lists with strings and
     tags.
 
+    .. note:: Whenever the AST is generated, the local_context is reset to avoid
+              keeping stale values.
+
     .. warning:: The process *can not* depend on the `local_context`
                  and `global_context` since these may not be fully populated
                  yet. However, it can populate these.

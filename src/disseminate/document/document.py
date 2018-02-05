@@ -98,6 +98,9 @@ class Document(object):
 
         The cached AST is updated if the source file is updated.
 
+        Whenever the AST is generated, the local_context is reset to avoid
+        keeping stale values.
+
         See the :meth:`render` method for more details.
 
         Returns
