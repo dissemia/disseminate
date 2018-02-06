@@ -16,7 +16,7 @@ Headings are used to group and demarcate parts of the document's text.
         single: tags; @section
         single: tags; @h2
 
-    :aliases: @h2
+    :aliases: ``@h2``
     :attributes:
 
         :id: The section heading's marker label
@@ -34,7 +34,7 @@ Headings are used to group and demarcate parts of the document's text.
         single: tags; @subsection
         single: tags; @h3
 
-    :aliases: @h3
+    :aliases: ``@h3``
     :attributes:
 
         :id: The subsection heading's marker label
@@ -52,7 +52,7 @@ Headings are used to group and demarcate parts of the document's text.
         single: tags; @subsubsection
         single: tags; @h4
 
-    :aliases: @h4
+    :aliases: ``@h4``
     :attributes:
 
         :id: The subsubsection heading's marker label
@@ -64,13 +64,13 @@ Headings are used to group and demarcate parts of the document's text.
         ``@h4{Titration Procedure}``
 
 :@paragraph:
-    A paragraph heading.
+    A paragraph heading
 
     .. index::
         single: tags; @paragraph
         single: tags; @h5
 
-    :aliases: @h5
+    :aliases: ``@h5``
     :attributes:
 
         :id: The paragraph heading's marker label.
@@ -93,4 +93,71 @@ Text Formatting
 Text formatting tags are used to emphasize text in different ways and to
 introduce special characters.
 
+:@bold:
+    Emphasize text by with bold
 
+    .. index::
+        single: tags; @bold
+        single: tags; @b
+        single: tags; @textbf
+
+    :aliases: ``@b`` ``@textbf``
+
+    :examples:
+
+        ``@bold{This text is bold!}``
+
+        ``@b{This text is bold!}``
+
+        ``@textbf{This text is bold!}``
+
+:@italics:
+    Emphasize text by with italics
+
+    .. index::
+        single: tags; @italics
+        single: tags; @i
+        single: tags; @textit
+
+    :aliases: ``@i`` ``@textit``
+
+    :examples:
+
+        ``@italics{This text is in italics}``
+
+        ``@i{This text is in italics}``
+
+        ``@textit{This text is in italics}``
+
+:@sup:
+    Superscript text
+
+    .. index::
+        single: tags; @sup
+    :examples:
+
+        ``@sup{1}H``
+
+
+:@sub:
+    Subscript text
+
+    .. index::
+        single: tags; @sub
+
+    :examples:
+
+        ``H@sub{2}O``
+
+:@greek:
+    Add a letter in Greek
+
+    .. index::
+        single: tags; @greek
+        single: tags; @gr
+
+    :aliases: ``@gr``
+
+    :examples:
+
+        ``@greek{alpha}``
