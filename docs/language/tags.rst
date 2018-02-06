@@ -4,45 +4,81 @@ Tags
 Headings
 --------
 
-.. glossary::
-
-    @section
-    @h2
-        A section heading
-
-        Example:
-
-        .. code-block:: none
-
-            @section{Introduction}
-
-    @subsection
-    @h3
-        A subsection heading
-
-        Example:
-
-        .. code-block:: none
-
-            @subsection{Methods}
+Headings are used to group and demarcate parts of the document's text.
 
 
-    @subsubsection
-    @h4
-        A subsubsection heading
+:@section:
+    A section heading
 
-        Example:
+    .. index::
+        single: tags; @section
+        single: tags; @h2
 
-        .. code-block:: none
+    :aliases: @h2
+    :attributes:
 
-            @subsubsection{Titration Procedure}
+        :id: The section heading's marker label
 
-    @paragraph
-    @h5
-        A paragraph heading. By default, there is to ``<h5>`` HTML element.
+    :examples:
 
-        Example:
+        ``@section{Introduction}``
 
-        .. code-block:: none
+        ``@h2{Introduction}``
 
-            @paragraph{Group A}. The first group ...
+:@subsection:
+    A subsection heading
+
+    .. index::
+        single: tags; @subsection
+        single: tags; @h3
+
+    :aliases: @h3
+    :attributes:
+
+        :id: The subsection heading's marker label
+
+    :examples:
+
+        ``@subsection{Methods}``
+
+        ``@h3{Methods}``
+
+:@subsubsection:
+    A subsubsection heading
+
+    .. index::
+        single: tags; @subsubsection
+        single: tags; @h4
+
+    :aliases: @h4
+    :attributes:
+
+        :id: The subsubsection heading's marker label
+
+    :examples:
+
+        ``@subsubsection{Titration Procedure}``
+
+        ``@h4{Titration Procedure}``
+
+:@paragraph:
+    A paragraph heading.
+
+    .. index::
+        single: tags; @paragraph
+        single: tags; @h5
+
+    :aliases: @h5
+    :attributes:
+
+        :id: The paragraph heading's marker label.
+
+    :html: In html, this tag will be rendered as a
+           ``<span class="paragraph-heading">`` instead of an ``<h5>`` element.
+
+
+    :examples:
+
+        ``@paragraph{Group A}. The first group ...``
+
+        ``@h5{Group A}. The first group ...``
