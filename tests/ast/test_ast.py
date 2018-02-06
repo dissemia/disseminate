@@ -38,7 +38,7 @@ test_txt = """
 test_html = """<span class="root">
     This is my test document. It has multiple paragraphs.
 
-    Here is a new one with <b>bolded</b> text as an example.
+    Here is a new one with <strong>bolded</strong> text as an example.
     <span class=\"marginfig\">
       <img src="media/files"/>
       <caption>This is my <i>first</i> figure.</caption>
@@ -78,7 +78,7 @@ def test_ast_basic_string():
 
     content = ast.content
 
-    assert isinstance(content[1], Tag) and content[1].name == 'b' # b tag
+    assert isinstance(content[1], Tag) and content[1].name == 'b'
 
     assert isinstance(content[2], str) # string
 
@@ -150,7 +150,7 @@ def test_basic_html_conversion():
     assert e1.attrib == {'class': 'root'}
 
     e2 = next(root_iter)
-    assert e2.tag == 'b'
+    assert e2.tag == 'strong'
     assert isinstance(e2.text, str) and e2.text == 'bolded'
     assert e2.attrib == {}
 

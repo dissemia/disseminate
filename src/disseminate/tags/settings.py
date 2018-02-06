@@ -20,7 +20,7 @@ html_valid_tags = {"a",
                    "caption",
                    "div",
                    "em",
-                   "h1", "h2", "h3", "h4", "h5", "h6",
+                   "h1", "h2", "h3", "h4", "h5",
                    "li",
                    "i", "img",
                    "ol",
@@ -33,7 +33,7 @@ html_valid_tags = {"a",
 #: ~~~~~~~~
 
 tex_macros = {"chapter",
-              "ensuremath"
+              "ensuremath",
               "paragraph",
               "section", "subsection", "subsubsection",
               "textbf", "textit"}
