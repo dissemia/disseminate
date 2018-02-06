@@ -1,6 +1,9 @@
 #: Tags settings
 #: -------------
 
+#: HTML Tags
+#: ~~~~~~~~~
+
 #: The tag to use for the document in the HTML page
 html_root_tag = 'body'
 
@@ -17,7 +20,7 @@ html_valid_tags = {"a",
                    "caption",
                    "div",
                    "em",
-                   "h1", "h2", "h3", "h4","h5", "h6",
+                   "h1", "h2", "h3", "h4", "h5", "h6",
                    "li",
                    "i", "img",
                    "ol",
@@ -25,3 +28,15 @@ html_valid_tags = {"a",
                    "span",
                    "table", "tbody", "td", "th", "thead", "tr",
                    "ul"}
+
+#: TEX Tags
+#: ~~~~~~~~
+
+tex_macros = {"chapter",
+              "section", "subsection", "subsubsection",
+              "textbf"}
+
+tex_commands = {"item"}
+
+tex_environments = {"enumerate",
+                    "itemize"}

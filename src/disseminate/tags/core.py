@@ -61,12 +61,14 @@ class Tag(object):
     Attributes
     ----------
     name : str
-        The name of the tag. (ex: 'body')
+        The name of the tag as used in the disseminate source. (ex: 'body')
     content : None or str or list
         The contents of the tag. It can either be None, a string, or a list
         of tags and strings. (i.e. a sub-ast)
     attributes : list of tuples
         The attributes of the tag.
+    aliases : list of str
+        A list of strs for other names a tag goes by
     local_context : dict
         The context with values for the current document. The values in this
         dict do not depend on values from other documents. (local)
@@ -79,6 +81,11 @@ class Tag(object):
     name = None
     content = None
     attributes = None
+    aliases = None
+
+    html_name = None
+    tex_name = None
+
     local_context = None
     global_context = None
 
@@ -128,7 +135,33 @@ class Tag(object):
             return self.content
 
     def tex(self, level=1):
-        return self.default()
+        # Collect the content elements
+        if isinstance(self.content, list):
+            elements = ''.join([i.tex(level + 1) if hasattr(i, 'tex') else i
+                                for i in self.content])
+        elif isinstance(self.content, str):
+            elements = self.content
+        else:
+            elements = None
+
+        # Construct the tag name
+        if level > 1:
+            name = (self.tex_name if self.tex_name is not None else
+                    self.name.lower())
+        else:
+            name = ''
+
+        # Format the tag. It's either a macro or environment
+        if name in settings.tex_macros:
+            return "\\" + name + '{' + elements + '}'  # ex: \section{First}
+        elif name in settings.tex_commands:
+            return "\\" + name + ' ' + elements + "\n"  # ex: \item
+        elif name in settings.tex_environments:
+            return ("\n\\begin{" + name + "}\n" +  # ex: \begin{align}
+                    elements +
+                    "\\end{" + name + "}\n")
+        else:
+            return elements
 
     def html(self, level=1):
         """Convert the tag to an html string or html element.
@@ -147,17 +180,20 @@ class Tag(object):
         else:
             elements = None
 
-        # Construct the tag
-        lower_name = (self.name.lower() if level > 1
-                      else settings.html_root_tag)
+        # Construct the tag name
+        if level > 1:
+            name = (self.html_name if self.html_name is not None else
+                    self.name.lower())
+        else:
+            name = settings.html_root_tag
 
         if (settings.html_valid_tags and
-           lower_name in settings.html_valid_tags):
+           name in settings.html_valid_tags):
 
             kwargs = (kwargs_attributes(self.attributes) if self.attributes
                       else dict())
-            e = (E(lower_name, *elements, **kwargs) if elements else
-                 E(lower_name, **kwargs))
+            e = (E(name, *elements, **kwargs) if elements else
+                 E(name, **kwargs))
         else:
             # Create a span element if it not an allowed element
             # Add the tag type to the class attribute
