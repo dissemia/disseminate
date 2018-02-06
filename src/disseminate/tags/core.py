@@ -8,7 +8,9 @@ from disseminate.attributes import set_attribute, kwargs_attributes
 from . import settings
 
 
-class TagError(Exception): pass
+class TagError(Exception):
+    """An error was encountered while interpreting a tag."""
+    pass
 
 
 def _all_subclasses(cls):
