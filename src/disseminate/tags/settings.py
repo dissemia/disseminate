@@ -33,6 +33,7 @@ html_valid_tags = {"a",
 #: ~~~~~~~~
 
 tex_macros = {"chapter",
+              "paragraph",
               "section", "subsection", "subsubsection",
               "textbf"}
 

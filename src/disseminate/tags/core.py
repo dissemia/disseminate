@@ -20,12 +20,9 @@ class TagFactory(object):
     """Generates the appropriate tag for a given tag type.
     """
 
-    allowed_tags = None
     tag_types = None
 
     def __init__(self, allowed_tags=None):
-        self.allowed_tags = allowed_tags
-
         # Initialize the tag types dict.
         self.tag_types = dict()
         for scls in  _all_subclasses(Tag):
@@ -41,10 +38,6 @@ class TagFactory(object):
     def tag(self, tag_name, tag_content, tag_attributes,
                   local_context, global_context):
         """Return the approriate tag, give a tag_type and tag_content"""
-        # Just return the content if it's an unallowed tag type
-        if (isinstance(self.allowed_tags, list)
-           and tag_name not in self.allowed_tags):
-            return tag_content
 
         # Try to find the appropriate subclass
         small_tag_type = tag_name.lower()
@@ -193,6 +186,7 @@ class Tag(object):
         if level > 1:
             name = (self.html_name if self.html_name is not None else
                     self.name.lower())
+
         else:
             name = settings.html_root_tag
 

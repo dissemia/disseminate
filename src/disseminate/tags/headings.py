@@ -1,15 +1,13 @@
 """
 Tags for headings.
 """
-from lxml.builder import E
-
 from .core import Tag
 
 
 class Heading(Tag):
     """A heading tag."""
-    html_name = "h2"
-    tex_name = "section"
+    html_name = None
+    tex_name = None
 
 
 class Section(Heading):
