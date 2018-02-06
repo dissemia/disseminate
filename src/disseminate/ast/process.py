@@ -100,14 +100,19 @@ def process_ast(s, local_context=None, global_context=None,
             _, end = m.span()
             s = s[end:]
 
-    # Pre-process the string with macros
+    ## Pre-process the string ##
+
+    # Pre-process with macros
     # Setup the macros
-    # TODO: add macros from the yaml header
     macro_index = MacroIndex()
-    if '_macros' in global_context:
-        macro_index.update(global_context['_macros'])
+    if 'macros' in global_context:
+        macro_index.update(global_context['macros'])
+    if 'macros' in local_context and isinstance(local_context['macros'], dict):
+        macro_index.update(local_context['macros'].items())
+        print(macro_index)
     s = sub_macros(s, macro_index)
 
+    ## Process the AST
     # Create the root ast
     ast = []
 
