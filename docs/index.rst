@@ -57,6 +57,12 @@ Table of Contents
 -----------------
 .. toctree::
    :maxdepth: 2
+   :caption: Markup Language
+
+   language/tags
+
+.. toctree::
+   :maxdepth: 2
    :caption: Development
 
    development/development
