@@ -9,7 +9,8 @@ try:
 except ImportError:
     from yaml import Loader, Dumper
 
-from disseminate.tags import TagFactory, Tag
+from ..tags import TagFactory
+from ..macros import MacroIndex, sub_macros
 from .validate import ASTValidator
 from . import settings
 
@@ -98,6 +99,14 @@ def process_ast(s, local_context=None, global_context=None,
             # Advance the string by the amount of the header
             _, end = m.span()
             s = s[end:]
+
+    # Pre-process the string with macros
+    # Setup the macros
+    # TODO: add macros from the yaml header
+    macro_index = MacroIndex()
+    if '_macros' in global_context:
+        macro_index.update(global_context['_macros'])
+    s = sub_macros(s, macro_index)
 
     # Create the root ast
     ast = []
