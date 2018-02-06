@@ -25,7 +25,7 @@ html_valid_tags = {"a",
                    "i", "img",
                    "ol",
                    "p",
-                   "span",
+                   "span", "strong", "sub", "sup",
                    "table", "tbody", "td", "th", "thead", "tr",
                    "ul"}
 
@@ -33,9 +33,10 @@ html_valid_tags = {"a",
 #: ~~~~~~~~
 
 tex_macros = {"chapter",
+              "ensuremath"
               "paragraph",
               "section", "subsection", "subsubsection",
-              "textbf"}
+              "textbf", "textit"}
 
 tex_commands = {"item"}
 
