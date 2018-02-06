@@ -21,6 +21,9 @@ Features
 
 - **Templates**. Easily render documents with different styles and appearances.
 
+- **Macros**. An extensive library of macros and the support of user-definable
+  macros.
+
 - **Dependency management**. Include images, stylesheets and other dependencies
   and have them automatically included in the generated documents in the
   correct format.

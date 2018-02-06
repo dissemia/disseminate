@@ -1,7 +1,8 @@
 Tags
 ====
 
-The following tags have special behavior for ``.html`` and ``.tex`` targets.
+Any tag can be used in disseminate. However, the following tags have special
+behavior for ``.html``, ``.tex`` and ``.pdf`` targets.
 
 Headings
 --------
