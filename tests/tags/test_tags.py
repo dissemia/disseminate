@@ -10,7 +10,7 @@ def test_html():
     # Generate a simple root tag with a string as content
     root = Tag(name='root', content='base string', attributes=None,
                local_context=None, global_context=None)
-    assert root.html() == "<body>base string</body>\n"
+    assert root.html() == '<span class="root">base string</span>\n'
 
     # Generate a nested root tag with sub-tags
     b = Tag(name='b', content='bolded', attributes=None,
@@ -18,7 +18,9 @@ def test_html():
     elements = ["my first", b, "string"]
     root = Tag(name='root', content=elements, attributes=None,
                local_context=None, global_context=None)
-    assert root.html() == "<body>my first<b>bolded</b>string</body>\n"
+    assert root.html() == ('<span class="root">'
+                           'my first<b>bolded</b>string'
+                           '</span>\n')
 
 
 def test_html_invalid_tag():
@@ -30,9 +32,9 @@ def test_html_invalid_tag():
     elements = ["my first", eqn, "string"]
     root = Tag(name='root', content=elements, attributes=None,
                local_context=None, global_context=None)
-    assert root.html() == ("<body>my first"
-                           "<span class=\"eqn\">my eqn</span>"
-                           "string</body>\n")
+    assert root.html() == ('<span class="root">my first'
+                           '<span class=\"eqn\">my eqn</span>'
+                           'string</span>\n')
 
 
 def test_html_excluded_tag():
@@ -45,9 +47,9 @@ def test_html_excluded_tag():
     elements = ["my first", eqn, "string"]
     root = Tag(name='root', content=elements, attributes=None,
                local_context=None, global_context=None)
-    assert root.html() == ("<body>my first"
-                           "<span class=\"script\">my eqn</span>"
-                           "string</body>\n")
+    assert root.html() == ('<span class="root">my first'
+                           '<span class=\"script\">my eqn</span>'
+                           'string</span>\n')
 
 
 def test_html_unsafe_tag():
@@ -60,9 +62,9 @@ def test_html_unsafe_tag():
     elements = ["my first", eqn, "string"]
     root = Tag(name='root', content=elements, attributes=None,
                local_context=None, global_context=None)
-    assert root.html() == ("<body>my first"
-                           "<span class=\"script\">&lt;script&gt;</span>"
-                           "string</body>\n")
+    assert root.html() == ('<span class="root">my first'
+                           '<span class=\"script\">&lt;script&gt;</span>'
+                           'string</span>\n')
 
 
 def test_tex():

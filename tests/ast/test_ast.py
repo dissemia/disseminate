@@ -35,7 +35,7 @@ test_txt = """
 
     Here is a new paragraph."""
 
-test_html = """<body>
+test_html = """<span class="root">
     This is my test document. It has multiple paragraphs.
 
     Here is a new one with <b>bolded</b> text as an example.
@@ -46,7 +46,7 @@ test_html = """<body>
 
     This is a @13C variable, but this is an email address: justin@lorieau.com
 
-    Here is a new paragraph.</body>
+    Here is a new paragraph.</span>
 """
 
 test_invalid = """
@@ -140,14 +140,14 @@ def test_basic_html_conversion():
     assert html == test_html
 
     # Validate the html
-    root = lxml.html.fragment_fromstring(html, create_parent='body')
+    root = lxml.html.fragment_fromstring(html)
     root_iter = root.iter()
 
     # verify each element
     e1 = next(root_iter)
-    assert e1.tag == 'body'
+    assert e1.tag == 'span'
     assert isinstance(e1.text, str) and len(e1.text) > 0
-    assert e1.attrib == {}
+    assert e1.attrib == {'class': 'root'}
 
     e2 = next(root_iter)
     assert e2.tag == 'b'
