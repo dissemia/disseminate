@@ -1,6 +1,8 @@
 Tags
 ====
 
+The following tags have special behavior for ``.html`` and ``.tex`` targets.
+
 Headings
 --------
 
@@ -76,9 +78,19 @@ Headings are used to group and demarcate parts of the document's text.
     :html: In html, this tag will be rendered as a
            ``<span class="paragraph-heading">`` instead of an ``<h5>`` element.
 
+    :note: This tag is distinct from the ``@p``, which is used to identify a
+           paragraph element.
 
     :examples:
 
         ``@paragraph{Group A}. The first group ...``
 
         ``@h5{Group A}. The first group ...``
+
+Text Formatting
+---------------
+
+Text formatting tags are used to emphasize text in different ways and to
+introduce special characters.
+
+
