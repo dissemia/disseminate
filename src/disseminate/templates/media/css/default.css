@@ -1,10 +1,49 @@
 body {
-    max-width: 960px;
+    max-width: 720px;
     margin-left: auto;
     margin-right: auto;
     margin-top: 3.0rem;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     font-family: Palatino, serif;
     line-height: 1.5;
     color: #212529;
 }
+
+h1 {
+    display: block;
+    font-size: 1.8rem;
+    margin-top: 1.5rem;
+    marbin-bottom: 0.75rem;
+    font-weight: 400;
+}
+
+h2 {
+    display: block;
+    font-size: 1.6rem;
+    margin-top: 1.25rem;
+    marbin-bottom: 0.75rem;
+    font-weight: 400;
+}
+
+h3 {
+    display: block;
+    font-size: 1.2rem;
+    margin-top: 1.0rem;
+    marbin-bottom: 0.75rem;
+    font-weight: 400;
+}
+    
+.title {
+    display: block;
+    font-size: 1.8rem;
+    text-align: center;
+    padding: 0 0 1rem 0;
+}
+
+.author {
+    display: block;
+    text-align: center;
+    font-size: 1.3rem;
+    padding: 0 0 1.5rem 0;
+}
+    

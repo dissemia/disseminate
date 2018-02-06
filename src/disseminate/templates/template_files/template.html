@@ -11,5 +11,9 @@
   <link rel="stylesheet" href="/media/css/default.css">
 
 </head>
+<body>
+{% if title %}<span class="title">{{ title }}</span>{% endif %}
+{% if author %}<span class="author">{{ author }}</span>{% endif %}
 {{ body|safe }}
+</body>
 </html>
