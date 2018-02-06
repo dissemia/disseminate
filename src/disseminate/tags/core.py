@@ -26,8 +26,17 @@ class TagFactory(object):
     def __init__(self, allowed_tags=None):
         self.allowed_tags = allowed_tags
 
-        # Initialize the tag types dict
-        self.tag_types = {c.__name__.lower():c for c in _all_subclasses(Tag)}
+        # Initialize the tag types dict.
+        self.tag_types = dict()
+        for scls in  _all_subclasses(Tag):
+            aliases = (list(scls.aliases) if scls.aliases is not None else
+                       list())
+            names = [scls.__name__.lower(),] + aliases
+
+            for name in names:
+                # duplicate or overwritten tag names are not allowed
+                assert name not in self.tag_types
+                self.tag_types[name] = scls
 
     def tag(self, tag_name, tag_content, tag_attributes,
                   local_context, global_context):
