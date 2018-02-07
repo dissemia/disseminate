@@ -1,1 +1,5 @@
-from .macro import MacroIndex, sub_macros
+"""
+String processor functions to replace macros
+"""
+
+from .macro import replace_macros

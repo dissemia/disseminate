@@ -3,14 +3,7 @@ Functions for processing Abstract Syntax Trees (ASTs) from strings.
 """
 import regex
 
-from yaml import load, dump
-try:
-    from yaml import CLoader as Loader, CDumper as Dumper
-except ImportError:
-    from yaml import Loader, Dumper
-
 from ..tags import TagFactory
-from ..macros import MacroIndex, sub_macros
 from .validate import ASTValidator
 from . import settings
 
@@ -20,10 +13,6 @@ class AstException(Exception): pass
 
 control_char = r'@'
 
-
-re_header = regex.compile(r'[\s\n]*[\n]?-{3,}\n'
-                          r'(?P<yaml>[^-]+)'
-                          r'\n-{3,}\n')
 
 re_tag = regex.compile(r'(@(?P<tag>[A-Za-z]\w*)'
                        r'(?P<attributes>\[[^\]]+\])?'
@@ -77,42 +66,11 @@ def process_ast(s, local_context=None, global_context=None,
     global_context = (global_context if isinstance(global_context, dict)
                       else dict())
 
-    # Clear the local_context if this is the root tag. When reloading an AST,
-    # the old local_context is invalidated since some of the entries may have
-    # changed
-    if level == 1:
-        local_context.clear()
-
     # Setup the parsing
     current_pos = 0
     factory = TagFactory()
     validator = ASTValidator(src_filepath=src_filepath)
 
-    # get the header if present
-    if level == 1:
-        m = re_header.match(s)
-        if m:
-            header_str = m.groupdict()['yaml']
-            header = load(header_str, Loader=Loader)
-            local_context.update(header)
-
-            # Advance the string by the amount of the header
-            _, end = m.span()
-            s = s[end:]
-
-    ## Pre-process the string ##
-
-    # Pre-process with macros
-    # Setup the macros
-    macro_index = MacroIndex()
-    if 'macros' in global_context:
-        macro_index.update(global_context['macros'])
-    if 'macros' in local_context and isinstance(local_context['macros'], dict):
-        macro_index.update(local_context['macros'].items())
-        print(macro_index)
-    s = sub_macros(s, macro_index)
-
-    ## Process the AST
     # Create the root ast
     ast = []
 
@@ -150,11 +108,11 @@ def process_ast(s, local_context=None, global_context=None,
     ast.append(string)
 
     if level == 1:  # root level
-        root =  factory.tag(tag_name='root',
-                            tag_content=ast,
-                            tag_attributes=None,
-                            local_context=local_context,
-                            global_context=global_context)
+        root = factory.tag(tag_name='root',
+                           tag_content=ast,
+                           tag_attributes=None,
+                           local_context=local_context,
+                           global_context=global_context)
         return root
     else:
         return ast

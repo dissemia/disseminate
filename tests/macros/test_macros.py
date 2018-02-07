@@ -1,7 +1,7 @@
 """
 Test the functionality of macros.
 """
-from disseminate.macros import MacroIndex, sub_macros
+from disseminate.macros import replace_macros
 
 
 test = """
@@ -27,7 +27,7 @@ expected_result = """
       @caption{This is my @i{first} figure.}
     }
 
-    This is a @sup{13}{C} variable, an @sup{15}N, and a H@sub{2}O macro. but this is an email 
+    This is a @sup{13}C variable, an @sup{15}N, and a H@sub{2}O macro. but this is an email 
     address: justin@lorieau.com
 
     Here is a new paragraph."""
@@ -36,7 +36,6 @@ expected_result = """
 def test_basic_macros():
     """Basic tests of macros."""
 
-    macro_index = MacroIndex()
-    result = sub_macros(test, macro_index)
-    print(result)
-    print(macro_index)
+    result = replace_macros(test, local_context={}, global_context={})
+
+    assert result == expected_result

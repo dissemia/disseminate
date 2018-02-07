@@ -6,6 +6,8 @@ import os.path
 
 from ..ast import process_ast
 from ..templates import get_template
+from ..header import load_yaml_header
+from ..macros import replace_macros
 from ..utils import mkdir_p
 from .. import settings
 
@@ -50,8 +52,9 @@ class Document(object):
 
     string_processors : list of functions, **class attribute**
         A list of functions to process the string before conversion to the
-        AST. These functions are executed in sequence and simply accept a
-        string argument and return a processed string.
+        AST. These functions are executed in sequence and simply accept the
+        string, local_context and global_context as arguments and return a
+        processed string.
 
         .. note:: String processors are run asynchronously, and the
                   local_context and global_context dicts may not be fully
@@ -71,7 +74,9 @@ class Document(object):
     local_context = None
     global_context = None
 
-    string_processors = []
+    string_processors = [load_yaml_header,  # Process YAML headers
+                         replace_macros,  # Process macros
+                         ]
     ast_processors = []
     ast_post_processors = []
 
@@ -89,7 +94,7 @@ class Document(object):
         # processed
         self._mtime = None
 
-    def get_ast(self):
+    def get_ast(self, reload=False):
         """Process and return the AST.
 
         This method generates and caches the AST. This step is conducted
@@ -102,6 +107,11 @@ class Document(object):
         keeping stale values.
 
         See the :meth:`render` method for more details.
+
+        Parameters
+        ----------
+        reload : bool, str
+            If True, force the reload of the AST.
 
         Returns
         -------
@@ -116,10 +126,11 @@ class Document(object):
         stat = os.stat(self.src_filepath)
         time = stat.st_mtime
 
-
+        # Update the AST, if needed
         if (getattr(self, '_ast', None) is None or
            getattr(self, '_mtime', None) is None or
-           time > self._mtime):
+           time > self._mtime or
+           reload):
 
             # Check to make sure the file is reasonable
             filesize = stat.st_size
@@ -134,9 +145,15 @@ class Document(object):
             with open(self.src_filepath) as f:
                 string = f.read()
 
+            # Clear the local_context. When reloading an AST, the old
+            # local_context is invalidated since some of the entries may have
+            # changed
+            self.local_context.clear()
+
             # Process the string
             for processor in self.string_processors:
-                string = processor(string)
+                string = processor(string, self.local_context,
+                                   self.global_context)
 
             # Process and validate the AST
             ast = process_ast(s=string, local_context=self.local_context,

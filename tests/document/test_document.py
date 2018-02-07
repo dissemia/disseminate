@@ -78,3 +78,56 @@ def test_custom_template(tmpdir):
     in_file.write("test")
     doc.render()
     assert "Disseminate Project Index" not in out_file.read()
+
+
+def test_local_context_update(tmpdir):
+    """Tests that the local_context is properly updated in subsequent
+    renders."""
+    temp_file = tmpdir.join("temp.html")
+
+    # First load a file with a header
+    doc = Document("tests/document/example2/withheader.dm",
+                   {'.html': temp_file})
+    doc.get_ast()
+
+    # Check the contents  of the local_context
+    assert 'title' in doc.local_context
+    assert doc.local_context['title'] == 'My first title'
+
+    assert 'author' in doc.local_context
+    assert doc.local_context['author'] == 'Justin L Lorieau'
+
+    assert 'macros' in doc.local_context
+
+    # Get the local_context id to make sure it stays the same
+    local_context_id = id(doc.local_context)
+
+    # Now switch to a file without a header and make sure the header values
+    # are removed
+    doc.src_filepath = "tests/document/example2/noheader.dm"
+    doc.get_ast(reload=True)
+
+    # Check the contents  of the local_context
+    assert 'title' not in doc.local_context
+    assert 'author' not in doc.local_context
+    assert 'macros' not in doc.local_context
+
+    assert id(doc.local_context) == local_context_id
+
+
+def test_local_macros(tmpdir):
+    """Tests that macros defined in the header of a document are properly
+    processed."""
+    temp_file = tmpdir.join("temp.html")
+
+    # First load a file with a header
+    doc = Document("tests/document/example2/withheader.dm",
+                   {'.html': temp_file})
+    doc.render()
+
+    # See if the macro was properly replaced
+    rendered_html = temp_file.read()
+
+    assert '@macro' not in rendered_html
+    assert '<i>example</i>' in rendered_html
+
