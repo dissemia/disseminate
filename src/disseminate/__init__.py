@@ -6,3 +6,4 @@ from . import tags
 from . import dependencies
 from . import macros
 from . import header
+from . import convert

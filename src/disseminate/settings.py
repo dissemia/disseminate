@@ -43,6 +43,13 @@ compiled_exts = {'.pdf':
 #: -----------------
 template_basename = 'template'
 
+#: Convert Defaults
+#: ----------------
+
+# If True, converted files will be updated only when they're changed. Otherwise
+# converted files will always be updated
+convert_cache = True
+
 #: Dependency Defaults
 #: -------------------
 
