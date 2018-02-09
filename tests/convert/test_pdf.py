@@ -14,8 +14,6 @@ def test_pdf2svg(tmpdir):
 
     # Setup a target_filepath
     target_basefilepath = tmpdir.join('sample')
-    target_basefilepath_crop = tmpdir.join('sample_crop')
-    target_basefilepath_scale = tmpdir.join('sample_scale')
 
     # Try an unavailable: pdf->pdf
     with pytest.raises(ConverterError):
@@ -34,6 +32,20 @@ def test_pdf2svg(tmpdir):
     contents = tmpdir.join('sample.svg').read()
     assert 'width="65.5156pt"' in contents
     assert 'height="58.2628pt"' in contents
+
+
+@pytest.mark.optional
+def test_pdf2svg_optional(tmpdir):
+    """Test the Pdf2svg converter with optional pdfcrop and rsvg-convert
+    dependencies."""
+
+    # Get a test pdf file
+    pdf_file = "tests/convert/example1/sample.pdf"
+
+    # Setup a target_filepath
+    target_basefilepath = tmpdir.join('sample')
+    target_basefilepath_crop = tmpdir.join('sample_crop')
+    target_basefilepath_scale = tmpdir.join('sample_scale')
 
     # Try cropping
     target_filepath = convert(src_filepath=pdf_file,

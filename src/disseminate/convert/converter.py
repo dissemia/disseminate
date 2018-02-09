@@ -1,7 +1,8 @@
 """The base Converter class."""
 import os.path
+import subprocess
+import logging
 from tempfile import mkdtemp
-
 from distutils.spawn import find_executable
 
 from .arguments import PathArgument, Argument
@@ -98,7 +99,6 @@ def convert(src_filepath, target_basefilepath, targets, raise_error=True,
         return False
 
 
-
 class ConverterError(Exception):
     """An error was encountered in converting a file.
 
@@ -186,6 +186,50 @@ class Converter(object):
             filename = os.path.split(target_filepath)[1]
 
         return os.path.join(self._temp_dir, filename)
+
+    @classmethod
+    def run(cls, args, error_msg=None, raise_error=True):
+        """Run a command from the given arguments and either log a warning or
+        raise an error with the given message, if it fails.
+
+        Parameters
+        ----------
+        args : list of strings
+            The arguments for the command. (Compatible with Popen)
+        error_msg : str, optional
+            The warning or error message if the command fails. A command fails
+            if the returncode is not 0.
+            If no error message was specified, a default message will be
+            created.
+        raise_error : bool, optional
+            If True, a ConverterError will be raised if the command failed.
+            If False, a warning will be logged if the command failed.
+
+        Raises
+        ------
+        ConverterError
+            Raised if the command failed and raise_error is True.
+        """
+        p = subprocess.Popen(args, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE, bufsize=4096, )
+
+        # Check that it was succesfully converted
+        out, err = p.communicate()
+        returncode = p.returncode
+
+        if returncode != 0:
+            if error_msg is None:
+                error_msg = ("The conversion command '{}' was "
+                             "unsuccessful".format(args[0]))
+            if raise_error:
+                e = ConverterError(error_msg)
+                e.cmd = " ".join(args)
+                e.returncode = None
+                e.shell_out = out
+                e.shell_err = err
+                raise e
+            else:
+                logging.warning(error_msg)
 
     @classmethod
     def get_converter(cls, src_filepath, target_basefilepath, targets,

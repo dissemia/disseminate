@@ -1,11 +1,9 @@
 """
 Converters for PDF files.
 """
-import subprocess
-import logging
 import os
 
-from .converter import Converter, ConverterError
+from .converter import Converter
 from .arguments import PositiveIntArgument, PositiveFloatArgument
 
 
@@ -50,18 +48,8 @@ class Pdf2svg(Converter):
         # Crop the pdf, if specified
         if self.crop and pdfcrop_exec:
             # pdfcrop infile.pdf outfile.pdf
-            args = [pdfcrop_exec, current_pdf,
-                    temp_filepath_pdf]
-            p = subprocess.Popen(args, stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE, bufsize=4096)
-
-            # Check that it was succesfully converted
-            out, err = p.communicate()
-            returncode = p.returncode
-
-            if returncode != 0:
-                msg = "The pdfcrop of '{}' was unsuccessful."
-                logging.warning(msg.format(self.src_filepath.value_string))
+            args = [pdfcrop_exec, current_pdf, temp_filepath_pdf]
+            self.run(args, raise_error=False)
 
             # Move the current pdf
             current_pdf = temp_filepath_pdf
@@ -71,42 +59,13 @@ class Pdf2svg(Converter):
         args = [pdf2svg_exec, current_pdf, current_svg]
         if self.page_no is not None:
             args += self.page_no.value_string
-        p = subprocess.Popen(args, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE, bufsize=4096)
-
-        # Check that it was succesfully converted
-        out, err = p.communicate()
-        returncode = p.returncode
-
-        if returncode != 0:
-            msg = "The ps2svg of '{}' was unsuccessful."
-            e = ConverterError(msg.format(self.src_filepath.value_string))
-            e.cmd = " ".join(args)
-            e.returncode = None
-            e.shell_out = out
-            e.shell_err = err
-            raise e
+        self.run(args, raise_error=True)
 
         if self.scale and pdfcrop_exec:
             # rsvg-convert -z {scale} -f svg -o {target_filepath}
             args = [rsvg_exec, "-z", self.scale.value_string,
                     "-f", "svg", "-o", temp_filepath_svg2, current_svg]
-            p = subprocess.Popen(args, stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE, bufsize=4096,)
-
-            # Check that it was succesfully converted
-            out, err = p.communicate()
-            returncode = p.returncode
-
-            if returncode != 0:
-                msg = "The rsvg-convert of '{}' was unsuccessful."
-                e = ConverterError(msg.format(self.src_filepath.value_string))
-                e.cmd = " ".join(args)
-                e.returncode = None
-                print("err:", err)
-                e.shell_out = out
-                e.shell_err = err
-                raise e
+            self.run(args, raise_error=False)
 
             current_svg = temp_filepath_svg2
 
