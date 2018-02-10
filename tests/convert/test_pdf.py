@@ -2,6 +2,7 @@
 Test converters for pdf files
 """
 import os
+from distutils.spawn import find_executable
 
 import pytest
 
@@ -113,3 +114,26 @@ def test_caching(tmpdir):
     # See if the file has changed
     new_stats = os.stat(tmpdir.join('sample.svg'))
     assert mtime != new_stats.st_mtime
+
+
+def test_missing_executable(tmpdir, monkeypatch):
+    """Test the behavior when the pdf to svg converters are missing."""
+    # Remove the path from the environment
+    monkeypatch.setenv("PATH", "")
+    assert find_executable('pdf2svg') is None
+
+    # Get a test pdf file
+    pdf_file = "tests/convert/example1/sample.pdf"
+
+    # Setup a target_filepath
+    target_basefilepath = tmpdir.join('sample')
+
+    # Try an unavailable: pdf->pdf
+    with pytest.raises(ConverterError) as exc_info:
+        target_filepath = convert(src_filepath=pdf_file,
+                                  target_basefilepath=target_basefilepath,
+                                  targets=['.svg'])
+
+    # Check the exception message
+    assert "required program" in exc_info.value.args[0]
+    assert "pdf2svg" in exc_info.value.args[0]

@@ -8,14 +8,6 @@ from distutils.spawn import find_executable
 from .arguments import PathArgument, Argument
 from .. import settings
 
-#: A dict of cached files.
-#: key: the src_filepath
-#: value: dict with the following key/values:
-#:     - 'target_filepath':
-#:     - 'kwargs': dict(), the kwargs used to generate the target_filepath
-#:     - 'converter
-#_cached_files = dict()
-
 
 def kwargs_to_str(truncate_str_length=12, **kwargs):
     """Convert a kwargs dict into a string suitable for a filename.
@@ -244,7 +236,8 @@ class Converter(object):
         """Return True if this converter can be used (i.e. the required
         executables are all available)."""
         execs_paths = [cls.find_executable(e) for e in cls.required_execs]
-        return '' not in execs_paths
+
+        return None not in execs_paths
 
     @classmethod
     def find_executable(cls, executable_string):
@@ -299,7 +292,7 @@ class Converter(object):
         if returncode != 0:
             if error_msg is None:
                 error_msg = ("The conversion command '{}' was "
-                             "unsuccessful".format(args[0]))
+                             "unsuccessful".format(' '.join(args)))
             if raise_error:
                 e = ConverterError(error_msg)
                 e.cmd = " ".join(args)
@@ -365,9 +358,12 @@ class Converter(object):
                                 if c.is_available()]
 
         if len(available_converters) == 0:
-            exe_str = ", ".join(cls.required_execs)
-            msg = ("The required program(s) '{}' need to be installed to "
-                   "convert the '{}' file.")
+            required_execs = [", ".join(c.required_execs) for c in
+                              valid_converters]
+            exe_str = ", ".join(required_execs)
+
+            msg = ("One of the following required program(s) '{}' needs to be "
+                   "installed to convert the '{}' file.")
             raise ConverterError(msg.format(exe_str, src_filepath))
 
         # For the available converters find the converter that can handle the
