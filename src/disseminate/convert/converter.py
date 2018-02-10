@@ -17,6 +17,63 @@ from .. import settings
 #_cached_files = dict()
 
 
+def kwargs_to_str(truncate_str_length=12, **kwargs):
+    """Convert a kwargs dict into a string suitable for a filename.
+
+    Since the kwargs may come from user input, the final string is limited
+    somewhat to 6 modifiers and to the truncated_str_length for strings.
+
+    Parameters
+    ----------
+    truncate_str_length : int, optional
+        keys or values that generate strings longer than this number are
+        truncated.
+    kwargs : dict
+        kwargs to convert to a string suitable for a filename.
+
+    Returns
+    -------
+    str
+        A string suitable for a filename.
+
+    Examples
+    --------
+    >>> kwargs_to_str()
+    ''
+    >>> kwargs_to_str(scale='3.4', crop=True)
+    'crop_scale3'
+    >>> kwargs_to_str(scale='2.0', crop=False)
+    'scale2'
+    """
+    pieces = []
+    for k, v in sorted(kwargs.items())[:6]:  # Limit the number of arguments
+        # Convert the value from a string, if needed
+        if isinstance(v, str):
+            if v.title() == 'True':
+                v = True
+            elif v.title() == 'False':
+                v = False
+            elif v.isnumeric():
+                v = int(v)
+            else:
+                try:
+                    v = round(float(v))  # need to remove decimals from floats.
+                except ValueError:
+                    pass
+
+        if v is True:
+            pieces.append(str(k)[:truncate_str_length])
+        elif v is False:
+            pass
+        elif isinstance(v, float):
+            pieces.append(str(k)[:truncate_str_length] +
+                          str(v)[:truncate_str_length])
+        else:
+            pieces.append(str(k)[:truncate_str_length] +
+                          str(v)[:truncate_str_length])
+    return '_'.join(pieces)
+
+
 def convert(src_filepath, target_basefilepath, targets, raise_error=True,
             cache=settings.convert_cache, **kwargs):
     """Convert a source file to a target file.
@@ -70,6 +127,28 @@ def convert(src_filepath, target_basefilepath, targets, raise_error=True,
             msg = "The file '{}' requires a valid extension"
             raise ConverterError(msg.format(src_filepath))
         return False
+
+    # Get the modifier string and add it to the target_basefilepath
+    kwargs_str = kwargs_to_str(**kwargs)
+
+    if kwargs_str:
+        target_basefilepath = target_basefilepath + '_' + kwargs_str
+
+    # See if a target already exists and return an existing version if available
+    # and update to date
+    if cache:
+        def test_target(t):
+            target_filepath = target_basefilepath + t
+            return target_filepath if os.path.isfile(target_filepath) else False
+
+        valid_target_filepaths = filter(bool, map(test_target, targets))
+        valid_target_filepaths = list(valid_target_filepaths)
+
+        if (valid_target_filepaths and
+           (os.path.getmtime(valid_target_filepaths[0]) >=
+           os.path.getmtime(src_filepath))):
+
+            return valid_target_filepaths[0]
 
     # Get a suitable converter subclass
     try:
@@ -306,7 +385,7 @@ class Converter(object):
         assert best_target is not None
         assert best_converter is not None
 
-        # Generate the target_filepath
+        # Generate the target_filepath.
         target_filepath = ''.join((str(target_basefilepath), best_target))
 
         # instantiate the Converter subclass

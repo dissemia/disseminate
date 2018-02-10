@@ -1,6 +1,8 @@
 """
 Test converters for pdf files
 """
+import os
+
 import pytest
 
 from disseminate.convert import convert, ConverterError
@@ -44,12 +46,10 @@ def test_pdf2svg_optional(tmpdir):
 
     # Setup a target_filepath
     target_basefilepath = tmpdir.join('sample')
-    target_basefilepath_crop = tmpdir.join('sample_crop')
-    target_basefilepath_scale = tmpdir.join('sample_scale')
 
     # Try cropping
     target_filepath = convert(src_filepath=pdf_file,
-                              target_basefilepath=target_basefilepath_crop,
+                              target_basefilepath=target_basefilepath,
                               crop=True, targets=['.svg'])
 
     # See if the file was created
@@ -61,20 +61,55 @@ def test_pdf2svg_optional(tmpdir):
 
     # Try cropping and scaling by a factor of 2
     target_filepath = convert(src_filepath=pdf_file,
-                              target_basefilepath=target_basefilepath_scale,
+                              target_basefilepath=target_basefilepath,
                               crop=True, scale='2.0', targets=['.svg'])
 
     # See if the file was created
-    assert target_filepath == str(tmpdir.join('sample_scale.svg'))
-    assert tmpdir.join('sample_scale.svg').check()
-    contents = tmpdir.join('sample_scale.svg').read()
+    assert target_filepath == str(tmpdir.join('sample_crop_scale2.svg'))
+    assert tmpdir.join('sample_crop_scale2.svg').check()
+    contents = tmpdir.join('sample_crop_scale2.svg').read()
     assert 'width="60pt"' in contents
     assert 'height="60pt"' in contents
 
-# def test_caching(tmpdir):
-#     # Try convert the file again and see if it was updated
-#     mtime = tmpdir.join('sample.svg').mtime()
-#     target_filepath = convert(src_filepath=pdf_file,
-#                               target_basefilepath=target_basefilepath,
-#                               targets=['.svg'])
-#     assert tmpdir.join('sample.svg').mtime() == mtime
+
+def test_caching(tmpdir):
+    """Test the caching of files"""
+    # Try convert the file again and see if it was updated
+
+    # Get a test pdf file
+    pdf_file = "tests/convert/example1/sample.pdf"
+
+    # Setup a target_filepath
+    target_basefilepath = tmpdir.join('sample')
+
+    # Try the conversion
+    target_filepath = convert(src_filepath=pdf_file,
+                              target_basefilepath=target_basefilepath,
+                              crop=False, targets=['.svg'],
+                              cache=False)
+
+    # See if the file was created and get its mtime and ino
+    stats = os.stat(tmpdir.join('sample.svg'))
+    mtime = stats.st_mtime
+    assert target_filepath == str(tmpdir.join('sample.svg'))
+    assert tmpdir.join('sample.svg').check()
+
+    # Try the conversion again with caching
+    target_filepath = convert(src_filepath=pdf_file,
+                              target_basefilepath=target_basefilepath,
+                              crop=False, targets=['.svg'],
+                              cache=True)
+
+    # See if the file has changed
+    new_stats = os.stat(tmpdir.join('sample.svg'))
+    assert mtime == new_stats.st_mtime
+
+    # Now try to get a new version
+    target_filepath = convert(src_filepath=pdf_file,
+                              target_basefilepath=target_basefilepath,
+                              crop=False, targets=['.svg'],
+                              cache=False)
+
+    # See if the file has changed
+    new_stats = os.stat(tmpdir.join('sample.svg'))
+    assert mtime != new_stats.st_mtime
