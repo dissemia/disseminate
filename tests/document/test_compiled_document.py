@@ -5,7 +5,8 @@ import os.path
 
 import pytest
 
-from disseminate.document import CompiledDocument, CompiledDocumentError
+from disseminate.document import CompiledDocument
+from disseminate.convert import ConverterError
 
 
 def test_pdflatex(tmpdir):
@@ -52,10 +53,11 @@ def test_bad_pdflatex(tmpdir):
                            targets={'.pdf': target_filepath})
 
     # Render the document. This will raise a CompiledDocumentError
-    with pytest.raises(CompiledDocumentError) as e:
+    with pytest.raises(ConverterError) as e:
         doc.render()
-    assert e.match(target_filepath)
-    assert e.value.exit_code != 0  # unsuccessful run
+    assert e.match("index1.tex")  # the intermediary file should be in error
+    assert e.value.returncode != 0  # unsuccessful run
+
     assert "! Undefined control sequence." in e.value.shell_out
     assert "This is my \\bad" in e.value.shell_out
 

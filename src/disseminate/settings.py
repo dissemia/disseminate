@@ -35,9 +35,8 @@ document_max_size = 204800  # 200kB
 create_dirs = True
 
 #: A set of extensions that are compiled from other extensions
-compiled_exts = {'.pdf':
-                     ('.tex', ('pdflatex -interaction=nonstopmode '
-                               '-output-dir={out_dir} {in_file}'))}
+compiled_exts = {'.pdf': '.tex',
+                 }
 
 #: Template Defaults
 #: -----------------

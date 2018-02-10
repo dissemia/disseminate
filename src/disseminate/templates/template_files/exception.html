@@ -78,11 +78,14 @@
       <pre>{{ traceback }}</pre>
     </details>
 
-    {% if exception.command %}
+    {% if exception.cmd %}
     <details>
       <summary><span class="details">Compilation Command</span></summary>
-      <em>command:<em> {{ exception.command }}
+      <em>command:<em> {{ exception.cmd }}
+      <em>stdout:</em>
       <pre>{{ exception.shell_out }}</pre>
+      <em>stderr:</em>
+      <pre>{{ exception.shell_err }}</pre>
     {% endif %}
   </div>
 </body>
