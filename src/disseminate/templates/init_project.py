@@ -4,6 +4,7 @@ Functions to initialize a project in a directory
 import os.path
 import shutil
 import glob
+import sys
 
 from ..utils.file import mkdir_p
 
@@ -41,12 +42,12 @@ def init_project(dest='.', overwrite=False):
         dest_string = "'" + dest + "'"
 
     with open(os.path.join(template_root, info_file), 'r') as f:
-        print(f.read().strip().format(dest=dest_string))
-    print()
+        sys.stdout.write(f.read().strip().format(dest=dest_string))
+    sys.stdout.write('\n')
 
     # Create the destination directory, if needed
     if dest not in ('', '.', '/') and not os.path.isdir(dest):
-        print("\tcreating project directory: {}".format(dest))
+        sys.stdout.write("\tcreating project directory: {}".format(dest))
         mkdir_p(dest)
 
     # glob through the template project
@@ -72,7 +73,8 @@ def init_project(dest='.', overwrite=False):
 
         if is_dir and not os.path.exists(destination_path):
             os.mkdir(destination_path)
-            print("\tcreating directory: {}".format(destination_path))
+            sys.stdout.write("\tcreating directory: "
+                             "{}".format(destination_path))
 
         if not is_dir:
             if os.path.exists(destination_path):
@@ -80,10 +82,12 @@ def init_project(dest='.', overwrite=False):
                     os.remove(destination_path)
                     shutil.copy(os.path.join(template_root, template_path),
                                 destination_path)
-                    print("\toverwriting file: {}".format(destination_path))
+                    sys.stdout.write("\toverwriting file: "
+                                     "{}".format(destination_path))
             else:
                 shutil.copy(os.path.join(template_root, template_path),
                             destination_path)
-                print("\twriting file: {}".format(destination_path))
+                sys.stdout.write("\twriting file: "
+                                 "{}".format(destination_path))
 
-    print()
+        sys.stdout.write('\n')

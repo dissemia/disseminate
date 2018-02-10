@@ -8,7 +8,7 @@ from disseminate.templates.init_project import (init_project, template_root,
                                                 info_file)
 
 
-def test_init_project(tmpdir):
+def test_init_project(tmpdir, capsys):
     """Tests the basic functionality of init_project"""
     # Try a variety of destination paths
     for dest in (str(tmpdir), str(tmpdir) + '/'):
@@ -27,6 +27,7 @@ def test_init_project(tmpdir):
 
         # Initialize a project in the tmpdir
         init_project(dest=dest, overwrite=False)
+        out, err = capsys.readouterr()  # capture the output and error
 
         # Get a set of directories and files created
         destination_paths = set()
@@ -56,6 +57,7 @@ def test_init_project(tmpdir):
 
         # Initialize a project in the tmpdir, disabling overwrite
         init_project(dest=dest, overwrite=False)
+        out, err = capsys.readouterr()  # capture the output and error
 
         # Match the inodes
         for i in glob.iglob(os.path.join(dest, '**'), recursive=True):
@@ -65,11 +67,10 @@ def test_init_project(tmpdir):
 
         # Initialize a project in the tmpdir, enabling overwrite
         init_project(dest=dest, overwrite=True)
+        out, err = capsys.readouterr()  # capture the output and error
 
         # The inodes for the files shouldn't match now
         for i in glob.iglob(os.path.join(dest, '**'), recursive=True):
             if os.path.isdir(i):
                 continue
             assert inodes[i] != os.stat(i).st_ino
-
-
