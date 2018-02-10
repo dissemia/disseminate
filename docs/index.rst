@@ -56,8 +56,32 @@ Quick Start
 Installation
 ~~~~~~~~~~~~
 
+Dependencies
+------------
+The dependencies are only required depending on which features are used.
+
++------------------+-------------------------------------------------------------+
+| Program          | Feature                                                     |
++==================+=============================================================+
+| **pdflatex**     | Enables the conversion of LaTeX files (``.tex``) into pdfs. |
++------------------+-------------------------------------------------------------+
+| **pdf2svg**      | Enables the conversion of pdf images into svg images. The   |
+|                  | svg images are commonly used for html formats.              |
++------------------+-------------------------------------------------------------+
+| **pdfcrop**      | Enables the cropping of pdf images, which is used in        |
+|                  | rendering equations into svg files.                         |
++------------------+-------------------------------------------------------------+
+| **rsvg-convert** | Enables the scaling of svg images.                          |
++------------------+-------------------------------------------------------------+
+
 Table of Contents
 -----------------
+.. toctree::
+   :hidden:
+   :caption: Overview
+
+   self
+   
 .. toctree::
    :maxdepth: 2
    :caption: Markup Language

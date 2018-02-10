@@ -59,6 +59,21 @@ code.descname {
     color: #8D1A38;
 }
 
+table.docutils {
+    border: 0px;
+}
+
+table.docutils thead {
+    background-color: #e6f2fd;
+    color: #3177b3;
+}
+
+table.docutils th, td {
+    padding: 0.2rem;
+    border-left: 0;
+    border-right: 0;
+}
+
 table.field-list {
     border-top: none;
     border-bottom: none;
