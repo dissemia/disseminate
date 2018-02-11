@@ -100,6 +100,10 @@ class DependencyManager(object):
         else:
             return self.target_root
 
+    def reset(self):
+        """Reset the dependencies tracked by the DependencyManager"""
+        self.dependencies.clear()
+
     def search_file(self, path, raise_error=True):
         """Find a file for the given path.
 
@@ -168,7 +172,11 @@ class DependencyManager(object):
         mkdir_p(target_filepath)
 
         # copy the file at src_filepath to the target_path
-        os.link(src_filepath, target_filepath)
+        try:
+            os.link(src_filepath, target_filepath)
+        except FileExistsError:
+            os.remove(target_filepath)
+            os.link(src_filepath, target_filepath)
 
         return target_filepath
 
