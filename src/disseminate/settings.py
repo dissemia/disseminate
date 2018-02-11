@@ -34,7 +34,9 @@ document_max_size = 204800  # 200kB
 #: exist
 create_dirs = True
 
-#: A set of extensions that are compiled from other extensions
+#: A set of extensions that are compiled from other extensions. The keys are
+#: the compiled extension and the values are the extensions from which these
+#: extensions are compiled.
 compiled_exts = {'.pdf': '.tex',
                  }
 
@@ -42,26 +44,24 @@ compiled_exts = {'.pdf': '.tex',
 #: -----------------
 template_basename = 'template'
 
+#: Dependency Defaults
+#: -------------------
+
+#: A series of allowed tracked extensions for each target type with information
+#: to translate these files to a useable form, if needed.
+#: The keys are the targets. The values are lists of valid extensions that
+#: can be included for the target, in order of decreasing preference.
+tracked_deps = {'.html': ['.css', '.svg'],
+                '.tex': ['.pdf', '.png'],
+                '.css': ['.css', ]
+                }
+
 #: Convert Defaults
 #: ----------------
 
 # If True, converted files will be updated only when they're changed. Otherwise
 # converted files will always be updated
 convert_cache = True
-
-#: Dependency Defaults
-#: -------------------
-
-#: A series of allowed tracked extensions for each target type with information
-#: to translate these files to a useable form, if needed.
-#: The keys are the targets. The values are dicts whose keys are the allowed
-#: extension types of tracked dependencies, and the values are translators.
-#: Translator are either None, in which case, they will be linked or copied to
-#: the dependencies directory, or the name of a translator function to convert
-#: the file to a usable form.
-tracked_deps = {'.html':
-                {'.css': None},
-                }
 
 #: If a dependency exists in the target, overwrite it
 #overwrite_dependencies = True
