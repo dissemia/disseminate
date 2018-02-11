@@ -3,7 +3,9 @@ Test the DependencyManager functionality
 """
 import os.path
 
-from disseminate.dependency_manager import DependencyManager
+import pytest
+
+from disseminate.dependency_manager import DependencyManager, MissingDependency
 
 # Get the template path for disseminate
 from disseminate.templates import __file__ as template_path
@@ -141,6 +143,11 @@ def test_add_file(tmpdir):
     assert dependency.path == (target_root + '/html/media/images/sample.svg')
     assert os.path.isfile(target_root + '/html/media/images/sample.svg')
 
+    # Try adding a dependency for missing files
+    with pytest.raises(MissingDependency):
+        targets_added = dep.add_file(targets=['.misc', '.html'],
+                                     path='missing.pdf')
 
-
-
+    with pytest.raises(MissingDependency):
+        targets_added = dep.add_file(targets=['.misc', '.html'],
+                                     path='missing.invalid')
