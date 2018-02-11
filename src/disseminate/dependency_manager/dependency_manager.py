@@ -66,8 +66,10 @@ class DependencyManager(object):
 
     Attributes
     ----------
-    dependencies : set
-        A set of dependencies managed by this dependency manager.
+    dependencies : dict of sets
+        A dict of sets of dependencies managed by this dependency manager.
+        The keys are the target names (ex: '.html') and the values are
+        a set of FileDependency tuples.
     """
 
     project_root = None
@@ -90,7 +92,7 @@ class DependencyManager(object):
         self.target_root = target_root
         self.segregate_targets = segregate_targets
         self.media_root = media_root
-        self.dependencies = set()
+        self.dependencies = dict()
 
     def target_path(self, target):
         """The final render path for the given target."""
@@ -181,14 +183,16 @@ class DependencyManager(object):
 
         Returns
         -------
-        True
-            When the file was succesfully found and added.
+        targets_added : list of str
+            A list of targets for which the dependency was added.
 
         Raises
         ------
         MissingDependency
             Raised when a file was not found.
         """
+        targets_added = []
+
         # Only go through targets that have tracked dependencies
         for target in [t for t in targets if t in settings.tracked_deps]:
             # Find the file
@@ -207,12 +211,14 @@ class DependencyManager(object):
             if ext in settings.tracked_deps[target]:
                 media_path, path = paths
                 # Add the dependency
-                dep = FileDependency(paths)
-                self.dependencies.add(dep)
+                dep = FileDependency(*paths)
+                self.dependencies.setdefault(target, set()).add(dep)
 
                 # Link the file
                 self.copy_file(target=target, media_path=media_path,
                                path=path)
+
+                targets_added.append(target)
 
             # If the file cannot be used directly, try converting it. This
             # will change its media_path, since the extension (and possibly the
@@ -223,16 +229,13 @@ class DependencyManager(object):
                 # is the path we want the final file to be created in (in
                 # render path)
                 media_path, path = paths
+                target_filepath = os.path.join(self.target_path(target),
+                                               media_path)
 
-                if self.segregate_targets:
-                    target_filepath = os.path.join(self.target_root,
-                                                   target,
-                                                   media_path)
-                else:
-                    target_filepath = os.path.join(self.target_root,
-                                                   media_path)
-                # Strip the extension to make the target_basefilepath
+                # Strip the extension to make the target_basefilepath. The
+                # directories must be created as well
                 target_basefilepath = os.path.splitext(target_filepath)[0]
+                mkdir_p(target_basefilepath)
 
                 # The targets for the convert function are the allowed
                 # extensions for this target.
@@ -245,8 +248,12 @@ class DependencyManager(object):
                 # The new_path is a render path for the newly generated file
                 # We will need to get the media_path for this path.
                 if new_path:
-                    media_path = os.path.relpath(self.target_path(target),
-                                                 new_path)
+                    media_path = os.path.relpath(new_path,
+                                                 self.target_path(target))
 
                     # add the dependency
                     dep = FileDependency(media_path=media_path, path=new_path)
+                    self.dependencies.setdefault(target, set()).add(dep)
+                    targets_added.append(target)
+
+        return targets_added
