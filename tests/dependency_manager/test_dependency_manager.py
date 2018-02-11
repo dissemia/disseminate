@@ -162,6 +162,25 @@ def test_add_file(tmpdir):
                                      path='missing.invalid')
 
 
+def test_add_file_duplicates(tmpdir):
+    """Tests the add_file method when adding a file twice."""
+    # get a temporary target_root
+    target_root = str(tmpdir)
+
+    # Setup a dependency manager
+    dep = DependencyManager(project_root='tests/dependency_manager/example1',
+                            target_root=target_root, segregate_targets=True)
+
+    # Try adding a file twice
+    filepath = 'tests/dependency_manager/example1/media/css/default.css'
+    targets_added = dep.add_file(targets=['.html'], path=filepath)
+    targets_added = dep.add_file(targets=['.html'], path=filepath)
+
+    # The number of dependencies should be 1, not 2. This is guaranteed because
+    # the DependencyManager uses sets.
+    assert len(dep.dependencies['.html']) == 1
+
+
 def test_add_html(tmpdir):
     """Tests the add_html method."""
     # get a temporary target_root
