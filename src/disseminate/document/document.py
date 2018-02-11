@@ -150,6 +150,12 @@ class Document(object):
             # changed
             self.local_context.clear()
 
+            # Clear the dependencies. When reloading an AST, the old
+            # dependencies are invalidated since some of the entries may have
+            # changed
+            if '_dependencies' in self.global_context:
+                self.global_context['_dependencies'].reset()
+
             # Process the string
             for processor in self.string_processors:
                 string = processor(string, self.local_context,
