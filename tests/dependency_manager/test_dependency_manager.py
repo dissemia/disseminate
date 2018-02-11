@@ -151,3 +151,25 @@ def test_add_file(tmpdir):
     with pytest.raises(MissingDependency):
         targets_added = dep.add_file(targets=['.misc', '.html'],
                                      path='missing.invalid')
+
+
+def test_add_html(tmpdir):
+    """Tests the add_html method."""
+    # get a temporary target_root
+    target_root = str(tmpdir)
+
+    # Setup the dependency manager
+    dep = DependencyManager(project_root='',
+                            target_root=target_root, segregate_targets=True)
+
+    # Now try adding the 'template.html' file from the project. This file
+    # has a dependency on the 'media/css/default.css' file.
+    dep.add_html(template_path + '/template_files/template.html')
+
+    # Make sure the dependency was added and that it exists
+    dependency = list(dep.dependencies['.html'])[0]
+
+    assert dependency.media_path == 'media/css/default.css'
+    assert dependency.path == os.path.realpath(template_path +
+                                               '/media/css/default.css')
+    assert os.path.isfile(target_root + '/html/media/css/default.css')
