@@ -82,7 +82,7 @@ def test_copy_file(tmpdir):
     # Copy the file.
     path = 'tests/dependency_manager/example1/media/css/default.css'
     target_path = dep.copy_file(target='.html',
-                                media_path='media/css/default.css', path=path)
+                                dep_filepath='media/css/default.css', src_filepath=path)
     assert os.path.isfile(target_path)
     assert str(tmpdir.join('html/media/css/default.css')) == target_path
 
@@ -93,7 +93,7 @@ def test_copy_file(tmpdir):
     # Copy the file.
     path = 'tests/dependency_manager/example1/media/css/default.css'
     target_path = dep.copy_file(target='.html',
-                                media_path='media/css/default.css', path=path)
+                                dep_filepath='media/css/default.css', src_filepath=path)
     assert os.path.isfile(target_path)
     assert str(tmpdir.join('media/css/default.css')) == target_path
 
@@ -122,9 +122,13 @@ def test_add_file(tmpdir):
     # and that it was copied or linked to the right location
     assert targets_added == ['.html', ]
     dependency = list(dep.dependencies['.html'])[0]
-    assert dependency.media_path == 'media/css/default.css'
-    assert dependency.path == ('tests/dependency_manager/example1'
-                               '/media/css/default.css')
+
+    assert dependency.src_filepath == ('tests/dependency_manager/example1'
+                                       '/media/css/default.css')
+    assert dependency.target_filepath == tmpdir.join('html/media/css/'
+                                                      'default.css')
+    assert dependency.dep_filepath == 'media/css/default.css'
+
     assert os.path.isfile(tmpdir.join('html/media/css/default.css'))
 
     # Now try adding a file that requires a conversion. The example2 directory
@@ -139,8 +143,13 @@ def test_add_file(tmpdir):
     # dependency manager and that it was copied or linked to the right location
     assert targets_added == ['.html', ]
     dependency = list(dep.dependencies['.html'])[0]
-    assert dependency.media_path == 'media/images/sample.svg'
-    assert dependency.path == (target_root + '/html/media/images/sample.svg')
+
+    assert dependency.src_filepath == ('tests/dependency_manager/example2'
+                                       '/media/images/sample.pdf')
+    assert dependency.target_filepath == (target_root +
+                                          '/html/media/images/sample.svg')
+    assert dependency.dep_filepath == 'media/images/sample.svg'
+
     assert os.path.isfile(target_root + '/html/media/images/sample.svg')
 
     # Try adding a dependency for missing files
@@ -169,7 +178,10 @@ def test_add_html(tmpdir):
     # Make sure the dependency was added and that it exists
     dependency = list(dep.dependencies['.html'])[0]
 
-    assert dependency.media_path == 'media/css/default.css'
-    assert dependency.path == os.path.realpath(template_path +
-                                               '/media/css/default.css')
+    assert dependency.src_filepath == os.path.realpath(template_path +
+                                                       '/media/css/default.css')
+    assert dependency.target_filepath == (target_root +
+                                          '/html/media/css/default.css')
+    assert dependency.dep_filepath == 'media/css/default.css'
+
     assert os.path.isfile(target_root + '/html/media/css/default.css')
