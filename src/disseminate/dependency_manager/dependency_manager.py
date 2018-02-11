@@ -6,7 +6,9 @@ from collections import namedtuple
 
 import regex
 
+from ..convert import convert
 from ..attributes import re_attrs
+from ..utils.file import mkdir_p
 from .. import settings
 
 # Get the template path for the disseminate project
@@ -15,17 +17,22 @@ current_path = os.path.split(current_filepath)[0]
 template_path = os.path.join(current_path, '../templates')
 
 
-class FileDependency(namedtuple('FileDependency', ['path', 'media_path'])):
+class MissingDependency(Exception):
+    """A dependency was not found."""
+    pass
+
+
+class FileDependency(namedtuple('FileDependency', ['media_path', 'path'])):
     """A dependency on a file.
 
     Attributes
     ----------
-    path : str
-        The actual (render) path of the existing file
-        ex: 'src/media/images/fig1.png'
     media_path : str
         The path of the file relative to the media_root
         ex: 'images/fig1.png'
+    path : str
+        The actual (render) path of the existing file
+        ex: 'src/media/images/fig1.png'
     """
     pass
 
@@ -85,6 +92,13 @@ class DependencyManager(object):
         self.media_root = media_root
         self.dependencies = set()
 
+    def target_path(self, target):
+        """The final render path for the given target."""
+        if self.segregate_targets:
+            return os.path.join(self.target_root, target.strip('.'))
+        else:
+            return self.target_root
+
     def search_file(self, path):
         """Find a file for the given path.
 
@@ -125,7 +139,28 @@ class DependencyManager(object):
 
         return False
 
-    def add_file(self, targets, path):
+    def copy_file(self, target, media_path, path):
+        """Copy or link a file for the given (render) path to the target's
+        media path.
+
+        Returns
+        -------
+        target_path :
+            The string for the target path (render path) for the newly copied
+            or linked file.
+        """
+        # Get the target path in a render path
+        target_media_path = os.path.join(self.target_path(target), media_path)
+
+        # Make sure the target's media_path exists
+        mkdir_p(target_media_path)
+
+        # copy the file at path to the target_path
+        os.link(path, target_media_path)
+
+        return target_media_path
+
+    def add_file(self, targets, path, **kwargs):
         """Add a file dependency for the given path.
 
         The file will be converted to a suitable formant for the target, if
@@ -140,11 +175,78 @@ class DependencyManager(object):
         path : str
             The path of the file. The file will be searched using
             :meth:`DependencyManager.search_file`.
+        kwargs : dict
+            The kwargs to be used for the convert function, if the file needs
+            to be converted.
 
         Returns
         -------
         True
             When the file was succesfully found and added.
-        """
-        pass
 
+        Raises
+        ------
+        MissingDependency
+            Raised when a file was not found.
+        """
+        # Only go through targets that have tracked dependencies
+        for target in [t for t in targets if t in settings.tracked_deps]:
+            # Find the file
+            paths = self.search_file(path)
+
+            # Raise a MissingDependency if the file was not found.
+            if paths is False:
+                msg = "Could not find dependency file '{}'"
+                raise MissingDependency(msg.format(path))
+
+            # Get the extension for the file's path
+            ext = os.path.splitext(path)[1]
+
+            # See if the extension is compatible with an extension that can
+            # be used with this target. If so, add it directly.
+            if ext in settings.tracked_deps[target]:
+                media_path, path = paths
+                # Add the dependency
+                dep = FileDependency(paths)
+                self.dependencies.add(dep)
+
+                # Link the file
+                self.copy_file(target=target, media_path=media_path,
+                               path=path)
+
+            # If the file cannot be used directly, try converting it. This
+            # will change its media_path, since the extension (and possibly the
+            # filename) will change.
+            else:
+                # Get the suitable paths for the conversion. 'path' is the
+                # location of the file (render path) and the target_basefilepath
+                # is the path we want the final file to be created in (in
+                # render path)
+                media_path, path = paths
+
+                if self.segregate_targets:
+                    target_filepath = os.path.join(self.target_root,
+                                                   target,
+                                                   media_path)
+                else:
+                    target_filepath = os.path.join(self.target_root,
+                                                   media_path)
+                # Strip the extension to make the target_basefilepath
+                target_basefilepath = os.path.splitext(target_filepath)[0]
+
+                # The targets for the convert function are the allowed
+                # extensions for this target.
+                convert_targets = settings.tracked_deps[target]
+
+                new_path = convert(src_filepath=path,
+                                   target_basefilepath=target_basefilepath,
+                                   targets=convert_targets, **kwargs)
+
+                # The new_path is a render path for the newly generated file
+                # We will need to get the media_path for this path.
+                if new_path:
+                    media_path = os.path.relpath(self.target_path(target),
+                                                 new_path)
+
+                    # add the dependency
+                    dep = FileDependency(media_path=media_path, path=new_path)
