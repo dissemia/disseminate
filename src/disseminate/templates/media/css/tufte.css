@@ -1,0 +1,79 @@
+body {
+    font-size: 1.2rem;
+    font-family: Palatino, serif;
+    line-height: 1.7;
+    color: #212529;
+    padding-left: 12.5%;
+    margin-left: auto;
+    margin-right: auto;
+    width: 87.5%;
+    max-width: 1400px;
+}
+
+article {
+    padding-top: 5rem;
+    position: relative;
+    width: 60%;
+    max-width: 46rem;
+}
+
+h1 {
+    display: block;
+    font-size: 1.8rem;
+    margin-top: 1.5rem;
+    marbin-bottom: 0.75rem;
+    font-weight: 400;
+}
+
+h2 {
+    display: block;
+    font-size: 1.6rem;
+    margin-top: 1.25rem;
+    marbin-bottom: 0.75rem;
+    font-weight: 400;
+}
+
+h3 {
+    display: block;
+    font-size: 1.2rem;
+    margin-top: 1.0rem;
+    marbin-bottom: 0.75rem;
+    font-weight: 400;
+}
+    
+.title {
+    display: block;
+    font-size: 2.0rem;
+    padding: 0 0 1rem 0;
+}
+
+.author {
+    display: block;
+    font-size: 1.5rem;
+    padding: 0 0 1.5rem 0;
+    font-style: italic;
+}
+
+.root {
+    margin-top: 3.0rem;
+    display: block;
+}
+
+.sidenote {
+    display: block;
+    float: right;
+    clear: right;
+    width: 50%;
+    margin-right: -60%;
+    font-size: 1.0rem;
+    line-height: 1.5;
+}
+
+.sidenote sub, sup {
+  vertical-align: baseline;
+  position: relative;
+  top: -0.4em;
+}
+.sidenote sub { 
+  top: 0.4em; 
+}
