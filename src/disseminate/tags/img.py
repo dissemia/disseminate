@@ -10,6 +10,7 @@ class Img(Tag):
     """The img tag for inserting images."""
 
     src_filepath = None
+    manage_dependencies = True
 
     def __init__(self, name, content, attributes,
                  local_context, global_context):
@@ -30,26 +31,34 @@ class Img(Tag):
             raise TagError(msg)
 
     def tex(self, level=1):
-        # Add the file dependency
-        assert '_dependencies' in self.global_context
-        deps = self.global_context['_dependencies']
-        deps.add_file(targets=['.tex'], path=self.src_filepath)
-        dep = deps.get_dependency(target='.tex', src_filepath=self.src_filepath)
+        if self.manage_dependencies:
+            # Add the file dependency
+            assert '_dependencies' in self.global_context
+            deps = self.global_context['_dependencies']
+            deps.add_file(targets=['.tex'], path=self.src_filepath)
+            dep = deps.get_dependency(target='.tex',
+                                      src_filepath=self.src_filepath)
+            path = dep.dep_filepath
+        else:
+            path = self.src_filepath
 
-        return "\\includegraphics{{{}}}".format(dep.dep_filepath)
+        return "\\includegraphics{{{}}}".format(path)
 
     def html(self, level=1):
-        # Add the file dependency
-        assert '_dependencies' in self.global_context
-        deps = self.global_context['_dependencies']
-        deps.add_file(targets=['.html'], path=self.src_filepath)
-        dep = deps.get_dependency(target='.html',
-                                  src_filepath=self.src_filepath)
+        if self.manage_dependencies:
+            # Add the file dependency
+            assert '_dependencies' in self.global_context
+            deps = self.global_context['_dependencies']
+            deps.add_file(targets=['.html'], path=self.src_filepath)
+            dep = deps.get_dependency(target='.html',
+                                      src_filepath=self.src_filepath)
+            url = dep.url
+        else:
+            url = self.src_filepath
 
         # Use the parent method to render the tag. However, the 'src' attribute
         # should be fixed first.
-        self.attributes = set_attribute(self.attributes,
-                                        ('src', dep.url),
+        self.attributes = set_attribute(self.attributes, ('src', url),
                                         method='r')
         return super(Img, self).html(level)
 

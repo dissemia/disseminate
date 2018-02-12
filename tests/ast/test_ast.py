@@ -7,6 +7,7 @@ import lxml.html
 from disseminate.ast import process_ast
 from disseminate.ast.validate import ParseError
 from disseminate.tags import Tag
+from disseminate.tags.img import Img
 
 
 test = """
@@ -68,6 +69,8 @@ author: Justin L Lorieau
 
 def test_ast_basic_string():
     """Test the parsing of a basic string into an AST."""
+    # Disable the management of dependencies for tags
+    Img.manage_dependencies = False
 
     ast = process_ast(test)
 
@@ -133,6 +136,8 @@ def test_default_conversion():
 
 def test_basic_html_conversion():
     """Test the generation of html strings from tags."""
+    # Disable the management of dependencies for tags
+    Img.manage_dependencies = False
 
     # Generate the html string
     ast = process_ast(test)
