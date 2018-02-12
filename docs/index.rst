@@ -35,10 +35,7 @@ Features
   differently depending on the format (target).
 
 - **Built-in Webserver**. Preview documents in html, pdf and other formats
-  from within a browser.
-
-  - Easy to use navigational interface
-  - Informative error messages
+  from within a browser with an easy to use interface and error messages.
 
 - **Fast**
 
