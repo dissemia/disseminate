@@ -5,6 +5,7 @@ import os
 from tempfile import mkdtemp
 
 from .converter import Converter
+from ..utils.file import parents
 
 
 class Pdflatex(Converter):
@@ -27,10 +28,15 @@ class Pdflatex(Converter):
         filename_pdf = os.path.splitext(filename)[0] + '.pdf'
         temp_filepath_pdf = os.path.join(temp_dir, filename_pdf)
 
-        # Setup the command
+        # Setup the environment. This will list the source tex directory and all
+        # parent directories in the TEXINPUTS path
+        texinputs = ':'.join(parents(self.src_filepath.value_string))
+        env = {'TEXINPUTS': ":" + texinputs}
+
+        # Setup the command and run in
         args = [pdflatex_exec, "-interaction=nonstopmode",
                 "-output-directory="+temp_dir, self.src_filepath.value_string]
-        self.run(args, raise_error=True)
+        self.run(args, env=env, raise_error=True)
 
         # Copy the processed file to the target
         try:

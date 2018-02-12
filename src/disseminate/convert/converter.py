@@ -260,7 +260,7 @@ class Converter(object):
         return os.path.join(self._temp_dir, filename)
 
     @classmethod
-    def run(cls, args, error_msg=None, raise_error=True):
+    def run(cls, args, env=None, error_msg=None, raise_error=True):
         """Run a command from the given arguments and either log a warning or
         raise an error with the given message, if it fails.
 
@@ -268,6 +268,9 @@ class Converter(object):
         ----------
         args : list of strings
             The arguments for the command. (Compatible with Popen)
+        env : dict, optional
+            If specified, the env dict will be used in running the command.
+            Values will be appended to the current environment.
         error_msg : str, optional
             The warning or error message if the command fails. A command fails
             if the returncode is not 0.
@@ -282,7 +285,18 @@ class Converter(object):
         ConverterError
             Raised if the command failed and raise_error is True.
         """
-        p = subprocess.Popen(args, stdout=subprocess.PIPE,
+        # Setup the environment
+        if env is not None:
+            current_env = os.environ.copy()
+            for k, v in env.items():
+                if k in current_env:
+                    current_env[k] += ":" + v
+                else:
+                    current_env[k] = v
+            env = current_env
+
+        # Run the subprocess
+        p = subprocess.Popen(args, env=env, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, bufsize=4096, )
 
         # Check that it was succesfully converted

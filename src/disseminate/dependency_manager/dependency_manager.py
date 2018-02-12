@@ -39,17 +39,20 @@ class FileDependency(namedtuple('FileDependency', ['src_filepath',
 
     Attributes
     ----------
-    src_path : str
+    src_filepath : str
         The actual (render) path of the existing file
         ex: 'src/media/images/fig1.png'
-    target_path: str
+    target_filepath: str
         The actual (render) path for the existing file for the target.
         ex: 'html/media/images/fig1.png
-    dep_path : str
+    dep_filepath : str
         The path of the file relative to the target_path
         ex: 'media/images/fig1.png'
     """
-    pass
+    @property
+    def url(self):
+        """Produce the url for this dependency."""
+        return settings.dep_root_url + self.dep_filepath
 
 
 class DependencyManager(object):
@@ -104,6 +107,23 @@ class DependencyManager(object):
         """Reset the dependencies tracked by the DependencyManager"""
         self.dependencies.clear()
 
+    def get_dependency(self, target, src_filepath):
+        """Return the FileDependency for a given target and src_filepath."""
+        # Get the render_path for the src_filepath
+        _, render_path = self.search_file(src_filepath)
+
+        # Find the matching render_path
+        dependencies = filter(lambda x: x.src_filepath == render_path,
+                              self.dependencies[target])
+
+        # Get the dependency's dep_path, if a match was found
+        try:
+            dependency = next(dependencies)
+            return dependency
+        except StopIteration:
+            msg = "Could not find dependency file '{}'"
+            raise MissingDependency(msg.format(src_filepath))
+
     def search_file(self, path, raise_error=True):
         """Find a file for the given path.
 
@@ -133,22 +153,23 @@ class DependencyManager(object):
         MissingDependency
             Raised when a file was not found (and raise_error is True).
         """
-        # Search as a render path
-        if os.path.exists(path):
-            dep_path = os.path.relpath(path, self.project_root)
-            return dep_path, path
+        if isinstance(path, str):
+            # Search as a render path
+            if os.path.exists(path):
+                dep_path = os.path.relpath(path, self.project_root)
+                return dep_path, path
 
-        # Search relative to the project_root
-        path1 = os.path.join(self.project_root, path)  # generate render path
-        if os.path.exists(path1):
-            dep_path = os.path.relpath(path1, self.project_root)
-            return dep_path, path1
+            # Search relative to the project_root
+            path1 = os.path.join(self.project_root, path)  # generate render path
+            if os.path.exists(path1):
+                dep_path = os.path.relpath(path1, self.project_root)
+                return dep_path, path1
 
-        # Search in the module
-        path2 = os.path.join(template_path, path)  # generate render path
-        if os.path.exists(path2):
-            dep_path = os.path.relpath(path2, template_path)
-            return dep_path, path2
+            # Search in the module
+            path2 = os.path.join(template_path, path)  # generate render path
+            if os.path.exists(path2):
+                dep_path = os.path.relpath(path2, template_path)
+                return dep_path, path2
 
         if raise_error:
             msg = "Could not find dependency file '{}'"
@@ -186,7 +207,8 @@ class DependencyManager(object):
         The file will be converted to a suitable formant for the target, if
         needed.
 
-        .. note:: Files should be added while generating the AST.
+        .. note:: Files are added when generating the target document. (i.e.
+                  after the AST is created.)
 
         Parameters
         ----------

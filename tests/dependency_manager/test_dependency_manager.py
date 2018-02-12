@@ -123,11 +123,14 @@ def test_add_file(tmpdir):
     assert targets_added == ['.html', ]
     dependency = list(dep.dependencies['.html'])[0]
 
-    assert dependency.src_filepath == ('tests/dependency_manager/example1'
-                                       '/media/css/default.css')
+    src_filepath = 'tests/dependency_manager/example1/media/css/default.css'
+    assert dependency.src_filepath == src_filepath
     assert dependency.target_filepath == tmpdir.join('html/media/css/'
                                                       'default.css')
     assert dependency.dep_filepath == 'media/css/default.css'
+
+    assert (dep.get_dependency('.html',src_filepath).dep_filepath ==
+            'media/css/default.css')
 
     assert os.path.isfile(tmpdir.join('html/media/css/default.css'))
 
@@ -144,11 +147,14 @@ def test_add_file(tmpdir):
     assert targets_added == ['.html', ]
     dependency = list(dep.dependencies['.html'])[0]
 
-    assert dependency.src_filepath == ('tests/dependency_manager/example2'
-                                       '/media/images/sample.pdf')
+    src_filepath = 'tests/dependency_manager/example2/media/images/sample.pdf'
+    assert dependency.src_filepath == src_filepath
     assert dependency.target_filepath == (target_root +
                                           '/html/media/images/sample.svg')
     assert dependency.dep_filepath == 'media/images/sample.svg'
+
+    assert (dep.get_dependency('.html', src_filepath).dep_filepath ==
+            'media/images/sample.svg')
 
     assert os.path.isfile(target_root + '/html/media/images/sample.svg')
 

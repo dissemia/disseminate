@@ -1,12 +1,15 @@
 """
 Image tags
 """
-from .core import Tag
-from disseminate.attributes import set_attribute
+from .core import Tag, TagError
+from ..attributes import set_attribute
+from .. import settings
 
 
 class Img(Tag):
     """The img tag for inserting images."""
+
+    src_filepath = None
 
     def __init__(self, name, content, attributes,
                  local_context, global_context):
@@ -21,7 +24,35 @@ class Img(Tag):
         self.content = None
 
         if contents:
-            self.attributes = set_attribute(self.attributes,
-                                            ('src', contents),
-                                            method='r')
+            self.src_filepath = contents
+        else:
+            msg = "An image path must be used with the img tag."
+            raise TagError(msg)
+
+    def tex(self, level=1):
+        # Add the file dependency
+        assert '_dependencies' in self.global_context
+        deps = self.global_context['_dependencies']
+        deps.add_file(targets=['.tex'], path=self.src_filepath)
+        dep = deps.get_dependency(target='.tex', src_filepath=self.src_filepath)
+
+        return "\\includegraphics{{{}}}".format(dep.dep_filepath)
+
+    def html(self, level=1):
+        # Add the file dependency
+        assert '_dependencies' in self.global_context
+        deps = self.global_context['_dependencies']
+        deps.add_file(targets=['.html'], path=self.src_filepath)
+        dep = deps.get_dependency(target='.html',
+                                  src_filepath=self.src_filepath)
+
+        # Use the parent method to render the tag. However, the 'src' attribute
+        # should be fixed first.
+        self.attributes = set_attribute(self.attributes,
+                                        ('src', dep.url),
+                                        method='r')
+        return super(Img, self).html(level)
+
+
+
 
