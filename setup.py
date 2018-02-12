@@ -38,7 +38,7 @@ setup(
     install_requires=['regex', 'jinja2',  'pyyaml'],
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc'],
-        'test': ['pytest', 'tox'],
+        'test': ['pytest', 'tox', 'coverage'],
     },
     scripts=['scripts/dm', ],
     entry_points={
