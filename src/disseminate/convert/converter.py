@@ -282,6 +282,10 @@ class Converter(object):
         ConverterError
             Raised if the command failed and raise_error is True.
         """
+        if __debug__:
+            msg = "Running conversion: {}".format(" ".join(args))
+            logging.debug(msg)
+
         # Setup the environment
         if env is not None:
             current_env = os.environ.copy()
