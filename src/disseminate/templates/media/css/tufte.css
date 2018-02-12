@@ -67,6 +67,10 @@ h3 {
     margin-right: -60%;
     font-size: 1.0rem;
     line-height: 1.5;
+    padding: 0.2rem;
+    border: 1px solid #eee;
+    border-radius: 0.5rem;
+    background-color: #fafafa;
 }
 
 .sidenote sub, sup {
