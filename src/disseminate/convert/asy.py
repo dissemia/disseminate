@@ -81,7 +81,7 @@ class Asy2svg(Converter):
                                   target_basefilepath=target_basefilepath,
                                   targets=['.svg'],
                                   **kwargs)
-        
+
         if target_filepath is None:
             return False
 
