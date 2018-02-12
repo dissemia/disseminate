@@ -70,6 +70,7 @@ author: Justin L Lorieau
 def test_ast_basic_string():
     """Test the parsing of a basic string into an AST."""
     # Disable the management of dependencies for tags
+    manage_dependencies = Img.manage_dependencies
     Img.manage_dependencies = False
 
     ast = process_ast(test)
@@ -110,6 +111,9 @@ def test_ast_basic_string():
 
     assert len(content) == 5
 
+    # Reset dependency management
+    Img.manage_dependencies = manage_dependencies
+
 
 def test_ast_validation():
     """Test the correct validation when parsing an AST."""
@@ -137,6 +141,7 @@ def test_default_conversion():
 def test_basic_html_conversion():
     """Test the generation of html strings from tags."""
     # Disable the management of dependencies for tags
+    manage_dependencies = Img.manage_dependencies
     Img.manage_dependencies = False
 
     # Generate the html string
@@ -181,3 +186,6 @@ def test_basic_html_conversion():
 
     with pytest.raises(StopIteration):
         e7 = next(root_iter)
+
+    # Reset dependency management
+    Img.manage_dependencies = manage_dependencies
