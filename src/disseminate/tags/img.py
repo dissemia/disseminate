@@ -61,7 +61,3 @@ class Img(Tag):
         self.attributes = set_attribute(self.attributes, ('src', url),
                                         method='r')
         return super(Img, self).html(level)
-
-
-
-

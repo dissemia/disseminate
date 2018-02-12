@@ -3,3 +3,4 @@
 from .converter import convert, ConverterError
 from .pdf import *
 from .tex import *
+from .asy import *

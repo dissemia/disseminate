@@ -147,14 +147,11 @@ def convert(src_filepath, target_basefilepath, targets, raise_error=True,
         converter = Converter.get_converter(src_filepath, target_basefilepath,
                                             targets, **kwargs)
     except ConverterError as e:
+        if __debug__:
+            logging.debug("Converter subclasses:", Converter._converters)
         if raise_error:
             raise e
         return False
-
-    # See if the target file already exists and should be returned
-    # if (cache and
-    #    os.path.isfile(converter.target_filepath.value_string) and
-    #    (os.path.getmtime(converter.target_filepath.value_string) >
 
     # Try to convert the file with the converter
     try:
