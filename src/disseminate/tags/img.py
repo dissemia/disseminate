@@ -35,7 +35,7 @@ class Img(Tag):
             # get the document_src_filepath
             lc = self.local_context
             if '_src_filepath' in lc:
-                document_src_filepath = self.lc['_src_filepath']
+                document_src_filepath = lc['_src_filepath']
             else:
                 document_src_filepath = None
 
@@ -57,7 +57,7 @@ class Img(Tag):
             # get the document_src_filepath
             lc = self.local_context
             if '_src_filepath' in lc:
-                document_src_filepath = self.lc['_src_filepath']
+                document_src_filepath = lc['_src_filepath']
             else:
                 document_src_filepath = None
 

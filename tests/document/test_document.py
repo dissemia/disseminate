@@ -2,8 +2,10 @@
 Tests for Document classes and functions.
 """
 import pytest
+from shutil import copyfile
 
 from disseminate.document import Document, DocumentError
+from disseminate.dependency_manager import DependencyManager, MissingDependency
 
 
 def test_basic_conversion_html(tmpdir):
@@ -132,8 +134,46 @@ def test_local_macros(tmpdir):
     assert '<i>example</i>' in rendered_html
 
 
-# TODO: implement test
-# def test_dependencies(tmpdir):
-#     """Tests that the dependencies are correctly reset when the AST is
-#     reprocessed."""
+def test_dependencies_img(tmpdir):
+    """Tests that the image dependencies are correctly reset when the AST is
+    reprocessed."""
+    # Setup the project_root in a temp directory
+    project_root = tmpdir
 
+    # Copy a dependency image file to this directory
+    img_path = str(tmpdir.join('sample.png'))
+    copyfile('tests/document/example3/sample.png',
+             img_path)
+
+    # Make a document source file
+    markup = "@img{sample.png}"
+    project_root.join('test.dm').write(markup)
+
+    # Create a document
+    global_context = dict()
+    doc = Document(src_filepath=str(project_root.join('test.dm')),
+                   targets={'.html': project_root.join('html/test.html')},
+                   global_context=global_context)
+
+    # Render the document. If the dependency manager is present in the
+    # global_context, it will be used.
+    dep = DependencyManager(project_root=project_root, target_root=project_root,
+                            segregate_targets=True)
+    global_context['_dependencies'] = dep
+
+    doc.render()
+
+    # The img file should be a dependency in the '.html' target
+    d = dep.get_dependency(target='.html', src_filepath=img_path)
+    assert d.dep_filepath == 'sample.png'
+
+    # Rewrite the document source file without the dependency
+    markup = ""
+    project_root.join('test.dm').write(markup)
+
+    # Render the document and the dependency should have been removed.
+    doc.render()
+
+    # A missing dependency raises a MissingDependency exception
+    with pytest.raises(MissingDependency):
+        d = dep.get_dependency(target='.html', src_filepath=img_path)

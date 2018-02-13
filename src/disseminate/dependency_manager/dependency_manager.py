@@ -34,20 +34,27 @@ class MissingDependency(Exception):
 
 class FileDependency(namedtuple('FileDependency', ['src_filepath',
                                                    'target_filepath',
-                                                   'dep_filepath', ])):
+                                                   'dep_filepath',
+                                                   'document_src_filepath',
+                                                   ])):
     """A dependency on a file.
 
     Attributes
     ----------
     src_filepath : str
-        The actual (render) path of the existing file
+        The actual (render) path of the existing dependency file
         ex: 'src/media/images/fig1.png'
     target_filepath: str
-        The actual (render) path for the existing file for the target.
+        The actual (render) path for the existing dependency file for the
+        target.
         ex: 'html/media/images/fig1.png
     dep_filepath : str
         The path of the file relative to the target_path
         ex: 'media/images/fig1.png'
+    document_src_filepath : str or None
+        The src_filepath (render path) of the document source markup file that
+        owns the dependency.
+        ex: 'src/chapter2/introduction.dm'
     """
     @property
     def url(self):
@@ -102,10 +109,6 @@ class DependencyManager(object):
             return os.path.join(self.target_root, target.strip('.'))
         else:
             return self.target_root
-
-    def reset(self):
-        """Reset the dependencies tracked by the DependencyManager"""
-        self.dependencies.clear()
 
     def get_dependency(self, target, src_filepath):
         """Return the FileDependency for a given target and src_filepath."""
@@ -182,9 +185,11 @@ class DependencyManager(object):
 
         Returns
         -------
-        target_filepath :
-            The string for the target_filepath (a render path) for
-            the newly copied or linked file.
+        src_filepath : str
+            The string for the src_filepath (a render path) for the original
+            file.
+        dep_path : str
+            The string for the file to copy or link in the target_root.
         """
         # Get the target src_filepath in a render src_filepath
         target_filepath = os.path.join(self.target_path(target), dep_filepath)
@@ -201,7 +206,7 @@ class DependencyManager(object):
 
         return target_filepath
 
-    def add_file(self, targets, path, **kwargs):
+    def add_file(self, targets, path, document_src_filepath=None, **kwargs):
         """Add a file dependency for the given path.
 
         The file will be converted to a suitable formant for the target, if
@@ -215,8 +220,11 @@ class DependencyManager(object):
         targets : list of str
             The targets for the dependency. ex: '.html' or '.tex'
         path : str
-            The path of the file. The file will be searched using
+            The path of the dependency file. The file will be searched using
             :meth:`DependencyManager.search_file`.
+        document_src_filepath: : str, optional
+            The src_filepath (render path) of the document source markup files
+            that own the dependency.
         kwargs : dict
             The kwargs to be used for the convert function, if the file needs
             to be converted.
@@ -247,12 +255,14 @@ class DependencyManager(object):
                 # Link the file
                 target_path = self.copy_file(target=target,
                                              src_filepath=render_path,
-                                             dep_filepath=dep_path,)
+                                             dep_filepath=dep_path)
 
                 # Add the dependency
+                doc_src_filepath = document_src_filepath
                 dep = FileDependency(src_filepath=render_path,
                                      target_filepath=target_path,
-                                     dep_filepath=dep_path)
+                                     dep_filepath=dep_path,
+                                     document_src_filepath=doc_src_filepath)
                 self.dependencies.setdefault(target, set()).add(dep)
 
                 # Add it to the targets_added returned
@@ -289,15 +299,46 @@ class DependencyManager(object):
                                                self.target_path(target))
 
                     # add the dependency
+                    doc_src_filepath = document_src_filepath
                     dep = FileDependency(src_filepath=render_path,
                                          target_filepath=new_path,
-                                         dep_filepath=dep_path)
+                                         dep_filepath=dep_path,
+                                         document_src_filepath=doc_src_filepath)
                     self.dependencies.setdefault(target, set()).add(dep)
 
                     # Add it to the targets_added returned
                     targets_added.append(target)
 
         return targets_added
+
+    def reset(self, document_src_filepath=None):
+        """Reset the dependencies tracked by the DependencyManager.
+
+        Parameters
+        ----------
+        document_src_filepath : str or None
+            If specified, remove all dependencies for the given src_filepath of
+            a document markup source file for all targets.
+            If not specified (None), all dependencies are removed.
+        """
+        if isinstance(document_src_filepath, str):
+            # Go through all targets
+            for deps in self.dependencies.values():
+                # Find the dependencies that match the document_src_filepath
+                search = (lambda x: x.document_src_filepath ==
+                          document_src_filepath)
+                deps_to_remove = set(filter(search, deps))
+
+                # Remove dependencies
+                deps.difference_update(deps_to_remove)
+
+            # Remove targets with empty dependency sets
+            keys = list(self.dependencies.keys())
+            for key in keys:
+                if len(self.dependencies[key]) == 0:
+                    del self.dependencies[key]
+        else:
+            self.dependencies.clear()
 
     def add_html(self, html):
         """Add dependencies, like css and js files, from html.

@@ -26,7 +26,7 @@ def test_target_path():
     assert dep.target_path('html') == target_root
 
 
-def test_search_file():
+def test_search_file(tmpdir):
     """Test the search_file method."""
     # Try finding a file in the disseminate templates directory
     dep = DependencyManager(project_root='', target_root='')
@@ -82,7 +82,8 @@ def test_copy_file(tmpdir):
     # Copy the file.
     path = 'tests/dependency_manager/example1/media/css/default.css'
     target_path = dep.copy_file(target='.html',
-                                dep_filepath='media/css/default.css', src_filepath=path)
+                                dep_filepath='media/css/default.css',
+                                src_filepath=path)
     assert os.path.isfile(target_path)
     assert str(tmpdir.join('html/media/css/default.css')) == target_path
 
@@ -93,7 +94,8 @@ def test_copy_file(tmpdir):
     # Copy the file.
     path = 'tests/dependency_manager/example1/media/css/default.css'
     target_path = dep.copy_file(target='.html',
-                                dep_filepath='media/css/default.css', src_filepath=path)
+                                dep_filepath='media/css/default.css',
+                                src_filepath=path)
     assert os.path.isfile(target_path)
     assert str(tmpdir.join('media/css/default.css')) == target_path
 
@@ -166,6 +168,42 @@ def test_add_file(tmpdir):
     with pytest.raises(MissingDependency):
         targets_added = dep.add_file(targets=['.misc', '.html'],
                                      path='missing.invalid')
+
+
+def test_reset(tmpdir):
+    """Test the reset method."""
+    # get a temporary target_root
+    target_root = str(tmpdir)
+
+    # Setup a dependency manager
+    dep = DependencyManager(project_root='tests/dependency_manager/example3',
+                            target_root=target_root, segregate_targets=True)
+
+    # Add a file for a target with a sample document_src_filepath. The
+    # dependency is a '.png' file that works for .tex and .html targets
+    filepath = 'tests/dependency_manager/example3/sample.png'
+    targets_added = dep.add_file(targets=['.html', '.tex'], path=filepath,
+                                 document_src_filepath="src/sample.dm")
+
+    # Make sure the added file was correctly added
+    assert len(dep.dependencies['.html']) == 1
+    dependency = list(dep.dependencies['.html'])[0]
+    assert dependency.document_src_filepath == "src/sample.dm"
+    assert len(dep.dependencies['.tex']) == 1
+    dependency = list(dep.dependencies['.tex'])[0]
+    assert dependency.document_src_filepath == "src/sample.dm"
+
+    # Try resetting a mismatched document_src_filepath. This doesn't remove
+    # the dependencies
+    dep.reset(document_src_filepath='src/mismatch.dm')
+    assert len(dep.dependencies['.html']) == 1
+    assert len(dep.dependencies['.tex']) == 1
+
+    # Try resetting the correct document_src_filepath. This removes the
+    # dependencies and target, since the target has no dependencies
+    dep.reset(document_src_filepath='src/sample.dm')
+    assert '.html' not in dep.dependencies
+    assert '.tex' not in dep.dependencies
 
 
 def test_add_file_duplicates(tmpdir):
