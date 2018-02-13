@@ -131,3 +131,9 @@ def test_local_macros(tmpdir):
     assert '@macro' not in rendered_html
     assert '<i>example</i>' in rendered_html
 
+
+# TODO: implement test
+# def test_dependencies(tmpdir):
+#     """Tests that the dependencies are correctly reset when the AST is
+#     reprocessed."""
+

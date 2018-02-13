@@ -34,8 +34,8 @@ class Img(Tag):
         if self.manage_dependencies:
             # get the document_src_filepath
             lc = self.local_context
-            if '_document_src_filepath' in lc:
-                document_src_filepath = self.lc['_document_src_filepath']
+            if '_src_filepath' in lc:
+                document_src_filepath = self.lc['_src_filepath']
             else:
                 document_src_filepath = None
 
@@ -56,8 +56,8 @@ class Img(Tag):
         if self.manage_dependencies:
             # get the document_src_filepath
             lc = self.local_context
-            if '_document_src_filepath' in lc:
-                document_src_filepath = self.lc['_document_src_filepath']
+            if '_src_filepath' in lc:
+                document_src_filepath = self.lc['_src_filepath']
             else:
                 document_src_filepath = None
 
