@@ -337,6 +337,8 @@ class DependencyManager(object):
             for key in keys:
                 if len(self.dependencies[key]) == 0:
                     del self.dependencies[key]
+
+            # TODO: optional remove the untracked files
         else:
             self.dependencies.clear()
 
