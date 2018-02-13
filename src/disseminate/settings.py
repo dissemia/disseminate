@@ -51,7 +51,7 @@ template_basename = 'template'
 #: to translate these files to a useable form, if needed.
 #: The keys are the targets. The values are lists of valid extensions that
 #: can be included for the target, in order of decreasing preference.
-tracked_deps = {'.html': ['.css', '.svg'],
+tracked_deps = {'.html': ['.css', '.svg', '.png'],
                 '.tex': ['.pdf', '.png'],
                 '.css': ['.css', ]
                 }

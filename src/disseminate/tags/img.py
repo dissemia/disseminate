@@ -32,10 +32,18 @@ class Img(Tag):
 
     def tex(self, level=1):
         if self.manage_dependencies:
+            # get the document_src_filepath
+            lc = self.local_context
+            if '_document_src_filepath' in lc:
+                document_src_filepath = self.lc['_document_src_filepath']
+            else:
+                document_src_filepath = None
+
             # Add the file dependency
             assert '_dependencies' in self.global_context
             deps = self.global_context['_dependencies']
-            deps.add_file(targets=['.tex'], path=self.src_filepath)
+            deps.add_file(targets=['.tex'], path=self.src_filepath,
+                          document_src_filepath=document_src_filepath)
             dep = deps.get_dependency(target='.tex',
                                       src_filepath=self.src_filepath)
             path = dep.dep_filepath
@@ -46,10 +54,18 @@ class Img(Tag):
 
     def html(self, level=1):
         if self.manage_dependencies:
+            # get the document_src_filepath
+            lc = self.local_context
+            if '_document_src_filepath' in lc:
+                document_src_filepath = self.lc['_document_src_filepath']
+            else:
+                document_src_filepath = None
+
             # Add the file dependency
             assert '_dependencies' in self.global_context
             deps = self.global_context['_dependencies']
-            deps.add_file(targets=['.html'], path=self.src_filepath)
+            deps.add_file(targets=['.html'], path=self.src_filepath,
+                          document_src_filepath=document_src_filepath)
             dep = deps.get_dependency(target='.html',
                                       src_filepath=self.src_filepath)
             url = dep.url

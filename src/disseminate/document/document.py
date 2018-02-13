@@ -94,6 +94,11 @@ class Document(object):
         # processed
         self._mtime = None
 
+    def reset_contexts(self):
+        """Clear and repopulate the local_context and global_context."""
+        self.local_context.clear()
+        self.local_context['_src_filepath'] = self.src_filepath
+
     def get_ast(self, reload=False):
         """Process and return the AST.
 
@@ -145,16 +150,17 @@ class Document(object):
             with open(self.src_filepath) as f:
                 string = f.read()
 
-            # Clear the local_context. When reloading an AST, the old
+            # TODO: Reorganize the resetting of contexts
+            # Reset the local_context. When reloading an AST, the old
             # local_context is invalidated since some of the entries may have
             # changed
-            self.local_context.clear()
+            self.reset_contexts()
 
-            # Clear the dependencies. When reloading an AST, the old
-            # dependencies are invalidated since some of the entries may have
-            # changed
+            # Clear the dependencies for this document
             if '_dependencies' in self.global_context:
-                self.global_context['_dependencies'].reset()
+                document_src_filepath = self.src_filepath
+                dep = self.global_context['_dependencies']
+                dep.reset(document_src_filepath=document_src_filepath)
 
             # Process the string
             for processor in self.string_processors:
