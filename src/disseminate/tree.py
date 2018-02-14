@@ -131,6 +131,7 @@ class Tree(object):
     managed_dirs = None
     src_filepaths = None
     documents = None
+    dependencies = None
     global_context = None
 
     def __init__(self, project_root, target_root,
@@ -153,7 +154,7 @@ class Tree(object):
         dep = DependencyManager(project_root=self.project_root,
                                 target_root=self.target_root,
                                 segregate_targets=self.segregate_targets)
-        self.global_context['_dependencies'] = dep
+        self.dependencies = dep
 
         # The time of the last render
         self._last_render = None
@@ -487,6 +488,7 @@ class Tree(object):
         self.global_context.clear()
         self.global_context['_project_root'] = self.project_root
         self.global_context['_target_root'] = self.target_root
+        self.global_context['_dependencies'] = self.dependencies
 
     def render(self, target_list=None):
         """Render documents.
