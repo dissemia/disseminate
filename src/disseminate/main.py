@@ -22,7 +22,7 @@ def is_directory(value):
                                           "directories".format(value))
     return value
 
-
+# TODO: add clean or clear option to remove targets and .cache
 def main():
     # Create the argument parser
     parser = argparse.ArgumentParser(description='disseminate documents')
