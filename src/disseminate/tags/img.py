@@ -9,6 +9,8 @@ from .. import settings
 class Img(Tag):
     """The img tag for inserting images."""
 
+    active = True
+
     src_filepath = None
     manage_dependencies = True
 
@@ -77,3 +79,18 @@ class Img(Tag):
         self.attributes = set_attribute(self.attributes, ('src', url),
                                         method='r')
         return super(Img, self).html(level)
+
+
+def RenderedImg(Img):
+    """An img base class for saving and caching an image that needs to be
+    rendered by an external program.
+
+    .. note:: This class is not intended to be directly used as a tag. Rather,
+              it is intended to be subclassed for other image types that need
+              to be rendered first.
+    """
+
+    active = False
+
+    # def __init__(self, name, content, attributes,
+    #              local_context, global_context, input, render_target):

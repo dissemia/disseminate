@@ -11,6 +11,7 @@ class Bold(Tag):
     aliases = ("b", "textbf", "strong")
     html_name = "strong"
     tex_name = "textbf"
+    active = True
 
 
 class Italics(Tag):
@@ -18,11 +19,13 @@ class Italics(Tag):
     aliases = ("i", "textit")
     html_name = "i"
     tex_name = "textit"
+    active = True
 
 
 class Sup(Tag):
     """A superscript tag."""
     html_name = "sup"
+    active = True
 
     def tex(self, level=1):
         # Collect the content elements
@@ -40,6 +43,7 @@ class Sup(Tag):
 class Sub(Tag):
     """A subscript tag."""
     html_name = "sub"
+    active = True
 
     def tex(self, level=1):
         # Collect the content elements
@@ -58,6 +62,7 @@ class Greek(Tag):
     """One or more greek characters."""
 
     aliases = ("gr",)
+    active = True
 
     def assert_not_nested(self):
         """Raise a TagError if this tag is nested."""

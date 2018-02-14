@@ -29,6 +29,11 @@ class TagFactory(object):
         # Initialize the tag types dict.
         self.tag_types = dict()
         for scls in  _all_subclasses(Tag):
+            # Tag must be active
+            if not scls.active:
+                continue
+
+            # Collect the name and aliases (alternative names) for the tag
             aliases = (list(scls.aliases) if scls.aliases is not None else
                        list())
             names = [scls.__name__.lower(),] + aliases
@@ -74,6 +79,14 @@ class Tag(object):
         The attributes of the tag.
     aliases : list of str
         A list of strs for other names a tag goes by
+    html_name : str
+        If specified, use this name when rendering the tag to html. Otherwise,
+        use name.
+    tex_name : str
+        If specified, use this name when rendering the tag to tex. Otherwise,
+        use name.
+    active : bool
+        If True, the Tag can be used by the TagFactory.
     local_context : dict
         The context with values for the current document. The values in this
         dict do not depend on values from other documents. (local)
@@ -93,6 +106,8 @@ class Tag(object):
 
     local_context = None
     global_context = None
+
+    active = False
 
     process_ast = None # takes target, returns a tag or list of tags.
 
