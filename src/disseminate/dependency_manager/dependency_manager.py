@@ -292,8 +292,8 @@ class DependencyManager(object):
 
                 # Strip the extension to make the target_basefilepath. The
                 # directories must be created as well
+                mkdir_p(target_filepath)
                 target_basefilepath = os.path.splitext(target_filepath)[0]
-                mkdir_p(target_basefilepath)
 
                 # The targets for the convert function are the allowed
                 # extensions for this target.
