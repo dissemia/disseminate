@@ -160,7 +160,7 @@ class RenderedImg(Img):
             # write the contents, if needed
             if not os.path.isfile(cache_filepath):
                 # Create the needed directories
-                mkdir_p(cache_filepath)
+                mkdir_p(cache_dir)
                 with open(cache_filepath, 'w') as f:
                     f.write(content)
 
