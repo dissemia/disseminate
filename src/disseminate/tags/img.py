@@ -1,8 +1,12 @@
 """
 Image tags
 """
+import os.path
+import hashlib
+
 from .core import Tag, TagError
 from ..attributes import set_attribute
+from ..utils.file import mkdir_p
 from .. import settings
 
 
@@ -10,6 +14,8 @@ class Img(Tag):
     """The img tag for inserting images."""
 
     active = True
+
+    html_name = 'img'
 
     src_filepath = None
     manage_dependencies = True
@@ -23,7 +29,10 @@ class Img(Tag):
         if self.attributes is None:
             self.attributes = []
 
-        contents = self.content.strip()
+        if isinstance(content, list):
+            contents = ''.join(content).strip()
+        else:
+            contents = self.content.strip()
         self.content = None
 
         if contents:
@@ -44,6 +53,7 @@ class Img(Tag):
             # Add the file dependency
             assert '_dependencies' in self.global_context
             deps = self.global_context['_dependencies']
+
             deps.add_file(targets=['.tex'], path=self.src_filepath,
                           document_src_filepath=document_src_filepath)
             dep = deps.get_dependency(target='.tex',
@@ -66,6 +76,7 @@ class Img(Tag):
             # Add the file dependency
             assert '_dependencies' in self.global_context
             deps = self.global_context['_dependencies']
+
             deps.add_file(targets=['.html'], path=self.src_filepath,
                           document_src_filepath=document_src_filepath)
             dep = deps.get_dependency(target='.html',
@@ -81,7 +92,7 @@ class Img(Tag):
         return super(Img, self).html(level)
 
 
-def RenderedImg(Img):
+class RenderedImg(Img):
     """An img base class for saving and caching an image that needs to be
     rendered by an external program.
 
@@ -92,5 +103,71 @@ def RenderedImg(Img):
 
     active = False
 
-    # def __init__(self, name, content, attributes,
-    #              local_context, global_context, input, render_target):
+    def __init__(self, name, content, attributes,
+                 local_context, global_context, render_target):
+        if isinstance(content, list):
+            content = ''.join(content).strip()
+        else:
+            content = self.content.strip()
+
+        # Determine with the contents is a file or asy code
+        if os.path.isfile(content):
+            pass
+        else:
+            # Get the cache path from the dependency manager
+            assert '_dependencies' in global_context
+            deps = global_context['_dependencies']
+
+            # ex: cache_path = '.cache'
+            cache_path = deps.cache_path()
+
+            # Get the media_path. The temporary file will be stored in this
+            # directory.
+            # ex: media_path = '.cache/media'
+            media_path = os.path.join(cache_path, settings.media_dir)
+
+            # Get the doc_src_filepath and root_path to better organize the
+            # temporary files in the final directories. This allows the
+            # directory structure of the source file to be created in the
+            # target
+            doc_src_filepath = local_context.get('_src_filepath', None)
+            project_root = global_context.get('_project_root', None)
+
+            # Find the cache directory for the file to create
+            # ex: cache_dir = '.cache/media/chapter1'
+            if project_root and doc_src_filepath:
+                doc_src_path = os.path.relpath(doc_src_filepath, project_root)
+                doc_src_path = os.path.split(doc_src_path)[0]
+                cache_dir = os.path.join(media_path,
+                                         doc_src_path)
+            else:
+                cache_dir = media_path
+
+            # Construct the filename for the rendered image
+            # ex: filename = 'chapter1_231aef342.asy'
+            content_hash = hashlib.md5(content.encode("UTF-8")).hexdigest()[:10]
+            if doc_src_filepath:
+                doc_basefilename = os.path.split(doc_src_filepath)[1]
+                filename = (os.path.splitext(doc_basefilename)[0] + '_' +
+                            content_hash + render_target)
+            else:
+                filename = content_hash + render_target
+
+            # Construct the final cache filepath
+            # ex: cache_filepath='.cache/media/chapter1/chapter1_231aef342.asy'
+            cache_filepath = os.path.join(cache_dir, filename)
+
+            # write the contents, if needed
+            if not os.path.isfile(cache_filepath):
+                # Create the needed directories
+                mkdir_p(cache_filepath)
+                with open(cache_filepath, 'w') as f:
+                    f.write(content)
+
+            # Set the tag content to the newly saved file path. This path
+            # should be relative to the .cache directory
+            content = os.path.relpath(cache_filepath, cache_path)
+
+        super(RenderedImg, self).__init__(name, content, attributes,
+                                          local_context, global_context)
+

@@ -59,12 +59,18 @@ tracked_deps = {'.html': ['.css', '.svg', '.png'],
 #: The root url prepended to dependency file paths
 dep_root_url = '/'
 
-#: Convert Defaults
-#: ----------------
+#: Convert and Tag Defaults
+#: ------------------------
 
 # If True, converted files will be updated only when they're changed. Otherwise
 # converted files will always be updated
 convert_cache = True
+
+# The location in the target_root to store tempororary cached files
+cache_dir ='.cache'
+
+# The directory to store converted media files
+media_dir = 'media'
 
 #: Any tracked files that are in the target dependency directory ("media") but
 #: that are no longer used are deleted.

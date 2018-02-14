@@ -146,8 +146,8 @@ class Tree(object):
         self.target_list = target_list
         self.src_filepaths = []
         self.document_factory = DocumentFactory()
-        self.documents = {}
-        self.global_context = {}
+        self.documents = dict()
+        self.global_context = dict()
 
         # Populate the dependencies in the global context
         dep = DependencyManager(project_root=self.project_root,
@@ -482,6 +482,12 @@ class Tree(object):
                "be found.")
         raise TreeException(msg.format(target_filepath))
 
+    def reset_contexts(self):
+        """Clear and repopulate the global_context."""
+        self.global_context.clear()
+        self.global_context['_project_root'] = self.project_root
+        self.global_context['_target_root'] = self.target_root
+
     def render(self, target_list=None):
         """Render documents.
 
@@ -502,10 +508,8 @@ class Tree(object):
         target_list = (target_list if target_list is not None else
                        self.target_list)
 
-        # Generate the global context, if needed
-        self.global_context = (self.global_context
-                               if isinstance(self.global_context, dict)
-                               else dict())
+        # Reset the global context
+        self.reset_contexts()
 
         # Update the documents in this tree. Remove any documents from
         # self.documents that are no longer managed or don't exist.

@@ -110,6 +110,10 @@ class DependencyManager(object):
         else:
             return self.target_root
 
+    def cache_path(self):
+        """Return the render path for the cache directory."""
+        return os.path.join(self.target_root, settings.cache_dir)
+
     def get_dependency(self, target, src_filepath):
         """Return the FileDependency for a given target and src_filepath."""
         # Get the render_path for the src_filepath
@@ -133,6 +137,7 @@ class DependencyManager(object):
         The file will be searched in the following order:
             - as a render path 'src/media/images/fig1.png'
             - relative to the project_root 'media/images/fig1.png'
+            - in the cache_dir
             - in the disseminate module templates.
 
         Parameters
@@ -168,11 +173,17 @@ class DependencyManager(object):
                 dep_path = os.path.relpath(path1, self.project_root)
                 return dep_path, path1
 
-            # Search in the module
-            path2 = os.path.join(template_path, path)  # generate render path
+            # Search the cache_dir
+            path2 = os.path.join(self.cache_path(), path)
             if os.path.exists(path2):
-                dep_path = os.path.relpath(path2, template_path)
+                dep_path = os.path.relpath(path2, self.cache_path())
                 return dep_path, path2
+
+            # Search in the module
+            path3 = os.path.join(template_path, path)  # generate render path
+            if os.path.exists(path3):
+                dep_path = os.path.relpath(path3, template_path)
+                return dep_path, path3
 
         if raise_error:
             msg = "Could not find dependency file '{}'"

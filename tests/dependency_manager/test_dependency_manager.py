@@ -28,7 +28,7 @@ def test_target_path():
 
 def test_search_file(tmpdir):
     """Test the search_file method."""
-    # Try finding a file in the disseminate templates directory
+    # 1. Try finding a file in the disseminate templates directory
     dep = DependencyManager(project_root='', target_root='')
     path = dep.search_file('media/css/default.css')
 
@@ -40,7 +40,7 @@ def test_search_file(tmpdir):
             os.path.abspath(os.path.join(template_path,
                                          'media/css/default.css')))
 
-    # Try finding a file in the project root. This path takes precedence
+    # 2. Try finding a file in the project root. This path takes precedence
     # over the module path. The example1 directory has a default.css file in
     # the media/css directory
     dep = DependencyManager(project_root='tests/dependency_manager/example1',
@@ -55,7 +55,7 @@ def test_search_file(tmpdir):
             os.path.abspath(os.path.join('tests/dependency_manager/example1',
                                          'media/css/default.css')))
 
-    # Try finding a file with a render path.
+    # 3. Try finding a file with a render path.
     dep = DependencyManager(project_root='tests/dependency_manager/example1',
                             target_root='')
     search_path = 'tests/dependency_manager/example1/media/css/default.css'
@@ -68,6 +68,17 @@ def test_search_file(tmpdir):
     assert (os.path.abspath(path[1]) ==
             os.path.abspath(os.path.join('tests/dependency_manager/example1',
                                          'media/css/default.css')))
+
+    # 4. Try finding a file in a cache directory.
+    # The example4 has a file at '.cache/media/file.txt'
+    dep = DependencyManager(project_root='tests/dependency_manager/example4',
+                            target_root='tests/dependency_manager/example4')
+    path = dep.search_file('media/file.txt')
+    assert path is not False
+    assert path[0] == 'media/file.txt'
+    assert (os.path.abspath(path[1]) ==
+            os.path.abspath(os.path.join('tests/dependency_manager/example4/'
+                                         '.cache/media/file.txt')))
 
 
 def test_copy_file(tmpdir):
