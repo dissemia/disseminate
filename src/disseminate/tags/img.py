@@ -33,7 +33,7 @@ class Img(Tag):
             contents = ''.join(content).strip()
         else:
             contents = self.content.strip()
-        self.content = None
+        self.content = ''
 
         if contents:
             self.src_filepath = contents

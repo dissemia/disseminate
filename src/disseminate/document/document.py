@@ -4,7 +4,7 @@ Classes and functions for rendering documents.
 import os
 import os.path
 
-from ..ast import process_ast
+from ..ast import process_ast, process_paragraphs
 from ..templates import get_template
 from ..header import load_yaml_header
 from ..macros import replace_macros
@@ -78,6 +78,7 @@ class Document(object):
                          replace_macros,  # Process macros
                          ]
     ast_processors = [process_ast,
+                      process_paragraphs,
                       ]
     ast_post_processors = []
 
@@ -179,9 +180,9 @@ class Document(object):
             # Process and validate the AST
             ast = [string]
             for processor in self.ast_processors:
-                ast = process_ast(ast=ast, local_context=self.local_context,
-                                  global_context=self.global_context,
-                                  src_filepath=self.src_filepath)
+                ast = processor(ast=ast, local_context=self.local_context,
+                                global_context=self.global_context,
+                                src_filepath=self.src_filepath)
 
             # cache the ast
             self._ast = ast

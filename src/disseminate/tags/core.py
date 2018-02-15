@@ -111,7 +111,7 @@ class Tag(object):
     global_context = None
 
     active = False
-    include_paragraphs = True
+    include_paragraphs = False
 
     process_ast = None # takes target, returns a tag or list of tags.
 

@@ -67,22 +67,6 @@ author: Justin L Lorieau
 """
 
 
-test_paragraphs = """
-This is my @b{first} paragraph.
-
-This is my @i{second}. It has a multiple
-lines.
-
-This paragraph has a note. @note{
-
-This note has multiple lines.
-
-and multiple paragraphs.
-}
-
-This is the fourth paragraph
-"""
-
 def test_ast_basic_string():
     """Test the parsing of a basic string into an AST."""
     # Disable the management of dependencies for tags
@@ -278,21 +262,5 @@ def test_basic_triple_html_conversion():
     with pytest.raises(StopIteration):
         e7 = next(root_iter)
 
-    # Reset dependency management
-    Img.manage_dependencies = manage_dependencies
-
-
-def test_process_paragraphs():
-    """Test the process_paragraphs function"""
-
-    # Disable the management of dependencies for tags
-    manage_dependencies = Img.manage_dependencies
-    Img.manage_dependencies = False
-
-    ast = process_ast([test_paragraphs])
-    ast = process_paragraphs(ast)
-    print(ast)
-    for count, i in enumerate(ast):
-        print("{}: {}".format(count, i))
     # Reset dependency management
     Img.manage_dependencies = manage_dependencies

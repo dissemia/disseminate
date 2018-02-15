@@ -187,24 +187,22 @@ def process_paragraphs(ast=None, local_context=None, global_context=None,
         attack.
     """
     # Setup the parsing
-    current_pos = 0
     factory = TagFactory()
-    validator = ASTValidator(src_filepath=src_filepath)
 
-    # [str]
-    # [str, str, tag, str]
-    #   ^    ^^        ^
-    # Create the root ast. The passed argument can either be a list, or a
-    # Tag for an already parsed root Tag
+    # Format ast into a list
     if isinstance(ast, list):
         pass
     elif isinstance(ast, Tag):
         ast = ast.content if isinstance(ast.content, list) else [ast.content]
     else:
         ast = []
+
+    # Create a new ast. This will be populated with the processed ast and
+    # returned
     new_ast = []
 
-    # Break the strings in this ast by paragraph newlines
+    # Break the strings in this ast by paragraph newlines -- i.e. 2 or more
+    # consecutive newlines.
     split_ast = []
     for i in ast:
         if isinstance(i, str):
@@ -218,20 +216,25 @@ def process_paragraphs(ast=None, local_context=None, global_context=None,
         if isinstance(i, str):
             if i.strip() == '':
                 if cur_para:  # end of paragraph
-                    p = factory.tag(tag_name='p',
-                                    tag_content=cur_para,
-                                    tag_attributes=None,
-                                    local_context=local_context,
-                                    global_context=global_context)
-                    new_ast.append(p)
+                    if len(cur_para) > 1 or isinstance(cur_para[0], str):
+                        p = factory.tag(tag_name='p',
+                                        tag_content=cur_para,
+                                        tag_attributes=None,
+                                        local_context=local_context,
+                                        global_context=global_context)
+                        new_ast.append(p)
+                    else:
+                        new_ast.append(cur_para[0])
+
                     cur_para = []
             else:
                 cur_para.append(i.strip('\n'))
         elif isinstance(i, Tag) and i.include_paragraphs:
             content = [i.content] if isinstance(i.content, str) else i.content
-            i.content = process_paragraphs(content, local_context,
-                                           global_context, src_filepath,
-                                           level=1+level)
+            content = process_paragraphs(content, local_context,
+                                         global_context, src_filepath,
+                                         level=1+level)
+            i.content = content
             cur_para.append(i)
         else:
             cur_para.append(i)
@@ -245,4 +248,12 @@ def process_paragraphs(ast=None, local_context=None, global_context=None,
                         global_context=global_context)
         new_ast.append(p)
 
-    return new_ast
+    if level == 1:  # root level
+        root = factory.tag(tag_name='root',
+                           tag_content=new_ast,
+                           tag_attributes=None,
+                           local_context=local_context,
+                           global_context=global_context)
+        return root
+    else:
+        return new_ast
