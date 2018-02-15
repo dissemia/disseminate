@@ -1,8 +1,6 @@
 """
-Functions for processing Abstract Syntax Trees (ASTs) from strings.
+Functions for processing Abstract Syntax Trees (ASTs).
 """
-from itertools import chain
-
 import regex
 
 from ..tags import TagFactory, Tag
@@ -10,7 +8,9 @@ from .validate import ASTValidator
 from . import settings
 
 
-class AstException(Exception): pass
+class AstException(Exception):
+    """An error was encountered while processing the Abstract Syntax Tree"""
+    pass
 
 
 control_char = r'@'
@@ -19,8 +19,6 @@ control_char = r'@'
 re_tag = regex.compile(r'(@(?P<tag>[A-Za-z]\w*)'
                        r'(?P<attributes>\[[^\]]+\])?'
                        r'{(?P<content>(?>[^{}@]+|(?R))*)})')
-
-re_para = regex.compile(r'(\n{2,}|^)')
 
 
 def process_ast(ast=None, local_context=None, global_context=None,
@@ -142,111 +140,6 @@ def process_ast(ast=None, local_context=None, global_context=None,
             new_ast.append(i)
         else:
             new_ast.append(string)
-
-    if level == 1:  # root level
-        root = factory.tag(tag_name='root',
-                           tag_content=new_ast,
-                           tag_attributes=None,
-                           local_context=local_context,
-                           global_context=global_context)
-        return root
-    else:
-        return new_ast
-
-
-def process_paragraphs(ast=None, local_context=None, global_context=None,
-                       src_filepath=None, level=1):
-    """Process the paragraphs for an AST.
-
-    .. note:: This function should be run after process_ast.
-
-    Parameters
-    ----------
-    ast : list
-        An optional AST to build from or a list of strings.
-    local_context : dict, optional
-        The context with values for the current document. (local)
-    global_context : dict, optional
-        The context with values for all documents in a project. (global)
-    src_filepath : str, optional
-        The path for the document (source markup) file being processed.
-    level : int, optional
-        The current level of the ast.
-
-    Returns
-    -------
-    ast : :obj:`disseminate.Tag`
-        The AST is a root tag with a content comprising a list of tags or
-        strings.
-
-    Raises
-    ------
-    AstException
-        Raises an AstException if the max depth has been achieved
-        (settings.ast_max_depth). This is an attempt to foil the Billion Laughs
-        attack.
-    """
-    # Setup the parsing
-    factory = TagFactory()
-
-    # Format ast into a list
-    if isinstance(ast, list):
-        pass
-    elif isinstance(ast, Tag):
-        ast = ast.content if isinstance(ast.content, list) else [ast.content]
-    else:
-        ast = []
-
-    # Create a new ast. This will be populated with the processed ast and
-    # returned
-    new_ast = []
-
-    # Break the strings in this ast by paragraph newlines -- i.e. 2 or more
-    # consecutive newlines.
-    split_ast = []
-    for i in ast:
-        if isinstance(i, str):
-            split_ast += re_para.split(i)
-        else:
-            split_ast.append(i)
-
-    # Collect items in the current paragraph
-    cur_para = []
-    for i in split_ast:
-        if isinstance(i, str):
-            if i.strip() == '':
-                if cur_para:  # end of paragraph
-                    if len(cur_para) > 1 or isinstance(cur_para[0], str):
-                        p = factory.tag(tag_name='p',
-                                        tag_content=cur_para,
-                                        tag_attributes=None,
-                                        local_context=local_context,
-                                        global_context=global_context)
-                        new_ast.append(p)
-                    else:
-                        new_ast.append(cur_para[0])
-
-                    cur_para = []
-            else:
-                cur_para.append(i.strip('\n'))
-        elif isinstance(i, Tag) and i.include_paragraphs:
-            content = [i.content] if isinstance(i.content, str) else i.content
-            content = process_paragraphs(content, local_context,
-                                         global_context, src_filepath,
-                                         level=1+level)
-            i.content = content
-            cur_para.append(i)
-        else:
-            cur_para.append(i)
-
-    # Add the last paragraph
-    if cur_para:
-        p = factory.tag(tag_name='p',
-                        tag_content=cur_para,
-                        tag_attributes=None,
-                        local_context=local_context,
-                        global_context=global_context)
-        new_ast.append(p)
 
     if level == 1:  # root level
         root = factory.tag(tag_name='root',
