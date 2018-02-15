@@ -24,7 +24,7 @@ def test_img_html(tmpdir):
     root_end = '</span>\n'
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, global_context=global_context)
+    root = process_ast([src], global_context=global_context)
 
     # Remove the root tag
     root_html = root.html()
@@ -51,7 +51,7 @@ def test_img_tex(tmpdir):
     tex = "\\includegraphics{sample.pdf}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, global_context=global_context)
+    root = process_ast([src], global_context=global_context)
 
     # Remove the root tag
     root_tex = root.tex()

@@ -87,6 +87,9 @@ class Tag(object):
         use name.
     active : bool
         If True, the Tag can be used by the TagFactory.
+    include_paragraphs : bool
+        If True, then the contents of this tag can include paragraphs.
+        See :func:`disseminate.ast.process_paragraphs`.
     local_context : dict
         The context with values for the current document. The values in this
         dict do not depend on values from other documents. (local)
@@ -108,6 +111,7 @@ class Tag(object):
     global_context = None
 
     active = False
+    include_paragraphs = True
 
     process_ast = None # takes target, returns a tag or list of tags.
 

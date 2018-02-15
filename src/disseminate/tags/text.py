@@ -6,12 +6,19 @@ from .core import Tag, TagError
 from lxml.etree import Entity
 
 
+class P(Tag):
+    """A Paragraph tag"""
+    active = True
+    include_paragraphs = False
+
+
 class Bold(Tag):
     """A bold tag."""
     aliases = ("b", "textbf", "strong")
     html_name = "strong"
     tex_name = "textbf"
     active = True
+    include_paragraphs = False
 
 
 class Italics(Tag):
@@ -20,12 +27,14 @@ class Italics(Tag):
     html_name = "i"
     tex_name = "textit"
     active = True
+    include_paragraphs = False
 
 
 class Sup(Tag):
     """A superscript tag."""
     html_name = "sup"
     active = True
+    include_paragraphs = False
 
     def tex(self, level=1):
         # Collect the content elements
@@ -44,6 +53,7 @@ class Sub(Tag):
     """A subscript tag."""
     html_name = "sub"
     active = True
+    include_paragraphs = False
 
     def tex(self, level=1):
         # Collect the content elements
@@ -63,6 +73,7 @@ class Greek(Tag):
 
     aliases = ("gr",)
     active = True
+    include_paragraphs = False
 
     def assert_not_nested(self):
         """Raise a TagError if this tag is nested."""

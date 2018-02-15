@@ -77,7 +77,8 @@ class Document(object):
     string_processors = [load_yaml_header,  # Process YAML headers
                          replace_macros,  # Process macros
                          ]
-    ast_processors = []
+    ast_processors = [process_ast,
+                      ]
     ast_post_processors = []
 
     def __init__(self, src_filepath, targets, global_context=None):
@@ -176,13 +177,11 @@ class Document(object):
                                    self.global_context)
 
             # Process and validate the AST
-            ast = process_ast(s=string, local_context=self.local_context,
-                              global_context=self.global_context,
-                              src_filepath=self.src_filepath)
-
-            # Run the AST processing functions
+            ast = [string]
             for processor in self.ast_processors:
-                ast = processor(ast)
+                ast = process_ast(ast=ast, local_context=self.local_context,
+                                  global_context=self.global_context,
+                                  src_filepath=self.src_filepath)
 
             # cache the ast
             self._ast = ast

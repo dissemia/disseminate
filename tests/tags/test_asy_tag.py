@@ -37,7 +37,7 @@ def test_asy_html(tmpdir):
         draw(unitcircle);  }"""
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, global_context=global_context)
+    root = process_ast([src], global_context=global_context)
 
     # get the root tag
     root_html = root.html()
@@ -68,7 +68,7 @@ def test_asy_html(tmpdir):
     local_context = {'_src_filepath': 'src/chapter/test.dm'}
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, local_context=local_context,
+    root = process_ast([src], local_context=local_context,
                        global_context=global_context)
 
     # get the root tag

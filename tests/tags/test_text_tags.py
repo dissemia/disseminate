@@ -18,7 +18,7 @@ def test_html():
 
     # Generate a tag for each and compare the generated html to the answer key
     for src, html in markups.items():
-        root = process_ast(src)
+        root = process_ast([src])
 
         # Remove the root tag
         root_html = root.html()[len(root_start):]  # strip the start
@@ -38,7 +38,7 @@ def test_tex():
 
     # Generate a tag for each and compare the generated tex to the answer key
     for src, tex in markups.items():
-        root = process_ast(src)
+        root = process_ast([src])
 
         # Remove the root tag
         root_tex = root.tex()

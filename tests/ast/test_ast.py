@@ -4,7 +4,7 @@ Tests for the ast sub-module.
 import pytest
 import lxml.html
 
-from disseminate.ast import process_ast
+from disseminate.ast import process_ast, process_paragraphs
 from disseminate.ast.validate import ParseError
 from disseminate.tags import Tag
 from disseminate.tags.img import Img
@@ -67,13 +67,29 @@ author: Justin L Lorieau
 """
 
 
+test_paragraphs = """
+This is my @b{first} paragraph.
+
+This is my @i{second}. It has a multiple
+lines.
+
+This paragraph has a note. @note{
+
+This note has multiple lines.
+
+and multiple paragraphs.
+}
+
+This is the fourth paragraph
+"""
+
 def test_ast_basic_string():
     """Test the parsing of a basic string into an AST."""
     # Disable the management of dependencies for tags
     manage_dependencies = Img.manage_dependencies
     Img.manage_dependencies = False
 
-    ast = process_ast(test)
+    ast = process_ast([test])
 
     test_pieces = test.splitlines()
 
@@ -120,7 +136,7 @@ def test_ast_validation():
 
     # Process a string with an open tag
     with pytest.raises(ParseError) as e:
-        ast = process_ast(test_invalid)
+        ast = process_ast([test_invalid])
 
     # The error should pop up in line 4
     assert "line 4" in str(e.value)
@@ -132,7 +148,24 @@ def test_default_conversion():
     """Test the default conversion of an AST into a text string."""
 
     # Generate the txt string
-    ast = process_ast(test)
+    ast = process_ast([test])
+    txt = ast.default()
+
+    assert txt == test_txt
+
+
+def test_double_convert():
+    """Tests the default conversion run twice of an AST to make sure the
+    AST stays the same."""
+
+    # Generate the txt string
+    ast = process_ast([test])
+    txt = ast.default()
+
+    assert txt == test_txt
+
+    # Generate the txt string
+    ast = process_ast(ast)
     txt = ast.default()
 
     assert txt == test_txt
@@ -145,7 +178,7 @@ def test_basic_html_conversion():
     Img.manage_dependencies = False
 
     # Generate the html string
-    ast = process_ast(test)
+    ast = process_ast([test])
     html = ast.html()
     assert html == test_html
 
@@ -187,5 +220,79 @@ def test_basic_html_conversion():
     with pytest.raises(StopIteration):
         e7 = next(root_iter)
 
+    # Reset dependency management
+    Img.manage_dependencies = manage_dependencies
+
+
+def test_basic_triple_html_conversion():
+    """Test the generation of html strings from tags after 2 conversions."""
+    # Disable the management of dependencies for tags
+    manage_dependencies = Img.manage_dependencies
+    Img.manage_dependencies = False
+
+    # Generate the html string and process the ast twice
+    ast = process_ast([test])
+    ast = process_ast(ast)
+    ast = process_ast(ast)
+    html = ast.html()
+    print(html)
+    print()
+    print(test_html)
+    assert html == test_html
+
+    # Validate the html
+    root = lxml.html.fragment_fromstring(html)
+    root_iter = root.iter()
+
+    # verify each element
+    e1 = next(root_iter)
+    assert e1.tag == 'span'
+    assert isinstance(e1.text, str) and len(e1.text) > 0
+    assert e1.attrib == {'class': 'root'}
+
+    e2 = next(root_iter)
+    assert e2.tag == 'strong'
+    assert isinstance(e2.text, str) and e2.text == 'bolded'
+    assert e2.attrib == {}
+
+    e3 = next(root_iter)
+    assert e3.tag == 'span'
+    assert isinstance(e3.text, str) and e3.text.strip() == ''
+    assert e3.attrib == {'class': 'marginfig'}
+
+    e4 = next(root_iter)
+    assert e4.tag == 'img'
+    assert e4.text is None
+    assert e4.attrib == {'src': 'media/files'}
+
+    e5 = next(root_iter)
+    assert e5.tag == 'caption'
+    assert isinstance(e5.text, str) and e5.text == 'This is my '
+    assert e5.attrib == {}
+
+    e6 = next(root_iter)
+    assert e6.tag == 'i'
+    assert isinstance(e6.text, str) and e6.text == 'first'
+    assert e6.attrib == {}
+
+    with pytest.raises(StopIteration):
+        e7 = next(root_iter)
+
+    # Reset dependency management
+    Img.manage_dependencies = manage_dependencies
+
+
+def test_process_paragraphs():
+    """Test the process_paragraphs function"""
+
+    # Disable the management of dependencies for tags
+    manage_dependencies = Img.manage_dependencies
+    Img.manage_dependencies = False
+
+    ast = process_ast([test_paragraphs])
+    ast = process_paragraphs(ast)
+    print(ast)
+    for count, i in enumerate(ast):
+        print("{}: {}".format(count, i))
     # Reset dependency management
     Img.manage_dependencies = manage_dependencies

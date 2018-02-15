@@ -9,6 +9,7 @@ class Heading(Tag):
     html_name = None
     tex_name = None
     active = True
+    include_paragraphs = False
 
 
 class Section(Heading):
@@ -17,7 +18,7 @@ class Section(Heading):
     html_name = "h2"
     tex_name = "section"
     active = True
-
+    include_paragraphs = False
 
 class SubSection(Heading):
     """A subsection heading tag."""
@@ -25,6 +26,7 @@ class SubSection(Heading):
     html_name = "h3"
     tex_name = "subsection"
     active = True
+    include_paragraphs = False
 
 
 class SubSubSection(Heading):
@@ -33,6 +35,7 @@ class SubSubSection(Heading):
     html_name = "h4"
     tex_name = "subsubsection"
     active = True
+    include_paragraphs = False
 
 
 class Para(Heading):
@@ -42,3 +45,4 @@ class Para(Heading):
     html_name = "paragraph-heading"
     tex_name = "paragraph"
     active = True
+    include_paragraphs = False
