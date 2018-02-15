@@ -4,7 +4,7 @@
 % Graphics
 \usepackage{graphicx}
 
-{% if title %} \title{ {{ title }} } {% endif %}
+{% if title %} \title{ {% if title_label %}{{ title_label }} {{ document_number }}. {% endif %}{{ title }} } {% endif %}
 {% if author %} \author{ {{ author }} } {% endif %}
 
 \begin{document}
