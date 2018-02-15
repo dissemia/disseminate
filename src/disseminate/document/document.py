@@ -97,7 +97,15 @@ class Document(object):
     def reset_contexts(self):
         """Clear and repopulate the local_context and global_context."""
         self.local_context.clear()
+        # Populate the document's src_filepath
         self.local_context['_src_filepath'] = self.src_filepath
+
+        # Set this document's number in the tree, if available
+        if ('_document_numbers' in self.global_context and
+            self.src_filepath in self.global_context['_document_numbers']):
+            document_numbers = self.global_context['_document_numbers']
+            document_number = document_numbers[self.src_filepath]
+            self.local_context['document_number'] = document_number
 
     def get_ast(self, reload=False):
         """Process and return the AST.

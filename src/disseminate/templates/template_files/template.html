@@ -12,7 +12,12 @@
 </head>
 <body>
   <article>
-    {% if title %}<span class="title">{{ title }}</span>{% endif %}
+    {% if title %}
+    <span class="title">
+      {% if title_label %}<span class="title-label">{{ title_label }} {{ document_number }}</span>{% endif %}
+      {{ title }}
+    </span>
+    {% endif %}
     {% if author %}<span class="author">{{ author }}</span>{% endif %}
     {% block body %}
     {{ body|safe }}

@@ -40,6 +40,14 @@ h3 {
     padding: 0 0 1rem 0;
 }
 
+.title-label {
+    color: #9c0303;
+}
+
+.title-label::after {
+    content: " - ";
+}
+
 .author {
     display: block;
     text-align: center;

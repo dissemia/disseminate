@@ -486,9 +486,23 @@ class Tree(object):
     def reset_contexts(self):
         """Clear and repopulate the global_context."""
         self.global_context.clear()
+        # Set the locations of the project and document roots
         self.global_context['_project_root'] = self.project_root
         self.global_context['_target_root'] = self.target_root
+
+        # Set the dependency mananger
         self.global_context['_dependencies'] = self.dependencies
+
+        # Set the document numbers, which is used for chapter numbers and such.
+        # The '_document_numbers' value is a dict with the document's
+        # src_filepath (as a render path) as a key and the document number
+        # as the value
+        document_numbers = dict()
+        self.global_context['_document_numbers'] = document_numbers
+        for number, src_filepath in enumerate(self.src_filepaths, 1):
+            render_src_filepath = os.path.join(self.project_root,
+                                               src_filepath)
+            document_numbers[render_src_filepath] = number
 
     def render(self, target_list=None):
         """Render documents.
@@ -510,14 +524,14 @@ class Tree(object):
         target_list = (target_list if target_list is not None else
                        self.target_list)
 
-        # Reset the global context
-        self.reset_contexts()
-
         # Update the documents in this tree. Remove any documents from
         # self.documents that are no longer managed or don't exist.
         self.find_documents()
         self.documents = {k: v for k, v in self.documents.items()
                           if k in self.src_filepaths}
+
+        # Reset the global context
+        self.reset_contexts()
 
         # Run and update the AST for each document that needs updating or each
         # new document. Running the `get_ast` method for each document
