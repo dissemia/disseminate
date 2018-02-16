@@ -25,7 +25,7 @@ class Asy2pdf(Converter):
         # asy -pdf infile.asy -o outfile.pdf
         args = [asy_exec, '-f', 'pdf', self.src_filepath.value_string,
                 '-o', self.target_filepath.value_string]
-        self.run(args, raise_error=False)
+        self.run(args, raise_error=True)
         return True
 
 
