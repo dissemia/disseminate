@@ -137,3 +137,31 @@ def test_missing_executable(tmpdir, monkeypatch):
     # Check the exception message
     assert "required program" in exc_info.value.args[0]
     assert "pdf2svg" in exc_info.value.args[0]
+
+
+def test_bad_pdflatex(tmpdir):
+    """Tests the compilation of a PDF from a tex file with an error."""
+
+    # Create a src document
+    src_path = tmpdir.mkdir("src")
+    target_basepath = tmpdir.join("index1")
+
+    # Save text and create a new file
+    f1 = src_path.join("index1.tex")
+    f1.write("This is my \\bad{first} document")
+
+    # Get the target_filepath for the pdf file
+    target_filepath = str(src_path) + '/index1.pdf'
+
+    # Render the document. This will raise a CompiledDocumentError
+    with pytest.raises(ConverterError) as e:
+        convert(src_filepath=str(f1),
+                target_basefilepath=target_basepath,
+                targets=['.pdf'])
+
+    print(e)
+    assert e.match("index1.tex")  # the intermediary file should be in error
+    assert e.value.returncode != 0  # unsuccessful run
+
+    assert "! Undefined control sequence." in e.value.shell_out
+    assert "This is my \\bad" in e.value.shell_out

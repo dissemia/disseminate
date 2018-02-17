@@ -33,12 +33,12 @@ def test_html():
 def test_tex():
     """Tests the conversion of headings tags to tex."""
 
-    markups = {'@section{Section 1}': '\section{Section 1}',
-               '@subsection{Section 2}': '\subsection{Section 2}',
-               '@subsubsection{Section 3}': '\subsubsection{Section 3}',
-               '@h2{Section 2}': '\section{Section 2}',
-               '@h3{Section 3}': '\subsection{Section 3}',
-               '@h4{Section 4}': '\subsubsection{Section 4}',
+    markups = {'@section{Section 1}': '\n\section{Section 1}\n\n',
+               '@subsection{Section 2}': '\n\subsection{Section 2}\n\n',
+               '@subsubsection{Section 3}': '\n\subsubsection{Section 3}\n\n',
+               '@h2{Section 2}': '\n\section{Section 2}\n\n',
+               '@h3{Section 3}': '\n\subsection{Section 3}\n\n',
+               '@h4{Section 4}': '\n\subsubsection{Section 4}\n\n',
                '@h5{Section 5}': '\paragraph{Section 5}',
                }
 

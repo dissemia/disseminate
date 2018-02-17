@@ -1,5 +1,8 @@
 """Test the text formatting tags."""
 from disseminate.ast import process_ast
+from disseminate.tags.text import P
+
+from disseminate.tags import settings
 
 
 def test_html():
@@ -43,3 +46,11 @@ def test_tex():
         # Remove the root tag
         root_tex = root.tex()
         assert root_tex == tex
+
+
+def test_paragraph_tex():
+    """Test the formatting of paragraph tags for tex."""
+
+    p = P(name='p', content='content', attributes=(),
+          local_context={}, global_context={})
+    assert p.tex() == '\ncontent\n'

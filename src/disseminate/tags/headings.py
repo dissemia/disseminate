@@ -11,6 +11,11 @@ class Heading(Tag):
     active = True
     include_paragraphs = False
 
+    def tex(self, level=1):
+        # Add newlines around headings
+        tex = super(Heading, self).tex(level)
+        return "\n" + tex + "\n\n"
+
 
 class Section(Heading):
     """A section heading tag."""
@@ -19,6 +24,7 @@ class Section(Heading):
     tex_name = "section"
     active = True
     include_paragraphs = False
+
 
 class SubSection(Heading):
     """A subsection heading tag."""
@@ -38,7 +44,7 @@ class SubSubSection(Heading):
     include_paragraphs = False
 
 
-class Para(Heading):
+class Para(Tag):
     """A paragraph heading tag."""
     aliases = ("h5",)
 

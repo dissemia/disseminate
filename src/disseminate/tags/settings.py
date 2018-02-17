@@ -34,6 +34,7 @@ html_valid_tags = {"a",
 
 tex_macros = {"chapter",
               "ensuremath",
+              "marginnote", "marginpar",
               "paragraph",
               "section", "subsection", "subsubsection",
               "textbf", "textit"}
@@ -42,3 +43,7 @@ tex_commands = {"item"}
 
 tex_environments = {"enumerate",
                     "itemize"}
+
+#: Default text width to rewrap paragraphs. Set to 0 to disable.
+tex_paragraph_width = 80
+

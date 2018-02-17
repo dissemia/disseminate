@@ -1,7 +1,10 @@
 """
 Tests the core Tag and TagFactory classes.
 """
-from disseminate.tags import Tag
+import pytest
+
+from disseminate.tags import Tag, TagError
+from disseminate.tags.text import P
 
 
 def test_html():
@@ -21,6 +24,13 @@ def test_html():
     assert root.html() == ('<span class="root">'
                            'my first<b>bolded</b>string'
                            '</span>\n')
+
+    # Test the rendering of a tag with content for an invalid type.
+    # This should raise an exception
+    root = Tag(name='root', content=set(), attributes=None,
+               local_context=None, global_context=None)
+    with pytest.raises(TagError):
+        root.html()
 
 
 def test_html_invalid_tag():
@@ -67,6 +77,18 @@ def test_html_unsafe_tag():
                            'string</span>\n')
 
 
+def test_html_nested():
+    """Nest nested tags with html"""
+
+    # Test a basic string without additional tags
+    p = P(name='p', content='paragraph', attributes=None,
+            local_context=None, global_context=None)
+    root = Tag(name='root', content=p, attributes=None,
+               local_context=None, global_context=None)
+    assert root.html() == ('<span class="root">\n'
+                           '  <p>paragraph</p>\n'
+                           '</span>\n')
+
 def test_tex():
     """Tests the rendering of latex tags."""
 
@@ -82,6 +104,13 @@ def test_tex():
     root = Tag(name='root', content=elements, attributes=None,
                local_context=None, global_context=None)
     assert root.tex() == "my first\\textbf{bolded}string"
+
+    # Test the rendering of a tag with content for an invalid type.
+    # This should raise an exception
+    root = Tag(name='root', content=set(), attributes=None,
+               local_context=None, global_context=None)
+    with pytest.raises(TagError):
+        root.tex()
 
 
 def test_tex_nested():
@@ -102,3 +131,10 @@ def test_tex_nested():
                           '\\item item 2\n'
                           '\\end{enumerate}\n'
                           'string')
+
+    # Test a basic string without additional tags
+    p = P(name='p', content='paragraph', attributes=None,
+            local_context=None, global_context=None)
+    root = Tag(name='root', content=p, attributes=None,
+               local_context=None, global_context=None)
+    assert root.tex() == '\nparagraph\n'

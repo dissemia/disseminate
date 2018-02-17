@@ -95,3 +95,16 @@ def test_process_paragraphs_leading_spaces():
 
     assert ast.content.name == 'section'
     assert ast.content.content == 'A heading with leading spaces'
+
+
+def test_process_paragraphs_edgecases():
+    """Test the process_paragraphs function for a series of edge cases."""
+
+    # Test a basic string with no tags. This create a root tag
+    test_edge = "basic"
+    ast = process_paragraphs([test_edge])
+
+    assert ast.name == 'root'
+    assert ast.content.name == 'p'
+    assert ast.content.content == 'basic'
+    assert ast.tex() == '\nbasic\n'

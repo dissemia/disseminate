@@ -1,0 +1,14 @@
+\documentclass{tufte-book}
+
+%%%
+% Graphics
+\usepackage{graphicx}
+
+{% if title %} \title{ {% if title_label %}{{ title_label }} {{ document_number }}. {% endif %}{{ title }} } {% endif %}
+{% if author %} \author{ {{ author }} } {% endif %}
+
+\begin{document}
+{% if title %}\chapter{ {{ title }} }{% endif %}
+{% if title and document_number %}\setcounter{chapter}{ {{ document_number }} } {% endif %}
+{{ body }}
+\end{document}

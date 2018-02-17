@@ -111,6 +111,13 @@ def test_ast_basic_string():
 
     assert len(content) == 5
 
+    # Now test a string with no tags
+    ast = process_ast(["test"])
+
+    assert isinstance(ast, Tag) and ast.name == 'root'  # root tag
+    assert isinstance(ast.content, str)
+    assert ast.content == 'test'
+
     # Reset dependency management
     Img.manage_dependencies = manage_dependencies
 
@@ -219,9 +226,7 @@ def test_basic_triple_html_conversion():
     ast = process_ast(ast)
     ast = process_ast(ast)
     html = ast.html()
-    print(html)
-    print()
-    print(test_html)
+
     assert html == test_html
 
     # Validate the html

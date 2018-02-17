@@ -35,33 +35,6 @@ def test_pdflatex(tmpdir):
     # Test that rendering it again doesn't create a new pdf
 
 
-def test_bad_pdflatex(tmpdir):
-    """Tests the compilation of a PDF from a tex file with an error."""
-
-    # Create a src document
-    src_path = tmpdir.mkdir("src")
-    f1 = src_path.join("index1.dm")
-
-    # Save text and create a new file
-    f1.write("This is my \\bad{first} document")
-
-    # Get the target_filepath for the pdf file
-    target_filepath = str(src_path) + '/index1.pdf'
-
-    # Generate a CompiledDocument for this file
-    doc = CompiledDocument(src_filepath=str(f1),
-                           targets={'.pdf': target_filepath})
-
-    # Render the document. This will raise a CompiledDocumentError
-    with pytest.raises(ConverterError) as e:
-        doc.render()
-    assert e.match("index1.tex")  # the intermediary file should be in error
-    assert e.value.returncode != 0  # unsuccessful run
-
-    assert "! Undefined control sequence." in e.value.shell_out
-    assert "This is my \\bad" in e.value.shell_out
-
-
 def test_compiled_with_existing_source(tmpdir):
     """A special case of CompiledDocument is when the source file format
     (ex: tex) is already a target for a compiled file format (ex: pdf). This

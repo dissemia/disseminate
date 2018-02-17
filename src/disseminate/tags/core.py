@@ -165,8 +165,11 @@ class Tag(object):
                                 for i in self.content])
         elif isinstance(self.content, str):
             elements = self.content
+        elif isinstance(self.content, Tag):
+            elements = self.content.tex(level+1)
         else:
-            elements = None
+            msg = "Tag element '{}' of type '{}' cannot be rendered."
+            raise(TagError(msg.format(self.content, type(self.content))))
 
         # Construct the tag name
         if level > 1:
@@ -201,8 +204,11 @@ class Tag(object):
                         for i in self.content]
         elif isinstance(self.content, str):
             elements = self.content
+        elif isinstance(self.content, Tag):
+            elements = [self.content.html(level+1)]
         else:
-            elements = None
+            msg = "Tag element '{}' of type '{}' cannot be rendered."
+            raise (TagError(msg.format(self.content, type(self.content))))
 
         # Construct the tag name
         if level > 1:
@@ -225,7 +231,7 @@ class Tag(object):
             attrs = self.attributes if self.attributes else ()
             attrs = set_attribute(attrs, ('class', self.name), 'a')
             kwargs = kwargs_attributes(attrs)
-            e = (E('span', *elements, **kwargs) if elements else
+            e = (E('span', *elements, **kwargs) if len(elements) else
                  E('span', **kwargs))
 
         # Render the root tag if this is the first level

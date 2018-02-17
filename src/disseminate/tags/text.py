@@ -1,15 +1,28 @@
 """
 Text formatting tags
 """
-from .core import Tag, TagError
+from textwrap import wrap
 
 from lxml.etree import Entity
+
+from .core import Tag, TagError
+from . import settings
 
 
 class P(Tag):
     """A Paragraph tag"""
     active = True
     include_paragraphs = False
+
+    def tex(self, level=1):
+        tex = super(P, self).tex(level)
+
+        # Rewrap the text
+        if settings.tex_paragraph_width > 0:
+            tex = "\n".join(wrap(tex, settings.tex_paragraph_width))
+
+        # Add newlines around headings
+        return "\n" + tex + "\n"
 
 
 class Bold(Tag):
