@@ -169,21 +169,17 @@ def convert(src_filepath, target_basefilepath, targets, raise_error=True,
 
 class ConverterError(Exception):
     """An error was encountered in converting a file.
-
-    Attributes
-    ----------
-    cmd : str
-        The shell command that generated the ConverterError
-    returncode : int
-        The return code for the shell command.
-    shell_out : str
-        The stdout for the shell command.
-    shell_err : str
-        The stderr for the shell command.
     """
+    #: (str) The shell command that generated the ConverterError
     cmd = None
+
+    #: (int) The return code for the shell command.
     returncode = None
+
+    #: The stdout for the shell command.
     shell_out = None
+
+    #: The stderr for the shell command.
     shell_err = None
 
 
