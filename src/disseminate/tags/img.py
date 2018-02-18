@@ -5,9 +5,10 @@ import os.path
 import hashlib
 
 from .core import Tag, TagError
-from ..attributes import set_attribute
+from ..attributes import set_attribute, format_tex_attributes
 from ..utils.file import mkdir_p
 from .. import settings
+from . import settings as tag_settings
 
 
 class Img(Tag):
@@ -62,7 +63,11 @@ class Img(Tag):
         else:
             path = self.src_filepath
 
-        return "\\includegraphics{{{}}}".format(path)
+        # get the attributes for tex
+        valid_attrs = tag_settings.tex_valid_attributes.get('img', None)
+        attrs_str = format_tex_attributes(self.attributes,
+                                          attribute_names=valid_attrs)
+        return "\\includegraphics" + attrs_str + "{{{}}}".format(path)
 
     def html(self, level=1):
         if self.manage_dependencies:

@@ -10,9 +10,6 @@ html_root_tag = 'root'
 #: Render HTML pages with newlines and indentation
 html_pretty = True
 
-#: Only render allowed HTML attributes
-html_allowed_attributes = True
-
 #: Allowed HTML tags. Tags that don't match these values will be rendered as
 #: span tags in html
 html_valid_tags = {"a",
@@ -29,6 +26,9 @@ html_valid_tags = {"a",
                    "table", "tbody", "td", "th", "thead", "tr",
                    "ul"}
 
+html_valid_attributes = {'img': {'src', 'width', 'height'},
+                         }
+
 #: TEX Tags
 #: ~~~~~~~~
 
@@ -43,6 +43,9 @@ tex_commands = {"item"}
 
 tex_environments = {"enumerate",
                     "itemize"}
+
+tex_valid_attributes = {'img': {'width', 'height', 'alt'},
+                        }
 
 #: Default text width to rewrap paragraphs. Set to 0 to disable.
 tex_paragraph_width = 80

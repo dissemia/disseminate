@@ -40,7 +40,7 @@ test_html = """<span class="root">
     This is my test document. It has multiple paragraphs.
 
     Here is a new one with <strong>bolded</strong> text as an example.
-    <span class=\"marginfig\">
+    <span class=\"sidenote\">
       <img src="media/files"/>
       <caption>This is my <i>first</i> figure.</caption>
     </span>
@@ -191,7 +191,7 @@ def test_basic_html_conversion():
     e3 = next(root_iter)
     assert e3.tag == 'span'
     assert isinstance(e3.text, str) and e3.text.strip() == ''
-    assert e3.attrib == {'class': 'marginfig'}
+    assert e3.attrib == {'class': 'sidenote'}
 
     e4 = next(root_iter)
     assert e4.tag == 'img'
@@ -247,7 +247,7 @@ def test_basic_triple_html_conversion():
     e3 = next(root_iter)
     assert e3.tag == 'span'
     assert isinstance(e3.text, str) and e3.text.strip() == ''
-    assert e3.attrib == {'class': 'marginfig'}
+    assert e3.attrib == {'class': 'sidenote'}
 
     e4 = next(root_iter)
     assert e4.tag == 'img'

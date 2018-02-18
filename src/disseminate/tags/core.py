@@ -4,7 +4,9 @@ Core classes and functions for tags.
 from lxml.builder import E
 from lxml import etree
 
-from disseminate.attributes import set_attribute, kwargs_attributes
+from disseminate.attributes import (parse_attributes, set_attribute,
+                                    kwargs_attributes, format_tex_attributes,
+                                    filter_attributes)
 from . import settings
 
 
@@ -120,7 +122,15 @@ class Tag(object):
     def __init__(self, name, content, attributes, local_context,
                  global_context):
         self.name = name
-        self.attributes = attributes
+
+        # Parse the attributes
+        if isinstance(attributes, str):
+            self.attributes = parse_attributes(attributes)
+        elif isinstance(attributes, list) or isinstance(attributes, tuple):
+            self.attributes = attributes
+        else:
+            self.attributes = None
+
         if isinstance(content, list) and len(content) == 1:
             self.content = content[0]
         else:
@@ -179,12 +189,16 @@ class Tag(object):
             name = ''
 
         # Format the tag. It's either a macro or environment
+        attrs_str = format_tex_attributes(self.attributes)
         if name in settings.tex_macros:
-            return "\\" + name + '{' + elements + '}'  # ex: \section{First}
+            # ex: \section{First}
+            return ("\\" + name + attrs_str + '{' + elements + '}')
         elif name in settings.tex_commands:
-            return "\\" + name + ' ' + elements + "\n"  # ex: \item
+            # ex: \item
+            return "\\" + name + ' ' + elements + "\n"
         elif name in settings.tex_environments:
-            return ("\n\\begin{" + name + "}\n" +  # ex: \begin{align}
+            # ex: \begin{align}
+            return ("\n\\begin" + attrs_str + "{" + name + "}\n" +
                     elements +
                     "\\end{" + name + "}\n")
         else:
@@ -218,18 +232,28 @@ class Tag(object):
         else:
             name = settings.html_root_tag
 
+        # Filter and prepare the attributes
+        attrs = self.attributes if self.attributes else []
+        if self.name in settings.html_valid_attributes:
+            valid_attrs = settings.html_valid_attributes[self.name]
+            attrs = filter_attributes(attrs=attrs,
+                                      attribute_names=valid_attrs,
+                                      target='.html')
+        else:
+            attrs = filter_attributes(attrs=attrs,
+                                      target='.html')
+
         if (settings.html_valid_tags and
            name in settings.html_valid_tags):
 
-            kwargs = (kwargs_attributes(self.attributes) if self.attributes
-                      else dict())
+            kwargs = kwargs_attributes(attrs)
             e = (E(name, *elements, **kwargs) if elements else
                  E(name, **kwargs))
         else:
             # Create a span element if it not an allowed element
             # Add the tag type to the class attribute
-            attrs = self.attributes if self.attributes else ()
-            attrs = set_attribute(attrs, ('class', self.name), 'a')
+            attrs = set_attribute(attrs, ('class', name), 'a')
+
             kwargs = kwargs_attributes(attrs)
             e = (E('span', *elements, **kwargs) if len(elements) else
                  E('span', **kwargs))
