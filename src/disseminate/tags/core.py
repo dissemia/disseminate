@@ -243,9 +243,7 @@ class Tag(object):
             attrs = filter_attributes(attrs=attrs,
                                       target='.html')
 
-        if (settings.html_valid_tags and
-           name in settings.html_valid_tags):
-
+        if name in settings.html_valid_tags:
             kwargs = kwargs_attributes(attrs)
             e = (E(name, *elements, **kwargs) if elements else
                  E(name, **kwargs))

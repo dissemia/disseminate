@@ -7,7 +7,7 @@ from .core import Tag
 class Sidenote(Tag):
     """A sidenote tag."""
 
-    aliases = ('marginnote', 'marginfig', 'sidefig')
+    aliases = ('marginnote',)
 
     html_name = 'sidenote'
     tex_name = 'marginnote'

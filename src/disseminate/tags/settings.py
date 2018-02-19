@@ -14,7 +14,6 @@ html_pretty = True
 #: span tags in html
 html_valid_tags = {"a",
                    "b", "blockquote", "body",
-                   "caption",
                    "div",
                    "em",
                    "h1", "h2", "h3", "h4", "h5",
@@ -32,7 +31,7 @@ html_valid_attributes = {'img': {'src', 'width', 'height'},
 #: TEX Tags
 #: ~~~~~~~~
 
-tex_macros = {"chapter",
+tex_macros = {"caption", "chapter",
               "ensuremath",
               "marginnote", "marginpar",
               "paragraph",
@@ -42,7 +41,8 @@ tex_macros = {"chapter",
 tex_commands = {"item"}
 
 tex_environments = {"enumerate",
-                    "itemize"}
+                    "itemize",
+                    "marginfigure"}
 
 tex_valid_attributes = {'img': {'width', 'height', 'alt'},
                         }

@@ -40,7 +40,12 @@ h3 {
     marbin-bottom: 0.75rem;
     font-weight: 400;
 }
-    
+
+img {
+    background-color: white;
+    margin: 0 0.2rem;
+}
+
 .title {
     display: block;
     font-size: 2.0rem;
@@ -67,7 +72,7 @@ h3 {
     display: block;
 }
 
-.sidenote {
+.sidenote, .marginfig {
     display: block;
     float: right;
     clear: right;
@@ -86,6 +91,21 @@ h3 {
   position: relative;
   top: -0.4em;
 }
+
+.marginfig sub, sup {
+  vertical-align: baseline;
+  position: relative;
+  top: -0.4em;
+}
+
 .sidenote sub { 
   top: 0.4em; 
+}
+
+.marginfig sub { 
+  top: 0.4em; 
+}
+
+.caption {
+    display: block;
 }
