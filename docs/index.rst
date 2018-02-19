@@ -84,6 +84,7 @@ Table of Contents
    :caption: Markup Language
 
    language/tags
+   language/macros
 
 .. toctree::
    :maxdepth: 2
