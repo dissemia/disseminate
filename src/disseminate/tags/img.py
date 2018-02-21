@@ -15,11 +15,8 @@ class Img(Tag):
     """The img tag for inserting images."""
 
     active = True
-
     html_name = 'img'
-
     src_filepath = None
-    manage_dependencies = True
 
     def __init__(self, name, content, attributes,
                  local_context, global_context):
@@ -43,25 +40,22 @@ class Img(Tag):
             raise TagError(msg)
 
     def tex(self, level=1):
-        if self.manage_dependencies:
-            # get the document_src_filepath
-            lc = self.local_context
-            if '_src_filepath' in lc:
-                document_src_filepath = lc['_src_filepath']
-            else:
-                document_src_filepath = None
-
-            # Add the file dependency
-            assert '_dependencies' in self.global_context
-            deps = self.global_context['_dependencies']
-
-            deps.add_file(targets=['.tex'], path=self.src_filepath,
-                          document_src_filepath=document_src_filepath)
-            dep = deps.get_dependency(target='.tex',
-                                      src_filepath=self.src_filepath)
-            path = dep.dep_filepath
+        # get the document_src_filepath
+        lc = self.local_context
+        if '_src_filepath' in lc:
+            document_src_filepath = lc['_src_filepath']
         else:
-            path = self.src_filepath
+            document_src_filepath = None
+
+        # Add the file dependency
+        assert '_dependencies' in self.global_context
+        deps = self.global_context['_dependencies']
+
+        deps.add_file(targets=['.tex'], path=self.src_filepath,
+                      document_src_filepath=document_src_filepath)
+        dep = deps.get_dependency(target='.tex',
+                                  src_filepath=self.src_filepath)
+        path = dep.dep_filepath
 
         # get the attributes for tex
         valid_attrs = tag_settings.tex_valid_attributes.get('img', None)
@@ -70,25 +64,22 @@ class Img(Tag):
         return "\\includegraphics" + attrs_str + "{{{}}}".format(path)
 
     def html(self, level=1):
-        if self.manage_dependencies:
-            # get the document_src_filepath
-            lc = self.local_context
-            if '_src_filepath' in lc:
-                document_src_filepath = lc['_src_filepath']
-            else:
-                document_src_filepath = None
-
-            # Add the file dependency
-            assert '_dependencies' in self.global_context
-            deps = self.global_context['_dependencies']
-
-            deps.add_file(targets=['.html'], path=self.src_filepath,
-                          document_src_filepath=document_src_filepath)
-            dep = deps.get_dependency(target='.html',
-                                      src_filepath=self.src_filepath)
-            url = dep.url
+        # get the document_src_filepath
+        lc = self.local_context
+        if '_src_filepath' in lc:
+            document_src_filepath = lc['_src_filepath']
         else:
-            url = self.src_filepath
+            document_src_filepath = None
+
+        # Add the file dependency
+        assert '_dependencies' in self.global_context
+        deps = self.global_context['_dependencies']
+
+        deps.add_file(targets=['.html'], path=self.src_filepath,
+                      document_src_filepath=document_src_filepath)
+        dep = deps.get_dependency(target='.html',
+                                  src_filepath=self.src_filepath)
+        url = dep.url
 
         # Use the parent method to render the tag. However, the 'src' attribute
         # should be fixed first.

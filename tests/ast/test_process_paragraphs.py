@@ -3,7 +3,6 @@ Test the proces_paragraphs function.
 """
 from disseminate.ast import process_ast, process_paragraphs
 from disseminate.tags.text import P
-from disseminate.tags.img import Img
 
 
 test_paragraphs = """
@@ -27,8 +26,7 @@ A fifth paragraph.
 
 Here is a new one with @b{bolded} text as an example.
     @marginfig[offset=-1.0em]{
-      @img{media/files}
-      @caption{This is my @i{first} figure.}
+      @b{test}
     }
 
 My final paragraph.
@@ -41,10 +39,6 @@ test_paragraphs2 = """
 
 def test_process_paragraphs():
     """Test the process_paragraphs function"""
-
-    # Disable the management of dependencies for tags
-    manage_dependencies = Img.manage_dependencies
-    Img.manage_dependencies = False
 
     ast = process_ast([test_paragraphs])
     ast = process_paragraphs(ast)
@@ -81,9 +75,6 @@ def test_process_paragraphs():
 
     assert isinstance(ast[7], P)
     assert ast[7].content == 'My final paragraph.'
-
-    # Reset dependency management
-    Img.manage_dependencies = manage_dependencies
 
 
 def test_process_paragraphs_leading_spaces():
