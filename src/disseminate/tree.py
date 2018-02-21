@@ -9,6 +9,7 @@ from datetime import datetime
 
 from .document import DocumentFactory
 from .dependency_manager import DependencyManager
+from .labels import LabelManager
 from . import settings
 
 
@@ -132,6 +133,7 @@ class Tree(object):
     src_filepaths = None
     documents = None
     dependencies = None
+    label_manager = None
     global_context = None
 
     def __init__(self, project_root, target_root,
@@ -155,6 +157,12 @@ class Tree(object):
                                 target_root=self.target_root,
                                 segregate_targets=self.segregate_targets)
         self.dependencies = dep
+
+        # Set the label manager
+        label_manager = LabelManager(project_root=self.project_root,
+                                     target_root=self.target_root,
+                                     segregate_targets=self.segregate_targets)
+        self.label_manager = label_manager
 
         # The time of the last render
         self._last_render = None
@@ -490,8 +498,11 @@ class Tree(object):
         self.global_context['_project_root'] = self.project_root
         self.global_context['_target_root'] = self.target_root
 
-        # Set the dependency mananger
+        # Set the dependency manager
         self.global_context['_dependencies'] = self.dependencies
+
+        # Set the label manager
+        self.global_context['_label_manager'] = self.label_manager
 
         # Set the document numbers, which is used for chapter numbers and such.
         # The '_document_numbers' value is a dict with the document's
@@ -503,6 +514,9 @@ class Tree(object):
             render_src_filepath = os.path.join(self.project_root,
                                                src_filepath)
             document_numbers[render_src_filepath] = number
+
+        # Add the total number of documents
+        self.global_context['_no_documents'] = len(self.src_filepaths)
 
     def render(self, target_list=None):
         """Render documents.

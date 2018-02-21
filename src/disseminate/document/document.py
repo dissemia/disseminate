@@ -102,6 +102,9 @@ class Document(object):
         # Populate the document's src_filepath
         self.local_context['_src_filepath'] = self.src_filepath
 
+        # Populate the documents's targets
+        self.local_context['_targets'] = self.targets
+
         # Set this document's number in the tree, if available
         if ('_document_numbers' in self.global_context and
             self.src_filepath in self.global_context['_document_numbers']):
@@ -171,6 +174,12 @@ class Document(object):
                 document_src_filepath = self.src_filepath
                 dep = self.global_context['_dependencies']
                 dep.reset(document_src_filepath=document_src_filepath)
+
+            # Clear the labels for this document
+            if '_label_manager' in self.global_context:
+                document_src_filepath = self.src_filepath
+                label_manager = self.global_context['_label_manager']
+                label_manager.reset(document_src_filepath=document_src_filepath)
 
             # Process the string
             for processor in self.string_processors:

@@ -78,6 +78,13 @@ media_dir = 'media'
 
 #media_url_root
 
+#: Default formats for labels
+label_format = {'figure': "Fig. {number}."}
+
+#: Strip the following characters from labels when creating html/tex links
+#: ex: Convert 'Fig. 1.' to 'Fig. 1'
+label_strip = '.- '
+
 #: HTTP Server
 #: -----------
 
