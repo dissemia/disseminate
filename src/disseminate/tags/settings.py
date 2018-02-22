@@ -46,6 +46,7 @@ tex_environments = {"enumerate",
 
 tex_valid_attributes = {'img': {'width', 'height', 'alt'},
                         'marginfig': {'offset'},
+                        'caption': {},
                         }
 
 #: Default text width to rewrap paragraphs. Set to 0 to disable.

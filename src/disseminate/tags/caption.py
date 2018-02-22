@@ -17,7 +17,13 @@ class RefError(Exception):
 
 
 class Caption(Tag):
-    """A tag for captions."""
+    """A tag for captions.
+
+    .. note:: The use of a naked caption tag is allowed (i.e. a caption not
+              nested within a figure or table), but this won't register a label
+              with the label manager. This is because the 'add_label' method
+              will not be called.
+    """
 
     html_name = 'caption'
     tex_name = 'caption'
@@ -61,9 +67,8 @@ class Caption(Tag):
                                             id=id,
                                             contents=contents)
             # Get the label's text and add it to the caption
-            label_text = label.short(local_context=local_context,
+            label_text = label.label(local_context=local_context,
                                      global_context=global_context)
-            label_text = label_text + settings.label_sep + ' '
 
             # Add the label's short text to this caption's text.
             if isinstance(self.content, str):
@@ -72,6 +77,10 @@ class Caption(Tag):
                   len(self.content) > 0 and
                   isinstance(self.content[0], str)):
                 self.content[0] = ' '.join((label_text, self.content[0]))
+
+    def tex(self, level=1):
+        """Add newline to the end of a caption"""
+        return super(Caption, self).tex(level) + '\n'
 
 
 class Ref(Tag):

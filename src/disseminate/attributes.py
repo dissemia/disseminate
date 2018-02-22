@@ -239,7 +239,7 @@ def filter_attributes(attrs, attribute_names=None, target=None,
                     new_attrs.append(attr)
         attrs = new_attrs
 
-    if attribute_names:
+    if attribute_names is not None:
         new_attrs = []
         # Filter attributes based on attribute names
         for attr in attrs:

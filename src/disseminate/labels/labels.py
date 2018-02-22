@@ -96,6 +96,25 @@ class Label(object):
 
         return text
 
+    def label(self, local_context=None, global_context=None):
+        """The text label.
+
+        Parameters
+        ----------
+        local_context : dict, optional
+            The context with values for the document that owns this label. The
+            values in this dict do not depend on values from other documents.
+            (local)
+        global_context : dict
+            The context with values for all documents in a project.
+
+        Returns
+        -------
+        label : str
+            The text label
+        """
+        return self.short(local_context, global_context) + settings.label_sep
+
     def html_label(self, local_context=None, global_context=None):
         """The html label (anchor).
 
@@ -113,8 +132,7 @@ class Label(object):
         html_entity : :obj:`lxml.builder.E`
             A 'span' element with the 'id' set to this label's identifier.
         """
-        text = (self.short(local_context, global_context) +
-                settings.label_sep + ' ')
+        text = self.label(local_context, global_context)
         attrs = {'class': self.kind + '-label',
                  'id': self.id}
         return E('span', text, **attrs)
