@@ -88,3 +88,11 @@ can be compiled alone and only once.
 
 Rendering Steps
 ---------------
+
+1. Create the tree, which is a groupment of interdepedent documents
+
+    - populate the global_context with:
+
+2. Create each document
+
+    - populate the local_context with:
