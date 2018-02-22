@@ -1,13 +1,22 @@
-\documentclass[12pt]{article}
+{% block class %}\documentclass[12pt]{article}{% endblock %}
 
+{% block header %}
 %%%
 % Graphics
 \usepackage{graphicx}
+
+%%%
+% Caption customization
+\usepackage[labelformat=empty]{caption}
+{% endblock %}
+
+{% block extraheader %}
+{% endblock %}    
 
 {% if title %} \title{ {% if title_label %}{{ title_label }} {{ document_number }}. {% endif %}{{ title }} } {% endif %}
 {% if author %} \author{ {{ author }} } {% endif %}
 
 \begin{document}
-{% if title and author %}\maketitle{% endif %}
+{% block title %}{% if title and author %}\maketitle{% endif %}{% endblock %}
 {{ body }}
 \end{document}

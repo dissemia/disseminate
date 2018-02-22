@@ -97,7 +97,7 @@ class Label(object):
         return text
 
     def html_label(self, local_context=None, global_context=None):
-        """The html label (anchor) for this label.
+        """The html label (anchor).
 
         Parameters
         ----------
@@ -113,7 +113,8 @@ class Label(object):
         html_entity : :obj:`lxml.builder.E`
             A 'span' element with the 'id' set to this label's identifier.
         """
-        text = self.short(local_context, global_context)
+        text = (self.short(local_context, global_context) +
+                settings.label_sep + ' ')
         attrs = {'class': self.kind + '-label',
                  'id': self.id}
         return E('span', text, **attrs)
@@ -248,7 +249,8 @@ class LabelManager(object):
             If a label id is not specified, a short one based on the
             document and label count will be generated.
         contents : str, optional
-
+            The short description for the label that can be used as the
+            reference.
 
         Returns
         -------

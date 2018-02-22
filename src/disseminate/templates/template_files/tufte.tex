@@ -1,14 +1,19 @@
-\documentclass{tufte-book}
+{% extends "template.tex" %}
+{% block class %}\documentclass{tufte-book}{% endblock %}
 
+{% block extraheader %}
 %%%
-% Graphics
-\usepackage{graphicx}
-
-{% if title %} \title{ {% if title_label %}{{ title_label }} {{ document_number }}. {% endif %}{{ title }} } {% endif %}
-{% if author %} \author{ {{ author }} } {% endif %}
-
-\begin{document}
+% Remove labels from captions  
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd{\@caption}
+  {\noindent\csname fnum@#1\endcsname: \ignorespaces}
+  {}
+  {}{}
+\makeatother
+{% endblock %}  
+  
+{% block title %}
 {% if title %}\chapter{ {{ title }} }{% endif %}
 {% if title and document_number %}\setcounter{chapter}{ {{ document_number }} } {% endif %}
-{{ body }}
-\end{document}
+{% endblock %}    

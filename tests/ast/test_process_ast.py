@@ -13,7 +13,7 @@ test = """
     This is my test document. It has multiple paragraphs.
 
     Here is a new one with @b{bolded} text as an example.
-    @marginfig[offset=-1.0em]{
+    @marginfigtag[offset=-1.0em]{
       @imgtag{media/files}
       @captiontag{This is my @i{first} figure.}
     }
@@ -39,7 +39,7 @@ test_html = """<span class="root">
     This is my test document. It has multiple paragraphs.
 
     Here is a new one with <strong>bolded</strong> text as an example.
-    <span class="marginfig">
+    <span offset="-1.0em" class="marginfigtag">
       <span class="imgtag">media/files</span>
       <span class="captiontag">This is my <i>first</i> figure.</span>
     </span>
@@ -53,7 +53,7 @@ test_invalid = """
     This is my test document. It has multiple paragraphs.
 
     Here is a new one with @b{bolded} text as an example.
-    @marginfig[offset=-1.0em]{
+    @marginfigtag[offset=-1.0em]{
       @imgtag{media/files}
       @caption{This is my @i{first} figure.}
 """
@@ -81,7 +81,7 @@ def test_ast_basic_string():
 
     assert isinstance(content[2], str) # string
 
-    assert isinstance(content[3], Tag) and content[3].name == 'marginfig'
+    assert isinstance(content[3], Tag) and content[3].name == 'marginfigtag'
     assert isinstance(content[3].content, list)  # margin tag has subtags
 
     assert isinstance(content[3][0], str) # string
@@ -179,7 +179,8 @@ def test_basic_html_conversion():
     e3 = next(root_iter)
     assert e3.tag == 'span'
     assert isinstance(e3.text, str) and e3.text.strip() == ''
-    assert e3.attrib == {'class': 'marginfig'}
+    assert e3.attrib == {'class': 'marginfigtag',
+                         'offset': '-1.0em'}
 
     e4 = next(root_iter)
     assert e4.tag == 'span'
@@ -228,7 +229,8 @@ def test_basic_triple_html_conversion():
     e3 = next(root_iter)
     assert e3.tag == 'span'
     assert isinstance(e3.text, str) and e3.text.strip() == ''
-    assert e3.attrib == {'class': 'marginfig'}
+    assert e3.attrib == {'class': 'marginfigtag',
+                         'offset': '-1.0em'}
 
     e4 = next(root_iter)
     assert e4.tag == 'span'

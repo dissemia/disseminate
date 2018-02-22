@@ -124,15 +124,15 @@ def test_label_html():
 
     # Check the html label
     html = etree.tostring(label1.html_label()).decode('utf-8')
-    assert html == '<span class="figure-label" id="fig:image1">Fig. 1.</span>'
+    assert html == '<span class="figure-label" id="fig:image1">Fig. 1. </span>'
 
     # Check the html reference (from inside the document)
     html = etree.tostring(label1.html_ref(local_context=local_context))
     html = html.decode('utf-8')
-    assert html == '<a href="#fig:image1">Fig. 1.</a>'
+    assert html == '<a href="#fig:image1">Fig. 1</a>'
 
     # Check the html reference (from outside the document and with a different
     # local_context)
     html = etree.tostring(label1.html_ref())
     html = html.decode('utf-8')
-    assert html == '<a href="main1.html#fig:image1">Fig. 1.</a>'
+    assert html == '<a href="main1.html#fig:image1">Fig. 1</a>'

@@ -8,7 +8,7 @@ re_attrs = regex.compile(r'((?P<key>[\w\.]+)'
                          r'\s*=\s*'
                          r'(?P<value>("[^"]*"'
                          r'|\'[^\']*\''
-                         r'|\w+))'
+                         r'|[^\s\]]+))'
                          r'|(?P<position>\w+))')
 
 
@@ -47,8 +47,8 @@ def parse_attributes(s):
     return tuple(attrs)
 
 
-def set_attribute(attrs, attribute, method='r'):
-    """Set an attribute in an attributes list.
+def get_attribute_value(attrs, attribute_name):
+    """Get an attribute's value from an attribute_name.
 
     Parameters
     ----------
@@ -56,10 +56,59 @@ def set_attribute(attrs, attribute, method='r'):
         A tuple of attributes comprising either 2-ple strings (key, value) or
         strings (positional arguments)
     attribute: 2-ple or str
-        An attribute to set. It's either a 2 item tuple (attribute name, attribute value) or
-        a positional attribute string.
+        An attribute to set. It's either a 2 item tuple (attribute id,
+        attribute value) or a positional attribute string.
+
+    Returns
+    -------
+    attr_value: string or None
+        The attribute value, if found, or None if it was not found.
+
+    Examples
+    --------
+    >>> get_attribute_value((('class', 'base bttnred'), ('style', 'media')),
+    ...                     'class')
+    'base bttnred'
+    >>> get_attribute_value((('class', 'base bttnred'), ('style', 'media')),
+    ...                     'classes')
+    >>> get_attribute_value((('class', 'base bttnred'), 'red'),
+    ...                     'red')
+    'red'
+    >>> get_attribute_value((('class', 'base bttnred'), 'red'),
+    ...                     'blue')
+    """
+    # Format the attrs
+    if isinstance(attrs, str):
+        attrs = parse_attributes(attrs)
+    elif attrs is None:
+        attrs = tuple()
+
+    # Find the attribute that matches
+    for attr in attrs:
+        # Deal with a 2-ple attribute
+        if (hasattr(attr, '__iter__') and
+           len(attr) == 2 and
+           attr[0] == attribute_name):
+            return attr[1]
+        elif isinstance(attr, str) and attr == attribute_name:
+            return attr
+
+    return None
+
+
+def set_attribute(attrs, attribute, method='r'):
+    """Set an attribute in an attributes tuple.
+
+    Parameters
+    ----------
+    attrs: tuple
+        A tuple of attributes comprising either 2-ple strings (key, value) or
+        strings (positional arguments)
+    attribute: 2-ple or str
+        An attribute to set. It's either a 2 item tuple (attribute id,
+        attribute value) or a positional attribute string.
     method: char
-        'r': replace (default)
+        'r': replace (short)
         'a': append
 
     Returns
@@ -70,20 +119,20 @@ def set_attribute(attrs, attribute, method='r'):
 
     Examples
     --------
-    >>> set_attribute([('class', 'base bttnred'), ('style', 'media'), 'red'],
+    >>> set_attribute((('class', 'base bttnred'), ('style', 'media'), 'red'),
     ...                ('class', 'standard'), method='r')
     (('class', 'standard'), ('style', 'media'), 'red')
-    >>> set_attribute([('class', 'base bttnred'), ('style', 'media'), 'red'],
+    >>> set_attribute((('class', 'base bttnred'), ('style', 'media'), 'red'),
     ...                ('class', 'standard'), method='a')
     (('class', 'base bttnred'), ('style', 'media'), 'red', ('class', 'standard'))
-    >>> set_attribute([('class', 'base bttnred'), ('style', 'media'), 'red'],
+    >>> set_attribute((('class', 'base bttnred'), ('style', 'media'), 'red'),
     ...                'red', method='r')
     (('class', 'base bttnred'), ('style', 'media'), 'red')
-    >>> set_attribute([('class', 'base bttnred'), ('style', 'media'), 'red'],
+    >>> set_attribute((('class', 'base bttnred'), ('style', 'media'), 'red'),
     ...                'red', method='a')
     (('class', 'base bttnred'), ('style', 'media'), 'red', 'red')
     """
-    attrs = tuple if attrs is None else attrs
+    attrs = tuple() if attrs is None else attrs
 
     if method == 'a':
         new_attrs = list(attrs)
@@ -129,7 +178,7 @@ def filter_attributes(attrs, attribute_names=None, target=None,
         returned result. Matches are case-sensitive.
     target: str, optional
         If specified, filter the target-specific attributes.
-        Target-specific attributes start with the target name.
+        Target-specific attributes start with the target id.
         For example, 'tex.width' is the 'width' attribute for '.tex' targets.
         If a target is specified, the filtered attributes will only include
         target-specific attributes that match the target, and the
@@ -252,7 +301,7 @@ def format_html_attributes(attrs, attribute_names=None, raise_error=False):
     """Format attributes into an options string for html.
 
     .. note:: If there are target-specific attributes (i.e. they start with
-              the target's name with a period, like 'html.width') then
+              the target's id with a period, like 'html.width') then
               only the 'html.' attributes are added.
 
     Parameters
@@ -317,7 +366,7 @@ def format_tex_attributes(attrs, attribute_names=None, raise_error=False):
     """Format attributes into an options string for tex.
 
     .. note:: If there are target-specific attributes (i.e. they start with
-              the target's name with a period, like 'html.width') then
+              the target's id with a period, like 'html.width') then
               only the 'tex.' attributes are added.
 
     Parameters
@@ -334,8 +383,8 @@ def format_tex_attributes(attrs, attribute_names=None, raise_error=False):
 
     Returns
     -------
-    kwargs: dict
-        A dict with {key: value} pairs for the attributes.
+    formatted_str
+        A formatted string for tex.
 
     Examples
     --------

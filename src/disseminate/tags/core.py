@@ -188,8 +188,19 @@ class Tag(object):
         else:
             name = ''
 
+        # Filter and prepare the attributes
+        attrs = self.attributes if self.attributes else []
+        if self.name in settings.tex_valid_attributes:
+            valid_attrs = settings.tex_valid_attributes[self.name]
+            attrs = filter_attributes(attrs=attrs,
+                                      attribute_names=valid_attrs,
+                                      target='.tex')
+        else:
+            attrs = filter_attributes(attrs=attrs,
+                                      target='.tex')
+        attrs_str = format_tex_attributes(attrs)
+
         # Format the tag. It's either a macro or environment
-        attrs_str = format_tex_attributes(self.attributes)
         if name in settings.tex_macros:
             # ex: \section{First}
             return ("\\" + name + attrs_str + '{' + elements + '}')
