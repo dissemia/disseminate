@@ -14,17 +14,53 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+# Get the version number and package information.  The __version__.py
+# file is executed so that the disseminate package is not loaded.  At
+# this point, the C/C++ extensions may not be built, and loading the
+# mollib package will lead to an ImportError. This approach
+# circumvents this problem.
+__version__ = None  # This is a version string
+VERSION = None  # This is a 5-item version tuple
+exec(open("./src/disseminate/__version__.py").read())
+
+# Organize classifiers
+if VERSION[3] == 'alpha':
+    classifiers = ['Development Status :: 3 - Alpha', ]
+elif VERSION[3] == 'beta':
+    classifiers = ['Development Status :: 4 - Beta', ]
+elif VERSION[3] == 'rc':
+    classifiers = ['Development Status :: 4 - Beta', ]
+elif VERSION[3] == 'final':
+    classifiers = ['Development Status :: 5 - Production/Stable', ]
+else:
+    classifiers = []
+
+
+classifiers += [
+          'Intended Audience :: End Users/Desktop',
+          'Intended Audience :: Science/Research',
+          'Operating System :: MacOS :: MacOS X',
+          'Operating System :: POSIX :: Linux',
+          'Programming Language :: Python',
+          'Programming Language :: Python :: 3',
+          'Programming Language :: Python :: 3.5',
+          'Programming Language :: Python :: 3.6',
+          'Topic :: Text Processing :: General',
+          'Topic :: Text Processing :: Markup',
+          'Topic :: Text Processing :: Markup :: HTML',
+          'Topic :: Text Processing :: Markup :: LaTeX',
+          ]
+
 
 setup(
     name='disseminate',  # Required
-    version='0.1',
+    version=__version__,
     description='A document processor and generation engine',
     long_description=long_description,
     # url='https://github.com/pypa/sampleproject',
     author='Justin L Lorieau',
     classifiers=[  
         'Development Status :: 3 - Alpha',
-        'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
