@@ -25,7 +25,8 @@ html_valid_tags = {"a",
                    "table", "tbody", "td", "th", "thead", "tr",
                    "ul"}
 
-html_valid_attributes = {'img': {'src', 'width', 'height'},
+html_valid_attributes = {'a': {'href',},
+                         'img': {'src', 'width', 'height'},
                          }
 
 #: TEX Tags
