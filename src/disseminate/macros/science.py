@@ -16,4 +16,16 @@ macros_chemicals = {'@H2O': 'H@sub{2}O',
                     }
 
 # Symbols
-macros_symbols = {'@deg': '@symbol{deg}'}
+macros_symbols = {'@deg': '@symbol{deg}',
+                  }
+
+# Greek Symbols
+macros_greek = {'@' + i: '@symbol{' + i + '}'
+                for i in ('alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
+                          'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu',
+                          'xi', 'omicron', 'pi', 'rho', 'sigma', 'tau',
+                          'upsilon', 'phi', 'chi', 'psi', 'omega',
+                          'Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta',
+                          'Eta', 'Theta', 'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu',
+                          'Xi', 'Omicron', 'Pi', 'Rho', 'Sigma', 'Tau',
+                          'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega',)}

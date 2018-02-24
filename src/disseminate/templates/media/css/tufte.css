@@ -10,6 +10,12 @@ body {
     max-width: 1400px;
 }
 
+a:link, a:visited, a:hover, a:active {
+    text-decoration: none;
+    font-weight: 600;
+    color: #4a4a54;
+}
+
 article {
     padding-top: 5rem;
     position: relative;
