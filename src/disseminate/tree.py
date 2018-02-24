@@ -665,13 +665,13 @@ class Tree(object):
             elem_str += "</tr>"
             elem_strs.append(elem_str)
 
-        top = "<table>\n  "
-        top += ("<thead>"
+        top = '<table class="tablesorter" id="index">\n  '
+        top += ("<thead><tr>"
                 "<th>num</th>"
                 "<th>source</th>"
                 "<th>targets</th>"
                 "<th>last saved</th>"
-                "</thead>\n")
+                "</tr></thead>\n")
         top += "<tbody>"
         bottom = "</tbody>\n</table>"
         result_str += "\n".join((top, *elem_strs, bottom))

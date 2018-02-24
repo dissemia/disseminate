@@ -69,8 +69,8 @@
     }
 
     td.num {
-      mid-width: 2.0rem;
-      text-align: center;
+      min-width: 4.0rem;
+      padding-left: 1.25rem;
     }
 
     td.src {
@@ -85,8 +85,27 @@
       display: table;
       margin: 0 auto;
     }
-  </style>
 
+    .tablesorter-headerDesc .tablesorter-header-inner:after {
+      padding-left: 0.3em;
+      content: '↓';
+    }
+
+    .tablesorter-headerAsc .tablesorter-header-inner:after {
+      padding-left: 0.3em;
+      content: '↑';
+    }
+  </style>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script> 
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.29.5/js/jquery.tablesorter.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function() { 
+      $("#index").tablesorter(
+        {sortList: [[0,0],]}
+    );
+      } 
+    );
+    </script>
 </head>
 <body>
   <div class="content">
