@@ -66,9 +66,23 @@ def test_pdf2svg_optional(tmpdir):
                               crop=True, scale='2.0', targets=['.svg'])
 
     # See if the file was created
-    assert target_filepath == str(tmpdir.join('sample_crop_scale2.svg'))
-    assert tmpdir.join('sample_crop_scale2.svg').check()
-    contents = tmpdir.join('sample_crop_scale2.svg').read()
+    assert target_filepath == str(tmpdir.join('sample_crop_scale2.0.svg'))
+    assert tmpdir.join('sample_crop_scale2.0.svg').check()
+    contents = tmpdir.join('sample_crop_scale2.0.svg').read()
+    assert 'width="60pt"' in contents
+    assert 'height="60pt"' in contents
+
+    # Try cropping and scaling by a factor of 2, but this time with a
+    # spurious kwarg
+    target_filepath = convert(src_filepath=pdf_file,
+                              target_basefilepath=target_basefilepath,
+                              crop=True, scale='2.0', width='3.0',
+                              targets=['.svg'])
+
+    # See if the file was created
+    assert target_filepath == str(tmpdir.join('sample_crop_scale2.0.svg'))
+    assert tmpdir.join('sample_crop_scale2.0.svg').check()
+    contents = tmpdir.join('sample_crop_scale2.0.svg').read()
     assert 'width="60pt"' in contents
     assert 'height="60pt"' in contents
 

@@ -21,15 +21,34 @@ class Pdf2svg(Converter):
     page_no = None
     scale = None
 
-    def __init__(self, src_filepath, target_filepath, page_no=None, scale=None,
-                 crop=False, **kwargs):
-        super(Pdf2svg, self).__init__(src_filepath, target_filepath, **kwargs)
+    def __init__(self, src_filepath, target_basefilepath, page_no=None,
+                 scale=None, crop=False, **kwargs):
+        super(Pdf2svg, self).__init__(src_filepath, target_basefilepath,
+                                      **kwargs)
 
         self.crop = crop
-        self.page_no = (PositiveIntArgument('page_no', page_no, required=False)
-                        if page_no is not None else None)
-        self.scale = (PositiveFloatArgument('scale', scale, required=False)
-                      if scale is not None else None)
+        if isinstance(page_no, PositiveIntArgument):
+            self.page_no = page_no
+        else:
+            self.page_no = (PositiveIntArgument('page_no', page_no,
+                                                required=False)
+                            if page_no is not None else None)
+        if isinstance(scale, PositiveFloatArgument):
+            self.scale = scale
+        else:
+            self.scale = (PositiveFloatArgument('scale', scale, required=False)
+                          if scale is not None else None)
+
+    def target_filepath(self):
+        target_basefilepath = self.target_basefilepath.value_string
+        if self.crop:
+            target_basefilepath += '_crop'
+        if self.page_no is not None:
+            target_basefilepath += '_pg' + str(self.page_no.value_string)
+        if self.scale is not None:
+            scale = round(float(self.scale.value_string), 0)
+            target_basefilepath += '_scale{:.1f}'.format(scale)
+        return target_basefilepath + self.target
 
     def convert(self):
         """Convert a pdf to an svg file."""
@@ -39,7 +58,7 @@ class Pdf2svg(Converter):
 
         # Setup temp file. The returned file path is a .svg; get the .pdf and
         # .svg temp filepaths
-        temp_filepath_svg = self.temp_filepath(self.target_filepath)
+        temp_filepath_svg = self.temp_filepath()
         temp_filepath_svg2 = os.path.splitext(temp_filepath_svg)[0] + '2.svg'
         temp_filepath_pdf = os.path.splitext(temp_filepath_svg)[0] + '.pdf'
         current_pdf = self.src_filepath.value_string
@@ -71,8 +90,8 @@ class Pdf2svg(Converter):
 
         # Copy the processed file to the target
         try:
-            os.link(current_svg, self.target_filepath.value_string)
+            os.link(current_svg, self.target_filepath())
         except FileExistsError:
-            os.remove(self.target_filepath.value_string)
-            os.link(temp_filepath_svg, self.target_filepath.value_string)
+            os.remove(self.target_filepath())
+            os.link(temp_filepath_svg, self.target_filepath())
         return True

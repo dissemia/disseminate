@@ -27,7 +27,7 @@ def test_naked_caption():
 
     img = root.content[1]
     assert img.name == 'caption'
-    assert img.attributes == None
+    assert img.attributes == tuple()
     assert img.content == 'This is my caption'
 
     # Naked captions do not register labels
@@ -54,14 +54,14 @@ def test_figure_caption_no_id():
 
     fig = root.content[1]
     assert fig.name == 'marginfig'
-    assert fig.attributes == None
+    assert fig.attributes == tuple()
 
     # Get the caption
     assert isinstance(fig.content, list)
     caption = [i for i in fig.content if isinstance(i, Caption)][0]
 
     assert caption.name == 'caption'
-    assert caption.attributes is None
+    assert caption.attributes == tuple()
     assert caption.content == 'Fig. 1. This is my caption'
 
     # A label should have been registered

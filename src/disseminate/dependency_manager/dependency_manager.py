@@ -8,7 +8,7 @@ import urllib.parse
 import regex
 
 from ..convert import convert
-from ..attributes import re_attrs
+from ..attributes import re_attrs, kwargs_attributes
 from ..utils.file import mkdir_p
 from .. import settings
 
@@ -217,7 +217,8 @@ class DependencyManager(object):
 
         return target_filepath
 
-    def add_file(self, targets, path, document_src_filepath=None, **kwargs):
+    def add_file(self, targets, path, document_src_filepath=None,
+                 attributes=None):
         """Add a file dependency for the given path.
 
         The file will be converted to a suitable formant for the target, if
@@ -229,16 +230,15 @@ class DependencyManager(object):
         Parameters
         ----------
         targets : list of str
-            The targets for the dependency. ex: '.html' or '.tex'
+            The targets for the dependency. ex: ['.html', '.tex']
         path : str
             The path of the dependency file. The file will be searched using
             :meth:`DependencyManager.search_file`.
         document_src_filepath: : str, optional
             The src_filepath (render path) of the document source markup files
             that own the dependency.
-        kwargs : dict
-            The kwargs to be used for the convert function, if the file needs
-            to be converted.
+        attributes : tuple
+            The attributes of a tag.
 
         Returns
         -------
@@ -299,6 +299,14 @@ class DependencyManager(object):
                 # extensions for this target.
                 convert_targets = settings.tracked_deps[target]
 
+                # Format the attributes to a kwargs dict for this target,
+                # suitable for the convert function
+                if attributes:
+                    kwargs = kwargs_attributes(attrs=attributes, target=target)
+                else:
+                    kwargs = dict()
+
+                # Convert the file
                 new_path = convert(src_filepath=render_path,
                                    target_basefilepath=target_basefilepath,
                                    targets=convert_targets, **kwargs)

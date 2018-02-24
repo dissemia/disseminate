@@ -17,16 +17,14 @@ class Img(Tag):
     active = True
     html_name = 'img'
     src_filepath = None
+    dependency_manager = None
 
     def __init__(self, name, content, attributes,
                  local_context, global_context):
         super(Img, self).__init__(name, content, attributes, local_context,
                                   global_context)
 
-        # Place the image location in the src attribute
-        if self.attributes is None:
-            self.attributes = []
-
+        # Move the contents to the src_filpath attribute
         if isinstance(content, list):
             contents = ''.join(content).strip()
         else:
@@ -39,22 +37,23 @@ class Img(Tag):
             msg = "An image path must be used with the img tag."
             raise TagError(msg)
 
+        # Add the image dependency
+        assert '_dependencies' in global_context
+        assert '_targets' in local_context
+        deps = global_context['_dependencies']
+        targets = list(local_context['_targets'].keys())
+        document_src_filepath = (local_context['_src_filepath']
+                                 if '_src_filepath' in local_context else None)
+
+        self.dependency_manager = deps
+        deps.add_file(targets=targets, path=self.src_filepath,
+                      document_src_filepath=document_src_filepath,
+                      attributes=self.attributes)
+
     def tex(self, level=1):
-        # get the document_src_filepath
-        lc = self.local_context
-        if '_src_filepath' in lc:
-            document_src_filepath = lc['_src_filepath']
-        else:
-            document_src_filepath = None
-
-        # Add the file dependency
-        assert '_dependencies' in self.global_context
-        deps = self.global_context['_dependencies']
-
-        deps.add_file(targets=['.tex'], path=self.src_filepath,
-                      document_src_filepath=document_src_filepath)
-        dep = deps.get_dependency(target='.tex',
-                                  src_filepath=self.src_filepath)
+        # Get the file dependency
+        deps = self.dependency_manager
+        dep = deps.get_dependency(target='.tex', src_filepath=self.src_filepath)
         path = dep.dep_filepath
 
         # get the attributes for tex
@@ -64,19 +63,8 @@ class Img(Tag):
         return "\\includegraphics" + attrs_str + "{{{}}}".format(path)
 
     def html(self, level=1):
-        # get the document_src_filepath
-        lc = self.local_context
-        if '_src_filepath' in lc:
-            document_src_filepath = lc['_src_filepath']
-        else:
-            document_src_filepath = None
-
         # Add the file dependency
-        assert '_dependencies' in self.global_context
-        deps = self.global_context['_dependencies']
-
-        deps.add_file(targets=['.html'], path=self.src_filepath,
-                      document_src_filepath=document_src_filepath)
+        deps = self.dependency_manager
         dep = deps.get_dependency(target='.html',
                                   src_filepath=self.src_filepath)
         url = dep.url
@@ -106,7 +94,7 @@ class RenderedImg(Img):
         else:
             content = self.content.strip()
 
-        # Determine with the contents is a file or asy code
+        # Determine if contents is a file or code
         if os.path.isfile(content):
             pass
         else:

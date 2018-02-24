@@ -129,7 +129,7 @@ class Tag(object):
         elif isinstance(attributes, list) or isinstance(attributes, tuple):
             self.attributes = attributes
         else:
-            self.attributes = None
+            self.attributes = tuple()
 
         if isinstance(content, list) and len(content) == 1:
             self.content = content[0]
@@ -245,8 +245,9 @@ class Tag(object):
 
         # Filter and prepare the attributes
         attrs = self.attributes if self.attributes else []
-        if self.name in settings.html_valid_attributes:
-            valid_attrs = settings.html_valid_attributes[self.name]
+
+        if name in settings.html_valid_attributes:
+            valid_attrs = settings.html_valid_attributes[name]
             attrs = filter_attributes(attrs=attrs,
                                       attribute_names=valid_attrs,
                                       target='.html')

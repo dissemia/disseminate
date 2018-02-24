@@ -40,8 +40,8 @@ class Pdflatex(Converter):
 
         # Copy the processed file to the target
         try:
-            os.link(temp_filepath_pdf, self.target_filepath.value_string)
+            os.link(temp_filepath_pdf, self.target_filepath())
         except FileExistsError:
-            os.remove(self.target_filepath.value_string)
-            os.link(temp_filepath_pdf, self.target_filepath.value_string)
+            os.remove(self.target_filepath())
+            os.link(temp_filepath_pdf, self.target_filepath())
         return True

@@ -3,8 +3,9 @@ Converters for ASY files.
 """
 import os
 
-from .converter import Converter, convert
-from .arguments import PositiveIntArgument, PositiveFloatArgument
+from .converter import Converter
+from .pdf import Pdf2svg
+from .arguments import PathArgument
 
 
 class Asy2pdf(Converter):
@@ -24,12 +25,12 @@ class Asy2pdf(Converter):
         # Convert the file to pdf
         # asy -pdf infile.asy -o outfile.pdf
         args = [asy_exec, '-f', 'pdf', self.src_filepath.value_string,
-                '-o', self.target_filepath.value_string]
+                '-o', self.target_filepath()]
         self.run(args, raise_error=True)
         return True
 
 
-class Asy2svg(Converter):
+class Asy2svg(Pdf2svg):
     """Converter for an asy file to an svg file."""
 
     order = 10100
@@ -42,47 +43,30 @@ class Asy2svg(Converter):
     page_no = None
     scale = None
 
-    def __init__(self, src_filepath, target_filepath, page_no=None, scale=None,
-                 crop=False, **kwargs):
-        super(Asy2svg, self).__init__(src_filepath, target_filepath, **kwargs)
-
-        self.crop = crop
-        self.page_no = (PositiveIntArgument('page_no', page_no, required=False)
-                        if page_no is not None else None)
-        self.scale = (PositiveFloatArgument('scale', scale, required=False)
-                      if scale is not None else None)
+    def __init__(self, src_filepath, target_basefilepath, page_no=None,
+                 scale=None, crop=False, **kwargs):
+        super(Asy2svg, self).__init__(src_filepath, target_basefilepath,
+                                      page_no, scale, crop, **kwargs)
 
     def convert(self):
         """Convert an asy file to a pdf file."""
+
         # Setup a temporary file for the intermediary pdf
-        temp_filepath = self.temp_filepath(self.target_filepath)
+        temp_filepath = self.temp_filepath()
         temp_basefilepath = os.path.splitext(temp_filepath)[0]
+        src_filepath = self.src_filepath.value_string
 
         # Convert asy->pdf
-        temp_filepath_pdf = convert(src_filepath=self.src_filepath.value_string,
-                                    target_basefilepath=temp_basefilepath,
-                                    targets=['.pdf'])
-        if temp_filepath_pdf is None:
+        ast2pdf = Asy2pdf(src_filepath=src_filepath,
+                          target_basefilepath=temp_basefilepath,
+                          target='.pdf')
+        success = ast2pdf.convert()
+        if success is None:
             return False
 
-        # Convert pdf->svg
-        target_filepath = self.target_filepath.value_string
-        target_basefilepath = os.path.splitext(target_filepath)[0]
+        # Now the target of ast2pdf is the source for this file
+        self.src_filepath = PathArgument('src_filepath',
+                                         ast2pdf.target_filepath(),
+                                         required=True)
 
-        kwargs = {}
-        if self.page_no:
-            kwargs['page_no'] = self.page_no
-        if self.scale:
-            kwargs['scale'] = self.scale
-        if self.crop:
-            kwargs['crop'] = self.crop
-
-        target_filepath = convert(src_filepath=temp_filepath_pdf,
-                                  target_basefilepath=target_basefilepath,
-                                  targets=['.svg'],
-                                  **kwargs)
-
-        if target_filepath is None:
-            return False
-
-        return True
+        return super(Asy2svg, self).convert()

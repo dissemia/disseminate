@@ -163,7 +163,6 @@ class Document(object):
             with open(self.src_filepath) as f:
                 string = f.read()
 
-            # TODO: Reorganize the resetting of contexts
             # Reset the local_context. When reloading an AST, the old
             # local_context is invalidated since some of the entries may have
             # changed

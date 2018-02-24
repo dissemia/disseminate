@@ -8,7 +8,6 @@ class Asy(RenderedImg):
     """The asy tag for inserting asymptote images."""
 
     src_filepath = None
-    manage_dependencies = True
     active = True
 
     def __init__(self, name, content, attributes,

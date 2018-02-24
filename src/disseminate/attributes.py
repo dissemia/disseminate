@@ -13,7 +13,7 @@ re_attrs = regex.compile(r'((?P<key>[\w\.]+)'
 
 
 def parse_attributes(s):
-    """Parses an attribute string into an OrderedDict of attributes.
+    """Parses an attribute string into a tuple of attributes.
 
     Parameters
     ----------
@@ -123,14 +123,8 @@ def set_attribute(attrs, attribute, method='r'):
     ...                ('class', 'standard'), method='r')
     (('class', 'standard'), ('style', 'media'), 'red')
     >>> set_attribute((('class', 'base bttnred'), ('style', 'media'), 'red'),
-    ...                ('class', 'standard'), method='a')
-    (('class', 'base bttnred'), ('style', 'media'), 'red', ('class', 'standard'))
-    >>> set_attribute((('class', 'base bttnred'), ('style', 'media'), 'red'),
-    ...                'red', method='r')
-    (('class', 'base bttnred'), ('style', 'media'), 'red')
-    >>> set_attribute((('class', 'base bttnred'), ('style', 'media'), 'red'),
-    ...                'red', method='a')
-    (('class', 'base bttnred'), ('style', 'media'), 'red', 'red')
+    ...                ('class', 'std'), method='a')
+    (('class', 'base bttnred'), ('style', 'media'), 'red', ('class', 'std'))
     """
     attrs = tuple() if attrs is None else attrs
 
@@ -173,15 +167,16 @@ def filter_attributes(attrs, attribute_names=None, target=None,
     attrs: tuple
         A tuple of attributes comprising either 2-ple strings (key, value) or
         strings (positional arguments)
-    attribute_names: list of str, optional
+    attribute_names: list of str or None, optional
         A list of attribute names and positional arguments to include in the
         returned result. Matches are case-sensitive.
+        If None, no attribute names are filtered.
     target: str, optional
-        If specified, filter the target-specific attributes.
-        Target-specific attributes start with the target id.
-        For example, 'tex.width' is the 'width' attribute for '.tex' targets.
-        If a target is specified, the filtered attributes will only include
-        target-specific attributes that match the target, and the
+        By default (i.e. when target is None), target-specific attributes are
+        removed. Target-specific attributes start with the target id and a
+        period. For example, 'tex.width' is the 'width' attribute for '.tex'
+        targets. If a target is specified, the filtered attributes will only
+        include target-specific attributes that match the target, and the
         target-specific part will be stripped.
     raise_error: bool, optional
         If an attribute has been included that is not recognized, raise an
@@ -201,43 +196,47 @@ def filter_attributes(attrs, attribute_names=None, target=None,
 
     Examples
     --------
-    >>> filter_attributes([('class', 'base'), ('style', 'media'), 'red'],
-    ...                   ['class', 'red'])
+    filter_attributes((('class', 'base'), ('style', 'media'), 'red'))
+    >>> filter_attributes((('class', 'base'), ('style', 'media'), 'red'),
+    ...                   attribute_names=['class', 'red'])
     (('class', 'base'), 'red')
-    >>> filter_attributes([('tex.class', 'base'), ('html.class', 'media')],
-    ...                   ['class', 'red'], '.tex')
+    >>> filter_attributes((('tex.class', 'base'), ('html.class', 'media')),
+    ...                   attribute_names=['class', 'red'], target='.tex')
+    (('class', 'base'),)
+    >>> filter_attributes((('tex.class', 'base'), ('html.class', 'media')),
+    ...                   target='.tex')
     (('class', 'base'),)
     """
+
     new_attrs = []
     # Filter attributes based on target
-    if target:
-        target = target.strip('.')
+    target = target.strip('.') if target is not None else ''
 
-        for attr in attrs:
-            # See if the attribute matches a target and whether it matches
-            # the specified target
-            if hasattr(attr, '__iter__') and len(attr) == 2:
-                # Deal with an attr that is a 2-ple
-                if attr[0].startswith(target + '.'):
-                    # matches target. ex: 'tex.width'
-                    new_attrs.append((attr[0].replace(target + '.', ''),
-                                      attr[1]))
-                elif '.' in attr[0]:
-                    # attr for another target. ex: 'html.width'
-                    continue
-                else:
-                    new_attrs.append(attr)
+    for attr in attrs:
+        # See if the attribute matches a target and whether it matches
+        # the specified target
+        if hasattr(attr, '__iter__') and len(attr) == 2:
+            # Deal with an attr that is a 2-ple
+            if attr[0].startswith(target + '.'):
+                # matches target. ex: 'tex.width'
+                new_attrs.append((attr[0].replace(target + '.', ''),
+                                  attr[1]))
+            elif '.' in attr[0]:
+                # attr for another target. ex: 'html.width'
+                continue
             else:
-                # Deal with an attr that is a string
-                if attr.startswith(target + '.'):
-                    # matches target. ex: 'tex.width'
-                    new_attrs.append(attr.replace(target + '.', ''))
-                elif '.' in attr:
-                    # attr for another target. ex: 'html.width'
-                    continue
-                else:
-                    new_attrs.append(attr)
-        attrs = new_attrs
+                new_attrs.append(attr)
+        else:
+            # Deal with an attr that is a string
+            if attr.startswith(target + '.'):
+                # matches target. ex: 'tex.width'
+                new_attrs.append(attr.replace(target + '.', ''))
+            elif '.' in attr:
+                # attr for another target. ex: 'html.width'
+                continue
+            else:
+                new_attrs.append(attr)
+    attrs = new_attrs
 
     if attribute_names is not None:
         new_attrs = []
@@ -253,10 +252,13 @@ def filter_attributes(attrs, attribute_names=None, target=None,
             elif raise_error:
                 msg = "The attribute '{}' is not a valid attribute."
                 raise TagAttributeError(msg.format(attr))
-    return tuple(new_attrs)
+        attrs = new_attrs
+
+    return tuple(attrs)
 
 
-def kwargs_attributes(attrs, attribute_names=None, raise_error=False):
+def kwargs_attributes(attrs, attribute_names=None, target=None,
+                      raise_error=False):
     """Produce a dict of attributes {key: value} suitable to be used
     as kwargs.
 
@@ -267,9 +269,13 @@ def kwargs_attributes(attrs, attribute_names=None, raise_error=False):
     attrs: tuple
         A tuple of attributes comprising either 2-ple strings (key, value) or
         strings (positional arguments)
-    attribute_names: list of str, optional
-        A list of attribute names and positional arguments to include in the
-        returned result. Matches are case-sensitive.
+    attribute_names: list of str, str or None, optional
+        - A list of attribute names and positional arguments to include in the
+          returned result. Matches are case-sensitive.
+        - None - Do not filter attribute names
+    target: str, optional
+        If specified, filter the target-specific attributes. (See
+        filter_attributes)
     raise_error: bool, optional
         If an attribute has been included that is not recognized, raise an
         TagAttributeError.
@@ -283,11 +289,14 @@ def kwargs_attributes(attrs, attribute_names=None, raise_error=False):
     --------
     >>> kwargs_attributes((('class', 'base'), ('style', 'media'), 'red'))
     {'class': 'base', 'style': 'media'}
+    >>> kwargs_attributes((('html.class', 'html'), ('tex.class', 'tex')),
+    ...                   target='.html')
+    {'class': 'html'}
     """
-    if hasattr(attribute_names, '__iter__'):
-        processed_attrs = filter_attributes(attrs, attribute_names, raise_error)
-    else:
-        processed_attrs = attrs
+    processed_attrs = filter_attributes(attrs=attrs,
+                                        attribute_names=attribute_names,
+                                        target=target,
+                                        raise_error=raise_error)
 
     kwargs = dict()
     for attr in processed_attrs:

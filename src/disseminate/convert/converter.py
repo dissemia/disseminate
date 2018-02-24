@@ -120,28 +120,6 @@ def convert(src_filepath, target_basefilepath, targets, raise_error=True,
             raise ConverterError(msg.format(src_filepath))
         return False
 
-    # Get the modifier string and add it to the target_basefilepath
-    kwargs_str = kwargs_to_str(**kwargs)
-
-    if kwargs_str:
-        target_basefilepath = target_basefilepath + '_' + kwargs_str
-
-    # See if a target already exists and return an existing version if available
-    # and update to date
-    if cache:
-        def test_target(t):
-            target_filepath = target_basefilepath + t
-            return target_filepath if os.path.isfile(target_filepath) else False
-
-        valid_target_filepaths = filter(bool, map(test_target, targets))
-        valid_target_filepaths = list(valid_target_filepaths)
-
-        if (valid_target_filepaths and
-           (os.path.getmtime(valid_target_filepaths[0]) >=
-           os.path.getmtime(src_filepath))):
-
-            return valid_target_filepaths[0]
-
     # Get a suitable converter subclass
     try:
         converter = Converter.get_converter(src_filepath, target_basefilepath,
@@ -153,7 +131,16 @@ def convert(src_filepath, target_basefilepath, targets, raise_error=True,
             raise e
         return False
 
-    # Try to convert the file with the converter
+    # Get the target_filepath the convert would create
+    target_filepath = converter.target_filepath()
+
+    # See if a target already exists and return an existing version if available
+    # and update to date
+    if cache and os.path.isfile(target_filepath):
+        return target_filepath
+
+    # A cached file wasn't used or found. Try to convert the file with the
+    # converter
     try:
         successful = converter.convert()
     except ConverterError as e:
@@ -161,8 +148,8 @@ def convert(src_filepath, target_basefilepath, targets, raise_error=True,
         if raise_error:
             raise e
 
-    if successful:
-        return converter.target_filepath.value_string
+    if successful and os.path.isfile(target_filepath):
+        return target_filepath
     else:
         return False
 
@@ -183,8 +170,30 @@ class ConverterError(Exception):
     shell_err = None
 
 
+def _all_subclasses(cls):
+    """Retrieve all subclasses, sub-subclasses and so on for a class"""
+    return cls.__subclasses__() + [g for s in cls.__subclasses__()
+                                   for g in _all_subclasses(s)]
+
+
 class Converter(object):
     """The base class for converting between file types.
+
+    Parameters
+    ----------
+    src_filepath : str
+        The path and filename for the file to convert. This file must exist,
+        and it's a render path.
+        ex: 'src/media/img1.svg'
+    target_basefilepath : str
+        The path and filename (without extension) that the target file should
+        adopt. This is a render path, and the final target will be determined
+        by this function, if a conversion is possible.
+        ex: 'tex/media/img'
+    target : str
+        The desired extension format to convert to (ex: '.svg')
+    kwargs : dict
+        The options to use with the converter.
 
     Attributes
     ----------
@@ -213,16 +222,21 @@ class Converter(object):
     optional_execs = None
 
     src_filepath = None
-    target_filepath = None
+    target_basefilepath = None
+    target = None
 
     _converters = None
     _temp_dir = None
 
-    def __init__(self, src_filepath, target_filepath, **kwargs):
+    def __init__(self, src_filepath, target_basefilepath, target, **kwargs):
+
         self.src_filepath = PathArgument('src_filepath', str(src_filepath),
                                          required=True)
-        self.target_filepath = PathArgument('target_filepath',
-                                            str(target_filepath), required=True)
+        self.target_basefilepath = PathArgument('target_basefilepath',
+                                                str(target_basefilepath),
+                                                required=True)
+        assert target in self.to_formats
+        self.target = target
 
     @classmethod
     def is_available(cls):
@@ -235,22 +249,6 @@ class Converter(object):
     @classmethod
     def find_executable(cls, executable_string):
         return find_executable(executable_string)
-
-    @classmethod
-    def temp_filepath(self, target_filepath):
-        """Given a target file path, return the filepath that can be used
-        as a temporary file for the converted file."""
-        # Load the temp directory
-        if getattr(Converter, '_temp_dir', None) is None:
-            Converter._temp_dir = mkdtemp()
-
-        # Generate the filename
-        if isinstance(target_filepath, Argument):
-            filename = os.path.split(target_filepath.value_string)[1]
-        else:
-            filename = os.path.split(target_filepath)[1]
-
-        return os.path.join(self._temp_dir, filename)
 
     @classmethod
     def run(cls, args, env=None, error_msg=None, raise_error=True):
@@ -344,7 +342,7 @@ class Converter(object):
         """
         # Setup the converter subclasses
         if cls._converters is None:
-            cls._converters = sorted(cls.__subclasses__(),
+            cls._converters = sorted(_all_subclasses(cls),
                                      key=lambda s: s.order)
 
         # Get the extension of the src_filepath and target_filepath
@@ -392,13 +390,33 @@ class Converter(object):
         assert best_target is not None
         assert best_converter is not None
 
-        # Generate the target_filepath.
-        target_filepath = ''.join((str(target_basefilepath), best_target))
-
         # instantiate the Converter subclass
-        converter = best_converter(src_filepath, target_filepath, **kwargs)
+        converter = best_converter(src_filepath=src_filepath,
+                                   target_basefilepath=target_basefilepath,
+                                   target=best_target, **kwargs)
 
         return converter
+
+    def temp_filepath(self):
+        """Return the filepath that can be used as a temporary file for the
+        converted file."""
+        target_filepath = self.target_filepath()
+
+        # Load the temp directory
+        if getattr(Converter, '_temp_dir', None) is None:
+            Converter._temp_dir = mkdtemp()
+
+        # Generate the filename
+        if isinstance(target_filepath, Argument):
+            filename = os.path.split(target_filepath.value_string)[1]
+        else:
+            filename = os.path.split(target_filepath)[1]
+
+        return os.path.join(self._temp_dir, filename)
+
+    def target_filepath(self):
+        """Return the full target_path with modifiers and an extension."""
+        return self.target_basefilepath.value_string + self.target
 
     def convert(self):
         """Convert a file and return its new path.
