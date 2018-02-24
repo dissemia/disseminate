@@ -16,4 +16,4 @@ macros_chemicals = {'@H2O': 'H@sub{2}O',
                     }
 
 # Symbols
-macros_symbols = {}
+macros_symbols = {'@deg': '@symbol{deg}'}

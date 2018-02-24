@@ -81,10 +81,10 @@ class Sub(Tag):
         return "\\ensuremath{_{" + elements + "}}"
 
 
-class Greek(Tag):
+class Symbol(Tag):
     """One or more greek characters."""
 
-    aliases = ("gr",)
+    aliases = ("smb ",)
     active = True
     include_paragraphs = False
 

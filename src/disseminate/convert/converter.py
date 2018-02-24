@@ -78,8 +78,11 @@ def convert(src_filepath, target_basefilepath, targets, raise_error=True,
     target_filepath = converter.target_filepath()
 
     # See if a target already exists and return an existing version if available
-    # and update to date
-    if cache and os.path.isfile(target_filepath):
+    # and up to date
+    if (cache and
+       os.path.isfile(target_filepath) and
+       os.path.getmtime(target_filepath) >= os.path.getmtime(src_filepath)):
+
         return target_filepath
 
     # A cached file wasn't used or found. Try to convert the file with the
