@@ -3,7 +3,7 @@ Macros are special markup for inserting one or a series of tags in the AST.
 """
 import regex
 
-from .chemistry import *
+from .science import *
 
 
 re_macro = regex.compile(r"(?P<macro>@\w+)(?=\s*[^{\w])")

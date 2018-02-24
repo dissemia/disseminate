@@ -574,5 +574,4 @@ def test_html(tmpdir):
 
     # The result html string should have 3 table rows: one for each of the
     # documents
-    assert html.count("<tr>") == 3
-
+    assert html.count("<tr>") == 4

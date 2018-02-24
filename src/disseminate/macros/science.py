@@ -1,5 +1,5 @@
 """
-Macros for chemistry.
+Macros for science.
 """
 
 # spin active isotopes
@@ -14,3 +14,6 @@ macros_isotopes = {'@1H': '@sup{1}H',
 # Chemicals
 macros_chemicals = {'@H2O': 'H@sub{2}O',
                     }
+
+# Symbols
+macros_symbols = {}

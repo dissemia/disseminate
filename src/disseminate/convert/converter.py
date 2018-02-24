@@ -9,63 +9,6 @@ from .arguments import PathArgument, Argument
 from .. import settings
 
 
-def kwargs_to_str(truncate_str_length=12, **kwargs):
-    """Convert a kwargs dict into a string suitable for a filename.
-
-    Since the kwargs may come from user input, the final string is limited
-    somewhat to 6 modifiers and to the truncated_str_length for strings.
-
-    Parameters
-    ----------
-    truncate_str_length : int, optional
-        keys or values that generate strings longer than this number are
-        truncated.
-    kwargs : dict
-        kwargs to convert to a string suitable for a filename.
-
-    Returns
-    -------
-    str
-        A string suitable for a filename.
-
-    Examples
-    --------
-    >>> kwargs_to_str()
-    ''
-    >>> kwargs_to_str(scale='3.4', crop=True)
-    'crop_scale3'
-    >>> kwargs_to_str(scale='2.0', crop=False)
-    'scale2'
-    """
-    pieces = []
-    for k, v in sorted(kwargs.items())[:6]:  # Limit the number of arguments
-        # Convert the value from a string, if needed
-        if isinstance(v, str):
-            if v.title() == 'True':
-                v = True
-            elif v.title() == 'False':
-                v = False
-            elif v.isnumeric():
-                v = int(v)
-            else:
-                try:
-                    v = round(float(v))  # need to remove decimals from floats.
-                except ValueError:
-                    pass
-
-        if v is True:
-            pieces.append(str(k)[:truncate_str_length])
-        elif v is False:
-            pass
-        elif isinstance(v, float):
-            pieces.append(str(k)[:truncate_str_length] +
-                          str(v)[:truncate_str_length])
-        else:
-            pieces.append(str(k)[:truncate_str_length] +
-                          str(v)[:truncate_str_length])
-    return '_'.join(pieces)
-
-
 def convert(src_filepath, target_basefilepath, targets, raise_error=True,
             cache=settings.convert_cache, **kwargs):
     """Convert a source file to a target file.
