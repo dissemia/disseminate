@@ -12,7 +12,7 @@ def test_html():
                '@i{italics}': '<i>italics</i>',
                '@sup{superscript}': '<sup>superscript</sup>',
                '@sub{subscript}': '<sub>subscript</sub>',
-               '@greek{alpha}': '&alpha;',
+               '@symbol{alpha}': '&alpha;',
                }
 
     # The following root tags have to be stripped for the html strings
@@ -36,7 +36,7 @@ def test_tex():
                '@i{italics}': '\\textit{italics}',
                '@sup{superscript}': '\\ensuremath{^{superscript}}',
                '@sub{subscript}': '\\ensuremath{_{subscript}}',
-               '@greek{alpha}': '\\ensuremath{\\alpha}',
+               '@symbol{alpha}': '\\ensuremath{\\alpha}',
                }
 
     # Generate a tag for each and compare the generated tex to the answer key

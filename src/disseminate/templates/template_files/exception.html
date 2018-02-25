@@ -70,31 +70,31 @@
       <line x1="12" y1="8" x2="11" y2="12"></line>
       <line x1="11" y1="16" x2="11" y2="16" stroke-width="3.0"></line>
     </svg>
-    <span class="name">{{ name }}:</span><span class="description">{{ description}}</span>
-    <p>{{ exception }}</p>
+    <span class="name">(( name )):</span><span class="description">(( description ))</span>
+    <p>(( exception ))</p>
 
     <details>
       <summary><span class="details">Traceback</span></summary>
-      <pre>{{ traceback }}</pre>
+      <pre>(( traceback ))</pre>
     </details>
 
-    {% if exception.cmd %}
+    (% if exception.cmd %)
     <details>
       <summary><span class="details">Compilation Command</span></summary>
       <dl>
         <dt>command:</dt>
         <dd>
-          <pre>{{ exception.cmd }}</pre>
+          <pre>(( exception.cmd ))</pre>
         </dd>
         <dt>stdout:</dt>
         <dd>
-          <pre>{{ exception.shell_out }}</pre>
+          <pre>(( exception.shell_out ))</pre>
         </dd>
         <dt>stderr:</dt>
         <dd>
-          <pre>{{ exception.shell_err }}</pre>
+          <pre>(( exception.shell_err ))</pre>
         </dd>
-    {% endif %}
+    (% endif %)
   </div>
 </body>
 </html>

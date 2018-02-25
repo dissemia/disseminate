@@ -9,9 +9,9 @@ except ImportError:
     from yaml import Loader, Dumper
 
 
-re_header = regex.compile(r'[\s\n]*[\n]?-{3,}\n'
+re_header = regex.compile(r'^[\s\n]*[\n]?\s*-{3,}\n'
                           r'(?P<yaml>[^-]+)'
-                          r'\n-{3,}\n')
+                          r'\n\s*-{3,}\n')
 
 
 def load_yaml_header(s, local_context, global_context):

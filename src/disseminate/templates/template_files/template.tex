@@ -1,6 +1,5 @@
-{% block class %}\documentclass[12pt]{article}{% endblock %}
-
-{% block header %}
+(% block class %)\documentclass[12pt]{article}(% endblock %)
+(% block header %)
 %%%
 % Graphics
 \usepackage{graphicx}
@@ -12,16 +11,19 @@
 %%%
 % Symbols
 \renewcommand{\deg}{^\circ}
-
-{% endblock %}
-
-{% block extraheader %}
-{% endblock %}    
-
-{% if title %} \title{ {% if title_label %}{{ title_label }} {{ document_number }}. {% endif %}{{ title }} } {% endif %}
-{% if author %} \author{ {{ author }} } {% endif %}
-
+(% endblock %)
+(% block marginheader %)
+%%%
+% Extra shim environments for marginfig, figure, ... environments.
+\newenvironment{marginfigure}[1][]{%
+\begin{figure}}
+{\end{figure}}
+(% endblock %)
+(% block extraheader %)
+(% endblock %)
+(% if title %) \title{ (% if title_label %)(( title_label )) (( document_number )). (% endif %)(( title ))} (% endif %)
+(% if author %) \author{(( author ))} (% endif %)
 \begin{document}
-{% block title %}{% if title and author %}\maketitle{% endif %}{% endblock %}
-{{ body }}
+(% block title %)(% if title and author %)\maketitle(% endif %)(% endblock %)
+(( body ))
 \end{document}

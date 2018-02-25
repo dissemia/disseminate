@@ -43,6 +43,12 @@ compiled_exts = {'.pdf': '.tex',
 #: Template Defaults
 #: -----------------
 template_basename = 'template'
+template_block_start = '(%'
+template_block_end = '%)'
+template_variable_start = '(('
+template_variable_end = '))'
+template_comment_start = '(#'
+template_comment_end = '#)'
 
 #: Dependency Defaults
 #: -------------------

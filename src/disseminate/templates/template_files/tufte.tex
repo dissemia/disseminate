@@ -1,7 +1,7 @@
-{% extends "template.tex" %}
-{% block class %}\documentclass{tufte-book}{% endblock %}
-
-{% block extraheader %}
+(% extends "template.tex" %)
+(% block class %)\documentclass{tufte-book}(% endblock %)
+(% block marginheader %)(% endblock %)
+(% block extraheader %)
 %%%
 % Remove labels from captions  
 \usepackage{etoolbox}
@@ -11,9 +11,9 @@
   {}
   {}{}
 \makeatother
-{% endblock %}  
+(% endblock %)  
   
-{% block title %}
-{% if title %}\chapter{ {{ title }} }{% endif %}
-{% if title and document_number %}\setcounter{chapter}{ {{ document_number }} } {% endif %}
-{% endblock %}    
+(% block title %)
+(% if title %)\chapter{(( title ))}(% endif %)
+(% if title and document_number %)\setcounter{chapter}{(( document_number ))} (% endif %)
+(% endblock %)    

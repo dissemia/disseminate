@@ -49,3 +49,35 @@ def test_yaml_header():
 
     # Check the correct rendering of the AST html
     assert processed_string == test
+
+
+def test_yaml_nonyaml():
+    """Test the parsing of a yaml header with a non-yaml like block in the
+    source."""
+
+    src = """
+    ---
+    title: yaml header
+    ---
+    
+    ---
+    type: non-parsed
+    ---
+    """
+
+    local_context = {}
+    global_context = {}
+
+    # Process the header
+    processed_string = load_yaml_header(src, local_context,
+                                        global_context)
+
+    # Check the contents  of the local_context
+    assert 'title' in local_context
+    assert local_context['title'] == 'yaml header'
+
+    assert processed_string == ("    \n"
+                                "    ---\n"
+                                "    type: non-parsed\n"
+                                "    ---\n"
+                                "    ")

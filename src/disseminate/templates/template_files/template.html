@@ -3,25 +3,25 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>{{ title }}</title>
-  {% if description %}<meta name="description" content="{{ description}}">{% endif %}
-  {% if author %}<meta name="author" content="{{ author }}">{% endif %}
-  {% block css %}
+  <title>(( title ))</title>
+  (% if description %)<meta name="description" content="(( description ))">(% endif %)
+  (% if author %)<meta name="author" content="(( author ))">(% endif %)
+  (% block css %)
   <link rel="stylesheet" href="/media/css/default.css">
-  {% endblock %}
+  (% endblock %)
 </head>
 <body>
   <article>
-    {% if title %}
+    (% if title %)
     <span class="title">
-      {% if title_label %}<span class="title-label">{{ title_label }} {{ document_number }}</span>{% endif %}
-      {{ title }}
+      (% if title_label %)<span class="title-label">(( title_label )) (( document_number ))</span>(% endif %)
+      (( title ))
     </span>
-    {% endif %}
-    {% if author %}<span class="author">{{ author }}</span>{% endif %}
-    {% block body %}
-    {{ body|safe }}
-    {% endblock %}
+    (% endif %)
+    (% if author %)<span class="author">(( author ))</span>(% endif %)
+    (% block body %)
+    (( body|safe ))
+    (% endblock %)
   </article>
 </body>
 </html>
