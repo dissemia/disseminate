@@ -43,7 +43,8 @@ h3 {
     display: block;
     font-size: 1.2rem;
     margin-top: 1.0rem;
-    marbin-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+    font-style: italic;
     font-weight: 400;
 }
 
