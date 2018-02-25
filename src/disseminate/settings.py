@@ -42,7 +42,12 @@ compiled_exts = {'.pdf': '.tex',
 
 #: Template Defaults
 #: -----------------
+
+#: default basename for a template file
 template_basename = 'template'
+
+#: modifiers for Jinja2 blocks, variables and comments. Parentheses are used
+#: instead of the default curly braces to more easily work with latex formats.
 template_block_start = '(%'
 template_block_end = '%)'
 template_variable_start = '(('
