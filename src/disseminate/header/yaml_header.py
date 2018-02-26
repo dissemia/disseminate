@@ -8,6 +8,8 @@ try:
 except ImportError:
     from yaml import Loader, Dumper
 
+from ..utils.string import Metastring
+
 
 re_header = regex.compile(r'^[\s\n]*[\n]?\s*-{3,}\n'
                           r'(?P<yaml>[^-]+)'
@@ -33,6 +35,8 @@ def load_yaml_header(s, local_context, global_context):
     processed_string : str
         A string with the header removed.
     """
+    # Initialize the metastring dict
+    meta = s.__dict__ if hasattr(s, '__dict__') else dict()
 
     m = re_header.match(s)
     if m:
@@ -40,8 +44,18 @@ def load_yaml_header(s, local_context, global_context):
         header = load(header_str, Loader=Loader)
         local_context.update(header)
 
-        # Advance the string by the amount of the header
-        _, end = m.span()
-        s = s[end:]
+        # Determine the start and end position of the header
+        start, end = m.span()
+
+        # Determine the number of new lines skipped and add it to the meta
+        # dict for the metastring
+        header_str = s[start:end]
+        meta['line_offset'] = (meta.setdefault('line_offset', 1) +
+                               header_str.count('\n'))
+        print(repr(header_str))
+
+        # Advance the string by the amount of the header. Add the line_offset
+        # Metainformation
+        s = Metastring(s[end:], **meta)
 
     return s

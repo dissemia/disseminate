@@ -54,7 +54,8 @@ class Document(object):
         A list of functions to process the string before conversion to the
         AST. These functions are executed in sequence and simply accept the
         string, local_context and global_context as arguments and return a
-        processed string.
+        processed string. The processed string can either be a 'str' or a
+        'Metastring' with additional meta information.
 
         .. note:: String processors are run asynchronously, and the
                   local_context and global_context dicts may not be fully

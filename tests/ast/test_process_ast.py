@@ -5,7 +5,6 @@ import pytest
 import lxml.html
 
 from disseminate.ast import process_ast
-from disseminate.ast.validate import ParseError
 from disseminate.tags import Tag
 
 
@@ -49,15 +48,6 @@ test_html = """<span class="root">
     Here is a new paragraph.</span>
 """
 
-test_invalid = """
-    This is my test document. It has multiple paragraphs.
-
-    Here is a new one with @b{bolded} text as an example.
-    @marginfigtag[offset=-1.0em]{
-      @imgtag{media/files}
-      @caption{This is my @i{first} figure.}
-"""
-
 test_header = """
 ---
 title: My first title
@@ -73,7 +63,7 @@ def test_ast_basic_string():
     test_pieces = test.splitlines()
 
     # Check the AST piece-by-piece
-    assert isinstance(ast, Tag) and ast.name == 'root' # root tag
+    assert isinstance(ast, Tag) and ast.name == 'root'  # root tag
 
     content = ast.content
 
@@ -112,19 +102,6 @@ def test_ast_basic_string():
     assert isinstance(ast, Tag) and ast.name == 'root'  # root tag
     assert isinstance(ast.content, str)
     assert ast.content == 'test'
-
-
-def test_ast_validation():
-    """Test the correct validation when parsing an AST."""
-
-    # Process a string with an open tag
-    with pytest.raises(ParseError) as e:
-        ast = process_ast([test_invalid])
-
-    # The error should pop up in line 4
-    assert "line 4" in str(e.value)
-
-    # Validate closing bracket
 
 
 def test_default_conversion():

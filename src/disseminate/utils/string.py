@@ -34,3 +34,23 @@ def find_basestring(strings):
         base_found = all(i.startswith(base) for i in strings)
 
     return base
+
+
+class Metastring(str):
+    """A string class that holds metadata.
+
+    Examples
+    --------
+    >>> s = Metastring('test', line_offset=3)
+    >>> print(s)
+    test
+    >>> print(hasattr(s, 'line_offset'))
+    True
+    >>> print(s.line_offset)
+    3
+    """
+    def __new__(cls, content, **kwargs):
+        new_str = super(Metastring, cls).__new__(cls, content)
+        new_str.__dict__.update(kwargs)
+        return new_str
+

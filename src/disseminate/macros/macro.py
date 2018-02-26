@@ -4,9 +4,10 @@ Macros are special markup for inserting one or a series of tags in the AST.
 import regex
 
 from .science import *
+from ..utils.string import Metastring
 
 
-re_macro = regex.compile(r"(?P<macro>@\w+)(?=\s*[^{\w])")
+re_macro = regex.compile(r"(?P<macro>@\w+)(?=\s*[^{\[\w])")
 
 
 #: The following are macros defined by this submodule
@@ -36,7 +37,16 @@ def replace_macros(s, local_context, global_context):
     -------
     processed_string : str
         A string with the macros replaced.
+
+    Raises
+    ------
+    MacroNotFound
+        Raises a MacroNotFound exception if a macro was included, but it could
+        not be found.
     """
+    # Initialize the metastring dict
+    meta = s.__dict__ if hasattr(s, '__dict__') else dict()
+
     # Initialize the macros to be used
     macros = dict()
 
@@ -64,7 +74,7 @@ def replace_macros(s, local_context, global_context):
     # See if the local_context already has a dict of macros. These will
     # potentially overwrite the submodule_macros and global_macros
     if ('macros' in local_context and
-        isinstance(local_context['macros'], dict)):
+       isinstance(local_context['macros'], dict)):
 
         macros.update(local_context['macros'])
 
@@ -74,4 +84,5 @@ def replace_macros(s, local_context, global_context):
         return (macros[macro_name] if macro_name in macros else
                 macro_name)
 
-    return re_macro.sub(_substitute, s)
+    # Return a metastring with the macros substituted
+    return Metastring(re_macro.sub(_substitute, s), **meta)
