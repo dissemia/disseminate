@@ -5,6 +5,7 @@ import regex
 
 from ..tags import TagFactory, Tag
 from .validate import ASTValidator
+from ..utils.string import Metastring
 from . import settings
 
 
@@ -86,7 +87,7 @@ def process_ast(ast=None, local_context=None, global_context=None,
         (settings.ast_max_depth). This is an attempt to foil the Billion Laughs
         attack.
     """
-    # Get the line_offset, if available.
+    # Get the line_offset, if available, and set the LineNumber
     if isinstance(ast, list) and len(ast) > 0 and isinstance(ast[0], str):
         meta = ast[0].__dict__ if hasattr(ast[0], '__dict__') else dict()
         line_offset = meta['line_offset'] if 'line_offset' in meta else 1
@@ -104,7 +105,6 @@ def process_ast(ast=None, local_context=None, global_context=None,
 
     # Setup the parsing
     factory = TagFactory()
-    validator = ASTValidator(src_filepath=src_filepath, line_no=line_offset)
 
     # Create the root ast. The passed argument can either be a list, or a
     # Tag for an already parsed root Tag
@@ -141,11 +141,7 @@ def process_ast(ast=None, local_context=None, global_context=None,
             # Find the string up to this match and find the current line number
             string = s[current_pos:start]
 
-            # Validate the string and match to make sure there are no errors.
-            print("string:", repr(string), "m.group():", m.group())
-            validator.validate(string, m)
-
-            # Add the validated string to the ast
+            # Add the validated string to the ast and increment the line number
             new_ast.append(string)
 
             # Reset the current position to the end of this match
@@ -157,7 +153,6 @@ def process_ast(ast=None, local_context=None, global_context=None,
             # If the content is None, then a macro is matched. Simply return
             # it as a string. A macro is a tag without curly braces.
             # (ex: 'my @tag.')
-
             if d['content'] is None:
                 new_ast.append(m.group())
                 continue
@@ -181,18 +176,21 @@ def process_ast(ast=None, local_context=None, global_context=None,
 
         # Add the end of the string, if it's valid
         string = s[current_pos:]
-        validator.validate(string, None)
         if isinstance(i, Tag):
             i.content = string
             new_ast.append(i)
         else:
             new_ast.append(string)
 
-    # Join contiguous strings. This is done to clean up the output new_ast
-    # and keep it consistent between successive runs of process_ast.
-    new_ast = join_strings(new_ast)
-
     if level == 1:  # root level
+        # If this is the root tag, validate the ast
+        #validator = ASTValidator(src_filepath=src_filepath)
+        #alidator.validate(new_ast)
+
+        # Join contiguous strings. This is done to clean up the output new_ast
+        # and keep it consistent between successive runs of process_ast.
+        new_ast = join_strings(new_ast)
+
         root = factory.tag(tag_name='root',
                            tag_content=new_ast,
                            tag_attributes=None,
@@ -200,4 +198,8 @@ def process_ast(ast=None, local_context=None, global_context=None,
                            global_context=global_context)
         return root
     else:
+        # Join contiguous strings. This is done to clean up the output new_ast
+        # and keep it consistent between successive runs of process_ast.
+        new_ast = join_strings(new_ast)
+
         return new_ast

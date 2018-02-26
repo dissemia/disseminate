@@ -11,38 +11,27 @@ class ParseError(Exception):
 class ASTValidator:
     """A class to validate ASTs as they're being processed."""
 
-    def __init__(self, src_filepath, line_no=1):
+    def __init__(self, src_filepath):
         self.src_filepath = src_filepath
-        self.line_no = line_no
 
-    def validate(self, string, match=None):
+    def validate(self, ast):
         """Validate unmatched strings and regex matches."""
-        # Get a list of all available validate_methods
+
         validate_methods = [getattr(self, i) for i in dir(self)
                             if i.startswith("validate_")]
 
         # Run the validations. If any return a string instead of True, raise
         # a ParseError exception
         for method in validate_methods:
-            return_value = method(string, match)
+            return_value = method(ast)
             if isinstance(return_value, str):
                 raise ParseError(return_value)
 
-        # increment the line numbers from the unmatched string
-        self.line_no += string.count("\n")
+    _opentag = regex.compile(r'(@(?P<tag>[A-Za-z]\w*)'
+                               r'(?P<attributes>\[[^\]]+\])?'
+                               r'{)')
 
-        # increment the line numbers from the regex match
-        if match:
-            matched_string = match.string[slice(*match.span())]
-            self.line_no += matched_string.count("\n")
-
-        return True
-
-    _e_opentag = regex.compile(r'(@(?P<tag>[A-Za-z]\w*)'
-                              r'(?P<attributes>\[[^\]]+\])?'
-                              r'{)')
-
-    def validate_closed_tags(self, string, match=None):
+    def validate_closed_tags(self, ast):
         """Validates that all tags are closed in a given string.
 
         Parameters
@@ -57,28 +46,41 @@ class ASTValidator:
             If a msg is returned, then the validation didn't pass. The msg
             is an error message.
         """
+        for i in ast:
+            print("{}: {}".format(type(i), i))
+            if isinstance(i, str) and self._opentag.search(i):
+                line_no = getattr(i, 'line_no', None)
+                if line_no:
+                    msg = "Tag not closed on line {}: {}".format(line_no, i)
+                else:
+                    msg = "Tag not closed: {}".format(i)
+
+                return msg
+
+        return True
+
         # Look for malformed tags (i.e. tags with open curly brackets)
-        m = self._e_opentag.search(string)
-        if m:
-            # Get the problematic string
-            match_positions = m.span()
-            problem_string = string[slice(*match_positions)]
-
-            # Find its line number
-            self.line_no += problem_string.count("\n")
-
-            # Return the error message
-            if isinstance(self.src_filepath, str):
-                msg = "({}) Tag not closed on line {}: {}"
-                msg = msg.format(self.src_filepath, self.line_no,
-                                 problem_string)
-            else:
-                msg = "Tag not closed on line {}: {}"
-                msg = msg.format(self.line_no, problem_string)
-
-            return msg
-        else:
-            return True
+    #     m = self._e_opentag.search(string)
+    #     if m:
+    #         # Get the problematic string
+    #         match_positions = m.span()
+    #         problem_string = string[slice(*match_positions)]
+    #
+    #         # Find its line number
+    #         self.line_no += problem_string.count("\n")
+    #
+    #         # Return the error message
+    #         if isinstance(self.src_filepath, str):
+    #             msg = "({}) Tag not closed on line {}: {}"
+    #             msg = msg.format(self.src_filepath, self.line_no,
+    #                              problem_string)
+    #         else:
+    #             msg = "Tag not closed on line {}: {}"
+    #             msg = msg.format(self.line_no, problem_string)
+    #
+    #         return msg
+    #     else:
+    #         return True
 
     # e_openattr = regex.compile(r'(@(?P<tag>[A-Za-z]\w*)'
     #                            r'(?P<attributes>\[[^\]]+\]))')
