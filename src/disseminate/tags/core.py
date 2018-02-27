@@ -65,20 +65,31 @@ class Tag(object):
     """A tag to format text in the markup document.
 
     .. note:: Tags are created asynchroneously, so the creation of a tag
-              should not read and depend on the `local_context` or
+              should not depend on the `local_context` of other tags or
               `global_context`. These will only be partially populated at
-              creation time. Only the target specific methods (html, tex, ...)
-              should return new tags that depend on these contexts.
+              creation time. The target specific methods (html, tex, ...), by
+              contrast, may depend on local_context and global_context
+              attributes populated by other tags.
 
-    Attributes
+    Parameters
     ----------
     name : str
         The name of the tag as used in the disseminate source. (ex: 'body')
     content : None or str or list
         The contents of the tag. It can either be None, a string, or a list
         of tags and strings. (i.e. a sub-ast)
-    attributes : list of tuples
+    attributes : tuple of tuples or strings
         The attributes of the tag.
+    local_context : dict
+        The context with values for the current document. The values in this
+        dict do not depend on values from other documents. (local)
+    global_context : dict
+        The context with values for all documents in a project. The
+        `global_context` is constructed with the `src_filepath` as a key and
+        the `local_context` as a value.
+
+    Attributes
+    ----------
     aliases : list of str
         A list of strs for other names a tag goes by
     html_name : str
@@ -92,32 +103,25 @@ class Tag(object):
     include_paragraphs : bool
         If True, then the contents of this tag can include paragraphs.
         See :func:`disseminate.ast.process_paragraphs`.
-    local_context : dict
-        The context with values for the current document. The values in this
-        dict do not depend on values from other documents. (local)
-    global_context : dict
-        The context with values for all documents in a project. The
-        `global_context` is constructed with the `src_filepath` as a key and
-        the `local_context` as a value.
+    line_number : int or None
+        The corresponding starting line number in the source file for the
+        tag. This is useful for error messages and it is set when the AST is
+        processed.
     """
 
     name = None
     content = None
     attributes = None
-    aliases = None
-
-    html_name = None
-    tex_name = None
-
     local_context = None
     global_context = None
 
+    aliases = None
+    html_name = None
+    tex_name = None
+
     active = False
     include_paragraphs = False
-
-    process_ast = None # takes target, returns a tag or list of tags.
-
-    html_required_attributes = None
+    line_number = None
 
     def __init__(self, name, content, attributes, local_context,
                  global_context):

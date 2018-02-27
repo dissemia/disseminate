@@ -4,7 +4,85 @@ Test the ASTValidator.
 import pytest
 
 from disseminate.ast import process_ast
-from disseminate.ast.validate import ParseError
+from disseminate.ast.validate import ValidateAndCleanAST, ParseError
+from disseminate.tags import Tag
+
+
+def test_join_strings():
+    """Test the join_string method of the ValidateAndCleanAST class."""
+
+    validate = ValidateAndCleanAST()
+
+    # Try simple flat lists
+    assert validate.join_strings(['a', 'b', 5, 'c', 'd']) == ['ab', 5, 'cd']
+    assert validate.join_strings([1, 2, 3, 4]) == [1, 2, 3, 4]
+
+    # Try nested lists
+    assert (validate.join_strings(['a', 'b', [1, 2, 3], 'c', 'd']) ==
+            ['ab',[1, 2, 3], 'cd'])
+    assert (validate.join_strings(['a', 'b', [1, 'c', 'd'], 'e', 'f']) ==
+            ['ab', [1, 'cd'], 'ef'])
+
+    # Try with tags non-nested tag
+    tag = Tag(name='tag', content='test', attributes=(),
+              local_context=dict(), global_context=dict())
+    assert (validate.join_strings(['a', 'b', tag, 'c', 'd']) ==
+            ['ab', tag, 'cd'])
+
+    # Try with nested tags
+    tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(),
+              local_context=dict(), global_context=dict())
+    assert (validate.join_strings(tag) == tag)
+    assert tag.content == [1, 'cd']
+
+    tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(),
+              local_context=dict(), global_context=dict())
+    assert (validate.join_strings([tag]) == [tag])
+    assert tag.content == [1, 'cd']
+
+    tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(),
+              local_context=dict(), global_context=dict())
+    assert (validate.join_strings(['a', 'b', tag, 'c', 'd']) ==
+            ['ab', tag, 'cd'])
+    assert tag.content == [1, 'cd']
+
+    tag1 = Tag(name='tag', content=[1, 'c', 'd'], attributes=(),
+               local_context=dict(), global_context=dict())
+    tag2 = Tag(name='tag', content=[tag1, 'c', 'd'], attributes=(),
+               local_context=dict(), global_context=dict())
+    assert (validate.join_strings(['a', 'b', tag2, 'c', 'd']) ==
+            ['ab', tag2, 'cd'])
+    assert tag1.content == [1, 'cd']
+    assert tag2.content == [tag1, 'cd']
+
+
+def test_ast_count():
+    """Test the assignment of line_numbers in tags."""
+
+    # Setup a test source string
+    test = """
+    This is my test document. It has multiple paragraphs.
+
+    Here is a new one with @b{bolded} text as an example.
+    @marginfigtag[offset=-1.0em]{
+      @imgtag{media/files}
+      @captiontag{This is my @i{first} figure.}
+    }
+
+    This is a @13C variable, but this is an email address: justin@lorieau.com
+
+    Here is a @i{new} paragraph."""
+
+    # Parse it
+    ast = process_ast([test],)
+
+    # Check the line numbers of tags.
+    assert ast[1].line_number == 4  # @b tag
+    assert ast[3].line_number == 5  # @marginfigtag
+    assert ast[3][1].line_number == 6  # @imgtag
+    assert ast[3][3].line_number == 7  # @captiontag
+    assert ast[3][3][1].line_number == 7  # @i tag
+    assert ast[5].line_number == 12  # @i tag
 
 
 def test_ast_validation():
@@ -22,9 +100,6 @@ def test_ast_validation():
     # Process a string with an open tag
     with pytest.raises(ParseError) as e:
         ast = process_ast([test_invalid])
-        print(process_ast(ast))
 
     # The error should pop up in line 4
-    assert "line 4" in str(e.value)
-
-    # Validate closing bracket
+    assert "line 5" in str(e.value)

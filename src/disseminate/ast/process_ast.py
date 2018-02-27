@@ -4,8 +4,7 @@ Functions for processing Abstract Syntax Trees (ASTs).
 import regex
 
 from ..tags import TagFactory, Tag
-from .validate import ASTValidator
-from ..utils.string import Metastring
+from .validate import ValidateAndCleanAST
 from . import settings
 
 
@@ -20,34 +19,6 @@ control_char = r'@'
 re_tag = regex.compile(r'(@(?P<tag>[A-Za-z][\w]*)'
                        r'(?P<attributes>\[[^\]]+\])?'
                        r'({(?P<content>(?>[^{}@]+|(?R))*)})?)')
-
-
-def join_strings(l):
-    """Join consecutive strings in a list.
-
-    Examples
-    --------
-    >>> join_strings(['a', 'b', 3, 'c', 'd'])
-    ['ab', 3, 'cd']
-    """
-    new_list = []
-
-    for i in l:
-        # Simply add the element to the new list if:
-        #  1. The element isn't a string,
-        #  2. There are not elements in the new_list already, or
-        #  3. The previous element wasn't a string
-        if (not isinstance(i, str) or
-           len(new_list) == 0 or
-           not isinstance(new_list[-1], str)):
-
-            new_list.append(i)
-        else:
-            # In this case, element 'i' is a str and the previous element is a
-            # str. Join them.
-            new_list[-1] += i
-
-    return new_list
 
 
 def process_ast(ast=None, local_context=None, global_context=None,
@@ -183,13 +154,10 @@ def process_ast(ast=None, local_context=None, global_context=None,
             new_ast.append(string)
 
     if level == 1:  # root level
-        # If this is the root tag, validate the ast
-        #validator = ASTValidator(src_filepath=src_filepath)
-        #alidator.validate(new_ast)
-
-        # Join contiguous strings. This is done to clean up the output new_ast
-        # and keep it consistent between successive runs of process_ast.
-        new_ast = join_strings(new_ast)
+        # If this is the root tag, validate and clean the ast
+        validator = ValidateAndCleanAST(name=src_filepath,
+                                        line_offset=line_offset)
+        new_ast = validator.validate(new_ast)
 
         root = factory.tag(tag_name='root',
                            tag_content=new_ast,
@@ -198,8 +166,4 @@ def process_ast(ast=None, local_context=None, global_context=None,
                            global_context=global_context)
         return root
     else:
-        # Join contiguous strings. This is done to clean up the output new_ast
-        # and keep it consistent between successive runs of process_ast.
-        new_ast = join_strings(new_ast)
-
         return new_ast
