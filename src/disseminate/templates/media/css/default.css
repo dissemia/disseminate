@@ -38,6 +38,10 @@ img {
     margin: 0 0.2rem;
 }
 
+sub,sup {
+    font-size: 70%;
+}
+
 .title {
     display: block;
     font-size: 1.8rem;
@@ -60,3 +64,11 @@ img {
     padding: 0 0 1.5rem 0;
 }
     
+.supsub {
+   display: inline-block;
+   margin: -9em 0;
+   vertical-align: -0.3em;
+   line-height: 0.75em;
+   font-size: 70%;
+   text-align: left;
+}

@@ -4,6 +4,7 @@ Text formatting tags
 from textwrap import wrap
 
 from lxml.etree import Entity
+from lxml.builder import E
 
 from .core import Tag, TagError
 from . import settings
@@ -79,6 +80,47 @@ class Sub(Tag):
             elements = None
 
         return "\\ensuremath{_{" + elements + "}}"
+
+
+class Supsub(Tag):
+    """A superscript/subscript tag, together, that displays them one on top of
+    the other.
+
+    The content of the tag consists of two elements separated by a '&&'
+    character. ex: @supsub{superscript && subscript}
+    """
+    include_paragraphs = False
+    active = True
+
+    _sup = None
+    _sub = None
+
+    def __init__(self, *args, **kwargs):
+        super(Supsub, self).__init__(*args, **kwargs)
+
+        # Raise a TagError if this tag is nested."""
+        if not isinstance(self.content, str):
+            msg = "The @supsub tag cannot have tags nested within it."
+            raise TagError(msg)
+
+        # assert that the element separator, '&&', is in the contents
+        if self.content.count('&&') != 1:
+            msg = ("The @supsub tag must contain only one element '&&' element "
+                   "separator. ex: @supsub{{superscript && subscript}}. The "
+                   "tag given was: {}")
+            raise TagError(msg.format(self))
+
+        # Seperate the superscript and subscript
+        sup, sub = self.content.split('&&')
+        self._sup = sup.strip()
+        self._sub = sub.strip()
+
+    def html(self, level=1):
+        kwargs = {'class': 'supsub'}
+        return E('span', self._sup, E('br'), self._sub, **kwargs)
+
+    def tex(self, level=1):
+        return "\\ensuremath{^{" + self._sup +"}_{" + self._sub + "}}"
 
 
 class Symbol(Tag):

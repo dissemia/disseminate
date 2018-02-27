@@ -53,6 +53,6 @@ def test_process_ast_nested_macros():
     ast = process_ast([result], local_context=local_context,
                              global_context=global_context)
     assert ast.content[0] == 'My 90'
-    assert (ast.content[1].name, ast.content[1].content) == ('symbol', 'deg')
+    assert (ast.content[1].name, ast.content[1].content) == ('sup', '○')
     assert (ast.content[2].name, ast.content[2].content) == ('sub', 'x')
     assert ast.content[3] == ' pulse.'

@@ -16,7 +16,10 @@ macros_chemicals = {'@H2O': 'H@sub{2}O',
                     }
 
 # Symbols
-macros_symbols = {'@deg': '@symbol{deg}',
+# Note: The degree symbol is a superscript circle instead of a degree character
+# so that the @supsub tag can draw a degree symbol and the formatting is
+# consistent.
+macros_symbols = {'@deg': '@sup{○}',
                   }
 
 # Greek Symbols

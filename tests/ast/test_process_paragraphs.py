@@ -114,4 +114,4 @@ def test_process_paragraphs_macros():
 
     ast = process_paragraphs([result], local_context=local_context,
                              global_context=global_context)
-    assert ast.content.content == "My 90@symbol{deg}@sub{x} pulse."
+    assert ast.content.content == "My 90@sup{○}@sub{x} pulse."

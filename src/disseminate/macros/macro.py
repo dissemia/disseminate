@@ -7,7 +7,7 @@ from .science import *
 from ..utils.string import Metastring
 
 
-re_macro = regex.compile(r"(?P<macro>@\w+)(?=\s*[^{\[\w])")
+re_macro = regex.compile(r"(?P<macro>@\w+)(?=\s*([^{\[\w]|$))")
 
 
 #: The following are macros defined by this submodule
@@ -80,7 +80,7 @@ def replace_macros(s, local_context, global_context):
 
     # Replace the macros
     def _substitute(m):
-        macro_name = m.group()
+        macro_name = m.group();
         return (macros[macro_name] if macro_name in macros else
                 macro_name)
 

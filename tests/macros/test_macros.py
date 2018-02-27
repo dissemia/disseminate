@@ -41,6 +41,15 @@ def test_macros_basic():
     assert result == expected_result
 
 
+def test_macros_specific():
+    """Test specific macros."""
+
+    assert (replace_macros("90@deg", local_context={}, global_context={}) ==
+            '90@sup{○}')
+    assert (replace_macros("90@deg ", local_context={}, global_context={}) ==
+            '90@sup{○} ')
+
+
 def test_macros_multiple_substitutions():
     """Test multiple substitutions of macros."""
 
@@ -49,4 +58,4 @@ def test_macros_multiple_substitutions():
 
     result = replace_macros("My @p90x pulse.", local_context=local_context,
                             global_context=global_context)
-    assert result == "My 90@symbol{deg}@sub{x} pulse."
+    assert result == "My 90@sup{○}@sub{x} pulse."
