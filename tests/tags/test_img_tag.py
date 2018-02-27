@@ -23,7 +23,7 @@ def test_img_attribute(tmpdir):
     root = process_ast([src], local_context=local_context,
                        global_context=global_context)
 
-    img = root.content[1]
+    img = root.content
     assert img.name == 'img'
     assert img.attributes == (('width', '100'),)
 
@@ -44,8 +44,8 @@ def test_img_html(tmpdir):
     html = '<img src="/sample.svg"/>'  # create an svg by default
 
     # The following root tags have to be stripped for the html strings
-    root_start = '<span class="root">'
-    root_end = '</span>\n'
+    root_start = '<span class="root">\n  '
+    root_end = '\n</span>\n'
 
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast([src], local_context=local_context,
@@ -66,8 +66,8 @@ def test_img_html(tmpdir):
     html = '<img width="100" src="/sample.svg"/>'  # create an svg by default
 
     # The following root tags have to be stripped for the html strings
-    root_start = '<span class="root">'
-    root_end = '</span>\n'
+    root_start = '<span class="root">\n  '
+    root_end = '\n</span>\n'
 
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast([src], local_context=local_context,

@@ -2,8 +2,6 @@
 from disseminate.ast import process_ast
 from disseminate.tags.text import P
 
-from disseminate.tags import settings
-
 
 def test_html():
     """Test the text formatting tags into html."""
@@ -12,7 +10,21 @@ def test_html():
                '@i{italics}': '<i>italics</i>',
                '@sup{superscript}': '<sup>superscript</sup>',
                '@sub{subscript}': '<sub>subscript</sub>',
-               '@symbol{alpha}': '&alpha;',
+               }
+
+    # The following root tags have to be stripped for the html strings
+    root_start = '<span class="root">\n  '
+    root_end = '\n</span>\n'
+
+    # Generate a tag for each and compare the generated html to the answer key
+    for src, html in markups.items():
+        root = process_ast([src])
+        # Remove the root tag
+        root_html = root.html()[len(root_start):]  # strip the start
+        root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
+        assert root_html == html
+
+    markups = {'@symbol{alpha}': '&alpha;',
                }
 
     # The following root tags have to be stripped for the html strings
@@ -22,12 +34,10 @@ def test_html():
     # Generate a tag for each and compare the generated html to the answer key
     for src, html in markups.items():
         root = process_ast([src])
-
         # Remove the root tag
         root_html = root.html()[len(root_start):]  # strip the start
         root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
         assert root_html == html
-
 
 def test_tex():
     """Test the text formatting tags in tex."""

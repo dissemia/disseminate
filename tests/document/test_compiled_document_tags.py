@@ -26,7 +26,7 @@ def test_compiled_document_marginfig(tmpdir):
     for template in ('template', 'tufte',):
         # Write the source
         src_filepath.write(src.format(template=template))
-        print(src.format(template=template))
+
         # Create the compiled document
         doc = CompiledDocument(src_filepath=str(src_filepath),
                                targets=targets, global_context=None)

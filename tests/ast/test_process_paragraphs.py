@@ -2,6 +2,7 @@
 Test the proces_paragraphs function.
 """
 from disseminate.ast import process_ast, process_paragraphs
+from disseminate.macros import replace_macros
 from disseminate.tags.text import P
 
 
@@ -99,3 +100,18 @@ def test_process_paragraphs_edgecases():
     assert ast.content.name == 'p'
     assert ast.content.content == 'basic'
     assert ast.tex() == '\nbasic\n'
+
+
+def test_process_paragraphs_macros():
+    """Test the process_paragraphs function with macros."""
+
+    # setup a test ast with a macro
+    local_context = {'macros': {'@p90x': '90@deg@sub{x}'}}
+    global_context = {}
+
+    result = replace_macros("My @p90x pulse.", local_context=local_context,
+                            global_context=global_context)
+
+    ast = process_paragraphs([result], local_context=local_context,
+                             global_context=global_context)
+    assert ast.content.content == "My 90@symbol{deg}@sub{x} pulse."

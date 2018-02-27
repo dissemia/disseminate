@@ -14,8 +14,8 @@ def test_asy_html(tmpdir):
     target_root = str(tmpdir)
 
     # The following root tags have to be stripped for the html strings
-    root_start = '<span class="root">'
-    root_end = '</span>\n'
+    root_start = '<span class="root">\n  '
+    root_end = '\n</span>\n'
 
     # First, we'll test the case when asy code is used directly in the tag.
     # We will not use a document_src_filepath in the global_context, since
@@ -122,8 +122,8 @@ def test_asy_html_attribute(tmpdir):
                        global_context=global_context)
 
     # The following root tags have to be stripped for the html strings
-    root_start = '<span class="root">'
-    root_end = '</span>\n'
+    root_start = '<span class="root">\n  '
+    root_end = '\n</span>\n'
 
     # Remove the root tag
     root_html = root.html()[len(root_start):]  # strip the start

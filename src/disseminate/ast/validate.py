@@ -118,6 +118,7 @@ class ValidateAndCleanAST:
             return ast
 
         for i in source_ast:
+
             if isinstance(i, Tag):
                 new_ast.append(self.join_strings(i))
 
@@ -127,6 +128,11 @@ class ValidateAndCleanAST:
             elif isinstance(i, str):
                 # strings either need to be added to the last element, if that
                 # is a string also, or it is simply added to the ast.
+
+                # Skip empty strings.
+                if not i:
+                    continue
+
                 if len(new_ast) > 0 and isinstance(new_ast[-1], str):
                     new_ast[-1] += i
                 else:

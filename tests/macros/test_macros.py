@@ -33,9 +33,20 @@ expected_result = """
     Here is a new paragraph."""
 
 
-def test_basic_macros():
+def test_macros_basic():
     """Basic tests of macros."""
 
     result = replace_macros(test, local_context={}, global_context={})
 
     assert result == expected_result
+
+
+def test_macros_multiple_substitutions():
+    """Test multiple substitutions of macros."""
+
+    local_context = {'macros': {'@p90x': '90@deg@sub{x}'}}
+    global_context = {}
+
+    result = replace_macros("My @p90x pulse.", local_context=local_context,
+                            global_context=global_context)
+    assert result == "My 90@symbol{deg}@sub{x} pulse."

@@ -17,8 +17,8 @@ def test_html():
                }
 
     # The following root tags have to be stripped for the html strings
-    root_start = '<span class="root">'
-    root_end = '</span>\n'
+    root_start = '<span class="root">\n  '
+    root_end = '\n</span>\n'
 
     # Generate a tag for each and compare the generated html to the answer key
     for src, html in markups.items():

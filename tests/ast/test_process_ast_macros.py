@@ -36,10 +36,23 @@ def test_process_ast_basic_macros():
         pulse rotates the magnetization with a phase of `x'.}"""
 
     s = replace_macros(test2, local_context, global_context)
-    print("macro parsed:", repr(s))
     ast = process_ast([s], local_context, global_context)
 
     # Make sure the sidenote tag is in the ast
     assert ast.content[1].name == 'sidenote'
 
-    #local_context.update({'macros': {'@p90', '90@deg'}})
+
+def test_process_ast_nested_macros():
+    """Test the process_ast with a nested macros."""
+
+    local_context = {'macros': {'@p90x': '90@deg@sub{x}'}}
+    global_context = {}
+
+    result = replace_macros("My @p90x pulse.", local_context=local_context,
+                            global_context=global_context)
+    ast = process_ast([result], local_context=local_context,
+                             global_context=global_context)
+    assert ast.content[0] == 'My 90'
+    assert (ast.content[1].name, ast.content[1].content) == ('symbol', 'deg')
+    assert (ast.content[2].name, ast.content[2].content) == ('sub', 'x')
+    assert ast.content[3] == ' pulse.'

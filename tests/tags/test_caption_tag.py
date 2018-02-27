@@ -25,10 +25,10 @@ def test_naked_caption():
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast([src], global_context=global_context)
 
-    img = root.content[1]
-    assert img.name == 'caption'
-    assert img.attributes == tuple()
-    assert img.content == 'This is my caption'
+    caption = root.content
+    assert caption.name == 'caption'
+    assert caption.attributes == tuple()
+    assert caption.content == 'This is my caption'
 
     # Naked captions do not register labels
     assert len(label_man.labels) == 0
@@ -52,7 +52,7 @@ def test_figure_caption_no_id():
     root = process_ast([src], local_context=local_context,
                        global_context=global_context)
 
-    fig = root.content[1]
+    fig = root.content
     assert fig.name == 'marginfig'
     assert fig.attributes == tuple()
 
@@ -94,19 +94,19 @@ def test_figure_caption_no_id_html():
 
     # Test the caption's html
     # The following root tags have to be stripped for the html strings
-    root_start = '<span class="root">'
-    root_end = '</span>\n'
+    root_start = '<span class="root">\n  '
+    root_end = '\n</span>\n'
 
     root_html = root.html()
     # Remove the root tag
     root_html = root_html[len(root_start):]  # strip the start
     root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
 
-    assert root_html == ('<span class="marginfig">'
-                         '<span class="caption">'
+    assert root_html == ('<span class="marginfig">\n'
+                         '    <span class="caption">'
                          'Fig. 1. This is my caption'
                          '</span>'
-                         '</span>')
+                         '\n  </span>')
 
 
 def test_figure_caption_no_id_tex():
@@ -154,7 +154,7 @@ def test_figure_caption_with_id():
         root = process_ast([src], local_context=local_context,
                            global_context=global_context)
 
-        fig = root.content[1]
+        fig = root.content
         assert fig.name == 'marginfig'
 
         # Get the caption
@@ -205,17 +205,17 @@ def test_figure_caption_with_id_html():
         root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
 
         if count == 0:
-            assert root_html == ('<span id="fig-1" class="marginfig">'
-                                 '<span class="caption">'
+            assert root_html == ('\n  <span id="fig-1" class="marginfig">\n'
+                                 '    <span class="caption">'
                                  'Fig. 1. This is my caption'
-                                 '</span>'
-                                 '</span>')
+                                 '</span>\n'
+                                 '  </span>\n')
         elif count == 1:
-            assert root_html == ('<span class="marginfig">'
-                                 '<span id="fig-1" class="caption">'
+            assert root_html == ('\n  <span class="marginfig">\n'
+                                 '    <span id="fig-1" class="caption">'
                                  'Fig. 1. This is my caption'
-                                 '</span>'
-                                 '</span>')
+                                 '</span>\n'
+                                 '  </span>\n')
 
 
 def test_figure_caption_with_id_tex():

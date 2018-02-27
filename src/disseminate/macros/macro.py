@@ -84,5 +84,12 @@ def replace_macros(s, local_context, global_context):
         return (macros[macro_name] if macro_name in macros else
                 macro_name)
 
-    # Return a metastring with the macros substituted
-    return Metastring(re_macro.sub(_substitute, s), **meta)
+    # Return a metastring with the macros substituted. Keep substituting until
+    # all macros are replaced or the string is no longer changing
+    s, num_subs = re_macro.subn(_substitute, s)
+    last_num_subs = 0
+    while num_subs > 0 and num_subs > last_num_subs:
+        last_num_subs = num_subs
+        s, num_subs = re_macro.subn(_substitute, s)
+
+    return Metastring(s, **meta)

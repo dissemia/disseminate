@@ -52,7 +52,6 @@ def load_yaml_header(s, local_context, global_context):
         header_str = s[start:end]
         meta['line_offset'] = (meta.setdefault('line_offset', 1) +
                                header_str.count('\n'))
-        print(repr(header_str))
 
         # Advance the string by the amount of the header. Add the line_offset
         # Metainformation

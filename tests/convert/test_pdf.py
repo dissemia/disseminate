@@ -173,7 +173,6 @@ def test_bad_pdflatex(tmpdir):
                 target_basefilepath=target_basepath,
                 targets=['.pdf'])
 
-    print(e)
     assert e.match("index1.tex")  # the intermediary file should be in error
     assert e.value.returncode != 0  # unsuccessful run
 
