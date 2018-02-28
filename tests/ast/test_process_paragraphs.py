@@ -4,6 +4,7 @@ Test the proces_paragraphs function.
 from disseminate.ast import process_ast, process_paragraphs
 from disseminate.macros import replace_macros
 from disseminate.tags.text import P
+from disseminate.tags.text import Bold
 
 
 test_paragraphs = """
@@ -35,6 +36,8 @@ My final paragraph.
 
 test_paragraphs2 = """
   @section{A heading with leading spaces}
+  
+  This is my paragraph.
 """
 
 
@@ -84,9 +87,10 @@ def test_process_paragraphs_leading_spaces():
 
     ast = process_ast([test_paragraphs2])
     ast = process_paragraphs(ast)
-
-    assert ast.content.name == 'section'
-    assert ast.content.content == 'A heading with leading spaces'
+    print(ast)
+    assert ast.content[0] == '  '
+    assert ast.content[1].name == 'section'
+    assert ast.content[2] == '  \n  This is my paragraph.'
 
 
 def test_process_paragraphs_edgecases():
@@ -111,7 +115,22 @@ def test_process_paragraphs_macros():
 
     result = replace_macros("My @p90x pulse.", local_context=local_context,
                             global_context=global_context)
-
     ast = process_paragraphs([result], local_context=local_context,
                              global_context=global_context)
     assert ast.content.content == "My 90@sup{○}@sub{x} pulse."
+
+    # Test paragraph processing with a macro and tag
+    result = replace_macros("My @b{y = x} @1H pulse.", local_context=local_context,
+                            global_context=global_context)
+    ast = process_paragraphs([result], local_context=local_context,
+                             global_context=global_context)
+    assert ast.name == 'root'
+    assert ast.content.name == 'p'
+    assert ast.content.content == 'My @b{y = x} @sup{1}H pulse.'
+
+    # Test paragraph processing after process_ast
+    ast = process_ast([result], local_context={}, global_context={})
+    print(ast)
+    ast = process_paragraphs(ast, local_context=local_context,
+                             global_context=global_context)
+    print(ast)

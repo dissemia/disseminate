@@ -6,6 +6,7 @@ Functions for processing paragraphs in Abstract Syntax Trees (ASTs).
 import regex
 
 from ..tags import TagFactory, Tag
+from ..tags.headings import Heading
 
 
 re_para = regex.compile(r'(\n{2,}|^)')
@@ -76,7 +77,7 @@ def process_paragraphs(ast=None, local_context=None, global_context=None,
             # Process a string item. It can either be a string with text or a
             # string with new lines.
 
-            if i.strip() == '':
+            if i.strip('\n') == '':
                 # If it's a string with just newlines, then this is the end of a
                 # paragraph. Process the collected items in cur_para, if there
                 # are items in it, and reset the cur_para. Otherwise, just skip
@@ -135,7 +136,6 @@ def process_paragraphs(ast=None, local_context=None, global_context=None,
 
     # After going through the split_ast, there may still be items in the
     # cur_para. Add these to the new_ast
-
     if cur_para:
         if len(cur_para) > 1 or isinstance(cur_para[0], str):
             p = factory.tag(tag_name='p',
@@ -146,6 +146,20 @@ def process_paragraphs(ast=None, local_context=None, global_context=None,
             new_ast.append(p)
         else:
             new_ast.append(cur_para[0])
+
+    # Now remove paragraphs for paragraphs that have items that are headings
+    # Headings should not be wrapped in paragraphs
+    reprocessed_ast = []
+    for i in new_ast:
+        if (getattr(i, 'name', None) == 'p' and
+           isinstance(i.content, list) and
+           any(isinstance(j, Heading) for j in i.content)):
+            # See if it's a paragraph whose contents contains Heading elements.
+            # If so, remove the paragraph.
+            reprocessed_ast.append(i.content)
+        else:
+            reprocessed_ast.append(i)
+    new_ast = reprocessed_ast
 
     # If this is the root ast, then wrap the new_ast in a root tag.
     if level == 1:  # root level

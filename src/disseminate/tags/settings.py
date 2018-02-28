@@ -26,7 +26,7 @@ html_valid_tags = {"a",
                    "ul"}
 
 html_valid_attributes = {'a': {'href',},
-                         'img': {'src', 'width', 'height'},
+                         'img': {'src', 'width', 'height', 'alt', 'class'},
                          }
 
 #: TEX Tags
@@ -45,7 +45,7 @@ tex_environments = {"enumerate",
                     "itemize",
                     "marginfigure"}
 
-tex_valid_attributes = {'img': {'width', 'height', 'alt'},
+tex_valid_attributes = {'img': {'width', 'height',},
                         'marginfig': {'offset'},
                         'caption': {},
                         }
@@ -53,3 +53,8 @@ tex_valid_attributes = {'img': {'width', 'height', 'alt'},
 #: Default text width to rewrap paragraphs. Set to 0 to disable.
 tex_paragraph_width = 80
 
+#: Equation Tags
+#: ~~~~~~~~~~~~~
+
+eq_svg_scale = 1.15
+eq_svg_crop = True

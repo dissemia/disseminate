@@ -55,3 +55,30 @@ def test_pdflatex(tmpdir):
     # See if the file was created
     assert target_filepath == str(tmpdir.join('valid.pdf'))
     assert tmpdir.join('valid.pdf').check()
+
+
+def test_tex2svg(tmpdir):
+    """Test the tex to svg converter."""
+
+    # write an invalid tex file
+    invalid_tex_file = tmpdir.join('invalid.tex')
+    invalid_tex_file.write(invalid_tex)
+
+    # Setup a target_filepath
+    target_basefilepath = tmpdir.join('invalid')
+
+    # write a valid tex file
+    valid_tex_file = tmpdir.join('valid.tex')
+    valid_tex_file.write(valid_tex)
+
+    # Setup a target_filepath
+    target_basefilepath = tmpdir.join('valid')
+
+    # Try a tex->svg run
+    target_filepath = convert(src_filepath=valid_tex_file,
+                              target_basefilepath=target_basefilepath,
+                              targets=['.svg'])
+
+    # See if the file was created
+    assert target_filepath == str(tmpdir.join('valid.svg'))
+    assert tmpdir.join('valid.svg').check()

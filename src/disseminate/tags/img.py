@@ -7,6 +7,7 @@ import hashlib
 from .core import Tag, TagError
 from ..attributes import set_attribute, format_tex_attributes
 from ..utils.file import mkdir_p
+from ..templates import get_template
 from .. import settings
 from . import settings as tag_settings
 
@@ -71,6 +72,7 @@ class Img(Tag):
 
         # Use the parent method to render the tag. However, the 'src' attribute
         # should be fixed first.
+
         self.attributes = set_attribute(self.attributes, ('src', url),
                                         method='r')
         return super(Img, self).html(level)
@@ -83,16 +85,25 @@ class RenderedImg(Img):
     .. note:: This class is not intended to be directly used as a tag. Rather,
               it is intended to be subclassed for other image types that need
               to be rendered first.
+
+    Attributes
+    ----------
+    template : str, optional
+        If specified, use this template to render the file. The contents of the
+        tag will be passed as the 'body' variable.
     """
 
     active = False
 
+    template = None
+
     def __init__(self, name, content, attributes,
-                 local_context, global_context, render_target):
+                 local_context, global_context, render_target, template=None):
+        self.template = template
         if isinstance(content, list):
             content = ''.join(content).strip()
         else:
-            content = self.content.strip()
+            content = content.strip()
 
         # Determine if contents is a file or code
         if os.path.isfile(content):
@@ -145,6 +156,18 @@ class RenderedImg(Img):
             if not os.path.isfile(cache_filepath):
                 # Create the needed directories
                 mkdir_p(cache_dir)
+
+                # Use a template, if specified
+                if self.template:
+                    src_filepath = (local_context['_src_filepath'] if
+                                    '_src_filepath' in local_context else
+                                    '')
+                    template = get_template(src_filepath=src_filepath,
+                                            target='.tex',
+                                            template_basename='eq')
+                    content = template.render(body=content)
+
+                # Write the file using
                 with open(cache_filepath, 'w') as f:
                     f.write(content)
 
@@ -154,4 +177,3 @@ class RenderedImg(Img):
 
         super(RenderedImg, self).__init__(name, content, attributes,
                                           local_context, global_context)
-

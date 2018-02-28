@@ -72,3 +72,7 @@ sub,sup {
    font-size: 70%;
    text-align: left;
 }
+
+.eq {
+    display: inline;
+}
