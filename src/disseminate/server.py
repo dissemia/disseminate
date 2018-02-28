@@ -26,41 +26,43 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
         # Parse the self.path
         path_ext = os.path.splitext(self.path)[1]
 
-        # Try the render. If it's unsuccessful, handle the exception
-        try:
-            if __debug__: # timing information for debug
-                t0 = time.time()
+        # Try the render if it's a request for a file that is in this tree's
+        # target list. If it's unsuccessful, handle the exception
+        if path_ext in self.tree.target_list:
+            try:
+                if __debug__: # timing information for debug
+                    t0 = time.time()
 
-            self.tree.render()
+                self.tree.render()
 
-            if __debug__:
-                t1 = time.time()
-                msg = "Render time: {:.1f} ms".format(1000. * (t1-t0))
-                logging.debug(msg)
-        except Exception as e:
-            # Get the exception template
-            template = get_template(src_filepath="",
-                                    template_basename="exception",
-                                    target=".html",
-                                    module_only=True)
+                if __debug__:
+                    t1 = time.time()
+                    msg = "Render time: {:.1f} ms".format(1000. * (t1-t0))
+                    logging.debug(msg)
+            except Exception as e:
+                # Get the exception template
+                template = get_template(src_filepath="",
+                                        template_basename="exception",
+                                        target=".html",
+                                        module_only=True)
 
-            # format the context and traceback
-            # TODO: Move the description away from the __doc__ attribute, since
-            # this can be stripped by python optimizations
-            tb = ''.join(format_exception(type(e), e, e.__traceback__))
-            context = {'name': e.__class__.__name__,
-                       'description': e.__class__.__doc__,
-                       'traceback': tb,
-                       'exception': e}
+                # format the context and traceback
+                # TODO: Move the description away from the __doc__ attribute,
+                # since this can be stripped by python optimizations
+                tb = ''.join(format_exception(type(e), e, e.__traceback__))
+                context = {'name': e.__class__.__name__,
+                           'description': e.__class__.__doc__,
+                           'traceback': tb,
+                           'exception': e}
 
-            # render the html and respond
-            html = template.render(**context)
-            self.send_response(500)
-            self.send_header(b"Content-type", "text/html")
-            self.end_headers()
-            self.wfile.write(html.encode("utf-8"))
+                # render the html and respond
+                html = template.render(**context)
+                self.send_response(500)
+                self.send_header(b"Content-type", "text/html")
+                self.end_headers()
+                self.wfile.write(html.encode("utf-8"))
 
-            return
+                return
 
         # The root path is special because it renders the tree
         if self.path == "/":

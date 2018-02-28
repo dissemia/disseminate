@@ -30,6 +30,7 @@ class CompiledDocument(object):
     _temp_dir = None
 
     def __init__(self, targets, *args, **kwargs):
+        self.targets = targets
 
         # Setup the compilation
         # First separate the compiled and uncompiled targets
