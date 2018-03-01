@@ -138,6 +138,16 @@ class RenderedImg(Img):
             else:
                 cache_dir = media_path
 
+            # Use a template, if specified
+            if self.template:
+                src_filepath = (local_context['_src_filepath'] if
+                '_src_filepath' in local_context else
+                '')
+                template = get_template(src_filepath=src_filepath,
+                                        target='.tex',
+                                        template_basename=self.template)
+                content = template.render(body=content)
+
             # Construct the filename for the rendered image
             # ex: filename = 'chapter1_231aef342.asy'
             content_hash = hashlib.md5(content.encode("UTF-8")).hexdigest()[:10]
@@ -156,16 +166,6 @@ class RenderedImg(Img):
             if not os.path.isfile(cache_filepath):
                 # Create the needed directories
                 mkdir_p(cache_dir)
-
-                # Use a template, if specified
-                if self.template:
-                    src_filepath = (local_context['_src_filepath'] if
-                                    '_src_filepath' in local_context else
-                                    '')
-                    template = get_template(src_filepath=src_filepath,
-                                            target='.tex',
-                                            template_basename='eq')
-                    content = template.render(body=content)
 
                 # Write the file using
                 with open(cache_filepath, 'w') as f:
