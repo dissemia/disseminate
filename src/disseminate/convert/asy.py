@@ -43,11 +43,6 @@ class Asy2svg(Pdf2svg):
     page_no = None
     scale = None
 
-    def __init__(self, src_filepath, target_basefilepath, page_no=None,
-                 scale=None, crop=False, **kwargs):
-        super(Asy2svg, self).__init__(src_filepath, target_basefilepath,
-                                      page_no, scale, crop, **kwargs)
-
     def convert(self):
         """Convert an asy file to a pdf file."""
 

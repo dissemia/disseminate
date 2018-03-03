@@ -21,10 +21,8 @@ class Pdf2svg(Converter):
     page_no = None
     scale = None
 
-    def __init__(self, src_filepath, target_basefilepath, page_no=None,
-                 scale=None, crop=False, **kwargs):
-        super(Pdf2svg, self).__init__(src_filepath, target_basefilepath,
-                                      **kwargs)
+    def __init__(self, page_no=None, scale=None, crop=False, **kwargs):
+        super(Pdf2svg, self).__init__(**kwargs)
 
         self.crop = crop
         if isinstance(page_no, PositiveIntArgument):
