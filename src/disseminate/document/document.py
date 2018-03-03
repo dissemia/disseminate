@@ -4,7 +4,7 @@ Classes and functions for rendering documents.
 import os
 import os.path
 
-from ..ast import process_ast, process_paragraphs
+from ..ast import process_ast, process_paragraphs, process_typography
 from ..templates import get_template
 from ..header import load_yaml_header
 from ..macros import replace_macros
@@ -80,6 +80,7 @@ class Document(object):
                          ]
     ast_processors = [process_ast,
                       process_paragraphs,
+                      process_typography,
                       ]
     ast_post_processors = []
 

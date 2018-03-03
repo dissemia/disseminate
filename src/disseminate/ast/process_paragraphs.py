@@ -36,13 +36,6 @@ def process_paragraphs(ast=None, local_context=None, global_context=None,
     ast : :obj:`disseminate.Tag`
         The AST is a root tag with a content comprising a list of tags or
         strings.
-
-    Raises
-    ------
-    AstException
-        Raises an AstException if the max depth has been achieved
-        (settings.ast_max_depth). This is an attempt to foil the Billion Laughs
-        attack.
     """
     # Setup the parsing
     factory = TagFactory()
