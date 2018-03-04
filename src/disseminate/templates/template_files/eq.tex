@@ -1,10 +1,53 @@
-\documentclass[preview]{standalone}
+%%%
+% Code snippet taken from
+% http://mactextoolbox.sourceforge.net/articles/baseline.html
+\documentclass[10pt]{article}
+\usepackage{graphics}
+\usepackage{geometry}
 \usepackage{amsmath}
 
-\begin{document}
+\newcommand{\scalefactor}{1.4}
+
+\pagestyle{empty}
+\newsavebox{\mybox}
+
+\newlength{\mywidth}
+\newlength{\myheight}
+\newlength{\mydepth}
+
+\setlength{\topskip}{0pt}
+\setlength{\parindent}{0pt}
+\setlength{\abovedisplayskip}{0pt}
+\setlength{\belowdisplayskip}{0pt}
+
+\begin{lrbox}{\mybox}
 (% block body %)
-\begin{align*}
+  $\displaystyle
   (( body ))
-\end{align*}
-(% endblock %)
+  $
+  (% endblock %)
+\end{lrbox}
+
+\settowidth {\mywidth}
+    {\scalebox{\scalefactor}{\usebox{\mybox}}}
+\settoheight{\myheight}
+    {\scalebox{\scalefactor}{\usebox{\mybox}}}
+\settodepth {\mydepth}
+    {\scalebox{\scalefactor}{\usebox{\mybox}}}
+
+\newwrite\foo
+\immediate\openout\foo=\jobname.sizes
+    \immediate\write\foo{Depth = \the\mydepth}
+    \immediate\write\foo{Height = \the\myheight}
+    \addtolength{\myheight} {\mydepth}
+    \immediate\write\foo{TotalHeight = \the\myheight}
+    \immediate\write\foo{Width = \the\mywidth}
+\closeout\foo
+
+% set the paper-size and do everything in one pdflatex run
+\geometry{paperwidth=\mywidth,
+    paperheight=\myheight,margin=0pt}
+
+\begin{document}
+\scalebox{\scalefactor}{\usebox{\mybox}}
 \end{document}
