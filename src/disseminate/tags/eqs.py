@@ -7,26 +7,50 @@ from ..attributes import set_attribute
 from . import settings
 
 
+def raw_content_string(content):
+    """Generate a string from the content."""
+    if isinstance(content, str):
+        return content
+    elif isinstance(content, list) or hasattr(content, '__iter__'):
+        return ''.join(map(raw_content_string, content))
+    elif isinstance(content, Eq) and hasattr(content, '_raw_content'):
+        raw_content = raw_content_string(content._raw_content)
+
+        return (content.tex_format.format(content=raw_content)
+                if hasattr(content, 'tex_format')
+                else raw_content)
+
+    elif hasattr(content, 'content'):
+        return raw_content_string(content.content)
+    else:
+        return ""
+
+
 class Eq(RenderedImg):
     """The inline equation tag"""
+    # TODO: Images shouldn't be converted on creation
 
     aliases = ('term',)
     src_filepath = None
     active = True
 
-    tex_format = "\\ensuremath{{{content}}}"
+    block_equation = None
+    _raw_content = None
+    tex_format = "{content}"
+    tex_inline_format = "\\ensuremath{{{content}}}"
+    tex_block_format = "\\begin{{{env}}}\n{{{content}}}\n\\end{{{env}}}"
+    default_block_env = "align*"
 
     def __init__(self, name, content, attributes,
-                 local_context, global_context, eq_template=None):
+                 local_context, global_context, block_equation=False,
+                 eq_template=None):
+        self.block_equation = block_equation
+
         # Set the equation template for rendering pdf/svg versions of equations
         eq_template = 'eq' if eq_template is None else eq_template
 
         # Add css class for html formatting
         attributes = set_attribute(attributes, ('class', 'eq'))
-        # attributes = set_attribute(attributes,
-        #                            ('scale', str(settings.eq_svg_scale)))
-        # attributes = set_attribute(attributes,
-        #                            ('crop', str(settings.eq_svg_crop)))
 
         # Save the raw content and format the content in tex
         self._raw_content = content
@@ -39,15 +63,16 @@ class Eq(RenderedImg):
                                  render_target='.tex',
                                  template=eq_template)
 
-    def tex(self, level=1, content=None):
-        content = self._raw_content
-        if isinstance(content, list):
-            new_content = [i.tex(level+1) if hasattr(i, 'tex') else
-                           self.tex_format.format(content=i)
-                           for i in content]
-            return ''.join(new_content)
+    def tex(self, level=1):
+        raw_content = raw_content_string(self._raw_content)
+        raw_content.strip('\n')
+        content = self.tex_format.format(content=raw_content)
+
+        if self.block_equation:
+            env = self.default_block_env
+            return self.default_block_env.format(env=env, content=content)
         else:
-            return self.tex_format.format(content=content)
+            return self.tex_inline_format.format(content=content)
 
 
 class EqBold(Eq):
@@ -55,4 +80,4 @@ class EqBold(Eq):
 
     aliases = ('termb',)
 
-    tex_format = "\\ensuremath{{\\boldsymbol{{{content}}}}}"
+    tex_format = "\\boldsymbol{{{content}}}"
