@@ -38,23 +38,19 @@ class Img(Tag):
             msg = "An image path must be used with the img tag."
             raise TagError(msg)
 
-        # Add the image dependency
-        assert '_dependencies' in global_context
-        assert '_targets' in local_context
-        deps = global_context['_dependencies']
-        targets = list(local_context['_targets'].keys())
-        document_src_filepath = (local_context['_src_filepath']
-                                 if '_src_filepath' in local_context else None)
-
-        self.dependency_manager = deps
-        deps.add_file(targets=targets, path=self.src_filepath,
-                      document_src_filepath=document_src_filepath,
-                      attributes=self.attributes)
-
     def tex(self, level=1):
         # Get the file dependency
-        deps = self.dependency_manager
-        dep = deps.get_dependency(target='.tex', src_filepath=self.src_filepath)
+        assert '_dependencies' in self.global_context
+
+        deps = self.global_context['_dependencies']
+        document_src_filepath = (self.local_context['_src_filepath']
+                                 if '_src_filepath' in self.local_context else
+                                 None)
+        deps.add_file(targets=['.tex'], path=self.src_filepath,
+                      document_src_filepath=document_src_filepath,
+                      attributes=self.attributes)
+        dep = deps.get_dependency(target='.tex',
+                                  src_filepath=self.src_filepath)
         path = dep.dep_filepath
 
         # get the attributes for tex
@@ -65,7 +61,15 @@ class Img(Tag):
 
     def html(self, level=1):
         # Add the file dependency
-        deps = self.dependency_manager
+        assert '_dependencies' in self.global_context
+
+        deps = self.global_context['_dependencies']
+        document_src_filepath = (self.local_context['_src_filepath']
+                                 if '_src_filepath' in self.local_context else
+                                 None)
+        deps.add_file(targets=['.html'], path=self.src_filepath,
+                      document_src_filepath=document_src_filepath,
+                      attributes=self.attributes)
         dep = deps.get_dependency(target='.html',
                                   src_filepath=self.src_filepath)
         url = dep.url
