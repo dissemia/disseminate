@@ -191,14 +191,15 @@ def test_block_equation_tex(tmpdir):
 
     # Test markup
     test = """
-    @section{Section 1}
-    
-    @eq{y &= x + b \\
-          &= x + a}
+    @eq[env=align*]{
+    y &= x + b \\
+    &= x + a
+    }
     """
 
     root = process_ast([test], local_context=local_context,
                        global_context=global_context)
-
-    print(root)
-    print(root.tex())
+    assert root.tex() == ('\n    \\begin{align*} %\n'
+                          'y &= x + b \\\n'
+                          '    &= x + a\n'
+                          '\\end{align*}\n    ')

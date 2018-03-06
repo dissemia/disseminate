@@ -58,7 +58,7 @@ class Eq(RenderedImg):
         if env:
             self.block_equation = True
         self.env = env if env is not None else self.default_block_env
-        print("env:", env); print("attributes:", attributes)
+
         # Add css class for html formatting
         self._raw_attributes = attributes
         attributes = set_attribute(attributes, ('class', 'eq'))
