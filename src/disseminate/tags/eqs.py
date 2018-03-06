@@ -38,7 +38,7 @@ class Eq(RenderedImg):
     _raw_content = None
     tex_format = "{content}"
     tex_inline_format = "\\ensuremath{{{content}}}"
-    tex_block_format = "\\begin{{{env}}}\n{{{content}}}\n\\end{{{env}}}"
+    tex_block_format = "\\begin{{{env}}} %\n{content}\n\\end{{{env}}}"
     default_block_env = "align*"
 
     def __init__(self, name, content, attributes,
@@ -70,7 +70,7 @@ class Eq(RenderedImg):
 
         if self.block_equation:
             env = self.default_block_env
-            return self.default_block_env.format(env=env, content=content)
+            return self.tex_block_format.format(env=env, content=content)
         else:
             return self.tex_inline_format.format(content=content)
 

@@ -9,7 +9,7 @@ from disseminate import settings
 
 
 def test_inline_equation(tmpdir):
-    """Test the tex rendering of a simple inline equations."""
+    """Test the tex rendering of simple inline equations."""
 
     # Setup the test paths
     project_root = str(tmpdir.join('src'))
@@ -59,6 +59,30 @@ def test_inline_equation(tmpdir):
     eq7 = EqBold(name='eq', content=['this is my ', eq1], attributes=tuple(),
              local_context=local_context, global_context=global_context)
     assert eq7.tex() == "\ensuremath{\\boldsymbol{this is my y=x}}"
+
+
+def test_block_equation(tmpdir):
+    """Test the tex rendering of a simple block equations."""
+
+    # Setup the test paths
+    project_root = str(tmpdir.join('src'))
+    target_root = str(tmpdir)
+
+    # Setup the dependency manager in the global context. This is needed
+    # to find and convert images by the img tag.
+    dep = DependencyManager(project_root=project_root,
+                            target_root=target_root,
+                            segregate_targets=True)
+    global_context = {'_dependencies': dep,
+                      '_project_root': project_root,
+                      '_target_root': target_root}
+    local_context = {'_targets': {'.html': 'test.html'}}
+
+    # Example 1 - simple inline equation
+    eq1 = Eq(name='eq', content='y=x', attributes=tuple(),
+             local_context=local_context, global_context=global_context,
+             block_equation=True)
+    assert eq1.tex() == '\\begin{align*} %\ny=x\n\\end{align*}'
 
 
 def test_simple_inline_equation_html(tmpdir):
