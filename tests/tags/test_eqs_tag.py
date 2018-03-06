@@ -78,11 +78,24 @@ def test_block_equation(tmpdir):
                       '_target_root': target_root}
     local_context = {'_targets': {'.html': 'test.html'}}
 
-    # Example 1 - simple inline equation
+    # Example 1 - simple block equation
     eq1 = Eq(name='eq', content='y=x', attributes=tuple(),
              local_context=local_context, global_context=global_context,
              block_equation=True)
     assert eq1.tex() == '\\begin{align*} %\ny=x\n\\end{align*}'
+
+    # Example 2 - simple block equation with alternative environment
+    eq2 = Eq(name='eq', content='y=x', attributes=(('env', 'alignat*'),),
+             local_context=local_context, global_context=global_context,
+             block_equation=True)
+    assert eq2.tex() == '\\begin{alignat*} %\ny=x\n\\end{alignat*}'
+
+    # Example 3 - simple block equation with alternative environment and
+    # positional arguments
+    eq3 = Eq(name='eq', content='y=x', attributes=(('env', 'alignat*'), '3'),
+             local_context=local_context, global_context=global_context,
+             block_equation=True)
+    assert eq3.tex() == '\\begin{alignat*}{3} %\ny=x\n\\end{alignat*}'
 
 
 def test_simple_inline_equation_html(tmpdir):
@@ -108,7 +121,7 @@ def test_simple_inline_equation_html(tmpdir):
 
     # Check the paths. These are stored by the parent Img tag in the
     # 'src_filepath' attribute
-    assert eq.src_filepath == 'media/1f075a226c.tex'
+    assert eq.src_filepath == 'media/b78aaacbfd.tex'
 
     # Create a root tag and render the html
     root = Tag(name='root', content=["This is my test", eq, "equation"],
@@ -129,10 +142,10 @@ def test_simple_inline_equation_html(tmpdir):
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert root_html == ('<img class="eq" '
-                         'src="/media/1f075a226c.svg"/>')
-    assert tmpdir.ensure(settings.media_dir, '1f075a226c.svg')
+                         'src="/media/b78aaacbfd.svg"/>')
+    assert tmpdir.ensure(settings.media_dir, 'b78aaacbfd.svg')
     assert tmpdir.ensure('.html', settings.media_dir,
-                         '1f075a226c.svg')
+                         'b78aaacbfd.svg')
 
 
 def test_simple_inline_equation_tex(tmpdir):

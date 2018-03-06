@@ -1,3 +1,21 @@
+"""
+Functions for parsing and processing attributes.
+
+Attributes are optional parameters added to a tag with square brackets.
+
+    ex: "@section[id=title one]{My first section}"
+
+Attributes comprise keyword attributes (i.e. 'id=title') and positional
+attributes (i.e. 'one'). Additionally, attributes may include target-specific
+attributes that are only used for a given target. For example,
+
+    "@img[html.width=300]{media/image.jpg}"
+
+The 'html.width' keyword argument will be parsed as 'width=300' for '.html'
+targets.
+
+"""
+
 import regex
 
 
@@ -18,7 +36,9 @@ def parse_attributes(s):
     Parameters
     ----------
     s: str
-        Input string of attributes of the form: "key1 = value1 key2 = value2"
+        Input string of attributes. Attributes come in two forms: positional
+        attributes and keyword attributes (kwargs), and attributes strings have
+        the following form: "key1=value1 key2=value2 value3"
 
     Returns
     -------
@@ -47,8 +67,9 @@ def parse_attributes(s):
     return tuple(attrs)
 
 
-def get_attribute_value(attrs, attribute_name):
-    """Get an attribute's value from an attribute_name.
+def get_attribute_value(attrs, attribute_name, target=None):
+    """Get an attribute's value from a keyword attribute key or positional
+    attribute value.
 
     Parameters
     ----------
@@ -83,8 +104,12 @@ def get_attribute_value(attrs, attribute_name):
     elif attrs is None:
         attrs = tuple()
 
+    processed_attrs = filter_attributes(attrs=attrs,
+                                        target=target,
+                                        raise_error=False)
+
     # Find the attribute that matches
-    for attr in attrs:
+    for attr in processed_attrs:
         # Deal with a 2-ple attribute
         if (hasattr(attr, '__iter__') and
            len(attr) == 2 and
@@ -96,14 +121,62 @@ def get_attribute_value(attrs, attribute_name):
     return None
 
 
+def remove_attribute(attrs, attribute_name):
+    """Remove the given attribute for the attribute tuple.
+
+    Parameters
+    ----------
+    attrs: tuple
+        A tuple of attributes comprising either 2-ple strings (key, value) or
+        strings (positional attributes)
+    attribute: 2-ple or str
+        An attribute to set. It's either a 2 item tuple (attribute id,
+        attribute value) or a positional attribute string.
+
+    Returns
+    -------
+    attrs: tuple
+        A tuple of attributes comprising either 2-ple strings (key, value) or
+        strings (positional arguments)
+
+    Examples
+    --------
+    >>> remove_attribute((('class', 'base bttnred'), 'red'),
+    ...                  attribute_name= 'red')
+    (('class', 'base bttnred'),)
+    >>> remove_attribute((('class', 'base bttnred'), 'red'),
+    ...                  attribute_name= 'class')
+    ('red',)
+    """
+    # Format the attrs
+    if isinstance(attrs, str):
+        attrs = parse_attributes(attrs)
+    elif attrs is None:
+        attrs = tuple()
+
+    # Find the attribute that matches
+    filtered_attributes = []
+    for attr in attrs:
+        # Deal with a 2-ple attribute
+        if (hasattr(attr, '__iter__') and
+                len(attr) == 2 and
+                attr[0] == attribute_name):
+            continue
+        elif isinstance(attr, str) and attr == attribute_name:
+            continue
+        filtered_attributes.append(attr)
+
+    return tuple(filtered_attributes)
+
+
 def set_attribute(attrs, attribute, method='r'):
     """Set an attribute in an attributes tuple.
 
     Parameters
     ----------
     attrs: tuple
-        A tuple of attributes comprising either 2-ple strings (key, value) or
-        strings (positional arguments)
+        A tuple of attributes comprising either 2-ple strings (keyword
+        attributes) or strings (positional attributes)
     attribute: 2-ple or str
         An attribute to set. It's either a 2 item tuple (attribute id,
         attribute value) or a positional attribute string.
@@ -114,7 +187,7 @@ def set_attribute(attrs, attribute, method='r'):
     Returns
     -------
     attrs: tuple
-        A typle of attributes comprising either 2-ple strings (key, value) or
+        A tuple of attributes comprising either 2-ple strings (key, value) or
         strings (positional arguments)
 
     Examples
@@ -206,6 +279,14 @@ def filter_attributes(attrs, attribute_names=None, target=None,
     >>> filter_attributes((('tex.class', 'base'), ('html.class', 'media')),
     ...                   target='.tex')
     (('class', 'base'),)
+    >>> filter_attributes((('tex.class', 'base'), ('src', 'image.png')),
+    ...                   target='.tex')
+    (('class', 'base'), ('src', 'image.png'))
+    >>> filter_attributes(('tex.orange', 'red'),
+    ...                   target='.tex')
+    ('orange', 'red')
+    >>> filter_attributes(('tex.orange', 'red'), target=None)
+    ('red',)
     """
 
     new_attrs = []
@@ -262,7 +343,7 @@ def kwargs_attributes(attrs, attribute_names=None, target=None,
     """Produce a dict of attributes {key: value} suitable to be used
     as kwargs.
 
-    .. note:: This function ignores positional arguments.
+    .. note:: This function ignores arguments.
 
     Parameters
     ----------
@@ -304,6 +385,42 @@ def kwargs_attributes(attrs, attribute_names=None, target=None,
             kwargs[attr[0]] = attr[1]
 
     return kwargs
+
+
+def positional_attributes(attrs, target=None, raise_error=False):
+    """Produce a tuple of the positional attributes/arguments
+
+    Parameters
+    ----------
+    attrs : tuple
+        A tuple of attributes comprising either 2-ple strings (key, value) or
+        strings (positional arguments)
+    target : string or None
+        Filter the positional attributes for target-specific attributes.
+    raise_error: bool, optional
+        If an attribute has been included that is not recognized, raise an
+        TagAttributeError.
+
+    Returns
+    -------
+    attrs : tuple
+        A tuple of attributes comprising either 2-ple strings (key, value) or
+        strings (positional arguments)
+
+    Examples
+    --------
+    >>> positional_attributes((('class', 'base'), ('style', 'media'), 'red'))
+    ('red',)
+    >>> positional_attributes(('html.orange', 'tex.red'))
+    ()
+    >>> positional_attributes(('html.orange', 'tex.red'), target='.html')
+    ('orange',)
+    """
+    processed_attrs = filter_attributes(attrs=attrs,
+                                        target=target,
+                                        raise_error=raise_error)
+    return tuple([a for a in processed_attrs if not isinstance(a, tuple)
+                  or not hasattr(a, '__iter__')])
 
 
 def format_html_attributes(attrs, attribute_names=None, raise_error=False):
@@ -371,7 +488,9 @@ def format_html_attributes(attrs, attribute_names=None, raise_error=False):
         return ""
 
 
-def format_tex_attributes(attrs, attribute_names=None, raise_error=False):
+def format_tex_attributes(attrs, attribute_names=None,
+                          left_bracket='[', right_bracket=']',
+                          raise_error=False):
     """Format attributes into an options string for tex.
 
     .. note:: If there are target-specific attributes (i.e. they start with
@@ -386,6 +505,10 @@ def format_tex_attributes(attrs, attribute_names=None, raise_error=False):
     attribute_names: list of str, optional
         A list of attribute names and positional arguments to include in the
         returned result. Matches are case-sensitive.
+    left_bracket : str
+        The left bracket string to use when enclosing the tex attributes
+    right_bracket : str
+        The right bracket string to use when enclosing the tex attributes
     raise_error: bool, optional
         If an attribute has been included that is not recognized, raise an
         TagAttributeError.
@@ -431,7 +554,6 @@ def format_tex_attributes(attrs, attribute_names=None, raise_error=False):
                     attr_elements.append('='.join(attr))
                 elif isinstance(attr, str):
                     attr_elements.append(attr)
-        return '[' + ", ".join(attr_elements) + "]"
+        return left_bracket + ", ".join(attr_elements) + right_bracket
     else:
         return ''
-

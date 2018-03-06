@@ -1,10 +1,9 @@
 """
 Equation tags.
 """
-from .core import Tag
 from .img import RenderedImg
-from ..attributes import set_attribute
-from . import settings
+from ..attributes import (set_attribute, remove_attribute, get_attribute_value,
+                          format_tex_attributes)
 
 
 def raw_content_string(content):
@@ -38,7 +37,8 @@ class Eq(RenderedImg):
     _raw_content = None
     tex_format = "{content}"
     tex_inline_format = "\\ensuremath{{{content}}}"
-    tex_block_format = "\\begin{{{env}}} %\n{content}\n\\end{{{env}}}"
+    tex_block_format = ("\\begin{{{env}}}{attrs} %\n"
+                        "{content}\n\\end{{{env}}}")
     default_block_env = "align*"
 
     def __init__(self, name, content, attributes,
@@ -49,7 +49,18 @@ class Eq(RenderedImg):
         # Set the equation template for rendering pdf/svg versions of equations
         eq_template = 'eq' if eq_template is None else eq_template
 
+        # Get the environment type
+        env = get_attribute_value(attributes, attribute_name='env',
+                                  target='.tex')
+        attributes = remove_attribute(attributes, 'env')
+
+        # If the env attribute is specified, then it must be a block environment
+        if env:
+            self.block_equation = True
+        self.env = env if env is not None else self.default_block_env
+        print("env:", env); print("attributes:", attributes)
         # Add css class for html formatting
+        self._raw_attributes = attributes
         attributes = set_attribute(attributes, ('class', 'eq'))
 
         # Save the raw content and format the content in tex
@@ -64,13 +75,14 @@ class Eq(RenderedImg):
                                  template=eq_template)
 
     def tex(self, level=1):
-        raw_content = raw_content_string(self._raw_content)
-        raw_content.strip('\n')
+        raw_content = raw_content_string(self._raw_content).strip(' \t\n')
         content = self.tex_format.format(content=raw_content)
 
         if self.block_equation:
-            env = self.default_block_env
-            return self.tex_block_format.format(env=env, content=content)
+            attrs = format_tex_attributes(self._raw_attributes,
+                                          left_bracket="{", right_bracket="}")
+            return self.tex_block_format.format(env=self.env, attrs=attrs,
+                                                content=content)
         else:
             return self.tex_inline_format.format(content=content)
 

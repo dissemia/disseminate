@@ -145,12 +145,20 @@ class RenderedImg(Img):
             # Use a template, if specified
             if self.template:
                 src_filepath = (local_context['_src_filepath'] if
-                '_src_filepath' in local_context else
-                '')
+                                '_src_filepath' in local_context else
+                                '')
                 template = get_template(src_filepath=src_filepath,
                                         target='.tex',
                                         template_basename=self.template)
-                content = template.render(body=content)
+
+                # Get the kwargs and args to pass to the template
+                kwargs = self.template_kwargs()
+                kwargs = kwargs if kwargs is not None else dict()
+                args = self.template_args()
+                args = args if args is not None else tuple()
+                kwargs['args'] = args
+
+                content = template.render(body=content, **kwargs)
 
             # Construct the filename for the rendered image
             # ex: filename = 'chapter1_231aef342.asy'
@@ -181,3 +189,27 @@ class RenderedImg(Img):
 
         super(RenderedImg, self).__init__(name, content, attributes,
                                           local_context, global_context)
+
+    def template_kwargs(self):
+        """Get the kwargs to pass to the template.
+
+        Returns
+        -------
+        None or dict
+            A dict or keyword arguments to pass to the template.
+        """
+        return None
+
+    def template_args(self):
+        """Get the args to pass to the template
+
+        The args will be passed to the template as 'args', which can be iterated
+        over.
+
+        Returns
+        -------
+        None or tuple
+            A tuple of arguments to pass to the template as the 'args'
+            parameter/variable.
+        """
+        return None
