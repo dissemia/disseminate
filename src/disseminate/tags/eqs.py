@@ -1,6 +1,7 @@
 """
 Equation tags.
 """
+from .core import Tag
 from .img import RenderedImg
 from ..attributes import (set_attribute, remove_attribute, get_attribute_value,
                           format_tex_attributes)
@@ -10,8 +11,10 @@ def raw_content_string(content):
     """Generate a string from the content."""
     if isinstance(content, str):
         return content
+
     elif isinstance(content, list) or hasattr(content, '__iter__'):
         return ''.join(map(raw_content_string, content))
+
     elif isinstance(content, Eq) and hasattr(content, '_raw_content'):
         raw_content = raw_content_string(content._raw_content)
 
@@ -19,8 +22,12 @@ def raw_content_string(content):
                 if hasattr(content, 'tex_format')
                 else raw_content)
 
+    elif isinstance(content, Tag) and hasattr(content, 'tex'):
+        return content.tex()
+
     elif hasattr(content, 'content'):
         return raw_content_string(content.content)
+
     else:
         return ""
 
