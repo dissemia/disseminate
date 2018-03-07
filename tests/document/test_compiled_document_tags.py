@@ -10,7 +10,6 @@ def test_compiled_document_marginfig(tmpdir):
     # Create the paths in the temporary directory
     src_path = tmpdir
     src_filepath = src_path.join('main.dm')
-    src_file = src_filepath.join('main.dm')
     targets = {k: str(tmpdir.join(k.strip('.')).join('main' + k)) for k in
                ('.html', '.tex', '.pdf')}
 

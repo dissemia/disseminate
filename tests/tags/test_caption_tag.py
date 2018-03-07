@@ -23,7 +23,7 @@ def test_naked_caption():
     src = "@caption{This is my caption}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast([src], global_context=global_context)
+    root = process_ast(src, global_context=global_context)
 
     caption = root.content
     assert caption.name == 'caption'
@@ -49,7 +49,7 @@ def test_figure_caption_no_id():
     src = "@marginfig{@caption{This is my caption}}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast([src], local_context=local_context,
+    root = process_ast(src, local_context=local_context,
                        global_context=global_context)
 
     fig = root.content
@@ -89,7 +89,7 @@ def test_figure_caption_no_id_html():
     src = "@marginfig{@caption{This is my caption}}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast([src], local_context=local_context,
+    root = process_ast(src, local_context=local_context,
                        global_context=global_context)
 
     # Test the caption's html
@@ -125,7 +125,7 @@ def test_figure_caption_no_id_tex():
     src = "@marginfig{@caption{This is my caption}}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast([src], local_context=local_context,
+    root = process_ast(src, local_context=local_context,
                        global_context=global_context)
 
     root_tex = root.tex()
@@ -151,7 +151,7 @@ def test_figure_caption_with_id():
         global_context = {'_label_manager': label_man}
 
         # Generate a tag and compare the generated tex to the answer key
-        root = process_ast([src], local_context=local_context,
+        root = process_ast(src, local_context=local_context,
                            global_context=global_context)
 
         fig = root.content
@@ -191,7 +191,7 @@ def test_figure_caption_with_id_html():
         global_context = {'_label_manager': label_man}
 
         # Generate a tag and compare the generated tex to the answer key
-        root = process_ast([src], local_context=local_context,
+        root = process_ast(src, local_context=local_context,
                            global_context=global_context)
 
         # Test the caption's html
@@ -236,7 +236,7 @@ def test_figure_caption_with_id_tex():
         global_context = {'_label_manager': label_man}
 
         # Generate a tag and compare the generated tex to the answer key
-        root = process_ast([src], local_context=local_context,
+        root = process_ast(src, local_context=local_context,
                            global_context=global_context)
 
         root_tex = root.tex()
@@ -260,7 +260,7 @@ def test_ref_missing():
     src = "@ref{test} @caption{This is my caption}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast([src], local_context=local_context,
+    root = process_ast(src, local_context=local_context,
                        global_context=global_context)
 
     # Trying to convert the root ast to a target type, like html, will raise
@@ -288,7 +288,7 @@ def test_ref_html():
     src = "@ref{test} @marginfig{@caption[id=test]{This is my caption}}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast([src], local_context=local_context,
+    root = process_ast(src, local_context=local_context,
                        global_context=global_context)
 
     #  Test the ref's html
@@ -321,7 +321,7 @@ def test_ref_html():
     src = "@ref{test} @marginfig{@caption[id=test]{This is my caption}}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast([src], local_context=local_context,
+    root = process_ast(src, local_context=local_context,
                        global_context=global_context)
 
     #  Test the ref's html
@@ -354,7 +354,7 @@ def test_ref_tex():
     src = "@ref{test} @marginfig{@caption[id=test]{This is my caption}}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast([src], local_context=local_context,
+    root = process_ast(src, local_context=local_context,
                        global_context=global_context)
 
     #  Test the ref's html

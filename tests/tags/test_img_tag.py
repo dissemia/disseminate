@@ -20,7 +20,7 @@ def test_img_attribute(tmpdir):
     src = "@img[width=100]{sample.pdf}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast([src], local_context=local_context,
+    root = process_ast(src, local_context=local_context,
                        global_context=global_context)
 
     img = root.content
@@ -48,7 +48,7 @@ def test_img_html(tmpdir):
     root_end = '\n</span>\n'
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast([src], local_context=local_context,
+    root = process_ast(src, local_context=local_context,
                        global_context=global_context)
 
     # Remove the root tag
@@ -70,7 +70,7 @@ def test_img_html(tmpdir):
     root_end = '\n</span>\n'
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast([src], local_context=local_context,
+    root = process_ast(src, local_context=local_context,
                        global_context=global_context)
 
     # Remove the root tag
@@ -98,7 +98,7 @@ def test_img_tex(tmpdir):
     tex = "\\includegraphics{sample.pdf}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast([src], local_context=local_context,
+    root = process_ast(src, local_context=local_context,
                        global_context=global_context)
 
     # Remove the root tag
@@ -111,7 +111,7 @@ def test_img_tex(tmpdir):
     tex = "\\includegraphics[height=20]{sample.pdf}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast([src], local_context=local_context,
+    root = process_ast(src, local_context=local_context,
                        global_context=global_context)
 
     # Remove the root tag

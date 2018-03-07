@@ -44,7 +44,7 @@ test_paragraphs2 = """
 def test_process_paragraphs():
     """Test the process_paragraphs function"""
 
-    ast = process_ast([test_paragraphs])
+    ast = process_ast(test_paragraphs)
     ast = process_paragraphs(ast)
 
     # Check the individual items of the ast.
@@ -85,9 +85,9 @@ def test_process_paragraphs_leading_spaces():
     """Test the process_paragraphs function when trailing spaces are present.
     """
 
-    ast = process_ast([test_paragraphs2])
+    ast = process_ast(test_paragraphs2)
     ast = process_paragraphs(ast)
-    print(ast)
+
     assert ast.content[0] == '  '
     assert ast.content[1].name == 'section'
     assert ast.content[2] == '  \n  This is my paragraph.'
@@ -98,7 +98,7 @@ def test_process_paragraphs_edgecases():
 
     # Test a basic string with no tags. This create a root tag
     test_edge = "basic"
-    ast = process_paragraphs([test_edge])
+    ast = process_paragraphs(test_edge)
 
     assert ast.name == 'root'
     assert ast.content.name == 'p'
@@ -129,8 +129,6 @@ def test_process_paragraphs_macros():
     assert ast.content.content == 'My @b{y = x} @sup{1}H pulse.'
 
     # Test paragraph processing after process_ast
-    ast = process_ast([result], local_context={}, global_context={})
-    print(ast)
+    ast = process_ast(result, local_context={}, global_context={})
     ast = process_paragraphs(ast, local_context=local_context,
                              global_context=global_context)
-    print(ast)

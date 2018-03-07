@@ -56,9 +56,9 @@ class TagFactory(object):
         else:
             cls = Tag
 
-        return cls(name=tag_name, content=tag_content,
-                   attributes=tag_attributes,
-                   local_context=local_context, global_context=global_context)
+        tag = cls(name=tag_name, content=tag_content, attributes=tag_attributes,
+                  local_context=local_context, global_context=global_context)
+        return tag
 
 
 class Tag(object):
@@ -139,6 +139,7 @@ class Tag(object):
             self.content = content[0]
         else:
             self.content = content
+
         self.local_context = local_context
         self.global_context = global_context
 

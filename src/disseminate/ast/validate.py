@@ -39,7 +39,7 @@ class ValidateAndCleanAST:
                             if i.startswith("validate_")]
 
         # Run the validations. If any return a string instead of True, raise
-        # a ParseError exception
+        # a AstException exception
         for method in validate_methods:
             return_value = method(ast)
             if isinstance(return_value, str):
@@ -66,28 +66,19 @@ class ValidateAndCleanAST:
             If a msg is returned, then the validation didn't pass. The msg
             is an error message.
         """
-        # Keep track of the previously analyzed ast elements for line number
-        # counting and error reporting
-        previous_ast = []
+        if isinstance(ast, str):
+            return True
+        elif isinstance(ast, Tag):
+            if getattr(ast, 'open_brace', False):
+                msg = "The '{}' tag not closed on line {}."
+                return msg.format(ast.name, ast.line_number)
+            return self.validate_closed_tags(ast.content)
 
+        # The ast should be a list at this point
         for i in ast:
-            # see if there's a match for an opentag
-            match = self._opentag.search(i) if isinstance(i, str) else None
-
-            # If a match was found, return the error/exception message
-            if match:
-                # Determine the line number up to the match
-                substring = i[:match.end()]
-                line_number = count_ast_lines(previous_ast)
-                line_number += substring.count('\n')
-
-                msg = ("{}: ".format(self.name) if isinstance(self.name, str)
-                       else '')
-
-                msg += "Tag not closed on line {}: {}".format(line_number, i)
-                return msg
-
-            previous_ast.append(i)
+            return_value = self.validate_closed_tags(i)
+            if return_value is not True:
+                return return_value
 
         return True
 

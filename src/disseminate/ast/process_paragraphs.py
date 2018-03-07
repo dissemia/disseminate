@@ -45,6 +45,8 @@ def process_paragraphs(ast=None, local_context=None, global_context=None,
         pass
     elif isinstance(ast, Tag):
         ast = ast.content if isinstance(ast.content, list) else [ast.content]
+    elif isinstance(ast, str):
+        ast = [ast]
     else:
         ast = []
 

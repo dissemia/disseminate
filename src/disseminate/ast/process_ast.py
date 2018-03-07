@@ -13,12 +13,8 @@ class AstException(Exception):
     pass
 
 
-control_char = r'@'
-
-
-re_tag = regex.compile(r'(@(?P<tag>[A-Za-z][\w]*)'
-                       r'(?P<attributes>\[[^\]]+\])?'
-                       r'({(?P<content>(?>[^{}@]+|(?R))*)})?)')
+re_open_tag = regex.compile(r'@(?P<tag>[A-Za-z][\w]*)(?P<attributes>\[[^\]]+\])?{')
+re_brace = regex.compile(r'[}{]')
 
 
 def process_ast(ast=None, local_context=None, global_context=None,
@@ -47,7 +43,7 @@ def process_ast(ast=None, local_context=None, global_context=None,
 
     Returns
     -------
-    ast : :obj:`disseminate.Tag`
+    ast : :obj:`disseminate.Tag`, list of ast elements or string
         The AST is a root tag with a content comprising a list of tags or
         strings.
 
@@ -58,112 +54,115 @@ def process_ast(ast=None, local_context=None, global_context=None,
         (settings.ast_max_depth). This is an attempt to foil the Billion Laughs
         attack.
     """
-    # Get the line_offset, if available, and set the LineNumber
-    if isinstance(ast, list) and len(ast) > 0 and isinstance(ast[0], str):
-        meta = ast[0].__dict__ if hasattr(ast[0], '__dict__') else dict()
-        line_offset = meta['line_offset'] if 'line_offset' in meta else 1
-    else:
-        line_offset = 1
-
+    # Conduct initial tests
     if level >= settings.ast_max_depth:
         msg = ("The maximum depth of '{}' has been reached in the AST. "
                "Additional levels can be set by the 'settings.ast_max_depth'.")
         raise AstException(msg.format(settings.ast_max_depth))
+
+    # Setup the AST and determine the kind of ast passed and how to process
+    # it.
     local_context = (local_context if isinstance(local_context, dict)
                      else dict())
     global_context = (global_context if isinstance(global_context, dict)
                       else dict())
+    new_ast = []
+    process = lambda x: process_ast(x, local_context, global_context,
+                                    src_filepath, level+1)
 
-    # Setup the parsing
+    # Look at the ast and process it depending on whether it's a string, tag
+    # or list
+    if isinstance(ast, str):
+        text = ast
+    elif isinstance(ast, list):
+        return list(map(process, ast))
+    elif isinstance(ast, Tag):
+        if isinstance(ast.content, str) or isinstance(ast.content, Tag):
+            ast.content = process(ast.content)
+        elif isinstance(ast.content, list):
+            ast.content = list(map(process, ast.content))
+        return ast
+
+    # The following only processes text
+
+    # Setup the tag factor to generate tags
     factory = TagFactory()
 
-    # Create the root ast. The passed argument can either be a list, or a
-    # Tag for an already parsed root Tag
-    if isinstance(ast, list):
-        pass
-    elif isinstance(ast, Tag):
-        ast = ast.content
-    else:
-        ast = []
-    new_ast = []
+    # The parser starts at the start of the text string
+    position = 0
 
-    for i in ast:
-        # Reset the current_pos in the string,
-        current_pos = 0
+    # find open tags
+    match_tag = re_open_tag.search(text[position:])
 
-        # Each item should either be a string to be processed, or an
-        # already-processed tag. If it's a tag, process its contents.
-        if isinstance(i, str):
-            s = i
-        elif isinstance(i, Tag) and isinstance(i.content, str):
-            s = i.content
-        elif isinstance(i, Tag):
-            i.content = process_ast(i.content, local_context, global_context,
-                                    src_filepath, level + 1)
-            new_ast.append(i)
-            continue
-        else:
-            continue
+    # Process the tag
+    while match_tag:
+        # Add the text up to this tag the match start/end are relative to the
+        # truncated text[position:] string, so the match start position has
+        # to be offset when referencing the full 'text' string
+        match_tag_start = position + match_tag.start()
+        new_ast.append(text[position:match_tag_start])
 
-        for m in re_tag.finditer(s):
-            # Find the match's start and end positions in the string
-            start, end = m.span()
+        # Push up the position to the end of the tag match
+        position += match_tag.end()
+        start_position = position
 
-            # Find the string up to this match and find the current line number
-            string = s[current_pos:start]
+        # Find open and close braces and advance the position
+        # up until the match closing brace is found
+        brace_level = 1
+        match = re_brace.search(text[position:])
+        while match and 0 < brace_level < 10:
+            # Increment or decrement the match
+            if match.group() == '}':
+                brace_level -= 1
+            elif match.group() == '{':
+                brace_level += 1
 
-            # Add the validated string to the ast and increment the line number
-            new_ast.append(string)
+            position += match.end()
 
-            # Reset the current position to the end of this match
-            current_pos = end
+            # Get the next match
+            match = re_brace.search(text[position:])
 
-            # Parse the match's content.
-            d = m.groupdict()
+        # Parse and add the tag
+        d = match_tag.groupdict()
+        tag_name = d['tag']
+        tag_content = process(text[start_position:position - 1])
+        tag_attributes = d['attributes']
 
-            # If the content is None, then a macro is matched. Simply return
-            # it as a string. A macro is a tag without curly braces.
-            # (ex: 'my @tag.')
-            if d['content'] is None:
-                new_ast.append(m.group())
-                continue
+        tag = factory.tag(tag_name=tag_name,
+                          tag_content=tag_content,
+                          tag_attributes=tag_attributes,
+                          local_context=local_context,
+                          global_context=global_context)
+        new_ast.append(tag)
 
-            # Prepare the tag from the match
-            tag_name = m['tag']
-            tag_content = process_ast([m['content']], local_context,
-                                      global_context, src_filepath, level + 1)
-            tag_attributes = m['attributes']
+        # If the tag didn't have a close brace, mark the open_brace attribute
+        # on the tag. The AST validator will deal with this.
+        if brace_level != 0:
+            tag.open_brace = True
 
-            if isinstance(i, Tag):
-                i.content = tag_content
-                i.attributes = tag_attributes
-                new_ast.append(i)
-            else:
-                new_ast.append(factory.tag(tag_name=tag_name,
-                                           tag_content=tag_content,
-                                           tag_attributes=tag_attributes,
-                                           local_context=local_context,
-                                           global_context=global_context))
+        # Find the next tag
+        match_tag = re_open_tag.search(text[position:])
 
-        # Add the end of the string, if it's valid
-        string = s[current_pos:]
-        if isinstance(i, Tag):
-            i.content = string
-            new_ast.append(i)
-        else:
-            new_ast.append(string)
+    # Add the remainer
+    new_ast.append(text[position:])
 
+    # If the new_ast has only one item, then return the item itself. (i.e.
+    # don't wrap a single item in a list
+    if len(new_ast) == 1:
+        new_ast = new_ast[0]
+
+    # Wrap in a root tag, if it's the first level
     if level == 1:  # root level
         # If this is the root tag, validate and clean the ast
+        line_offset = ast.line_offset if hasattr(ast, 'line_offset') else 1
         validator = ValidateAndCleanAST(name=src_filepath,
                                         line_offset=line_offset)
         new_ast = validator.validate(new_ast)
 
-        root = factory.tag(tag_name='root',
-                           tag_content=new_ast,
-                           tag_attributes=None,
-                           local_context=local_context,
-                           global_context=global_context)
-        return root
-    else:
-        return new_ast
+        new_ast = factory.tag(tag_name='root',
+                              tag_content=new_ast,
+                              tag_attributes=None,
+                              local_context=local_context,
+                              global_context=global_context)
+
+    return new_ast

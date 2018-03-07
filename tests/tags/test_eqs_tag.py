@@ -197,7 +197,7 @@ def test_block_equation_tex(tmpdir):
     }
     """
 
-    root = process_ast([test], local_context=local_context,
+    root = process_ast(test, local_context=local_context,
                        global_context=global_context)
     assert root.tex() == ('\n    \\begin{align*} %\n'
                           'y &= x + b \\\n'

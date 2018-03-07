@@ -188,7 +188,7 @@ class Document(object):
                                    self.global_context)
 
             # Process and validate the AST
-            ast = [string]
+            ast = string
             for processor in self.ast_processors:
                 ast = processor(ast=ast, local_context=self.local_context,
                                 global_context=self.global_context,

@@ -5,6 +5,7 @@ import pytest
 import lxml.html
 
 from disseminate.ast import process_ast
+from disseminate.ast.validate import ParseError
 from disseminate.tags import Tag
 
 
@@ -58,7 +59,7 @@ author: Justin L Lorieau
 
 def test_ast_basic_string():
     """Test the parsing of a basic string into an AST."""
-    ast = process_ast([test])
+    ast = process_ast(test)
 
     test_pieces = test.splitlines()
 
@@ -97,7 +98,7 @@ def test_ast_basic_string():
     assert len(content) == 5
 
     # Now test a string with no tags
-    ast = process_ast(["test"])
+    ast = process_ast("test")
 
     assert isinstance(ast, Tag) and ast.name == 'root'  # root tag
     assert isinstance(ast.content, str)
@@ -108,9 +109,8 @@ def test_default_conversion():
     """Test the default conversion of an AST into a text string."""
 
     # Generate the txt string
-    ast = process_ast([test])
+    ast = process_ast(test)
     txt = ast.default()
-
     assert txt == test_txt
 
 
@@ -119,22 +119,22 @@ def test_double_convert():
     AST stays the same."""
 
     # Generate the txt string
-    ast = process_ast([test])
+    ast = process_ast(test)
     txt = ast.default()
-
     assert txt == test_txt
 
     # Generate the txt string
-    ast = process_ast(ast)
-    txt = ast.default()
-
+    ast2 = process_ast(ast)
+    txt = ast2.default()
     assert txt == test_txt
+
+    assert ast == ast2
 
 
 def test_basic_html_conversion():
     """Test the generation of html strings from tags."""
     # Generate the html string
-    ast = process_ast([test])
+    ast = process_ast(test)
     html = ast.html()
     assert html == test_html
 
@@ -181,7 +181,7 @@ def test_basic_html_conversion():
 def test_basic_triple_html_conversion():
     """Test the generation of html strings from tags after 2 conversions."""
     # Generate the html string and process the ast twice
-    ast = process_ast([test])
+    ast = process_ast(test)
     ast = process_ast(ast)
     ast = process_ast(ast)
     html = ast.html()
@@ -227,3 +227,25 @@ def test_basic_triple_html_conversion():
     with pytest.raises(StopIteration):
         e7 = next(root_iter)
 
+
+def test_ast_open_brace():
+    """Test the identification of open braces (unclosed tags) in formatting
+     an AST."""
+
+    test_invalid = """
+        This is my test document. It has multiple paragraphs.
+
+        Here is a new one with @b{bolded} text as an example.
+        @marginfigtag[offset=-1.0em]{
+          @imgtag{media/files}
+          @caption{This is my @i{first} figure.}
+    """
+    with pytest.raises(ParseError):
+        ast = process_ast(test_invalid)
+
+
+def test_ast_edge_cases():
+    """Tests the processing of ASTs with edge cases of source markup files."""
+
+    test1 = "This is my @marginfig{{Margin figure}}."
+    ast = process_ast(test1)

@@ -16,7 +16,7 @@ def test_process_ast_basic_macros():
     local_context = dict()
     global_context = dict()
     s = replace_macros(test1, local_context, global_context)
-    ast = process_ast([s], local_context, global_context)
+    ast = process_ast(s, local_context, global_context)
 
     # Make sure the sidenote tag is in the ast
     assert ast.content[1].name == 'sidenote'
@@ -26,7 +26,7 @@ def test_process_ast_basic_macros():
     pulse rotates the magnetization with a phase of `x'.}"""
 
     s = replace_macros(test2, local_context, global_context)
-    ast = process_ast([s], local_context, global_context)
+    ast = process_ast(s, local_context, global_context)
 
     # Make sure the sidenote tag is in the ast
     assert ast.content[1].name == 'sidenote'
@@ -36,7 +36,7 @@ def test_process_ast_basic_macros():
         pulse rotates the magnetization with a phase of `x'.}"""
 
     s = replace_macros(test2, local_context, global_context)
-    ast = process_ast([s], local_context, global_context)
+    ast = process_ast(s, local_context, global_context)
 
     # Make sure the sidenote tag is in the ast
     assert ast.content[1].name == 'sidenote'
@@ -50,8 +50,8 @@ def test_process_ast_nested_macros():
 
     result = replace_macros("My @p90x pulse.", local_context=local_context,
                             global_context=global_context)
-    ast = process_ast([result], local_context=local_context,
-                             global_context=global_context)
+    ast = process_ast(result, local_context=local_context,
+                      global_context=global_context)
     assert ast.content[0] == 'My 90'
     assert (ast.content[1].name, ast.content[1].content) == ('sup', '○')
     assert (ast.content[2].name, ast.content[2].content) == ('sub', 'x')

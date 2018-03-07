@@ -74,7 +74,7 @@ def test_ast_count():
     Here is a @i{new} paragraph."""
 
     # Parse it
-    ast = process_ast([test],)
+    ast = process_ast(test)
 
     # Check the line numbers of tags.
     assert ast[1].line_number == 4  # @b tag
@@ -88,6 +88,7 @@ def test_ast_count():
 def test_ast_validation():
     """Test the correct validation when parsing an AST."""
 
+    # Test an invalid tag with a root-level tag
     test_invalid = """
         This is my test document. It has multiple paragraphs.
 
@@ -99,7 +100,42 @@ def test_ast_validation():
 
     # Process a string with an open tag
     with pytest.raises(ParseError) as e:
-        ast = process_ast([test_invalid])
+        ast = process_ast(test_invalid)
 
-    # The error should pop up in line 4
+    # The error should pop up in line 5
     assert "line 5" in str(e.value)
+
+    # Test an invalid tag with a nested tag
+    test_invalid2 = """
+            This is my test document. It has multiple paragraphs.
+
+            Here is a new one with @b{bolded} text as an example.
+            @marginfigtag[offset=-1.0em]{
+              @imgtag{media/files}
+              @caption{This is my @i{first figure.}
+              }
+        """
+
+    # Process a string with an open tag
+    with pytest.raises(ParseError) as e:
+        ast = process_ast(test_invalid2)
+
+    # The error should pop up in line 5
+    assert "line 5" in str(e.value)
+
+
+def test_ast_validation_cases():
+    """Test specific cases of AST validation"""
+
+    valid1 = """
+    @tag{
+     y &= & \int_a^b{x} && \\mathrm{(first equation)}
+     }
+    """
+
+    ast1 = process_ast(valid1, local_context=dict(), global_context=dict())
+
+    assert ast1.name == 'root'
+    assert ast1.content[1].name == 'tag'
+    assert ast1.content[1].content == ('\n     y &= & \int_a^b{x} && '
+                                       '\\mathrm{(first equation)}\n     ')

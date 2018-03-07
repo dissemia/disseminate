@@ -23,7 +23,7 @@ def test_count_ast_lines():
         Here is a @i{new} paragraph."""
 
     # Parse it
-    ast = process_ast([test], )
+    ast = process_ast(test)
 
     # The total number of lines
     assert count_ast_lines(ast) == 12

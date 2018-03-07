@@ -31,7 +31,11 @@ class BaseFigure(Tag):
             caption = caption[0] if len(caption) == 1 else None
             new_content = [i for i in self.content
                            if not isinstance(i, Caption)]
-            new_content.append(caption)
+
+            # Add the caption if it's present
+            if caption is not None:
+                new_content.append(caption)
+
             self.content = new_content
 
         elif isinstance(self.content, Caption):

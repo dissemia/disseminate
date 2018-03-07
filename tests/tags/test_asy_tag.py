@@ -34,7 +34,7 @@ def test_asy_html(tmpdir):
         draw(unitcircle);  }"""
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast([src], local_context=local_context,
+    root = process_ast(src, local_context=local_context,
                        global_context=global_context)
 
     # get the root tag
@@ -71,7 +71,7 @@ def test_asy_html(tmpdir):
                      '_targets': {'.html': 'chapter/test.html'}}
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast([src], local_context=local_context,
+    root = process_ast(src, local_context=local_context,
                        global_context=global_context)
 
     # get the root tag
@@ -118,7 +118,7 @@ def test_asy_html_attribute(tmpdir):
         draw(unitcircle);  }"""
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast([src], local_context=local_context,
+    root = process_ast(src, local_context=local_context,
                        global_context=global_context)
 
     # The following root tags have to be stripped for the html strings
