@@ -121,7 +121,7 @@ def test_simple_inline_equation_html(tmpdir):
 
     # Check the paths. These are stored by the parent Img tag in the
     # 'src_filepath' attribute
-    assert eq.src_filepath == 'media/b78aaacbfd.tex'
+    assert eq.src_filepath == 'media/ed7d69f737.tex'
 
     # Create a root tag and render the html
     root = Tag(name='root', content=["This is my test", eq, "equation"],
@@ -142,10 +142,10 @@ def test_simple_inline_equation_html(tmpdir):
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert root_html == ('<img class="eq" '
-                         'src="/media/b78aaacbfd.svg"/>')
-    assert tmpdir.ensure(settings.media_dir, 'b78aaacbfd.svg')
+                         'src="/media/ed7d69f737.svg"/>')
+    assert tmpdir.ensure(settings.media_dir, 'ed7d69f737.svg')
     assert tmpdir.ensure('.html', settings.media_dir,
-                         'b78aaacbfd.svg')
+                         'ed7d69f737.svg')
 
 
 def test_simple_inline_equation_tex(tmpdir):
