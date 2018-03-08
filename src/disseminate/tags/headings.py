@@ -11,9 +11,9 @@ class Heading(Tag):
     active = True
     include_paragraphs = False
 
-    def tex(self, level=1):
+    def tex(self, level=1, mathmode=False):
         # Add newlines around headings
-        tex = super(Heading, self).tex(level)
+        tex = super(Heading, self).tex(level, mathmode)
         return "\n" + tex + "\n\n"
 
 

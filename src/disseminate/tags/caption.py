@@ -3,7 +3,6 @@ Tags for captions and references.
 """
 from .core import Tag
 from ..attributes import get_attribute_value
-from .. import settings
 
 
 class CaptionError(Exception):
@@ -78,9 +77,9 @@ class Caption(Tag):
                   isinstance(self.content[0], str)):
                 self.content[0] = ' '.join((label_text, self.content[0]))
 
-    def tex(self, level=1):
+    def tex(self, level=1, mathmode=False):
         """Add newline to the end of a caption"""
-        return super(Caption, self).tex(level) + '\n'
+        return super(Caption, self).tex(level, mathmode) + '\n'
 
 
 class Ref(Tag):
@@ -113,7 +112,7 @@ class Ref(Tag):
         return label.html_ref(local_context=self.local_context,
                               global_context=self.global_context)
 
-    def tex(self, level=1):
+    def tex(self, level=1, mathmode=False):
         label = self.get_label()
         return label.tex_ref(local_context=self.local_context,
                              global_context=self.global_context)

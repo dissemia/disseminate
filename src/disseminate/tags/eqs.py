@@ -23,7 +23,7 @@ def raw_content_string(content):
                 else raw_content)
 
     elif isinstance(content, Tag) and hasattr(content, 'tex'):
-        return content.tex()
+        return content.tex(mathmode=True)
 
     elif hasattr(content, 'content'):
         return raw_content_string(content.content)
@@ -66,11 +66,8 @@ class Eq(RenderedImg):
             self.block_equation = True
         self.env = env if env is not None else self.default_block_env
 
-        # Add css class for html formatting
+        # Save the raw content and raw attributes and format the content in tex
         self._raw_attributes = attributes
-        attributes = set_attribute(attributes, ('class', 'eq'))
-
-        # Save the raw content and format the content in tex
         self._raw_content = content
         content = self.tex()
 
@@ -81,7 +78,16 @@ class Eq(RenderedImg):
                                  render_target='.tex',
                                  template=eq_template)
 
-    def tex(self, level=1):
+    def html(self, level=1):
+        if self.block_equation:
+            self.attributes = set_attribute(self.attributes,
+                                            ('class', 'eq blockeq'))
+        else:
+            self.attributes = set_attribute(self.attributes,
+                                            ('class', 'eq'))
+        return super(Eq, self).html(level)
+
+    def tex(self, level=1, mathmode=True):
         raw_content = raw_content_string(self._raw_content).strip(' \t\n')
         content = self.tex_format.format(content=raw_content)
 

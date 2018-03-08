@@ -15,8 +15,8 @@ class P(Tag):
     active = True
     include_paragraphs = False
 
-    def tex(self, level=1):
-        tex = super(P, self).tex(level)
+    def tex(self, level=1, mathmode=False):
+        tex = super(P, self).tex(level, mathmode)
 
         # Rewrap the text
         if settings.tex_paragraph_width > 0:
@@ -50,17 +50,19 @@ class Sup(Tag):
     active = True
     include_paragraphs = False
 
-    def tex(self, level=1):
+    def tex(self, level=1, mathmode=False):
         # Collect the content elements
         if isinstance(self.content, list):
-            elements = ''.join([i.tex(level + 1) if hasattr(i, 'tex') else i
+            elements = ''.join([i.tex(level + 1, mathmode)
+                                if hasattr(i, 'tex') else i
                                 for i in self.content])
         elif isinstance(self.content, str):
             elements = self.content
         else:
             elements = None
 
-        return "\\ensuremath{^{" + elements + "}}"
+        return ("\\ensuremath{^{" + elements + "}}" if not mathmode else
+                "^{" + elements + "}")
 
 
 class Sub(Tag):
@@ -69,17 +71,19 @@ class Sub(Tag):
     active = True
     include_paragraphs = False
 
-    def tex(self, level=1):
+    def tex(self, level=1, mathmode=False):
         # Collect the content elements
         if isinstance(self.content, list):
-            elements = ''.join([i.tex(level + 1) if hasattr(i, 'tex') else i
+            elements = ''.join([i.tex(level + 1, mathmode)
+                                if hasattr(i, 'tex') else i
                                 for i in self.content])
         elif isinstance(self.content, str):
             elements = self.content
         else:
             elements = None
 
-        return "\\ensuremath{_{" + elements + "}}"
+        return ("\\ensuremath{_{" + elements + "}}" if not mathmode else
+                "_{" + elements + "}")
 
 
 class Supsub(Tag):
@@ -119,8 +123,10 @@ class Supsub(Tag):
         kwargs = {'class': 'supsub'}
         return E('span', self._sup, E('br'), self._sub, **kwargs)
 
-    def tex(self, level=1):
-        return "\\ensuremath{^{" + self._sup +"}_{" + self._sub + "}}"
+    def tex(self, level=1, mathmode=False):
+        formatted = "^{" + self._sup + "}_{" + self._sub + "}"
+        return ("\\ensuremath{" + formatted + "}"
+                if not mathmode else formatted)
 
 
 class Symbol(Tag):
@@ -140,6 +146,8 @@ class Symbol(Tag):
         self.assert_not_nested()
         return Entity(self.content.strip())
 
-    def tex(self, level=1):
+    def tex(self, level=1, mathmode=False):
         self.assert_not_nested()
-        return "\\ensuremath{\\" + self.content + "}"
+        content = "\\" + self.content
+        return ("\\ensuremath{" + content + "}" if not mathmode else
+                content)

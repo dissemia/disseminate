@@ -38,7 +38,7 @@ class Img(Tag):
             msg = "An image path must be used with the img tag."
             raise TagError(msg)
 
-    def tex(self, level=1):
+    def tex(self, level=1, mathmode=False):
         # Get the file dependency
         assert '_dependencies' in self.global_context
 

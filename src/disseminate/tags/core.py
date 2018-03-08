@@ -173,10 +173,26 @@ class Tag(object):
         else:
             return self.content
 
-    def tex(self, level=1):
+    def tex(self, level=1, mathmode=False):
+        """Format the tag in latex format.
+
+        Parameters
+        ----------
+        level : int, optional
+            The level of the tag.
+        mathmode : bool, optional
+            If True, the tag will be rendered in math mode. Otherwise (default)
+            latex text mode is assumed.
+
+        Returns
+        -------
+        tex_string : str
+            The formatted tex string.
+        """
         # Collect the content elements
         if isinstance(self.content, list):
-            elements = ''.join([i.tex(level + 1) if hasattr(i, 'tex') else i
+            elements = ''.join([i.tex(level + 1, mathmode)
+                                if hasattr(i, 'tex') else i
                                 for i in self.content])
         elif isinstance(self.content, str):
             elements = self.content

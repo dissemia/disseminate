@@ -132,7 +132,7 @@ def run(in_directory, out_directory,
 
     # Serve the following files as plain text files
     for ext in [settings.document_extension, ] + settings.text_extensions:
-        MyHandler.extensions_map[ext] = "text/plain"
+        MyHandler.extensions_map[ext] = "text/plain; charset=utf-8"
 
     server_address = ('', port)
     httpd = server_class(server_address, MyHandler)
