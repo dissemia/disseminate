@@ -2,7 +2,7 @@
 Test the equation tags.
 """
 from disseminate.tags import Tag
-from disseminate.tags.eqs import Eq, EqBold
+from disseminate.tags.eqs import Eq
 from disseminate.dependency_manager import DependencyManager
 from disseminate.ast import process_ast
 from disseminate import settings
@@ -41,11 +41,11 @@ def test_inline_equation(tmpdir):
     assert eq3.tex() == "\ensuremath{test is my y=x}"
 
     # Example 4 - a bold equation
-    eq4 = EqBold(name='eq', content="y=x", attributes=tuple(),
-                 local_context=local_context, global_context=global_context)
+    eq4 = Eq(name='eq', content="y=x", attributes=('bold',),
+             local_context=local_context, global_context=global_context)
     assert eq4.tex() == "\ensuremath{\\boldsymbol{y=x}}"
 
-    # Example 5 - an equation with a  bold equation subtag
+    # Example 5 - an equation with a bold equation subtag
     eq5 = Eq(name='eq', content=eq4, attributes=tuple(),
              local_context=local_context, global_context=global_context)
     assert eq5.tex() == "\ensuremath{\\boldsymbol{y=x}}"
@@ -56,7 +56,7 @@ def test_inline_equation(tmpdir):
     assert eq6.tex() == "\ensuremath{this is my \\boldsymbol{y=x}}"
 
     # Example 7 - a bold equation with an equation subtag in a list
-    eq7 = EqBold(name='eq', content=['this is my ', eq1], attributes=tuple(),
+    eq7 = Eq(name='eq', content=['this is my ', eq1], attributes=('bold',),
              local_context=local_context, global_context=global_context)
     assert eq7.tex() == "\ensuremath{\\boldsymbol{this is my y=x}}"
 

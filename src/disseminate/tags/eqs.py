@@ -15,13 +15,6 @@ def raw_content_string(content):
     elif isinstance(content, list) or hasattr(content, '__iter__'):
         return ''.join(map(raw_content_string, content))
 
-    elif isinstance(content, Eq) and hasattr(content, '_raw_content'):
-        raw_content = raw_content_string(content._raw_content)
-
-        return (content.tex_format.format(content=raw_content)
-                if hasattr(content, 'tex_format')
-                else raw_content)
-
     elif isinstance(content, Tag) and hasattr(content, 'tex'):
         return content.tex(mathmode=True)
 
@@ -34,14 +27,19 @@ def raw_content_string(content):
 
 class Eq(RenderedImg):
     """The inline equation tag"""
-    # TODO: Images shouldn't be converted on creation
+    # TODO: "@eq[bold color=blue]{y=x}"
 
-    aliases = ('term',)
+    aliases = ('term', 'termb')
     src_filepath = None
     active = True
 
     block_equation = None
+    bold = None
+    color = None
+
     _raw_content = None
+    _raw_attributes = None
+
     tex_format = "{content}"
     tex_inline_format = "\\ensuremath{{{content}}}"
     tex_block_format = ("\\begin{{{env}}}{attrs} %\n"
@@ -66,6 +64,21 @@ class Eq(RenderedImg):
             self.block_equation = True
         self.env = env if env is not None else self.default_block_env
 
+        # Determine if bold
+        bold = get_attribute_value(attributes, attribute_name='bold',
+                                   target='.tex')
+        attributes = remove_attribute(attributes, 'bold')
+        if bold or name == 'termb':
+            self.bold = True
+        else:
+            self.bold = False
+
+        # Determine if a color was specified
+        color = get_attribute_value(attributes, attribute_name='color',
+                                   target='.tex')
+        attributes = remove_attribute(attributes, 'color')
+        self.color = color
+
         # Save the raw content and raw attributes and format the content in tex
         self._raw_attributes = attributes
         self._raw_content = content
@@ -87,22 +100,23 @@ class Eq(RenderedImg):
                                             ('class', 'eq'))
         return super(Eq, self).html(level)
 
-    def tex(self, level=1, mathmode=True):
+    def tex(self, level=1, mathmode=False):
         raw_content = raw_content_string(self._raw_content).strip(' \t\n')
-        content = self.tex_format.format(content=raw_content)
+        content = raw_content
 
-        if self.block_equation:
-            attrs = format_tex_attributes(self._raw_attributes,
-                                          left_bracket="{", right_bracket="}")
-            return self.tex_block_format.format(env=self.env, attrs=attrs,
-                                                content=content)
+        # Add bold and color if specified
+        if self.color:
+            content = "\\textcolor{" + self.color + "}{" + content + "}"
+        if self.bold:
+            content = "\\boldsymbol{" + content + "}"
+
+        if mathmode:
+            return content
         else:
-            return self.tex_inline_format.format(content=content)
-
-
-class EqBold(Eq):
-    """A bolded inline equation."""
-
-    aliases = ('termb',)
-
-    tex_format = "\\boldsymbol{{{content}}}"
+            if self.block_equation:
+                attrs = format_tex_attributes(self._raw_attributes,
+                                              left_bracket="{", right_bracket="}")
+                return self.tex_block_format.format(env=self.env, attrs=attrs,
+                                                    content=content)
+            else:
+                return self.tex_inline_format.format(content=content)
