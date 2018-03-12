@@ -14,7 +14,8 @@ re_para = regex.compile(r'(\n{2,}|^)')
 
 def process_paragraphs(ast=None, local_context=None, global_context=None,
                        src_filepath=None, level=1):
-    """Process the paragraphs for an AST.
+    """Process the paragraphs for an AST. Paragraphs are blocks of text with
+    zero or more tags.
 
     .. note:: This function should be run after process_ast.
 
@@ -142,17 +143,29 @@ def process_paragraphs(ast=None, local_context=None, global_context=None,
         else:
             new_ast.append(cur_para[0])
 
-    # Now remove paragraphs for paragraphs that have items that are headings
-    # Headings should not be wrapped in paragraphs
+    # Now remove paragraphs for blocks that aren't paragraphs
+    # i.e. lists that are blocks of text with zero or more tags, or for blocks
+    # that contain tags that shouldn't be wrapped in paragraphs, like headings.
     reprocessed_ast = []
     for i in new_ast:
-        if (getattr(i, 'name', None) == 'p' and
-           isinstance(i.content, list) and
-           any(isinstance(j, Heading) for j in i.content)):
-            # See if it's a paragraph whose contents contains Heading elements.
-            # If so, remove the paragraph.
-            reprocessed_ast.append(i.content)
+        if getattr(i, 'name', None) == 'p':
+            # Process paragraph tags
+            if (isinstance(i.content, list) and
+               any(isinstance(j, Heading) for j in i.content)):
+                # See if it's a paragraph whose contents contains Heading
+                # elements. If so, remove the paragraph.
+                reprocessed_ast.append(i.content)
+
+            elif isinstance(i.content, Tag):
+                # Do not wrap tags themselves in tags
+                reprocessed_ast.append(i.content)
+
+            else:
+                # Otherwise keep the paragraph
+                reprocessed_ast.append(i)
+
         else:
+            # For non-paragraphs, add them to the reprocessed_ast unmodified.
             reprocessed_ast.append(i)
     new_ast = reprocessed_ast
 

@@ -20,12 +20,12 @@ html_valid_tags = {"a",
                    "li",
                    "i", "img",
                    "ol",
-                   "p",
+                   "p", "pre",
                    "span", "strong", "sub", "sup",
                    "table", "tbody", "td", "th", "thead", "tr",
                    "ul"}
 
-html_valid_attributes = {'a': {'href',},
+html_valid_attributes = {'a': {'href', 'class', 'role'},
                          'img': {'src', 'width', 'height', 'alt', 'class'},
                          }
 

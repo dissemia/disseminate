@@ -113,10 +113,11 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
 
 def run(in_directory, out_directory,
         server_class=http.server.HTTPServer, handler_class=RequestHandler,
-        port=settings.default_port):
+        port=settings.default_port,
+        target_list=settings.default_target_list):
     # Setup the index tree
     tree1 = Tree(project_root=in_directory, target_root=out_directory,
-                 target_list=settings.default_target_list)
+                 target_list=target_list)
     tree1.find_documents()
 
     # Customize the request handler with the tree

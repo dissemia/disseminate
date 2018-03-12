@@ -22,6 +22,12 @@ def is_directory(value):
                                           "directories".format(value))
     return value
 
+
+def format_ext(value):
+    """Format the target extensions list."""
+    return '.' + value if not value.startswith('.') else value
+
+
 # TODO: add clean or clear option to remove targets and .cache
 def main():
     # Create the argument parser
@@ -56,6 +62,13 @@ def main():
                        help="the target root directory for the generated "
                             "output documents")
 
+        p.add_argument('-t', '--targets',
+                       default=settings.default_target_list,
+                       nargs='*',
+                       type=format_ext,
+                       help="The target types (extensions) to render. ex:"
+                            "html tex")
+
     # init arguments
     init.add_argument('destination', default='', nargs='?',
                       help="The destination directory to initialize a project "
@@ -64,6 +77,7 @@ def main():
     # serve arguments
     serve.add_argument('-p', '--port',
                        action='store', default=settings.default_port,
+                       type=int,
                        help="The port to listen to for the webserver "
                             "(default: {})".format(settings.default_port))
 
@@ -91,4 +105,5 @@ def main():
         tree1.render()
 
     if args.command == 'serve':
-        run(in_directory=args.i, out_directory=args.o)
+        run(in_directory=args.i, out_directory=args.o, port=args.port,
+            target_list=args.targets)

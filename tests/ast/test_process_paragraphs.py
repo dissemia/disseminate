@@ -87,7 +87,7 @@ def test_process_paragraphs_leading_spaces():
 
     ast = process_ast(test_paragraphs2)
     ast = process_paragraphs(ast)
-
+    print(type(ast), ast)
     assert ast.content[0] == '  '
     assert ast.content[1].name == 'section'
     assert ast.content[2] == '  \n  This is my paragraph.'
