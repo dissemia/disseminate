@@ -224,7 +224,7 @@ class Tag(object):
         # Format the tag. It's either a macro or environment
         if name in settings.tex_macros:
             # ex: \section{First}
-            return ("\\" + name + attrs_str + '{' + elements + '}')
+            return "\\" + name + attrs_str + '{' + elements + '}'
         elif name in settings.tex_commands:
             # ex: \item
             return "\\" + name + ' ' + elements + "\n"

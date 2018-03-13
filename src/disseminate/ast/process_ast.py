@@ -125,8 +125,14 @@ def process_ast(ast=None, local_context=None, global_context=None,
         # Parse and add the tag
         d = match_tag.groupdict()
         tag_name = d['tag']
-        tag_content = process(text[start_position:position - 1])
         tag_attributes = d['attributes']
+
+        # Parse the ast for the tag's content only if it's not a verbatim style
+        # tag.
+        if tag_name in settings.verbatim_tags:
+            tag_content = text[start_position:position - 1]
+        else:
+            tag_content = process(text[start_position:position - 1])
 
         tag = factory.tag(tag_name=tag_name,
                           tag_content=tag_content,

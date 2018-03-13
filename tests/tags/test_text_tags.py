@@ -1,4 +1,6 @@
 """Test the text formatting tags."""
+from lxml.html import tostring
+
 from disseminate.ast import process_ast
 from disseminate.tags.text import P
 
@@ -39,6 +41,7 @@ def test_html():
         root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
         assert root_html == html
 
+
 def test_tex():
     """Test the text formatting tags in tex."""
 
@@ -64,3 +67,28 @@ def test_paragraph_tex():
     p = P(name='p', content='content', attributes=(),
           local_context={}, global_context={})
     assert p.tex() == '\ncontent\n'
+
+
+def test_verbatim():
+    """Test the verbatim tags."""
+
+    # Test a verb tag that includes a tag
+    test = "@v{@bold{bolded}}"
+    root = process_ast(test)
+    verb = root.content
+
+    # Match targets
+    assert verb.default() == "@bold{bolded}"
+    assert tostring(verb.html(level=2)) == b'<pre>@bold{bolded}</pre>'
+    assert verb.tex() == "\\verb|@bold{bolded}|"
+
+    # Test a verbatim block
+    test = "@verbatim{@bold{bolded}}"
+    root = process_ast(test)
+    verb = root.content
+
+    # Match targets
+    assert verb.default() == "@bold{bolded}"
+    assert tostring(verb.html(level=2)) == b'<pre>@bold{bolded}</pre>'
+    assert verb.tex() == ("\n\\begin{verbatim}\n"
+                          "@bold{bolded}\\end{verbatim}\n")

@@ -151,3 +151,20 @@ class Symbol(Tag):
         content = "\\" + self.content
         return ("\\ensuremath{" + content + "}" if not mathmode else
                 content)
+
+
+class Verb(Tag):
+    """A verbatim tag for displaying unformatted blocks of text."""
+
+    aliases = ("v", "pre", "verbatim")
+    active = True
+    include_paragraphs = False
+
+    html_name = 'pre'
+
+    def tex(self, *args, **kwargs):
+        if self.name == "verbatim":
+            return ("\n\\begin{verbatim}\n" + self.default() +
+                    "\\end{verbatim}\n")
+        else:
+            return "\\verb|" + self.default() + "|"
