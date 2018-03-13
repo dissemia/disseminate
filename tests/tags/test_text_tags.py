@@ -79,7 +79,7 @@ def test_verbatim():
 
     # Match targets
     assert verb.default() == "@bold{bolded}"
-    assert tostring(verb.html(level=2)) == b'<pre>@bold{bolded}</pre>'
+    assert tostring(verb.html(level=2)) == b'<code>@bold{bolded}</code>'
     assert verb.tex() == "\\verb|@bold{bolded}|"
 
     # Test a verbatim block
@@ -89,6 +89,7 @@ def test_verbatim():
 
     # Match targets
     assert verb.default() == "@bold{bolded}"
-    assert tostring(verb.html(level=2)) == b'<pre>@bold{bolded}</pre>'
+    assert tostring(verb.html(level=2)) == (b'<code class="block">@bold{bolded}'
+                                            b'</code>')
     assert verb.tex() == ("\n\\begin{verbatim}\n"
                           "@bold{bolded}\\end{verbatim}\n")

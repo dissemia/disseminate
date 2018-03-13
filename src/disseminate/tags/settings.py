@@ -14,6 +14,7 @@ html_pretty = True
 #: span tags in html
 html_valid_tags = {"a",
                    "b", "blockquote", "body",
+                   "code",
                    "div",
                    "em",
                    "h1", "h2", "h3", "h4", "h5",

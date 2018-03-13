@@ -7,6 +7,7 @@ from lxml.etree import Entity
 from lxml.builder import E
 
 from .core import Tag, TagError
+from ..attributes import set_attribute
 from . import settings
 
 
@@ -160,7 +161,12 @@ class Verb(Tag):
     active = True
     include_paragraphs = False
 
-    html_name = 'pre'
+    html_name = 'code'
+
+    def html(self, level=1):
+        if self.name == "verbatim":
+            self.attributes = set_attribute(self.attributes, ('class', 'block'))
+        return super(Verb, self).html(level)
 
     def tex(self, *args, **kwargs):
         if self.name == "verbatim":

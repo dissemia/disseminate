@@ -93,6 +93,7 @@ def test_yaml_macros():
     ---
     """
 
+    # 1. Test a basic macro
     local_context = {}
     global_context = {}
 
@@ -104,3 +105,23 @@ def test_yaml_macros():
     assert 'macros' in local_context
     assert '@feature' in local_context['macros']
     assert local_context['macros']['@feature'] == "@div[class=col-md-4]"
+
+    # 2. Test macros with quotes
+    src = """
+        ---
+        macros:
+            "@feature": "@div[class='col-md-4 test']"
+        ---
+        """
+
+    local_context = {}
+    global_context = {}
+
+    # Process the header
+    processed_string = load_yaml_header(src, local_context,
+                                        global_context)
+
+    # Check the contents of the local_context
+    assert 'macros' in local_context
+    assert '@feature' in local_context['macros']
+    assert local_context['macros']['@feature'] == "@div[class='col-md-4 test']"
