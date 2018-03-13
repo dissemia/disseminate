@@ -11,9 +11,9 @@ except ImportError:
 from ..utils.string import Metastring
 
 
-re_header = regex.compile(r'^[\s\n]*[\n]?\s*-{3,}\n'
-                          r'(?P<yaml>[^-]+)'
-                          r'\n\s*-{3,}\n')
+re_header = regex.compile(r'^[\s\n]*(-{3,})\n'
+                          r'(?P<yaml>.+?)'
+                          r'(\n\s*\g<1>)\n', regex.DOTALL)
 
 
 def load_yaml_header(s, local_context, global_context):
