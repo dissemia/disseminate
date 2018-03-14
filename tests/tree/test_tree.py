@@ -76,6 +76,14 @@ def test_load_index_files():
     assert src_filepaths[2] == 'sub2/subsub2/index.dm'
     assert src_filepaths[3] == 'sub1/index.dm'
 
+    # The 'examples8' directory contains and index.tree file without a newline
+    # at the end
+    src_filepaths = load_index_files('tests/tree/examples8/index.tree',
+                                     'tests/tree/examples8')
+    assert len(src_filepaths) == 2
+    assert src_filepaths[0] == 'main.dm'
+    assert src_filepaths[1] == 'secondary.dm'
+
 
 def test_basic_index():
     """Tests a basic index tree file."""
