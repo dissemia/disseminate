@@ -2,6 +2,7 @@
 Test the process_typography function.
 """
 from disseminate.ast.process_typography import process_typography
+from disseminate.ast.process_ast import process_ast
 from disseminate.tags import Tag
 
 
@@ -61,3 +62,15 @@ def test_process_typography_apostrophes_and_quotes():
             "This is ‘Justin’s’ string.")
     assert (process_typography("This is \"Justin's\" string.") ==
             "This is “Justin’s” string.")
+
+
+def test_process_typography_verbatim():
+    """Test process_typography with endashes and emdashes."""
+
+    # Test a verbatim tag
+    test1 = "@v{An emdash---this is a test of that}"
+    ast = process_ast(test1)
+    print(ast)
+    ast = process_typography(ast)
+
+    assert ast.content.content == "An emdash---this is a test of that"

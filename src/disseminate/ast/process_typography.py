@@ -4,6 +4,8 @@ Process AST functions for typography.
 import regex
 
 from ..tags import Tag
+from . import settings
+
 
 re_endash = regex.compile(r"[\s\u00a0]*(--|\u2013)[\s\u00a0]*")
 re_emdash = regex.compile(r"[\s\u00a0]*(---|\u2014)[\s\u00a0]*")
@@ -39,8 +41,8 @@ def process_typography(ast=None, local_context=None, global_context=None,
         The AST is a root tag with a content comprising a list of tags or
         strings.
     """
-    # Process the ast if it's simply a string
     if isinstance(ast, str):
+        # Process the ast if it's simply a string
         ast = re_emdash.sub('\u2014', ast)
         ast = re_endash.sub('\u2013', ast)
         ast = re_apostrophe.sub('’', ast)
@@ -50,13 +52,19 @@ def process_typography(ast=None, local_context=None, global_context=None,
         ast = re_double_end.sub('”', ast)
         return ast
 
-    elif isinstance(ast, Tag):
+    elif isinstance(ast, Tag) and ast.name not in settings.verbatim_tags:
+        # Process the tag (as long as it's not a verbatim tag)
         ast.content = process_typography(ast.content,
                                          local_context, global_context,
                                          src_filepath, level+1)
         return ast
 
-    # Process each ast element and find text elements
+    elif isinstance(ast, Tag):
+        # For verbatim tags, simply return the ast unprocessed.
+        return ast
+
+    # The ast at this point should be a list. Process each ast element and
+    # find text elements
     new_ast = []
     for i in ast:
         # Determine the type of AST element and process it further if it's
@@ -64,12 +72,11 @@ def process_typography(ast=None, local_context=None, global_context=None,
         if isinstance(i, str) or isinstance(i, list):
             i = process_typography(i, local_context, global_context,
                                    src_filepath, level+1)
-            new_ast.append(i)
 
-        elif isinstance(i, Tag):
+        elif isinstance(i, Tag) and i.name not in settings.verbatim_tags:
             i.content = process_typography(i.content,
                                            local_context, global_context,
                                            src_filepath, level + 1)
-            new_ast.append(i)
+        new_ast.append(i)
 
     return new_ast
