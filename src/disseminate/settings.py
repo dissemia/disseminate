@@ -90,8 +90,7 @@ media_dir = 'media'
 #media_url_root
 
 #: Default formats for labels
-label_format = {'figure': "Fig. {number}"}
-
+label_format = {'figure': "Fig. {document_number}.{number}"}
 
 #: Default separator for labels. (ex: the period at the end of Fig. 1.)
 label_sep = '.'

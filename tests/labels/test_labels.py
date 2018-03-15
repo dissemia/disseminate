@@ -5,26 +5,26 @@ import pytest
 from lxml import etree
 
 from disseminate.labels import LabelManager, LabelNotFound
+from disseminate import Document
 
 
-def test_basic_labels():
+def test_basic_labels(tmpdir):
     """Tests the basic functionality of labels."""
-    # Get a label manager
-    label_man = LabelManager(project_root='src', target_root='.',
-                             segregate_targets=True)
+    # Create a test document and global_context
+    global_context = dict()
+    src_filepath = tmpdir.join('src').join('main.dm')
+    doc = Document(src_filepath=str(src_filepath),
+                   targets={'.html': str(tmpdir.join('html').join('main.html')),
+                            '.tex': str(tmpdir.join('html').join('main.html'))},
+                   global_context=global_context)
 
-    # Make a mock local_context
-    local_context = {'_src_filepath': 'src/main1.dm',
-                     '_targets': {'.html': 'html/main1.dm'}}
+    # Get a label manager
+    label_man = LabelManager()
 
     # Generate a couple of generic labels. These have no id and cannot be
     # fetched
-    label1 = label_man.add_label(local_context=local_context,
-                                 global_context=None,
-                                 kind='figure')
-    label2 = label_man.add_label(local_context=local_context,
-                                 global_context=None,
-                                 kind='figure')
+    label1 = label_man.add_label(document=doc, kind='figure')
+    label2 = label_man.add_label(document=doc, kind='figure')
 
     # Try to get the labels. These are generic labels, which cannot be
     # retrieved.
@@ -33,49 +33,41 @@ def test_basic_labels():
         assert label1 == label_man.get_label(label1.id)
 
     # Generate a couple of specific labels
-    label3 = label_man.add_label(local_context=local_context,
-                                 global_context=None,
-                                 kind='figure',
-                                 id='fig:image1')
-    label4 = label_man.add_label(local_context=local_context,
-                                 global_context=None,
-                                 kind='figure',
-                                 id='fig:image2')
+    label3 = label_man.add_label(document=doc, kind='figure', id='fig:image1')
+    label4 = label_man.add_label(document=doc, kind='figure', id='fig:image2')
 
     # Get the labels and make sure they match
     assert label3 == label_man.get_label('fig:image1')
     assert label4 == label_man.get_label('fig:image2')
 
 
-def test_reset():
+def test_reset(tmpdir):
     """Tests the reset method for the label manager."""
+    # Create a test document and global_context
+    global_context = dict()
+    src_filepath = tmpdir.join('src').join('main.dm')
+    doc = Document(src_filepath=str(src_filepath),
+                   targets={'.html': str(tmpdir.join('html').join('main.html')),
+                            '.tex': str(tmpdir.join('html').join('main.html'))},
+                   global_context=global_context)
+
     # Get a label manager
-    label_man = LabelManager(project_root='src', target_root='.',
-                             segregate_targets=True)
-
-    # Make a mock local_context
-    local_context = {'_src_filepath': 'src/main1.dm',
-                     '_targets': {'.html': 'html/main1.html'}}
+    label_man = LabelManager()
 
     # Generate a couple of short labels
-    label1 = label_man.add_label(local_context=local_context,
-                                 global_context=None,
-                                 kind='figure')
-    label2 = label_man.add_label(local_context=local_context,
-                                 global_context=None,
-                                 kind='figure')
+    label1 = label_man.add_label(document=doc, kind='figure')
+    label2 = label_man.add_label(document=doc, kind='figure')
 
-    # Create a second mock local_context for a second document
-    local_context2 = {'_src_filepath': 'src/main2.dm',
-                      '_targets': {'.html': 'html/main2.html'}}
+    # Create a second document
+    src_filepath2 = tmpdir.join('src').join('tmp2.dm')
+    doc2 = Document(src_filepath=str(src_filepath2),
+                    targets={'.html': str(tmpdir.join('html').join('tmp2.html')),
+                             '.tex': str(tmpdir.join('html').join('tmp2.html'))},
+                    global_context=global_context)
 
     # Generate a couple of short labels
-    label3 = label_man.add_label(local_context=local_context2,
-                                 global_context=None,
-                                 kind='figure')
-    label4 = label_man.add_label(local_context=local_context2,
-                                 global_context=None,
-                                 kind='figure')
+    label3 = label_man.add_label(document=doc2, kind='figure')
+    label4 = label_man.add_label(document=doc2, kind='figure')
 
     # Check the numbers
     assert label3.global_number == 3
@@ -91,7 +83,7 @@ def test_reset():
     assert label4 in label_man.labels
 
     # Now remove labels for the document in local_context
-    label_man.reset('src/main1.dm')
+    label_man.reset(doc)
 
     assert len(label_man.labels) == 2
     assert label1 not in label_man.labels
@@ -106,24 +98,28 @@ def test_reset():
     assert label4.local_number == 2
 
 
-def test_label_html():
+def test_label_html(tmpdir):
     """Tests the generation of html from a label"""
-    # Get a label manager
-    label_man = LabelManager(project_root='src', target_root='.',
-                             segregate_targets=True)
+    # Create a test document and global_context
+    global_context = {'_target_root': str(tmpdir),
+                      '_segregate_targets': True}
+    src_filepath = tmpdir.join('src').join('main.dm')
+    doc = Document(src_filepath=str(src_filepath),
+                   targets={'.html': str(tmpdir.join('html').join('main.html')),
+                            '.tex': str(tmpdir.join('html').join('main.html'))},
+                   global_context=global_context)
 
-    # Make a mock local_context
-    local_context = {'_src_filepath': 'src/main1.dm',
-                     '_targets': {'.html': 'html/main1.html'}}
+    # Get a label manager
+    label_man = LabelManager()
 
     # Generate a specific labels
-    label1 = label_man.add_label(local_context=local_context,
-                                 global_context=None,
-                                 kind='figure',
-                                 id='fig:image1')
+    label1 = label_man.add_label(document=doc,  kind='figure', id='fig:image1')
 
     # Check the html label
-    html = etree.tostring(label1.html_label()).decode('utf-8')
+    local_context = {'_src_filepath': doc.src_filepath,
+                     'figure': "Fig. {number}"}
+    html = etree.tostring(label1.html_label(local_context=local_context))
+    html = html.decode('utf-8')
     assert html == '<span class="figure-label" id="fig:image1">Fig. 1.</span>'
 
     # Check the html reference (from inside the document)
@@ -133,6 +129,8 @@ def test_label_html():
 
     # Check the html reference (from outside the document and with a different
     # local_context)
-    html = etree.tostring(label1.html_ref())
+    local_context = {'_src_filepath': 'different',
+                     'figure': "Fig. {number}"}
+    html = etree.tostring(label1.html_ref(local_context=local_context))
     html = html.decode('utf-8')
-    assert html == '<a href="main1.html#fig:image1">Fig. 1</a>'
+    assert html == '<a href="main.html#fig:image1">Fig. 1</a>'

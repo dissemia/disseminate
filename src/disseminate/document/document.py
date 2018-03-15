@@ -34,9 +34,10 @@ class Document(object):
     Attributes
     ----------
     src_filepath : str
-        A filename for a document (markup source) file. This file should exist.
-        This path is a render path: it's either an absolute path or a path
-        relative to the current directory.
+        The filename and path for this document's (markup source) file. This
+        file should exist. This path is a render path: it's either an absolute
+        path or a path relative to the current directory.
+        ex: 'src/chapter1/chapter1.dm'
     targets : dict
         A dict with the target extension as keys (ex: '.html') and the value
         is the target_filepath for that target. (ex: 'html/index.html')
@@ -89,8 +90,13 @@ class Document(object):
         self.targets = targets
         self.global_context = (global_context
                                if isinstance(global_context, dict) else dict())
-        self.local_context = self.global_context.setdefault(src_filepath,
-                                                            dict())
+        self.local_context = dict()
+
+        # Reset the local_context, dependencies and labels
+        self.reset_contexts()
+        self.reset_dependencies()
+        self.reset_labels()
+
         # The cached AST
         self._ast = None
 
@@ -98,9 +104,61 @@ class Document(object):
         # processed
         self._mtime = None
 
+    @property
+    def project_filepath(self):
+        """The filepath for this document relative to the project_root.
+
+        Returns
+        -------
+        project_filepath : str or None
+            The string of the src_filepath relative to the project_root.
+            If the project_root could not be found, then None is returned.
+
+        """
+        if '_project_root' in self.global_context:
+            project_root = self.global_context['_project_root']
+            return os.path.relpath(self.src_filepath, project_root)
+        else:
+            return None
+
+    def target_filepath(self, target, render_path=True):
+        """The filepath for the given target extension.
+
+        Parameters
+        ----------
+        target : str
+            The target extension for the target file.
+            ex: '.html' or '.tex'
+        render_path : bool
+            If True, the returned target_filepath is a render path---i.e. it
+            is an absolute path or relative to the current directory.
+            If False, the returned target_filepath is relative to the target
+            root, including the segregate_targets subdirectory.
+        """
+        assert target in self.targets
+
+        # Strip the leading period
+        stripped_target = target if not target.startswith('.') else target[1:]
+
+        if (not render_path and
+            '_target_root' in self.global_context and
+            '_segregate_targets' in self.global_context):
+            target_root = self.global_context['_target_root']
+            segregate_targets = self.global_context['_segregate_targets']
+
+            target_path = (target_root if not segregate_targets else
+                           os.path.join(target_root, stripped_target))
+            return os.path.relpath(self.targets[target], target_path)
+
+        return self.targets[target]
+
     def reset_contexts(self):
         """Clear and repopulate the local_context and global_context."""
         self.local_context.clear()
+
+        # Populate the document in the local_context
+        self.local_context['_document'] = self
+
         # Populate the document's src_filepath
         self.local_context['_src_filepath'] = self.src_filepath
 
@@ -113,6 +171,48 @@ class Document(object):
             document_numbers = self.global_context['_document_numbers']
             document_number = document_numbers[self.src_filepath]
             self.local_context['document_number'] = document_number
+
+    def reset_dependencies(self):
+        """Clear and repopulate the dependencies for this document in the
+        dependency manager."""
+        if '_dependencies' in self.global_context:
+            document_src_filepath = self.src_filepath
+            dep = self.global_context['_dependencies']
+            dep.reset(document_src_filepath=document_src_filepath)
+
+    def reset_labels(self):
+        """Clear and repopulate the labels for this document in the label
+        manager."""
+        if '_label_manager' in self.global_context:
+            document_src_filepath = self.src_filepath
+            label_manager = self.global_context['_label_manager']
+            label_manager.reset(document=self)
+
+    def set_document_label(self):
+        """Set the label for this document in the label manager.
+
+        .. note:: This function is invoked as part of the get_ast method, after
+                  parsing the source file, so that the 'title' attribute can be
+                  retrieved from the local_context.
+        """
+        if '_label_manager' in self.global_context:
+            label_manager = self.global_context['_label_manager']
+
+            # Get the filepath for this document relative to the project_root,
+            # if possible
+            project_filepath = self.project_filepath
+            project_filepath = (self.src_filepath
+                                if project_filepath is None
+                                else project_filepath)
+
+            # Get the title for this document
+            title = (self.local_context['title'] if 'title' in
+                     self.local_context else project_filepath)
+
+            # Set the label for this document
+            label_manager.add_label(document=self, kind='document',
+                                    id='doc:' + project_filepath,
+                                    contents=title)
 
     def get_ast(self, reload=False):
         """Process and return the AST.
@@ -171,16 +271,10 @@ class Document(object):
             self.reset_contexts()
 
             # Clear the dependencies for this document
-            if '_dependencies' in self.global_context:
-                document_src_filepath = self.src_filepath
-                dep = self.global_context['_dependencies']
-                dep.reset(document_src_filepath=document_src_filepath)
+            self.reset_dependencies()
 
             # Clear the labels for this document
-            if '_label_manager' in self.global_context:
-                document_src_filepath = self.src_filepath
-                label_manager = self.global_context['_label_manager']
-                label_manager.reset(document_src_filepath=document_src_filepath)
+            self.reset_labels()
 
             # Process the string
             for processor in self.string_processors:
@@ -193,6 +287,11 @@ class Document(object):
                 ast = processor(ast=ast, local_context=self.local_context,
                                 global_context=self.global_context,
                                 src_filepath=self.src_filepath)
+
+            # Set the label for this document. This is done after the source
+            # file is parsed because the source file might contain the 'title'
+            # setting.
+            self.set_document_label()
 
             # cache the ast
             self._ast = ast

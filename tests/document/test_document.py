@@ -6,6 +6,7 @@ from shutil import copyfile
 
 from disseminate.document import Document, DocumentError
 from disseminate.dependency_manager import DependencyManager, MissingDependency
+from disseminate.labels import LabelManager
 
 
 def test_basic_conversion_html(tmpdir):
@@ -55,6 +56,39 @@ def test_ast_caching(tmpdir):
     doc.get_ast()
     assert ast == doc._ast
     assert mtime == doc._mtime
+
+
+def test_target_filepath():
+    """Test the target_filepath method."""
+
+    # Create the document with the needed local_context and global_context
+    global_context = dict()
+    doc = Document(src_filepath='tmp.dm', targets={'.html': 'html/tmp.html',
+                                                   '.tex': 'tex/tmp.tex'},
+                   global_context=global_context)
+
+    # Without the '_target_root' and '_segregate_target' defined in the
+    # global_context, only the raw target filepath can be returned.
+    assert doc.target_filepath('.html', render_path=True) == 'html/tmp.html'
+    assert doc.target_filepath('.html', render_path=False) == 'html/tmp.html'
+    assert doc.target_filepath('.tex', render_path=True) == 'tex/tmp.tex'
+    assert doc.target_filepath('.tex', render_path=False) == 'tex/tmp.tex'
+
+    # Assign the '_target_root' and '_segregate_target" in the global_context
+    global_context['_target_root'] = '.'
+    global_context['_segregate_targets'] = True
+
+    assert doc.target_filepath('.html', render_path=True) == 'html/tmp.html'
+    assert doc.target_filepath('.html', render_path=False) == 'tmp.html'
+    assert doc.target_filepath('.tex', render_path=True) == 'tex/tmp.tex'
+    assert doc.target_filepath('.tex', render_path=False) == 'tmp.tex'
+
+    global_context['_segregate_targets'] = False
+
+    assert doc.target_filepath('.html', render_path=True) == 'html/tmp.html'
+    assert doc.target_filepath('.html', render_path=False) == 'html/tmp.html'
+    assert doc.target_filepath('.tex', render_path=True) == 'tex/tmp.tex'
+    assert doc.target_filepath('.tex', render_path=False) == 'tex/tmp.tex'
 
 
 def test_custom_template(tmpdir):
@@ -177,3 +211,78 @@ def test_dependencies_img(tmpdir):
     # A missing dependency raises a MissingDependency exception
     with pytest.raises(MissingDependency):
         d = dep.get_dependency(target='.html', src_filepath=img_path)
+
+
+def test_document_labels(tmpdir):
+    """Test the correct assignment of labels for a document."""
+
+    # Setup the project_root in a temp directory
+    project_root = tmpdir.join('src')
+    target_root = tmpdir
+
+    # Make a document source file
+    src_filepath = project_root.join('test.dm')
+    src_filepath.ensure(file=True)  # touch the file
+
+    # Create a document
+    man = LabelManager()
+    global_context = {'_label_manager': man}
+    doc = Document(src_filepath=str(src_filepath),
+                   targets={'.html': target_root.join('html/test.html'),
+                            '.tex': target_root.join('html/test.tex')},
+                   global_context=global_context)
+
+    # 1. Test the label when the '_project_root' value is not assigned in the
+    #    global_context. In this case, the label is identified by the document's
+    #    src_filepath
+
+    # The project_filepath property can't access the '_project_root', so it
+    # returns None
+    assert doc.project_filepath is None
+
+    # The label isn't created until the get_ast or render methods are run.
+    assert len(man.labels) == 0
+
+    # Run the render method and the label should be set
+    doc.render(targets=['.html',])
+
+    assert len(man.labels) == 1
+    label = man.get_label(id="doc:" + str(src_filepath))
+    assert label.id == "doc:" + str(src_filepath)
+
+    # 2. Test the label when the '_project_root' value is assigned in the
+    #    global_context
+
+    # Set the '_project_root' value in the global context
+    global_context['_project_root'] = str(project_root)
+    assert doc.project_filepath == 'test.dm'
+
+    # Reset the ast cache and run the render method and the label should be set
+    doc._ast = None
+    doc.render(targets=['.html', ])
+
+    assert len(man.labels) == 1
+    label = man.get_label('doc:test.dm')
+    assert label.id == "doc:test.dm"
+    assert label.contents == 'test.dm'  # generic title base on project_root
+
+    # 3. Test the label when the '_project_root' value is assigned in the
+    #    global_context and the 'title' value is assigned in the local_context
+
+    # Set the title in the document
+    src_filepath.write("---\n"
+                       "title: my title\n"
+                       "---\n")
+
+    # Set the '_project_root' value in the global context
+    global_context['_project_root'] = str(project_root)
+    assert doc.project_filepath == 'test.dm'
+
+    # Reset the ast cache and run the render method and the label should be set
+    doc._ast = None
+    doc.render(targets=['.html', ])
+
+    assert len(man.labels) == 1
+    label = man.get_label('doc:test.dm')
+    assert label.id == "doc:test.dm"
+    assert label.contents == "my title"

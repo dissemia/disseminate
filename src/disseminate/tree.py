@@ -159,9 +159,7 @@ class Tree(object):
         self.dependencies = dep
 
         # Set the label manager
-        label_manager = LabelManager(project_root=self.project_root,
-                                     target_root=self.target_root,
-                                     segregate_targets=self.segregate_targets)
+        label_manager = LabelManager()
         self.label_manager = label_manager
 
         # The time of the last render
@@ -494,9 +492,11 @@ class Tree(object):
     def reset_contexts(self):
         """Clear and repopulate the global_context."""
         self.global_context.clear()
+
         # Set the locations of the project and document roots
         self.global_context['_project_root'] = self.project_root
         self.global_context['_target_root'] = self.target_root
+        self.global_context['_segregate_targets'] = self.segregate_targets
 
         # Set the dependency manager
         self.global_context['_dependencies'] = self.dependencies

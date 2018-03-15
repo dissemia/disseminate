@@ -58,13 +58,14 @@ class Caption(Tag):
                                                            'id')
 
         # Get the label manager and add the label
-        if '_label_manager' in global_context:
+        if ('_label_manager' in global_context and
+           '_document' in local_context):
             label_manager = global_context['_label_manager']
-            label = label_manager.add_label(local_context=local_context,
-                                            global_context=global_context,
-                                            kind=kind,
-                                            id=id,
-                                            contents=contents)
+            document = local_context['_document']
+
+            label = label_manager.add_label(document=document, kind=kind,
+                                            id=id, contents=contents)
+
             # Get the label's text and add it to the caption
             label_text = label.label(local_context=local_context,
                                      global_context=global_context)
