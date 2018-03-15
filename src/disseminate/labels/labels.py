@@ -310,6 +310,43 @@ class LabelManager(object):
 
         return existing_labels.pop()
 
+    def get_labels(self, document=None, kinds=None):
+        """Return a filtered list of all labels for the given document.
+
+        Parameters
+        ----------
+        document : :obj:`disseminate.Document` or None
+            The document to search labels for.
+            If None is specified, labels for all documents are returned.
+        kinds : str or list of str or None
+            If None, all label kinds are returned.
+            If string, all labels matching the kind string will be returned.
+            If a list of strings is returned, all labels matching all the kinds
+            listed will be returned.
+
+        Returns
+        -------
+        list of :obj:`disseminate.labels.Label`
+            A list of label objects.
+        """
+        # Filter labels by document
+        if document is not None:
+            returned_labels = sorted([l for l in self.labels
+                                      if l.document == document],
+                                     key=lambda x: x.global_number)
+        else:
+            returned_labels = sorted([l for l in self.labels],
+                                     key=lambda x: x.global_number)
+
+        if kinds is None:
+            return list(returned_labels)
+
+        # Filter labels by kind
+        if isinstance(kinds, str):
+            kinds = [kinds]
+
+        return [l for l in returned_labels if l.kind in kinds]
+
     def reset(self, document=None):
         """Reset the labels tracked by the LabelManager.
 

@@ -41,6 +41,48 @@ def test_basic_labels(tmpdir):
     assert label4 == label_man.get_label('fig:image2')
 
 
+def test_get_labels(tmpdir):
+    """Test the get_labels method."""
+    # Create a test document and global_context
+    global_context = dict()
+    src_filepath = tmpdir.join('src').join('main.dm')
+    doc = Document(src_filepath=str(src_filepath),
+                   targets={'.html': str(tmpdir.join('html').join('main.html')),
+                            '.tex': str(tmpdir.join('html').join('main.html'))},
+                   global_context=global_context)
+
+    # Get a label manager
+    label_man = LabelManager()
+
+    # Generate a couple of generic labels. These have no id and cannot be
+    # fetched
+    label1 = label_man.add_label(document=doc, kind='figure')
+    label2 = label_man.add_label(document=doc, kind='figure')
+
+    # Get all labels
+    labels = label_man.get_labels()
+    assert labels == [label1, label2]
+
+    # Get labels for this document
+    labels = label_man.get_labels(document=doc)
+    assert labels == [label1, label2]
+
+    # Get labels for another document (a string is used since the type is not
+    # checked)
+    labels = label_man.get_labels(document='other')
+    assert labels == []
+
+    # Filter by kind
+    labels = label_man.get_labels(kinds='figure')
+    assert labels == [label1, label2]
+
+    labels = label_man.get_labels(kinds=['figure', 'h1'])
+    assert labels == [label1, label2]
+
+    labels = label_man.get_labels(kinds=['h1'])
+    assert labels == []
+
+
 def test_reset(tmpdir):
     """Tests the reset method for the label manager."""
     # Create a test document and global_context
