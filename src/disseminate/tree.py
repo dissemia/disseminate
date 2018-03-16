@@ -376,6 +376,10 @@ class Tree(object):
         self.find_documents_in_indexes()
         self.find_documents_by_type()
 
+    def get_documents(self):
+        """Get an ordered list of documents for this tree."""
+        return list(map(self.documents.get, self.src_filepaths))
+
     def convert_src_filepath(self, src_filepath, target_list=None,
                              relative_root=None):
         """Converts the src_filepath to a dict of targets and their target
@@ -492,6 +496,9 @@ class Tree(object):
     def reset_contexts(self):
         """Clear and repopulate the global_context."""
         self.global_context.clear()
+
+        # Populate the tree in the global_context
+        self.global_context['_tree'] = self
 
         # Set the locations of the project and document roots
         self.global_context['_project_root'] = self.project_root

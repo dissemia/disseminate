@@ -105,6 +105,18 @@ class Document(object):
         self._mtime = None
 
     @property
+    def title(self):
+        """The title for the document."""
+        if 'title' in self.local_context:
+            return self.local_context['title']
+
+        project_filepath = self.project_filepath
+        if project_filepath is not None:
+            return project_filepath.strip(settings.document_extension)
+
+        return self.src_filepath.strip(settings.document_extension)
+
+    @property
     def project_filepath(self):
         """The filepath for this document relative to the project_root.
 
@@ -141,8 +153,9 @@ class Document(object):
         stripped_target = target if not target.startswith('.') else target[1:]
 
         if (not render_path and
-            '_target_root' in self.global_context and
-            '_segregate_targets' in self.global_context):
+           '_target_root' in self.global_context and
+           '_segregate_targets' in self.global_context):
+
             target_root = self.global_context['_target_root']
             segregate_targets = self.global_context['_segregate_targets']
 
@@ -184,7 +197,6 @@ class Document(object):
         """Clear and repopulate the labels for this document in the label
         manager."""
         if '_label_manager' in self.global_context:
-            document_src_filepath = self.src_filepath
             label_manager = self.global_context['_label_manager']
             label_manager.reset(document=self)
 
@@ -205,14 +217,10 @@ class Document(object):
                                 if project_filepath is None
                                 else project_filepath)
 
-            # Get the title for this document
-            title = (self.local_context['title'] if 'title' in
-                     self.local_context else project_filepath)
-
             # Set the label for this document
             label_manager.add_label(document=self, kind='document',
                                     id='doc:' + project_filepath,
-                                    contents=title)
+                                    contents=self.title)
 
     def get_ast(self, reload=False):
         """Process and return the AST.

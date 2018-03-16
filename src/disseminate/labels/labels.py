@@ -162,24 +162,30 @@ class Label(object):
             A 'a' element with the 'href' set to this label's identifier.
             By default, the short decription is used.
         """
+        # Construct the anchor, if an id has been specified
+        anchor = '#' + self.id if isinstance(self.id, str) else ''
 
+        # Cunstrum the link
         # See if it's on a different document from the src_filepath
         if (isinstance(local_context, dict) and
            '_src_filepath' in local_context and
            local_context['_src_filepath'] == self.src_filepath):
             # the documents match, make an internal link
 
-            link = "#" + self.id
+            link = anchor
         else:
             # the documents do not match, make a link to a different page
 
             location_file = self.document.target_filepath(target='.html',
                                                           render_path=False)
-            link = location_file + "#" + self.id
+            link = location_file + anchor
 
         text = self.short(local_context, global_context)
 
-        return E('a', text, href=link)
+        if link != "":
+            return E('a', text, href=link)
+        else:
+            return text
 
     def tex_ref(self, local_context=None, global_context=None):
         """An tex reference to this label.

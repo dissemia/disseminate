@@ -2,6 +2,7 @@
 Tags for headings.
 """
 from .core import Tag
+from ..attributes import get_attribute_value
 
 
 class Heading(Tag):
@@ -10,6 +11,26 @@ class Heading(Tag):
     tex_name = None
     active = True
     include_paragraphs = False
+
+    label_heading = True
+
+    def __init__(self, name, content, attributes, local_context,
+                 global_context):
+        super(Heading, self).__init__(name, content, attributes, local_context,
+                                      global_context)
+
+        # Add a label for the heading
+        if (self.label_heading and
+           '_label_manager' in global_context and
+           '_document' in local_context):
+
+            label_manager = global_context['_label_manager']
+            document = local_context['_document']
+            kind = self.__class__.__name__.lower()
+            id = get_attribute_value(self.attributes, 'id')
+
+            label_manager.add_label(document=document, kind=kind, id=id,
+                                    contents=self.content)
 
     def tex(self, level=1, mathmode=False):
         # Add newlines around headings
@@ -52,3 +73,5 @@ class Para(Tag):
     tex_name = "paragraph"
     active = True
     include_paragraphs = False
+
+    label_heading = False

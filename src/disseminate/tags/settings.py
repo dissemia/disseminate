@@ -28,6 +28,8 @@ html_valid_tags = {"a",
 
 html_valid_attributes = {'a': {'href', 'class', 'role'},
                          'img': {'src', 'width', 'height', 'alt', 'class'},
+                         'ol': {'class'},
+                         'ul': {'class'},
                          }
 
 #: TEX Tags
