@@ -160,12 +160,12 @@ def test_label_html(tmpdir):
     # Check the html label
     local_context = {'_src_filepath': doc.src_filepath,
                      'figure': "Fig. {number}"}
-    html = etree.tostring(label1.html_label(local_context=local_context))
+    html = etree.tostring(label1.label_html(local_context=local_context))
     html = html.decode('utf-8')
     assert html == '<span class="figure-label" id="fig:image1">Fig. 1.</span>'
 
     # Check the html reference (from inside the document)
-    html = etree.tostring(label1.html_ref(local_context=local_context))
+    html = etree.tostring(label1.ref_html(local_context=local_context))
     html = html.decode('utf-8')
     assert html == '<a href="#fig:image1">Fig. 1</a>'
 
@@ -173,6 +173,6 @@ def test_label_html(tmpdir):
     # local_context)
     local_context = {'_src_filepath': 'different',
                      'figure': "Fig. {number}"}
-    html = etree.tostring(label1.html_ref(local_context=local_context))
+    html = etree.tostring(label1.ref_html(local_context=local_context))
     html = html.decode('utf-8')
     assert html == '<a href="main.html#fig:image1">Fig. 1</a>'

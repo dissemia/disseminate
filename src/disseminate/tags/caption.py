@@ -110,10 +110,10 @@ class Ref(Tag):
 
     def html(self, level=1):
         label = self.get_label()
-        return label.html_ref(local_context=self.local_context,
+        return label.ref_html(local_context=self.local_context,
                               global_context=self.global_context)
 
     def tex(self, level=1, mathmode=False):
         label = self.get_label()
-        return label.tex_ref(local_context=self.local_context,
+        return label.ref_tex(local_context=self.local_context,
                              global_context=self.global_context)

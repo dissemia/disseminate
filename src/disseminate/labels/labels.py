@@ -122,7 +122,7 @@ class Label(object):
         """
         return self.short(local_context, global_context) + settings.label_sep
 
-    def html_label(self, local_context=None, global_context=None):
+    def label_html(self, local_context=None, global_context=None):
         """The html label (anchor).
 
         Parameters
@@ -144,7 +144,7 @@ class Label(object):
                  'id': self.id}
         return E('span', text, **attrs)
 
-    def html_ref(self, local_context=None, global_context=None):
+    def ref_html(self, local_context=None, global_context=None):
         """An html reference link to this label.
 
         Parameters
@@ -187,7 +187,7 @@ class Label(object):
         else:
             return text
 
-    def tex_ref(self, local_context=None, global_context=None):
+    def ref_tex(self, local_context=None, global_context=None):
         """An tex reference to this label.
 
         Parameters

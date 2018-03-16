@@ -58,7 +58,7 @@ class Toc(Tag):
                                               kinds=self._heading_kinds)
 
             for label in labels:
-                e = E('li', label.html_ref(self.local_context,
+                e = E('li', label.ref_html(self.local_context,
                                            self.global_context))
                 elements.append(e)
 
