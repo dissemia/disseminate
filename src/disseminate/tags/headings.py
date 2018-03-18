@@ -5,6 +5,9 @@ from .core import Tag
 from ..attributes import get_attribute_value
 
 
+toc_levels = ('section', 'subsection', 'subsubsection')
+
+
 class Heading(Tag):
     """A heading tag."""
     html_name = None
@@ -26,11 +29,11 @@ class Heading(Tag):
 
             label_manager = global_context['_label_manager']
             document = local_context['_document']
-            kind = self.__class__.__name__.lower()
+            kind = ('heading', self.__class__.__name__.lower())
             id = get_attribute_value(self.attributes, 'id')
 
             label_manager.add_label(document=document, kind=kind, id=id,
-                                    contents=self.content)
+                                    contents=self.content, label_type='caption')
 
     def tex(self, level=1, mathmode=False):
         # Add newlines around headings

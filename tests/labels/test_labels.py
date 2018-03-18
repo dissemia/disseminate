@@ -112,10 +112,10 @@ def test_reset(tmpdir):
     label4 = label_man.add_label(document=doc2, kind='figure')
 
     # Check the numbers
-    assert label3.global_number == 3
-    assert label3.local_number == 1
-    assert label4.global_number == 4
-    assert label4.local_number == 2
+    assert label3.global_order == (3,)
+    assert label3.local_order == (1,)
+    assert label4.global_order == (4,)
+    assert label4.local_order == (2,)
 
     # Check that the labels were correctly added
     assert len(label_man.labels) == 4
@@ -134,10 +134,10 @@ def test_reset(tmpdir):
     assert label4 in label_man.labels
 
     # Check the numbers
-    assert label3.global_number == 1
-    assert label3.local_number == 1
-    assert label4.global_number == 2
-    assert label4.local_number == 2
+    assert label3.global_order == (1,)
+    assert label3.local_order == (1,)
+    assert label4.global_order == (2,)
+    assert label4.local_order == (2,)
 
 
 def test_label_html(tmpdir):
@@ -175,4 +175,4 @@ def test_label_html(tmpdir):
                      'figure': "Fig. {number}"}
     html = etree.tostring(label1.ref_html(local_context=local_context))
     html = html.decode('utf-8')
-    assert html == '<a href="main.html#fig:image1">Fig. 1</a>'
+    assert html == '<a href="/main.html#fig:image1">Fig. 1</a>'
