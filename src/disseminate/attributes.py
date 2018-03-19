@@ -97,6 +97,9 @@ def get_attribute_value(attrs, attribute_name, target=None):
     'red'
     >>> get_attribute_value((('class', 'base bttnred'), 'red'),
     ...                     'blue')
+    >>> get_attribute_value((('html.label', 'test1'), ('tex.label', 'test2')),
+    ...                     'label', target='.tex')
+    'test2'
     """
     # Format the attrs
     if isinstance(attrs, str):
@@ -105,20 +108,19 @@ def get_attribute_value(attrs, attribute_name, target=None):
         attrs = tuple()
 
     processed_attrs = filter_attributes(attrs=attrs,
+                                        attribute_names=[attribute_name],
                                         target=target,
                                         raise_error=False)
-
-    # Find the attribute that matches
-    for attr in processed_attrs:
-        # Deal with a 2-ple attribute
-        if (hasattr(attr, '__iter__') and
-           len(attr) == 2 and
-           attr[0] == attribute_name):
+    if len(processed_attrs) > 0:
+        attr = processed_attrs[0]
+        if hasattr(attr, '__iter__') and len(attr) == 2:
             return attr[1]
-        elif isinstance(attr, str) and attr == attribute_name:
+        elif isinstance(attr, str):
             return attr
-
-    return None
+        else:
+            return None
+    else:
+        return None
 
 
 def remove_attribute(attrs, attribute_name):
