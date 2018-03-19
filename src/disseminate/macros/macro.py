@@ -7,7 +7,6 @@ from .science import *
 from ..utils.string import Metastring
 
 
-#re_macro = regex.compile(r"(?P<macro>@\w+)(?=\s*([^{\[\w]|$))")
 re_macro = regex.compile(r"(?P<macro>@\w+)")
 
 #: The following are macros defined by this submodule

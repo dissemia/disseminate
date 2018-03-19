@@ -13,15 +13,9 @@ from ..attributes import (get_attribute_value, filter_attributes,
                           kwargs_attributes)
 
 
-def tree_to_html(elements, tag='ol'):
-    """Convert a nested tree of HTML list items to a nested set of tags"""
-    returned_elements = []
-    for element in elements:
-        if isinstance(element, list):
-            returned_elements.append(tree_to_html(element, tag))
-        else:
-            returned_elements.append(element)
-    return E(tag, *returned_elements)
+class TocError(Exception):
+    """An error was encountered while processing a table of contents tag."""
+    pass
 
 
 def process_toc(target, local_context, global_context):
@@ -72,10 +66,48 @@ def process_toc(target, local_context, global_context):
         return ''
 
 
-class TocError(Exception):
-    """An error was encountered while processing a table of contents tag."""
-    pass
+def tree_to_html(elements, local_context, global_context, tag='ol'):
+    """Convert a nested tree to html"""
+    returned_elements = []
+    for e in elements:
+        if isinstance(e, tuple) and len(e) == 2:
+            # Unpack the element if it's a tuple with the order and the element
+            order, e = e
+        if isinstance(e, list):
+            returned_elements.append(tree_to_html(e, local_context,
+                                                  global_context, tag))
+        else:
+            returned_elements.append(E('li', e.ref_html(local_context,
+                                                        global_context)))
 
+    return E(tag, *returned_elements)
+
+
+def tree_to_tex(elements, local_context, global_context, level=1,
+                listing='enumerate'):
+    """Convert a nested tree to tex."""
+    returned_elements = []
+    for e in elements:
+        if isinstance(e, tuple) and len(e) == 2:
+            # Unpack the element if it's a tuple with the order and the element
+            order, e = e
+        if isinstance(e, list):
+            returned_elements.append(tree_to_tex(e, local_context,
+                                                  global_context, level+1))
+        else:
+            returned_elements.append("  " * level + "\item " +
+                                     e.ref_tex(local_context, global_context) +
+                                     "\n")
+
+    if returned_elements:
+        return ("  " * (level - 1) + "\\begin{{{}}}\n".format(listing) +
+                ''.join(returned_elements) +
+                "  " * (level - 1) + "\\end{{{}}}\n".format(listing))
+    else:
+        return ''
+
+
+# def tree_to_txt
 
 class Toc(Tag):
     """Table of contents and listings.
@@ -102,76 +134,126 @@ class Toc(Tag):
         self.toc_kind = (self.content.strip() if isinstance(self.content, str)
                          else '')
 
-    def headings_html(self, document=None):
-        """Construct a headings html listing for one or all documents."""
-        # Use the current document, if None is specified--but only do this if
-        # 'all' isn't specified in the toc_kind
-        if (document is None and '_document' in self.local_context and
-           'all' not in self.toc_kind):
+    # def headings_html(self, document=None):
+    #     """Construct a headings html listing for one or all documents."""
+    #     # Use the current document, if None is specified--but only do this if
+    #     # 'all' isn't specified in the toc_kind
+    #     if (document is None and '_document' in self.local_context and
+    #        'all' not in self.toc_kind):
+    #
+    #         document = self.local_context['_document']
+    #
+    #     # Get the label_manager and labels
+    #     elements = []
+    #     if '_label_manager' in self.global_context:
+    #         label_manager = self.global_context['_label_manager']
+    #
+    #         labels = label_manager.get_labels(document=document,
+    #                                           kinds='heading')
+    #
+    #         # Got through the labels and keep track of the heading levels
+    #         max_level = 0
+    #         for label in labels:
+    #             current_specific_kind = label.kind[-1]
+    #             try:
+    #                 level = toc_levels.index(current_specific_kind)
+    #             except ValueError:
+    #                 level = 0
+    #
+    #             if level > max_level:
+    #                 max_level = level
+    #
+    #             # Create the item
+    #             e = E('li', label.ref_html(self.local_context,
+    #                                        self.global_context))
+    #             elements.append((level, e))
+    #
+    #         # Group the levels
+    #         for level in reversed(range(0, max_level)):
+    #             groups = [(k, list(g)) for k, g in
+    #                       groupby(elements, lambda x: x[0] > level)]
+    #
+    #             elements = []
+    #             for above_level, g in groups:
+    #                 if above_level is False:
+    #                     # These are smaller than the current level. Do not
+    #                     # group these values and add them back to the list
+    #                     elements += list(g)
+    #                 else:
+    #                     # These are as large as the current level. Group them
+    #                     # in their own sub-list
+    #                     elements.append((level, [j[1] for j in g]))
+    #
+    #         # Convert groups to html elements
+    #         elements = [e[1] for e in elements]  # strip remaining levels
+    #         elements = tree_to_html(elements)
+    #
+    #     if len(elements) > 0:
+    #         valid_attrs = settings.html_valid_attributes['ol']
+    #         attrs = filter_attributes(attrs=self.attributes,
+    #                                   attribute_names=valid_attrs,
+    #                                   target='.html')
+    #         kwargs = kwargs_attributes(attrs)
+    #
+    #         # add a class to the tag
+    #         if 'class' in kwargs:
+    #             kwargs['class'] += ' toc-heading'
+    #         else:
+    #             kwargs['class'] = 'toc-heading'
+    #
+    #         return E('ol', *elements, **kwargs)
+    #     else:
+    #         return ""
 
-            document = self.local_context['_document']
+    def construct_tree(self, labels, order_function):
+        """Construct a toc tree for the given target.
 
+        Parameters
+        ----------
+        labels : list of :obj:`disseminate.labels.Label`
+           The labels to construct a tree from.
+        order_function : :function:
+            A function which returns the order of a given label item. The
+            function takes a label and returns an integer. The base TOC levels
+            start at 0, and the sub-levels return higher numbers.
+        target : str
+            The target for the tree to construct.
+            ex: '.html', '.tex' or None (for default)
+        """
         # Get the label_manager and labels
         elements = []
-        if '_label_manager' in self.global_context:
-            label_manager = self.global_context['_label_manager']
 
-            labels = label_manager.get_labels(document=document,
-                                              kinds='heading')
+        # Got through the labels and keep track of the heading levels
+        max_level = 0
+        for label in labels:
+            try:
+                level = order_function(label)
+            except ValueError:
+                level = 0
 
-            # Got through the labels and keep track of the heading levels
-            max_level = 0
-            for label in labels:
-                current_specific_kind = label.kind[-1]
-                try:
-                    level = toc_levels.index(current_specific_kind)
-                except ValueError:
-                    level = 0
+            if level > max_level:
+                max_level = level
 
-                if level > max_level:
-                    max_level = level
+            # Create the item
+            elements.append((level, label))
 
-                # Create the item
-                e = E('li', label.ref_html(self.local_context,
-                                           self.global_context))
-                elements.append((level, e))
+        # Group the levels
+        for level in reversed(range(0, max_level)):
+            groups = [(k, list(g)) for k, g in
+                      groupby(elements, lambda x: x[0] > level)]
 
-            # Group the levels
-            for level in reversed(range(0, max_level)):
-                groups = [(k, list(g)) for k, g in
-                          groupby(elements, lambda x: x[0] > level)]
+            elements = []
+            for above_level, g in groups:
+                if above_level is False:
+                    # These are smaller than the current level. Do not
+                    # group these values and add them back to the list
+                    elements += list(g)
+                else:
+                    # These are as large as the current level. Group them
+                    # in their own sub-list
+                    elements.append((level, [j[1] for j in g]))
 
-                elements = []
-                for above_level, g in groups:
-                    if above_level is False:
-                        # These are smaller than the current level. Do not
-                        # group these values and add them back to the list
-                        elements += list(g)
-                    else:
-                        # These are as large as the current level. Group them
-                        # in their own sub-list
-                        elements.append((level, [j[1] for j in g]))
-
-            # Convert groups to html elements
-            elements = [e[1] for e in elements]  # strip remaining levels
-            elements = tree_to_html(elements)
-
-        if len(elements) > 0:
-            valid_attrs = settings.html_valid_attributes['ol']
-            attrs = filter_attributes(attrs=self.attributes,
-                                      attribute_names=valid_attrs,
-                                      target='.html')
-            kwargs = kwargs_attributes(attrs)
-
-            # add a class to the tag
-            if 'class' in kwargs:
-                kwargs['class'] += ' toc-heading'
-            else:
-                kwargs['class'] = 'toc-heading'
-
-            return E('ol', *elements, **kwargs)
-        else:
-            return ""
+        return elements
 
     def documents_html(self):
         """Construct the documents html listing."""
@@ -230,6 +312,65 @@ class Toc(Tag):
         else:
             return ""
 
+    def get_labels(self):
+        """Get the labels, ordering function and labeling type."""
+        def default_order_function(label):
+            return 0
+
+        default_return_value = [], default_order_function, ''
+
+        if '_label_manager' in self.global_context:
+            label_manager = self.global_context['_label_manager']
+        else:
+            return default_return_value
+
+        if 'heading' in self.toc_kind:
+            labels = label_manager.get_labels(kinds='heading')
+
+            def order_function(label):
+                return toc_levels.index(label.kind[-1])
+
+            return labels, order_function, 'heading'
+        if 'document' in self.toc_kind:
+            # Get the documents and tree
+            if ('_tree' not in self.global_context or
+               '_document' not in self.local_context):
+                return default_return_value
+
+            tree = self.global_context['_tree']
+            documents = tree.get_documents()
+            current_document = self.local_context['_document']
+
+            # Get the labels
+            labels = []
+            for document in documents:
+                # Get the document's label
+                doc_labels = label_manager.get_labels(document=document,
+                                                      kinds='document')
+
+                if len(doc_labels) != 1:
+                    # Only one label for the document should have been returned
+                    continue
+                labels += doc_labels
+
+                # Get the labels for the headings for the document, if needed
+                if ('expanded' in self.toc_kind or
+                   ('abbreviated' in self.toc_kind and
+                    document == current_document)):
+
+                    labels += label_manager.get_labels(document=document,
+                                                       kinds='heading')
+
+            # Create and order function that includes documents
+            doc_levels = ('document',) + toc_levels
+
+            def order_function(label):
+                return doc_levels.index(label.kind[-1])
+
+            return labels, order_function, 'document'
+        else:
+            return default_return_value
+
     def html(self, level=1):
         """Convert the tag to an html listing.
 
@@ -242,16 +383,49 @@ class Toc(Tag):
         html : str or html element
             A string in HTML format or an HTML element (:obj:`lxml.builder.E`).
         """
-        if 'document' in self.toc_kind:
-            element = self.documents_html()
-        elif 'heading' in self.toc_kind:
-            element = self.headings_html()
-        else:
-            element = ''
+        labels, order_function, heading_type = self.get_labels()
 
-        if isinstance(element, str):
-            return element
+        if len(labels) > 0:
+            elements = self.construct_tree(labels=labels,
+                                           order_function=order_function)
+            html = tree_to_html(elements=elements,
+                                local_context=self.local_context,
+                                global_context=self.global_context)
+
+            # Add the class to the HTML element
+            if heading_type:
+                html.attrib['class'] = 'toc-' + heading_type
+        else:
+            html = ''
+
+        if isinstance(html, str):
+            return html
         else:
             # Convert the element to a string
-            return (etree.tostring(element, pretty_print=settings.html_pretty)
+            return (etree.tostring(html, pretty_print=settings.html_pretty)
                          .decode("utf-8"))
+
+    def tex(self, level=1, mathmode=False):
+        """Convert the tag to a tex listing.
+
+        .. note:: The 'document' toc is special since it uses the documents
+                  directly to construct the tree. All other toc types will
+                  get the labels from the label_manager
+
+        Returns
+        -------
+        tex : str
+            A string in TEX format
+        """
+        labels, order_function, heading_type = self.get_labels()
+
+        if len(labels) > 0:
+            elements = self.construct_tree(labels=labels,
+                                           order_function=order_function)
+            tex = tree_to_tex(elements=elements,
+                              local_context=self.local_context,
+                              global_context=self.global_context)
+        else:
+            tex = ''
+
+        return tex

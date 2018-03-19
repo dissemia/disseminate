@@ -15,7 +15,7 @@ html_pretty = True
 html_valid_tags = {"a",
                    "b", "blockquote", "body",
                    "code",
-                   "div",
+                   "dd", "div", "dl", "dt",
                    "em",
                    "h1", "h2", "h3", "h4", "h5",
                    "li",

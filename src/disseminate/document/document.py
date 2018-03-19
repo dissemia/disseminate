@@ -8,6 +8,7 @@ from ..ast import process_ast, process_paragraphs, process_typography
 from ..templates import get_template
 from ..header import load_yaml_header
 from ..macros import replace_macros
+from ..tags.toc import process_toc
 from ..utils import mkdir_p
 from .. import settings
 
@@ -394,11 +395,6 @@ class Document(object):
             ast = self.get_ast()
 
             # Step 2: Synchronous
-            # Run individual tag process functions
-            # At this stage, the tags may depend on other documents through the
-            # global_context. (i.e. it must be done synchronously
-
-            # postprocess_ast
 
             # First pull out the template, if specified
             template_basename = settings.template_basename
@@ -427,8 +423,11 @@ class Document(object):
             else:
                 output_string = ast.default()
 
-            # Add the output string to the context
+            # Add the output string to the context and other variables
             context['body'] = output_string
+            context['toc'] = process_toc(target=target,
+                                         local_context=self.local_context,
+                                         global_context=self.global_context)
 
             # get a template. The following can be done asynchronously.
             template = get_template(self.src_filepath, target=target,
