@@ -32,8 +32,8 @@ class Heading(Tag):
             kind = ('heading', self.__class__.__name__.lower())
             id = get_attribute_value(self.attributes, 'id')
 
-            label_manager.add_label(document=document, kind=kind, id=id,
-                                    contents=self.content, label_type='caption')
+            label_manager.add_label(document=document, tag=self,
+                                    kind=kind, id=id,)
 
     def tex(self, level=1, mathmode=False):
         # Add newlines around headings

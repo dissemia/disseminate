@@ -264,7 +264,6 @@ def test_document_labels(tmpdir):
     assert len(man.labels) == 1
     label = man.get_label('doc:test.dm')
     assert label.id == "doc:test.dm"
-    assert label.contents == 'test'  # generic title base on project_root
 
     # 3. Test the label when the '_project_root' value is assigned in the
     #    global_context and the 'title' value is assigned in the local_context
@@ -285,4 +284,3 @@ def test_document_labels(tmpdir):
     assert len(man.labels) == 1
     label = man.get_label('doc:test.dm')
     assert label.id == "doc:test.dm"
-    assert label.contents == "my title"

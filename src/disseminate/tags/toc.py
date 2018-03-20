@@ -77,8 +77,7 @@ def tree_to_html(elements, local_context, global_context, tag='ol'):
             returned_elements.append(tree_to_html(e, local_context,
                                                   global_context, tag))
         else:
-            returned_elements.append(E('li', e.ref_html(local_context,
-                                                        global_context)))
+            returned_elements.append(E('li', e.ref(target='.html')))
 
     return E(tag, *returned_elements)
 
@@ -96,7 +95,7 @@ def tree_to_tex(elements, local_context, global_context, level=1,
                                                   global_context, level+1))
         else:
             returned_elements.append("  " * level + "\item " +
-                                     e.ref_tex(local_context, global_context) +
+                                     e.ref(target='.tex') +
                                      "\n")
 
     if returned_elements:
@@ -133,77 +132,6 @@ class Toc(Tag):
 
         self.toc_kind = (self.content.strip() if isinstance(self.content, str)
                          else '')
-
-    # def headings_html(self, document=None):
-    #     """Construct a headings html listing for one or all documents."""
-    #     # Use the current document, if None is specified--but only do this if
-    #     # 'all' isn't specified in the toc_kind
-    #     if (document is None and '_document' in self.local_context and
-    #        'all' not in self.toc_kind):
-    #
-    #         document = self.local_context['_document']
-    #
-    #     # Get the label_manager and labels
-    #     elements = []
-    #     if '_label_manager' in self.global_context:
-    #         label_manager = self.global_context['_label_manager']
-    #
-    #         labels = label_manager.get_labels(document=document,
-    #                                           kinds='heading')
-    #
-    #         # Got through the labels and keep track of the heading levels
-    #         max_level = 0
-    #         for label in labels:
-    #             current_specific_kind = label.kind[-1]
-    #             try:
-    #                 level = toc_levels.index(current_specific_kind)
-    #             except ValueError:
-    #                 level = 0
-    #
-    #             if level > max_level:
-    #                 max_level = level
-    #
-    #             # Create the item
-    #             e = E('li', label.ref_html(self.local_context,
-    #                                        self.global_context))
-    #             elements.append((level, e))
-    #
-    #         # Group the levels
-    #         for level in reversed(range(0, max_level)):
-    #             groups = [(k, list(g)) for k, g in
-    #                       groupby(elements, lambda x: x[0] > level)]
-    #
-    #             elements = []
-    #             for above_level, g in groups:
-    #                 if above_level is False:
-    #                     # These are smaller than the current level. Do not
-    #                     # group these values and add them back to the list
-    #                     elements += list(g)
-    #                 else:
-    #                     # These are as large as the current level. Group them
-    #                     # in their own sub-list
-    #                     elements.append((level, [j[1] for j in g]))
-    #
-    #         # Convert groups to html elements
-    #         elements = [e[1] for e in elements]  # strip remaining levels
-    #         elements = tree_to_html(elements)
-    #
-    #     if len(elements) > 0:
-    #         valid_attrs = settings.html_valid_attributes['ol']
-    #         attrs = filter_attributes(attrs=self.attributes,
-    #                                   attribute_names=valid_attrs,
-    #                                   target='.html')
-    #         kwargs = kwargs_attributes(attrs)
-    #
-    #         # add a class to the tag
-    #         if 'class' in kwargs:
-    #             kwargs['class'] += ' toc-heading'
-    #         else:
-    #             kwargs['class'] = 'toc-heading'
-    #
-    #         return E('ol', *elements, **kwargs)
-    #     else:
-    #         return ""
 
     def construct_tree(self, labels, order_function):
         """Construct a toc tree for the given target.

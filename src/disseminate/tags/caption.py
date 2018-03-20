@@ -1,8 +1,10 @@
 """
 Tags for captions and references.
 """
+from lxml.builder import E
+
 from .core import Tag
-from ..attributes import get_attribute_value
+from ..attributes import get_attribute_value, remove_attribute
 
 
 class CaptionError(Exception):
@@ -24,12 +26,12 @@ class Caption(Tag):
               will not be called.
     """
 
-    html_name = 'caption'
+    html_name = 'caption-text'
     tex_name = 'caption'
     active = True
+    label = None
 
-    def add_label(self, local_context, global_context, kind,
-                  id=None, contents=None):
+    def add_label(self, local_context, global_context, kind, id=None):
         """Add a label to the caption.
 
         .. note:: This function is run by the parent tag so that the kind is
@@ -56,6 +58,7 @@ class Caption(Tag):
         # Get the id, if this caption has one
         id = id if id is not None else get_attribute_value(self.attributes,
                                                            'id')
+        self.attributes = remove_attribute(self.attributes, 'id')
 
         # Get the label manager and add the label
         if ('_label_manager' in global_context and
@@ -63,24 +66,50 @@ class Caption(Tag):
             label_manager = global_context['_label_manager']
             document = local_context['_document']
 
-            label = label_manager.add_label(document=document, kind=kind,
-                                            id=id, contents=contents)
+            label = label_manager.add_label(document=document, tag=self,
+                                            kind=kind, id=id)
+            self.label = label
 
-            # Get the label's text and add it to the caption
-            label_text = label.label(local_context=local_context,
-                                     global_context=global_context)
+            # # Get the label's text and add it to the caption
+            # label_text = label.label()
+            #
+            # # Add the label's short text to this caption's text.
+            # if isinstance(self.content, str):
+            #     self.content = ' '.join((label_text, self.content))
+            # elif (isinstance(self.content, list) and
+            #       len(self.content) > 0 and
+            #       isinstance(self.content[0], str)):
+            #     self.content[0] = ' '.join((label_text, self.content[0]))
 
-            # Add the label's short text to this caption's text.
-            if isinstance(self.content, str):
-                self.content = ' '.join((label_text, self.content))
-            elif (isinstance(self.content, list) and
-                  len(self.content) > 0 and
-                  isinstance(self.content[0], str)):
-                self.content[0] = ' '.join((label_text, self.content[0]))
+    def default(self):
+        """Add newline to the end of a caption"""
+        default = super(Caption, self).default()
+
+        if self.label is not None:
+            # add the label to the caption
+            return ' '.join((self.label.label(target='default'), default))
+        else:
+            return default
+
+    def html(self, level=1):
+        html = super(Caption, self).html(level+1)
+        if self.label is not None:
+            # add the label to the caption
+            label = self.label.label(target='.html')
+            kwargs = {'class': 'caption'}
+            return E('span', label, html, **kwargs)
+        else:
+            return html
 
     def tex(self, level=1, mathmode=False):
-        """Add newline to the end of a caption"""
-        return super(Caption, self).tex(level, mathmode) + '\n'
+        tex = super(Caption, self).tex(level + 1, mathmode)
+
+        if self.label is not None:
+            # add the label to the caption
+            return ' '.join((self.label.label(target='.tex'), tex)) + '\n'
+        else:
+            return tex + '\n'
+
 
 
 class Ref(Tag):
@@ -105,15 +134,12 @@ class Ref(Tag):
 
     def default(self, level=1):
         label = self.get_label()
-        return label.short(local_context=self.local_context,
-                           global_context=self.global_context)
+        return label.ref(target='default')
 
     def html(self, level=1):
         label = self.get_label()
-        return label.ref_html(local_context=self.local_context,
-                              global_context=self.global_context)
+        return label.ref(target='.html')
 
     def tex(self, level=1, mathmode=False):
         label = self.get_label()
-        return label.ref_tex(local_context=self.local_context,
-                             global_context=self.global_context)
+        return label.ref(target='.tex')

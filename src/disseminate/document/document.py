@@ -118,6 +118,22 @@ class Document(object):
         return self.src_filepath.strip(settings.document_extension)
 
     @property
+    def short(self):
+        """The short title for the document."""
+        if 'short' in self.local_context:
+            return self.local_context['short']
+        else:
+            return self.title
+
+    @property
+    def number(self):
+        """The number of the document."""
+        if 'document_number' in self.local_context:
+            return self.local_context
+        else:
+            return None
+
+    @property
     def project_filepath(self):
         """The filepath for this document relative to the project_root.
 
@@ -220,8 +236,7 @@ class Document(object):
 
             # Set the label for this document
             label_manager.add_label(document=self, kind='document',
-                                    id='doc:' + project_filepath,
-                                    contents=self.title)
+                                    id='doc:' + project_filepath)
 
     def get_ast(self, reload=False):
         """Process and return the AST.

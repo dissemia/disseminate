@@ -24,26 +24,44 @@ def test_toc_heading_html(tmpdir):
     toc = Toc(name='toc', content='all headings', attributes=tuple(),
               local_context=docs[0].local_context,
               global_context=tree.global_context)
-
-    key = '\n'.join(('<ol class="toc-heading">',
-                     '  <li>Heading 1</li>',
-                     '  <li>Heading 2</li>',
-                     '  <ol>',
-                     '    <li>sub-Heading 2.1</li>',
-                     '    <li>sub-Heading 2.2</li>',
-                     '    <ol>',
-                     '      <li>sub-sub-Header 2.2.1</li>',
-                     '    </ol>',
-                     '    <li>sub-Heading 2.3</li>',
-                     '  </ol>',
-                     '  <li>Heading 3</li>',
-                     '  <ol>',
-                     '    <ol>',
-                     '      <li>sub-sub-header 3.1.1</li>',
-                     '    </ol>',
-                     '  </ol>',
-                     '  <li>Heading 4</li>',
-                     '</ol>\n'))
+    key = """<ol class="toc-heading">
+  <li>
+    <a class="section-ref" href="/file1.html">Heading 1</a>
+  </li>
+  <li>
+    <a class="section-ref" href="/file1.html">Heading 2</a>
+  </li>
+  <ol>
+    <li>
+      <a class="subsection-ref" href="/file1.html">sub-Heading 2.1</a>
+    </li>
+    <li>
+      <a class="subsection-ref" href="/file1.html">sub-Heading 2.2</a>
+    </li>
+    <ol>
+      <li>
+        <a class="subsubsection-ref" href="/file1.html">sub-sub-Header 2.2.1</a>
+      </li>
+    </ol>
+    <li>
+      <a class="subsection-ref" href="/file1.html">sub-Heading 2.3</a>
+    </li>
+  </ol>
+  <li>
+    <a class="section-ref" href="/file1.html">Heading 3</a>
+  </li>
+  <ol>
+    <ol>
+      <li>
+        <a class="subsubsection-ref" href="/file1.html">sub-sub-header 3.1.1</a>
+      </li>
+    </ol>
+  </ol>
+  <li>
+    <a class="section-ref" href="/file1.html">Heading 4</a>
+  </li>
+</ol>
+"""
     assert key == toc.html()
 
     # The 'tests/tags/toc_example2' directory contains three markup files:
@@ -59,18 +77,23 @@ def test_toc_heading_html(tmpdir):
               local_context=docs[1].local_context,
               global_context=tree.global_context)
 
-    key = '\n'.join(('<ol class="toc-heading">',
-                     '  <li>',
-                     '    <a href="/file1.html">Heading 1</a>',
-                     '  </li>',
-                     '  <li>Heading 2</li>',
-                     '  <ol>',
-                     '    <li>sub-Heading 2</li>',
-                     '  </ol>',
-                     '  <li>',
-                     '    <a href="/file3.html">Heading 3</a>',
-                     '  </li>',
-                     '</ol>\n'))
+    key = """<ol class="toc-heading">
+  <li>
+    <a class="section-ref" href="/file1.html">Heading 1</a>
+  </li>
+  <li>
+    <a class="section-ref" href="/file2.html">Heading 2</a>
+  </li>
+  <ol>
+    <li>
+      <a class="subsection-ref" href="/file2.html">sub-Heading 2</a>
+    </li>
+  </ol>
+  <li>
+    <a class="section-ref" href="/file3.html">Heading 3</a>
+  </li>
+</ol>
+"""
     assert key == toc.html()
 
 
@@ -159,11 +182,13 @@ def test_toc_document(tmpdir):
     # Match the default toc (format: 'collapsed')
     key = """<ol class="toc-document">
   <li>
-    <a href="/file1.html">file1</a>
+    <a class="document-ref" href="/file1.html">file1</a>
   </li>
-  <li>My second document</li>
   <li>
-    <a href="/file3.html">The third document</a>
+    <a class="document-ref" href="/file2.html">My second document</a>
+  </li>
+  <li>
+    <a class="document-ref" href="/file3.html">The third document</a>
   </li>
 </ol>
 """
@@ -181,26 +206,32 @@ def test_toc_document(tmpdir):
               global_context=tree.global_context)
     key = """<ol class="toc-document">
   <li>
-    <a href="/file1.html">file1</a>
+    <a class="document-ref" href="/file1.html">file1</a>
   </li>
   <ol>
     <li>
-      <a href="/file1.html">Heading 1</a>
+      <a class="section-ref" href="/file1.html">Heading 1</a>
     </li>
   </ol>
-  <li>My second document</li>
+  <li>
+    <a class="document-ref" href="/file2.html">My second document</a>
+  </li>
   <ol>
-    <li>Heading 2</li>
+    <li>
+      <a class="section-ref" href="/file2.html">Heading 2</a>
+    </li>
     <ol>
-      <li>sub-Heading 2</li>
+      <li>
+        <a class="subsection-ref" href="/file2.html">sub-Heading 2</a>
+      </li>
     </ol>
   </ol>
   <li>
-    <a href="/file3.html">The third document</a>
+    <a class="document-ref" href="/file3.html">The third document</a>
   </li>
   <ol>
     <li>
-      <a href="/file3.html">Heading 3</a>
+      <a class="section-ref" href="/file3.html">Heading 3</a>
     </li>
   </ol>
 </ol>
@@ -214,17 +245,23 @@ def test_toc_document(tmpdir):
               global_context=tree.global_context)
     key = """<ol class="toc-document">
   <li>
-    <a href="/file1.html">file1</a>
+    <a class="document-ref" href="/file1.html">file1</a>
   </li>
-  <li>My second document</li>
+  <li>
+    <a class="document-ref" href="/file2.html">My second document</a>
+  </li>
   <ol>
-    <li>Heading 2</li>
+    <li>
+      <a class="section-ref" href="/file2.html">Heading 2</a>
+    </li>
     <ol>
-      <li>sub-Heading 2</li>
+      <li>
+        <a class="subsection-ref" href="/file2.html">sub-Heading 2</a>
+      </li>
     </ol>
   </ol>
   <li>
-    <a href="/file3.html">The third document</a>
+    <a class="document-ref" href="/file3.html">The third document</a>
   </li>
 </ol>
 """

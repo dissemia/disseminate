@@ -3,6 +3,7 @@ import os.path
 from lxml.builder import E
 
 from .. import settings
+from ..attributes import get_attribute_value
 
 
 class LabelError(Exception):
@@ -19,27 +20,26 @@ class LabelNotFound(LabelError):
     """Could not find a reference to a label"""
     pass
 
-# TODO: replace contents with the tag itself. How to communicate what kind of
-# label or ref needed? short, caption?
-# TODO: allow format strings to be parsed by ast
+
 class Label(object):
     """A label used for referencing.
 
     Parameters
     ----------
     document : :obj:`disseminate.Document`
-        The document (:obj:`disseminate.Document`) that owns this label.
-    kind : tuple
+        The document that owns the label.
+    tag : None or :obj:`disseminate.Tag`
+        The tag that owns the label.
+    kind : tuple or None
         The kind of the label is a tuple that identified the kind of a label
         from least specific to most specific. ex: ('figure',), ('chapter',),
         ('equation',), ('heading', 'h1',)
-    id : str
+    id : str or None
         The (unique) identifier of the label. ex: 'nmr_introduction'.
+        If None is given, the label cannot be referenced; it is used for
+        counting only.
     contents : str, optional
         The short description for the label that can be used in the reference.
-    label_type : str, optional
-        The label to show when constructing references for the label.
-        options: 'short', 'caption'
     local_order : tuple of int
         The number of the label in the current document. Since the kind is a
         tuple, the local_order corresponds to the count for each kind.
@@ -77,22 +77,19 @@ class Label(object):
               - short: The short caption of the label linked to this label.
 
     """
-    __slots__ = ('document', 'kind', 'id', 'contents', 'label_type',
-                 'local_order', 'global_order')
+    __slots__ = ('document', 'tag', 'kind', 'id', 'local_order', 'global_order')
 
-    # TODO: add format
-    def __init__(self, document, kind, id, contents=None, label_type='short',
+    def __init__(self, document, tag=None, kind=None, id=None,
                  local_order=None, global_order=None):
         self.document = document
-        self.kind = kind
+        self.tag = tag
+        self.kind = kind if kind is not None else ('default',)
         self.id = id
-        self.contents = contents
-        self.label_type = label_type
         self.local_order = local_order
         self.global_order = global_order
 
     def __repr__(self):
-        name = self.id if self.id is not None else self.contents
+        name = self.id
         return "({} {})".format(name, self.global_order)
 
     @property
@@ -103,172 +100,165 @@ class Label(object):
                 "A document must own the label '{}'".format(self))
         return self.document.src_filepath
 
-    def short(self, local_context=None, global_context=None):
-        """The short text for the label.
+    def format_str(self, name, target):
+        """Get the format string for the given format string name.
 
         Parameters
         ----------
-        local_context : dict, optional
-            The context with values for the document that owns this label. The
-            values in this dict do not depend on values from other documents.
-            (local)
-        global_context : dict
-            The context with values for all documents in a project.
+        name : str
+            The name of the format_str to get. Either 'label', 'ref' or 'link
 
         Returns
         -------
-        short_description : str
-            The short description for this label. ex: Fig. 1
+        format_str : str
+            The format string for the given name.
+
+        .. note:: The format string can be specified in a few ways, in the
+                  following (decreasing) order of preference.
+
+                  1. The label's tag attributes. A format string can be
+                     specified. ex: @ref[label='Fig. {number}' html.link='/']
+                  2. The local_context. The format string is found from the
+                     kind of label. ex: 'figure_label': {Fig. 'number'}
+                  3. The global_context. The format string is found from the
+                     kind of label. ex: 'figure_label': {Fig. 'number'}
+                  4. The settings. The format string is found from the kind
+                     of label in the 'label_formats' dict.
         """
-        # Get the format string for the short label. Start from the most
-        # specific kind to the least specific.
-        text = None
+        # See if the format_str is in the local_context or global context
+        # Try look for the kind of label, starting from the most specific
+        # (last item) to the least. Use default values last.
+        for kind in list(reversed(self.kind)) + ['default']:
+            context_label = kind + '_' + name  # ex: 'figure_label'
+            context_target_label = context_label + '_' + target.strip('.')
 
-        for kind in reversed(self.kind):
-            # Look in the local_context, global_context and the settings,
-            # in that order
-            if text is not None:
-                # The format text is found! We don't need to look anymore
-                break
-            for d in (local_context, global_context, settings.label_format):
-                if kind in d:
-                    # See if a format for the kind tuple is available
-                    text = local_context[kind]
-                    break
-        if text is None:
-            text = self.contents
-            # text = self.kind[-1]
+            contexts = (getattr(self.document, 'local_context', None),
+                        getattr(self.document, 'global_context', None))
+            for context in contexts:
+                if context is None:
+                    continue
+                if context_target_label in context:
+                    return context[context_target_label]
+                if context_label in context:
+                    return context[context_label]
 
-        # Get the document's number
-        if (isinstance(local_context, dict) and
-           'document_number' in local_context):
-            document_number = (local_context['document_number'] if
-                               'document_number' in local_context else '')
-        else:
-            document_number = ''
+            # Finally, try to get a default format_str from the settings, if one
+            # couldn't be found in the tag
+            if context_target_label in settings.label_formats:
+                return settings.label_formats[context_target_label]
+            if context_label in settings.label_formats:
+                return settings.label_formats[context_label]
 
-        # Get the number of the label from the most specific kind
-        number = str(self.local_order[-1])
+        return ''
 
-        # Format the text
-        text = text.format(number=number, document_number=document_number)
+    def format_kwargs(self):
+        """Forumlate a kwargs dict used for making labels and references for
+        this label.
 
-        return text
+        Returns
+        -------
+        kwargs : dict
+            A dict of values used for the labels and references, including:
+            - name: A default name of the label. ex: 'Figure', 'Section',
+                    'Chapter'
+            - document_number: the number (order) of the document,
+              starting from 1.
+            - number: the number (order) of the label within the document.
+              (this is the same as the local_number)
+            - global_number: the number (order) of the label between all
+              documents in the label manager.
+            - content: The content of the tag that owns this label.
+            - short: The short content of the tag linked to this label.
+        """
+        kwargs = dict()
+        kwargs['name'] = self.kind[-1].title()
+        kwargs['number'] = self.local_order[-1]
+        kwargs['local_number'] = self.local_order[-1]
+        kwargs['global_number'] = self.global_order[-1]
+        kwargs['id'] = self.id if self.id is not None else ''
 
-    #TODO: def label(format="...")
-    def label(self, local_context=None, global_context=None,
-              end=settings.label_sep):
-        """The text label.
+        # Get values from the document
+        kwargs['document_number'] = (self.document.number
+                                     if self.document.number is not None
+                                     else '')
+        kwargs['content'] = self.document.title
+        kwargs['short'] = self.document.short
+
+        # Overwrite with values from the tag, if available
+        if self.tag is not None:
+            kwargs['content'] = (self.tag.content
+                                 if hasattr(self.tag, 'content')
+                                 else '')
+
+            short = get_attribute_value(attrs=self.tag.attributes,
+                                        attribute_name='short')
+            kwargs['short'] = short if short is not None else kwargs['content']
+
+        return kwargs
+
+    def label(self, target, label_str=None):
+        """Generate the label.
 
         Parameters
         ----------
-        local_context : dict, optional
-            The context with values for the document that owns this label. The
-            values in this dict do not depend on values from other documents.
-            (local)
-        global_context : dict
-            The context with values for all documents in a project.
-        end : str
-            Add the following string to the end.
+        target : str
+            The target format to generate the label for. (ex: '.html', '.tex')
+        label_str : str or None, optional
+            If a format_str is given, it will be used rather than the one
+            returned from this class's format_str method.
 
         Returns
         -------
-        label : str
-            The text label
-        """
-        if self.label_type == 'short':
-            return self.short(local_context, global_context) + end
-        else:
-            return self.contents
+        label : str or html element
+            The label.
 
-    def label_html(self, local_context=None, global_context=None):
-        """The html label (anchor).
+        .. note:: The label method makes the following variables available to
+                  formatted strings.
+
+        """
+        label_str = (self.format_str(name='label', target=target)
+                     if label_str is None else label_str)
+        kwargs = self.format_kwargs()
+        if target == '.html':
+            # Make a span element for html labels
+            tag_kwargs = dict()
+            if self.id:
+                tag_kwargs['id'] = self.id
+            tag_kwargs['class'] = self.kind[-1] + '-' + 'label'
+            return E('span', label_str.format(**kwargs), **tag_kwargs)
+        else:
+            # Otherwise just return the text
+            return label_str.format(**kwargs)
+
+    def ref(self, target, ref_str=None, link_str=None):
+        """
 
         Parameters
         ----------
-        local_context : dict, optional
-            The context with values for the document that owns this label. The
-            values in this dict do not depend on values from other documents.
-            (local)
-        global_context : dict
-            The context with values for all documents in a project.
+        target
+        label_format
 
         Returns
         -------
-        html_entity : :obj:`lxml.builder.E`
-            A 'span' element with the 'id' set to this label's identifier.
+
         """
-        text = self.label(local_context, global_context)
-        specific_kind = self.kind[-1]
-        attrs = {'class': specific_kind + '-label',
-                 'id': self.id}
-        return E('span', text, **attrs)
+        ref_str = (self.format_str(name='ref', target=target)
+                   if ref_str is None else ref_str)
+        link_str = (self.format_str(name='link', target=target)
+                    if link_str is None else link_str)
+        kwargs = self.format_kwargs()
+        kwargs['filepath'] = self.document.target_filepath(target=target,
+                                                           render_path=False)
 
-    def ref_html(self, local_context=None, global_context=None):
-        """An html reference link to this label.
+        if target == '.html':
+            tag_kwargs = dict()
+            tag_kwargs['class'] = self.kind[-1] + '-' + 'ref'
+            tag_kwargs['href'] = link_str.format(**kwargs)
 
-        Parameters
-        ----------
-        local_context : dict, optional
-            The context with values for the document that owns this label. The
-            values in this dict do not depend on values from other documents.
-            (local)
-        global_context : dict
-            The context with values for all documents in a project.
-
-        Returns
-        -------
-        html_entity : :obj:`lxml.builder.E`
-            A 'a' element with the 'href' set to this label's identifier.
-            By default, the short decription is used.
-        """
-        # Construct the anchor, if an id has been specified
-        if self.kind[-1] != 'document':
-            anchor = '#' + self.id if isinstance(self.id, str) else ''
+            return E('a', ref_str.format(**kwargs), **tag_kwargs)
         else:
-            anchor = ''
-
-        # Cunstrum the link
-        # See if it's on a different document from the src_filepath
-        if (isinstance(local_context, dict) and
-           '_src_filepath' in local_context and
-           local_context['_src_filepath'] == self.src_filepath):
-            # the documents match, make an internal link
-
-            link = anchor
-        else:
-            # the documents do not match, make a link to a different page
-
-            location_file = self.document.target_filepath(target='.html',
-                                                          render_path=False)
-            link = "/" + location_file + anchor
-
-        text = self.label(local_context, global_context, end='')
-
-        if link != "":
-            return E('a', text, href=link)
-        else:
-            return text
-
-    def ref_tex(self, local_context=None, global_context=None):
-        """An tex reference to this label.
-
-        Parameters
-        ----------
-        local_context : dict, optional
-            The context with values for the document that owns this label. The
-            values in this dict do not depend on values from other documents.
-            (local)
-        global_context : dict
-            The context with values for all documents in a project.
-
-        Returns
-        -------
-        html_entity : :obj:`lxml.builder.E`
-            A 'a' element with the 'href' set to this label's identifier.
-            By default, the short decription is used.
-        """
-        return self.label(local_context, global_context, end='')
+            # Otherwise just return the text
+            return ref_str.format(**kwargs)
 
 
 class LabelManager(object):
@@ -299,26 +289,21 @@ class LabelManager(object):
         self._local_counters = dict()
         self._global_counter = dict()
 
-    def add_label(self, document, kind, id=None, contents=None,
-                  label_type='short',):
+    def add_label(self, document, tag=None, kind=None, id=None):
         """Add a label.
 
         Parameters
         ----------
         document : :obj:`disseminate.Document`
-            The document (:obj:`disseminate.Document`) that owns this label.
+            The document that owns the label.
+        tag : None or :obj:`disseminate.Tag`
+            The tag that owns the label.
         kind : tuple or str
             The kind of the label. ex: 'figure', 'chapter', 'equation'
         id : str, optional
             The label of the label ex: 'ch:nmr-introduction'
             If a label id is not specified, a short one based on the
             document and label count will be generated.
-        contents : str, optional
-            The short description for the label that can be used as the
-            reference.
-        label_type : str, optional
-            The label to show when constructing references for the label.
-            options: 'short', 'caption'
 
         Returns
         -------
@@ -366,16 +351,9 @@ class LabelManager(object):
             local_order.append(count)
             global_order.append(global_count)
 
-        # # Get the local_number and global_number of this label, based on
-        # # current counts
-        # kind_labels = {i for i in self.labels if i.kind == kind}
-        # global_number = len(kind_labels) + 1
-        # local_number = len([i for i in kind_labels
-        #                     if i.src_filepath == src_filepath]) + 1
-
         # Add the label
-        label = Label(document=document, kind=kind, id=id, contents=contents,
-                      label_type=label_type, local_order=tuple(local_order),
+        label = Label(document=document, tag=tag, kind=kind, id=id,
+                      local_order=tuple(local_order),
                       global_order=tuple(global_order))
         self.labels.add(label)
 
