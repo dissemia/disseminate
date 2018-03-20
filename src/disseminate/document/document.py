@@ -129,7 +129,7 @@ class Document(object):
     def number(self):
         """The number of the document."""
         if 'document_number' in self.local_context:
-            return self.local_context
+            return self.local_context['document_number']
         else:
             return None
 
