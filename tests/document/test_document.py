@@ -215,6 +215,7 @@ def test_document_labels(tmpdir):
     assert len(man.labels) == 1
     label = man.get_label(id="doc:test.dm")
     assert label.id == "doc:test.dm"
+    assert label.kind == ('document', 'document-level-1')
 
 
 def test_document_tree(tmpdir):

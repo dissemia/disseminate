@@ -138,7 +138,8 @@ class Document(object):
     def number(self):
         """The number of the document."""
         if ('documents' in self.context and
-            self.src_filepath in self.context['documents']):
+           self.src_filepath in self.context['documents']):
+
             documents = list(self.context['documents'].keys())
             return documents.index(self.src_filepath) + 1
         else:
@@ -174,7 +175,7 @@ class Document(object):
         if isinstance(value, list):
             self._target_list = value
         elif isinstance(value, str):
-            # If it's a string, items may be seperated by commas, spaces
+            # If it's a string, items may be separated by commas, spaces
             # or both
             target_exts = value.split(',')
             if len(target_exts) == 1:
@@ -257,7 +258,9 @@ class Document(object):
         # The following tests whether the context values came from a parent
         # document
         if self.context.get('src_filepath', None) != self.src_filepath:
-            self.context['number'] = self.context.get('number', 0) + 1
+            # Set the document's level. The root document is level 1, its'
+            # sub-documents are level 2, their sub-documents are level 3
+            self.context['level'] = self.context.get('level', 0) + 1
 
         self.context['src_filepath'] = self.src_filepath
 
@@ -310,8 +313,12 @@ class Document(object):
             project_filepath = os.path.relpath(self.src_filepath,
                                                self.project_root)
 
+            # Get the level of the document
+            level = self.context.get('level', 1)
+
             # Set the label for this document
-            label = label_manager.add_label(document=self, kind='document',
+            kind = ('document', 'document-level-' + str(level))
+            label = label_manager.add_label(document=self, kind=kind,
                                             id='doc:' + project_filepath)
             self._label = label
 
@@ -322,7 +329,7 @@ class Document(object):
             if isinstance(src_filepaths, str):
                 src_filepaths = src_filepaths.split()
             src_filepaths = [s for s in src_filepaths if isinstance(s, str)]
-            print("src_filepaths", self.src_filepath, type(src_filepaths), src_filepaths)
+
             # Create missing documents
             current_src_filepath = os.path.split(self.src_filepath)[0]
             for src_filepath in src_filepaths:
@@ -343,6 +350,8 @@ class Document(object):
             for src_filepath in extra_src_filepaths:
                 del self.sub_documents[src_filepath]
 
+    # TODO: Keep track of ast modification times in the context so that this
+    # can be used with update_only on render.
     def get_ast(self, reload=False):
         """Process and return the AST.
 
@@ -433,7 +442,8 @@ class Document(object):
 
         return self._ast
 
-    def render(self, targets=None, create_dirs=settings.create_dirs):
+    def render(self, targets=None, create_dirs=settings.create_dirs,
+               update_only=True):
         """Convert the src_filepath to a rendered document at target_filepath.
 
         A document loads a document (source markup) file and this method
@@ -484,6 +494,9 @@ class Document(object):
         create_dirs : bool, optional
             Create directories for the rendered target files, if the directories
             don't exist.
+        update_only : bool, optional
+            If True, the file will only be rendered if the rendered file is
+            older than the source file.
 
         Returns
         -------
@@ -507,8 +520,21 @@ class Document(object):
             msg = "Specified targets '{}' must be a string or a list of strings"
             raise DocumentError(msg.format(targets))
 
+        # Process the sub-documents
+        for document in self.sub_documents.values():
+            document.render(targets=targets, create_dirs=create_dirs,
+                            update_only=update_only)
+
         # Process each specified target
         for target, target_filepath in targets.items():
+            # Skip if we should update_only and the src_filepath is older
+            # than the target_filepath, if target_filepath exists.
+            if (update_only and
+                os.path.isfile(target_filepath) and
+                (os.path.getmtime(self.src_filepath) <=
+                 os.path.getmtime(target_filepath))):
+                continue
+
             target = target if target.startswith('.') else '.' + target
 
             # Check to see if the target directory needs to be created
