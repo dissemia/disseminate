@@ -10,10 +10,8 @@ class Asy(RenderedImg):
     src_filepath = None
     active = True
 
-    def __init__(self, name, content, attributes,
-                 local_context, global_context):
+    def __init__(self, name, content, attributes, context):
         super(Asy, self).__init__(name=name, content=content,
                                   attributes=attributes,
-                                  local_context=local_context,
-                                  global_context=global_context,
+                                  context=context,
                                   render_target='.asy')

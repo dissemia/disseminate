@@ -70,17 +70,6 @@ class Caption(Tag):
                                             kind=kind, id=id)
             self.label = label
 
-            # # Get the label's text and add it to the caption
-            # label_text = label.label()
-            #
-            # # Add the label's short text to this caption's text.
-            # if isinstance(self.content, str):
-            #     self.content = ' '.join((label_text, self.content))
-            # elif (isinstance(self.content, list) and
-            #       len(self.content) > 0 and
-            #       isinstance(self.content[0], str)):
-            #     self.content[0] = ' '.join((label_text, self.content[0]))
-
     def default(self):
         """Add newline to the end of a caption"""
         default = super(Caption, self).default()
@@ -111,7 +100,6 @@ class Caption(Tag):
             return tex + '\n'
 
 
-
 class Ref(Tag):
     """A tag to reference a label."""
 
@@ -119,7 +107,7 @@ class Ref(Tag):
 
     def get_label(self):
         """Retrieve a label from the label_manager."""
-        assert '_label_manager' in self.global_context
+        assert 'label_manager' in self.context
 
         # Get the identifier; it has to be a text string
         if not isinstance(self.content, str):
@@ -127,7 +115,7 @@ class Ref(Tag):
             raise RefError(msg.format(str(self.content)))
         id = self.content
 
-        label_manager = self.global_context['_label_manager']
+        label_manager = self.context['label_manager']
         label = label_manager.get_label(id=id)
 
         return label

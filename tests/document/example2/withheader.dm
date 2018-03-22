@@ -1,6 +1,7 @@
 ---
 title: My first title
 author: Justin L Lorieau
+targets: html
 macros:
   '@macro': '@i{example}'
 ---

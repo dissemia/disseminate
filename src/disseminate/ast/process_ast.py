@@ -17,8 +17,7 @@ re_open_tag = regex.compile(r'@(?P<tag>[A-Za-z][\w]*)(?P<attributes>\[[^\]]+\])?
 re_brace = regex.compile(r'[}{]')
 
 
-def process_ast(ast=None, local_context=None, global_context=None,
-                src_filepath=None, level=1):
+def process_ast(ast=None, context=None, src_filepath=None, level=1):
     """Process an AST comprising a list of strings, lists or tags.
 
     .. note:: The AST processing should be able to reprocess the generated AST
@@ -32,10 +31,8 @@ def process_ast(ast=None, local_context=None, global_context=None,
     ----------
     ast : list
         An optional AST to build from or a list of strings.
-    local_context : dict, optional
-        The context with values for the current document. (local)
-    global_context : dict, optional
-        The context with values for all documents in a project. (global)
+    context : dict, optional
+        The context with values for the document.
     src_filepath : str, optional
         The path for the document (source markup) file being processed.
     level : int, optional
@@ -62,13 +59,10 @@ def process_ast(ast=None, local_context=None, global_context=None,
 
     # Setup the AST and determine the kind of ast passed and how to process
     # it.
-    local_context = (local_context if isinstance(local_context, dict)
-                     else dict())
-    global_context = (global_context if isinstance(global_context, dict)
-                      else dict())
+    context = context if isinstance(context, dict) else dict()
+
     new_ast = []
-    process = lambda x: process_ast(x, local_context, global_context,
-                                    src_filepath, level+1)
+    process = lambda x: process_ast(x, context, src_filepath, level+1)
 
     # Look at the ast and process it depending on whether it's a string, tag
     # or list
@@ -137,8 +131,7 @@ def process_ast(ast=None, local_context=None, global_context=None,
         tag = factory.tag(tag_name=tag_name,
                           tag_content=tag_content,
                           tag_attributes=tag_attributes,
-                          local_context=local_context,
-                          global_context=global_context)
+                          context=context,)
         new_ast.append(tag)
 
         # If the tag didn't have a close brace, mark the open_brace attribute
@@ -168,7 +161,6 @@ def process_ast(ast=None, local_context=None, global_context=None,
         new_ast = factory.tag(tag_name='root',
                               tag_content=new_ast,
                               tag_attributes=None,
-                              local_context=local_context,
-                              global_context=global_context)
+                              context=context)
 
     return new_ast

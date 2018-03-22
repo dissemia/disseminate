@@ -1,6 +1,8 @@
 """
 Classes and functions for rendering documents.
 """
+from collections import OrderedDict
+from weakref import ref
 import os
 import os.path
 
@@ -8,6 +10,8 @@ from ..ast import process_ast, process_paragraphs, process_typography
 from ..templates import get_template
 from ..header import load_yaml_header
 from ..macros import replace_macros
+from ..labels import LabelManager
+from ..dependency_manager import DependencyManager
 from ..tags.toc import process_toc
 from ..utils import mkdir_p
 from .. import settings
@@ -26,11 +30,13 @@ class Document(object):
     src_filepath : str
         The path (relative to the current directory) for the document (markup
         source) file of this document.
-    targets : dict
-        A dict with the target extension as keys (ex: '.html') and the value
-        is the target_filepath for that target. (ex: 'html/index.html')
-    global_context : dict, optional
-        The global context to store variables shared between all documents.
+    target_root : str, optional
+        The path for the rendered target files. To this directly, the target
+        extension subdirectories (ex: 'html' 'tex') will be created.
+        By default, if not specified, the target_root will be one directory
+        above the project_root.
+    context : dict, optional
+        The context of the parent document.
 
     Attributes
     ----------
@@ -44,13 +50,12 @@ class Document(object):
         is the target_filepath for that target. (ex: 'html/index.html')
         These paths are render paths: they're either an absolute path or a
         path relative to the current directory.
-    local_context : dict
-        The context with values for the current document. The values in this
-        dict do not depend on values from other documents. (local)
-    global_context : dict
-        The context with values for all documents in a project. The
-        `global_context` is constructed with the `src_filepath` as a key and
-        the `local_context` as a value.
+    content : dict
+        The context with values for the document.
+    sub_documents : :obj:`collections.OrderedDict`
+        A dict with the sub-documents included in this document. The keys are
+        src_filepath values relative to the document's directory, and the values
+        are the sub_documents themselves.
 
     string_processors : list of functions, **class attribute**
         A list of functions to process the string before conversion to the
@@ -73,9 +78,11 @@ class Document(object):
     """
 
     src_filepath = None
-    targets = None
-    local_context = None
-    global_context = None
+    context = None
+    sub_documents = None
+    _parent_context = None
+    _label = None
+    _target_root = None
 
     string_processors = [load_yaml_header,  # Process YAML headers
                          replace_macros,  # Process macros
@@ -86,12 +93,15 @@ class Document(object):
                       ]
     ast_post_processors = []
 
-    def __init__(self, src_filepath, targets, global_context=None):
-        self.src_filepath = src_filepath
-        self.targets = targets
-        self.global_context = (global_context
-                               if isinstance(global_context, dict) else dict())
-        self.local_context = dict()
+    def __init__(self, src_filepath, target_root=None, context=None):
+        self.src_filepath = str(src_filepath)
+        self.sub_documents = OrderedDict()
+        self.context = dict()
+
+        self._parent_context = context
+        src_path = os.path.split(self.src_filepath)[0]
+        self._target_root = (target_root if target_root is not None else
+                             os.path.split(src_path)[0])
 
         # Reset the local_context, dependencies and labels
         self.reset_contexts()
@@ -105,50 +115,84 @@ class Document(object):
         # processed
         self._mtime = None
 
+        # Read in the AST
+        self.get_ast()
+
     @property
     def title(self):
         """The title for the document."""
-        if 'title' in self.local_context:
-            return self.local_context['title']
-
-        project_filepath = self.project_filepath
-        if project_filepath is not None:
-            return project_filepath.strip(settings.document_extension)
-
+        if 'title' in self.context:
+            return self.context['title']
         return self.src_filepath.strip(settings.document_extension)
 
     @property
     def short(self):
         """The short title for the document."""
-        if 'short' in self.local_context:
-            return self.local_context['short']
+        if 'short' in self.context:
+            return self.context['short']
         else:
             return self.title
 
     @property
     def number(self):
         """The number of the document."""
-        if 'document_number' in self.local_context:
-            return self.local_context['document_number']
+        if ('documents' in self.context and
+            self.src_filepath in self.context['documents']):
+            documents = list(self.context['documents'].keys())
+            return documents.index(self.src_filepath) + 1
         else:
             return None
 
     @property
-    def project_filepath(self):
-        """The filepath for this document relative to the project_root.
-
-        Returns
-        -------
-        project_filepath : str or None
-            The string of the src_filepath relative to the project_root.
-            If the project_root could not be found, then None is returned.
-
-        """
-        if '_project_root' in self.global_context:
-            project_root = self.global_context['_project_root']
-            return os.path.relpath(self.src_filepath, project_root)
+    def project_root(self):
+        if 'project_root' in self.context:
+            return self.context['project_root']
         else:
-            return None
+            return os.path.split(self.src_filepath)[0]
+
+    @property
+    def target_root(self):
+        if 'target_root' in self.context:
+            return self.context['target_root']
+        else:
+            return self._target_root
+
+    @property
+    def targets(self):
+        """The dict of target extension (key) and target_filepath (value)."""
+        # Get the extensions of the targets from the local_context
+        if 'targets' in self.context:
+            target_exts = self.context['targets']
+
+            if isinstance(target_exts, str):
+                # If it's a string, items may be seperated by commas, spaces
+                # or both
+                target_exts = target_exts.split(',')
+                if len(target_exts) == 1:
+                    target_exts = [t.strip() for t in target_exts[0].split(" ")]
+                else:
+                    target_exts = [t.strip() for t in target_exts]
+
+            # Add trailing periods for extensions. ex: ['.html', '.pdf']
+            target_exts = [ext if ext.startswith('.') else '.' + ext
+                           for ext in target_exts]
+
+            # Keep a list of extensions without the trailing period
+            # ex: ['html', 'pdf']
+            stripped_exts = [ext[1:] for ext in target_exts]
+
+            # Create the target dict
+            targets = dict()
+            base_target = self.target_root
+            base_filename = os.path.split(self.src_filepath)[1]
+            base_filename = os.path.splitext(base_filename)[0]
+            for target_ext, stripped_ext in zip(target_exts, stripped_exts):
+                t = (os.path.join(base_target, stripped_ext, base_filename) +
+                     target_ext)
+                targets[target_ext] = t
+            return targets
+        else:
+            return dict()
 
     def target_filepath(self, target, render_path=True):
         """The filepath for the given target extension.
@@ -162,59 +206,80 @@ class Document(object):
             If True, the returned target_filepath is a render path---i.e. it
             is an absolute path or relative to the current directory.
             If False, the returned target_filepath is relative to the target
-            root, including the segregate_targets subdirectory.
+            root, including the target subdirectory.
         """
         assert target in self.targets
 
-        # Strip the leading period
-        stripped_target = target if not target.startswith('.') else target[1:]
-
-        if (not render_path and
-           '_target_root' in self.global_context and
-           '_segregate_targets' in self.global_context):
-
-            target_root = self.global_context['_target_root']
-            segregate_targets = self.global_context['_segregate_targets']
-
-            target_path = (target_root if not segregate_targets else
-                           os.path.join(target_root, stripped_target))
-            return os.path.relpath(self.targets[target], target_path)
+        if not render_path:
+            # Get the target_root. The actual target path includes the target
+            # extension as a subdirectory.
+            target_root = self.target_root + "/" + target.strip('.')
+            return os.path.relpath(self.targets[target], target_root)
 
         return self.targets[target]
 
     def reset_contexts(self):
         """Clear and repopulate the local_context and global_context."""
-        self.local_context.clear()
+        # Remove everything from the context dict except for objects that
+        # need to be preserved between documents, like the label_manager and
+        # dependency_manager
+        excluded_items = ('label_manager', 'dependency_manager')
+        context_keys = list(self.context.keys())
+        for k in context_keys:
+            if k in excluded_items:
+                continue
+            del self.context[k]
 
-        # Populate the document in the local_context
-        self.local_context['_document'] = self
+        # Copy over the context values from parent context. The excluded_items
+        # do not pertain to sub-documents.
+        excluded_items = ('include',)
+        if self._parent_context is not None:
+            for k, v in self._parent_context.items():
+                if k in excluded_items:
+                    continue
+                self.context[k] = v
 
-        # Populate the document's src_filepath
-        self.local_context['_src_filepath'] = self.src_filepath
+        self.context['document'] = self
 
-        # Populate the documents's targets
-        self.local_context['_targets'] = self.targets
+        # The following tests whether the context values came from a parent
+        # document
+        if self.context.get('src_filepath', None) != self.src_filepath:
+            self.context['number'] = self.context.get('number', 0) + 1
 
-        # Set this document's number in the tree, if available
-        if ('_document_numbers' in self.global_context and
-            self.src_filepath in self.global_context['_document_numbers']):
-            document_numbers = self.global_context['_document_numbers']
-            document_number = document_numbers[self.src_filepath]
-            self.local_context['document_number'] = document_number
+        self.context['src_filepath'] = self.src_filepath
+
+        # The following should only be set by the root target document
+        if 'project_root' not in self.context:
+            self.context['project_root'] = self.project_root
+        if 'target_root' not in self.context:
+            self.context['target_root'] = self.target_root
+        if 'label_manager' not in self.context:
+            self.context['label_manager'] = LabelManager()
+        if 'dependency_manager' not in self.context:
+            dep = DependencyManager(project_root=self.project_root,
+                                    target_root=self.target_root)
+            self.context['dependency_manager'] = dep
+        if 'documents' not in self.context:
+            self.context['documents'] = OrderedDict()
+
+        # Add this document to the documents weak refs ordered dict
+        self.context['documents'][self.src_filepath] = ref(self)
+
+        # project_root, target_root. Include methods with 'render' options
 
     def reset_dependencies(self):
         """Clear and repopulate the dependencies for this document in the
         dependency manager."""
-        if '_dependencies' in self.global_context:
+        if 'dependency_manager' in self.context:
             document_src_filepath = self.src_filepath
-            dep = self.global_context['_dependencies']
+            dep = self.context['dependency_manager']
             dep.reset(document_src_filepath=document_src_filepath)
 
     def reset_labels(self):
         """Clear and repopulate the labels for this document in the label
         manager."""
-        if '_label_manager' in self.global_context:
-            label_manager = self.global_context['_label_manager']
+        if 'label_manager' in self.context:
+            label_manager = self.context['label_manager']
             label_manager.reset(document=self)
 
     def set_document_label(self):
@@ -224,19 +289,46 @@ class Document(object):
                   parsing the source file, so that the 'title' attribute can be
                   retrieved from the local_context.
         """
-        if '_label_manager' in self.global_context:
-            label_manager = self.global_context['_label_manager']
+        if 'label_manager' in self.context and self._label is None:
+            label_manager = self.context['label_manager']
 
             # Get the filepath for this document relative to the project_root,
             # if possible
-            project_filepath = self.project_filepath
-            project_filepath = (self.src_filepath
-                                if project_filepath is None
-                                else project_filepath)
+            project_filepath = os.path.relpath(self.src_filepath,
+                                               self.project_root)
 
             # Set the label for this document
-            label_manager.add_label(document=self, kind='document',
-                                    id='doc:' + project_filepath)
+            label = label_manager.add_label(document=self, kind='document',
+                                            id='doc:' + project_filepath)
+            self._label = label
+
+    def load_sub_documents(self):
+        """Load the sub-documents listed in the include of a local_context."""
+        if 'include' in self.context:
+            src_filepaths = self.context['include']
+            if isinstance(src_filepaths, str):
+                src_filepaths = src_filepaths.split()
+            src_filepaths = [s for s in src_filepaths if isinstance(s, str)]
+            print("src_filepaths", self.src_filepath, type(src_filepaths), src_filepaths)
+            # Create missing documents
+            current_src_filepath = os.path.split(self.src_filepath)[0]
+            for src_filepath in src_filepaths:
+                if src_filepath in self.sub_documents:
+                    continue
+
+                # Add the current path to make it a render_path
+                a_src_filepath = os.path.join(current_src_filepath,
+                                              src_filepath)
+
+                doc = Document(src_filepath=a_src_filepath,
+                               context=self.context)
+                self.sub_documents[src_filepath] = doc
+
+            # Remove missing documents
+            extra_src_filepaths = (src_filepaths ^
+                                   self.sub_documents.keys())
+            for src_filepath in extra_src_filepaths:
+                del self.sub_documents[src_filepath]
 
     def get_ast(self, reload=False):
         """Process and return the AST.
@@ -262,6 +354,10 @@ class Document(object):
         :obj:`disseminate.tag.Tag`
             A root tag object for the AST.
         """
+        # Run get_ast for the sub-documents
+        for document in self.sub_documents.values():
+            document.get_ast(reload=reload)
+
         # Check to make sure the file exists
         if not os.path.isfile(self.src_filepath):  # file must exist
             msg = "The source document '{}' must exist."
@@ -302,20 +398,21 @@ class Document(object):
 
             # Process the string
             for processor in self.string_processors:
-                string = processor(string, self.local_context,
-                                   self.global_context)
+                string = processor(string, self.context)
 
             # Process and validate the AST
             ast = string
             for processor in self.ast_processors:
-                ast = processor(ast=ast, local_context=self.local_context,
-                                global_context=self.global_context,
+                ast = processor(ast=ast, context=self.context,
                                 src_filepath=self.src_filepath)
 
             # Set the label for this document. This is done after the source
             # file is parsed because the source file might contain the 'title'
             # setting.
             self.set_document_label()
+
+            # Load the sub-documents
+            self.load_sub_documents()
 
             # cache the ast
             self._ast = ast
@@ -413,22 +510,13 @@ class Document(object):
 
             # First pull out the template, if specified
             template_basename = settings.template_basename
-            if 'template' in self.global_context:
-                template_basename = self.global_context['template']
-            if 'template' in self.local_context:
-                template_basename = self.local_context['template']
+            if 'template' in self.context:
+                template_basename = self.context['template']
 
             # Prepare the context
-            # Add non-private variables from the global context
-            # context['_global'] = self.global_context
-            context = {k: v for k, v in self.global_context.items()
+            # Add non-private variables from the  context
+            context = {k: v for k, v in self.context.items()
                        if not str(k).startswith("_")}
-
-            # Add non-private variables from the local_context
-            # These intentionally overwrite overlapping variables from the
-            # global_context
-            context.update({k: v for k, v in self.local_context.items()
-                            if not str(k).startswith("_")})
 
             # render and save to output file
             target_name = target.strip('.')
@@ -441,8 +529,7 @@ class Document(object):
             # Add the output string to the context and other variables
             context['body'] = output_string
             context['toc'] = process_toc(target=target,
-                                         local_context=self.local_context,
-                                         global_context=self.global_context)
+                                         context=self.context)
 
             # get a template. The following can be done asynchronously.
             template = get_template(self.src_filepath, target=target,
@@ -456,9 +543,9 @@ class Document(object):
                 output_string = template.render(**context)
 
                 # Add template to dependencies, if able
-                if ('_dependencies' in self.global_context and
+                if ('dependency_manager' in self.context and
                     hasattr(template, 'filename')):
-                    dep = self.global_context['_dependencies']
+                    dep = self.context['dependency_manager']
 
                     # See if the dependencies has a method for this target
                     meth = getattr(dep, 'add_' + target_name, None)

@@ -16,8 +16,7 @@ re_double_start = regex.compile(r"(?<!\w)\"(?=\S)")
 re_double_end = regex.compile(r"(?<=\S)\"(?!\w)")
 
 
-def process_typography(ast=None, local_context=None, global_context=None,
-                       src_filepath=None, level=1):
+def process_typography(ast=None, context=None, src_filepath=None, level=1):
     """Process the typography for an AST.
 
     .. note:: This function should be run after process_ast.
@@ -26,10 +25,8 @@ def process_typography(ast=None, local_context=None, global_context=None,
     ----------
     ast : list
         An optional AST to build from or a list of strings.
-    local_context : dict, optional
-        The context with values for the current document. (local)
-    global_context : dict, optional
-        The context with values for all documents in a project. (global)
+    context : dict, optional
+        The context with values for the document.
     src_filepath : str, optional
         The path for the document (source markup) file being processed.
     level : int, optional
@@ -54,9 +51,8 @@ def process_typography(ast=None, local_context=None, global_context=None,
 
     elif isinstance(ast, Tag) and ast.name not in settings.verbatim_tags:
         # Process the tag (as long as it's not a verbatim tag)
-        ast.content = process_typography(ast.content,
-                                         local_context, global_context,
-                                         src_filepath, level+1)
+        ast.content = process_typography(ast.content, context, src_filepath,
+                                         level+1)
         return ast
 
     elif isinstance(ast, Tag):
@@ -70,12 +66,10 @@ def process_typography(ast=None, local_context=None, global_context=None,
         # Determine the type of AST element and process it further if it's
         # a string or defer the processing recursively
         if isinstance(i, str) or isinstance(i, list):
-            i = process_typography(i, local_context, global_context,
-                                   src_filepath, level+1)
+            i = process_typography(i, context, src_filepath, level+1)
 
         elif isinstance(i, Tag) and i.name not in settings.verbatim_tags:
-            i.content = process_typography(i.content,
-                                           local_context, global_context,
+            i.content = process_typography(i.content, context,
                                            src_filepath, level + 1)
         new_ast.append(i)
 

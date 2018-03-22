@@ -26,21 +26,19 @@ def test_process_typography_dashes():
 
     # Test tags with string contents
     test5 = Tag(name='root', content="An endash--this is a test of that",
-                attributes=tuple(), local_context=dict(), global_context=dict())
+                attributes=tuple(), context=dict())
     assert (process_typography(test5).content ==
             "An endash–this is a test of that")
     test6 = Tag(name='root', content="An emdash---this is a test of that",
-                attributes=tuple(), local_context=dict(), global_context=dict())
+                attributes=tuple(), context=dict())
     assert (process_typography(test6).content ==
             "An emdash\u2014this is a test of that")
 
     # Test tags with tag contents
-    test7 = Tag(name='root', content=test5,
-                attributes=tuple(), local_context=dict(), global_context=dict())
+    test7 = Tag(name='root', content=test5, attributes=tuple(), context=dict())
     assert (process_typography(test7).content.content ==
             "An endash–this is a test of that")
-    test8 = Tag(name='root', content=test6,
-                attributes=tuple(), local_context=dict(), global_context=dict())
+    test8 = Tag(name='root', content=test6, attributes=tuple(), context=dict())
     assert (process_typography(test8).content.content ==
             "An emdash\u2014this is a test of that")
 
@@ -70,7 +68,6 @@ def test_process_typography_verbatim():
     # Test a verbatim tag
     test1 = "@v{An emdash---this is a test of that}"
     ast = process_ast(test1)
-    print(ast)
     ast = process_typography(ast)
 
     assert ast.content.content == "An emdash---this is a test of that"

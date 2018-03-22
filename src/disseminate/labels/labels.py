@@ -89,8 +89,8 @@ class Label(object):
         self.global_order = global_order
 
     def __repr__(self):
-        name = self.id
-        return "({} {})".format(name, self.global_order)
+        name = self.id if self.id else ''
+        return "({}: {} {})".format(self.kind, name, self.global_order)
 
     @property
     def src_filepath(self):
@@ -118,11 +118,9 @@ class Label(object):
 
                   1. The label's tag attributes. A format string can be
                      specified. ex: @ref[label='Fig. {number}' html.link='/']
-                  2. The local_context. The format string is found from the
+                  2. The context. The format string is found from the
                      kind of label. ex: 'figure_label': {Fig. 'number'}
-                  3. The global_context. The format string is found from the
-                     kind of label. ex: 'figure_label': {Fig. 'number'}
-                  4. The settings. The format string is found from the kind
+                  3. The settings. The format string is found from the kind
                      of label in the 'label_formats' dict.
         """
         # See if the format_str is in the local_context or global context
@@ -132,15 +130,11 @@ class Label(object):
             context_label = kind + '_' + name  # ex: 'figure_label'
             context_target_label = context_label + '_' + target.strip('.')
 
-            contexts = (getattr(self.document, 'local_context', None),
-                        getattr(self.document, 'global_context', None))
-            for context in contexts:
-                if context is None:
-                    continue
-                if context_target_label in context:
-                    return context[context_target_label]
-                if context_label in context:
-                    return context[context_label]
+            context = self.document.context
+            if context_target_label in context:
+                return context[context_target_label]
+            if context_label in context:
+                return context[context_label]
 
             # Finally, try to get a default format_str from the settings, if one
             # couldn't be found in the tag
@@ -332,7 +326,7 @@ class LabelManager(object):
             if existing_labels:
                 label = existing_labels.pop()
                 msg = "The label '{}' was already defined by the document {}."
-                raise DuplicateLabel(msg.format(label.name,
+                raise DuplicateLabel(msg.format(label,
                                                 label.document.src_filepath))
 
         # Get the counter for this document

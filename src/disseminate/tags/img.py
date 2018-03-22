@@ -20,10 +20,8 @@ class Img(Tag):
     src_filepath = None
     dependency_manager = None
 
-    def __init__(self, name, content, attributes,
-                 local_context, global_context):
-        super(Img, self).__init__(name, content, attributes, local_context,
-                                  global_context)
+    def __init__(self, name, content, attributes, context):
+        super(Img, self).__init__(name, content, attributes, context)
 
         # Move the contents to the src_filpath attribute
         if isinstance(content, list):
@@ -40,11 +38,11 @@ class Img(Tag):
 
     def tex(self, level=1, mathmode=False):
         # Get the file dependency
-        assert '_dependencies' in self.global_context
+        assert 'dependency_manager' in self.context
 
-        deps = self.global_context['_dependencies']
-        document_src_filepath = (self.local_context['_src_filepath']
-                                 if '_src_filepath' in self.local_context else
+        deps = self.context['dependency_manager']
+        document_src_filepath = (self.context['src_filepath']
+                                 if 'src_filepath' in self.context else
                                  None)
         deps.add_file(targets=['.tex'], path=self.src_filepath,
                       document_src_filepath=document_src_filepath,
@@ -61,11 +59,11 @@ class Img(Tag):
 
     def html(self, level=1):
         # Add the file dependency
-        assert '_dependencies' in self.global_context
+        assert 'dependency_manager' in self.context
 
-        deps = self.global_context['_dependencies']
-        document_src_filepath = (self.local_context['_src_filepath']
-                                 if '_src_filepath' in self.local_context else
+        deps = self.context['dependency_manager']
+        document_src_filepath = (self.context['src_filepath']
+                                 if 'src_filepath' in self.context else
                                  None)
         deps.add_file(targets=['.html'], path=self.src_filepath,
                       document_src_filepath=document_src_filepath,
@@ -101,8 +99,8 @@ class RenderedImg(Img):
 
     template = None
 
-    def __init__(self, name, content, attributes,
-                 local_context, global_context, render_target, template=None):
+    def __init__(self, name, content, attributes, context, render_target,
+                 template=None):
         self.template = template
         if isinstance(content, list):
             content = ''.join(content).strip()
@@ -114,8 +112,8 @@ class RenderedImg(Img):
             pass
         else:
             # Get the cache path from the dependency manager
-            assert '_dependencies' in global_context
-            deps = global_context['_dependencies']
+            assert 'dependency_manager' in context
+            deps = context['dependency_manager']
 
             # ex: cache_path = '.cache'
             cache_path = deps.cache_path()
@@ -129,8 +127,8 @@ class RenderedImg(Img):
             # temporary files in the final directories. This allows the
             # directory structure of the source file to be created in the
             # target
-            doc_src_filepath = local_context.get('_src_filepath', None)
-            project_root = global_context.get('_project_root', None)
+            doc_src_filepath = context.get('src_filepath', None)
+            project_root = context.get('project_root', None)
 
             # Find the cache directory for the file to create
             # ex: cache_dir = '.cache/media/chapter1'
@@ -144,9 +142,7 @@ class RenderedImg(Img):
 
             # Use a template, if specified
             if self.template:
-                src_filepath = (local_context['_src_filepath'] if
-                                '_src_filepath' in local_context else
-                                '')
+                src_filepath = context.get('src_filepath', '')
                 template = get_template(src_filepath=src_filepath,
                                         target='.tex',
                                         template_basename=self.template)
@@ -187,8 +183,7 @@ class RenderedImg(Img):
             # should be relative to the .cache directory
             content = os.path.relpath(cache_filepath, cache_path)
 
-        super(RenderedImg, self).__init__(name, content, attributes,
-                                          local_context, global_context)
+        super(RenderedImg, self).__init__(name, content, attributes, context)
 
     def template_kwargs(self):
         """Get the kwargs to pass to the template.

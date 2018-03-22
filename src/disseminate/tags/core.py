@@ -27,7 +27,7 @@ class TagFactory(object):
 
     tag_types = None
 
-    def __init__(self, allowed_tags=None):
+    def __init__(self):
         # Initialize the tag types dict.
         self.tag_types = dict()
         for scls in  _all_subclasses(Tag):
@@ -45,8 +45,7 @@ class TagFactory(object):
                 assert name not in self.tag_types
                 self.tag_types[name] = scls
 
-    def tag(self, tag_name, tag_content, tag_attributes,
-                  local_context, global_context):
+    def tag(self, tag_name, tag_content, tag_attributes, context):
         """Return the approriate tag, give a tag_type and tag_content"""
 
         # Try to find the appropriate subclass
@@ -57,7 +56,7 @@ class TagFactory(object):
             cls = Tag
 
         tag = cls(name=tag_name, content=tag_content, attributes=tag_attributes,
-                  local_context=local_context, global_context=global_context)
+                  context=context)
         return tag
 
 
@@ -80,13 +79,8 @@ class Tag(object):
         of tags and strings. (i.e. a sub-ast)
     attributes : tuple of tuples or strings
         The attributes of the tag.
-    local_context : dict
-        The context with values for the current document. The values in this
-        dict do not depend on values from other documents. (local)
-    global_context : dict
-        The context with values for all documents in a project. The
-        `global_context` is constructed with the `src_filepath` as a key and
-        the `local_context` as a value.
+    context : dict
+        The context with values for the document.
 
     Attributes
     ----------
@@ -112,8 +106,7 @@ class Tag(object):
     name = None
     content = None
     attributes = None
-    local_context = None
-    global_context = None
+    context = None
 
     aliases = None
     html_name = None
@@ -123,8 +116,7 @@ class Tag(object):
     include_paragraphs = False
     line_number = None
 
-    def __init__(self, name, content, attributes, local_context,
-                 global_context):
+    def __init__(self, name, content, attributes, context):
         self.name = name
 
         # Parse the attributes
@@ -140,8 +132,7 @@ class Tag(object):
         else:
             self.content = content
 
-        self.local_context = local_context
-        self.global_context = global_context
+        self.context = context
 
     def __repr__(self):
         return "{type}{{{content}}}".format(type=self.name,

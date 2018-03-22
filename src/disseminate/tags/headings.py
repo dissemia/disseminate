@@ -17,23 +17,20 @@ class Heading(Tag):
 
     label_heading = True
 
-    def __init__(self, name, content, attributes, local_context,
-                 global_context):
-        super(Heading, self).__init__(name, content, attributes, local_context,
-                                      global_context)
+    def __init__(self, name, content, attributes, context):
+        super(Heading, self).__init__(name, content, attributes, context)
 
         # Add a label for the heading
         if (self.label_heading and
-           '_label_manager' in global_context and
-           '_document' in local_context):
+            'label_manager' in context and 'document' in context):
 
-            label_manager = global_context['_label_manager']
-            document = local_context['_document']
+            label_manager = context['label_manager']
+            document = context['document']
             kind = ('heading', self.__class__.__name__.lower())
             id = get_attribute_value(self.attributes, 'id')
 
-            label_manager.add_label(document=document, tag=self,
-                                    kind=kind, id=id,)
+            label_manager.add_label(document=document, tag=self, kind=kind,
+                                    id=id)
 
     def tex(self, level=1, mathmode=False):
         # Add newlines around headings

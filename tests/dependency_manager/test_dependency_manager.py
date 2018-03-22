@@ -16,14 +16,8 @@ def test_target_path():
     """Tests the target_path method."""
     target_root = 'tests/dependency_manager/examples1'
     # With segregate_targets
-    dep = DependencyManager(project_root='', target_root=target_root,
-                            segregate_targets=True)
+    dep = DependencyManager(project_root='', target_root=target_root)
     assert dep.target_path('html') == target_root + '/html'
-
-    # Without segregate_targets
-    dep = DependencyManager(project_root='', target_root=target_root,
-                            segregate_targets=False)
-    assert dep.target_path('html') == target_root
 
 
 def test_search_file(tmpdir):
@@ -88,7 +82,7 @@ def test_copy_file(tmpdir):
 
     # Copy a file using segregate_targets
     dep = DependencyManager(project_root='tests/dependency_manager/example1',
-                            target_root=target_root, segregate_targets=True)
+                            target_root=target_root)
 
     # Copy the file.
     path = 'tests/dependency_manager/example1/media/css/default.css'
@@ -98,18 +92,6 @@ def test_copy_file(tmpdir):
     assert os.path.isfile(target_path)
     assert str(tmpdir.join('html/media/css/default.css')) == target_path
 
-    # Try again, but this time without segregate_targets
-    dep = DependencyManager(project_root='tests/dependency_manager/example1',
-                            target_root=target_root, segregate_targets=False)
-
-    # Copy the file.
-    path = 'tests/dependency_manager/example1/media/css/default.css'
-    target_path = dep.copy_file(target='.html',
-                                dep_filepath='media/css/default.css',
-                                src_filepath=path)
-    assert os.path.isfile(target_path)
-    assert str(tmpdir.join('media/css/default.css')) == target_path
-
 
 def test_add_file(tmpdir):
     """Tests the add_file method."""
@@ -118,7 +100,7 @@ def test_add_file(tmpdir):
 
     # Setup a dependency manager
     dep = DependencyManager(project_root='tests/dependency_manager/example1',
-                            target_root=target_root, segregate_targets=True)
+                            target_root=target_root)
 
     # Try adding a file for a target that doesn't support it. The add_file
     # will return False in this case.
@@ -151,7 +133,7 @@ def test_add_file(tmpdir):
     # has a pdf file in 'media/images/sample.pdf'. This file will need to be
     # converted to an .svg file for an .html target.
     dep = DependencyManager(project_root='tests/dependency_manager/example2',
-                            target_root=target_root, segregate_targets=True)
+                            target_root=target_root)
     filepath = 'media/images/sample.pdf'
     targets_added = dep.add_file(targets=['.misc', '.html'], path=filepath)
 
@@ -188,7 +170,7 @@ def test_reset(tmpdir):
 
     # Setup a dependency manager
     dep = DependencyManager(project_root='tests/dependency_manager/example3',
-                            target_root=target_root, segregate_targets=True)
+                            target_root=target_root)
 
     # Add a file for a target with a sample document_src_filepath. The
     # dependency is a '.png' file that works for .tex and .html targets
@@ -224,7 +206,7 @@ def test_add_file_duplicates(tmpdir):
 
     # Setup a dependency manager
     dep = DependencyManager(project_root='tests/dependency_manager/example1',
-                            target_root=target_root, segregate_targets=True)
+                            target_root=target_root)
 
     # Try adding a file twice
     filepath = 'tests/dependency_manager/example1/media/css/default.css'
@@ -242,14 +224,14 @@ def test_add_html(tmpdir):
     target_root = str(tmpdir)
 
     # Setup the dependency manager
-    dep = DependencyManager(project_root='',
-                            target_root=target_root, segregate_targets=True)
+    dep = DependencyManager(project_root='', target_root=target_root)
 
-    # Now try adding the 'template.html' file from the project. This file
-    # has a dependency on the 'media/css/default.css' file.
+    # 1. Now try adding the 'template.html' file from the project. This file
+    #    has a dependency on the 'media/css/default.css' file.
     dep.add_html(template_path + '/template_files/template.html')
 
     # Make sure the dependency was added and that it exists
+    assert len(dep.dependencies) == 1
     dependency = list(dep.dependencies['.html'])[0]
 
     assert dependency.src_filepath == os.path.realpath(template_path +
@@ -259,3 +241,9 @@ def test_add_html(tmpdir):
     assert dependency.dep_filepath == 'media/css/default.css'
 
     assert os.path.isfile(target_root + '/html/media/css/default.css')
+
+    # 2. Now try adding the 'tree.html' file from the project. This has a css
+    #    file, the same as 'template.html', and a link to a font, which should
+    #    not be added.
+    dep.add_html(template_path + '/template_files/tree.html')
+    assert len(dep.dependencies) == 1

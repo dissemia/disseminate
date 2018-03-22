@@ -13,7 +13,7 @@ re_macro = regex.compile(r"(?P<macro>@\w+)")
 _submodule_macros = None
 
 
-def replace_macros(s, local_context, global_context):
+def replace_macros(s, context):
     """Replace the macros and return a processed string.
 
     .. note:: A set of macros from this submodule are loaded as well as macros
@@ -26,11 +26,8 @@ def replace_macros(s, local_context, global_context):
     ----------
     s : str
         The string to process for macros
-    local_context : dict
+    context : dict
         A dict containing variables defined for a specific document.
-    global_context : dict
-        A dict containing variables defined for a project (i.e. a set of
-        documents)
 
     Returns
     -------
@@ -63,23 +60,14 @@ def replace_macros(s, local_context, global_context):
         globals()['_submodule_macros'] = submodule_macros
     macros.update(submodule_macros)
 
-    # See if the global_context already has a dict of macros. These will
+    # See if the context already has a dict of macros. These will
     # potentially overwrite the submodule_macros.
-    if ('macros' in global_context and
-       isinstance(global_context['macros'], dict)):
-
-        macros.update(global_context['macros'])
-
-    # See if the local_context already has a dict of macros. These will
-    # potentially overwrite the submodule_macros and global_macros
-    if ('macros' in local_context and
-       isinstance(local_context['macros'], dict)):
-
-        macros.update(local_context['macros'])
+    if 'macros' in context and isinstance(context['macros'], dict):
+        macros.update(context['macros'])
 
     # Replace the macros
     def _substitute(m):
-        macro_name = m.group();
+        macro_name = m.group()
         return (macros[macro_name] if macro_name in macros else
                 macro_name)
 

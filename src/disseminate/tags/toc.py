@@ -18,7 +18,7 @@ class TocError(Exception):
     pass
 
 
-def process_toc(target, local_context, global_context):
+def process_toc(target, context):
     """Process a string for the 'toc' in the local_context.
 
     A 'toc' field may optionally be placed in the local_context of a document.
@@ -29,10 +29,8 @@ def process_toc(target, local_context, global_context):
     ----------
     target : str
         The target (extension) for the output TOC. ex: '.html', '.tex'
-    local_context : dict
-        The local_context dict containing values for a specific document.
-    global_context : dict
-        The global_context dict caintain values for a group of documents (tree).
+    context : dict
+        The context dict containing values for the document.
 
     Returns
     -------
@@ -40,13 +38,13 @@ def process_toc(target, local_context, global_context):
         The string for the TOC. If no 'toc' was found in the local_context, an
         empty string is returned
     """
-    if 'toc' not in local_context:
+    if 'toc' not in context:
         return ''
 
-    toc_kind = (local_context['toc']['kind'] if
-                'kind' in local_context['toc'] else local_context['toc'])
-    toc_format = (local_context['toc']['format'] if
-                  'format' in local_context['toc'] else None)
+    toc_kind = (context['toc']['kind'] if
+                'kind' in context['toc'] else context['toc'])
+    toc_format = (context['toc']['format'] if
+                  'format' in context['toc'] else None)
 
     if toc_format is not None:
         attributes = (('format', toc_format),)
@@ -56,7 +54,7 @@ def process_toc(target, local_context, global_context):
     if isinstance(toc_kind, str):
         # Create the tag
         toc = Toc(name='toc', content=toc_kind, attributes=attributes,
-                  local_context=local_context, global_context=global_context)
+                  context=context)
         if target == '.html':
             return toc.html()
         else:
@@ -66,7 +64,7 @@ def process_toc(target, local_context, global_context):
         return ''
 
 
-def tree_to_html(elements, local_context, global_context, tag='ol'):
+def tree_to_html(elements, context, tag='ol'):
     """Convert a nested tree to html"""
     returned_elements = []
     for e in elements:
@@ -74,16 +72,14 @@ def tree_to_html(elements, local_context, global_context, tag='ol'):
             # Unpack the element if it's a tuple with the order and the element
             order, e = e
         if isinstance(e, list):
-            returned_elements.append(tree_to_html(e, local_context,
-                                                  global_context, tag))
+            returned_elements.append(tree_to_html(e, context, tag))
         else:
             returned_elements.append(E('li', e.ref(target='.html')))
 
     return E(tag, *returned_elements)
 
 
-def tree_to_tex(elements, local_context, global_context, level=1,
-                listing='enumerate'):
+def tree_to_tex(elements, context, level=1, listing='enumerate'):
     """Convert a nested tree to tex."""
     returned_elements = []
     for e in elements:
@@ -91,8 +87,7 @@ def tree_to_tex(elements, local_context, global_context, level=1,
             # Unpack the element if it's a tuple with the order and the element
             order, e = e
         if isinstance(e, list):
-            returned_elements.append(tree_to_tex(e, local_context,
-                                                  global_context, level+1))
+            returned_elements.append(tree_to_tex(e, context, level+1))
         else:
             returned_elements.append("  " * level + "\item " +
                                      e.ref(target='.tex') +

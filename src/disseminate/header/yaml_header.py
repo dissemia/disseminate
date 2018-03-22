@@ -16,7 +16,7 @@ re_header = regex.compile(r'^[\s\n]*(-{3,})\s*\n'
                           r'(\n\s*\g<1>)\n', regex.DOTALL)
 
 
-def load_yaml_header(s, local_context, global_context):
+def load_yaml_header(s, context):
     """Load a yaml header from a string to the local_context and return the
     string with the header removed.
 
@@ -24,11 +24,8 @@ def load_yaml_header(s, local_context, global_context):
     ----------
     s : str
         The string to process for the header
-    local_context : dict
+    context : dict
         A dict containing variables defined for a specific document.
-    global_context : dict
-        A dict containing variables defined for a project (i.e. a set of
-        documents)
 
     Returns
     -------
@@ -42,7 +39,15 @@ def load_yaml_header(s, local_context, global_context):
     if m:
         header_str = m.groupdict()['yaml']
         header = load(header_str, Loader=Loader)
-        local_context.update(header)
+
+        # update the context
+        for k, v in header.items():
+            if (k in context and isinstance(v, dict) and
+               isinstance(context[k], dict)):
+                # For dict entries, update the dict with the context's values
+                v.update(context[k])
+            # Replace the entry
+            context[k] = v
 
         # Determine the start and end position of the header
         start, end = m.span()

@@ -24,32 +24,27 @@ def test_join_strings():
             ['ab', [1, 'cd'], 'ef'])
 
     # Try with tags non-nested tag
-    tag = Tag(name='tag', content='test', attributes=(),
-              local_context=dict(), global_context=dict())
+    tag = Tag(name='tag', content='test', attributes=(), context=dict())
     assert (validate.join_strings(['a', 'b', tag, 'c', 'd']) ==
             ['ab', tag, 'cd'])
 
     # Try with nested tags
-    tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(),
-              local_context=dict(), global_context=dict())
+    tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(), context=dict())
     assert (validate.join_strings(tag) == tag)
     assert tag.content == [1, 'cd']
 
-    tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(),
-              local_context=dict(), global_context=dict())
+    tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(), context=dict())
     assert (validate.join_strings([tag]) == [tag])
     assert tag.content == [1, 'cd']
 
-    tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(),
-              local_context=dict(), global_context=dict())
+    tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(), context=dict())
     assert (validate.join_strings(['a', 'b', tag, 'c', 'd']) ==
             ['ab', tag, 'cd'])
     assert tag.content == [1, 'cd']
 
-    tag1 = Tag(name='tag', content=[1, 'c', 'd'], attributes=(),
-               local_context=dict(), global_context=dict())
+    tag1 = Tag(name='tag', content=[1, 'c', 'd'], attributes=(), context=dict())
     tag2 = Tag(name='tag', content=[tag1, 'c', 'd'], attributes=(),
-               local_context=dict(), global_context=dict())
+               context=dict())
     assert (validate.join_strings(['a', 'b', tag2, 'c', 'd']) ==
             ['ab', tag2, 'cd'])
     assert tag1.content == [1, 'cd']
@@ -133,7 +128,7 @@ def test_ast_validation_cases():
      }
     """
 
-    ast1 = process_ast(valid1, local_context=dict(), global_context=dict())
+    ast1 = process_ast(valid1, context=dict())
 
     assert ast1.name == 'root'
     assert ast1.content[1].name == 'tag'

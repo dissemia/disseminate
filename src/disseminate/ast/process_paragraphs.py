@@ -12,8 +12,7 @@ from ..tags.headings import Heading
 re_para = regex.compile(r'(\n{2,}|^)')
 
 
-def process_paragraphs(ast=None, local_context=None, global_context=None,
-                       src_filepath=None, level=1):
+def process_paragraphs(ast=None, context=None, src_filepath=None, level=1):
     """Process the paragraphs for an AST. Paragraphs are blocks of text with
     zero or more tags.
 
@@ -23,10 +22,8 @@ def process_paragraphs(ast=None, local_context=None, global_context=None,
     ----------
     ast : list
         An optional AST to build from or a list of strings.
-    local_context : dict, optional
-        The context with values for the current document. (local)
-    global_context : dict, optional
-        The context with values for all documents in a project. (global)
+    context : dict, optional
+        The context with values for the  document.
     src_filepath : str, optional
         The path for the document (source markup) file being processed.
     level : int, optional
@@ -93,8 +90,7 @@ def process_paragraphs(ast=None, local_context=None, global_context=None,
                         p = factory.tag(tag_name='p',
                                         tag_content=cur_para,
                                         tag_attributes=None,
-                                        local_context=local_context,
-                                        global_context=global_context)
+                                        context=context)
                         new_ast.append(p)
                     else:
                         new_ast.append(cur_para[0])
@@ -117,8 +113,7 @@ def process_paragraphs(ast=None, local_context=None, global_context=None,
             # by this function. This means that if the contents are a string,
             # wrap it in a list, otherwise just pass this tag's contents
             content = [i.content] if isinstance(i.content, str) else i.content
-            content = process_paragraphs(content, local_context,
-                                         global_context, src_filepath,
+            content = process_paragraphs(content, context, src_filepath,
                                          level=1+level)
 
             # The processed content is now set as this tag's content. At this
@@ -137,8 +132,7 @@ def process_paragraphs(ast=None, local_context=None, global_context=None,
             p = factory.tag(tag_name='p',
                             tag_content=cur_para,
                             tag_attributes=None,
-                            local_context=local_context,
-                            global_context=global_context)
+                            context=context)
             new_ast.append(p)
         else:
             new_ast.append(cur_para[0])
@@ -174,8 +168,7 @@ def process_paragraphs(ast=None, local_context=None, global_context=None,
         root = factory.tag(tag_name='root',
                            tag_content=new_ast,
                            tag_attributes=None,
-                           local_context=local_context,
-                           global_context=global_context)
+                           context=context)
         return root
     else:
         return new_ast

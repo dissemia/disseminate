@@ -35,7 +35,7 @@ def test_macros_basic():
 
         Here is a new paragraph."""
 
-    result = replace_macros(test, local_context={}, global_context={})
+    result = replace_macros(test, context={})
 
     assert result == expected_result
 
@@ -43,29 +43,23 @@ def test_macros_basic():
 def test_macros_specific():
     """Test specific macros."""
 
-    assert (replace_macros("90@deg", local_context={}, global_context={}) ==
-            '90@sup{○}')
-    assert (replace_macros("90@deg ", local_context={}, global_context={}) ==
-            '90@sup{○} ')
+    assert (replace_macros("90@deg", context={}) == '90@sup{○}')
+    assert (replace_macros("90@deg ", context={}) == '90@sup{○} ')
 
 
 def test_macros_multiple_substitutions():
     """Test multiple substitutions of macros."""
 
-    local_context = {'macros': {'@p90x': '90@deg@sub{x}'}}
-    global_context = {}
+    context = {'macros': {'@p90x': '90@deg@sub{x}'}}
 
-    result = replace_macros("My @p90x pulse.", local_context=local_context,
-                            global_context=global_context)
+    result = replace_macros("My @p90x pulse.", context=context )
     assert result == "My 90@sup{○}@sub{x} pulse."
 
 
 def test_macros_attributes():
     """Test the replacement of macros and values with attributes."""
 
-    local_context = {'macros': {"@feature": "@div[class=col-md-4]"}}
-    global_context = {}
+    context = {'macros': {"@feature": "@div[class=col-md-4]"}}
 
-    result = replace_macros("My @feature{is good}.", local_context=local_context,
-                            global_context=global_context)
+    result = replace_macros("My @feature{is good}.", context=context)
     assert result == "My @div[class=col-md-4]{is good}."

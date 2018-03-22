@@ -13,10 +13,8 @@ class BaseFigure(Tag):
     the label manager and reorganizing captions to the bottom of the figure.
     """
 
-    def __init__(self, name, content, attributes, local_context,
-                 global_context):
-        super(BaseFigure, self).__init__(name, content, attributes,
-                                         local_context, global_context)
+    def __init__(self, name, content, attributes, context):
+        super(BaseFigure, self).__init__(name, content, attributes, context)
 
         # Register the caption as a label, if there's a caption in the contents
         id = get_attribute_value(self.attributes, 'id')
@@ -46,10 +44,7 @@ class BaseFigure(Tag):
             caption = None
 
         if caption is not None:
-            caption.add_label(local_context=local_context,
-                              global_context=global_context,
-                              kind='figure',
-                              id=id)
+            caption.add_label(context=context, kind='figure', id=id)
 
 
 class Marginfig(BaseFigure):
@@ -57,6 +52,3 @@ class Marginfig(BaseFigure):
     html_name = 'marginfig'
     tex_name = 'marginfigure'
     active = True
-
-
-

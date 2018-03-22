@@ -87,7 +87,7 @@ def test_process_paragraphs_leading_spaces():
 
     ast = process_ast(test_paragraphs2)
     ast = process_paragraphs(ast)
-    print(type(ast), ast)
+
     assert ast.content[0] == '  '
     assert ast.content[1].name == 'section'
     assert ast.content[2] == '  \n  This is my paragraph.'
@@ -110,25 +110,19 @@ def test_process_paragraphs_macros():
     """Test the process_paragraphs function with macros."""
 
     # setup a test ast with a macro
-    local_context = {'macros': {'@p90x': '90@deg@sub{x}'}}
-    global_context = {}
+    context = {'macros': {'@p90x': '90@deg@sub{x}'}}
 
-    result = replace_macros("My @p90x pulse.", local_context=local_context,
-                            global_context=global_context)
-    ast = process_paragraphs([result], local_context=local_context,
-                             global_context=global_context)
+    result = replace_macros("My @p90x pulse.", context=context)
+    ast = process_paragraphs([result], context=context)
     assert ast.content.content == "My 90@sup{○}@sub{x} pulse."
 
     # Test paragraph processing with a macro and tag
-    result = replace_macros("My @b{y = x} @1H pulse.", local_context=local_context,
-                            global_context=global_context)
-    ast = process_paragraphs([result], local_context=local_context,
-                             global_context=global_context)
+    result = replace_macros("My @b{y = x} @1H pulse.", context=context)
+    ast = process_paragraphs([result], context=context)
     assert ast.name == 'root'
     assert ast.content.name == 'p'
     assert ast.content.content == 'My @b{y = x} @sup{1}H pulse.'
 
     # Test paragraph processing after process_ast
-    ast = process_ast(result, local_context={}, global_context={})
-    ast = process_paragraphs(ast, local_context=local_context,
-                             global_context=global_context)
+    ast = process_ast(result, context={})
+    ast = process_paragraphs(ast, context=context)

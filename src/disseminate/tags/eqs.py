@@ -46,8 +46,7 @@ class Eq(RenderedImg):
                         "{content}\n\\end{{{env}}}")
     default_block_env = "align*"
 
-    def __init__(self, name, content, attributes,
-                 local_context, global_context, block_equation=False,
+    def __init__(self, name, content, attributes, context, block_equation=False,
                  eq_template=None):
         self.block_equation = block_equation
 
@@ -86,8 +85,7 @@ class Eq(RenderedImg):
 
         super(Eq, self).__init__(name=name, content=content,
                                  attributes=attributes,
-                                 local_context=local_context,
-                                 global_context=global_context,
+                                 context=context,
                                  render_target='.tex',
                                  template=eq_template)
 

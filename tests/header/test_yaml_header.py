@@ -30,22 +30,17 @@ def test_yaml_header():
     """
 
     combined_test = test_header + test
-    local_context = {}
-    global_context = {}
+    context = {}
 
     # Process the header
-    processed_string = load_yaml_header(combined_test, local_context,
-                                        global_context)
+    processed_string = load_yaml_header(combined_test, context)
 
     # Check the contents  of the local_context
-    assert 'title' in local_context
-    assert local_context['title'] == 'My first title'
+    assert 'title' in context
+    assert context['title'] == 'My first title'
 
-    assert 'author' in local_context
-    assert local_context['author'] == 'Justin L Lorieau'
-
-    # The global_context should have nothing in it
-    assert len(global_context) == 0
+    assert 'author' in context
+    assert context['author'] == 'Justin L Lorieau'
 
     # Check the correct rendering of the AST html
     assert processed_string == test
@@ -65,16 +60,14 @@ def test_yaml_nonyaml():
     ---
     """
 
-    local_context = {}
-    global_context = {}
+    context = {}
 
     # Process the header
-    processed_string = load_yaml_header(src, local_context,
-                                        global_context)
+    processed_string = load_yaml_header(src, context)
 
     # Check the contents  of the local_context
-    assert 'title' in local_context
-    assert local_context['title'] == 'yaml header'
+    assert 'title' in context
+    assert context['title'] == 'yaml header'
 
     assert processed_string == ("    \n"
                                 "    ---\n"
@@ -94,17 +87,15 @@ def test_yaml_macros():
     """
 
     # 1. Test a basic macro
-    local_context = {}
-    global_context = {}
+    context = {}
 
     # Process the header
-    processed_string = load_yaml_header(src, local_context,
-                                        global_context)
+    processed_string = load_yaml_header(src, context)
 
     # Check the contents of the local_context
-    assert 'macros' in local_context
-    assert '@feature' in local_context['macros']
-    assert local_context['macros']['@feature'] == "@div[class=col-md-4]"
+    assert 'macros' in context
+    assert '@feature' in context['macros']
+    assert context['macros']['@feature'] == "@div[class=col-md-4]"
 
     # 2. Test macros with quotes
     src = """
@@ -114,14 +105,12 @@ def test_yaml_macros():
         ---
         """
 
-    local_context = {}
-    global_context = {}
+    context = {}
 
     # Process the header
-    processed_string = load_yaml_header(src, local_context,
-                                        global_context)
+    processed_string = load_yaml_header(src, context)
 
     # Check the contents of the local_context
-    assert 'macros' in local_context
-    assert '@feature' in local_context['macros']
-    assert local_context['macros']['@feature'] == "@div[class='col-md-4 test']"
+    assert 'macros' in context
+    assert '@feature' in context['macros']
+    assert context['macros']['@feature'] == "@div[class='col-md-4 test']"

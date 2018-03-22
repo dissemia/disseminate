@@ -77,12 +77,6 @@ class DependencyManager(object):
     target_root : str
         The target directory for the output documents (i.e. the output
         directory). The final output directory also depends on the
-        segregate_targets option.
-        ex: 'out/'
-    seggregate_targets : bool, optional
-        If True (default), the processed output documents for each target type
-        will be place in its directory named for the target.
-        ex: 'out/html'
 
     Attributes
     ----------
@@ -96,19 +90,14 @@ class DependencyManager(object):
     target_root = None
     dependencies = None
 
-    def __init__(self, project_root, target_root,
-                 segregate_targets=settings.segregate_targets):
+    def __init__(self, project_root, target_root):
         self.project_root = project_root
         self.target_root = target_root
-        self.segregate_targets = segregate_targets
         self.dependencies = dict()
 
     def target_path(self, target):
         """The final render path for the given target."""
-        if self.segregate_targets:
-            return os.path.join(self.target_root, target.strip('.'))
-        else:
-            return self.target_root
+        return os.path.join(self.target_root, target.strip('.'))
 
     def cache_path(self):
         """Return the render path for the cache directory."""
