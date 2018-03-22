@@ -51,21 +51,16 @@ def test_ast_caching(tmpdir):
 
 def test_target_filepath():
     """Test the target_filepath method."""
-
-    # Create the document with the needed local_context and global_context
-    global_context = dict()
     doc = Document("tests/document/example1/dummy.dm")
 
-    # Without the '_target_root' and '_segregate_target' defined in the
-    # global_context, only the raw target filepath can be returned.
     assert (doc.target_filepath('.html', render_path=True) ==
             "tests/document/html/dummy.html")
     assert (doc.target_filepath('.html', render_path=False) ==
-            "html/dummy.html")
+            "dummy.html")
     assert (doc.target_filepath('.tex', render_path=True) ==
             "tests/document/tex/dummy.tex")
     assert (doc.target_filepath('.tex', render_path=False) ==
-            "tex/dummy.tex")
+            "dummy.tex")
 
 
 def test_custom_template(tmpdir):

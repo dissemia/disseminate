@@ -64,8 +64,7 @@ def test_tex():
 def test_paragraph_tex():
     """Test the formatting of paragraph tags for tex."""
 
-    p = P(name='p', content='content', attributes=(),
-          local_context={}, global_context={})
+    p = P(name='p', content='content', attributes=(), context=dict())
     assert p.tex() == '\ncontent\n'
 
 

@@ -31,7 +31,7 @@ class Caption(Tag):
     active = True
     label = None
 
-    def add_label(self, local_context, global_context, kind, id=None):
+    def add_label(self, context, kind, id=None):
         """Add a label to the caption.
 
         .. note:: This function is run by the parent tag so that the kind is
@@ -39,12 +39,8 @@ class Caption(Tag):
 
         Parameters
         ----------
-        local_context : dict, optional
-            The context with values for the document that owns this label. The
-            values in this dict do not depend on values from other documents.
-            (local)
-        global_context : dict
-            The context with values for all documents in a project.
+        context : dict
+            The context for the document that owns this label.
         kind : str
             The kind of label. ex: 'chapter', 'figure', 'equation'
         id : str, optional
@@ -61,10 +57,10 @@ class Caption(Tag):
         self.attributes = remove_attribute(self.attributes, 'id')
 
         # Get the label manager and add the label
-        if ('_label_manager' in global_context and
-           '_document' in local_context):
-            label_manager = global_context['_label_manager']
-            document = local_context['_document']
+        if ('label_manager' in context and
+           'document' in context):
+            label_manager = context['label_manager']
+            document = context['document']
 
             label = label_manager.add_label(document=document, tag=self,
                                             kind=kind, id=id)

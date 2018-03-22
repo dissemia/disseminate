@@ -129,8 +129,8 @@ class Label(object):
         for kind in list(reversed(self.kind)) + ['default']:
             context_label = kind + '_' + name  # ex: 'figure_label'
             context_target_label = context_label + '_' + target.strip('.')
-
             context = self.document.context
+
             if context_target_label in context:
                 return context[context_target_label]
             if context_label in context:
@@ -248,7 +248,6 @@ class Label(object):
             tag_kwargs = dict()
             tag_kwargs['class'] = self.kind[-1] + '-' + 'ref'
             tag_kwargs['href'] = link_str.format(**kwargs)
-
             return E('a', ref_str.format(**kwargs), **tag_kwargs)
         else:
             # Otherwise just return the text

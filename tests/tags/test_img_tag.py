@@ -13,15 +13,13 @@ def test_img_attribute(tmpdir):
     # to find and convert images by the img tag.
     dep = DependencyManager(project_root='tests/tags/img_example1',
                             target_root=target_root)
-    local_context = {'_targets': {'.html': 'html/main.html'}}
-    global_context = {'_dependencies': dep}
+    context = {'dependency_manager': dep}
 
     # Generate the markup
     src = "@img[width=100]{sample.pdf}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, local_context=local_context,
-                       global_context=global_context)
+    root = process_ast(src, context)
 
     img = root.content
     assert img.name == 'img'
@@ -36,8 +34,7 @@ def test_img_html(tmpdir):
     # to find and convert images by the img tag.
     dep = DependencyManager(project_root='tests/tags/img_example1',
                             target_root=target_root)
-    local_context = {'_targets': {'.html': 'html/main.html'}}
-    global_context = {'_dependencies': dep}
+    context = {'dependency_manager': dep}
 
     # Generate the markup
     src = "@img{sample.pdf}"
@@ -48,8 +45,7 @@ def test_img_html(tmpdir):
     root_end = '\n</span>\n'
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, local_context=local_context,
-                       global_context=global_context)
+    root = process_ast(src, context)
 
     # Remove the root tag
     root_html = root.html()
@@ -70,8 +66,7 @@ def test_img_html(tmpdir):
     root_end = '\n</span>\n'
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, local_context=local_context,
-                       global_context=global_context)
+    root = process_ast(src, context)
 
     # Remove the root tag
     root_html = root.html()
@@ -91,15 +86,14 @@ def test_img_tex(tmpdir):
     dep = DependencyManager(project_root='tests/tags/img_example1',
                             target_root=target_root)
     local_context = {'_targets': {'.tex': 'html/main.tex'}}
-    global_context = {'_dependencies': dep}
+    context = {'dependency_manager': dep}
 
     # Generate the markup
     src = "@img{sample.pdf}"
     tex = "\\includegraphics{sample.pdf}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, local_context=local_context,
-                       global_context=global_context)
+    root = process_ast(src, context=context)
 
     # Remove the root tag
     root_tex = root.tex()
@@ -111,8 +105,7 @@ def test_img_tex(tmpdir):
     tex = "\\includegraphics[height=20]{sample.pdf}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, local_context=local_context,
-                       global_context=global_context)
+    root = process_ast(src, context=context)
 
     # Remove the root tag
     root_tex = root.tex()

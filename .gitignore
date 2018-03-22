@@ -41,10 +41,14 @@ prof/
 .coverage
 .coverage.*
 .cache
+.pytest_cache
 nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+
+# Re-include .cache directories from test examples
+!tests/**/.cache
 
 # Translations
 *.mo

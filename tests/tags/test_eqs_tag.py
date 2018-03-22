@@ -18,46 +18,40 @@ def test_inline_equation(tmpdir):
     # Setup the dependency manager in the global context. This is needed
     # to find and convert images by the img tag.
     dep = DependencyManager(project_root=project_root,
-                            target_root=target_root,
-                            segregate_targets=True)
-    global_context = {'_dependencies': dep,
-                      '_project_root': project_root,
-                      '_target_root': target_root}
-    local_context = {'_targets': {'.html': 'test.html'}}
+                            target_root=target_root)
+
+    context = {'dependency_manager': dep,
+               'project_root': project_root}
 
     # Example 1 - simple inline equation
-    eq1 = Eq(name='eq', content='y=x', attributes=tuple(),
-             local_context=local_context, global_context=global_context)
+    eq1 = Eq(name='eq', content='y=x', attributes=tuple(), context=context)
     assert eq1.tex() == "\ensuremath{y=x}"
 
     # Example 2 - nested inline equation with subtag as content
-    eq2 = Eq(name='eq', content=eq1, attributes=tuple(),
-             local_context=local_context, global_context=global_context)
+    eq2 = Eq(name='eq', content=eq1, attributes=tuple(), context=context)
     assert eq2.tex() == "\ensuremath{y=x}"
 
     # Example 3 - nested inline equation with subtag as list
     eq3 = Eq(name='eq', content=['test is my ', eq2], attributes=tuple(),
-             local_context=local_context, global_context=global_context)
+             context=context)
     assert eq3.tex() == "\ensuremath{test is my y=x}"
 
     # Example 4 - a bold equation
-    eq4 = Eq(name='eq', content="y=x", attributes=('bold',),
-             local_context=local_context, global_context=global_context)
+    eq4 = Eq(name='eq', content="y=x", attributes=('bold',), context=context)
     assert eq4.tex() == "\ensuremath{\\boldsymbol{y=x}}"
 
     # Example 5 - an equation with a bold equation subtag
-    eq5 = Eq(name='eq', content=eq4, attributes=tuple(),
-             local_context=local_context, global_context=global_context)
+    eq5 = Eq(name='eq', content=eq4, attributes=tuple(), context=context)
     assert eq5.tex() == "\ensuremath{\\boldsymbol{y=x}}"
 
     # Example 6 - an equation with a  bold equation subtag in a list
     eq6 = Eq(name='eq', content=['this is my ', eq4], attributes=tuple(),
-             local_context=local_context, global_context=global_context)
+             context=context)
     assert eq6.tex() == "\ensuremath{this is my \\boldsymbol{y=x}}"
 
     # Example 7 - a bold equation with an equation subtag in a list
     eq7 = Eq(name='eq', content=['this is my ', eq1], attributes=('bold',),
-             local_context=local_context, global_context=global_context)
+             context=context)
     assert eq7.tex() == "\ensuremath{\\boldsymbol{this is my y=x}}"
 
 
@@ -71,30 +65,24 @@ def test_block_equation(tmpdir):
     # Setup the dependency manager in the global context. This is needed
     # to find and convert images by the img tag.
     dep = DependencyManager(project_root=project_root,
-                            target_root=target_root,
-                            segregate_targets=True)
-    global_context = {'_dependencies': dep,
-                      '_project_root': project_root,
-                      '_target_root': target_root}
-    local_context = {'_targets': {'.html': 'test.html'}}
+                            target_root=target_root)
+    context = {'dependency_manager': dep,
+               'project_root': project_root}
 
     # Example 1 - simple block equation
-    eq1 = Eq(name='eq', content='y=x', attributes=tuple(),
-             local_context=local_context, global_context=global_context,
+    eq1 = Eq(name='eq', content='y=x', attributes=tuple(),context=context,
              block_equation=True)
     assert eq1.tex() == '\\begin{align*} %\ny=x\n\\end{align*}'
 
     # Example 2 - simple block equation with alternative environment
     eq2 = Eq(name='eq', content='y=x', attributes=(('env', 'alignat*'),),
-             local_context=local_context, global_context=global_context,
-             block_equation=True)
+             context=context, block_equation=True)
     assert eq2.tex() == '\\begin{alignat*} %\ny=x\n\\end{alignat*}'
 
     # Example 3 - simple block equation with alternative environment and
     # positional arguments
     eq3 = Eq(name='eq', content='y=x', attributes=(('env', 'alignat*'), '3'),
-             local_context=local_context, global_context=global_context,
-             block_equation=True)
+             context=context, block_equation=True)
     assert eq3.tex() == '\\begin{alignat*}{3} %\ny=x\n\\end{alignat*}'
 
 
@@ -108,16 +96,12 @@ def test_simple_inline_equation_html(tmpdir):
     # Setup the dependency manager in the global context. This is needed
     # to find and convert images by the img tag.
     dep = DependencyManager(project_root=project_root,
-                            target_root=target_root,
-                            segregate_targets=True)
-    global_context = {'_dependencies': dep,
-                      '_project_root': project_root,
-                      '_target_root': target_root}
-    local_context = {'_targets': {'.html': 'test.html'}}
+                            target_root=target_root)
+    context = {'dependency_manager': dep,
+               'project_root': project_root}
 
     # Setup the equation tag
-    eq = Eq(name='eq', content='y = x', attributes=tuple(),
-            local_context=local_context, global_context=global_context)
+    eq = Eq(name='eq', content='y = x', attributes=tuple(), context=context)
 
     # Check the paths. These are stored by the parent Img tag in the
     # 'src_filepath' attribute
@@ -125,8 +109,7 @@ def test_simple_inline_equation_html(tmpdir):
 
     # Create a root tag and render the html
     root = Tag(name='root', content=["This is my test", eq, "equation"],
-               attributes=tuple(), local_context=local_context,
-               global_context=global_context)
+               attributes=tuple(), context=context)
 
     # get the root tag
     root_html = root.html()
@@ -158,16 +141,12 @@ def test_simple_inline_equation_tex(tmpdir):
     # Setup the dependency manager in the global context. This is needed
     # to find and convert images by the img tag.
     dep = DependencyManager(project_root=project_root,
-                            target_root=target_root,
-                            segregate_targets=True)
-    global_context = {'_dependencies': dep,
-                      '_project_root': project_root,
-                      '_target_root': target_root}
-    local_context = {'_targets': {'.html': 'test.html'}}
+                            target_root=target_root)
+    context = {'dependency_manager': dep,
+               'project_root': project_root}
 
     # Setup the equation tag
-    eq = Eq(name='eq', content='y = x', attributes=tuple(),
-            local_context=local_context, global_context=global_context)
+    eq = Eq(name='eq', content='y = x', attributes=tuple(), context=context)
 
     assert eq.tex() == "\\ensuremath{y = x}"
 
@@ -182,12 +161,9 @@ def test_block_equation_tex(tmpdir):
     # Setup the dependency manager in the global context. This is needed
     # to find and convert images by the img tag.
     dep = DependencyManager(project_root=project_root,
-                            target_root=target_root,
-                            segregate_targets=True)
-    global_context = {'_dependencies': dep,
-                      '_project_root': project_root,
-                      '_target_root': target_root}
-    local_context = {'_targets': {'.tex': 'test.tex'}}
+                            target_root=target_root)
+    context = {'dependency_manager': dep,
+               'project_root': project_root}
 
     # Test markup
     test = """
@@ -197,8 +173,7 @@ def test_block_equation_tex(tmpdir):
     }
     """
 
-    root = process_ast(test, local_context=local_context,
-                       global_context=global_context)
+    root = process_ast(test, context=context)
     assert root.tex() == ('\n    \\begin{align*} %\n'
                           'y &= x + b \\\n'
                           '    &= x + a\n'

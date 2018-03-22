@@ -20,12 +20,10 @@ def test_asy_html(tmpdir):
     # Setup the dependency manager in the global context. This is needed
     # to find and convert images by the img tag.
     dep = DependencyManager(project_root=project_root,
-                            target_root=target_root,
-                            segregate_targets=True)
-    global_context = {'_dependencies': dep,
-                      '_project_root': project_root,
-                      '_target_root': target_root}
-    local_context = {'_targets': {'.html': 'test.html'}}
+                            target_root=target_root)
+    context = {'dependency_manager': dep,
+               'project_root': project_root,
+               'target_root': target_root}
 
     # Generate the markup
     src = """@asy{
@@ -34,8 +32,7 @@ def test_asy_html(tmpdir):
         draw(unitcircle);  }"""
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, local_context=local_context,
-                       global_context=global_context)
+    root = process_ast(src, context=context)
 
     # get the root tag
     root_html = root.html()
@@ -55,24 +52,20 @@ def test_asy_html(tmpdir):
     assert tmpdir.ensure('.html', settings.media_dir, '69a34c39e1.svg')
 
     # Second, we'll test the case when asy code is used directly in the tag.
-    # We will now use a _src_filepath of the markup document in the
+    # We will now use a src_filepath of the markup document in the
     # local_context, since it is not used in generating the cached filename
 
     # Setup the dependency manager in the global context. This is needed
     # to find and convert images by the img tag. We'll place the project root
     # in 'src'
     dep = DependencyManager(project_root=project_root,
-                            target_root=target_root,
-                            segregate_targets=True)
-    global_context = {'_dependencies': dep,
-                      '_project_root': 'src',
-                      '_target_root': target_root}
-    local_context = {'_src_filepath': 'src/chapter/test.dm',
-                     '_targets': {'.html': 'chapter/test.html'}}
+                            target_root=target_root)
+    context = {'dependency_manager': dep,
+               'project_root': 'src',
+               'target_root': target_root}
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, local_context=local_context,
-                       global_context=global_context)
+    root = process_ast(src, context=context)
 
     # get the root tag
     root_html = root.html()

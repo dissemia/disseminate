@@ -83,6 +83,7 @@ class Document(object):
     _parent_context = None
     _label = None
     _target_root = None
+    _target_list = None
 
     string_processors = [load_yaml_header,  # Process YAML headers
                          replace_macros,  # Process macros
@@ -158,41 +159,53 @@ class Document(object):
             return self._target_root
 
     @property
+    def target_list(self):
+        if self._target_list is None:
+            # Get the target list from the context
+            self.target_list = self.context['targets']
+
+        if isinstance(self._target_list, list):
+            return self._target_list
+        else:
+            return []
+
+    @target_list.setter
+    def target_list(self, value):
+        if isinstance(value, list):
+            self._target_list = value
+        elif isinstance(value, str):
+            # If it's a string, items may be seperated by commas, spaces
+            # or both
+            target_exts = value.split(',')
+            if len(target_exts) == 1:
+                self._target_list = [t.strip() for t in
+                                     target_exts[0].split(" ")]
+            else:
+                self._target_list = [t.strip() for t in target_exts]
+        else:
+            raise AttributeError
+
+    @property
     def targets(self):
         """The dict of target extension (key) and target_filepath (value)."""
-        # Get the extensions of the targets from the local_context
-        if 'targets' in self.context:
-            target_exts = self.context['targets']
+        # Add trailing periods for extensions. ex: ['.html', '.pdf']
+        target_exts = [ext if ext.startswith('.') else '.' + ext
+                       for ext in self.target_list]
 
-            if isinstance(target_exts, str):
-                # If it's a string, items may be seperated by commas, spaces
-                # or both
-                target_exts = target_exts.split(',')
-                if len(target_exts) == 1:
-                    target_exts = [t.strip() for t in target_exts[0].split(" ")]
-                else:
-                    target_exts = [t.strip() for t in target_exts]
+        # Keep a list of extensions without the trailing period
+        # ex: ['html', 'pdf']
+        stripped_exts = [ext[1:] for ext in target_exts]
 
-            # Add trailing periods for extensions. ex: ['.html', '.pdf']
-            target_exts = [ext if ext.startswith('.') else '.' + ext
-                           for ext in target_exts]
-
-            # Keep a list of extensions without the trailing period
-            # ex: ['html', 'pdf']
-            stripped_exts = [ext[1:] for ext in target_exts]
-
-            # Create the target dict
-            targets = dict()
-            base_target = self.target_root
-            base_filename = os.path.split(self.src_filepath)[1]
-            base_filename = os.path.splitext(base_filename)[0]
-            for target_ext, stripped_ext in zip(target_exts, stripped_exts):
-                t = (os.path.join(base_target, stripped_ext, base_filename) +
-                     target_ext)
-                targets[target_ext] = t
-            return targets
-        else:
-            return dict()
+        # Create the target dict
+        targets = dict()
+        base_target = self.target_root
+        base_filename = os.path.split(self.src_filepath)[1]
+        base_filename = os.path.splitext(base_filename)[0]
+        for target_ext, stripped_ext in zip(target_exts, stripped_exts):
+            t = (os.path.join(base_target, stripped_ext, base_filename) +
+                 target_ext)
+            targets[target_ext] = t
+        return targets
 
     def target_filepath(self, target, render_path=True):
         """The filepath for the given target extension.
