@@ -249,6 +249,9 @@ class Label(object):
             tag_kwargs['class'] = self.kind[-1] + '-' + 'ref'
             tag_kwargs['href'] = link_str.format(**kwargs)
             return E('a', ref_str.format(**kwargs), **tag_kwargs)
+        elif target == '.tex':
+            return (link_str.format(**kwargs) if self.id is not None else
+                    ref_str.format(**kwargs))
         else:
             # Otherwise just return the text
             return ref_str.format(**kwargs)

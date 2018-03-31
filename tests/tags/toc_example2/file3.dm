@@ -1,4 +1,4 @@
 ---
 title: The third document
 ---
-@section{Heading 3}
+@section[id=heading-3]{Heading 3}

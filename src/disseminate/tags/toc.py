@@ -7,10 +7,8 @@ from lxml.builder import E
 from lxml import etree
 
 from . import settings
-from .headings import toc_levels
+from .headings import toc_levels as heading_toc_levels
 from .core import Tag
-from ..attributes import (get_attribute_value, filter_attributes,
-                          kwargs_attributes)
 
 
 class TocError(Exception):
@@ -18,10 +16,10 @@ class TocError(Exception):
     pass
 
 
-def process_toc(target, context):
-    """Process a string for the 'toc' in the local_context.
+def process_context_toc(context):
+    """Process a the 'toc' in the context by replacing it with a toc string.
 
-    A 'toc' field may optionally be placed in the local_context of a document.
+    A 'toc' field may optionally be placed in the context of a document.
     If present, this function will read in the options for the 'toc' field and
     return a string for the given target.
 
@@ -31,37 +29,35 @@ def process_toc(target, context):
         The target (extension) for the output TOC. ex: '.html', '.tex'
     context : dict
         The context dict containing values for the document.
-
-    Returns
-    -------
-    toc : str
-        The string for the TOC. If no 'toc' was found in the local_context, an
-        empty string is returned
     """
-    if 'toc' not in context:
-        return ''
-
-    toc_kind = (context['toc']['kind'] if
-                'kind' in context['toc'] else context['toc'])
-    toc_format = (context['toc']['format'] if
-                  'format' in context['toc'] else None)
-
-    if toc_format is not None:
-        attributes = (('format', toc_format),)
+    # Get the toc kind from the context and store it in the 'toc_kind' entry
+    if 'toc_kind' in context:
+        toc_kind = context['toc_kind']
     else:
-        attributes = tuple
+        if 'toc' in context:
+            toc_kind = context['toc']
+            context['toc_kind'] = toc_kind
+        else:
+            return None
+    attributes = tuple()
 
     if isinstance(toc_kind, str):
         # Create the tag
         toc = Toc(name='toc', content=toc_kind, attributes=attributes,
                   context=context)
-        if target == '.html':
-            return toc.html()
-        else:
-            # Unknown format
-            return ''
-    else:
-        return ''
+
+        # Render the toc
+        targets = context['document'].target_list
+        context['toc'] = dict()
+        for target in targets:
+            target_stripped = (target if not target.startswith('.') else
+                               target[1:])
+            render_func = getattr(toc, target_stripped, None)
+
+            if render_func is not None and callable(render_func):
+                context['toc'][target] = render_func()
+            else:
+                context['toc'][target] = toc.default()
 
 
 def tree_to_html(elements, context, tag='ol'):
@@ -100,8 +96,6 @@ def tree_to_tex(elements, context, level=1, listing='enumerate'):
     else:
         return ''
 
-
-# def tree_to_txt
 
 class Toc(Tag):
     """Table of contents and listings.
@@ -178,119 +172,98 @@ class Toc(Tag):
 
         return elements
 
-    def documents_html(self):
-        """Construct the documents html listing."""
-        # Get the format of the documents listing
-        format = get_attribute_value(attrs=self.attributes,
-                                     attribute_name='format')
-
-        # Get the documents
-        elements = []
-        if '_tree' in self.global_context and '_document' in self.local_context:
-            tree = self.global_context['_tree']
-            documents = tree.get_documents()
-            current_document = self.local_context['_document']
-
-            for document in documents:
-                # Get the headings for the document, if needed
-                if isinstance(format, str):
-                    if 'expanded' in format:
-                        headings= self.headings_html(document=document)
-                    elif ('abbreviated' in format and
-                          document == current_document):
-                        headings = self.headings_html(document=document)
-                    else:
-                        headings = ''
-                else:
-                    headings = ''
-
-                # Process each of the documents
-                if document == current_document:
-                    # Treat the current document differently. It should not
-                    # have a link and may contain headings
-                    elements.append(E('li', document.title, headings))
-                else:
-                    # Create links to other documents
-                    tgt = document.target_filepath(target='.html',
-                                                   render_path=False)
-                    tgt = '/' + tgt
-
-                    link = E('a', document.title, href=tgt)
-                    elements.append(E('li', link, headings))
-
-        if len(elements) > 0:
-            valid_attrs = settings.html_valid_attributes['ol']
-            attrs = filter_attributes(attrs=self.attributes,
-                                      attribute_names=valid_attrs,
-                                      target='.html')
-            kwargs = kwargs_attributes(attrs)
-
-            # add a class to the tag
-            if 'class' in kwargs:
-                kwargs['class'] += ' toc-document'
-            else:
-                kwargs['class'] = 'toc-document'
-
-            return E('ol', *elements, **kwargs)
-        else:
-            return ""
-
     def get_labels(self):
         """Get the labels, ordering function and labeling type."""
+        current_document = self.context.get('document', None)
+
         def default_order_function(label):
             return 0
 
         default_return_value = [], default_order_function, ''
 
-        if '_label_manager' in self.global_context:
-            label_manager = self.global_context['_label_manager']
+        if 'label_manager' in self.context:
+            label_manager = self.context['label_manager']
         else:
             return default_return_value
 
         if 'heading' in self.toc_kind:
-            labels = label_manager.get_labels(kinds='heading')
+            document = current_document if 'all' not in self.toc_kind else None
+            labels = label_manager.get_labels(document=document,
+                                              kinds='heading')
 
+            last_heading_level = 0
+            current_toc_level = 0
+
+            # Setup the ordering function. This ordering function is setup so
+            # that the heading level only increases or decreases by 1 level at
+            # a time. The is because the heading level may jump by 2 or more
+            # levels (ex: heading -> subsubheading), and this can trip up
+            # enumerate environments for targets like tex.
             def order_function(label):
-                return toc_levels.index(label.kind[-1])
+                nonlocal last_heading_level
+                nonlocal current_toc_level
+                heading_level = heading_toc_levels.index(label.kind[-1])
+                if heading_level > last_heading_level:
+                    current_toc_level += 1
+                elif heading_level < last_heading_level:
+                    current_toc_level -= 1
+                last_heading_level = heading_level
+                return current_toc_level
 
             return labels, order_function, 'heading'
+
         if 'document' in self.toc_kind:
-            # Get the documents and tree
-            if ('_tree' not in self.global_context or
-               '_document' not in self.local_context):
-                return default_return_value
+            document = current_document if 'all' not in self.toc_kind else None
 
-            tree = self.global_context['_tree']
-            documents = tree.get_documents()
-            current_document = self.local_context['_document']
+            # Get the labels for the documents and the headings
+            document_labels = label_manager.get_labels(document=document,
+                                                       kinds='document')
+            heading_labels = label_manager.get_labels(document=document,
+                                                      kinds='heading')
 
-            # Get the labels
-            labels = []
-            for document in documents:
-                # Get the document's label
-                doc_labels = label_manager.get_labels(document=document,
-                                                      kinds='document')
+            # Reorganize the document and heading labels such that the headings
+            # are between documents
+            merged_labels = []
+            for document_label in document_labels:
+                merged_labels.append(document_label)
 
-                if len(doc_labels) != 1:
-                    # Only one label for the document should have been returned
-                    continue
-                labels += doc_labels
-
-                # Get the labels for the headings for the document, if needed
+                # Add the headings either if this is an 'expanded' toc, or
+                # it's an 'abbreviated' toc, but the document corresponds to the
+                # current document
                 if ('expanded' in self.toc_kind or
                    ('abbreviated' in self.toc_kind and
-                    document == current_document)):
+                    document_label.document == current_document)):
 
-                    labels += label_manager.get_labels(document=document,
-                                                       kinds='heading')
+                    merged_labels += [l for l in heading_labels
+                                      if l.document == document_label.document]
 
-            # Create and order function that includes documents
-            doc_levels = ('document',) + toc_levels
+            # Get a toc_levels for the document, based on the document_labels
+            doc_toc_levels = {l.kind[-1] for l in document_labels}
+            doc_toc_levels = tuple(sorted(doc_toc_levels))
+            merged_toc_levels = doc_toc_levels + heading_toc_levels
 
+            last_doc_level = 0
+            current_toc_level = 0
+
+            # Setup the ordering function. This ordering function is setup so
+            # that the document and heading  level only increases or decreases
+            # by 1 level at a time. The is because the document or heading
+            # level may jump by 2 or more levels (ex: heading -> subsubheading),
+            # and this can trip up enumerate environments for targets like tex.
             def order_function(label):
-                return doc_levels.index(label.kind[-1])
+                nonlocal last_doc_level
+                nonlocal current_toc_level
+                specific_kind = label.kind[-1]
+                doc_level = merged_toc_levels.index(specific_kind)
+                if doc_level > last_doc_level:
+                    current_toc_level += 1
+                elif doc_level < last_doc_level:
+                    current_toc_level -= 1
+                last_doc_level = doc_level
+                return current_toc_level
 
-            return labels, order_function, 'document'
+            return merged_labels, order_function, 'document'
+
         else:
             return default_return_value
 
@@ -311,9 +284,7 @@ class Toc(Tag):
         if len(labels) > 0:
             elements = self.construct_tree(labels=labels,
                                            order_function=order_function)
-            html = tree_to_html(elements=elements,
-                                local_context=self.local_context,
-                                global_context=self.global_context)
+            html = tree_to_html(elements=elements, context=self.context)
 
             # Add the class to the HTML element
             if heading_type:
@@ -345,9 +316,7 @@ class Toc(Tag):
         if len(labels) > 0:
             elements = self.construct_tree(labels=labels,
                                            order_function=order_function)
-            tex = tree_to_tex(elements=elements,
-                              local_context=self.local_context,
-                              global_context=self.global_context)
+            tex = tree_to_tex(elements=elements, context=self.context)
         else:
             tex = ''
 

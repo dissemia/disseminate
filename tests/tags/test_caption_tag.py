@@ -251,7 +251,6 @@ def test_figure_caption_with_id_tex(tmpdir):
         root = process_ast(src, context=doc.context)
 
         root_tex = root.tex()
-        print(root_tex)
         assert root_tex == ('\n\\begin{marginfigure}\n'
                             'Fig. 1. \\caption{This is my caption}\n'
                             '\\end{marginfigure}\n')
@@ -330,8 +329,23 @@ def test_ref_tex(tmpdir):
     doc = Document(src_filepath=src_filepath)
     doc.context['figure_ref'] = "Fig. {number}"
     doc.context['figure_label'] = "Fig. {number}."
+    doc.context['figure_link_tex'] = ('\\hyperlink{{{id}}}{{Fig. '
+                                      '{number}}}')
     doc.target_list = ['.tex']
-    label_man = doc.context['label_manager']
+
+    # Generate the markup without an id. A reference cannot be made, and a
+    # LabelNotFound exception is raised
+    src = "@ref{test} @marginfig{@caption{This is my caption}}"
+
+    # Generate a tag and compare the generated tex to the answer key
+    root = process_ast(src, context=doc.context)
+
+    # Rendering the tex raises the LabelNotFound exception
+    with pytest.raises(LabelNotFound):
+        root.tex()
+
+    # Reset the labels
+    doc.context['label_manager'].reset()
 
     # Generate the markup with an id. The marginfig tag is needed to
     # set the kind of the label.
@@ -342,4 +356,4 @@ def test_ref_tex(tmpdir):
 
     #  Test the ref's html
     root_tex = root.tex()
-    assert root_tex.startswith('Fig. 1')
+    assert root_tex.startswith('\hyperlink{test}{Fig. 1}')

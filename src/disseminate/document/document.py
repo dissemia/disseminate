@@ -12,7 +12,7 @@ from ..header import load_yaml_header
 from ..macros import replace_macros
 from ..labels import LabelManager
 from ..dependency_manager import DependencyManager
-from ..tags.toc import process_toc
+from ..tags.toc import process_context_toc
 from ..utils import mkdir_p
 from .. import settings
 
@@ -75,6 +75,11 @@ class Document(object):
         .. note:: AST processors are run asynchronously, and the
                   local_context and global_context dicts may not be fully
                   populated.
+
+    context_processors : list of functions, **class attribute**
+        A list of functions to process the document's context *after* the
+        AST is loaded. The context_processor functions only take a context as
+        a parameter.
     """
 
     src_filepath = None
@@ -92,7 +97,8 @@ class Document(object):
                       process_paragraphs,
                       process_typography,
                       ]
-    ast_post_processors = []
+    context_processors = [process_context_toc,
+                          ]
 
     def __init__(self, src_filepath, target_root=None, context=None):
         self.src_filepath = str(src_filepath)
@@ -172,26 +178,32 @@ class Document(object):
 
     @target_list.setter
     def target_list(self, value):
+        """Set the target_list, which is a list of target extensions with a
+        trailing period."""
         if isinstance(value, list):
-            self._target_list = value
+            target_list = value
         elif isinstance(value, str):
             # If it's a string, items may be separated by commas, spaces
             # or both
             target_exts = value.split(',')
             if len(target_exts) == 1:
-                self._target_list = [t.strip() for t in
+                target_list = [t.strip() for t in
                                      target_exts[0].split(" ")]
             else:
-                self._target_list = [t.strip() for t in target_exts]
+                target_list = [t.strip() for t in target_exts]
+
         else:
             raise AttributeError
+
+        # Prepend the targets with a period. ex: '.html'
+        target_list = ['.' + t if not t.startswith('.') else t
+                       for t in target_list]
+        self._target_list = target_list
 
     @property
     def targets(self):
         """The dict of target extension (key) and target_filepath (value)."""
-        # Add trailing periods for extensions. ex: ['.html', '.pdf']
-        target_exts = [ext if ext.startswith('.') else '.' + ext
-                       for ext in self.target_list]
+        target_exts = self.target_list
 
         # Keep a list of extensions without the trailing period
         # ex: ['html', 'pdf']
@@ -436,6 +448,11 @@ class Document(object):
             # Load the sub-documents
             self.load_sub_documents()
 
+            # Further process the context. These may depend on the document's
+            # label of the sub-documents, so it is run after these are loaded.
+            for processor in self.context_processors:
+                processor(self.context)
+
             # cache the ast
             self._ast = ast
             self._mtime = time
@@ -565,10 +582,8 @@ class Document(object):
             else:
                 output_string = ast.default()
 
-            # Add the output string to the context and other variables
+            # Add the output string to the context
             context['body'] = output_string
-            context['toc'] = process_toc(target=target,
-                                         context=self.context)
 
             # get a template. The following can be done asynchronously.
             template = get_template(self.src_filepath, target=target,

@@ -1,8 +1,8 @@
 """
 Test the process_typography function.
 """
-from disseminate.ast.process_typography import process_typography
-from disseminate.ast.process_ast import process_ast
+from disseminate.ast.typography import process_typography
+from disseminate.ast.ast import process_ast
 from disseminate.tags import Tag
 
 

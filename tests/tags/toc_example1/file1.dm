@@ -1,3 +1,10 @@
+---
+targets: html, tex
+include:
+  sub/file21.dm
+  sub/file22.dm
+---
+
 @section{Heading 1}
 
 @section{Heading 2}

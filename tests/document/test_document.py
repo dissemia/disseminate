@@ -49,6 +49,20 @@ def test_ast_caching(tmpdir):
     assert mtime == doc._mtime
 
 
+def test_target_list():
+    """Test the setting of the target_list property."""
+    doc = Document("tests/document/example1/dummy.dm")
+
+    # dummy.dm has the entry 'html, tex' set in the header.
+    assert doc.target_list == ['.html', '.tex']
+
+    # Try a variety of target_list strings
+    for s in (['tex', 'html'], ['.tex', '.html'],
+              'tex html', '.tex .html', 'tex, html', '.tex, .html'):
+        doc.target_list = s
+        assert doc.target_list == ['.tex', '.html']
+
+
 def test_target_filepath():
     """Test the target_filepath method."""
     doc = Document("tests/document/example1/dummy.dm")
@@ -250,3 +264,20 @@ targets: txt, tex
     assert doc.sub_documents[keys[0]].src_filepath == str(file2)
     assert doc.sub_documents[keys[1]].src_filepath == str(file3)
 
+
+def test_document_toc(tmpdir):
+    """Test the generation of a toc from the header of a document."""
+    # Load example4, which has a file.dm with a 'toc' entry in the heading
+    # for documents.
+    doc = Document('tests/document/example4/file.dm',
+                   target_root=str(tmpdir))
+
+    # Render the doc
+    doc.render()
+    key = """<ol class="toc-document">
+  <li>
+    <a class="document-level-1-ref" href="/file.html">My first title</a>
+  </li>
+</ol>
+"""
+    assert doc.context['toc']['.html'] == key

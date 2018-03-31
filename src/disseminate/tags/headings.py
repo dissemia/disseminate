@@ -28,7 +28,6 @@ class Heading(Tag):
             document = context['document']
             kind = ('heading', self.__class__.__name__.lower())
             id = get_attribute_value(self.attributes, 'id')
-
             label_manager.add_label(document=document, tag=self, kind=kind,
                                     id=id)
 

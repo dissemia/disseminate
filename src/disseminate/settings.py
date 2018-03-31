@@ -95,14 +95,17 @@ media_dir = 'media'
 label_formats = {'figure_label': 'Fig. {document_number}.{number}.',
                  'figure_ref': 'Fig. {document_number}.{number}',
                  'figure_link_html': '/{filepath}#{id}',
-                 'header_label': '{short}',
-                 'header_ref': '{short}',
-                 'header_link_html': '/{filepath}#{id}',
+                 'figure_link_tex': '\\hyperlink{{{id}}}{Fig. '
+                                    '{{document_number}.{number}}}',
+                 'heading_label': '{short}',
+                 'heading_ref': '{short}',
+                 'heading_link_tex': '\\hyperlink{{{id}}}{{{content}}}',
+                 'heading_link_html': '/{filepath}#{id}',
                  'default_label': '{short}',
                  'default_ref': '{short}',
+                 'default_link_tex': '\\hyperlink{{{id}}}{{{content}}}',
                  'default_link_html': '/{filepath}'
                  }
-
 
 #: Default separator for labels. (ex: the period at the end of Fig. 1.)
 label_sep = '.'
