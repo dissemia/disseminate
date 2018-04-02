@@ -5,8 +5,7 @@ import os.path
 
 import pytest
 
-from disseminate.document import CompiledDocument
-from disseminate.convert import ConverterError
+from disseminate.document import Document
 
 
 def test_pdflatex(tmpdir):
@@ -17,14 +16,17 @@ def test_pdflatex(tmpdir):
     f1 = src_path.join("index1.dm")
 
     # Save text and create a new file
-    f1.write("This is my first document")
+    f1.write("""
+---
+targets: pdf
+---
+This is my first document""")
 
     # Get the target_filepath for the pdf file
-    target_filepath = str(src_path) + '/index1.pdf'
+    target_filepath = str(tmpdir) + '/pdf/index1.pdf'
 
     # Generate a CompiledDocument for this file
-    doc = CompiledDocument(src_filepath=str(f1),
-                           targets={'.pdf': target_filepath})
+    doc = Document(src_filepath=str(f1), target_root=str(tmpdir))
 
     # Render the document
     doc.render()
@@ -41,14 +43,17 @@ def test_pdflatex_caching(tmpdir):
     f1 = src_path.join("index1.dm")
 
     # Save text and create a new file
-    f1.write("This is my first document")
+    f1.write("""
+---
+targets: pdf
+---
+This is my first document""")
 
     # Get the target_filepath for the pdf file
-    target_filepath = str(src_path) + '/index1.pdf'
+    target_filepath = str(tmpdir) + '/pdf/index1.pdf'
 
     # Generate a CompiledDocument for this file
-    doc = CompiledDocument(src_filepath=str(f1),
-                           targets={'.pdf': target_filepath})
+    doc = Document(src_filepath=str(f1), target_root=str(tmpdir))
 
     # Render the document
     doc.render()
@@ -62,7 +67,11 @@ def test_pdflatex_caching(tmpdir):
     assert os.path.getmtime(target_filepath) == pytest.approx(mtime, abs=0.0001)
 
     # Now change the src tex file and make sure the pdf has changed
-    f1.write("New")
+    f1.write("""
+---
+targets: pdf
+---
+new""")
 
     # Render again, and the mtime should change
     doc.render()
@@ -80,18 +89,20 @@ def test_compiled_with_existing_source(tmpdir):
     f1 = src_path.join("index3.dm")
 
     # Save text and create a new file
-    f1.write("This is my third document")
+    f1.write("""
+---
+targets: tex, pdf
+---
+This is my third document""")
 
     # Get the target_filepath for the pdf file
 
-    # Generate a CompiledDocument for this file
-    doc = CompiledDocument(src_filepath=str(f1),
-                           targets={'.pdf': str(src_path) + '/index3.pdf',
-                                    '.tex': str(src_path) + '/index3.tex'})
+    # Generate a for this file
+    doc = Document(src_filepath=str(f1), target_root=str(tmpdir))
 
     # Render the document
     doc.render()
 
     # See if the PDF was succesfully generated
-    assert os.path.exists(str(src_path) + '/index3.tex')
-    assert os.path.exists(str(src_path) + '/index3.pdf')
+    assert os.path.exists(str(tmpdir) + '/tex/index3.tex')
+    assert os.path.exists(str(tmpdir) + '/pdf/index3.pdf')

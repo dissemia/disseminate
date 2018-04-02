@@ -3,6 +3,8 @@ Classes and functions for rendering documents.
 """
 from collections import OrderedDict
 from weakref import ref
+from tempfile import mkdtemp
+from shutil import rmtree
 import os
 import os.path
 
@@ -10,6 +12,7 @@ from ..ast import process_ast, process_paragraphs, process_typography
 from ..templates import get_template
 from ..header import load_yaml_header
 from ..macros import replace_macros
+from ..convert import convert
 from ..labels import LabelManager
 from ..dependency_manager import DependencyManager
 from ..tags.toc import process_context_toc
@@ -36,7 +39,7 @@ class Document(object):
         By default, if not specified, the target_root will be one directory
         above the project_root.
     context : dict, optional
-        The context of the parent document.
+        The context of the document.
 
     Attributes
     ----------
@@ -45,12 +48,7 @@ class Document(object):
         file should exist. This path is a render path: it's either an absolute
         path or a path relative to the current directory.
         ex: 'src/chapter1/chapter1.dm'
-    targets : dict
-        A dict with the target extension as keys (ex: '.html') and the value
-        is the target_filepath for that target. (ex: 'html/index.html')
-        These paths are render paths: they're either an absolute path or a
-        path relative to the current directory.
-    content : dict
+    context : dict
         The context with values for the document.
     sub_documents : :obj:`collections.OrderedDict`
         A dict with the sub-documents included in this document. The keys are
@@ -89,6 +87,7 @@ class Document(object):
     _label = None
     _target_root = None
     _target_list = None
+    _temp_dir = None
 
     string_processors = [load_yaml_header,  # Process YAML headers
                          replace_macros,  # Process macros
@@ -125,6 +124,11 @@ class Document(object):
         # Read in the AST
         self.get_ast()
 
+    def __del__(self):
+        """Clean up any temp directories no longer in use."""
+        if self._temp_dir is not None:
+            rmtree(self._temp_dir, ignore_errors=True)
+
     @property
     def title(self):
         """The title for the document."""
@@ -150,6 +154,12 @@ class Document(object):
             return documents.index(self.src_filepath) + 1
         else:
             return None
+
+    @property
+    def temp_dir(self):
+        if self._temp_dir is None:
+            self._temp_dir = mkdtemp()
+        return self._temp_dir
 
     @property
     def project_root(self):
@@ -202,23 +212,34 @@ class Document(object):
 
     @property
     def targets(self):
-        """The dict of target extension (key) and target_filepath (value)."""
-        target_exts = self.target_list
+        """The targets dict.
+
+        Returns
+        -------
+        targets : dict
+            The targets are a dict with the target extension as keys
+            (ex: '.html') and the value is the target_filepath for that target.
+            (ex: 'html/index.html') These paths are render paths: they're
+            either an absolute path or a path relative to the current
+            directory.
+        """
+        target_list = self.target_list
 
         # Keep a list of extensions without the trailing period
         # ex: ['html', 'pdf']
-        stripped_exts = [ext[1:] for ext in target_exts]
+        stripped_exts = [ext[1:] for ext in target_list]
 
         # Create the target dict
         targets = dict()
         base_target = self.target_root
         base_filename = os.path.split(self.src_filepath)[1]
         base_filename = os.path.splitext(base_filename)[0]
-        for target_ext, stripped_ext in zip(target_exts, stripped_exts):
+        for target_ext, stripped_ext in zip(target_list, stripped_exts):
             t = (os.path.join(base_target, stripped_ext, base_filename) +
                  target_ext)
             targets[target_ext] = t
-        return targets
+        self._targets = targets
+        return self._targets
 
     def target_filepath(self, target, render_path=True):
         """The filepath for the given target extension.
@@ -461,53 +482,14 @@ class Document(object):
 
     def render(self, targets=None, create_dirs=settings.create_dirs,
                update_only=True):
-        """Convert the src_filepath to a rendered document at target_filepath.
-
-        A document loads a document (source markup) file and this method
-        renders it to one or more target output format(s).
-
-        The rending has the following steps:
-
-        *Asynchronous*.
-        Depends only on the source file and does not depend on variables from
-        other documents in the global_context. Consequently, it can be run in
-        a multi-threaded mode, and this part does not need to be repeated as
-        long as the source file has not changed.
-
-            1. get_ast (:meth:`get_ast`)
-
-                a. Load the file into a string
-
-                b. Process the string with the string processors
-                   (`self.string_processors`).
-
-                c. Convert the string to an AST.
-
-                d. Process the AST with the ast processors
-                   (`self.ast_processors`). These modifications do not depend
-                   on the global_context or the target type.
-
-        **After this step** for all documents, the `local_context` and
-        `global_context` are fully populated. Nothing in the subsequent steps
-        should change these.
-
-        *Synchronous*.
-        The synchronous step depends on the target type as well as the
-        global_context. Consequently, all other documents in a tree must be
-        loaded and their ASTs processed to conduct this step.
-
-            2. convert to the target type
-
-                a. Convert the AST to target string using an AST conversion
-                   function.
-
-                b. Render this string in a template.
+        """Render the document to one or more target formats.
 
         Parameters
         ----------
-        targets : str or list of str
+        targets : dict or None
             If specified, only the specified targets will be rendered.
-            Otherwise all targets in self.targets will be rendered.
+            This is a dict with the extension as keys and the target_filepath
+            (as a render path) as the value.
         create_dirs : bool, optional
             Create directories for the rendered target files, if the directories
             don't exist.
@@ -525,16 +507,10 @@ class Document(object):
         # Workup the targets into a dict, like self.targets
         if targets is None:
             targets = self.targets
-        elif isinstance(targets, str):
-            if targets not in self.targets:
-                msg = ("The target format '{}' is not available in this "
-                       "document's available targets.")
-                raise DocumentError(msg.format(targets))
-            targets = {targets: self.targets[targets]}
-        elif isinstance(targets, list):
-            targets = {t: self.targets[t] for t in targets}
+        elif isinstance(targets, dict):
+            pass
         else:
-            msg = "Specified targets '{}' must be a string or a list of strings"
+            msg = "Specified targets '{}' must be a dict"
             raise DocumentError(msg.format(targets))
 
         # Process the sub-documents
@@ -542,80 +518,171 @@ class Document(object):
             document.render(targets=targets, create_dirs=create_dirs,
                             update_only=update_only)
 
+        # Check to see if the target directories need to be created
+        if create_dirs:
+            for target_filepath in targets.values():
+                mkdir_p(target_filepath)
+
         # Process each specified target
         for target, target_filepath in targets.items():
+            target = target if target.startswith('.') else '.' + target
+
             # Skip if we should update_only and the src_filepath is older
             # than the target_filepath, if target_filepath exists.
             if (update_only and
-                os.path.isfile(target_filepath) and
-                (os.path.getmtime(self.src_filepath) <=
-                 os.path.getmtime(target_filepath))):
+                    os.path.isfile(target_filepath) and
+                    (os.path.getmtime(self.src_filepath) <=
+                     os.path.getmtime(target_filepath))):
                 continue
 
-            target = target if target.startswith('.') else '.' + target
-
-            # Check to see if the target directory needs to be created
-            if create_dirs:
-                mkdir_p(target_filepath)
-
-            # Step 1: Asynchronous
-            # get the ast
-            ast = self.get_ast()
-
-            # Step 2: Synchronous
-
-            # First pull out the template, if specified
-            template_basename = settings.template_basename
-            if 'template' in self.context:
-                template_basename = self.context['template']
-
-            # Prepare the context
-            # Add non-private variables from the  context
-            context = {k: v for k, v in self.context.items()
-                       if not str(k).startswith("_")}
-
-            # render and save to output file
-            target_name = target.strip('.')
-
-            if hasattr(ast, target_name):
-                output_string = getattr(ast, target_name)()
+            # Determine whether it's a compiled target or uncompiled target
+            if target in settings.compiled_exts:
+                self.render_compiled(target=target,
+                                     target_filepath=target_filepath,
+                                     targets=targets)
             else:
-                output_string = ast.default()
-
-            # Add the output string to the context
-            context['body'] = output_string
-
-            # get a template. The following can be done asynchronously.
-            template = get_template(self.src_filepath, target=target,
-                                    template_basename=template_basename)
-
-            # If a template is available, use it to render the string.
-            # Otherwise, just write the string
-
-            if template is not None:
-                # generate a new ouput_string
-                output_string = template.render(**context)
-
-                # Add template to dependencies, if able
-                if ('dependency_manager' in self.context and
-                    hasattr(template, 'filename')):
-                    dep = self.context['dependency_manager']
-
-                    # See if the dependencies has a method for this target
-                    meth = getattr(dep, 'add_' + target_name, None)
-                    if meth is not None:
-                        meth(output_string)
-
-            # determine whether the file contents are new
-            if not os.path.isfile(target_filepath):
-                new = True
-            else:
-                with open(target_filepath, 'r') as f:
-                    new = output_string != f.read()
-
-            # if the contents are new, write it to the file
-            if new:
-                with open(target_filepath, 'w') as f:
-                    f.write(output_string)
+                self.render_uncompiled(target=target,
+                                       target_filepath=target_filepath)
 
         return True
+
+    def render_uncompiled(self, target, target_filepath):
+        """Render a text target format.
+
+        For many output formats, like .html and .tex, the rendered file is
+        simply another text file. This render_uncompiled method handles these.
+
+        The rending has the following steps:
+
+        *Asynchronous*.
+        Depends only on the source file and does not depend on variables from
+        other documents in the context. Consequently, it can be run in
+        a multi-threaded mode, and this part does not need to be repeated as
+        long as the source file has not changed.
+
+            1. get_ast (:meth:`get_ast`)
+
+        **After this step** for all documents, the `context` is populated.
+        Nothing in the subsequent steps should change these.
+
+        *Synchronous*.
+        The synchronous step depends on the target type as well as the
+        global_context. Consequently, all other documents in a tree must be
+        loaded and their ASTs processed to conduct this step.
+
+            2. convert to the target type
+
+                a. Convert the AST to target string using an AST conversion
+                   function.
+
+                b. Render this string in a template.
+
+        Parameters
+        ----------
+        target: str
+            The target extension to render. ex: '.html' or '.tex'
+        target_filepath: str
+            The final render path of the target file. ex : 'html/index.html'
+        """
+        # Step 1: Asynchronous
+        # get the ast
+        ast = self.get_ast()
+
+        # Step 2: Synchronous
+
+        # First pull out the template, if specified
+        template_basename = settings.template_basename
+        if 'template' in self.context:
+            template_basename = self.context['template']
+
+        # Prepare the context
+        # Add non-private variables from the  context
+        context = {k: v for k, v in self.context.items()
+                   if not str(k).startswith("_")}
+
+        # render and save to output file
+        target_name = target.strip('.')
+
+        if hasattr(ast, target_name):
+            output_string = getattr(ast, target_name)()
+        else:
+            output_string = ast.default()
+
+        # Add the output string to the context
+        context['body'] = output_string
+
+        # get a template. The following can be done asynchronously.
+        template = get_template(self.src_filepath, target=target,
+                                template_basename=template_basename)
+
+        # If a template is available, use it to render the string.
+        # Otherwise, just write the string
+
+        if template is not None:
+            # generate a new ouput_string
+            output_string = template.render(**context)
+
+            # Add template to dependencies, if able
+            if ('dependency_manager' in self.context and
+                    hasattr(template, 'filename')):
+                dep = self.context['dependency_manager']
+
+                # See if the dependencies has a method for this target
+                meth = getattr(dep, 'add_' + target_name, None)
+                if meth is not None:
+                    meth(output_string)
+
+        # determine whether the file contents are new
+        if not os.path.isfile(target_filepath):
+            new = True
+        else:
+            with open(target_filepath, 'r') as f:
+                new = output_string != f.read()
+
+        # if the contents are new, write it to the file
+        if new:
+            with open(target_filepath, 'w') as f:
+                f.write(output_string)
+
+    def render_compiled(self, target, target_filepath, targets):
+        """Render a compiled target format.
+
+        For some formats, like .pdf, these have to be compiled after generating
+        the text file from the render_uncompiled method. The render_compiled
+        method generates the needed intermediate text file and converts it to
+        the final output format.
+
+        Parameters
+        ----------
+        target: str
+            The target extension to render. ex: '.pdf'
+        target_filepath : str
+            The final render path of the target file. ex : 'pdf/index.pdf'
+        targets : dict or None
+            If specified, only the specified targets will be rendered.
+            This is a dict with the extension as keys and the target_filepath
+            (as a render path) as the value.
+        """
+        # Render the intermediate target. First, see if the
+        # intermediary extension is already in targets. If not, create
+        # a temporary one.
+        inter_ext = settings.compiled_exts[target]
+        if inter_ext in targets:
+            self.render_uncompiled(target=inter_ext,
+                                   target_filepath=target_filepath)
+            src_filepath = targets[inter_ext]
+        else:
+            temp_dir = self.temp_dir
+            temp_filename = os.path.split(target_filepath)[1]
+            temp_filename = (os.path.splitext(temp_filename)[0] +
+                             inter_ext)
+            temp_path = os.path.join(temp_dir, temp_filename)
+            self.render_uncompiled(target=inter_ext,
+                                   target_filepath=temp_path)
+            src_filepath = temp_path
+
+        # Now convert the file and continue
+        target_basefilepath = os.path.splitext(target_filepath)[0]
+        convert(src_filepath=src_filepath,
+                target_basefilepath=target_basefilepath,
+                targets=[target, ])
