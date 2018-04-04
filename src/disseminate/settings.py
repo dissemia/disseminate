@@ -11,10 +11,6 @@ strip_base_project_path = True
 #: A list of the default target formats of rendered files
 default_target_list = ['.html', '.tex', '.pdf']
 
-#: If True, rendered target documents will be saved in a subdirectory with
-#: the target extension's name (ex: 'html' 'tex')
-segregate_targets = True
-
 #: The template base file for rendering the tree.
 tree_template_basefilename = "tree"
 
@@ -27,8 +23,14 @@ tree_template_basefilename = "tree"
 #: The default extension of markup files
 document_extension = '.dm'
 
+#: The default directory for source files
+document_src_directory = 'src'
+
 #: Maximum file size
 document_max_size = 204800  # 200kB
+
+#: Default target_list
+document_target_list = ['.html']
 
 #: If True, directories for target files will be created, if they not already
 #: exist

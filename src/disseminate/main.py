@@ -8,7 +8,6 @@ import os.path
 
 from .server import run
 from .templates import init_project
-from .tree import Tree
 from . import settings
 
 
@@ -62,13 +61,6 @@ def main():
                        help="the target root directory for the generated "
                             "output documents")
 
-        p.add_argument('-t', '--targets',
-                       default=settings.default_target_list,
-                       nargs='*',
-                       type=format_ext,
-                       help="The target types (extensions) to render. ex:"
-                            "html tex")
-
     # init arguments
     init.add_argument('destination', default='', nargs='?',
                       help="The destination directory to initialize a project "
@@ -100,10 +92,10 @@ def main():
         init_project(args.destination)
 
     if args.command == 'render':
-        tree1 = Tree(project_root=args.i, target_root=args.o,
-                     target_list=settings.default_target_list)
-        tree1.render()
+        #tree1 = Tree(project_root=args.i, target_root=args.o,
+        #             target_list=settings.default_target_list)
+        #tree1.render()
+        pass
 
     if args.command == 'serve':
-        run(in_directory=args.i, out_directory=args.o, port=args.port,
-            target_list=args.targets)
+        run(in_directory=args.i, out_directory=args.o, port=args.port)

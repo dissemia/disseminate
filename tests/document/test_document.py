@@ -5,8 +5,9 @@ import pytest
 from shutil import copyfile
 
 from disseminate.document import Document, DocumentError
-from disseminate.dependency_manager import DependencyManager, MissingDependency
-from disseminate.labels import LabelManager
+from disseminate.dependency_manager import MissingDependency
+from disseminate.labels import DuplicateLabel
+from disseminate.utils.tests import strip_leading_space
 
 
 def test_basic_conversion_html(tmpdir):
@@ -65,16 +66,41 @@ def test_target_list():
 
 def test_target_filepath():
     """Test the target_filepath method."""
+
+    # 1. Example1 does not have markup source files in a source
+    #    directory. Target files will be saved in the project directory
     doc = Document("tests/document/example1/dummy.dm")
 
     assert (doc.target_filepath('.html', render_path=True) ==
-            "tests/document/html/dummy.html")
+            "tests/document/example1/html/dummy.html")
     assert (doc.target_filepath('.html', render_path=False) ==
             "dummy.html")
     assert (doc.target_filepath('.tex', render_path=True) ==
-            "tests/document/tex/dummy.tex")
+            "tests/document/example1/tex/dummy.tex")
     assert (doc.target_filepath('.tex', render_path=False) ==
             "dummy.tex")
+
+    # 2. Example4 has a markup source file in a source directory,
+    #    'src'. Target files will be saved in the parent directory of the 'src'
+    #    directory
+    doc = Document("tests/document/example4/src/file.dm")
+    assert (doc.target_filepath('.html', render_path=True) ==
+            "tests/document/example4/html/file.html")
+    assert (doc.target_filepath('.html', render_path=False) ==
+            "file.html")
+
+    # 3. Example5 has markup source files in the root project directory, and
+    #    in the sub1, sub2 and sub3 directories.
+    doc = Document("tests/document/example5/index.dm")
+    assert (doc.target_filepath('.html', render_path=True) ==
+            "tests/document/example5/html/index.html")
+    assert (doc.target_filepath('.html', render_path=False) ==
+            "index.html")
+
+    # Check the sub_documents
+    sub_document = list(doc.sub_documents.values())[0]
+    assert (sub_document.target_filepath('.html', render_path=True) ==
+            "tests/document/example5/html/sub1/index.html")
 
 
 def test_custom_template(tmpdir):
@@ -84,12 +110,14 @@ def test_custom_template(tmpdir):
     tmpdir.mkdir('src')
     in_file = tmpdir.join('src').join("index.dm")
     out_file = tmpdir.join('html').join("index.html")
-    input = ["---",
-             "template: tree",
-             "targets: html",
-             "---",
-             ""]
-    in_file.write('\n'.join(input))
+
+    markup = """
+    ---
+    template: tree
+    targets: html
+    ---
+    """
+    in_file.write(strip_leading_space(markup))
 
     # Make document
     doc = Document(str(in_file))
@@ -166,13 +194,14 @@ def test_dependencies_img(tmpdir):
 
     # Make a document source file
     markup = """
----
-targets: html
----
-@img{sample.png}"""
+    ---
+    targets: html
+    ---
+    @img{sample.png}
+    """
 
     src_filepath = project_root.join('test.dm')
-    src_filepath.write(markup)
+    src_filepath.write(strip_leading_space(markup))
 
     # Create a document
     doc = Document(str(src_filepath), tmpdir)
@@ -233,20 +262,21 @@ def test_document_labels(tmpdir):
 
 
 def test_document_tree(tmpdir):
-    """Test the loading of trees from a document."""
+    """Test the loading of trees and sub-documents from a document."""
 
     # Setup the project_root in a temp directory
     project_root = tmpdir.join('src').mkdir()
 
     # Populate some files
     file1 = project_root.join('main.dm')
-    file1.write("""---
-include:
-  sub/file2.dm
-  sub/file3.dm
-targets: txt, tex
----
-""")
+    markup = """---
+    include:
+      sub/file2.dm
+      sub/file3.dm
+    targets: txt, tex
+    ---
+    """
+    file1.write(strip_leading_space(markup))
     file2 = project_root.join('sub').join('file2.dm').ensure(file=True)
     file3 = project_root.join('sub').join('file3.dm').ensure(file=True)
 
@@ -264,20 +294,94 @@ targets: txt, tex
     assert doc.sub_documents[keys[0]].src_filepath == str(file2)
     assert doc.sub_documents[keys[1]].src_filepath == str(file3)
 
+    # Update the root document and remove a file
+    markup = """---
+    include:
+      sub/file2.dm
+    targets: txt, tex
+    ---
+    """
+    file1.write(strip_leading_space(markup))
+    doc.get_ast()
+
+    # Test the paths
+    assert len(doc.sub_documents) == 1
+    assert doc.src_filepath == str(file1)
+
+    keys = list(doc.sub_documents.keys())
+    assert doc.sub_documents[keys[0]].src_filepath == str(file2)
+
+
+def test_document_tree_recursive_reference(tmpdir):
+    """Test the loading of trees and sub-documents with recursive references."""
+
+    # Setup the project_root in a temp directory
+    project_root = tmpdir.join('src').mkdir()
+
+    # Populate some files
+    file1 = project_root.join('file1.dm')
+    markup = """---
+    include:
+      file2.dm
+    targets: txt, tex
+    ---
+    """
+    file1.write(strip_leading_space(markup))
+
+    file2 = project_root.join('file2.dm')
+    markup = """---
+    include:
+      file1.dm
+    targets: txt, tex
+    ---
+    """
+    file2.write(strip_leading_space(markup))
+
+    # Create the root document. This will raise a DuplicateLabel error since
+    # a document is loaded twice.
+    with pytest.raises(DuplicateLabel):
+        doc = Document(src_filepath=str(file1))
+
+
+def test_document_tree_matching_filenames(tmpdir):
+    """Test the loading of trees with matching filenames in sub-directories."""
+
+    # Setup the project_root in a temp directory
+    project_root = tmpdir.join('src').mkdir()
+
+    # Populate some files
+    file1 = project_root.join('file1.dm')
+    markup = """---
+    include:
+      sub/file1.dm
+    targets: txt, tex
+    ---
+    """
+    file1.write(strip_leading_space(markup))
+
+    project_root.join('sub').mkdir()
+    file2 = project_root.join('sub').join('file1.dm')
+    markup = """test"""
+    file2.write(strip_leading_space(markup))
+
+    # Create the root document
+    doc = Document(src_filepath=str(file1))
+
 
 def test_document_toc(tmpdir):
     """Test the generation of a toc from the header of a document."""
     # Load example4, which has a file.dm with a 'toc' entry in the heading
     # for documents.
-    doc = Document('tests/document/example4/file.dm',
+    doc = Document('tests/document/example4/src/file.dm',
                    target_root=str(tmpdir))
 
     # Render the doc
     doc.render()
     key = """<ol class="toc-document">
-  <li>
-    <a class="document-level-1-ref" href="/file.html">My first title</a>
-  </li>
-</ol>
-"""
-    assert doc.context['toc']['.html'] == key
+      <li>
+        <a class="document-level-1-ref" href="/file.html">My first title</a>
+      </li>
+    </ol>
+    """
+
+    assert doc.context['toc']['.html'] == strip_leading_space(key)

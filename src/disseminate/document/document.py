@@ -106,8 +106,19 @@ class Document(object):
 
         self._parent_context = context
         src_path = os.path.split(self.src_filepath)[0]
-        self._target_root = (target_root if target_root is not None else
-                             os.path.split(src_path)[0])
+
+        # Set the target_root.
+        # Otherwise use the directory above the src_path
+        if target_root is not None:
+            # Use the specified value, if available.
+            self._target_root = target_root
+        elif src_path.endswith(settings.document_src_directory):
+            # If the src_path is in a src_directory, use the directory above
+            # this directory
+            self._target_root = os.path.split(src_path)[0]
+        else:
+            # Otherwise just use the same directory as the src directory
+            self._target_root = src_path
 
         # Reset the local_context, dependencies and labels
         self.reset_contexts()
@@ -128,6 +139,9 @@ class Document(object):
         """Clean up any temp directories no longer in use."""
         if self._temp_dir is not None:
             rmtree(self._temp_dir, ignore_errors=True)
+
+    def __repr__(self):
+        return "Document({})".format(self.src_filepath)
 
     @property
     def title(self):
@@ -179,7 +193,8 @@ class Document(object):
     def target_list(self):
         if self._target_list is None:
             # Get the target list from the context
-            self.target_list = self.context['targets']
+            self.target_list = self.context.get('targets',
+                                                settings.document_target_list)
 
         if isinstance(self._target_list, list):
             return self._target_list
@@ -260,7 +275,7 @@ class Document(object):
         if not render_path:
             # Get the target_root. The actual target path includes the target
             # extension as a subdirectory.
-            target_root = self.target_root + "/" + target.strip('.')
+            target_root = os.path.join(self.target_root, target.strip('.'))
             return os.path.relpath(self.targets[target], target_root)
 
         return self.targets[target]
@@ -383,8 +398,6 @@ class Document(object):
             for src_filepath in extra_src_filepaths:
                 del self.sub_documents[src_filepath]
 
-    # TODO: Keep track of ast modification times in the context so that this
-    # can be used with update_only on render.
     def get_ast(self, reload=False):
         """Process and return the AST.
 
