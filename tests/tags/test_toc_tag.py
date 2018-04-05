@@ -3,6 +3,7 @@ Test the TOC tag.
 """
 from disseminate import Document
 from disseminate.tags.toc import Toc, process_context_toc
+from disseminate.utils.tests import strip_leading_space
 
 
 def test_process_toc(tmpdir):
@@ -20,7 +21,8 @@ def test_process_toc(tmpdir):
     doc.context['toc'] = 'all documents collapsed'
 
     # Load the html version of the toc
-    process_context_toc(context=doc.context)
+    context = dict(doc.context)
+    process_context_toc(context=context, target='.html')
 
     key = """<ol class="toc-document">
   <li>
@@ -28,15 +30,15 @@ def test_process_toc(tmpdir):
   </li>
   <ol>
     <li>
-      <a class="document-level-2-ref" href="/file21.html">tests/tags/toc_example1/sub/file21</a>
+      <a class="document-level-2-ref" href="/sub/file21.html">tests/tags/toc_example1/sub/file21</a>
     </li>
     <li>
-      <a class="document-level-2-ref" href="/file22.html">tests/tags/toc_example1/sub/file22</a>
+      <a class="document-level-2-ref" href="/sub/file22.html">tests/tags/toc_example1/sub/file22</a>
     </li>
   </ol>
 </ol>
 """
-    assert key == doc.context['toc']['.html']
+    assert key == context['toc']
 
 
 def test_toc_heading_html(tmpdir):
@@ -225,10 +227,10 @@ def test_toc_document_html(tmpdir):
   </li>
   <ol>
     <li>
-      <a class="document-level-2-ref" href="/file21.html">tests/tags/toc_example1/sub/file21</a>
+      <a class="document-level-2-ref" href="/sub/file21.html">tests/tags/toc_example1/sub/file21</a>
     </li>
     <li>
-      <a class="document-level-2-ref" href="/file22.html">tests/tags/toc_example1/sub/file22</a>
+      <a class="document-level-2-ref" href="/sub/file22.html">tests/tags/toc_example1/sub/file22</a>
     </li>
   </ol>
 </ol>
@@ -283,10 +285,10 @@ def test_toc_document_html(tmpdir):
     </li>
   </ol>
   <li>
-    <a class="document-level-2-ref" href="/file21.html">tests/tags/toc_example1/sub/file21</a>
+    <a class="document-level-2-ref" href="/sub/file21.html">tests/tags/toc_example1/sub/file21</a>
   </li>
   <li>
-    <a class="document-level-2-ref" href="/file22.html">tests/tags/toc_example1/sub/file22</a>
+    <a class="document-level-2-ref" href="/sub/file22.html">tests/tags/toc_example1/sub/file22</a>
   </li>
 </ol>
 """
@@ -336,10 +338,10 @@ def test_toc_document_html(tmpdir):
     </li>
   </ol>
   <li>
-    <a class="document-level-2-ref" href="/file21.html">tests/tags/toc_example1/sub/file21</a>
+    <a class="document-level-2-ref" href="/sub/file21.html">tests/tags/toc_example1/sub/file21</a>
   </li>
   <li>
-    <a class="document-level-2-ref" href="/file22.html">tests/tags/toc_example1/sub/file22</a>
+    <a class="document-level-2-ref" href="/sub/file22.html">tests/tags/toc_example1/sub/file22</a>
   </li>
 </ol>
 """
@@ -361,3 +363,95 @@ def test_toc_document_html(tmpdir):
 
 def test_toc_document_tex(tmpdir):
     """Test the generation of tocs for documents in latex."""
+    # Setup paths
+    target_root = str(tmpdir)
+
+    # The 'tests/tags/toc_example1' directory contains three markup files:
+    # file1.dm, in the root folder, and file21.dm and file2.dm in the 'sub'
+    # folder. The 'file1.dm' includes 'file21.dm' and 'file22.dm'.
+    doc = Document('tests/tags/toc_example1/file1.dm',
+                   target_root=target_root)
+
+    # Create the tag for document2
+    toc = Toc(name='toc', content='all documents', attributes=tuple(),
+              context=doc.context)
+
+    key = """\\begin{enumerate}
+  \\item \\hyperlink{doc:file1.dm}{tests/tags/toc_example1/file1}
+  \\begin{enumerate}
+    \\item \\hyperlink{doc:sub/file21.dm}{tests/tags/toc_example1/sub/file21}
+    \\item \\hyperlink{doc:sub/file22.dm}{tests/tags/toc_example1/sub/file22}
+  \\end{enumerate}
+\\end{enumerate}
+"""
+    assert key == toc.tex()
+
+
+def test_toc_changes(tmpdir):
+    """Test the generation of tocs when the label manager changes."""
+    # Setup a test document
+    src_path = tmpdir.join('src')
+    src_path.mkdir()
+    src_filepath = src_path.join('test.dm')
+
+    markup = """
+    ---
+    title: my first file
+    ---
+    @section[id=heading1]{My first heading}
+    """
+    src_filepath.write(strip_leading_space(markup))
+
+    # Create the document and render
+    doc = Document(src_filepath=src_filepath, target_root=str(tmpdir))
+    doc.render()
+
+    # Match the abbreviated toc
+    toc = Toc(name='toc', content='all documents abbreviated',
+              attributes=tuple(),
+              context=doc.context)
+    key = """<ol class="toc-document">
+  <li>
+    <a class="document-level-1-ref" href="/test.html">my first file</a>
+  </li>
+  <ol>
+    <li>
+      <a class="section-ref" href="/test.html#heading1">My first heading</a>
+    </li>
+  </ol>
+</ol>
+"""
+    assert toc.html() == key
+
+    # Change the document
+    markup = """
+    ---
+    title: my first file
+    ---
+    @section[id=heading1]{My first heading}
+    @subsection[id=subheading1]{My first sub-heading}
+    """
+    src_filepath.write(strip_leading_space(markup))
+    doc.render()
+
+    # Match the abbreviated toc
+    toc = Toc(name='toc', content='all documents abbreviated',
+              attributes=tuple(),
+              context=doc.context)
+    key = """<ol class="toc-document">
+  <li>
+    <a class="document-level-1-ref" href="/test.html">my first file</a>
+  </li>
+  <ol>
+    <li>
+      <a class="section-ref" href="/test.html#heading1">My first heading</a>
+    </li>
+    <ol>
+      <li>
+        <a class="subsection-ref" href="/test.html#subheading1">My first sub-heading</a>
+      </li>
+    </ol>
+  </ol>
+</ol>
+"""
+    assert toc.html() == key

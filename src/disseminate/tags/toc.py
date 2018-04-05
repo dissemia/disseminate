@@ -16,7 +16,7 @@ class TocError(Exception):
     pass
 
 
-def process_context_toc(context):
+def process_context_toc(context, target):
     """Process a the 'toc' in the context by replacing it with a toc string.
 
     A 'toc' field may optionally be placed in the context of a document.
@@ -25,10 +25,10 @@ def process_context_toc(context):
 
     Parameters
     ----------
-    target : str
-        The target (extension) for the output TOC. ex: '.html', '.tex'
     context : dict
         The context dict containing values for the document.
+    target : str
+        The target (extension) for the output TOC. ex: '.html', '.tex'
     """
     # Get the toc kind from the context and store it in the 'toc_kind' entry
     if 'toc_kind' in context:
@@ -41,23 +41,19 @@ def process_context_toc(context):
             return None
     attributes = tuple()
 
-    if isinstance(toc_kind, str):
-        # Create the tag
-        toc = Toc(name='toc', content=toc_kind, attributes=attributes,
-                  context=context)
+    # Create the tag
+    toc = Toc(name='toc', content=toc_kind, attributes=attributes,
+              context=context)
 
-        # Render the toc
-        targets = context['document'].target_list
-        context['toc'] = dict()
-        for target in targets:
-            target_stripped = (target if not target.startswith('.') else
-                               target[1:])
-            render_func = getattr(toc, target_stripped, None)
+    # Render the toc
+    target_stripped = (target if not target.startswith('.') else
+                       target[1:])
+    render_func = getattr(toc, target_stripped, None)
 
-            if render_func is not None and callable(render_func):
-                context['toc'][target] = render_func()
-            else:
-                context['toc'][target] = toc.default()
+    if render_func is not None and callable(render_func):
+        context['toc'] = render_func()
+    else:
+        context['toc'] = toc.default()
 
 
 def tree_to_html(elements, context, tag='ol'):

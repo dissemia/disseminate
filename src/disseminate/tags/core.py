@@ -30,7 +30,7 @@ class TagFactory(object):
     def __init__(self):
         # Initialize the tag types dict.
         self.tag_types = dict()
-        for scls in  _all_subclasses(Tag):
+        for scls in _all_subclasses(Tag):
             # Tag must be active
             if not scls.active:
                 continue
@@ -161,7 +161,10 @@ class Tag(object):
                             for i in self.content]
             items = filter(bool, items)
             return "".join(items)
+        elif isinstance(self.content, Tag):
+            return self.content.default()
         else:
+            # strings and other types of content
             return self.content
 
     def tex(self, level=1, mathmode=False):

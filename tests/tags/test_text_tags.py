@@ -65,7 +65,9 @@ def test_paragraph_tex():
     """Test the formatting of paragraph tags for tex."""
 
     p = P(name='p', content='content', attributes=(), context=dict())
+    assert p.html() == '<span class="root">content</span>\n'
     assert p.tex() == '\ncontent\n'
+    assert p.default() == 'content'
 
 
 def test_verbatim():

@@ -13,7 +13,7 @@ from ..utils.string import Metastring
 
 re_header = regex.compile(r'^[\s\n]*(-{3,})\s*\n'
                           r'(?P<yaml>.+?)'
-                          r'(\n\s*\g<1>)\n', regex.DOTALL)
+                          r'(\n\s*\g<1>)\n?', regex.DOTALL)
 
 
 def load_yaml_header(s, context):

@@ -83,7 +83,14 @@ def translate_path(path, documents):
 
     Given a src_filepath or target_filepath and documents, this function finds
     the corresponding render path for a path relative to the project_root or
-    target_root.
+    target_root. The file in the given render_path exists.
+
+    Parameters
+    ----------
+    path : str
+        The path relative to project_root or target_root.
+    documents : list of :obj:`disseminate.Document`
+        The documents whose paths should be checked.
 
     Returns
     -------
@@ -104,6 +111,12 @@ def translate_path(path, documents):
 
         # Try constructing a render target_filepath
         target_filepath = os.path.join(document.target_root, target, path)
+        if os.path.isfile(target_filepath):
+            return target_filepath
+
+        # Try constructing a render target_filepath not include the target
+        # sub-directory
+        target_filepath = os.path.join(document.target_root, path)
         if os.path.isfile(target_filepath):
             return target_filepath
 

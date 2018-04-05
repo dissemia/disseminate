@@ -75,9 +75,9 @@ class Document(object):
                   populated.
 
     context_processors : list of functions, **class attribute**
-        A list of functions to process the document's context *after* the
-        AST is loaded. The context_processor functions only take a context as
-        a parameter.
+        A list of functions to process the document's context while the target
+        is being rendered. The context_processor functions take a context and a
+        target as parameters.
     """
 
     src_filepath = None
@@ -112,6 +112,8 @@ class Document(object):
         if target_root is not None:
             # Use the specified value, if available.
             self._target_root = target_root
+        elif isinstance(context, dict) and 'target_root' in context:
+            self._target_root = context['target_root']
         elif src_path.endswith(settings.document_src_directory):
             # If the src_path is in a src_directory, use the directory above
             # this directory
@@ -238,6 +240,9 @@ class Document(object):
             either an absolute path or a path relative to the current
             directory.
         """
+        if getattr(self, '_targets', None):
+            return self._targets
+
         target_list = self.target_list
 
         # Keep a list of extensions without the trailing period
@@ -247,13 +252,19 @@ class Document(object):
         # Create the target dict
         targets = dict()
         base_target = self.target_root
-        base_filename = os.path.split(self.src_filepath)[1]
-        base_filename = os.path.splitext(base_filename)[0]
+
+        # Get the filename relative to the project root
+        project_filename = os.path.relpath(self.src_filepath, self.project_root)
+
+        # Strip the extension
+        project_basefilename = os.path.splitext(project_filename)[0]
+
         for target_ext, stripped_ext in zip(target_list, stripped_exts):
-            t = (os.path.join(base_target, stripped_ext, base_filename) +
+            t = (os.path.join(base_target, stripped_ext, project_basefilename) +
                  target_ext)
             targets[target_ext] = t
         self._targets = targets
+
         return self._targets
 
     def target_filepath(self, target, render_path=True):
@@ -281,11 +292,37 @@ class Document(object):
         return self.targets[target]
 
     def reset_contexts(self):
-        """Clear and repopulate the local_context and global_context."""
+        """Clear and repopulate the local_context and global_context.
+
+        The context contains one of the following for all documents in a root
+        document:
+          1. label_manager: Manages labels and references to labels.
+          2. dependency_manager: Manages the media dependencies (like image
+             files) for documents
+          3. project_root: the root directory (render path) for the document
+             and sub-documents
+          4. target_root: the root directory (render path) for the document
+             and sub-documents. The final target path includes a sub-directory
+             for the target's extension.
+          5. documents: an :obj:`collections.OrderedDict` containing *all* of
+             the documents, including the root document (first item) and all
+             sub_documents. This is larger that the sub_documents attribute of
+             a document, since the sub_documents only contains the immediate
+             sub_documents of a document.
+
+        Context variables that can be local to a document are:
+          1. targets: a listing of target formats to render to.
+          2. include: the sub-documents to include under a document.
+          3. title: the title of a document.
+          4. short: the short title of a document.
+          5. toc: the kind of table-of-contents to render for a document.
+          6. template: the template file to use in rendering a document.
+        """
         # Remove everything from the context dict except for objects that
         # need to be preserved between documents, like the label_manager and
         # dependency_manager
-        excluded_items = ('label_manager', 'dependency_manager')
+        excluded_items = ('label_manager', 'dependency_manager',
+                          'project_root', 'target_root', 'documents')
         context_keys = list(self.context.keys())
         for k in context_keys:
             if k in excluded_items:
@@ -294,7 +331,7 @@ class Document(object):
 
         # Copy over the context values from parent context. The excluded_items
         # do not pertain to sub-documents.
-        excluded_items = ('include',)
+        excluded_items = ('include', 'title', 'short')
         if self._parent_context is not None:
             for k, v in self._parent_context.items():
                 if k in excluded_items:
@@ -329,8 +366,6 @@ class Document(object):
         # Add this document to the documents weak refs ordered dict
         self.context['documents'][self.src_filepath] = ref(self)
 
-        # project_root, target_root. Include methods with 'render' options
-
     def reset_dependencies(self):
         """Clear and repopulate the dependencies for this document in the
         dependency manager."""
@@ -353,22 +388,26 @@ class Document(object):
                   parsing the source file, so that the 'title' attribute can be
                   retrieved from the local_context.
         """
-        if 'label_manager' in self.context and self._label is None:
+        if 'label_manager' in self.context:
             label_manager = self.context['label_manager']
 
-            # Get the filepath for this document relative to the project_root,
-            # if possible
-            project_filepath = os.path.relpath(self.src_filepath,
-                                               self.project_root)
+            # See if a label for this document exists already. If it doesn't,
+            # create it.
+            labels = label_manager.get_labels(document=self, kinds='document')
+            if len(labels) == 0:
+                # Get the filepath for this document relative to the project_root,
+                # if possible
+                project_filepath = os.path.relpath(self.src_filepath,
+                                                   self.project_root)
 
-            # Get the level of the document
-            level = self.context.get('level', 1)
+                # Get the level of the document
+                level = self.context.get('level', 1)
 
-            # Set the label for this document
-            kind = ('document', 'document-level-' + str(level))
-            label = label_manager.add_label(document=self, kind=kind,
-                                            id='doc:' + project_filepath)
-            self._label = label
+                # Set the label for this document
+                kind = ('document', 'document-level-' + str(level))
+                label = label_manager.add_label(document=self, kind=kind,
+                                                id='doc:' + project_filepath)
+                self._label = label
 
     def load_sub_documents(self):
         """Load the sub-documents listed in the include of a local_context."""
@@ -388,6 +427,7 @@ class Document(object):
                 a_src_filepath = os.path.join(current_src_filepath,
                                               src_filepath)
 
+                # Create the target_root relative to the project's target_root
                 doc = Document(src_filepath=a_src_filepath,
                                context=self.context)
                 self.sub_documents[src_filepath] = doc
@@ -482,11 +522,6 @@ class Document(object):
             # Load the sub-documents
             self.load_sub_documents()
 
-            # Further process the context. These may depend on the document's
-            # label of the sub-documents, so it is run after these are loaded.
-            for processor in self.context_processors:
-                processor(self.context)
-
             # cache the ast
             self._ast = ast
             self._mtime = time
@@ -517,6 +552,11 @@ class Document(object):
             False, if the document did not need to be rendered.
 
         """
+        # Process the sub-documents
+        for document in self.sub_documents.values():
+            document.render(targets=targets, create_dirs=create_dirs,
+                            update_only=update_only)
+
         # Workup the targets into a dict, like self.targets
         if targets is None:
             targets = self.targets
@@ -525,11 +565,6 @@ class Document(object):
         else:
             msg = "Specified targets '{}' must be a dict"
             raise DocumentError(msg.format(targets))
-
-        # Process the sub-documents
-        for document in self.sub_documents.values():
-            document.render(targets=targets, create_dirs=create_dirs,
-                            update_only=update_only)
 
         # Check to see if the target directories need to be created
         if create_dirs:
@@ -543,9 +578,9 @@ class Document(object):
             # Skip if we should update_only and the src_filepath is older
             # than the target_filepath, if target_filepath exists.
             if (update_only and
-                    os.path.isfile(target_filepath) and
-                    (os.path.getmtime(self.src_filepath) <=
-                     os.path.getmtime(target_filepath))):
+                os.path.isfile(target_filepath) and
+                (os.path.getmtime(self.src_filepath) <
+                 os.path.getmtime(target_filepath))):
                 continue
 
             # Determine whether it's a compiled target or uncompiled target
@@ -609,9 +644,15 @@ class Document(object):
             template_basename = self.context['template']
 
         # Prepare the context
+
         # Add non-private variables from the  context
         context = {k: v for k, v in self.context.items()
                    if not str(k).startswith("_")}
+
+        # Further process the context. The context_processors render target-
+        # specific information.
+        for processor in self.context_processors:
+            processor(context, target)
 
         # render and save to output file
         target_name = target.strip('.')
@@ -650,7 +691,7 @@ class Document(object):
             new = True
         else:
             with open(target_filepath, 'r') as f:
-                new = output_string != f.read()
+                new = (output_string != f.read())
 
         # if the contents are new, write it to the file
         if new:

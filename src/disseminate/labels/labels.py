@@ -196,7 +196,8 @@ class Label(object):
         Parameters
         ----------
         target : str
-            The target format to generate the label for. (ex: '.html', '.tex')
+            The target format for the generated  label for.
+            (ex: '.html', '.tex')
         label_str : str or None, optional
             If a format_str is given, it will be used rather than the one
             returned from this class's format_str method.
@@ -225,16 +226,24 @@ class Label(object):
             return label_str.format(**kwargs)
 
     def ref(self, target, ref_str=None, link_str=None):
-        """
+        """A reference to a label
 
         Parameters
         ----------
-        target
-        label_format
+        target : str
+            The target format for the generated reference.
+            (ex: '.html', '.tex')
+        ref_str : str or None, optional
+            If a format_str is given, it will be used rather than the one
+            returned from this class's format_str method for the reference.
+        link_str : str or None, optional
+            If a format_str is given, it will be used rather than the one
+            returned from this class's format_str method for the link.
 
         Returns
         -------
-
+        ref : str or html element
+            The reference.
         """
         ref_str = (self.format_str(name='ref', target=target)
                    if ref_str is None else ref_str)

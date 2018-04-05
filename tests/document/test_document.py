@@ -7,6 +7,7 @@ from shutil import copyfile
 from disseminate.document import Document, DocumentError
 from disseminate.dependency_manager import MissingDependency
 from disseminate.labels import DuplicateLabel
+from disseminate.tags.toc import process_context_toc
 from disseminate.utils.tests import strip_leading_space
 
 
@@ -92,6 +93,7 @@ def test_target_filepath():
     # 3. Example5 has markup source files in the root project directory, and
     #    in the sub1, sub2 and sub3 directories.
     doc = Document("tests/document/example5/index.dm")
+    assert doc.target_root == 'tests/document/example5'
     assert (doc.target_filepath('.html', render_path=True) ==
             "tests/document/example5/html/index.html")
     assert (doc.target_filepath('.html', render_path=False) ==
@@ -99,8 +101,24 @@ def test_target_filepath():
 
     # Check the sub_documents
     sub_document = list(doc.sub_documents.values())[0]
+    assert sub_document.target_root == 'tests/document/example5'
     assert (sub_document.target_filepath('.html', render_path=True) ==
             "tests/document/example5/html/sub1/index.html")
+
+    sub_document = list(doc.sub_documents.values())[1]
+    assert sub_document.target_root == 'tests/document/example5'
+    assert (sub_document.target_filepath('.html', render_path=True) ==
+            "tests/document/example5/html/sub2/index.html")
+
+    sub_document = list(sub_document.sub_documents.values())[0]
+    assert sub_document.target_root == 'tests/document/example5'
+    assert (sub_document.target_filepath('.html', render_path=True) ==
+            "tests/document/example5/html/sub2/subsub2/index.html")
+
+    sub_document = list(doc.sub_documents.values())[2]
+    assert sub_document.target_root == 'tests/document/example5'
+    assert (sub_document.target_filepath('.html', render_path=True) ==
+            "tests/document/example5/html/sub3/index.html")
 
 
 def test_custom_template(tmpdir):
@@ -311,6 +329,38 @@ def test_document_tree(tmpdir):
     keys = list(doc.sub_documents.keys())
     assert doc.sub_documents[keys[0]].src_filepath == str(file2)
 
+    # Now test Example5. Example5 has a file in the root directory, a file in
+    # the 'sub1', 'sub2' and 'sub3' directories and a file in the 'sub2/subsub2'
+    # directory
+    doc = Document('tests/document/example5/index.dm',
+                   target_root=str(tmpdir))
+
+    assert len(doc.sub_documents) == 3  # Only sub_documents of doc
+    assert len(doc.context['documents']) == 5  # all sub_documents
+
+    sub_docs = list(doc.sub_documents.values())
+    assert sub_docs[0].src_filepath == 'tests/document/example5/sub1/index.dm'
+    assert sub_docs[1].src_filepath == 'tests/document/example5/sub2/index.dm'
+    assert sub_docs[2].src_filepath == 'tests/document/example5/sub3/index.dm'
+
+    all_docs = [d() for d in doc.context['documents'].values()]
+    assert all_docs[0].src_filepath == 'tests/document/example5/index.dm'
+    assert all_docs[1].src_filepath == 'tests/document/example5/sub1/index.dm'
+    assert all_docs[2].src_filepath == 'tests/document/example5/sub2/index.dm'
+    assert all_docs[3].src_filepath == ('tests/document/example5/sub2/subsub2/'
+                                        'index.dm')
+    assert all_docs[4].src_filepath == 'tests/document/example5/sub3/index.dm'
+
+    # Check that the targets are rendered in the right locations
+    doc.render()
+
+    assert tmpdir.join('html').join('index.html').exists()
+    assert tmpdir.join('html').join('sub1').join('index.html').exists()
+    assert tmpdir.join('html').join('sub2').join('index.html').exists()
+    assert (tmpdir.join('html').join('sub2').join('subsub2')
+            .join('index.html').exists())
+    assert tmpdir.join('html').join('sub3').join('index.html').exists()
+
 
 def test_document_tree_recursive_reference(tmpdir):
     """Test the loading of trees and sub-documents with recursive references."""
@@ -366,6 +416,7 @@ def test_document_tree_matching_filenames(tmpdir):
 
     # Create the root document
     doc = Document(src_filepath=str(file1))
+    doc.render()
 
 
 def test_document_toc(tmpdir):
@@ -377,11 +428,18 @@ def test_document_toc(tmpdir):
 
     # Render the doc
     doc.render()
+
+    # Make sure the 'toc' context entry is correct
+    assert doc.context['toc'] == 'documents'
+
+    # Make a context and process the toc
+    context = dict(doc.context)
+    process_context_toc(context, target='.html')
+
     key = """<ol class="toc-document">
       <li>
         <a class="document-level-1-ref" href="/file.html">My first title</a>
       </li>
     </ol>
     """
-
-    assert doc.context['toc']['.html'] == strip_leading_space(key)
+    assert strip_leading_space(key) == context['toc']

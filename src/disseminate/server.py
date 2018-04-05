@@ -53,6 +53,10 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
         render_path = translate_path(self.path, self.documents)
 
         if render_path is not None:
+            # Render the documents
+            for document in self.documents:
+                document.render()
+
             return render_path
 
         return path
