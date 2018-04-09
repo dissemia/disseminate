@@ -42,7 +42,7 @@ def test_figure_caption_no_id(tmpdir):
 
     doc = Document(src_filepath=src_filepath)
     doc.context['figure_label'] = "Fig. {number}."
-    doc.target_list = ['.html']
+    doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
 
     # Generate the markup without an id
@@ -84,7 +84,7 @@ def test_figure_caption_no_id_html(tmpdir):
 
     doc = Document(src_filepath=src_filepath)
     doc.context['figure_label'] = "Fig. {number}."
-    doc.target_list = ['.html']
+    doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
 
     # Generate the markup without an id
@@ -123,7 +123,7 @@ def test_figure_caption_no_id_tex(tmpdir):
 
     doc = Document(src_filepath=src_filepath)
     doc.context['figure_label'] = "Fig. {number}."
-    doc.target_list = ['.html']
+    doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
 
     # Generate the markup without an id
@@ -148,7 +148,7 @@ def test_figure_caption_with_id(tmpdir):
 
     doc = Document(src_filepath=src_filepath)
     doc.context['figure_label'] = "Fig. {number}."
-    doc.target_list = ['.html']
+    doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
 
     """Tests the parsing of captions in figure tags when an id is specified."""
@@ -193,7 +193,7 @@ def test_figure_caption_with_id_html(tmpdir):
 
     doc = Document(src_filepath=src_filepath)
     doc.context['figure_label'] = "Fig. {number}."
-    doc.target_list = ['.html']
+    doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
 
     # Test two cases: one in which the id is in the figure tag, and one in which
@@ -236,7 +236,7 @@ def test_figure_caption_with_id_tex(tmpdir):
 
     doc = Document(src_filepath=src_filepath)
     doc.context['figure_label'] = "Fig. {number}."
-    doc.target_list = ['.html']
+    doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
 
     # Test two cases: one in which the id is in the figure tag, and one in which
@@ -265,7 +265,7 @@ def test_ref_missing(tmpdir):
 
     doc = Document(src_filepath=src_filepath)
     doc.context['figure_label'] = "Fig. {number}."
-    doc.target_list = ['.html']
+    doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
 
     # Generate the markup without an id
@@ -294,7 +294,7 @@ def test_ref_html(tmpdir):
     doc = Document(src_filepath=src_filepath)
     doc.context['figure_ref'] = "Fig. {number}"
     doc.context['figure_label'] = "Fig. {number}."
-    doc.target_list = ['.html']
+    doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
 
     # Generate the markup with an id. The marginfig tag is needed to
@@ -318,6 +318,20 @@ def test_ref_html(tmpdir):
     assert ('<a class="figure-ref" href="/main.html#test">'
             'Fig. 1</a>') in root_html
 
+    # Try removing the '.html' target for the document. In this case, a link
+    # should not be rendered.
+    doc.context['targets'] = ''
+
+    root_html = root.html()
+    # Remove the root tag
+    root_html = root_html[len(root_start):]  # strip the start
+    root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
+
+    assert ('<a class="figure-ref" href="/main.html#test">'
+            'Fig. 1</a>') not in root_html
+    assert ('<span id="test" class="figure-label">Fig. 1.</span>'
+            in root_html)
+
 
 def test_ref_tex(tmpdir):
     """Test the ref tag for a present caption in the texformat"""
@@ -331,7 +345,7 @@ def test_ref_tex(tmpdir):
     doc.context['figure_label'] = "Fig. {number}."
     doc.context['figure_link_tex'] = ('\\hyperlink{{{id}}}{{Fig. '
                                       '{number}}}')
-    doc.target_list = ['.tex']
+    doc.context['targets'] = '.tex'
 
     # Generate the markup without an id. A reference cannot be made, and a
     # LabelNotFound exception is raised

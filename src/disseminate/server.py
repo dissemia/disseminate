@@ -15,6 +15,19 @@ from .templates import get_template
 from . import settings
 
 
+def render(documents):
+    """Render the given documents"""
+    for document in documents:
+        if __debug__:  # Timing for debugging
+            t0 = time.time()
+
+        document.render()
+
+        if __debug__:
+            t1 = time.time()
+            print("{} render time {:.1f} ms".format(document,
+                                                    1000. * (t1 - t0)))
+
 class RequestHandler(http.server.SimpleHTTPRequestHandler):
     """A specialized request handler to serve index trees, files from the
     package or files from the document (source markup) directories."""
@@ -52,11 +65,9 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
         # See if the file is in the targets of one of the documents
         render_path = translate_path(self.path, self.documents)
 
+        # Render the documents and return the render_path
         if render_path is not None:
-            # Render the documents
-            for document in self.documents:
-                document.render()
-
+            render(self.documents)
             return render_path
 
         return path
@@ -70,8 +81,7 @@ def run(in_directory, out_directory,
     docs = load_root_documents(path=in_directory)
 
     # Render the documents
-    for document in docs:
-        document.render()
+    render(docs)
 
     # Customize the request handler with the tree
     class MyHandler(handler_class):

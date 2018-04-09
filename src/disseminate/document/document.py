@@ -193,39 +193,27 @@ class Document(object):
 
     @property
     def target_list(self):
-        if self._target_list is None:
-            # Get the target list from the context
-            self.target_list = self.context.get('targets',
-                                                settings.document_target_list)
+        """The list of targets from the context."""
+        # Refresh the context
+        #self.get_ast()
 
-        if isinstance(self._target_list, list):
-            return self._target_list
+        # Get the targets from the context
+        targets = self.context.get('targets', settings.document_target_list)
+
+        # Convert to a list, if needed
+        target_list = (targets.split(',') if isinstance(targets, str) else
+                       targets)
+
+        if len(target_list) == 1:
+            target_list = [t.strip() for t in target_list[0].split(" ")]
         else:
+            target_list = [t.strip() for t in target_list]
+
+        if 'none' in target_list:
             return []
 
-    @target_list.setter
-    def target_list(self, value):
-        """Set the target_list, which is a list of target extensions with a
-        trailing period."""
-        if isinstance(value, list):
-            target_list = value
-        elif isinstance(value, str):
-            # If it's a string, items may be separated by commas, spaces
-            # or both
-            target_exts = value.split(',')
-            if len(target_exts) == 1:
-                target_list = [t.strip() for t in
-                                     target_exts[0].split(" ")]
-            else:
-                target_list = [t.strip() for t in target_exts]
-
-        else:
-            raise AttributeError
-
-        # Prepend the targets with a period. ex: '.html'
-        target_list = ['.' + t if not t.startswith('.') else t
-                       for t in target_list]
-        self._target_list = target_list
+        # Add trailing period to extensions in target_list
+        return [t if t.startswith('.') else '.' + t for t in target_list]
 
     @property
     def targets(self):
@@ -240,9 +228,6 @@ class Document(object):
             either an absolute path or a path relative to the current
             directory.
         """
-        if getattr(self, '_targets', None):
-            return self._targets
-
         target_list = self.target_list
 
         # Keep a list of extensions without the trailing period
@@ -263,9 +248,7 @@ class Document(object):
             t = (os.path.join(base_target, stripped_ext, project_basefilename) +
                  target_ext)
             targets[target_ext] = t
-        self._targets = targets
-
-        return self._targets
+        return targets
 
     def target_filepath(self, target, render_path=True):
         """The filepath for the given target extension.
@@ -712,8 +695,7 @@ class Document(object):
             The target extension to render. ex: '.pdf'
         target_filepath : str
             The final render path of the target file. ex : 'pdf/index.pdf'
-        targets : dict or None
-            If specified, only the specified targets will be rendered.
+        targets : dict
             This is a dict with the extension as keys and the target_filepath
             (as a render path) as the value.
         """
@@ -722,9 +704,10 @@ class Document(object):
         # a temporary one.
         inter_ext = settings.compiled_exts[target]
         if inter_ext in targets:
+            inter_target_filepath = targets[inter_ext]
             self.render_uncompiled(target=inter_ext,
-                                   target_filepath=target_filepath)
-            src_filepath = targets[inter_ext]
+                                   target_filepath=inter_target_filepath)
+            src_filepath = inter_target_filepath
         else:
             temp_dir = self.temp_dir
             temp_filename = os.path.split(target_filepath)[1]
@@ -737,6 +720,6 @@ class Document(object):
 
         # Now convert the file and continue
         target_basefilepath = os.path.splitext(target_filepath)[0]
-        convert(src_filepath=src_filepath,
-                target_basefilepath=target_basefilepath,
-                targets=[target, ])
+        filepath = convert(src_filepath=src_filepath,
+                           target_basefilepath=target_basefilepath,
+                           targets=[target])

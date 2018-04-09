@@ -250,15 +250,25 @@ class Label(object):
         link_str = (self.format_str(name='link', target=target)
                     if link_str is None else link_str)
         kwargs = self.format_kwargs()
-        kwargs['filepath'] = self.document.target_filepath(target=target,
-                                                           render_path=False)
 
-        if target == '.html':
+        # See if the target is in the document's target_list and render a link
+        # if it is.
+        if target in self.document.target_list:
+            filepath = self.document.target_filepath(target=target,
+                                                     render_path=False)
+            kwargs['filepath'] = filepath
+            create_link = True
+        else:
+            create_link = False
+
+        # Create a link if the label's document has an available target
+        target_list = self.document.target_list
+        if target == '.html' and create_link:
             tag_kwargs = dict()
             tag_kwargs['class'] = self.kind[-1] + '-' + 'ref'
             tag_kwargs['href'] = link_str.format(**kwargs)
             return E('a', ref_str.format(**kwargs), **tag_kwargs)
-        elif target == '.tex':
+        elif target == '.tex' and create_link:
             return (link_str.format(**kwargs) if self.id is not None else
                     ref_str.format(**kwargs))
         else:

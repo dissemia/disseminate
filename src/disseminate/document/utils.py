@@ -106,24 +106,29 @@ def translate_path(path, documents):
     # Loop through the documents and see if a project_root or target_root
     # path is found.
     for document in documents:
-        # Get the target for the path without the preceeding '.'
-        target = os.path.splitext(path)[1].strip('.')
-
-        # Try constructing a render target_filepath
-        target_filepath = os.path.join(document.target_root, target, path)
-        if os.path.isfile(target_filepath):
-            return target_filepath
-
-        # Try constructing a render target_filepath not include the target
-        # sub-directory
-        target_filepath = os.path.join(document.target_root, path)
-        if os.path.isfile(target_filepath):
-            return target_filepath
-
         # Try constructing a render src_filepath
         src_filepath = os.path.join(document.project_root, path)
         if os.path.isfile(src_filepath):
             return src_filepath
+
+        # Get the target for the document
+        targets = document.target_list
+
+        for target in targets:
+            # Strip the target name of the preceeding period
+            stripped_target = target.strip('.')
+
+            # Try constructing a render target_filepath
+            target_filepath = os.path.join(document.target_root,
+                                           stripped_target, path)
+            if os.path.isfile(target_filepath):
+                return target_filepath
+
+            # Try constructing a render target_filepath not include the target
+            # sub-directory
+            target_filepath = os.path.join(document.target_root, path)
+            if os.path.isfile(target_filepath):
+                return target_filepath
 
     return None
 
@@ -152,12 +157,18 @@ def render_tree_html(documents, level=1):
 
         # Column 3: target files
         kwargs = {'class': 'tgt'}
-        tgt = E('td', "(",
-                *[E('a', target.strip('.'),
-                    href=document.target_filepath(target, render_path=False))
-                  for target in document.targets.keys()],
-                ")",
-                **kwargs)
+        tgt_links = [E('a', target.strip('.'),
+                       href=document.target_filepath(target, render_path=False))
+                     for target in document.targets.keys()]
+        # Add commas to targets
+        if len(tgt_links) > 1:
+            new_tgt_links = [tgt_links[0]]
+            for tgt_link in tgt_links[1:]:
+                new_tgt_links.append(", ")
+                new_tgt_links.append(tgt_link)
+            tgt_links = new_tgt_links
+        tgt = (E('td', "(", *tgt_links, ")", **kwargs) if len(tgt_links) > 0
+               else E('td', **kwargs))
 
         # Column 4: src mtime
         kwargs = {'class': 'date'}
@@ -177,14 +188,18 @@ def render_tree_html(documents, level=1):
             document_elements += render_tree_html(sub_docs, level+1)
 
         if level == 1 and document_elements:
-            kwargs = {'class': 'tablesorter', 'id': 'index'}
+
+            title = E('div', E('strong', 'Project Title: '),
+                        document.title,
+                        **{'class': 'caption-title'})
             head = E('thead',
                      E('tr',
                        E('th', 'num'),
                        E('th', 'source'),
                        E('th', 'targets'),
                        E('th', 'last saved')))
-            table = E('table', head, *document_elements, **kwargs)
+            kwargs = {'class': 'tablesorter', 'id': 'index'}
+            table = E('table', title, head, *document_elements, **kwargs)
             tables.append(table)
 
     if level == 1:

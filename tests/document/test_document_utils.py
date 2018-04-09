@@ -158,7 +158,7 @@ def test_translate_path(tmpdir):
             str(target_root5.join('html').join('sub3').join('index.html')))
 
 
-def test_render_tree_html(tmpdir):
+def test_render_tree_html():
     """Test the render_tree_html function."""
 
     # Load documents from example6. The example6 directory has 2 files in the
@@ -174,6 +174,7 @@ def test_render_tree_html(tmpdir):
     html = render_tree_html(docs[0:1])
     key = """<div class="tableset">
       <table class="tablesorter" id="index">
+        <div class="caption-title"><strong>Project Title: </strong>tests/document/example6/src/file1</div>
         <thead>
           <tr>
             <th>num</th>
@@ -188,7 +189,7 @@ def test_render_tree_html(tmpdir):
             <a href="/tests/document/example6/src/file1.dm">tests/document/example6/src/file1.dm</a>
           </td>
           <td class="tgt">(<a href="file1.html">html</a>)</td>
-          <td class="date">Apr 3, 2018 at 8:11PM</td>
+          <td class="date">Apr 5, 2018 at 4:45PM</td>
         </tr>
         <tr class="level-2">
           <td class="num">2</td>
@@ -196,7 +197,7 @@ def test_render_tree_html(tmpdir):
             <a href="/tests/document/example6/src/file2.dm">tests/document/example6/src/file2.dm</a>
           </td>
           <td class="tgt">(<a href="file2.html">html</a>)</td>
-          <td class="date">Apr 3, 2018 at 8:11PM</td>
+          <td class="date">Apr 5, 2018 at 4:45PM</td>
         </tr>
       </table>
     </div>

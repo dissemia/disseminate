@@ -2,9 +2,8 @@
 Tests the label manager and label classes.
 """
 import pytest
-from lxml import etree
 
-from disseminate.labels import LabelManager, LabelNotFound
+from disseminate.labels import LabelNotFound
 from disseminate import Document
 
 

@@ -97,8 +97,8 @@ media_dir = 'media'
 label_formats = {'figure_label': 'Fig. {document_number}.{number}.',
                  'figure_ref': 'Fig. {document_number}.{number}',
                  'figure_link_html': '/{filepath}#{id}',
-                 'figure_link_tex': '\\hyperlink{{{id}}}{Fig. '
-                                    '{{document_number}.{number}}}',
+                 'figure_link_tex': '\\hyperlink{{{id}}}{{Fig. '
+                                    '{document_number}.{number}}}',
                  'heading_label': '{short}',
                  'heading_ref': '{short}',
                  'heading_link_tex': '\\hyperlink{{{id}}}{{{content}}}',

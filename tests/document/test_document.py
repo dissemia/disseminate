@@ -58,12 +58,6 @@ def test_target_list():
     # dummy.dm has the entry 'html, tex' set in the header.
     assert doc.target_list == ['.html', '.tex']
 
-    # Try a variety of target_list strings
-    for s in (['tex', 'html'], ['.tex', '.html'],
-              'tex html', '.tex .html', 'tex, html', '.tex, .html'):
-        doc.target_list = s
-        assert doc.target_list == ['.tex', '.html']
-
 
 def test_target_filepath():
     """Test the target_filepath method."""
@@ -149,7 +143,7 @@ def test_custom_template(tmpdir):
     assert "Disseminate Project Index" not in out_file.read()
 
 
-def test_local_context_update(tmpdir):
+def test_context_update(tmpdir):
     """Tests that the context is properly updated in subsequent renders."""
     # First load a file with a header
     doc = Document("tests/document/example2/withheader.dm", str(tmpdir))
@@ -166,7 +160,6 @@ def test_local_context_update(tmpdir):
 
     # Get the local_context id to make sure it stays the same
     context_id = id(doc.context)
-
     # Now switch to a file without a header and make sure the header values
     # are removed
     doc.src_filepath = "tests/document/example2/noheader.dm"
@@ -180,7 +173,35 @@ def test_local_context_update(tmpdir):
     assert id(doc.context) == context_id
 
 
-def test_local_macros(tmpdir):
+def test_target_list_update(tmpdir):
+    """Tests the proper updating of the target list."""
+
+    # Create a test source document
+    tmpdir.join('src').mkdir()
+    src_filepath = tmpdir.join('test.dm')
+
+    markup = """---
+    targets: txt
+    ---
+    """
+    src_filepath.write(strip_leading_space(markup))
+
+    doc = Document(src_filepath, str(tmpdir))
+
+    assert doc.target_list == ['.txt']
+
+    # Update the header
+    markup = """---
+        targets: tex
+        ---
+        """
+    src_filepath.write(strip_leading_space(markup))
+    doc.get_ast()
+
+    assert doc.target_list == ['.tex']
+
+
+def test_macros(tmpdir):
     """Tests that macros defined in the header of a document are properly
     processed."""
     temp_file = tmpdir.join('html').join('withheader.html')
