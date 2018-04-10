@@ -1,6 +1,8 @@
 """
 Test the TOC tag.
 """
+from lxml.html import etree
+
 from disseminate import Document
 from disseminate.tags.toc import Toc, process_context_toc
 from disseminate.utils.tests import strip_leading_space
@@ -25,14 +27,14 @@ def test_process_toc(tmpdir):
     process_context_toc(context=context, target='.html')
 
     key = """<ol class="toc-document">
-  <li>
+  <li class="li-document-level-1">
     <a class="document-level-1-ref" href="/file1.html">tests/tags/toc_example1/file1</a>
   </li>
-  <ol>
-    <li>
+  <ol class="toc-level-2">
+    <li class="li-document-level-2">
       <a class="document-level-2-ref" href="/sub/file21.html">tests/tags/toc_example1/sub/file21</a>
     </li>
-    <li>
+    <li class="li-document-level-2">
       <a class="document-level-2-ref" href="/sub/file22.html">tests/tags/toc_example1/sub/file22</a>
     </li>
   </ol>
@@ -57,42 +59,43 @@ def test_toc_heading_html(tmpdir):
               context=doc.context)
 
     key = """<ol class="toc-heading">
-  <li>
+  <li class="li-section">
     <a class="section-ref" href="/file1.html#">Heading 1</a>
   </li>
-  <li>
+  <li class="li-section">
     <a class="section-ref" href="/file1.html#">Heading 2</a>
   </li>
-  <ol>
-    <li>
+  <ol class="toc-level-2">
+    <li class="li-subsection">
       <a class="subsection-ref" href="/file1.html#">sub-Heading 2.1</a>
     </li>
-    <li>
+    <li class="li-subsection">
       <a class="subsection-ref" href="/file1.html#">sub-Heading 2.2</a>
     </li>
-    <ol>
-      <li>
+    <ol class="toc-level-3">
+      <li class="li-subsubsection">
         <a class="subsubsection-ref" href="/file1.html#">sub-sub-Header 2.2.1</a>
       </li>
     </ol>
-    <li>
+    <li class="li-subsection">
       <a class="subsection-ref" href="/file1.html#">sub-Heading 2.3</a>
     </li>
   </ol>
-  <li>
+  <li class="li-section">
     <a class="section-ref" href="/file1.html#">Heading 3</a>
   </li>
-  <ol>
-    <li>
+  <ol class="toc-level-2">
+    <li class="li-subsubsection">
       <a class="subsubsection-ref" href="/file1.html#">sub-sub-header 3.1.1</a>
     </li>
   </ol>
-  <li>
+  <li class="li-section">
     <a class="section-ref" href="/file1.html#">Heading 4</a>
   </li>
 </ol>
 """
-    assert key == toc.html()
+    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
+    assert key == html
 
     # The 'tests/tags/toc_example2' directory contains three markup files:
     # file1.dm, file2.dm and file3.dm. The 'file1.dm' includes 'file2.dm' and
@@ -106,35 +109,37 @@ def test_toc_heading_html(tmpdir):
               context=doc.context)
 
     key = """<ol class="toc-heading">
-  <li>
+  <li class="li-section">
     <a class="section-ref" href="/file1.html#heading-1">Heading 1</a>
   </li>
-  <li>
+  <li class="li-section">
     <a class="section-ref" href="/file2.html#heading-2">Heading 2</a>
   </li>
-  <ol>
-    <li>
+  <ol class="toc-level-2">
+    <li class="li-subsection">
       <a class="subsection-ref" href="/file2.html#subheading-2">sub-Heading 2</a>
     </li>
   </ol>
-  <li>
+  <li class="li-section">
     <a class="section-ref" href="/file3.html#heading-3">Heading 3</a>
   </li>
 </ol>
 """
-    assert key == toc.html()
+    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
+    assert key == html
 
     # Create a toc for the root document, file1.dm, only.
     toc = Toc(name='toc', content='headings', attributes=tuple(),
               context=doc.context)
 
     key = """<ol class="toc-heading">
-  <li>
+  <li class="li-section">
     <a class="section-ref" href="/file1.html#heading-1">Heading 1</a>
   </li>
 </ol>
 """
-    assert key == toc.html()
+    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
+    assert key == html
 
 
 def test_toc_heading_tex(tmpdir):
@@ -152,23 +157,23 @@ def test_toc_heading_tex(tmpdir):
     toc = Toc(name='toc', content='all headings', attributes=tuple(),
               context=doc.context)
 
-    key = """\\begin{enumerate}
+    key = """\\begin{toclist}
   \\item Heading 1
   \\item Heading 2
-  \\begin{enumerate}
+  \\begin{toclist}
     \\item sub-Heading 2.1
     \\item sub-Heading 2.2
-    \\begin{enumerate}
+    \\begin{toclist}
       \\item sub-sub-Header 2.2.1
-    \\end{enumerate}
+    \\end{toclist}
     \\item sub-Heading 2.3
-  \\end{enumerate}
+  \\end{toclist}
   \\item Heading 3
-  \\begin{enumerate}
+  \\begin{toclist}
     \\item sub-sub-header 3.1.1
-  \\end{enumerate}
+  \\end{toclist}
   \\item Heading 4
-\\end{enumerate}
+\\end{toclist}
 """
     assert key == toc.tex()
 
@@ -183,14 +188,14 @@ def test_toc_heading_tex(tmpdir):
     toc = Toc(name='toc', content='all headings', attributes=tuple(),
               context=doc.context)
 
-    key = """\\begin{enumerate}
+    key = """\\begin{toclist}
   \\item \\hyperlink{heading-1}{Heading 1}
   \\item \\hyperlink{heading-2}{Heading 2}
-  \\begin{enumerate}
+  \\begin{toclist}
     \\item \\hyperlink{subheading-2}{sub-Heading 2}
-  \\end{enumerate}
+  \\end{toclist}
   \\item \\hyperlink{heading-3}{Heading 3}
-\\end{enumerate}
+\\end{toclist}
 """
     assert key == toc.tex()
 
@@ -198,9 +203,9 @@ def test_toc_heading_tex(tmpdir):
     toc = Toc(name='toc', content='headings', attributes=tuple(),
               context=doc.context)
 
-    key = """\\begin{enumerate}
+    key = """\\begin{toclist}
   \\item \\hyperlink{heading-1}{Heading 1}
-\\end{enumerate}
+\\end{toclist}
 """
     assert key == toc.tex()
 
@@ -222,130 +227,134 @@ def test_toc_document_html(tmpdir):
 
     # Match the default toc (format: 'collapsed')
     key = """<ol class="toc-document">
-  <li>
+  <li class="li-document-level-1">
     <a class="document-level-1-ref" href="/file1.html">tests/tags/toc_example1/file1</a>
   </li>
-  <ol>
-    <li>
+  <ol class="toc-level-2">
+    <li class="li-document-level-2">
       <a class="document-level-2-ref" href="/sub/file21.html">tests/tags/toc_example1/sub/file21</a>
     </li>
-    <li>
+    <li class="li-document-level-2">
       <a class="document-level-2-ref" href="/sub/file22.html">tests/tags/toc_example1/sub/file22</a>
     </li>
   </ol>
 </ol>
 """
-    assert toc.html() == key
+    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
+    assert key == html
 
     # Match the collapsed toc
     toc = Toc(name='toc', content='all documents collapsed', attributes=tuple(),
               context=doc.context)
-    assert toc.html() == key
+    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
+    assert key == html
 
     # Match the expanded toc
     toc = Toc(name='toc', content='all documents expanded', attributes=tuple(),
               context=doc.context)
     key = """<ol class="toc-document">
-  <li>
+  <li class="li-document-level-1">
     <a class="document-level-1-ref" href="/file1.html">tests/tags/toc_example1/file1</a>
   </li>
-  <ol>
-    <li>
+  <ol class="toc-level-2">
+    <li class="li-section">
       <a class="section-ref" href="/file1.html#">Heading 1</a>
     </li>
-    <li>
+    <li class="li-section">
       <a class="section-ref" href="/file1.html#">Heading 2</a>
     </li>
-    <ol>
-      <li>
+    <ol class="toc-level-3">
+      <li class="li-subsection">
         <a class="subsection-ref" href="/file1.html#">sub-Heading 2.1</a>
       </li>
-      <li>
+      <li class="li-subsection">
         <a class="subsection-ref" href="/file1.html#">sub-Heading 2.2</a>
       </li>
-      <ol>
-        <li>
+      <ol class="toc-level-4">
+        <li class="li-subsubsection">
           <a class="subsubsection-ref" href="/file1.html#">sub-sub-Header 2.2.1</a>
         </li>
       </ol>
-      <li>
+      <li class="li-subsection">
         <a class="subsection-ref" href="/file1.html#">sub-Heading 2.3</a>
       </li>
     </ol>
-    <li>
+    <li class="li-section">
       <a class="section-ref" href="/file1.html#">Heading 3</a>
     </li>
-    <ol>
-      <li>
+    <ol class="toc-level-3">
+      <li class="li-subsubsection">
         <a class="subsubsection-ref" href="/file1.html#">sub-sub-header 3.1.1</a>
       </li>
     </ol>
-    <li>
+    <li class="li-section">
       <a class="section-ref" href="/file1.html#">Heading 4</a>
     </li>
   </ol>
-  <li>
+  <li class="li-document-level-2">
     <a class="document-level-2-ref" href="/sub/file21.html">tests/tags/toc_example1/sub/file21</a>
   </li>
-  <li>
+  <li class="li-document-level-2">
     <a class="document-level-2-ref" href="/sub/file22.html">tests/tags/toc_example1/sub/file22</a>
   </li>
 </ol>
 """
-    assert toc.html() == key
+    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
+    assert key == html
 
     # Match the abbreviated toc
     toc = Toc(name='toc', content='all documents abbreviated',
               attributes=tuple(),
               context=doc.context)
     key = """<ol class="toc-document">
-  <li>
+  <li class="li-document-level-1">
     <a class="document-level-1-ref" href="/file1.html">tests/tags/toc_example1/file1</a>
   </li>
-  <ol>
-    <li>
+  <ol class="toc-level-2">
+    <li class="li-section">
       <a class="section-ref" href="/file1.html#">Heading 1</a>
     </li>
-    <li>
+    <li class="li-section">
       <a class="section-ref" href="/file1.html#">Heading 2</a>
     </li>
-    <ol>
-      <li>
+    <ol class="toc-level-3">
+      <li class="li-subsection">
         <a class="subsection-ref" href="/file1.html#">sub-Heading 2.1</a>
       </li>
-      <li>
+      <li class="li-subsection">
         <a class="subsection-ref" href="/file1.html#">sub-Heading 2.2</a>
       </li>
-      <ol>
-        <li>
+      <ol class="toc-level-4">
+        <li class="li-subsubsection">
           <a class="subsubsection-ref" href="/file1.html#">sub-sub-Header 2.2.1</a>
         </li>
       </ol>
-      <li>
+      <li class="li-subsection">
         <a class="subsection-ref" href="/file1.html#">sub-Heading 2.3</a>
       </li>
     </ol>
-    <li>
+    <li class="li-section">
       <a class="section-ref" href="/file1.html#">Heading 3</a>
     </li>
-    <ol>
-      <li>
+    <ol class="toc-level-3">
+      <li class="li-subsubsection">
         <a class="subsubsection-ref" href="/file1.html#">sub-sub-header 3.1.1</a>
       </li>
     </ol>
-    <li>
+    <li class="li-section">
       <a class="section-ref" href="/file1.html#">Heading 4</a>
     </li>
   </ol>
-  <li>
+  <li class="li-document-level-2">
     <a class="document-level-2-ref" href="/sub/file21.html">tests/tags/toc_example1/sub/file21</a>
   </li>
-  <li>
+  <li class="li-document-level-2">
     <a class="document-level-2-ref" href="/sub/file22.html">tests/tags/toc_example1/sub/file22</a>
   </li>
 </ol>
 """
-    assert toc.html() == key
+    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
+    assert key == html
 
     # Test the collapsed toc for only the root document
     toc = Toc(name='toc', content='documents', attributes=tuple(),
@@ -353,12 +362,13 @@ def test_toc_document_html(tmpdir):
 
     # Match the default toc (collapsed)
     key = """<ol class="toc-document">
-  <li>
+  <li class="li-document-level-1">
     <a class="document-level-1-ref" href="/file1.html">tests/tags/toc_example1/file1</a>
   </li>
 </ol>
 """
-    assert key == toc.html()
+    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
+    assert key == html
 
 
 def test_toc_document_tex(tmpdir):
@@ -376,13 +386,13 @@ def test_toc_document_tex(tmpdir):
     toc = Toc(name='toc', content='all documents', attributes=tuple(),
               context=doc.context)
 
-    key = """\\begin{enumerate}
+    key = """\\begin{toclist}
   \\item \\hyperlink{doc:file1.dm}{tests/tags/toc_example1/file1}
-  \\begin{enumerate}
+  \\begin{toclist}
     \\item \\hyperlink{doc:sub/file21.dm}{tests/tags/toc_example1/sub/file21}
     \\item \\hyperlink{doc:sub/file22.dm}{tests/tags/toc_example1/sub/file22}
-  \\end{enumerate}
-\\end{enumerate}
+  \\end{toclist}
+\\end{toclist}
 """
     assert key == toc.tex()
 
@@ -411,17 +421,18 @@ def test_toc_changes(tmpdir):
               attributes=tuple(),
               context=doc.context)
     key = """<ol class="toc-document">
-  <li>
+  <li class="li-document-level-1">
     <a class="document-level-1-ref" href="/test.html">my first file</a>
   </li>
-  <ol>
-    <li>
+  <ol class="toc-level-2">
+    <li class="li-section">
       <a class="section-ref" href="/test.html#heading1">My first heading</a>
     </li>
   </ol>
 </ol>
 """
-    assert toc.html() == key
+    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
+    assert key == html
 
     # Change the document
     markup = """
@@ -439,19 +450,20 @@ def test_toc_changes(tmpdir):
               attributes=tuple(),
               context=doc.context)
     key = """<ol class="toc-document">
-  <li>
+  <li class="li-document-level-1">
     <a class="document-level-1-ref" href="/test.html">my first file</a>
   </li>
-  <ol>
-    <li>
+  <ol class="toc-level-2">
+    <li class="li-section">
       <a class="section-ref" href="/test.html#heading1">My first heading</a>
     </li>
-    <ol>
-      <li>
+    <ol class="toc-level-3">
+      <li class="li-subsection">
         <a class="subsection-ref" href="/test.html#subheading1">My first sub-heading</a>
       </li>
     </ol>
   </ol>
 </ol>
 """
-    assert toc.html() == key
+    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
+    assert key == html

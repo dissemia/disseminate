@@ -6,7 +6,6 @@ from itertools import groupby
 from lxml.builder import E
 from lxml import etree
 
-from . import settings
 from .headings import toc_levels as heading_toc_levels
 from .core import Tag
 
@@ -51,12 +50,19 @@ def process_context_toc(context, target):
     render_func = getattr(toc, target_stripped, None)
 
     if render_func is not None and callable(render_func):
-        context['toc'] = render_func()
+        result = render_func()
+        if target == '.html':
+            # For the '.html' target, the element tree has to be converted
+            # to an html string
+            html = etree.tostring(result, pretty_print=True).decode('utf-8')
+            context['toc'] = html
+        else:
+            context['toc'] = result
     else:
         context['toc'] = toc.default()
 
 
-def tree_to_html(elements, context, tag='ol'):
+def tree_to_html(elements, context, tag='ol', level=1):
     """Convert a nested tree to html"""
     returned_elements = []
     for e in elements:
@@ -64,14 +70,17 @@ def tree_to_html(elements, context, tag='ol'):
             # Unpack the element if it's a tuple with the order and the element
             order, e = e
         if isinstance(e, list):
-            returned_elements.append(tree_to_html(e, context, tag))
+            returned_elements.append(tree_to_html(e, context, tag, level+1))
         else:
-            returned_elements.append(E('li', e.ref(target='.html')))
+            kwargs = {'class': 'li-' + e.kind[-1] if e.kind else ''}
+            returned_elements.append(E('li', e.ref(target='.html'),
+                                       **kwargs))
 
-    return E(tag, *returned_elements)
+    kwargs = {'class': 'toc-level-' + str(level)}
+    return E(tag, *returned_elements, **kwargs)
 
 
-def tree_to_tex(elements, context, level=1, listing='enumerate'):
+def tree_to_tex(elements, context, level=1, listing='toclist'):
     """Convert a nested tree to tex."""
     returned_elements = []
     for e in elements:
@@ -110,11 +119,11 @@ class Toc(Tag):
                         (default)
     """
 
+    active = True
     toc_kind = None
 
     def __init__(self, *args, **kwargs):
         super(Toc, self).__init__(*args, **kwargs)
-
         self.toc_kind = (self.content.strip() if isinstance(self.content, str)
                          else '')
 
@@ -288,12 +297,7 @@ class Toc(Tag):
         else:
             html = ''
 
-        if isinstance(html, str):
-            return html
-        else:
-            # Convert the element to a string
-            return (etree.tostring(html, pretty_print=settings.html_pretty)
-                         .decode("utf-8"))
+        return html
 
     def tex(self, level=1, mathmode=False):
         """Convert the tag to a tex listing.

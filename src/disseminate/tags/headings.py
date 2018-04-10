@@ -2,7 +2,7 @@
 Tags for headings.
 """
 from .core import Tag
-from ..attributes import get_attribute_value
+from ..attributes import get_attribute_value, remove_attribute
 
 
 toc_levels = ('section', 'subsection', 'subsubsection')
@@ -27,7 +27,10 @@ class Heading(Tag):
             label_manager = context['label_manager']
             document = context['document']
             kind = ('heading', self.__class__.__name__.lower())
+
             id = get_attribute_value(self.attributes, 'id')
+            remove_attribute(self.attributes, 'id')
+
             label_manager.add_label(document=document, tag=self, kind=kind,
                                     id=id)
 

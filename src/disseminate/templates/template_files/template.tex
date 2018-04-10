@@ -24,6 +24,17 @@
 %%%
 % Hyperref package for links
 \usepackage{hyperref}
+\hypersetup{colorlinks, linkcolor=blue,
+            pdftitle={(( title ))},
+            pdfauthor={(( author ))},
+            pdfcreator={Disseminate}}
+
+%%%
+% Customizations for lists
+\usepackage{enumitem}
+\setlistdepth{9}
+\newlist{toclist}{itemize}{9}
+\setlist[toclist]{label=}
 
 %%%
 % Page Layout

@@ -577,7 +577,7 @@ class Document(object):
 
         return True
 
-    def render_uncompiled(self, target, target_filepath):
+    def render_uncompiled(self, target, target_filepath, ast=None):
         """Render a text target format.
 
         For many output formats, like .html and .tex, the rendered file is
@@ -614,10 +614,14 @@ class Document(object):
             The target extension to render. ex: '.html' or '.tex'
         target_filepath: str
             The final render path of the target file. ex : 'html/index.html'
+        ast : list or tag, optional
+            If specified, use the given AST instead of the one from the get_ast
+            method.
         """
         # Step 1: Asynchronous
         # get the ast
-        ast = self.get_ast()
+        if ast is None:
+            ast = self.get_ast()
 
         # Step 2: Synchronous
 
@@ -681,7 +685,7 @@ class Document(object):
             with open(target_filepath, 'w') as f:
                 f.write(output_string)
 
-    def render_compiled(self, target, target_filepath, targets):
+    def render_compiled(self, target, target_filepath, targets, ast=None):
         """Render a compiled target format.
 
         For some formats, like .pdf, these have to be compiled after generating
@@ -698,6 +702,9 @@ class Document(object):
         targets : dict
             This is a dict with the extension as keys and the target_filepath
             (as a render path) as the value.
+        ast : list or tag, optional
+            If specified, use the given AST instead of the one from the get_ast
+            method.
         """
         # Render the intermediate target. First, see if the
         # intermediary extension is already in targets. If not, create
@@ -706,7 +713,8 @@ class Document(object):
         if inter_ext in targets:
             inter_target_filepath = targets[inter_ext]
             self.render_uncompiled(target=inter_ext,
-                                   target_filepath=inter_target_filepath)
+                                   target_filepath=inter_target_filepath,
+                                   ast=ast)
             src_filepath = inter_target_filepath
         else:
             temp_dir = self.temp_dir
@@ -715,7 +723,8 @@ class Document(object):
                              inter_ext)
             temp_path = os.path.join(temp_dir, temp_filename)
             self.render_uncompiled(target=inter_ext,
-                                   target_filepath=temp_path)
+                                   target_filepath=temp_path,
+                                   ast=ast)
             src_filepath = temp_path
 
         # Now convert the file and continue

@@ -42,6 +42,33 @@ sub,sup {
     font-size: 70%;
 }
 
+.toc-document ol {
+    list-style: none;
+    padding-left: 1rem;
+}
+
+.toc-document a {
+    color: #444444;
+}
+
+ol.toc-document {
+    list-style: none;
+}
+
+li.li-document-level-1 {
+    padding-bottom: 1rem;
+    font-size: 1.4rem;
+}
+
+.li-document-level-2,
+.li-document-level-3,
+.li-document-level-3,
+.li-document-level-4,
+.li-document-level-5,
+.li-document-level-6 {
+    padding-top: 0.5rem;
+}
+
 .title {
     display: block;
     font-size: 1.8rem;

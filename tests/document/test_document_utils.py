@@ -3,7 +3,8 @@ Test the Document utilities functions.
 """
 from disseminate.document import Document
 from disseminate.document.utils import (find_project_paths, load_root_documents,
-                                        render_tree_html, translate_path)
+                                        render_tree_html, translate_path,
+                                        group_asts)
 from disseminate.utils.tests import strip_leading_space
 
 
@@ -156,6 +157,30 @@ def test_translate_path(tmpdir):
                 .join('index.html')))
     assert (translate_path('/html/sub3/index.html', docs) ==
             str(target_root5.join('html').join('sub3').join('index.html')))
+
+
+def test_group_asts(tmpdir):
+    """Test the group_asts function."""
+
+    # 1. Load documents from example7. Example7 has one target ('.html')
+    #    specified in the root file, 'src/file1.dm'. This file also includes
+    #    a file, 'sub1/file11.dm', which in turn includes
+    #    'sub1/subsub1/file111.dm'. All 3 files have content.
+    target_root7 = tmpdir.join('example7')
+    target_root7.mkdir()
+
+    doc = Document('tests/document/example7/src/file1.dm', str(target_root7))
+
+    # A non-existent target should return an empty ast
+    ast = group_asts(document=doc, target='.tex')
+
+    assert ast == []
+
+    # An existing target should include all the asts.
+    ast = group_asts(document=doc, target='.html')
+    assert ast[0].content == 'file1.dm'
+    assert ast[1].content == 'file11.dm'
+    assert ast[2].content == 'file111.dm'
 
 
 def test_render_tree_html():

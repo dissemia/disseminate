@@ -28,22 +28,25 @@ class TagFactory(object):
     tag_types = None
 
     def __init__(self):
-        # Initialize the tag types dict.
-        self.tag_types = dict()
-        for scls in _all_subclasses(Tag):
-            # Tag must be active
-            if not scls.active:
-                continue
+        # Lazy initialization of the class. The tags can be cached because
+        # the source code is assumed static once the program has started.
+        if TagFactory.tag_types is None:
+            # Initialize the tag types dict.
+            TagFactory.tag_types = dict()
+            for scls in _all_subclasses(Tag):
+                # Tag must be active
+                if not scls.active:
+                    continue
 
-            # Collect the name and aliases (alternative names) for the tag
-            aliases = (list(scls.aliases) if scls.aliases is not None else
-                       list())
-            names = [scls.__name__.lower(),] + aliases
+                # Collect the name and aliases (alternative names) for the tag
+                aliases = (list(scls.aliases) if scls.aliases is not None else
+                           list())
+                names = [scls.__name__.lower(),] + aliases
 
-            for name in names:
-                # duplicate or overwritten tag names are not allowed
-                assert name not in self.tag_types
-                self.tag_types[name] = scls
+                for name in names:
+                    # duplicate or overwritten tag names are not allowed
+                    assert name not in self.tag_types
+                    TagFactory.tag_types[name] = scls
 
     def tag(self, tag_name, tag_content, tag_attributes, context):
         """Return the approriate tag, give a tag_type and tag_content"""
