@@ -115,6 +115,82 @@ def test_target_filepath():
             "tests/document/example5/html/sub3/index.html")
 
 
+def test_documents_list():
+    """Test the documents_list function."""
+
+    # 1. Load documents from example7. Example7 has one target ('.html')
+    #    specified in the root file, 'src/file1.dm'. This file also includes
+    #    a file, 'sub1/file11.dm', which in turn includes
+    #    'sub1/subsub1/file111.dm'. All 3 files have content
+    doc = Document('tests/document/example7/src/file1.dm')
+
+    docs = doc.documents_list()
+
+    assert len(docs) == 3
+    assert docs[0].src_filepath == 'tests/document/example7/src/file1.dm'
+    assert docs[1].src_filepath == 'tests/document/example7/src/sub1/file11.dm'
+    assert (docs[2].src_filepath ==
+            'tests/document/example7/src/sub1/subsub1/file111.dm')
+
+
+def test_get_grouped_asts(tmpdir):
+    """Test the get_grouped_asts function."""
+
+    # 1. Load documents from example7. Example7 has one target ('.html')
+    #    specified in the root file, 'src/file1.dm'. This file also includes
+    #    a file, 'sub1/file11.dm', which in turn includes
+    #    'sub1/subsub1/file111.dm'. All 3 files have content.
+    target_root7 = tmpdir.join('example7')
+    target_root7.mkdir()
+
+    doc = Document('tests/document/example7/src/file1.dm', str(target_root7))
+
+    # A non-existent target should return an empty ast
+    ast = doc.get_grouped_asts(target='.tex')
+
+    assert ast.content == []
+
+    # An existing target should include all the asts.
+    ast = doc.get_grouped_asts(target='.html')
+    assert ast[0].content == 'file1.dm'
+    assert ast[1].content == 'file11.dm'
+    assert ast[2].content == 'file111.dm'
+
+
+def test_render_collection(tmpdir):
+    """Test the rendering of a collection of documents."""
+    # 1. Load documents from example7. Example7 has one target ('.html')
+    #    specified in the root file, 'src/file1.dm'. This file also includes
+    #    a file, 'sub1/file11.dm', which in turn includes
+    #    'sub1/subsub1/file111.dm'. All 3 files have content.
+    target_root7 = tmpdir.join('example7')
+    target_root7.mkdir()
+
+    doc = Document('tests/document/example7/src/file1.dm', str(target_root7))
+
+    # Try rendering the file. By default only the root document is rendered
+    doc.render()
+
+    assert target_root7.join('html').join('file1.html').check()
+
+    html = target_root7.join('html').join('file1.html').read()
+    assert '<p>file1.dm</p>' in html
+    assert '<p>file11.dm</p>' not in html
+    assert '<p>file111.dm</p>' not in html
+
+    # Render the collection. Since the source file hasn't changed, we have to
+    # delete the target to trigger a render.
+    doc.context['render'] = 'collection'
+    target_root7.join('html').join('file1.html').remove()
+    doc.render()
+
+    assert target_root7.join('html').join('file1.html').check()
+
+    html = target_root7.join('html').join('file1.html').read()
+    assert '<p>file1.dm</p>' in html
+    assert '<p>file11.dm</p>' in html
+    assert '<p>file111.dm</p>' in html
+
 def test_custom_template(tmpdir):
     """Tests the loading of custom templates from the yaml header."""
     # Write a temporary file. We'll use the tree.html template, which contains

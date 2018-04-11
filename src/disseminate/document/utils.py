@@ -6,7 +6,6 @@ from lxml.builder import E
 from lxml import etree
 
 from .document import Document
-from ..tags import Tag
 from .. import settings
 
 
@@ -132,53 +131,6 @@ def translate_path(path, documents):
                 return target_filepath
 
     return None
-
-
-def group_asts(document, target):
-    """Group the ASTs for the given document and sub-documents for the given
-    target.
-
-    Parameters
-    ----------
-    document : :obj:`disseminate.Document`
-        The document to group the ASTs for.
-    target : str
-        Only include ASTs for the document and sub-documents that have this
-        target in their target_list.
-     """
-    asts = []
-
-    # Load the ASTs for all documents
-    document.get_ast()
-
-    # Get a listing of all documents in order.
-    if 'documents' in document.context:
-        # The listing in the context is complete for the document, all
-        # sub-documents, sub-sub-documents and so on. The values in the
-        # context's 'documents' are weak references.
-        documents = [d() for d in document.context['documents'].values()]
-    else:
-        # This listing is less preferable since it only includes the document
-        # add the next level of sub-documents
-        documents = [document] + document.sub_documents.values()
-
-    # Remove documents that don't have the target listed in their target_list
-    documents = [d for d in documents if target in d.target_list]
-
-    # Group the ASTs
-    for doc in documents:
-        ast = doc.get_ast()
-
-        # Unwrap the root tag, if present
-        if isinstance(ast, Tag) and ast.name == 'root':
-            ast = ast.content
-
-        if isinstance(ast, list):
-            asts += ast
-        else:
-            asts.append(ast)
-
-    return asts
 
 
 def render_tree_html(documents, level=1):

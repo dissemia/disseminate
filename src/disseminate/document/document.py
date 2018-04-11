@@ -11,6 +11,7 @@ import os.path
 from ..ast import process_ast, process_paragraphs, process_typography
 from ..templates import get_template
 from ..header import load_yaml_header
+from ..tags import Tag
 from ..macros import replace_macros
 from ..convert import convert
 from ..labels import LabelManager
@@ -274,6 +275,27 @@ class Document(object):
 
         return self.targets[target]
 
+    def documents_list(self, document=None):
+        """Produce a list of a document and all its sub-documents.
+
+        Parameters
+        ----------
+        document : :obj:`disseminate.Document`, optional
+            The document for which to create the document list.
+
+        Returns
+        -------
+        document_list : list of :obj:`disseminate.Document`
+            An ordered list of documents.
+        """
+        document = self if document is None else document
+        doc_list = [document]
+
+        for doc in document.sub_documents.values():
+            doc_list += self.documents_list(doc)
+
+        return doc_list
+
     def reset_contexts(self):
         """Clear and repopulate the local_context and global_context.
 
@@ -300,6 +322,10 @@ class Document(object):
           4. short: the short title of a document.
           5. toc: the kind of table-of-contents to render for a document.
           6. template: the template file to use in rendering a document.
+          7. render: the specific render mode.
+             - single: render only the given document (default)
+             - collection: include all sub-documents in the render--i.e. for
+               a book.
         """
         # Remove everything from the context dict except for objects that
         # need to be preserved between documents, like the label_manager and
@@ -314,7 +340,7 @@ class Document(object):
 
         # Copy over the context values from parent context. The excluded_items
         # do not pertain to sub-documents.
-        excluded_items = ('include', 'title', 'short')
+        excluded_items = ('include', 'title', 'short', 'render')
         if self._parent_context is not None:
             for k, v in self._parent_context.items():
                 if k in excluded_items:
@@ -511,6 +537,87 @@ class Document(object):
 
         return self._ast
 
+    def get_grouped_asts(self, target, reload=False):
+        """Group the ASTs for the given document and sub-documents for the given
+        target.
+
+        Parameters
+        ----------
+        target : str
+            Only include ASTs for the document and sub-documents that have this
+            target in their target_list.
+        reload : bool, str
+            If True, force the reload of the AST.
+
+        Returns
+        -------
+        ast : list or :obj:`disseminate.tag.Tag`
+            A root tag object for the AST.
+         """
+        asts = []
+
+        # Load the ASTs for all documents
+        self.get_ast()
+
+        # Get a listing of all documents in order.
+        documents = self.documents_list()
+
+        # Remove documents that don't have the target listed in their target_list
+        documents = [d for d in documents if target in d.target_list]
+
+        # Group the ASTs
+        for doc in documents:
+            ast = doc.get_ast()
+
+            # Unwrap the root tag, if present
+            if isinstance(ast, Tag) and ast.name == 'root':
+                ast = ast.content
+
+            if isinstance(ast, list):
+                asts += ast
+            else:
+                asts.append(ast)
+
+        # Wrap the ast in a root tag
+        root = Tag(name='root', content=asts, attributes=None,
+                   context=self.context)
+        return root
+
+    def render_required(self, target_filepath):
+        """Evaluate whether a render is required.
+
+        Parameters
+        ----------
+        target_filepath : The render path for the target file.
+
+        Returns
+        -------
+        render_required : bool
+            True, if a render is required.
+            False if a render isn't required.
+        """
+        render_mode = self.context.get('render', 'single')
+
+        # Render is required if the target_filepath doesn't exist
+        if not os.path.isfile(target_filepath):
+            return True
+
+        # Get the modification time for the source file(s) (src_filepath)
+        if render_mode == 'collection':
+            # Get the latest modification time for the source files
+            mtimes = map(lambda x: os.path.getmtime(x.src_filepath),
+                         self.documents_list())
+            src_mtime = max(mtimes)
+        else:
+            src_mtime = os.path.getmtime(self.src_filepath)
+
+        # Get the modification for the target file (target_filepath)
+        target_mtime = os.path.getmtime(target_filepath)
+
+        # Evaluate whether the src_filepath mtime is newer than the
+        # target_filepath
+        return src_mtime > target_mtime
+
     def render(self, targets=None, create_dirs=settings.create_dirs,
                update_only=True):
         """Render the document to one or more target formats.
@@ -560,20 +667,25 @@ class Document(object):
 
             # Skip if we should update_only and the src_filepath is older
             # than the target_filepath, if target_filepath exists.
-            if (update_only and
-                os.path.isfile(target_filepath) and
-                (os.path.getmtime(self.src_filepath) <
-                 os.path.getmtime(target_filepath))):
+            if update_only and not self.render_required(target_filepath):
                 continue
+
+            # Get the ast
+            if 'collection' == self.context.get('render', None):
+                ast = self.get_grouped_asts(target=target)
+            else:
+                ast = self.get_ast()
 
             # Determine whether it's a compiled target or uncompiled target
             if target in settings.compiled_exts:
                 self.render_compiled(target=target,
                                      target_filepath=target_filepath,
-                                     targets=targets)
+                                     targets=targets,
+                                     ast=ast)
             else:
                 self.render_uncompiled(target=target,
-                                       target_filepath=target_filepath)
+                                       target_filepath=target_filepath,
+                                       ast=ast)
 
         return True
 
