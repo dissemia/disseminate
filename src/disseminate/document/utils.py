@@ -111,8 +111,10 @@ def translate_path(path, documents):
         if os.path.isfile(src_filepath):
             return src_filepath
 
-        # Get the target for the document
-        targets = document.target_list
+        # Get all the targets for the document and sub-documents
+        targets = set()
+        for subdoc in document.documents_list():
+            targets.update(subdoc.target_list)
 
         for target in targets:
             # Strip the target name of the preceeding period

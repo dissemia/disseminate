@@ -84,7 +84,11 @@ li.li-document-level-1 {
     content: " - ";
 }
 
-.author {
+span.paragraph {
+    margin-right: 0;
+}
+
+.byline {
     display: block;
     text-align: center;
     font-size: 1.3rem;

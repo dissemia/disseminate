@@ -5,7 +5,7 @@ from .core import Tag
 from ..attributes import get_attribute_value, remove_attribute
 
 
-toc_levels = ('section', 'subsection', 'subsubsection')
+toc_levels = ('chapter', 'section', 'subsection', 'subsubsection')
 
 
 class Heading(Tag):
@@ -38,6 +38,15 @@ class Heading(Tag):
         # Add newlines around headings
         tex = super(Heading, self).tex(level, mathmode)
         return "\n" + tex + "\n\n"
+
+
+class Chapter(Heading):
+    """A section heading tag."""
+    aliases = ("h1", "title" )
+    html_name = "h1"
+    tex_name = "chapter"
+    active = True
+    include_paragraphs = False
 
 
 class Section(Heading):

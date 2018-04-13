@@ -112,6 +112,12 @@ label_formats = {'figure_label': 'Fig. {document_number}.{number}.',
 #: Default separator for labels. (ex: the period at the end of Fig. 1.)
 label_sep = '.'
 
+#: Macros
+#: ------
+
+#: A list of entries in the context that are created into macros
+custom_macros = ('title', 'author')
+
 #: HTTP Server
 #: -----------
 

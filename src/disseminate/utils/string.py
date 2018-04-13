@@ -36,6 +36,41 @@ def find_basestring(strings):
     return base
 
 
+def str_to_list(string, delimiter=','):
+    """Convert a string (or list) into a split list of strings.
+
+    Parameters
+    ----------
+    string : str
+        The string to split into a list.
+    delimiter : str, optional
+        The optional delimiter used to split pieces of a string.
+
+    Returns
+    -------
+    split_list
+        A list of strings split by delimiter and spaces.
+
+    Examples
+    --------
+    >>> str_to_list("my friend, the robot")
+    ['my friend', 'the robot']
+    >>> str_to_list(['my friend', ' the robot'])
+    ['my friend', 'the robot']
+    """
+    # Convert the string to a list
+    if isinstance(string, str):
+        lst = [string]
+    elif hasattr(string, '__iter__'):
+        lst = list(string)
+
+    # Breakup the pieces by delimiter
+    returned_list = []
+    for item in lst:
+        returned_list += [s.strip() for s in item.split(delimiter)]
+    return returned_list
+
+
 class Metastring(str):
     """A string class that holds metadata.
 

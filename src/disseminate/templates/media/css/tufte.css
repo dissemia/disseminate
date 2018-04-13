@@ -71,7 +71,11 @@ sub,sup {
     content: " - ";
 }
 
-.author {
+span.paragraph {
+    margin-right: 0;
+}
+
+.byline {
     display: block;
     font-size: 1.5rem;
     padding: 0 0 1.5rem 0;

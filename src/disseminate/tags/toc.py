@@ -196,7 +196,7 @@ class Toc(Tag):
             labels = label_manager.get_labels(document=document,
                                               kinds='heading')
 
-            last_heading_level = 0
+            last_heading_level = None
             current_toc_level = 0
 
             # Setup the ordering function. This ordering function is setup so
@@ -208,9 +208,12 @@ class Toc(Tag):
                 nonlocal last_heading_level
                 nonlocal current_toc_level
                 heading_level = heading_toc_levels.index(label.kind[-1])
-                if heading_level > last_heading_level:
+
+                if last_heading_level is None:  # Start at base level
+                    current_toc_level = 0
+                elif heading_level > last_heading_level:  # Increase level
                     current_toc_level += 1
-                elif heading_level < last_heading_level:
+                elif heading_level < last_heading_level:  # Decrease level
                     current_toc_level -= 1
                 last_heading_level = heading_level
                 return current_toc_level
@@ -247,7 +250,7 @@ class Toc(Tag):
             doc_toc_levels = tuple(sorted(doc_toc_levels))
             merged_toc_levels = doc_toc_levels + heading_toc_levels
 
-            last_doc_level = 0
+            last_doc_level = None
             current_toc_level = 0
 
             # Setup the ordering function. This ordering function is setup so
@@ -260,9 +263,12 @@ class Toc(Tag):
                 nonlocal current_toc_level
                 specific_kind = label.kind[-1]
                 doc_level = merged_toc_levels.index(specific_kind)
-                if doc_level > last_doc_level:
+
+                if last_doc_level is None:  # Start at the base level
+                    current_toc_level = 0
+                elif doc_level > last_doc_level:  # Increase by 1 level
                     current_toc_level += 1
-                elif doc_level < last_doc_level:
+                elif doc_level < last_doc_level:  # Decrease by 1 level
                     current_toc_level -= 1
                 last_doc_level = doc_level
                 return current_toc_level

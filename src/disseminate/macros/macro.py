@@ -5,6 +5,7 @@ import regex
 
 from .science import *
 from ..utils.string import Metastring
+from .. import settings
 
 
 re_macro = regex.compile(r"(?P<macro>@\w+)")
@@ -59,6 +60,11 @@ def replace_macros(s, context):
 
         globals()['_submodule_macros'] = submodule_macros
     macros.update(submodule_macros)
+
+    # Add custom macro entries like title and author.
+    for entry in settings.custom_macros:
+        if entry in context:
+            macros['@' + entry] = context[entry]
 
     # See if the context already has a dict of macros. These will
     # potentially overwrite the submodule_macros.
