@@ -60,37 +60,37 @@ def test_toc_heading_html(tmpdir):
 
     key = """<ol class="toc-heading">
   <li class="li-section">
-    <a class="section-ref" href="/file1.html#">Heading 1</a>
+    <a class="section-ref" href="/file1.html#section:heading-1">Heading 1</a>
   </li>
   <li class="li-section">
-    <a class="section-ref" href="/file1.html#">Heading 2</a>
+    <a class="section-ref" href="/file1.html#section:heading-2">Heading 2</a>
   </li>
   <ol class="toc-level-2">
     <li class="li-subsection">
-      <a class="subsection-ref" href="/file1.html#">sub-Heading 2.1</a>
+      <a class="subsection-ref" href="/file1.html#subsection:sub-heading-2-1">sub-Heading 2.1</a>
     </li>
     <li class="li-subsection">
-      <a class="subsection-ref" href="/file1.html#">sub-Heading 2.2</a>
+      <a class="subsection-ref" href="/file1.html#subsection:sub-heading-2-2">sub-Heading 2.2</a>
     </li>
     <ol class="toc-level-3">
       <li class="li-subsubsection">
-        <a class="subsubsection-ref" href="/file1.html#">sub-sub-Header 2.2.1</a>
+        <a class="subsubsection-ref" href="/file1.html#subsubsection:sub-sub-header-2-2-1">sub-sub-Header 2.2.1</a>
       </li>
     </ol>
     <li class="li-subsection">
-      <a class="subsection-ref" href="/file1.html#">sub-Heading 2.3</a>
+      <a class="subsection-ref" href="/file1.html#subsection:sub-heading-2-3">sub-Heading 2.3</a>
     </li>
   </ol>
   <li class="li-section">
-    <a class="section-ref" href="/file1.html#">Heading 3</a>
+    <a class="section-ref" href="/file1.html#section:heading-3">Heading 3</a>
   </li>
   <ol class="toc-level-2">
     <li class="li-subsubsection">
-      <a class="subsubsection-ref" href="/file1.html#">sub-sub-header 3.1.1</a>
+      <a class="subsubsection-ref" href="/file1.html#subsubsection:sub-sub-header-3-1-1">sub-sub-header 3.1.1</a>
     </li>
   </ol>
   <li class="li-section">
-    <a class="section-ref" href="/file1.html#">Heading 4</a>
+    <a class="section-ref" href="/file1.html#section:heading-4">Heading 4</a>
   </li>
 </ol>
 """
@@ -150,6 +150,7 @@ def test_toc_heading_tex(tmpdir):
     # The 'tests/tags/toc_example1' directory contains one markup in the root
     # directory, file1.dm, and two files, file21.dm and file22.dm, in the
     # 'sub' sub-directory. file1.dm includes file21.dm and file22.dm
+    # None of these files have explicit header ids, so generic ones are created.
     doc = Document('tests/tags/toc_example1/file1.dm',
                    target_root=target_root)
 
@@ -158,21 +159,21 @@ def test_toc_heading_tex(tmpdir):
               context=doc.context)
 
     key = """\\begin{toclist}
-  \\item Heading 1
-  \\item Heading 2
+  \\item \\hyperref[section:heading-1]{Heading 1}
+  \\item \\hyperref[section:heading-2]{Heading 2}
   \\begin{toclist}
-    \\item sub-Heading 2.1
-    \\item sub-Heading 2.2
+    \\item \\hyperref[subsection:sub-heading-2-1]{sub-Heading 2.1}
+    \\item \\hyperref[subsection:sub-heading-2-2]{sub-Heading 2.2}
     \\begin{toclist}
-      \\item sub-sub-Header 2.2.1
+      \\item \\hyperref[subsubsection:sub-sub-header-2-2-1]{sub-sub-Header 2.2.1}
     \\end{toclist}
-    \\item sub-Heading 2.3
+    \\item \\hyperref[subsection:sub-heading-2-3]{sub-Heading 2.3}
   \\end{toclist}
-  \\item Heading 3
+  \\item \\hyperref[section:heading-3]{Heading 3}
   \\begin{toclist}
-    \\item sub-sub-header 3.1.1
+    \\item \\hyperref[subsubsection:sub-sub-header-3-1-1]{sub-sub-header 3.1.1}
   \\end{toclist}
-  \\item Heading 4
+  \\item \\hyperref[section:heading-4]{Heading 4}
 \\end{toclist}
 """
     assert key == toc.tex()
@@ -189,12 +190,12 @@ def test_toc_heading_tex(tmpdir):
               context=doc.context)
 
     key = """\\begin{toclist}
-  \\item \\hyperlink{heading-1}{Heading 1}
-  \\item \\hyperlink{heading-2}{Heading 2}
+  \\item \\hyperref[heading-1]{Heading 1}
+  \\item \\hyperref[heading-2]{Heading 2}
   \\begin{toclist}
-    \\item \\hyperlink{subheading-2}{sub-Heading 2}
+    \\item \\hyperref[subheading-2]{sub-Heading 2}
   \\end{toclist}
-  \\item \\hyperlink{heading-3}{Heading 3}
+  \\item \\hyperref[heading-3]{Heading 3}
 \\end{toclist}
 """
     assert key == toc.tex()
@@ -204,7 +205,7 @@ def test_toc_heading_tex(tmpdir):
               context=doc.context)
 
     key = """\\begin{toclist}
-  \\item \\hyperlink{heading-1}{Heading 1}
+  \\item \\hyperref[heading-1]{Heading 1}
 \\end{toclist}
 """
     assert key == toc.tex()
@@ -258,37 +259,37 @@ def test_toc_document_html(tmpdir):
   </li>
   <ol class="toc-level-2">
     <li class="li-section">
-      <a class="section-ref" href="/file1.html#">Heading 1</a>
+      <a class="section-ref" href="/file1.html#section:heading-1">Heading 1</a>
     </li>
     <li class="li-section">
-      <a class="section-ref" href="/file1.html#">Heading 2</a>
+      <a class="section-ref" href="/file1.html#section:heading-2">Heading 2</a>
     </li>
     <ol class="toc-level-3">
       <li class="li-subsection">
-        <a class="subsection-ref" href="/file1.html#">sub-Heading 2.1</a>
+        <a class="subsection-ref" href="/file1.html#subsection:sub-heading-2-1">sub-Heading 2.1</a>
       </li>
       <li class="li-subsection">
-        <a class="subsection-ref" href="/file1.html#">sub-Heading 2.2</a>
+        <a class="subsection-ref" href="/file1.html#subsection:sub-heading-2-2">sub-Heading 2.2</a>
       </li>
       <ol class="toc-level-4">
         <li class="li-subsubsection">
-          <a class="subsubsection-ref" href="/file1.html#">sub-sub-Header 2.2.1</a>
+          <a class="subsubsection-ref" href="/file1.html#subsubsection:sub-sub-header-2-2-1">sub-sub-Header 2.2.1</a>
         </li>
       </ol>
       <li class="li-subsection">
-        <a class="subsection-ref" href="/file1.html#">sub-Heading 2.3</a>
+        <a class="subsection-ref" href="/file1.html#subsection:sub-heading-2-3">sub-Heading 2.3</a>
       </li>
     </ol>
     <li class="li-section">
-      <a class="section-ref" href="/file1.html#">Heading 3</a>
+      <a class="section-ref" href="/file1.html#section:heading-3">Heading 3</a>
     </li>
     <ol class="toc-level-3">
       <li class="li-subsubsection">
-        <a class="subsubsection-ref" href="/file1.html#">sub-sub-header 3.1.1</a>
+        <a class="subsubsection-ref" href="/file1.html#subsubsection:sub-sub-header-3-1-1">sub-sub-header 3.1.1</a>
       </li>
     </ol>
     <li class="li-section">
-      <a class="section-ref" href="/file1.html#">Heading 4</a>
+      <a class="section-ref" href="/file1.html#section:heading-4">Heading 4</a>
     </li>
   </ol>
   <li class="li-document-level-2">
@@ -312,37 +313,37 @@ def test_toc_document_html(tmpdir):
   </li>
   <ol class="toc-level-2">
     <li class="li-section">
-      <a class="section-ref" href="/file1.html#">Heading 1</a>
+      <a class="section-ref" href="/file1.html#section:heading-1">Heading 1</a>
     </li>
     <li class="li-section">
-      <a class="section-ref" href="/file1.html#">Heading 2</a>
+      <a class="section-ref" href="/file1.html#section:heading-2">Heading 2</a>
     </li>
     <ol class="toc-level-3">
       <li class="li-subsection">
-        <a class="subsection-ref" href="/file1.html#">sub-Heading 2.1</a>
+        <a class="subsection-ref" href="/file1.html#subsection:sub-heading-2-1">sub-Heading 2.1</a>
       </li>
       <li class="li-subsection">
-        <a class="subsection-ref" href="/file1.html#">sub-Heading 2.2</a>
+        <a class="subsection-ref" href="/file1.html#subsection:sub-heading-2-2">sub-Heading 2.2</a>
       </li>
       <ol class="toc-level-4">
         <li class="li-subsubsection">
-          <a class="subsubsection-ref" href="/file1.html#">sub-sub-Header 2.2.1</a>
+          <a class="subsubsection-ref" href="/file1.html#subsubsection:sub-sub-header-2-2-1">sub-sub-Header 2.2.1</a>
         </li>
       </ol>
       <li class="li-subsection">
-        <a class="subsection-ref" href="/file1.html#">sub-Heading 2.3</a>
+        <a class="subsection-ref" href="/file1.html#subsection:sub-heading-2-3">sub-Heading 2.3</a>
       </li>
     </ol>
     <li class="li-section">
-      <a class="section-ref" href="/file1.html#">Heading 3</a>
+      <a class="section-ref" href="/file1.html#section:heading-3">Heading 3</a>
     </li>
     <ol class="toc-level-3">
       <li class="li-subsubsection">
-        <a class="subsubsection-ref" href="/file1.html#">sub-sub-header 3.1.1</a>
+        <a class="subsubsection-ref" href="/file1.html#subsubsection:sub-sub-header-3-1-1">sub-sub-header 3.1.1</a>
       </li>
     </ol>
     <li class="li-section">
-      <a class="section-ref" href="/file1.html#">Heading 4</a>
+      <a class="section-ref" href="/file1.html#section:heading-4">Heading 4</a>
     </li>
   </ol>
   <li class="li-document-level-2">
@@ -387,10 +388,10 @@ def test_toc_document_tex(tmpdir):
               context=doc.context)
 
     key = """\\begin{toclist}
-  \\item \\hyperlink{doc:file1.dm}{tests/tags/toc_example1/file1}
+  \\item \\hyperref[doc:file1.dm]{tests/tags/toc_example1/file1}
   \\begin{toclist}
-    \\item \\hyperlink{doc:sub/file21.dm}{tests/tags/toc_example1/sub/file21}
-    \\item \\hyperlink{doc:sub/file22.dm}{tests/tags/toc_example1/sub/file22}
+    \\item \\hyperref[doc:sub/file21.dm]{tests/tags/toc_example1/sub/file21}
+    \\item \\hyperref[doc:sub/file22.dm]{tests/tags/toc_example1/sub/file22}
   \\end{toclist}
 \\end{toclist}
 """

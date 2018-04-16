@@ -1,6 +1,7 @@
 """
 String manipulation operations.
 """
+from slugify import slugify
 
 
 def find_basestring(strings):

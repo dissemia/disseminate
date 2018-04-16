@@ -38,7 +38,10 @@ class Pdflatex(Converter):
         # Setup the command and run in
         args = [pdflatex_exec, "-interaction=nonstopmode",
                 "-output-directory="+temp_dir, self.src_filepath.value_string]
-        self.run(args, env=env, raise_error=True)
+
+        # Run twice
+        for i in range(2):
+            self.run(args, env=env, raise_error=True)
 
         # Copy the processed file to the target
         try:

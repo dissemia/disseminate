@@ -71,7 +71,7 @@ setup(
     keywords='document processor academic publishing',
     packages=find_packages("src"),
     package_dir={"": "src"},
-    install_requires=['regex', 'jinja2', 'pyyaml', 'lxml'],
+    install_requires=['regex', 'jinja2', 'pyyaml', 'lxml', 'python-slugify'],
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc'],
         'test': ['pytest', 'tox', 'coverage'],
