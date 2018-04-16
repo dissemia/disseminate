@@ -275,6 +275,36 @@ class Label(object):
             # Otherwise just return the text
             return ref_str.format(**kwargs)
 
+    def pageref(self, target, pageref_str=None):
+        """A page reference to a label.
+
+        This only pertains to media that generate pages, like pdfs and latex.
+
+        Parameters
+        ----------
+        target : str
+            The target format for the generated reference.
+            (ex: '.html', '.tex')
+        pageref_str : str or None, optional
+            If a format_str is given, it will be used rather than the one
+            returned from this class's format_str method for the reference.
+
+        Returns
+        -------
+        pageref : str
+            The pagereference.
+        """
+        if pageref_str is None and target != '.html':
+            pageref_str = self.format_str(name='pageref', target=target)
+
+        kwargs = self.format_kwargs()
+
+        # Get the pageref
+        if target == '.html':
+            return ''
+        else:
+            return pageref_str.format(**kwargs)
+
 
 class LabelManager(object):
     """Manage labels and references.

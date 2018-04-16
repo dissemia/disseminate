@@ -105,6 +105,7 @@ label_formats = {'figure_label': 'Fig. {document_number}.{number}.',
                  'default_label': '{short}',
                  'default_label_tex': '\\label{{{id}}}',
                  'default_ref': '{short}',
+                 'default_pageref_tex': '\\pageref{{{id}}}',
                  'default_link_tex': '\\hyperref[{id}]{{{content}}}',
                  'default_link_html': '/{filepath}'
                  }
@@ -117,6 +118,14 @@ label_sep = '.'
 
 #: A list of entries in the context that are created into macros
 custom_macros = ('title', 'author')
+
+#: Specific Tag options
+#: --------------------
+
+toc_listing = 'toclist'
+toc_pageref_width = '5ex'
+toc_bolded_kinds = ('part', 'chapter')
+toc_dotted_kinds = ('section', 'subsection', 'subsubsection')
 
 #: HTTP Server
 #: -----------

@@ -8,6 +8,7 @@ from lxml import etree
 
 from .headings import toc_levels as heading_toc_levels
 from .core import Tag
+from .. import settings
 
 
 class TocError(Exception):
@@ -80,8 +81,31 @@ def tree_to_html(elements, context, tag='ol', level=1):
     return E(tag, *returned_elements, **kwargs)
 
 
-def tree_to_tex(elements, context, level=1, listing='toclist'):
-    """Convert a nested tree to tex."""
+def tree_to_tex(elements, context, level=1,
+                listing=settings.toc_listing,
+                pageref_width=settings.toc_pageref_width,
+                bolded_kinds=settings.toc_bolded_kinds,
+                dotted_kinds=settings.toc_dotted_kinds):
+    """Convert a nested tree to tex.
+
+    Parameters
+    ----------
+    elements : list of :obj:`disseminate.labels.Label`
+        A nested list of label objects.
+    context : dict
+        The document's context dict.
+    level : int, optional
+        The toc entry level, starting at 1.
+    listing : str, optional
+        The type of latex list environment to use.
+    pageref_width : str, optional
+        The width reserved for the page number in the pageref
+    bolded_kinds : tuple of str, optional
+        These entries will be bolded.
+    dotted_kinds : tuple of str, optional
+        When placing the pageref of latex entries, either an \hfill or \dotfill
+        is used. The \dotfill will be used for labels of the given kind.
+    """
     returned_elements = []
     for e in elements:
         if isinstance(e, tuple) and len(e) == 2:
@@ -90,9 +114,22 @@ def tree_to_tex(elements, context, level=1, listing='toclist'):
         if isinstance(e, list):
             returned_elements.append(tree_to_tex(e, context, level+1))
         else:
-            returned_elements.append("  " * level + "\item " +
-                                     e.ref(target='.tex') +
-                                     "\n")
+            # Prepare the entry
+            entry = "  " * level
+            entry += "\\item "
+            if e.kind[-1] in bolded_kinds:
+                entry += "\\textbf{"
+            entry += e.ref(target='.tex')
+            entry += (" \\dotfill " if e.kind[-1] in dotted_kinds
+                      else " \\hfill ")
+            entry += "\\makebox[" + pageref_width + "][r]{"
+            entry += e.pageref(target='.tex')
+            entry += "}"
+            if e.kind[-1] in bolded_kinds:
+                entry += "}"
+            entry += "\n"
+
+            returned_elements.append(entry)
 
     if returned_elements:
         return ("  " * (level - 1) + "\\begin{{{}}}\n".format(listing) +

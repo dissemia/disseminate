@@ -159,21 +159,21 @@ def test_toc_heading_tex(tmpdir):
               context=doc.context)
 
     key = """\\begin{toclist}
-  \\item \\hyperref[section:heading-1]{Heading 1}
-  \\item \\hyperref[section:heading-2]{Heading 2}
+  \\item \\hyperref[section:heading-1]{Heading 1} \\dotfill \\makebox[5ex][r]{\\pageref{section:heading-1}}
+  \\item \\hyperref[section:heading-2]{Heading 2} \\dotfill \\makebox[5ex][r]{\\pageref{section:heading-2}}
   \\begin{toclist}
-    \\item \\hyperref[subsection:sub-heading-2-1]{sub-Heading 2.1}
-    \\item \\hyperref[subsection:sub-heading-2-2]{sub-Heading 2.2}
+    \\item \\hyperref[subsection:sub-heading-2-1]{sub-Heading 2.1} \\dotfill \\makebox[5ex][r]{\\pageref{subsection:sub-heading-2-1}}
+    \\item \\hyperref[subsection:sub-heading-2-2]{sub-Heading 2.2} \\dotfill \\makebox[5ex][r]{\\pageref{subsection:sub-heading-2-2}}
     \\begin{toclist}
-      \\item \\hyperref[subsubsection:sub-sub-header-2-2-1]{sub-sub-Header 2.2.1}
+      \\item \\hyperref[subsubsection:sub-sub-header-2-2-1]{sub-sub-Header 2.2.1} \\dotfill \\makebox[5ex][r]{\\pageref{subsubsection:sub-sub-header-2-2-1}}
     \\end{toclist}
-    \\item \\hyperref[subsection:sub-heading-2-3]{sub-Heading 2.3}
+    \\item \\hyperref[subsection:sub-heading-2-3]{sub-Heading 2.3} \\dotfill \\makebox[5ex][r]{\\pageref{subsection:sub-heading-2-3}}
   \\end{toclist}
-  \\item \\hyperref[section:heading-3]{Heading 3}
+  \\item \\hyperref[section:heading-3]{Heading 3} \\dotfill \\makebox[5ex][r]{\\pageref{section:heading-3}}
   \\begin{toclist}
-    \\item \\hyperref[subsubsection:sub-sub-header-3-1-1]{sub-sub-header 3.1.1}
+    \\item \\hyperref[subsubsection:sub-sub-header-3-1-1]{sub-sub-header 3.1.1} \\dotfill \\makebox[5ex][r]{\\pageref{subsubsection:sub-sub-header-3-1-1}}
   \\end{toclist}
-  \\item \\hyperref[section:heading-4]{Heading 4}
+  \\item \\hyperref[section:heading-4]{Heading 4} \\dotfill \\makebox[5ex][r]{\\pageref{section:heading-4}}
 \\end{toclist}
 """
     assert key == toc.tex()
@@ -190,12 +190,12 @@ def test_toc_heading_tex(tmpdir):
               context=doc.context)
 
     key = """\\begin{toclist}
-  \\item \\hyperref[heading-1]{Heading 1}
-  \\item \\hyperref[heading-2]{Heading 2}
+  \\item \\hyperref[heading-1]{Heading 1} \\dotfill \\makebox[5ex][r]{\\pageref{heading-1}}
+  \\item \\hyperref[heading-2]{Heading 2} \\dotfill \\makebox[5ex][r]{\\pageref{heading-2}}
   \\begin{toclist}
-    \\item \\hyperref[subheading-2]{sub-Heading 2}
+    \\item \\hyperref[subheading-2]{sub-Heading 2} \\dotfill \\makebox[5ex][r]{\\pageref{subheading-2}}
   \\end{toclist}
-  \\item \\hyperref[heading-3]{Heading 3}
+  \\item \\hyperref[heading-3]{Heading 3} \\dotfill \\makebox[5ex][r]{\\pageref{heading-3}}
 \\end{toclist}
 """
     assert key == toc.tex()
@@ -205,7 +205,7 @@ def test_toc_heading_tex(tmpdir):
               context=doc.context)
 
     key = """\\begin{toclist}
-  \\item \\hyperref[heading-1]{Heading 1}
+  \\item \\hyperref[heading-1]{Heading 1} \\dotfill \\makebox[5ex][r]{\\pageref{heading-1}}
 \\end{toclist}
 """
     assert key == toc.tex()
@@ -388,10 +388,10 @@ def test_toc_document_tex(tmpdir):
               context=doc.context)
 
     key = """\\begin{toclist}
-  \\item \\hyperref[doc:file1.dm]{tests/tags/toc_example1/file1}
+  \\item \\hyperref[doc:file1.dm]{tests/tags/toc_example1/file1} \\hfill \\makebox[5ex][r]{\\pageref{doc:file1.dm}}
   \\begin{toclist}
-    \\item \\hyperref[doc:sub/file21.dm]{tests/tags/toc_example1/sub/file21}
-    \\item \\hyperref[doc:sub/file22.dm]{tests/tags/toc_example1/sub/file22}
+    \\item \\hyperref[doc:sub/file21.dm]{tests/tags/toc_example1/sub/file21} \\hfill \\makebox[5ex][r]{\\pageref{doc:sub/file21.dm}}
+    \\item \\hyperref[doc:sub/file22.dm]{tests/tags/toc_example1/sub/file22} \\hfill \\makebox[5ex][r]{\\pageref{doc:sub/file22.dm}}
   \\end{toclist}
 \\end{toclist}
 """
