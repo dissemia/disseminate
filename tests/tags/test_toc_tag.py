@@ -2,6 +2,7 @@
 Test the TOC tag.
 """
 from lxml.html import etree
+from lxml.builder import E
 
 from disseminate import Document
 from disseminate.tags.toc import Toc, process_context_toc
@@ -142,6 +143,54 @@ def test_toc_heading_html(tmpdir):
     assert key == html
 
 
+def test_toc_header_html(tmpdir):
+    """Test the creation of a chapter header for TOCs in html."""
+
+    # Setup paths
+    target_root = str(tmpdir)
+
+    # The 'tests/tags/toc_example2' directory contains three markup files:
+    # file1.dm, file2.dm and file3.dm. The 'file1.dm' includes 'file2.dm' and
+    # 'file3.dm' The 'file2.dm' has a header and a sub-header.
+    # This test has headers with id anchors specified.
+    doc = Document('tests/tags/toc_example2/file1.dm',
+                   target_root=target_root)
+
+    # Create a toc for the root document, file1.dm, only.
+    toc = Toc(name='toc', content='headings', attributes=tuple(),
+              context=doc.context)
+
+    key = """<ol class="toc-heading">
+  <li class="li-section">
+    <a class="section-ref" href="/file1.html#heading-1">Heading 1</a>
+  </li>
+</ol>
+"""
+    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
+    assert key == html
+
+    # Now try adding the header
+    toc = Toc(name='toc', content='headings', attributes=('header'),
+              context=doc.context)
+
+    key = """<div>
+  <h1>Table of Contents</h1>
+  <ol class="toc-heading">
+    <li class="li-section">
+      <a class="section-ref" href="/file1.html#heading-1">Heading 1</a>
+    </li>
+  </ol>
+</div>
+"""
+    e = E('div', *toc.html())
+    html = etree.tostring(e, pretty_print=True).decode('utf-8')
+    assert key == html
+
+    # Make sure a label was not created for the heading
+    label_manager = doc.context['label_manager']
+    assert len(label_manager.get_labels(kinds='chapter')) == 0
+
+
 def test_toc_heading_tex(tmpdir):
     """Test the generation of tocs from headings for tex"""
     # Setup paths
@@ -209,6 +258,49 @@ def test_toc_heading_tex(tmpdir):
 \\end{toclist}
 """
     assert key == toc.tex()
+
+
+def test_toc_header_tex(tmpdir):
+    """Test the creation of a chapter header for TOCs in tex."""
+
+    # Setup paths
+    target_root = str(tmpdir)
+
+    # The 'tests/tags/toc_example2' directory contains three markup files:
+    # file1.dm, file2.dm and file3.dm. The 'file1.dm' includes 'file2.dm' and
+    # 'file3.dm' The 'file2.dm' has a header and a sub-header.
+    # This test has headers with id anchors specified.
+    doc = Document('tests/tags/toc_example2/file1.dm',
+                   target_root=target_root)
+
+    # Create a toc for the root document, file1.dm, only.
+    toc = Toc(name='toc', content='headings', attributes=tuple(),
+              context=doc.context)
+
+    key = """\\begin{toclist}
+  \\item \\hyperref[heading-1]{Heading 1} \\dotfill \\makebox[5ex][r]{\\pageref{heading-1}}
+\\end{toclist}
+"""
+    tex = toc.tex()
+    assert key == tex
+
+    # Now try adding the header
+    toc = Toc(name='toc', content='headings', attributes=('header'),
+              context=doc.context)
+
+    key = """
+\\chapter{Table of Contents}
+
+\\begin{toclist}
+  \\item \\hyperref[heading-1]{Heading 1} \\dotfill \\makebox[5ex][r]{\\pageref{heading-1}}
+\\end{toclist}
+"""
+    tex = toc.tex()
+    assert key == tex
+
+    # Make sure a label was not created for the heading
+    label_manager = doc.context['label_manager']
+    assert len(label_manager.get_labels(kinds='chapter')) == 0
 
 
 def test_toc_document_html(tmpdir):

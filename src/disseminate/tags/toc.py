@@ -7,6 +7,8 @@ from lxml.builder import E
 from lxml import etree
 
 from .headings import toc_levels as heading_toc_levels
+from ..attributes import get_attribute_value, remove_attribute
+from ..tags.headings import Chapter
 from .core import Tag
 from .. import settings
 
@@ -158,11 +160,22 @@ class Toc(Tag):
 
     active = True
     toc_kind = None
+    header_tag = None
 
-    def __init__(self, *args, **kwargs):
-        super(Toc, self).__init__(*args, **kwargs)
+    def __init__(self, name, content, attributes, context):
+        super(Toc, self).__init__(name, content, attributes, context)
+
+        # Get the TOC's kind from the tag's content
         self.toc_kind = (self.content.strip() if isinstance(self.content, str)
                          else '')
+
+        # Setup the TOC header, if specified
+        header = get_attribute_value(self.attributes, 'header')
+        self.attributes = remove_attribute(self.attributes, 'header')
+
+        if header is not None:
+            self.header_tag = Chapter(name='TOC', content='Table of Contents',
+                                      attributes=('nolabel',), context=context)
 
     def construct_tree(self, labels, order_function):
         """Construct a toc tree for the given target.
@@ -337,6 +350,9 @@ class Toc(Tag):
             # Add the class to the HTML element
             if heading_type:
                 html.attrib['class'] = 'toc-' + heading_type
+
+            if self.header_tag is not None:
+                html = [self.header_tag.html(level+1), html]
         else:
             html = ''
 
@@ -360,6 +376,9 @@ class Toc(Tag):
             elements = self.construct_tree(labels=labels,
                                            order_function=order_function)
             tex = tree_to_tex(elements=elements, context=self.context)
+
+            if self.header_tag is not None:
+                tex = self.header_tag.tex(level+1) + tex
         else:
             tex = ''
 
