@@ -68,6 +68,5 @@
 (% if title %) \title{ (% if title_label %)(( title_label )) (( document_number )). (% endif %)(( title ))} (% endif %)
 (% if author %) \author{(( author ))} (% endif %)
 \begin{document}
-(% block title %)(% if title and author %)\maketitle(% endif %)(% endblock %)
 (( body ))
 \end{document}
