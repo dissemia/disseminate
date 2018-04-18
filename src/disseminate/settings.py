@@ -117,7 +117,7 @@ label_sep = '.'
 #: ------
 
 #: A list of entries in the context that are created into macros
-custom_macros = ('title', 'author')
+custom_macros = ('title',)
 
 #: Specific Tag options
 #: --------------------

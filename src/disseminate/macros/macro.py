@@ -65,6 +65,8 @@ def replace_macros(s, context):
     for entry in settings.custom_macros:
         if entry in context:
             macros['@' + entry] = context[entry]
+    macros['@author'] = '@authors{}'
+    macros['@authors'] = '@authors{}'
 
     # See if the context already has a dict of macros. These will
     # potentially overwrite the submodule_macros.
