@@ -1,8 +1,6 @@
 """
 Classes and functions for rendering documents.
 """
-from collections import OrderedDict
-from weakref import ref
 from tempfile import mkdtemp
 from shutil import rmtree
 import os
@@ -51,10 +49,11 @@ class Document(object):
         ex: 'src/chapter1/chapter1.dm'
     context : dict
         The context with values for the document.
-    sub_documents : :obj:`collections.OrderedDict`
+    sub_documents : dict
         A dict with the sub-documents included in this document. The keys are
         src_filepath values relative to the document's directory, and the values
-        are the sub_documents themselves.
+        are the sub_documents themselves. See the :meth:`documents_list` to get
+        an ordered list of documents.
 
     string_processors : list of functions, **class attribute**
         A list of functions to process the string before conversion to the
@@ -86,6 +85,7 @@ class Document(object):
     sub_documents = None
     _parent_context = None
     _label = None
+    _sub_documents_src_filepaths = None
     _target_root = None
     _target_list = None
     _temp_dir = None
@@ -102,11 +102,14 @@ class Document(object):
 
     def __init__(self, src_filepath, target_root=None, context=None):
         self.src_filepath = str(src_filepath)
-        self.sub_documents = OrderedDict()
+        self.sub_documents = dict()
         self.context = dict()
 
         self._parent_context = context
         src_path = os.path.split(self.src_filepath)[0]
+
+        # Set the src_filepaths of the document and sub-documents
+        self._sub_documents_src_filepaths = []
 
         # Set the target_root.
         # Otherwise use the directory above the src_path
@@ -123,10 +126,8 @@ class Document(object):
             # Otherwise just use the same directory as the src directory
             self._target_root = src_path
 
-        # Reset the local_context, dependencies and labels
+        # Reset the context
         self.reset_contexts()
-        self.reset_dependencies()
-        self.reset_labels()
 
         # The cached AST
         self._ast = None
@@ -164,11 +165,12 @@ class Document(object):
     @property
     def number(self):
         """The number of the document."""
-        if ('documents' in self.context and
-           self.src_filepath in self.context['documents']):
-
-            documents = list(self.context['documents'].keys())
-            return documents.index(self.src_filepath) + 1
+        # Get all documents from the root document
+        if 'root_document' in self.context:
+            root_document = self.context['root_document']
+            all_docs = root_document.documents_list(only_subdocuments=False,
+                                                    recursive=True)
+            return all_docs.index(self) + 1 if self in all_docs else None
         else:
             return None
 
@@ -196,7 +198,7 @@ class Document(object):
     def target_list(self):
         """The list of targets from the context."""
         # Refresh the context
-        #self.get_ast()
+        self.get_ast()
 
         # Get the targets from the context
         targets = self.context.get('targets', settings.document_target_list)
@@ -275,13 +277,20 @@ class Document(object):
 
         return self.targets[target]
 
-    def documents_list(self, document=None):
-        """Produce a list of a document and all its sub-documents.
+    def documents_list(self, document=None, only_subdocuments=False,
+                       recursive=False):
+        """Produce an ordered list of a document and all its sub-documents.
 
         Parameters
         ----------
         document : :obj:`disseminate.Document`, optional
             The document for which to create the document list.
+        only_subdocuments : bool, optional
+            If True, only the sub-documents will be returned (not this root
+            document or the document specified.
+        recursive : bool, optional
+            If True, the sub-documents of sub-documents are returned (in order)
+            in the list as well
 
         Returns
         -------
@@ -289,10 +298,19 @@ class Document(object):
             An ordered list of documents.
         """
         document = self if document is None else document
-        doc_list = [document]
+        doc_list = [document] if not only_subdocuments else []
 
-        for doc in document.sub_documents.values():
-            doc_list += self.documents_list(doc)
+        for src_filepath in document._sub_documents_src_filepaths:
+            if src_filepath not in self.sub_documents:
+                continue
+
+            doc = self.sub_documents[src_filepath]
+
+            if recursive:
+                doc_list += doc.documents_list(only_subdocuments=False,
+                                               recursive=recursive)
+            else:
+                doc_list.append(doc)
 
         return doc_list
 
@@ -309,11 +327,8 @@ class Document(object):
           4. target_root: the root directory (render path) for the document
              and sub-documents. The final target path includes a sub-directory
              for the target's extension.
-          5. documents: an :obj:`collections.OrderedDict` containing *all* of
-             the documents, including the root document (first item) and all
-             sub_documents. This is larger that the sub_documents attribute of
-             a document, since the sub_documents only contains the immediate
-             sub_documents of a document.
+          5. root_document: an :obj:`disseminate.Document` root document for
+             the project.
 
         Context variables that can be local to a document are:
           1. targets: a listing of target formats to render to.
@@ -331,7 +346,7 @@ class Document(object):
         # need to be preserved between documents, like the label_manager and
         # dependency_manager
         excluded_items = ('label_manager', 'dependency_manager',
-                          'project_root', 'target_root', 'documents')
+                          'project_root', 'target_root', 'root_document')
         context_keys = list(self.context.keys())
         for k in context_keys:
             if k in excluded_items:
@@ -369,11 +384,8 @@ class Document(object):
             dep = DependencyManager(project_root=self.project_root,
                                     target_root=self.target_root)
             self.context['dependency_manager'] = dep
-        if 'documents' not in self.context:
-            self.context['documents'] = OrderedDict()
-
-        # Add this document to the documents weak refs ordered dict
-        self.context['documents'][self.src_filepath] = ref(self)
+        if 'root_document' not in self.context:
+            self.context['root_document'] = self
 
     def reset_dependencies(self):
         """Clear and repopulate the dependencies for this document in the
@@ -404,6 +416,8 @@ class Document(object):
             # See if a label for this document exists already. If it doesn't,
             # create it.
             labels = label_manager.get_labels(document=self, kinds='document')
+
+            # Create the label, if it's not already in there
             if len(labels) == 0:
                 # Get the filepath for this document relative to the project_root,
                 # if possible
@@ -421,6 +435,9 @@ class Document(object):
 
     def load_sub_documents(self):
         """Load the sub-documents listed in the include of a local_context."""
+        # Reset the self._sub_documents_src_filepaths
+        self._sub_documents_src_filepaths.clear()
+
         if 'include' in self.context:
             src_filepaths = self.context['include']
             if isinstance(src_filepaths, str):
@@ -430,6 +447,10 @@ class Document(object):
             # Create missing documents
             current_src_filepath = os.path.split(self.src_filepath)[0]
             for src_filepath in src_filepaths:
+                # Add the src_filepath to the self._src_filepath
+                self._sub_documents_src_filepaths.append(src_filepath)
+
+                # Do nothing else if the document has already been created
                 if src_filepath in self.sub_documents:
                     continue
 
@@ -479,10 +500,6 @@ class Document(object):
         :obj:`disseminate.tag.Tag`
             A root tag object for the AST.
         """
-        # Run get_ast for the sub-documents
-        for document in self.sub_documents.values():
-            document.get_ast(reload=reload)
-
         # Check to make sure the file exists
         if not os.path.isfile(self.src_filepath):  # file must exist
             msg = "The source document '{}' must exist."
@@ -531,13 +548,21 @@ class Document(object):
                 ast = processor(ast=ast, context=self.context,
                                 src_filepath=self.src_filepath)
 
-            # Load the sub-documents
+            # Load the sub-documents. This is done after processing the string
+            # and ast since these may include sub-files, which should be read
+            # in before being loaded.
             self.load_sub_documents()
 
             # cache the ast
             self._ast = ast
             self._mtime = time
 
+        # Run get_ast for the sub-documents. This should be done after loading
+        # this document's AST since this document's header may have includes
+        for document in self.documents_list(only_subdocuments=True):
+            document.get_ast(reload=reload)
+
+        # Return this document's AST
         return self._ast
 
     def get_grouped_asts(self, target, reload=False):
@@ -562,10 +587,12 @@ class Document(object):
         # Load the ASTs for all documents
         self.get_ast()
 
-        # Get a listing of all documents in order.
-        documents = self.documents_list()
+        # Get a listing of all documents (recursively and including the root
+        # document) in order.
+        documents = self.documents_list(only_subdocuments=False, recursive=True)
 
-        # Remove documents that don't have the target listed in their target_list
+        # Remove documents that don't have the target listed in their
+        # target_list
         documents = [d for d in documents if target in d.target_list]
 
         # Group the ASTs
@@ -646,7 +673,7 @@ class Document(object):
 
         """
         # Process the sub-documents
-        for document in self.sub_documents.values():
+        for document in self.documents_list(only_subdocuments=True):
             document.render(targets=targets, create_dirs=create_dirs,
                             update_only=update_only)
 

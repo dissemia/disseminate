@@ -30,6 +30,51 @@ def test_basic_conversion_html(tmpdir):
         doc = Document("tests/document/missing.dm")
 
 
+def test_number_property(tmpdir):
+    """Tests the document number property."""
+    # Create a document tree.
+    src_path = tmpdir.join('src')
+    src_path.mkdir()
+
+    src_filepath1 = src_path.join('file1.dm')
+    src_filepath2 = src_path.join('file2.dm')
+    src_filepath3 = src_path.join('file3.dm')
+
+    src_filepath1.write("""---
+include:
+  file2.dm
+  file3.dm
+---""")
+    src_filepath2.ensure()
+    src_filepath3.ensure()
+
+    # 1. Load the root document
+    doc = Document(src_filepath=src_filepath1, target_root=str(tmpdir))
+
+    doc_list = doc.documents_list(only_subdocuments=False)
+    assert doc.number == 1
+    assert doc_list[0].src_filepath == str(src_filepath1)
+    assert doc_list[0].number == 1
+    assert doc_list[1].src_filepath == str(src_filepath2)
+    assert doc_list[1].number == 2
+    assert doc_list[2].src_filepath == str(src_filepath3)
+    assert doc_list[2].number == 3
+
+    # Reorder the documents and reload the ast.
+    src_filepath1.write("""---
+include:
+  file3.dm
+  file2.dm
+---""")
+    doc.get_ast()
+
+    doc_list = doc.documents_list(only_subdocuments=False)
+    assert doc.number == 1
+    assert doc_list[0].number == 1
+    assert doc_list[1].number == 2
+    assert doc_list[2].number == 3
+
+
 def test_ast_caching(tmpdir):
     """Tests the caching of the AST based on file modification times."""
     # Get a path to a temporary file
@@ -124,13 +169,24 @@ def test_documents_list():
     #    'sub1/subsub1/file111.dm'. All 3 files have content
     doc = Document('tests/document/example7/src/file1.dm')
 
-    docs = doc.documents_list()
-
+    # Get all files recursively, including the root document
+    docs = doc.documents_list(only_subdocuments=False, recursive=True)
     assert len(docs) == 3
     assert docs[0].src_filepath == 'tests/document/example7/src/file1.dm'
     assert docs[1].src_filepath == 'tests/document/example7/src/sub1/file11.dm'
     assert (docs[2].src_filepath ==
             'tests/document/example7/src/sub1/subsub1/file111.dm')
+
+    # Get only the sub-document and the root document
+    docs = doc.documents_list(only_subdocuments=False, recursive=False)
+    assert len(docs) == 2
+    assert docs[0].src_filepath == 'tests/document/example7/src/file1.dm'
+    assert docs[1].src_filepath == 'tests/document/example7/src/sub1/file11.dm'
+
+    # Get online the sub-document
+    docs = doc.documents_list(only_subdocuments=True, recursive=False)
+    assert len(docs) == 1
+    assert docs[0].src_filepath == 'tests/document/example7/src/sub1/file11.dm'
 
 
 def test_get_grouped_asts(tmpdir):
@@ -434,14 +490,14 @@ def test_document_tree(tmpdir):
                    target_root=str(tmpdir))
 
     assert len(doc.sub_documents) == 3  # Only sub_documents of doc
-    assert len(doc.context['documents']) == 5  # all sub_documents
+    assert len(doc.documents_list(recursive=True)) == 5  # all sub_documents
 
     sub_docs = list(doc.sub_documents.values())
     assert sub_docs[0].src_filepath == 'tests/document/example5/sub1/index.dm'
     assert sub_docs[1].src_filepath == 'tests/document/example5/sub2/index.dm'
     assert sub_docs[2].src_filepath == 'tests/document/example5/sub3/index.dm'
 
-    all_docs = [d() for d in doc.context['documents'].values()]
+    all_docs = doc.documents_list(recursive=True)
     assert all_docs[0].src_filepath == 'tests/document/example5/index.dm'
     assert all_docs[1].src_filepath == 'tests/document/example5/sub1/index.dm'
     assert all_docs[2].src_filepath == 'tests/document/example5/sub2/index.dm'
@@ -535,17 +591,52 @@ include:
     src_filepath2.ensure()
     src_filepath3.ensure()
 
-    # Load the root document
+    # 1. Load the root document
     doc = Document(src_filepath=src_filepath1, target_root=str(tmpdir))
 
     # There should now be 3 total documents and 3 sets of labels, one for each
     # document
     assert len(doc.documents_list()) == 3
 
-    label_manager = doc.context['label_manager']
-    assert len(label_manager.labels) == 3
+    # Check the ordering of documents
+    doc_list = doc.documents_list()
+    assert doc_list[0].src_filepath == str(src_filepath1)
+    assert doc_list[1].src_filepath == str(src_filepath2)
+    assert doc_list[2].src_filepath == str(src_filepath3)
 
-    # Now remove 1 document
+    # There should be 3 labels, one for each document. Check them and their
+    # ordering
+    label_manager = doc.context['label_manager']
+
+    assert len(label_manager.labels) == 3
+    label_list = label_manager.get_labels()
+    assert label_list[0].id == 'doc:file1.dm'
+    assert label_list[1].id == 'doc:file2.dm'
+    assert label_list[2].id == 'doc:file3.dm'
+
+    # 2. Now change the order of the sub-documents and reload the ast
+    src_filepath1.write("""---
+    include:
+      file3.dm
+      file2.dm
+    ---""")
+    doc.get_ast()
+
+    # Check the ordering of documents
+    doc_list = doc.documents_list()
+
+    assert doc_list[0].src_filepath == str(src_filepath1)
+    assert doc_list[1].src_filepath == str(src_filepath3)
+    assert doc_list[2].src_filepath == str(src_filepath2)
+
+    # Check the ordering of labels
+    assert len(label_manager.labels) == 3
+    label_list = label_manager.get_labels()
+    assert label_list[0].id == 'doc:file1.dm'
+    assert label_list[1].id == 'doc:file3.dm'
+    assert label_list[2].id == 'doc:file2.dm'
+
+    # 3. Now remove one document
     src_filepath1.write("""---
 include:
   file2.dm

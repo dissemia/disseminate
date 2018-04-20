@@ -148,7 +148,8 @@ class LabelManager(object):
         return existing_labels.pop()
 
     def get_labels(self, document=None, kinds=None):
-        """Return a filtered list of all labels for the given document.
+        """Return a filtered and sorted list of all labels for the given
+        document.
 
         Parameters
         ----------
@@ -166,14 +167,17 @@ class LabelManager(object):
         list of :obj:`disseminate.labels.Label`
             A list of label objects.
         """
-        # Filter labels by document
+        # Filter labels by document. Labels are sorted first by the order of a
+        # document in a document tree, then by their global_order
         if document is not None:
             document_labels = sorted([l for l in self.labels
                                       if l.document == document],
-                                     key=lambda x: x.global_order)
+                                     key=lambda x: (x.document.number or 0,
+                                                    x.global_order))
         else:
             document_labels = sorted([l for l in self.labels],
-                                     key=lambda x: x.global_order)
+                                     key=lambda x: (x.document.number or 0,
+                                                    x.global_order))
 
         if kinds is None:
             return list(document_labels)
@@ -232,7 +236,11 @@ class LabelManager(object):
         # Reset the numbers for the labels, which are counted by kind
         self._document_counters.clear()
         self._global_counter.clear()
-        for label in sorted(self.labels, key=lambda i: i.global_order):
+
+        # Labels are sorted first by the order of a document in a document tree,
+        # then by their global_order
+        for label in sorted(self.labels, key=lambda i: (i.document.number or 0,
+                                                        i.global_order)):
             src_filepath = label.document.src_filepath
             counter = self._document_counters.setdefault(src_filepath, dict())
             global_counter = self._global_counter
