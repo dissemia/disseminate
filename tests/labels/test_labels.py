@@ -120,7 +120,7 @@ def test_reset(tmpdir):
     assert label3 in label_man.labels
     assert label4 in label_man.labels
 
-    # Now remove labels for the document in local_context
+    # Now remove labels for the document
     label_man.reset(doc)
 
     assert len(label_man.labels) == 3
@@ -134,3 +134,80 @@ def test_reset(tmpdir):
     assert label3.local_order == (1,)
     assert label4.global_order == (2,)
     assert label4.local_order == (2,)
+
+
+def test_reset_by_excluded_kinds(tmpdir):
+    """Tests the reset method with excluded kinds."""
+    # Create a test document
+    src_filepath = tmpdir.join('src').join('main.dm')
+    tmpdir.join('src').mkdir()
+    src_filepath.write("")
+
+    doc = Document(str(src_filepath), str(tmpdir))
+
+    # Get the label manager
+    label_man = doc.context['label_manager']
+
+    # Generate a couple of short labels
+    label1 = label_man.add_label(document=doc, kind='figure')
+    label2 = label_man.add_label(document=doc, kind='figure')
+
+    # Check the numbers
+    assert label1.global_order == (1,)
+    assert label1.local_order == (1,)
+    assert label2.global_order == (2,)
+    assert label2.local_order == (2,)
+
+    # Create a second document, use the context of the first document
+    src_filepath2 = tmpdir.join('src').join('tmp2.dm')
+    src_filepath2.write("")
+    doc2 = Document(str(src_filepath2), str(tmpdir),
+                    context=doc.context)
+
+    # Generate a couple of short labels
+    label3 = label_man.add_label(document=doc2, kind='figure')
+    label4 = label_man.add_label(document=doc2, kind='figure')
+
+    # Check the numbers
+    assert label3.global_order == (3,)
+    assert label3.local_order == (1,)
+    assert label4.global_order == (4,)
+    assert label4.local_order == (2,)
+
+    # There should be 6 labels: 4 figure labels and 2 document labels
+
+    # Now remove labels but exclude document and figure labels. All labels
+    # should be in tact
+    label_man.reset(doc, exclude_kinds=('figure', 'document'))
+    assert len(label_man.labels) == 6
+    assert label1 in label_man.labels
+    assert label2 in label_man.labels
+    assert label3 in label_man.labels
+    assert label4 in label_man.labels
+
+    # Now remove labels but exclude figure labels. All figure labels
+    # should be in tact
+    label_man.reset(doc, exclude_kinds='figure')
+    assert len(label_man.labels) == 5
+    assert label1 in label_man.labels
+    assert label2 in label_man.labels
+    assert label3 in label_man.labels
+    assert label4 in label_man.labels
+
+    # Now remove labels for the document
+    label_man.reset(doc)
+    assert len(label_man.labels) == 3
+    assert label1 not in label_man.labels
+    assert label2 not in label_man.labels
+    assert label3 in label_man.labels
+    assert label4 in label_man.labels
+
+    # Check the numbers
+    assert label3.global_order == (1,)
+    assert label3.local_order == (1,)
+    assert label4.global_order == (2,)
+    assert label4.local_order == (2,)
+
+    # Now remove and exclude an unrelated kind. This removes all other labels.
+    label_man.reset(exclude_kinds='equation')
+    assert len(label_man.labels) == 0

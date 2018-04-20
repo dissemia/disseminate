@@ -388,7 +388,8 @@ class Document(object):
         manager."""
         if 'label_manager' in self.context:
             label_manager = self.context['label_manager']
-            label_manager.reset(document=self)
+            label_manager.reset(document=self, exclude_kinds='document')
+            self.set_document_label()
 
     def set_document_label(self):
         """Set the label for this document in the label manager.
@@ -445,6 +446,13 @@ class Document(object):
             extra_src_filepaths = (src_filepaths ^
                                    self.sub_documents.keys())
             for src_filepath in extra_src_filepaths:
+                # Remove the document's labels
+                if 'label_manager' in self.context:
+                    label_manager = self.context['label_manager']
+                    doc = self.sub_documents[src_filepath]
+                    label_manager.reset(document=doc)
+
+                # Remove the document
                 del self.sub_documents[src_filepath]
 
     def get_ast(self, reload=False):
@@ -522,11 +530,6 @@ class Document(object):
             for processor in self.ast_processors:
                 ast = processor(ast=ast, context=self.context,
                                 src_filepath=self.src_filepath)
-
-            # Set the label for this document. This is done after the source
-            # file is parsed because the source file might contain the 'title'
-            # setting.
-            self.set_document_label()
 
             # Load the sub-documents
             self.load_sub_documents()

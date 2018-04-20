@@ -191,6 +191,7 @@ def test_render_collection(tmpdir):
     assert '<p>file11.dm</p>' in html
     assert '<p>file111.dm</p>' in html
 
+
 def test_custom_template(tmpdir):
     """Tests the loading of custom templates from the yaml header."""
     # Write a temporary file. We'll use the tree.html template, which contains
@@ -514,6 +515,49 @@ def test_document_tree_matching_filenames(tmpdir):
     # Create the root document
     doc = Document(src_filepath=str(file1))
     doc.render()
+
+
+def test_document_tree_updates(tmpdir):
+    """Test the updates to the document tree and labels."""
+    # Create a document tree.
+    src_path = tmpdir.join('src')
+    src_path.mkdir()
+
+    src_filepath1 = src_path.join('file1.dm')
+    src_filepath2 = src_path.join('file2.dm')
+    src_filepath3 = src_path.join('file3.dm')
+
+    src_filepath1.write("""---
+include:
+  file2.dm
+  file3.dm
+---""")
+    src_filepath2.ensure()
+    src_filepath3.ensure()
+
+    # Load the root document
+    doc = Document(src_filepath=src_filepath1, target_root=str(tmpdir))
+
+    # There should now be 3 total documents and 3 sets of labels, one for each
+    # document
+    assert len(doc.documents_list()) == 3
+
+    label_manager = doc.context['label_manager']
+    assert len(label_manager.labels) == 3
+
+    # Now remove 1 document
+    src_filepath1.write("""---
+include:
+  file2.dm
+---""")
+
+    # The documents shouldn't change until the ast is reloaded
+    assert len(doc.documents_list()) == 3
+
+    # Reload the ast
+    doc.get_ast()
+    assert len(doc.documents_list()) == 2
+    assert len(label_manager.labels) == 2
 
 
 def test_document_toc(tmpdir):
