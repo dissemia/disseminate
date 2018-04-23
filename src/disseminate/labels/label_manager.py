@@ -244,9 +244,7 @@ class LabelManager(object):
                 labels_to_remove.add(label)
 
         # Remove the labels
-        if len(labels_to_remove) != 0:
-            self.labels -= labels_to_remove
-            self.set_mtime()  # Update the modification time
+        self.labels -= labels_to_remove
 
         # Reset the numbers for the labels, which are counted by kind
         self._document_counters.clear()
@@ -274,3 +272,6 @@ class LabelManager(object):
 
             label.local_order = tuple(local_order)
             label.global_order = tuple(global_order)
+
+        # Reset the mtime
+        self.set_mtime()
