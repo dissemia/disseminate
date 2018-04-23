@@ -1,6 +1,8 @@
 """
 The manager for labels.
 """
+import time
+
 from .labels import Label
 
 
@@ -43,11 +45,21 @@ class LabelManager(object):
     labels = None
     _document_counters = None
     _global_counter = None
+    _mtime = None
 
     def __init__(self):
         self.labels = set()
         self._document_counters = dict()
         self._global_counter = dict()
+        self.set_mtime()
+
+    def set_mtime(self):
+        """Set the modification time for the label_manager"""
+        self._mtime = time.time()
+
+    def get_mtime(self):
+        """Get the last modification time for the label_manager"""
+        return self._mtime
 
     def add_label(self, document, tag=None, kind=None, id=None):
         """Add a label.
@@ -116,6 +128,7 @@ class LabelManager(object):
                       local_order=tuple(local_order),
                       global_order=tuple(global_order))
         self.labels.add(label)
+        self.set_mtime()  # Update the modification time
 
         return label
 
@@ -231,7 +244,9 @@ class LabelManager(object):
                 labels_to_remove.add(label)
 
         # Remove the labels
-        self.labels -= labels_to_remove
+        if len(labels_to_remove) != 0:
+            self.labels -= labels_to_remove
+            self.set_mtime()  # Update the modification time
 
         # Reset the numbers for the labels, which are counted by kind
         self._document_counters.clear()

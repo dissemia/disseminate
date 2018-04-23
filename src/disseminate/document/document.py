@@ -49,10 +49,10 @@ class Document(object):
         ex: 'src/chapter1/chapter1.dm'
     context : dict
         The context with values for the document.
-    sub_documents : dict
+    subdocuments : dict
         A dict with the sub-documents included in this document. The keys are
         src_filepath values relative to the document's directory, and the values
-        are the sub_documents themselves. See the :meth:`documents_list` to get
+        are the subdocuments themselves. See the :meth:`documents_list` to get
         an ordered list of documents.
 
     string_processors : list of functions, **class attribute**
@@ -82,10 +82,10 @@ class Document(object):
 
     src_filepath = None
     context = None
-    sub_documents = None
+    subdocuments = None
     _parent_context = None
     _label = None
-    _sub_documents_src_filepaths = None
+    _subdocuments_src_filepaths = None
     _target_root = None
     _target_list = None
     _temp_dir = None
@@ -102,14 +102,14 @@ class Document(object):
 
     def __init__(self, src_filepath, target_root=None, context=None):
         self.src_filepath = str(src_filepath)
-        self.sub_documents = dict()
+        self.subdocuments = dict()
         self.context = dict()
 
         self._parent_context = context
         src_path = os.path.split(self.src_filepath)[0]
 
         # Set the src_filepaths of the document and sub-documents
-        self._sub_documents_src_filepaths = []
+        self._subdocuments_src_filepaths = []
 
         # Set the target_root.
         # Otherwise use the directory above the src_path
@@ -164,7 +164,15 @@ class Document(object):
 
     @property
     def number(self):
-        """The number of the document."""
+        """The number of the document.
+
+        Returns
+        -------
+        number : int or None
+            The number (order) of the document in relation to all documents in
+            a project or,
+            None, if the document's number hasn't yet been assigned.
+        """
         # Get all documents from the root document
         if 'root_document' in self.context:
             root_document = self.context['root_document']
@@ -300,11 +308,11 @@ class Document(object):
         document = self if document is None else document
         doc_list = [document] if not only_subdocuments else []
 
-        for src_filepath in document._sub_documents_src_filepaths:
-            if src_filepath not in self.sub_documents:
+        for src_filepath in document._subdocuments_src_filepaths:
+            if src_filepath not in self.subdocuments:
                 continue
 
-            doc = self.sub_documents[src_filepath]
+            doc = self.subdocuments[src_filepath]
 
             if recursive:
                 doc_list += doc.documents_list(only_subdocuments=False,
@@ -433,10 +441,10 @@ class Document(object):
                                                 id='doc:' + project_filepath)
                 self._label = label
 
-    def load_sub_documents(self):
+    def load_subdocuments(self):
         """Load the sub-documents listed in the include of a local_context."""
-        # Reset the self._sub_documents_src_filepaths
-        self._sub_documents_src_filepaths.clear()
+        # Reset the self._subdocuments_src_filepaths
+        self._subdocuments_src_filepaths.clear()
 
         if 'include' in self.context:
             src_filepaths = self.context['include']
@@ -448,10 +456,10 @@ class Document(object):
             current_src_filepath = os.path.split(self.src_filepath)[0]
             for src_filepath in src_filepaths:
                 # Add the src_filepath to the self._src_filepath
-                self._sub_documents_src_filepaths.append(src_filepath)
+                self._subdocuments_src_filepaths.append(src_filepath)
 
                 # Do nothing else if the document has already been created
-                if src_filepath in self.sub_documents:
+                if src_filepath in self.subdocuments:
                     continue
 
                 # Add the current path to make it a render_path
@@ -461,20 +469,20 @@ class Document(object):
                 # Create the target_root relative to the project's target_root
                 doc = Document(src_filepath=a_src_filepath,
                                context=self.context)
-                self.sub_documents[src_filepath] = doc
+                self.subdocuments[src_filepath] = doc
 
             # Remove missing documents
             extra_src_filepaths = (src_filepaths ^
-                                   self.sub_documents.keys())
+                                   self.subdocuments.keys())
             for src_filepath in extra_src_filepaths:
                 # Remove the document's labels
                 if 'label_manager' in self.context:
                     label_manager = self.context['label_manager']
-                    doc = self.sub_documents[src_filepath]
+                    doc = self.subdocuments[src_filepath]
                     label_manager.reset(document=doc)
 
                 # Remove the document
-                del self.sub_documents[src_filepath]
+                del self.subdocuments[src_filepath]
 
     def get_ast(self, reload=False):
         """Process and return the AST.
@@ -551,7 +559,7 @@ class Document(object):
             # Load the sub-documents. This is done after processing the string
             # and ast since these may include sub-files, which should be read
             # in before being loaded.
-            self.load_sub_documents()
+            self.load_subdocuments()
 
             # cache the ast
             self._ast = ast
@@ -614,7 +622,7 @@ class Document(object):
         return root
 
     def render_required(self, target_filepath):
-        """Evaluate whether a render is required.
+        """Evaluate whether a render is required to write the target file.
 
         Parameters
         ----------
@@ -628,7 +636,7 @@ class Document(object):
         """
         render_mode = self.context.get('render', 'single')
 
-        # Render is required if the target_filepath doesn't exist
+        # 1. A render is required if the target_filepath doesn't exist
         if not os.path.isfile(target_filepath):
             return True
 
@@ -644,12 +652,24 @@ class Document(object):
         # Get the modification for the target file (target_filepath)
         target_mtime = os.path.getmtime(target_filepath)
 
-        # Evaluate whether the src_filepath mtime is newer than the
+        # 2. A render is required if the src_filepath mtime is newer than the
         # target_filepath
-        return src_mtime > target_mtime
+        if src_mtime > target_mtime:
+            return True
+
+        # 3. A render is required if the label_manager has been updated since
+        #    the source file has been updated. This is because the label
+        #    numbers for this document may have changed if other documents have
+        #    added labels
+        if ('label_manager' in self.context and
+           self.context['label_manager'].get_mtime() > src_mtime):
+            return True
+
+        # All tests passed. No new render is needed
+        return False
 
     def render(self, targets=None, create_dirs=settings.create_dirs,
-               update_only=True):
+               update_only=True, subdocuments=True):
         """Render the document to one or more target formats.
 
         Parameters
@@ -664,6 +684,8 @@ class Document(object):
         update_only : bool, optional
             If True, the file will only be rendered if the rendered file is
             older than the source file.
+        subdocuments : bool, optional
+            If True, the subdocuments will be rendered (first) as well.
 
         Returns
         -------
@@ -672,10 +694,10 @@ class Document(object):
             False, if the document did not need to be rendered.
 
         """
-        # Process the sub-documents
-        for document in self.documents_list(only_subdocuments=True):
-            document.render(targets=targets, create_dirs=create_dirs,
-                            update_only=update_only)
+        if subdocuments:
+            for doc in self.documents_list(only_subdocuments=True):
+                doc.render(targets=targets, create_dirs=create_dirs,
+                                update_only=update_only)
 
         # Workup the targets into a dict, like self.targets
         if targets is None:

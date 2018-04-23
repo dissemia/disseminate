@@ -113,7 +113,8 @@ def translate_path(path, documents):
 
         # Get all the targets for the document and sub-documents
         targets = set()
-        for subdoc in document.documents_list():
+        for subdoc in document.documents_list(only_subdocuments=False,
+                                              recursive=True):
             targets.update(subdoc.target_list)
 
         for target in targets:
@@ -185,8 +186,8 @@ def render_tree_html(documents, level=1):
         document_elements.append(row)
 
         # Add sub-documents
-        if document.sub_documents is not None:
-            sub_docs = document.sub_documents.values()
+        if document.subdocuments is not None:
+            sub_docs = document.subdocuments.values()
             document_elements += render_tree_html(sub_docs, level+1)
 
         if level == 1 and document_elements:

@@ -74,5 +74,5 @@ def test_titlepage_tag_tex():
 
     tex = tag.tex()
 
-    key = "\n\\titlepage\n\n"
+    key = "\n\\maketitle\n\n"
     assert key == tex

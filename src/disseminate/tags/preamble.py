@@ -11,6 +11,7 @@ class Authors(Tag):
     """A tag for listing the author or authors."""
 
     aliases = ('author',)
+    active = True
 
     def __init__(self, name, content, attributes, context):
         super(Authors, self).__init__(name, content, attributes, context)
@@ -63,6 +64,7 @@ class Titlepage(Tag):
     """A titlepage tag."""
 
     authors_tag = None
+    active = True
 
     def __init__(self, name, content, attributes, context):
         super(Titlepage, self).__init__(name, content, attributes, context)
@@ -102,4 +104,4 @@ class Titlepage(Tag):
                  **{'class': 'title-page'})
 
     def tex(self, level=1, mathmode=False):
-        return "\n\\titlepage\n\n"
+        return "\n\\maketitle\n\n"

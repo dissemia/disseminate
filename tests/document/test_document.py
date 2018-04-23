@@ -138,25 +138,25 @@ def test_target_filepath():
     assert (doc.target_filepath('.html', render_path=False) ==
             "index.html")
 
-    # Check the sub_documents
-    sub_document = list(doc.sub_documents.values())[0]
-    assert sub_document.target_root == 'tests/document/example5'
-    assert (sub_document.target_filepath('.html', render_path=True) ==
+    # Check the subdocuments
+    subdocument = list(doc.subdocuments.values())[0]
+    assert subdocument.target_root == 'tests/document/example5'
+    assert (subdocument.target_filepath('.html', render_path=True) ==
             "tests/document/example5/html/sub1/index.html")
 
-    sub_document = list(doc.sub_documents.values())[1]
-    assert sub_document.target_root == 'tests/document/example5'
-    assert (sub_document.target_filepath('.html', render_path=True) ==
+    subdocument = list(doc.subdocuments.values())[1]
+    assert subdocument.target_root == 'tests/document/example5'
+    assert (subdocument.target_filepath('.html', render_path=True) ==
             "tests/document/example5/html/sub2/index.html")
 
-    sub_document = list(sub_document.sub_documents.values())[0]
-    assert sub_document.target_root == 'tests/document/example5'
-    assert (sub_document.target_filepath('.html', render_path=True) ==
+    subdocument = list(subdocument.subdocuments.values())[0]
+    assert subdocument.target_root == 'tests/document/example5'
+    assert (subdocument.target_filepath('.html', render_path=True) ==
             "tests/document/example5/html/sub2/subsub2/index.html")
 
-    sub_document = list(doc.sub_documents.values())[2]
-    assert sub_document.target_root == 'tests/document/example5'
-    assert (sub_document.target_filepath('.html', render_path=True) ==
+    subdocument = list(doc.subdocuments.values())[2]
+    assert subdocument.target_root == 'tests/document/example5'
+    assert (subdocument.target_filepath('.html', render_path=True) ==
             "tests/document/example5/html/sub3/index.html")
 
 
@@ -459,12 +459,12 @@ def test_document_tree(tmpdir):
     doc = Document(src_filepath=str(file1))
 
     # Test the paths
-    assert len(doc.sub_documents) == 2
+    assert len(doc.subdocuments) == 2
     assert doc.src_filepath == str(file1)
 
-    keys = list(doc.sub_documents.keys())
-    assert doc.sub_documents[keys[0]].src_filepath == str(file2)
-    assert doc.sub_documents[keys[1]].src_filepath == str(file3)
+    keys = list(doc.subdocuments.keys())
+    assert doc.subdocuments[keys[0]].src_filepath == str(file2)
+    assert doc.subdocuments[keys[1]].src_filepath == str(file3)
 
     # Update the root document and remove a file
     markup = """---
@@ -477,11 +477,11 @@ def test_document_tree(tmpdir):
     doc.get_ast()
 
     # Test the paths
-    assert len(doc.sub_documents) == 1
+    assert len(doc.subdocuments) == 1
     assert doc.src_filepath == str(file1)
 
-    keys = list(doc.sub_documents.keys())
-    assert doc.sub_documents[keys[0]].src_filepath == str(file2)
+    keys = list(doc.subdocuments.keys())
+    assert doc.subdocuments[keys[0]].src_filepath == str(file2)
 
     # Now test Example5. Example5 has a file in the root directory, a file in
     # the 'sub1', 'sub2' and 'sub3' directories and a file in the 'sub2/subsub2'
@@ -489,10 +489,10 @@ def test_document_tree(tmpdir):
     doc = Document('tests/document/example5/index.dm',
                    target_root=str(tmpdir))
 
-    assert len(doc.sub_documents) == 3  # Only sub_documents of doc
-    assert len(doc.documents_list(recursive=True)) == 5  # all sub_documents
+    assert len(doc.subdocuments) == 3  # Only subdocuments of doc
+    assert len(doc.documents_list(recursive=True)) == 5  # all subdocuments
 
-    sub_docs = list(doc.sub_documents.values())
+    sub_docs = list(doc.subdocuments.values())
     assert sub_docs[0].src_filepath == 'tests/document/example5/sub1/index.dm'
     assert sub_docs[1].src_filepath == 'tests/document/example5/sub2/index.dm'
     assert sub_docs[2].src_filepath == 'tests/document/example5/sub3/index.dm'
