@@ -270,6 +270,7 @@ def test_document_tree_updates_with_labels(tmpdir):
 include:
   file2.dm
   file3.dm
+targets: html
 ---
 @chapter{file1}
 """)
@@ -304,6 +305,12 @@ include:
     assert chapter_labels[1].id == 'chapter:file2'
     assert chapter_labels[2].id == 'chapter:file3'
 
+    # Render the files and check their mtimes
+    doc.render()
+    mtime1 = tmpdir.join('html').join('file1.html').mtime()
+    mtime2 = tmpdir.join('html').join('file2.html').mtime()
+    mtime3 = tmpdir.join('html').join('file3.html').mtime()
+
     # Now try reordering the files and see if the labels are reordered
     src_filepath1.write("""---
 include:
@@ -331,3 +338,18 @@ include:
     assert chapter_labels[0].id == 'chapter:file1'
     assert chapter_labels[1].id == 'chapter:file3'
     assert chapter_labels[2].id == 'chapter:file2'
+
+    # A render should be required since the labels have changed
+    doc1, doc2, doc3 = doc.documents_list(only_subdocuments=False,
+                                          recursive=True)
+
+    assert doc1.render_required(str(tmpdir.join('html').join('file1.html')))
+    assert doc2.render_required(str(tmpdir.join('html').join('file2.html')))
+    assert doc3.render_required(str(tmpdir.join('html').join('file3.html')))
+
+    # However, the files themselves are not updated since their contents
+    # haven't changed
+    doc.render()
+    assert mtime1 == tmpdir.join('html').join('file1.html').mtime()
+    assert mtime2 == tmpdir.join('html').join('file2.html').mtime()
+    assert mtime3 == tmpdir.join('html').join('file3.html').mtime()

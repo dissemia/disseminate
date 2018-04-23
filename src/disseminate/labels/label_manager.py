@@ -243,8 +243,10 @@ class LabelManager(object):
             elif document is None:
                 labels_to_remove.add(label)
 
-        # Remove the labels
-        self.labels -= labels_to_remove
+        # Remove the labels and update the modification time
+        if len(labels_to_remove) > 0:
+            self.labels -= labels_to_remove
+            self.set_mtime()
 
         # Reset the numbers for the labels, which are counted by kind
         self._document_counters.clear()
@@ -270,8 +272,11 @@ class LabelManager(object):
                 local_order.append(count)
                 global_order.append(global_count)
 
+            # See if the ordering has changed. If so, then change the label
+            # manager's modification time
+            if (label.local_order != tuple(local_order) or
+               label.global_order != tuple(global_order)):
+                self.set_mtime()
+
             label.local_order = tuple(local_order)
             label.global_order = tuple(global_order)
-
-        # Reset the mtime
-        self.set_mtime()

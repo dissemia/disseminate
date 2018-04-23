@@ -3,6 +3,7 @@ Classes and functions for rendering documents.
 """
 from tempfile import mkdtemp
 from shutil import rmtree
+import logging
 import os
 import os.path
 
@@ -89,6 +90,7 @@ class Document(object):
     _target_root = None
     _target_list = None
     _temp_dir = None
+    _templates = None
 
     string_processors = [load_yaml_header,  # Process YAML headers
                          replace_macros,  # Process macros
@@ -104,6 +106,7 @@ class Document(object):
         self.src_filepath = str(src_filepath)
         self.subdocuments = dict()
         self.context = dict()
+        self._templates = dict()
 
         self._parent_context = context
         src_path = os.path.split(self.src_filepath)[0]
@@ -484,6 +487,37 @@ class Document(object):
                 # Remove the document
                 del self.subdocuments[src_filepath]
 
+    def get_template(self, target, reload=False):
+        """Get the template for this document.
+
+        Parameters
+        ----------
+        target : str
+            The target for the template. ex: '.html'
+        reload : bool, optional
+            By default, this method returns cached template objects. If this
+            flag is set to True, then the template object will be reloaded and
+            returned. This needs to be done if the template object needs to be
+            updated.
+
+        Returns
+        -------
+        template
+        """
+        template_basename = settings.template_basename
+        if 'template' in self.context:
+            template_basename = self.context['template']
+
+        # Generate a cached template, if needed. Using the same template object
+        # between renders is needed so that the 'is_up_to_date' attribute
+        # is properly updated if the template file is re-written
+        if template_basename not in self._templates or reload:
+            template = get_template(self.src_filepath, target=target,
+                                    template_basename=template_basename)
+            self._templates[template_basename] = template
+
+        return self._templates[template_basename]
+
     def get_ast(self, reload=False):
         """Process and return the AST.
 
@@ -635,9 +669,12 @@ class Document(object):
             False if a render isn't required.
         """
         render_mode = self.context.get('render', 'single')
+        target = os.path.splitext(target_filepath)[1]
 
         # 1. A render is required if the target_filepath doesn't exist
         if not os.path.isfile(target_filepath):
+            logging.debug("Render required for {}: '{}' target file "
+                          "does not exist.".format(self, target_filepath))
             return True
 
         # Get the modification time for the source file(s) (src_filepath)
@@ -655,14 +692,29 @@ class Document(object):
         # 2. A render is required if the src_filepath mtime is newer than the
         # target_filepath
         if src_mtime > target_mtime:
+            logging.debug("Render required for {}: '{}' target file "
+                          "is older than source.".format(self, target_filepath))
             return True
 
         # 3. A render is required if the label_manager has been updated since
-        #    the source file has been updated. This is because the label
+        #    the target file was written. This is because the label
         #    numbers for this document may have changed if other documents have
         #    added labels
         if ('label_manager' in self.context and
-           self.context['label_manager'].get_mtime() > src_mtime):
+           self.context['label_manager'].get_mtime() > target_mtime):
+            logging.debug("Render required for {}:  Labels have been "
+                          "updated".format(self))
+            return True
+
+        # 4. A render is required if the template is not up to date. Simply
+        #    calling the 'get_template' method will return the current template
+        #    object, which can be used to test whether it's up to date. In the
+        #    render_uncompiled method, the template is reloaded to guarantee
+        #    that the latest template is loaded.
+        template = self.get_template(target=target)
+        if not template.is_up_to_date:
+            logging.debug("Render required for {}:  The template has been "
+                          "updated.".format(self))
             return True
 
         # All tests passed. No new render is needed
@@ -789,11 +841,6 @@ class Document(object):
 
         # Step 2: Synchronous
 
-        # First pull out the template, if specified
-        template_basename = settings.template_basename
-        if 'template' in self.context:
-            template_basename = self.context['template']
-
         # Prepare the context
 
         # Add non-private variables from the  context
@@ -816,9 +863,9 @@ class Document(object):
         # Add the output string to the context
         context['body'] = output_string
 
-        # get a template. The following can be done asynchronously.
-        template = get_template(self.src_filepath, target=target,
-                                template_basename=template_basename)
+        # Get a template. Reload is set to True to make sure that the latest
+        # version of the template is loaded.
+        template = self.get_template(target=target, reload=True)
 
         # If a template is available, use it to render the string.
         # Otherwise, just write the string

@@ -2,6 +2,7 @@
 Tests for Document classes and functions.
 """
 import pytest
+import os.path
 from shutil import copyfile
 
 from disseminate.document import Document, DocumentError
@@ -244,6 +245,37 @@ def test_custom_template(tmpdir):
     in_file.write("test")
     doc.render()
     assert "Disseminate Project Index" not in out_file.read()
+
+
+def test_template_updates(tmpdir):
+    """Tests the update of rendered targets when the template changes."""
+
+    # Create the markup source file and a test template
+    tmpdir.mkdir('src')
+    template = tmpdir.join('src').join("index.html")
+    in_file = tmpdir.join('src').join("index.dm")
+    out_file = tmpdir.join('html').join("index.html")
+
+    template.write("""test1""")
+    in_file.write("""---
+targets: html
+template: index
+---""")
+
+    # Load the document and test its contents
+    doc = Document(str(in_file))
+    doc.render()
+
+    assert not doc.render_required(str(out_file))
+    assert out_file.read() == 'test1'
+
+    # Change the template and see if the rendered output changes
+    template.write("""test2""")
+
+    print(out_file.read(), os.path.isfile(str(out_file)))
+    assert doc.render_required(str(out_file))
+    doc.render()
+    assert out_file.read() == 'test2'
 
 
 def test_context_update(tmpdir):
