@@ -104,6 +104,9 @@ class Tag(object):
         The corresponding starting line number in the source file for the
         tag. This is useful for error messages and it is set when the AST is
         processed.
+    label_id : str or None
+        If specified, this is the id for a label that is used by this tag.
+        (See :meth:`set_label` for creating a label at the same time)
     """
 
     name = None
@@ -118,6 +121,8 @@ class Tag(object):
     active = False
     include_paragraphs = False
     line_number = None
+
+    label_id = None
 
     def __init__(self, name, content, attributes, context):
         self.name = name
@@ -148,6 +153,45 @@ class Tag(object):
                    "tag contents are not a list")
             raise TagError(msg.format(self.__repr__()))
         return self.content[item]
+
+    def set_label(self, id, kind):
+        """Create and set a label for the tag.
+
+        If a reference to an existing label is desired, rather than creating
+        a label, set the 'label_id' attribute.
+
+        Parameters
+        ----------
+        id : str or None
+            The (unique) identifier of the label. ex: 'nmr_introduction'.
+            If None is given, the label cannot be referenced; it is used for
+            counting only.
+        kind : tuple or None
+            The kind of the label is a tuple that identified the kind of a label
+            from least specific to most specific. ex: ('figure',), ('chapter',),
+            ('equation',), ('heading', 'h1',)
+
+            This function is used to add a reference to a label by the tag.
+        """
+        assert id is not None
+
+        document = (self.context['document']() if 'document' in self.context
+                    else None)
+
+        if 'label_manager' in self.context and document is not None:
+            label_manager = self.context['label_manager']
+
+            # Create the label and set it as a weakref
+            label_manager.add_label(document=document, tag=self,
+                                    kind=kind, id=id)
+            self.label_id = id
+
+    @property
+    def label(self):
+        if self.label_id is not None and 'label_manager' in self.context:
+            label_manager = self.context['label_manager']
+            return label_manager.get_label(id=self.label_id)
+        return None
 
     def default(self):
         """Convert the tag to a text string.

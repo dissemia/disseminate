@@ -44,7 +44,7 @@ class BaseFigure(Tag):
             caption = None
 
         if caption is not None:
-            caption.add_label(context=context, kind='figure', id=id)
+            caption.set_label(kind='figure', id=id)
 
 
 class Marginfig(BaseFigure):

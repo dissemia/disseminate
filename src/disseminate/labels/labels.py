@@ -1,4 +1,5 @@
-import os.path
+import time
+import weakref
 
 from lxml.builder import E
 
@@ -13,25 +14,25 @@ class Label(object):
     ----------
     document : :obj:`disseminate.Document`
         The document that owns the label.
+    id : str or None
+        The (unique) identifier of the label. ex: 'nmr_introduction'.
+        If None is given, the label cannot be referenced; it is used for
+        counting only.
     tag : None or :obj:`disseminate.Tag`
         The tag that owns the label.
     kind : tuple or None
         The kind of the label is a tuple that identified the kind of a label
         from least specific to most specific. ex: ('figure',), ('chapter',),
         ('equation',), ('heading', 'h1',)
-    id : str or None
-        The (unique) identifier of the label. ex: 'nmr_introduction'.
-        If None is given, the label cannot be referenced; it is used for
-        counting only.
     contents : str, optional
         The short description for the label that can be used in the reference.
-    local_order : tuple of int
+    local_order : tuple of int or None
         The number of the label in the current document. Since the kind is a
         tuple, the local_order corresponds to the count for each kind.
         ex: for a kind ('heading', 'h2') could have a local_order of (3, 2)
         which would represent the 3rd 'heading' and 2nd 'h2' item for a
         document.
-    global_order : tuple of int
+    global_order : tuple of int or None
         The number of the label in all labels for the label manager.
 
     .. note:: Labels and references comprise a few components:
@@ -62,20 +63,133 @@ class Label(object):
               - short: The short caption of the label linked to this label.
 
     """
-    __slots__ = ('document', 'tag', 'kind', 'id', 'local_order', 'global_order')
+    __slots__ = ('id', '_document', '_tag', '_kind',
+                 '_local_order', '_global_order',
+                 '_document_label', '_chapter_label', '_section_label',
+                 'mtime', '__weakref__')
 
-    def __init__(self, document, tag=None, kind=None, id=None,
-                 local_order=None, global_order=None):
+    def __init__(self, document, id=None, tag=None, kind=None,
+                 local_order=None, global_order=None,):
         self.document = document
-        self.tag = tag
-        self.kind = kind if kind is not None else ('default',)
         self.id = id
-        self.local_order = local_order
-        self.global_order = global_order
+        self.tag = tag
+        self._kind = kind if kind is not None else ('default',)
+        self._local_order = local_order
+        self._global_order = global_order
+        self._document_label = None
+        self._chapter_label = None
+        self._section_label = None
+        self.mtime = time.time()
 
     def __repr__(self):
         name = self.id if self.id else ''
         return "({}: {} {})".format(self.kind, name, self.global_order)
+
+    @property
+    def document(self):
+        return (self._document() if hasattr(self, '_document') and
+                callable(self._document) else None)
+
+    @document.setter
+    def document(self, value):
+        old_value = self.document
+        if value != old_value and value is not None:
+            self.mtime = time.time()
+            self._document = weakref.ref(value)
+
+    @property
+    def document_number(self):
+        document = self.document
+        if document is not None:
+            return document.number or 0
+        else:
+            return 0
+
+    @property
+    def tag(self):
+        return (self._tag() if hasattr(self, '_tag') and
+                callable(self._tag) else None)
+
+    @tag.setter
+    def tag(self, value):
+        old_value = self.tag
+        if value != old_value and value is not None:
+            self.mtime = time.time()
+            self._tag = weakref.ref(value)
+
+    @property
+    def kind(self):
+        return self._kind
+
+    @kind.setter
+    def kind(self, value):
+        if value != self._kind:
+            self.mtime = time.time()
+            self._kind = value
+
+    @property
+    def local_order(self):
+        return self._local_order
+
+    @local_order.setter
+    def local_order(self, value):
+        if value != self._local_order:
+            self.mtime = time.time()
+            self._local_order = value
+
+    @property
+    def global_order(self):
+        return self._global_order
+
+    @global_order.setter
+    def global_order(self, value):
+        if value != self._global_order:
+            self.mtime = time.time()
+            self._global_order = value
+
+    @property
+    def document_label(self):
+        return (self._document_label() if hasattr(self, '_document_label') and
+                callable(self._document_label) else None)
+
+    @document_label.setter
+    def document_label(self, value):
+        old_value = self.document_label
+        if value != old_value and value is not None:
+            self.mtime = time.time()
+            self._document_label = weakref.ref(value)
+
+    @property
+    def chapter_label(self):
+        if self._chapter_label is not None and callable(self._chapter_label):
+            return self._chapter_label()
+        elif self.kind[-1] == 'chapter':
+            return self
+        else:
+            return None
+
+    @chapter_label.setter
+    def chapter_label(self, value):
+        old_value = self.chapter_label
+        if value != old_value and value is not None:
+            self.mtime = time.time()
+            self._chapter_label = weakref.ref(value)
+
+    @property
+    def section_label(self):
+        if self._section_label is not None and callable(self._section_label):
+            return self._section_label()
+        elif self.kind[-1] == 'section':
+            return self
+        else:
+            return None
+
+    @section_label.setter
+    def section_label(self, value):
+        old_value = self.section_label
+        if value != old_value and value is not None:
+            self.mtime = time.time()
+            self._section_label = weakref.ref(value)
 
     @property
     def src_filepath(self):
@@ -154,12 +268,10 @@ class Label(object):
         kwargs['number'] = self.local_order[-1]
         kwargs['local_number'] = self.local_order[-1]
         kwargs['global_number'] = self.global_order[-1]
-        kwargs['id'] = self.id if self.id is not None else ''
+        kwargs['id'] = self.id or ''
 
         # Get values from the document
-        kwargs['document_number'] = (self.document.number
-                                     if self.document.number is not None
-                                     else '')
+        kwargs['document_number'] = self.document.number or ''
         kwargs['content'] = self.document.title
         kwargs['short'] = self.document.short
 
@@ -172,6 +284,21 @@ class Label(object):
             short = get_attribute_value(attrs=self.tag.attributes,
                                         attribute_name='short')
             kwargs['short'] = short if short is not None else kwargs['content']
+
+        # Get values from the chapter and section
+        chapter_label = self.chapter_label
+        kwargs['chapter_local_number'] = (chapter_label.local_order[-1] if
+                                          chapter_label is not None else '')
+        kwargs['chapter_global_number'] = (chapter_label.global_order[-1] if
+                                           chapter_label is not None else '')
+        kwargs['chapter_number'] = kwargs['chapter_global_number']
+
+        section_label = self.section_label
+        kwargs['section_local_number'] = (section_label.local_order[-1] if
+                                          section_label is not None else '')
+        kwargs['section_global_number'] = (section_label.global_order[-1] if
+                                           section_label is not None else '')
+        kwargs['section_number'] = kwargs['section_local_number']
 
         return kwargs
 
@@ -199,6 +326,7 @@ class Label(object):
         label_str = (self.format_str(name='label', target=target)
                      if label_str is None else label_str)
         kwargs = self.format_kwargs()
+
         if target == '.html':
             # Make a span element for html labels
             tag_kwargs = dict()

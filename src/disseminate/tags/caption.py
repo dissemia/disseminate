@@ -4,6 +4,7 @@ Tags for captions and references.
 from lxml.builder import E
 
 from .core import Tag
+from ..utils.string import hashtxt
 from ..attributes import get_attribute_value, remove_attribute
 
 
@@ -29,42 +30,37 @@ class Caption(Tag):
     html_name = 'caption-text'
     tex_name = 'caption'
     active = True
-    label = None
 
-    def add_label(self, context, kind, id=None):
+    def set_label(self, id=None, kind=None):
         """Add a label to the caption.
 
         .. note:: This function is run by the parent tag so that the kind is
-                  properly set.
+                  properly set. If an 'id' is not specified, one is generated
+                  from the hash of the contents for this caption.
 
         Parameters
         ----------
-        context : dict
-            The context for the document that owns this label.
         kind : str
             The kind of label. ex: 'chapter', 'figure', 'equation'
         id : str, optional
             The label of the label ex: 'ch:nmr-introduction'
             If a label id is not specified, a short one based on the
             document and label count will be generated.
-        contents : str, optional
-            The short description for the label that can be used as the
-            reference.
         """
         # Get the id, if this caption has one
         id = id if id is not None else get_attribute_value(self.attributes,
                                                            'id')
         self.attributes = remove_attribute(self.attributes, 'id')
 
-        # Get the label manager and add the label
-        if ('label_manager' in context and
-           'document' in context):
-            label_manager = context['label_manager']
-            document = context['document']
+        # If an id still hasn't been specified, generate one from the caption's
+        # contents
+        if id is None:
+            text = self.default()
+            id = 'caption-' + hashtxt(text)
 
-            label = label_manager.add_label(document=document, tag=self,
-                                            kind=kind, id=id)
-            self.label = label
+        kind = ('caption',) if kind is None else kind
+
+        super(Caption, self).set_label(id=id, kind=kind)
 
     def default(self):
         """Add newline to the end of a caption"""
@@ -101,18 +97,21 @@ class Ref(Tag):
 
     active = True
 
-    def get_label(self):
-        """Retrieve a label from the label_manager."""
-        assert 'label_manager' in self.context
+    def __init__(self, name, content, attributes, context):
+        super(Ref, self).__init__(name, content, attributes, context)
 
+        # Set the label_id
         # Get the identifier; it has to be a text string
         if not isinstance(self.content, str):
             msg = "The reference '{}' should be a simple text identifier."
             raise RefError(msg.format(str(self.content)))
-        id = self.content
+        self.label_id = self.content.strip()
 
+    def get_label(self):
+        """Retrieve a label from the label_manager."""
+        assert 'label_manager' in self.context
         label_manager = self.context['label_manager']
-        label = label_manager.get_label(id=id)
+        label = label_manager.get_label(id=self.label_id)
 
         return label
 

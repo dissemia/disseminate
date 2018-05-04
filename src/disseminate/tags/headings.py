@@ -1,6 +1,8 @@
 """
 Tags for headings.
 """
+import weakref
+
 from .core import Tag
 from ..attributes import get_attribute_value, set_attribute, remove_attribute
 from ..utils.string import slugify
@@ -22,9 +24,18 @@ class Heading(Tag):
     include_paragraphs = False
 
     label_heading = True
-    label = None
 
     _nolabel = None
+
+    def get_id(self):
+        id = get_attribute_value(self.attributes, 'id')
+
+        # Assign an label, if one was not given
+        if id is None:
+            label = self.__class__.__name__.lower() + ":"
+            id = label + slugify(self.content)
+            self.attributes = set_attribute(self.attributes, ('id', id))
+        return id
 
     def __init__(self, name, content, attributes, context):
         super(Heading, self).__init__(name, content, attributes, context)
@@ -36,39 +47,27 @@ class Heading(Tag):
         if nolabel:
             self.label_heading = False
 
-        # Add a label for the heading, if needed
-        if (self.label_heading and
-           'label_manager' in context and 'document' in context):
-
-            label_manager = context['label_manager']
-            document = context['document']
+        if self.label_heading:
+            # Add a label for the heading, if needed
             kind = ('heading', self.__class__.__name__.lower())
-
-            id = get_attribute_value(self.attributes, 'id')
-
-            # Assign an label, if one was not given
-            if id is None:
-                label = self.__class__.__name__.lower() + ":"
-                id = label + slugify(self.content)
-                self.attributes = set_attribute(self.attributes, ('id', id))
-
-            label = label_manager.add_label(document=document, tag=self,
-                                            kind=kind, id=id)
-            self.label = label
+            id = self.get_id()
+            self.attributes = set_attribute(self.attributes, ('id', id))
+            self.set_label(id=id, kind=kind)
 
     def tex(self, level=1, mathmode=False):
         # Add newlines around headings
         name = (self.tex_name if self.tex_name is not None else
                 self.__class__.__name__.lower())
         # Get the label
-        if self.label is not None:
-            label = ' ' + self.label.label(target='.tex')
+        label = self.label
+        if label is not None:
+            label_str = ' ' + label.label(target='.tex')
         else:
-            label = ''
+            label_str = ''
 
         fmt = '\n\\{name}{{{content}}}{label}\n\n'.format(name=name,
                                                           content=self.content,
-                                                          label=label)
+                                                          label=label_str)
         return fmt
 
 

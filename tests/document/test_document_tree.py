@@ -1,6 +1,8 @@
 """
 Test the function of document trees and subdocuments.
 """
+import weakref
+
 import pytest
 
 from disseminate.document import Document
@@ -120,6 +122,49 @@ def test_document_tree(tmpdir):
     assert tmpdir.join('html').join('sub3').join('index.html').exists()
 
 
+def test_document_garbage_collection(tmpdir):
+    """Test the garbage collection of document trees."""
+
+    # Setup the project_root in a temp directory
+    project_root = tmpdir.join('src').mkdir()
+
+    # Populate some files
+    file1 = project_root.join('main.dm')
+    markup = """---
+    include:
+      sub/file2.dm
+      sub/file3.dm
+    targets: txt, tex
+    ---
+    """
+    file1.write(strip_leading_space(markup))
+    file2 = project_root.join('sub').join('file2.dm').ensure(file=True)
+    file3 = project_root.join('sub').join('file3.dm').ensure(file=True)
+
+    for text, f in (('file2', file2), ('file3', file3)):
+        f.write(text)
+
+    # Create the root document
+    doc = Document(src_filepath=str(file1), target_root=str(tmpdir))
+
+    # We can create weakrefs to the sub-documents
+    doc2, doc3 = doc.documents_list(only_subdocuments=True)
+    doc2_ref = weakref.ref(doc2)
+    doc3_ref = weakref.ref(doc3)
+
+    doc2, doc3 = None, None
+    assert doc2_ref() is not None
+    assert doc3_ref() is not None
+
+    # Try rendering the document, then delete the subdocuments and they
+    # should no longer exist
+    doc.render()
+    doc.subdocuments.clear()
+
+    assert doc2_ref() is None
+    assert doc3_ref() is None
+
+
 def test_document_tree_recursive_reference(tmpdir):
     """Test the loading of trees and sub-documents with recursive references."""
 
@@ -145,10 +190,17 @@ def test_document_tree_recursive_reference(tmpdir):
     """
     file2.write(strip_leading_space(markup))
 
-    # Create the root document. This will raise a DuplicateLabel error since
-    # a document is loaded twice.
-    with pytest.raises(DuplicateLabel):
-        doc = Document(src_filepath=str(file1))
+    # Create the root document. The file2 subdocument *should not* have file1
+    # as a subdocument
+    doc1 = Document(src_filepath=str(file1))
+    assert doc1.src_filepath == str(file1)
+
+    assert len(doc1.subdocuments) == 1
+
+    doc2 = doc1.documents_list(only_subdocuments=True)[0]
+    assert doc2.src_filepath == str(file2)
+
+    assert len(doc2.subdocuments) == 0
 
 
 def test_document_tree_matching_filenames(tmpdir):
@@ -242,17 +294,51 @@ include:
 
     # 3. Now remove one document
     src_filepath1.write("""---
-include:
-  file2.dm
----""")
+    include:
+      file2.dm
+    ---""")
 
     # The documents shouldn't change until the ast is reloaded
-    assert len(doc.documents_list()) == 3
+    doc_list = doc.documents_list()
+    assert len(doc_list) == 3
+
+    assert doc_list[0].src_filepath == str(src_filepath1)
+    assert doc_list[1].src_filepath == str(src_filepath3)
+    assert doc_list[2].src_filepath == str(src_filepath2)
 
     # Reload the ast
     doc.get_ast()
-    assert len(doc.documents_list()) == 2
+
+    doc_list = doc.documents_list()
+    assert len(doc_list) == 2
+    assert doc_list[0].src_filepath == str(src_filepath1)
+    assert doc_list[1].src_filepath == str(src_filepath2)
+
     assert len(label_manager.labels) == 2
+    label_list = label_manager.get_labels()
+    assert label_list[0].id == 'doc:file1.dm'
+    assert label_list[1].id == 'doc:file2.dm'
+
+    # 4. Now add the document back
+    src_filepath1.write("""---
+    include:
+      file2.dm
+      file3.dm
+    ---""")
+
+    # Reload the ast
+    doc.get_ast()
+    doc_list = doc.documents_list()
+    assert len(doc_list) == 3
+    assert doc_list[0].src_filepath == str(src_filepath1)
+    assert doc_list[1].src_filepath == str(src_filepath2)
+    assert doc_list[2].src_filepath == str(src_filepath3)
+
+    assert len(label_manager.labels) == 3
+    label_list = label_manager.get_labels()
+    assert label_list[0].id == 'doc:file1.dm'
+    assert label_list[1].id == 'doc:file2.dm'
+    assert label_list[2].id == 'doc:file3.dm'
 
 
 def test_document_tree_updates_with_labels(tmpdir):
@@ -266,20 +352,21 @@ def test_document_tree_updates_with_labels(tmpdir):
     src_filepath2 = src_path.join('file2.dm')
     src_filepath3 = src_path.join('file3.dm')
 
-    src_filepath1.write("""---
-include:
-  file2.dm
-  file3.dm
-targets: html
----
-@chapter{file1}
-""")
+    src_filepath1.write("""
+    ---
+    include:
+      file2.dm
+      file3.dm
+    targets: html
+    ---
+    @chapter{file1}
+    """)
     src_filepath2.write("""
-@chapter{file2}
-""")
+    @chapter{file2}
+    """)
     src_filepath3.write("""
-@chapter{file3}
-""")
+    @chapter{file3}
+    """)
 
     # 1. Load the root document
     doc = Document(src_filepath=src_filepath1, target_root=str(tmpdir))
@@ -312,13 +399,14 @@ targets: html
     mtime3 = tmpdir.join('html').join('file3.html').mtime()
 
     # Now try reordering the files and see if the labels are reordered
-    src_filepath1.write("""---
-include:
-  file3.dm
-  file2.dm
----
-@chapter{file1}
-""")
+    src_filepath1.write("""
+    ---
+    include:
+      file3.dm
+      file2.dm
+    ---
+    @chapter{file1}
+    """)
     doc.get_ast()  # reload the file
 
     # Check the order of the documents
@@ -347,9 +435,8 @@ include:
     assert doc2.render_required(str(tmpdir.join('html').join('file2.html')))
     assert doc3.render_required(str(tmpdir.join('html').join('file3.html')))
 
-    # However, the files themselves are not updated since their contents
-    # haven't changed
+    # The files have therefore been updated
     doc.render()
-    assert mtime1 == tmpdir.join('html').join('file1.html').mtime()
-    assert mtime2 == tmpdir.join('html').join('file2.html').mtime()
-    assert mtime3 == tmpdir.join('html').join('file3.html').mtime()
+    assert mtime1 != tmpdir.join('html').join('file1.html').mtime()
+    assert mtime2 != tmpdir.join('html').join('file2.html').mtime()
+    assert mtime3 != tmpdir.join('html').join('file3.html').mtime()

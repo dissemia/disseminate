@@ -2,6 +2,13 @@
 String manipulation operations.
 """
 from slugify import slugify
+import hashlib
+
+
+def hashtxt(text, truncate=10):
+    """Creates a hash from the given text."""
+    return (hashlib.md5(text.encode()).hexdigest() if truncate is None else
+            hashlib.md5(text.encode()).hexdigest()[:truncate])
 
 
 def find_basestring(strings):

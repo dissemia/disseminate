@@ -3,6 +3,7 @@ Classes and functions for rendering documents.
 """
 from tempfile import mkdtemp
 from shutil import rmtree
+import weakref
 import logging
 import os
 import os.path
@@ -14,6 +15,7 @@ from ..tags import Tag
 from ..macros import replace_macros
 from ..convert import convert
 from ..labels import LabelManager
+from ..labels.utils import label_latest_mtime
 from ..dependency_manager import DependencyManager
 from ..tags.toc import process_context_toc
 from ..utils import mkdir_p
@@ -54,7 +56,10 @@ class Document(object):
         A dict with the sub-documents included in this document. The keys are
         src_filepath values relative to the document's directory, and the values
         are the subdocuments themselves. See the :meth:`documents_list` to get
-        an ordered list of documents.
+        an ordered list of documents. This document owns the subdocuments and
+        only weak references to these documents should be made. (i.e. when
+        the subdocuments dict is cleared, the memory for the document objects
+        should be released)
 
     string_processors : list of functions, **class attribute**
         A list of functions to process the string before conversion to the
@@ -84,12 +89,26 @@ class Document(object):
     src_filepath = None
     context = None
     subdocuments = None
+
+    #: The context dict for the document that owns this document. For the root
+    #: document, this attribute is None
     _parent_context = None
-    _label = None
+
+    #: An ordered list of the src_filepaths for the subdocuments. These
+    #: correspond to the keys of the subdocuments dict. The reason a separate
+    #: list is used, instead of an OrderedDict, is because the ordering of the
+    #: entried can be easily manipulated in a list whereas this is not true for
+    #: and OrderedDict, which only keeps track of insertion order.
     _subdocuments_src_filepaths = None
+
+    #: The calculated target_root, based on the value specified or a value
+    #: evaluated from the project_root
     _target_root = None
-    _target_list = None
+
+    #: The path of a temporary directory created for this document, if needed.
     _temp_dir = None
+
+    #: Cached template objects for this document.
     _templates = None
 
     string_processors = [load_yaml_header,  # Process YAML headers
@@ -147,6 +166,14 @@ class Document(object):
         if self._temp_dir is not None:
             rmtree(self._temp_dir, ignore_errors=True)
 
+        # Reset the labels for this document
+        label_manager = self.context.get('label_manager', None)
+        if label_manager is not None:
+            label_manager.reset(document=self)
+
+        # Reset the dependencies for this document
+        self.reset_dependencies()
+
     def __repr__(self):
         return "Document({})".format(self.src_filepath)
 
@@ -176,9 +203,11 @@ class Document(object):
             a project or,
             None, if the document's number hasn't yet been assigned.
         """
+        root_document = self.context.get('root_document', None)
+        root_document = root_document() if root_document is not None else None
+
         # Get all documents from the root document
-        if 'root_document' in self.context:
-            root_document = self.context['root_document']
+        if root_document is not None:
             all_docs = root_document.documents_list(only_subdocuments=False,
                                                     recursive=True)
             return all_docs.index(self) + 1 if self in all_docs else None
@@ -352,6 +381,7 @@ class Document(object):
              - single: render only the given document (default)
              - collection: include all sub-documents in the render--i.e. for
                a book.
+          9. document: a weakref to this document.
         """
         # Remove everything from the context dict except for objects that
         # need to be preserved between documents, like the label_manager and
@@ -373,7 +403,7 @@ class Document(object):
                     continue
                 self.context[k] = v
 
-        self.context['document'] = self
+        self.context['document'] = weakref.ref(self)
 
         # The following tests whether the context values came from a parent
         # document
@@ -396,7 +426,7 @@ class Document(object):
                                     target_root=self.target_root)
             self.context['dependency_manager'] = dep
         if 'root_document' not in self.context:
-            self.context['root_document'] = self
+            self.context['root_document'] = weakref.ref(self)
 
     def reset_dependencies(self):
         """Clear and repopulate the dependencies for this document in the
@@ -406,13 +436,11 @@ class Document(object):
             dep = self.context['dependency_manager']
             dep.reset(document_src_filepath=document_src_filepath)
 
-    def reset_labels(self):
-        """Clear and repopulate the labels for this document in the label
-        manager."""
+    def register_labels(self):
+        """Registered newly added labels in the label_manager."""
         if 'label_manager' in self.context:
             label_manager = self.context['label_manager']
-            label_manager.reset(document=self, exclude_kinds='document')
-            self.set_document_label()
+            label_manager.register_labels()
 
     def set_document_label(self):
         """Set the label for this document in the label manager.
@@ -424,30 +452,36 @@ class Document(object):
         if 'label_manager' in self.context:
             label_manager = self.context['label_manager']
 
-            # See if a label for this document exists already. If it doesn't,
-            # create it.
-            labels = label_manager.get_labels(document=self, kinds='document')
+            # Reset the labels for this document
+            label_manager.reset(document=self)
 
-            # Create the label, if it's not already in there
-            if len(labels) == 0:
-                # Get the filepath for this document relative to the project_root,
-                # if possible
-                project_filepath = os.path.relpath(self.src_filepath,
-                                                   self.project_root)
+            project_filepath = os.path.relpath(self.src_filepath,
+                                               self.project_root)
 
-                # Get the level of the document
-                level = self.context.get('level', 1)
+            # Get the level of the document
+            level = self.context.get('level', 1)
 
-                # Set the label for this document
-                kind = ('document', 'document-level-' + str(level))
-                label = label_manager.add_label(document=self, kind=kind,
-                                                id='doc:' + project_filepath)
-                self._label = label
+            # Set the label for this document
+            kind = ('document', 'document-level-' + str(level))
+            label_manager.add_label(document=self, kind=kind,
+                                    id='doc:' + project_filepath)
 
     def load_subdocuments(self):
         """Load the sub-documents listed in the include of a local_context."""
         # Reset the self._subdocuments_src_filepaths
         self._subdocuments_src_filepaths.clear()
+
+        # Get the root document's src_filepath and the src_filepath for all of
+        # its included subdocuments to make sure we do not load documents
+        # recursively or twice
+        root_document = self.context.get('root_document', None)
+        root_document = root_document() if root_document is not None else None
+
+        p = [d.src_filepath for d in
+             root_document.documents_list(document=root_document,
+                                          only_subdocuments=False,
+                                          recursive=True)]
+        existing_src_filepaths = p
 
         if 'include' in self.context:
             src_filepaths = self.context['include']
@@ -458,16 +492,16 @@ class Document(object):
             # Create missing documents
             current_src_filepath = os.path.split(self.src_filepath)[0]
             for src_filepath in src_filepaths:
-                # Add the src_filepath to the self._src_filepath
-                self._subdocuments_src_filepaths.append(src_filepath)
-
-                # Do nothing else if the document has already been created
-                if src_filepath in self.subdocuments:
-                    continue
-
                 # Add the current path to make it a render_path
                 a_src_filepath = os.path.join(current_src_filepath,
                                               src_filepath)
+
+                # Do nothing else if the document has already been created
+                if a_src_filepath in existing_src_filepaths:
+                    continue
+
+                # Add the src_filepath to the self._src_filepath
+                self._subdocuments_src_filepaths.append(src_filepath)
 
                 # Create the target_root relative to the project's target_root
                 doc = Document(src_filepath=a_src_filepath,
@@ -475,15 +509,9 @@ class Document(object):
                 self.subdocuments[src_filepath] = doc
 
             # Remove missing documents
-            extra_src_filepaths = (src_filepaths ^
-                                   self.subdocuments.keys())
+            extra_src_filepaths = (set(self.subdocuments.keys()) -
+                                   set(src_filepaths))
             for src_filepath in extra_src_filepaths:
-                # Remove the document's labels
-                if 'label_manager' in self.context:
-                    label_manager = self.context['label_manager']
-                    doc = self.subdocuments[src_filepath]
-                    label_manager.reset(document=doc)
-
                 # Remove the document
                 del self.subdocuments[src_filepath]
 
@@ -518,7 +546,7 @@ class Document(object):
 
         return self._templates[template_basename]
 
-    def get_ast(self, reload=False):
+    def get_ast(self, reload=False, register_labels=True):
         """Process and return the AST.
 
         This method generates and caches the AST. This step is conducted
@@ -534,9 +562,11 @@ class Document(object):
 
         Parameters
         ----------
-        reload : bool, str
+        reload : bool, optional
             If True, force the reload of the AST.
-
+        register_labels : bool, optional
+            If True, this function will register new labels once the AST is
+            processed.
         Returns
         -------
         :obj:`disseminate.tag.Tag`
@@ -577,8 +607,9 @@ class Document(object):
             # Clear the dependencies for this document
             self.reset_dependencies()
 
-            # Clear the labels for this document
-            self.reset_labels()
+            # Reset the registered labels for this document and set the
+            # document's label
+            self.set_document_label()
 
             # Process the string
             for processor in self.string_processors:
@@ -594,6 +625,10 @@ class Document(object):
             # and ast since these may include sub-files, which should be read
             # in before being loaded.
             self.load_subdocuments()
+
+            # Register the labels added from parsing the AST
+            if register_labels:
+                self.register_labels()
 
             # cache the ast
             self._ast = ast
@@ -679,7 +714,7 @@ class Document(object):
 
         # Get the modification time for the source file(s) (src_filepath)
         if render_mode == 'collection':
-            # Get the latest modification time for the source files
+            # Get the latest modification time for the included source files
             mtimes = map(lambda x: os.path.getmtime(x.src_filepath),
                          self.documents_list())
             src_mtime = max(mtimes)
@@ -696,14 +731,13 @@ class Document(object):
                           "is older than source.".format(self, target_filepath))
             return True
 
-        # 3. A render is required if the label_manager has been updated since
-        #    the target file was written. This is because the label
-        #    numbers for this document may have changed if other documents have
-        #    added labels
-        if ('label_manager' in self.context and
-           self.context['label_manager'].get_mtime() > target_mtime):
-            logging.debug("Render required for {}:  Labels have been "
-                          "updated".format(self))
+        # 3. A render is required if the labels used by this document hase been
+        #    updated since the target file was written. This is because the
+        #    label numbers for this document may have changed if other
+        #    documents have added or removed labels
+        ast = self.get_ast()
+        latest_mtime = label_latest_mtime(ast=ast, context=self.context)
+        if latest_mtime is not None and target_mtime < latest_mtime:
             return True
 
         # 4. A render is required if the template is not up to date. Simply
@@ -884,17 +918,9 @@ class Document(object):
                 if meth is not None:
                     meth(output_string)
 
-        # determine whether the file contents are new
-        if not os.path.isfile(target_filepath):
-            new = True
-        else:
-            with open(target_filepath, 'r') as f:
-                new = (output_string != f.read())
-
-        # if the contents are new, write it to the file
-        if new:
-            with open(target_filepath, 'w') as f:
-                f.write(output_string)
+        # Write the file
+        with open(target_filepath, 'w') as f:
+            f.write(output_string)
 
     def render_compiled(self, target, target_filepath, targets, ast=None):
         """Render a compiled target format.

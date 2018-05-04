@@ -50,6 +50,7 @@ def test_figure_caption_no_id(tmpdir):
 
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context=doc.context)
+    label_man.register_labels()
 
     fig = root.content
     assert fig.name == 'marginfig'
@@ -58,17 +59,17 @@ def test_figure_caption_no_id(tmpdir):
     # Get the caption
     assert isinstance(fig.content, list)
     caption = [i for i in fig.content if isinstance(i, Caption)][0]
-
     assert caption.name == 'caption'
     assert caption.attributes == tuple()
     assert caption.default() == 'Fig. 1. This is my caption'
 
     # A label should have been registered. Altogether, there should be 1 label
-    # for the document and one for the figure
-    assert len(label_man.labels) == 2
+    # for the figure. The document's label was wiped out by the
+    # 'register_labels' function above.
+    assert len(label_man.labels) == 1
     labels = label_man.get_labels(kinds='figure')
     label = labels[0]
-    assert label.id == None
+    assert label.id is not None
     assert label.kind == ('figure',)
     assert label.local_order == (1,)
     assert label.global_order == (1,)
@@ -92,6 +93,7 @@ def test_figure_caption_no_id_html(tmpdir):
 
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context=doc.context)
+    label_man.register_labels()
 
     # Test the caption's html
     # The following root tags have to be stripped for the html strings
@@ -106,7 +108,7 @@ def test_figure_caption_no_id_html(tmpdir):
 
     key = """<span class="marginfig">
     <span class="caption">
-      <span class="figure-label">Fig. 1.</span>
+      <span id="caption-92042fbb8b" class="figure-label">Fig. 1.</span>
       <span class="caption-text">This is my caption</span>
     </span>
   </span>"""
@@ -131,6 +133,8 @@ def test_figure_caption_no_id_tex(tmpdir):
 
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context=doc.context)
+    label_man.register_labels()
+
     root_tex = root.tex()
     key = """
 \\begin{marginfigure}
@@ -157,11 +161,9 @@ def test_figure_caption_with_id(tmpdir):
     for src in ("@marginfig[id=fig-1]{@caption{This is my caption}}",
                 "@marginfig{@caption[id=fig-1]{This is my caption}}"):
 
-        # Reset the label manager
-        label_man.reset()
-
         # Generate a tag and compare the generated tex to the answer key
         root = process_ast(src, doc.context)
+        label_man.register_labels()
 
         fig = root.content
         assert fig.name == 'marginfig'
@@ -201,11 +203,9 @@ def test_figure_caption_with_id_html(tmpdir):
     srcs = ("@marginfig[id=fig-1]{@caption{This is my caption}}",
             "@marginfig{@caption[id=fig-1]{This is my caption}}")
     for count, src in enumerate(srcs):
-        # Reset the label manager
-        label_man.reset()
-
         # Generate a tag and compare the generated tex to the answer key
         root = process_ast(src, context=doc.context)
+        label_man.register_labels()
 
         # Test the caption's html
         # The following root tags have to be stripped for the html strings
@@ -244,11 +244,9 @@ def test_figure_caption_with_id_tex(tmpdir):
     srcs = ("@marginfig[id=fig-1]{@caption{This is my caption}}",
             "@marginfig{@caption[id=fig-1]{This is my caption}}")
     for count, src in enumerate(srcs):
-        # Reset the label manager
-        label_man.reset()
-
         # Generate a tag and compare the generated tex to the answer key
         root = process_ast(src, context=doc.context)
+        label_man.register_labels()
 
         root_tex = root.tex()
         assert root_tex == ('\n\\begin{marginfigure}\n'
@@ -273,6 +271,7 @@ def test_ref_missing(tmpdir):
 
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context=doc.context)
+    label_man.register_labels()
 
     # Trying to convert the root ast to a target type, like html, will raise
     # an LabelNotFound error
@@ -303,6 +302,7 @@ def test_ref_html(tmpdir):
 
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context=doc.context)
+    label_man.register_labels()
 
     #  Test the ref's html
     root_html = root.html()
@@ -341,6 +341,8 @@ def test_ref_tex(tmpdir):
     src_filepath.ensure(file=True)
 
     doc = Document(src_filepath=src_filepath)
+    label_man = doc.context['label_manager']
+
     doc.context['figure_ref'] = "Fig. {number}"
     doc.context['figure_label'] = "Fig. {number}."
     doc.context['figure_link_tex'] = ('\\hyperlink{{{id}}}{{Fig. '
@@ -353,13 +355,11 @@ def test_ref_tex(tmpdir):
 
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context=doc.context)
+    label_man.register_labels()
 
     # Rendering the tex raises the LabelNotFound exception
     with pytest.raises(LabelNotFound):
         root.tex()
-
-    # Reset the labels
-    doc.context['label_manager'].reset()
 
     # Generate the markup with an id. The marginfig tag is needed to
     # set the kind of the label.
@@ -367,6 +367,7 @@ def test_ref_tex(tmpdir):
 
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context=doc.context)
+    label_man.register_labels()
 
     #  Test the ref's html
     root_tex = root.tex()

@@ -5,11 +5,10 @@ from lxml import etree
 
 from disseminate import Document
 from disseminate.tags.headings import Section
-from disseminate.labels import LabelManager
 
 
 def test_label_heading_html(tmpdir):
-    """Tests the generation of headinglabels for html"""
+    """Tests the generation of heading labels for html"""
     # Create a test document
     src_filepath = tmpdir.join('src').join('main.dm')
     tmpdir.join('src').mkdir()
@@ -30,6 +29,7 @@ def test_label_heading_html(tmpdir):
                       attributes=(('id', 'sec:section1'),),
                       context=doc.context)
 
+    label_man.register_labels()
     label1 = label_man.get_label('sec:section1')
 
     # Check the html label using the default tag format from the settings
@@ -52,14 +52,16 @@ def test_label_heading_html(tmpdir):
     section = Section(name='section', content='My first section',
                       attributes=(('short', 'short'),),
                       context=doc.context)
-    label2 = label_man.add_label(document=doc, tag=section,
-                                 kind=('header', 'section'))
+
+    label_man.register_labels()
+    label2 = label_man.get_labels(kinds=('header', 'section'))[0]
 
     # Check the html label using the default tag format from the settings
     html = etree.tostring(label2.label('.html'))
     html = html.decode('utf-8')
-    assert html == '<span class="section-label">short</span>'
+    assert html == ('<span id="section:my-first-section" class="section-label">'
+                    'short</span>')
 
 
 def test_ref_heading_html(tmpdir):
-    pass
+    assert False

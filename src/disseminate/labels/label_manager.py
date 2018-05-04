@@ -1,10 +1,7 @@
 """
 The manager for labels.
 """
-import time
-
 from .labels import Label
-
 
 class LabelError(Exception):
     """An error was encountered while processing a label."""
@@ -25,44 +22,39 @@ class LabelManager(object):
     """Manage labels and references.
 
     Manages labels for a project. Labels have a kind (ex: 'figure', 'chapter')
-    and a id (ex: inept_introduction'). Names are expected to be unique
-    between all documents of a project.
+    and a id (ex: inept_introduction').
+
+    Labels are added with the :meth:`add_label` method. These labels are
+    collected and are only available after the :meth:`register_label` method
+    is executed. When registering labels, old labels that aren't reference
+    anymore are remove.
 
     Attributes
     ----------
     labels : set
         A set of labels
-    _document_counters : dict
-        The kind's count, starting from 1, for a given document.
-        - key: a tuple of str (src_filepath, kind)
-        - value: the count (int)
-    _global_counter = dict
-        The kind's count, starting from 1, for the project.
-        - key: a tuple of str (src_filepath, kind)
-        - value: the count (int)
+    collected_labels : dict
+        A dictionary organized by document src_filepath (key, str) and a list
+        of labels collected by the :meth:`add_label`. Collected labels aren't
+        registered and available for tags to use yet. The
+        :meth:`register_labels` method transfers them to the labels attribute
+        and sets their order.
     """
 
     labels = None
-    _document_counters = None
-    _global_counter = None
-    _mtime = None
+    collected_labels = None
 
     def __init__(self):
-        self.labels = set()
-        self._document_counters = dict()
-        self._global_counter = dict()
-        self.set_mtime()
-
-    def set_mtime(self):
-        """Set the modification time for the label_manager"""
-        self._mtime = time.time()
-
-    def get_mtime(self):
-        """Get the last modification time for the label_manager"""
-        return self._mtime
+        self.labels = []
+        self.collected_labels = dict()
 
     def add_label(self, document, tag=None, kind=None, id=None):
         """Add a label.
+
+        The add_label function adds a new or existing label to the
+        collected_labels. The register_labels (:meth:`register_labels`)
+        method must be invoked to register all collected labels to the list
+        of available labels (self.labels)
 
         Parameters
         ----------
@@ -76,11 +68,6 @@ class LabelManager(object):
             The label of the label ex: 'ch:nmr-introduction'
             If a label id is not specified, a short one based on the
             document and label count will be generated.
-
-        Returns
-        -------
-        label : :obj:`Label`
-            A named tuple with the label's information.
 
         Raises
         ------
@@ -96,41 +83,125 @@ class LabelManager(object):
         if isinstance(kind, str):
             kind = (kind,)
 
-        # Check to see if a label is unique for a project. A generic label id
-        # (i.e. None) is guaranteed to be unique
-        if id is not None:
-            existing_labels = {i for i in self.labels if i.id == id}
+        # See if the label already exists
+        existing_labels = [label for label in self.labels if label.id == id]
 
-            if existing_labels:
-                label = existing_labels.pop()
-                msg = "The label '{}' was already defined by the document {}."
-                raise DuplicateLabel(msg.format(label,
-                                                label.document.src_filepath))
+        if len(existing_labels) == 0 or id is None:
+            # If label doesn't exist or it's a generic label (i.e. no id),
+            # create it.
 
-        # Get the counter for this document
-        counter = self._document_counters.setdefault(src_filepath, dict())
-        global_counter = self._global_counter
+            # Add the label
+            label = Label(document=document, tag=tag, kind=kind, id=id,
+                          local_order=None,
+                          global_order=None)
+        else:
+            # A label with a match id was found. Use that one and make sure
+            # its document, tag and kind match those given by this function
+            label = existing_labels[0]
+            label.document = document
+            label.tag = tag
+            label.kind = kind
+        collected_labels = self.collected_labels.setdefault(src_filepath, [])
+        collected_labels.append(label)
 
-        # Get the count for each of the kind items
-        local_order, global_order = [], []
-        for item in kind:
-            count = counter.setdefault(item, 0) + 1
-            global_count = global_counter.setdefault(item, 0) + 1
+        return None
 
-            counter[item] = count
-            global_counter[item] = global_count
+    def register_labels(self):
+        """Process collected labels and register them in the label_manager.
 
-            local_order.append(count)
-            global_order.append(global_count)
+        Labels are added with the :meth:`add_label` method. These labels are
+        collected and are only available after the :meth:`register_label` method
+        is executed. When registering labels, old labels that aren't reference
+        anymore are remove.
+        """
+        # See if there are collected_labels. If there aren't then all labels
+        # are registered, and there's nothing to do.
+        if len(self.collected_labels.keys()) == 0:
+            return 0
 
-        # Add the label
-        label = Label(document=document, tag=tag, kind=kind, id=id,
-                      local_order=tuple(local_order),
-                      global_order=tuple(global_order))
-        self.labels.add(label)
-        self.set_mtime()  # Update the modification time
+        # Remove any labels for documents that no longer exist
+        invalid_labels = [l for l in self.labels if l.document is None]
+        for invalid_label in invalid_labels:
+            self.labels.remove(invalid_label)
 
-        return label
+        # Now organize the labels and transfer the collected labels
+        # First, get a list of all the document src_filepaths organized in
+        # document number order. The document's number may not be set at this
+        # point, in which case the document.number property will return None.
+        # In this case, give it a default order of 0.
+        documents = [l.document for l in self.labels]
+        documents += [l.document for lst in self.collected_labels.values()
+                      for l in lst]
+        documents = filter(bool, documents)  # Remove 'None' items
+        documents_dict = {d.src_filepath: d.number or 0 for d in documents}
+        src_filepaths = sorted(documents_dict.keys(),
+                               key=lambda k: documents_dict[k])
+
+        # Create a new list of registered labels
+        new_labels = []
+        updated_label_count = 0
+        global_counter = dict()  # Keep track of global count
+
+        for src_filepath in src_filepaths:
+            local_counter = dict()  # Keep track of global count
+            chapter_label = None
+            section_label = None
+
+            # If there are collected labels for the given src_filepath, use
+            # those labels. Otherwise, use those that are already registered
+            if src_filepath not in self.collected_labels:
+
+                # Use the existing registered label
+                labels = [l for l in self.labels
+                          if l.document.src_filepath == src_filepath]
+            else:
+                # Use the collected labels
+                labels = self.collected_labels[src_filepath]
+                updated_label_count += len(labels)
+
+            # Process each label. Set the local_order and global_order count
+            # for each label, set the corresponding chapter and section labels,
+            # and add it to the new list of registered labels
+            for label in labels:
+                if label.kind:
+                    if label.kind[-1] == 'chapter':
+                        chapter_label = label
+                    if label.kind[-1] == 'section':
+                        section_label = label
+
+                # Get the count for each of the kind items
+                local_order, global_order = [], []
+                for item in label.kind:
+                    local_count = local_counter.setdefault(item, 0) + 1
+                    global_count = global_counter.setdefault(item, 0) + 1
+
+                    local_counter[item] = local_count
+                    global_counter[item] = global_count
+
+                    local_order.append(local_count)
+                    global_order.append(global_count)
+
+                label.chapter_label = chapter_label
+                label.section_label = section_label
+                label.local_order = tuple(local_order)
+                label.global_order = tuple(global_order)
+
+                new_labels.append(label)
+
+            # Remove the collected labels
+            if src_filepath in self.collected_labels:
+                del self.collected_labels[src_filepath]
+
+        # Move the new_labels to the registered labels
+        self.labels.clear()
+        self.labels += new_labels
+
+        return updated_label_count
+
+    def reset(self, document):
+        """Reset the registration for the labels of the given document."""
+        src_filepath = document.src_filepath
+        self.collected_labels[src_filepath] = []
 
     def get_label(self, id):
         """Return the label for the given label id.
@@ -152,7 +223,8 @@ class LabelManager(object):
             could not be found.
         """
         # Find the label
-        existing_labels = {i for i in self.labels if i.id == id}
+        existing_labels = {i for i in self.labels if i.id == id and
+                           i.document is not None}
 
         if len(existing_labels) == 0 or id is None:
             msg = "Could not find label '{}'"
@@ -184,13 +256,15 @@ class LabelManager(object):
         # document in a document tree, then by their global_order
         if document is not None:
             document_labels = sorted([l for l in self.labels
-                                      if l.document == document],
-                                     key=lambda x: (x.document.number or 0,
-                                                    x.global_order))
+                                      if l.document is not None and
+                                      l.document == document],
+                                     key=lambda l: (l.document_number,
+                                                    l.global_order))
         else:
-            document_labels = sorted([l for l in self.labels],
-                                     key=lambda x: (x.document.number or 0,
-                                                    x.global_order))
+            document_labels = sorted([l for l in self.labels
+                                      if l.document is not None],
+                                     key=lambda l: (l.document_number,
+                                                    l.global_order))
 
         if kinds is None:
             return list(document_labels)
@@ -204,79 +278,3 @@ class LabelManager(object):
             returned_labels += [l for l in document_labels if kind in l.kind]
 
         return returned_labels
-
-    def reset(self, document=None, exclude_kinds=None):
-        """Reset the labels tracked by the LabelManager.
-
-        Parameters
-        ----------
-        document : document, str or None
-            - If a document (:obj:`disseminate.Document`) is specified, remove
-              all labels for this document.
-            - If not specified (None), all dependencies are removed.
-        exclude_kinds : str or tuple of string
-            If specified, labels with this kind(s) are excluded from removal.
-        """
-        if isinstance(exclude_kinds, str):
-            exclude_kinds = {exclude_kinds}
-        elif exclude_kinds is not None:
-            exclude_kinds = set(exclude_kinds)
-        else:
-            exclude_kinds = set()
-
-        # Build a list of labels to remove
-        labels_to_remove = set()
-
-        # Go through the labels and determine whether they should be removed
-        for label in self.labels:
-            # Determine whether there are overlapping kinds between the label
-            # and excluded_kinds
-            matched_kinds = exclude_kinds & set(label.kind)
-
-            if len(matched_kinds) != 0:  # An excluded kind matched
-                continue
-
-            # Remove the labelif the document is specified and matches the
-            # label's document,
-            if document is not None and label.document == document:
-                labels_to_remove.add(label)
-            elif document is None:
-                labels_to_remove.add(label)
-
-        # Remove the labels and update the modification time
-        if len(labels_to_remove) > 0:
-            self.labels -= labels_to_remove
-            self.set_mtime()
-
-        # Reset the numbers for the labels, which are counted by kind
-        self._document_counters.clear()
-        self._global_counter.clear()
-
-        # Labels are sorted first by the order of a document in a document tree,
-        # then by their global_order
-        for label in sorted(self.labels, key=lambda i: (i.document.number or 0,
-                                                        i.global_order)):
-            src_filepath = label.document.src_filepath
-            counter = self._document_counters.setdefault(src_filepath, dict())
-            global_counter = self._global_counter
-
-            # Get the count for each of the kind items
-            local_order, global_order = [], []
-            for item in label.kind:
-                count = counter.setdefault(item, 0) + 1
-                global_count = global_counter.setdefault(item, 0) + 1
-
-                counter[item] = count
-                global_counter[item] = global_count
-
-                local_order.append(count)
-                global_order.append(global_count)
-
-            # See if the ordering has changed. If so, then change the label
-            # manager's modification time
-            if (label.local_order != tuple(local_order) or
-               label.global_order != tuple(global_order)):
-                self.set_mtime()
-
-            label.local_order = tuple(local_order)
-            label.global_order = tuple(global_order)

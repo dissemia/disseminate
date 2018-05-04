@@ -12,10 +12,10 @@ def test_label_figure_html(tmpdir):
     src_filepath = tmpdir.join('src').join('main.dm')
     tmpdir.join('src').mkdir()
     markup = """
----
-targets: html
----
-"""
+    ---
+    targets: html
+    ---
+    """
     src_filepath.write(markup)
 
     doc = Document(str(src_filepath), str(tmpdir))
@@ -26,7 +26,9 @@ targets: html
     # 1. Test with a label label
 
     # Generate a specific labels
-    label1 = label_man.add_label(document=doc,  kind='figure', id='fig:image1')
+    label_man.add_label(document=doc,  kind='figure', id='fig:image1')
+    label_man.register_labels()
+    label1 = label_man.get_label('fig:image1')
 
     # Check the html label using the default tag format from the settings
     html = etree.tostring(label1.label('.html'))
@@ -48,10 +50,10 @@ def test_ref_figure_html(tmpdir):
     tmpdir.join('src').mkdir()
 
     markup = """
----
-targets: html
----
-"""
+    ---
+    targets: html
+    ---
+    """
     src_filepath.write(markup)
 
     doc = Document(str(src_filepath), str(tmpdir))
@@ -60,7 +62,9 @@ targets: html
     label_man = doc.context['label_manager']
 
     # Generate a specific labels
-    label1 = label_man.add_label(document=doc, kind='figure', id='fig:image1')
+    label_man.add_label(document=doc, kind='figure', id='fig:image1')
+    label_man.register_labels()
+    label1 = label_man.get_label('fig:image1')
 
     # Check the html reference (from inside the document)
     html = etree.tostring(label1.ref(target='.html'))

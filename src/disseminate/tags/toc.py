@@ -229,7 +229,10 @@ class Toc(Tag):
 
     def get_labels(self):
         """Get the labels, ordering function and labeling type."""
+        # Get the document from the context, which is a weakref to the document
         current_document = self.context.get('document', None)
+        current_document = (current_document() if current_document is not None
+                            and callable(current_document) else None)
 
         def default_order_function(label):
             return 0
@@ -354,7 +357,7 @@ class Toc(Tag):
             if self.header_tag is not None:
                 html = [self.header_tag.html(level+1), html]
         else:
-            html = ''
+            html = E('span', '', **{'class': 'root'})
 
         return html
 
