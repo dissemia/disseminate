@@ -111,8 +111,20 @@ class LabelManager(object):
 
         Labels are added with the :meth:`add_label` method. These labels are
         collected and are only available after the :meth:`register_label` method
-        is executed. When registering labels, old labels that aren't reference
+        is executed. When registering labels, old labels that aren't referenced
         anymore are remove.
+
+        Additionally, this function does the following:
+
+            1. Sets the local_number and global_number of the newly registered
+               tags. The global_number is the number for a given kind in the
+               project and the local_number is the number for a given kind in
+               the document.
+            2. For heading labels, like chapter, section and subsection, the
+               local_order is reset after elements like a chapter or section
+               are encountered.
+            3. A weakref to the chapter label or section label is placed in
+               labels under these headings.
         """
         # See if there are collected_labels. If there aren't then all labels
         # are registered, and there's nothing to do.
@@ -166,8 +178,22 @@ class LabelManager(object):
                 if label.kind:
                     if label.kind[-1] == 'chapter':
                         chapter_label = label
-                    if label.kind[-1] == 'section':
+
+                        # Reset the local_counter for sections, subsections
+                        local_counter['section'] = 0
+                        local_counter['subsection'] = 0
+                        local_counter['subsubsection'] = 0
+
+                    elif label.kind[-1] == 'section':
                         section_label = label
+
+                        # Reset the local_counter for sections, subsections
+                        local_counter['subsection'] = 0
+                        local_counter['subsubsection'] = 0
+
+                    elif label.kind[-1] == 'subsection':
+                        # Reset the local_counter for sections, subsections
+                        local_counter['subsubsection'] = 0
 
                 # Get the count for each of the kind items
                 local_order, global_order = [], []

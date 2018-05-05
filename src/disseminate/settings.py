@@ -94,14 +94,20 @@ media_dir = 'media'
 #: Label settings
 #: --------------
 
-label_formats = {'figure_label': 'Fig. {document_number}.{number}.',
-                 'figure_ref': 'Fig. {document_number}.{number}',
+label_formats = {'figure_label': 'Fig. {chapter_number}.{number}. ',
+                 'figure_ref': 'Fig. {chapter_number}.{number}',
                  'figure_link_html': '/{filepath}#{id}',
                  'figure_link_tex': '\\hyperref[{id}]{{Fig. '
-                                    '{document_number}.{number}}}',
+                                    '{chapter_number}.{number}}}',
+
                  'heading_ref': '{short}',
                  'heading_link_tex': '\\hyperref[{id}]{{{content}}}',
                  'heading_link_html': '/{filepath}#{id}',
+
+                 'chapter_label': 'Chapter {chapter_number}. ',
+
+                 'section_label': '{chapter_number}.{section_number} ',
+
                  'default_label': '{short}',
                  'default_label_tex': '\\label{{{id}}}',
                  'default_ref': '{short}',
