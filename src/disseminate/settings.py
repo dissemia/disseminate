@@ -91,33 +91,36 @@ media_dir = 'media'
 
 #media_url_root
 
-#: Label settings
-#: --------------
-
-label_formats = {'figure_label': 'Fig. {chapter_number}.{number}. ',
-                 'figure_ref': 'Fig. {chapter_number}.{number}',
-                 'figure_link_html': '/{filepath}#{id}',
-                 'figure_link_tex': '\\hyperref[{id}]{{Fig. '
-                                    '{chapter_number}.{number}}}',
-
-                 'heading_ref': '{short}',
-                 'heading_link_tex': '\\hyperref[{id}]{{{content}}}',
-                 'heading_link_html': '/{filepath}#{id}',
-
-                 'chapter_label': 'Chapter {chapter_number}. ',
-
-                 'section_label': '{chapter_number}.{section_number} ',
-
-                 'default_label': '{short}',
-                 'default_label_tex': '\\label{{{id}}}',
-                 'default_ref': '{short}',
-                 'default_pageref_tex': '\\pageref{{{id}}}',
-                 'default_link_tex': '\\hyperref[{id}]{{{content}}}',
-                 'default_link_html': '/{filepath}'
-                 }
-
-#: Default separator for labels. (ex: the period at the end of Fig. 1.)
-label_sep = '.'
+# #: Label settings
+# #: --------------
+#
+# label_formats = {'figure_label': 'Fig. {chapter_number}.{number}. ',
+#                  'figure_ref': 'Fig. {chapter_number}.{number}',
+#                  'figure_link_html': '/{filepath}#{id}',
+#                  'figure_link_tex': '\\hyperref[{id}]{{Fig. '
+#                                     '{chapter_number}.{number}}}',
+#
+#                  'heading_ref': '{short}',
+#                  'heading_link_tex': '\\hyperref[{id}]{{{content}}}',
+#                  'heading_link_html': '/{filepath}#{id}',
+#
+#                  'chapter_label': '\\chapter{{{short}}} \\label{{{id}}}',
+#
+#                  'section_label': '\\section{{{short}}} \\label{{{id}}}',
+#
+#                  'default_label': '{short}',
+#                  'default_label_tex': '\\label{{{id}}}',
+#                  'default_ref': '{short}',
+#                  'default_pageref_tex': '\\pageref{{{id}}}',
+#                  'default_link_tex': '\\hyperref[{id}]{{{content}}}',
+#                  'default_link_html': '/{filepath}'
+#                  }
+#
+# ref_formats = {'heading': '{label.short}',
+#                'equation': '({label.chapter_number}.{label.local_number})'}
+#
+# #: Default separator for labels. (ex: the period at the end of Fig. 1.)
+# label_sep = '.'
 
 #: Macros
 #: ------

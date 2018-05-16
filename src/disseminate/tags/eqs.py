@@ -89,16 +89,16 @@ class Eq(RenderedImg):
                                  render_target='.tex',
                                  template=eq_template)
 
-    def html(self, level=1):
+    def html(self, level=1, content=None):
         if self.block_equation:
             self.attributes = set_attribute(self.attributes,
                                             ('class', 'eq blockeq'))
         else:
             self.attributes = set_attribute(self.attributes,
                                             ('class', 'eq'))
-        return super(Eq, self).html(level)
+        return super(Eq, self).html(level, content)
 
-    def tex(self, level=1, mathmode=False):
+    def tex(self, level=1, mathmode=False, content=None):
         raw_content = raw_content_string(self._raw_content).strip(' \t\n')
         content = raw_content
 

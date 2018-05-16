@@ -6,7 +6,8 @@ from lxml import etree
 
 from disseminate.attributes import (parse_attributes, set_attribute,
                                     kwargs_attributes, format_tex_attributes,
-                                    filter_attributes)
+                                    filter_attributes, get_attribute_value,
+                                    remove_attribute)
 from . import settings
 
 
@@ -154,6 +155,33 @@ class Tag(object):
             raise TagError(msg.format(self.__repr__()))
         return self.content[item]
 
+    def get_attribute(self, name, target=None, clear=False):
+        """Retrieve an attribute from the tag and optionally clear it from
+        the list of attributes.
+
+        Parameters
+        ----------
+        name : str
+            The attribute's name.
+        target : str, optional
+            The (optional) target for target-specific attributes.
+        clear : bool, optional
+            If True, the attribute will be removed from the attribute listing
+            for the tag. By default, the attribute is not cleared.
+
+        Returns
+        -------
+        attribute_value : str or None
+            The value of the attribute, if the attribute was found, or None,
+            if the attribute was not found.
+        """
+        value = get_attribute_value(attrs=self.attributes, attribute_name=name,
+                                    target=target)
+        if clear:
+            self.attributes = remove_attribute(attrs=self.attributes,
+                                               attribute_name=name)
+        return value
+
     def set_label(self, id, kind):
         """Create and set a label for the tag.
 
@@ -193,28 +221,35 @@ class Tag(object):
             return label_manager.get_label(id=self.label_id)
         return None
 
-    def default(self):
+    def default(self, content=None):
         """Convert the tag to a text string.
 
         Strips the tag information and simply return the content of the tag.
+
+        Parameters
+        ----------
+        content : list or str or Tag, optional
+            If specified, render the given content. Otherwise, use this tag's
+            content.
 
         Returns
         -------
         text_string : str
             A text string with the tags stripped.
         """
-        if isinstance(self.content, list):
+        content = content if content is not None else self.content
+        if isinstance(content, list):
             items = [i.default() if hasattr(i, 'default') else i
-                            for i in self.content]
+                            for i in content]
             items = filter(bool, items)
             return "".join(items)
-        elif isinstance(self.content, Tag):
-            return self.content.default()
+        elif isinstance(content, Tag):
+            return content.default()
         else:
             # strings and other types of content
-            return self.content
+            return content
 
-    def tex(self, level=1, mathmode=False):
+    def tex(self, level=1, mathmode=False, content=None):
         """Format the tag in latex format.
 
         Parameters
@@ -224,24 +259,28 @@ class Tag(object):
         mathmode : bool, optional
             If True, the tag will be rendered in math mode. Otherwise (default)
             latex text mode is assumed.
+        content : list or str or Tag, optional
+            If specified, render the given content. Otherwise, use this tag's
+            content.
 
         Returns
         -------
         tex_string : str
             The formatted tex string.
         """
+        content = content if content is not None else self.content
         # Collect the content elements
-        if isinstance(self.content, list):
+        if isinstance(content, list):
             elements = ''.join([i.tex(level + 1, mathmode)
                                 if hasattr(i, 'tex') else i
-                                for i in self.content])
-        elif isinstance(self.content, str):
-            elements = self.content
-        elif isinstance(self.content, Tag):
-            elements = self.content.tex(level+1)
+                                for i in content])
+        elif isinstance(content, str):
+            elements = content
+        elif isinstance(content, Tag):
+            elements = content.tex(level+1)
         else:
             msg = "Tag element '{}' of type '{}' cannot be rendered."
-            raise(TagError(msg.format(self.content, type(self.content))))
+            raise(TagError(msg.format(content, type(content))))
 
         # Construct the tag name
         if level > 1:
@@ -277,25 +316,34 @@ class Tag(object):
         else:
             return elements
 
-    def html(self, level=1):
+    def html(self, level=1, content=None):
         """Convert the tag to an html string or html element.
+
+        Parameters
+        ----------
+        level : int, optional
+            The level of the tag.
+        content : list or str or Tag, optional
+            If specified, render the given content. Otherwise, use this tag's
+            content.
 
         Returns
         -------
         html : str or html element
             A string in HTML format or an HTML element (:obj:`lxml.builder.E`).
         """
+        content = content if content is not None else self.content
         # Collect the content elements
-        if isinstance(self.content, list):
+        if isinstance(content, list):
             elements = [i.html(level + 1) if hasattr(i, 'html') else i
-                        for i in self.content]
-        elif isinstance(self.content, str):
-            elements = self.content
-        elif isinstance(self.content, Tag):
-            elements = [self.content.html(level+1)]
+                        for i in content]
+        elif isinstance(content, str):
+            elements = content
+        elif isinstance(content, Tag):
+            elements = [content.html(level+1)]
         else:
             msg = "Tag element '{}' of type '{}' cannot be rendered."
-            raise (TagError(msg.format(self.content, type(self.content))))
+            raise (TagError(msg.format(content, type(content))))
 
         # Construct the tag name
         if level > 1:

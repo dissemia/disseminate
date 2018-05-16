@@ -388,9 +388,9 @@ def test_document_tree_updates_with_labels(tmpdir):
     assert len(label_manager.labels) == 6
 
     assert len(chapter_labels) == 3  # one for each file
-    assert chapter_labels[0].id == 'chapter:file1'
-    assert chapter_labels[1].id == 'chapter:file2'
-    assert chapter_labels[2].id == 'chapter:file3'
+    assert chapter_labels[0].id == 'ch:file1'
+    assert chapter_labels[1].id == 'ch:file2'
+    assert chapter_labels[2].id == 'ch:file3'
 
     # Render the files and check their mtimes
     doc.render()
@@ -423,9 +423,9 @@ def test_document_tree_updates_with_labels(tmpdir):
 
     chapter_labels = label_manager.get_labels(kinds='chapter')
     assert len(chapter_labels) == 3  # one for each file
-    assert chapter_labels[0].id == 'chapter:file1'
-    assert chapter_labels[1].id == 'chapter:file3'
-    assert chapter_labels[2].id == 'chapter:file2'
+    assert chapter_labels[0].id == 'ch:file1'
+    assert chapter_labels[1].id == 'ch:file3'
+    assert chapter_labels[2].id == 'ch:file2'
 
     # A render should be required since the labels have changed
     doc1, doc2, doc3 = doc.documents_list(only_subdocuments=False,

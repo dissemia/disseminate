@@ -1,10 +1,11 @@
 """
 Tags for headings.
 """
-import weakref
+from lxml.builder import E
 
 from .core import Tag
-from ..attributes import get_attribute_value, set_attribute, remove_attribute
+from .utils import format_label_tag
+from ..attributes import set_attribute, kwargs_attributes
 from ..utils.string import slugify
 
 
@@ -26,14 +27,24 @@ class Heading(Tag):
     label_heading = True
 
     _nolabel = None
+    _id_mappings = None
 
     def get_id(self):
-        id = get_attribute_value(self.attributes, 'id')
+        # Get the id mappings, if not set yet
+        if Heading._id_mappings is None:
+            Heading._id_mappings = {'chapter': 'ch',
+                                    'section': 'sec',
+                                    'subsection': 'subsec',
+                                    'subsubsection': 'subsubsec',
+                                    }
 
-        # Assign an label, if one was not given
+        id = self.get_attribute(name='id')
+
+        # Assign an id_type, if one was not given
         if id is None:
-            label = self.__class__.__name__.lower() + ":"
-            id = label + slugify(self.content)
+            classname = self.__class__.__name__.lower()
+            id_type = self._id_mappings.get(classname, classname) + ":"
+            id = id_type + slugify(self.content)
             self.attributes = set_attribute(self.attributes, ('id', id))
         return id
 
@@ -42,8 +53,7 @@ class Heading(Tag):
 
         # Determine whether a label should be given. By default, each heading
         # has a label
-        nolabel = get_attribute_value(self.attributes, 'nolabel')
-        self.attributes = remove_attribute(self.attributes, 'nolabel')
+        nolabel = self.get_attribute('nolabel', clear=True)
         if nolabel:
             self.label_heading = False
 
@@ -54,21 +64,54 @@ class Heading(Tag):
             self.attributes = set_attribute(self.attributes, ('id', id))
             self.set_label(id=id, kind=kind)
 
-    def tex(self, level=1, mathmode=False):
-        # Add newlines around headings
-        name = (self.tex_name if self.tex_name is not None else
-                self.__class__.__name__.lower())
-        # Get the label
+    def default(self, content=None):
+        name = self.__class__.__name__.lower()
         label = self.label
         if label is not None:
-            label_str = ' ' + label.label(target='.tex')
-        else:
-            label_str = ''
+            label_tag = format_label_tag(tag=self)
 
-        fmt = '\n\\{name}{{{content}}}{label}\n\n'.format(name=name,
-                                                          content=self.content,
-                                                          label=label_str)
-        return fmt
+            # Replace the label_tag name to this heading's name, ex: 'Chapter'
+            label_tag.name = name
+            return ("\n" +
+                    label_tag.default(content) + "\n\n")
+        else:
+            return "\n" + super(Heading, self).default(content) + "\n\n"
+
+    def html(self, level=1, content=None):
+        name = self.__class__.__name__.lower()
+        label = self.label
+
+        if label is not None:
+            label_tag = format_label_tag(tag=self, target='.html')
+
+            # Replace the label_tag name to this heading's name, ex: 'Chapter'
+            label_tag.name = name
+            kwargs = kwargs_attributes(self.attributes)
+            return E(self.html_name, label_tag.html(level+1), **kwargs)
+        else:
+            return super(Heading, self).html(level+1, content)
+
+    def tex(self, level=1, mathmode=False, content=None):
+        name = (self.tex_name if self.tex_name is not None else
+                self.__class__.__name__.lower())
+
+        label = self.label
+        if label is not None:
+            # set counter. ex: \setcounter{chapter}{3}
+            string = "\n\\setcounter{{{name}}}{{{number}}}"
+            number = (label.global_order[-1] if name == 'chapter' else
+                      label.local_order[-1])
+            string = string.format(name=name, number=number)
+
+            # Add the section heading and label id.
+            # ex: \chapter{Chapter One} \label{ch:chapter-one}
+            string += ("\n" + "\\{name}".format(name=name) + "{" +
+                       label.title + "} " +
+                       "\\label{{{id}}}".format(id=label.id) + "\n\n")
+            return string
+        else:
+            return ("\n" + super(Heading, self).tex(level+1, mathmode, content)
+                    + "\n\n")
 
 
 class Chapter(Heading):

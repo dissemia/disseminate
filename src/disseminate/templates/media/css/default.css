@@ -88,6 +88,18 @@ span.paragraph {
     margin-right: 0;
 }
 
+.figure .number {
+  font-weight: 600;
+}
+
+.figure .number::before {
+  content: "Fig. ";
+}
+
+.figure .number::after {
+  content: ".";
+}
+
 .authors {
     display: block;
     text-align: center;

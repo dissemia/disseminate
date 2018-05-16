@@ -203,8 +203,8 @@ def test_label_reordering(tmpdir):
     assert len(label_man.get_labels()) == 0
 
 
-def test_labels_chapter_numbers(tmpdir):
-    """Test the labeling of chapter numbers."""
+def test_label_title(tmpdir):
+    """Test the generation of titles for labels."""
     # Create a test document
     src_filepath = tmpdir.join('src').join('main.dm')
     tmpdir.join('src').mkdir()
@@ -213,10 +213,9 @@ def test_labels_chapter_numbers(tmpdir):
     targets: html, txt
     ---
     @chapter{First Chapter}
-    @section{Section One-One}
-    @chapter{Second Chapter}
-    @section{Section Two-One}
-    @chapter{Third Chapter}
+    @section{My First Section. It has periods.}
+    @subsection{My First SubSection, and
+      it has multiple lines.}
     """)
 
     doc = Document(str(src_filepath), str(tmpdir))
@@ -224,36 +223,15 @@ def test_labels_chapter_numbers(tmpdir):
     # Check the labels
     label_man = doc.context['label_manager']
 
-    # There should be 6 labels: 1 for the document, 3 for chapters,
-    # 2 for sections
-    assert len(label_man.labels) == 6
+    # There should be 4 labels: 1 for the document, 1 for chapter,
+    # 1 for section and 1 for subsection
+    assert len(label_man.labels) == 4
 
-    # Check the formatted string of the labels
-    chapter_labels = label_man.get_labels(kinds='chapter')
-    assert len(chapter_labels) == 3
+    # Get the heading labels
+    heading_labels = label_man.get_labels(kinds='heading')
+    assert len(heading_labels) == 3
 
-    # First try the short title
-    doc.context['chapter_label'] = '{short}'
-    assert chapter_labels[0].label(target='.txt') == 'First Chapter'
-    assert chapter_labels[1].label(target='.txt') == 'Second Chapter'
-    assert chapter_labels[2].label(target='.txt') == 'Third Chapter'
-
-    # Next try the chapter number
-    doc.context['chapter_label'] = 'Chapter {chapter_number}'
-    assert chapter_labels[0].label(target='.txt') == 'Chapter 1'
-    assert chapter_labels[1].label(target='.txt') == 'Chapter 2'
-    assert chapter_labels[2].label(target='.txt') == 'Chapter 3'
-
-    # Next try the section numbers
-    section_labels = label_man.get_labels(kinds='section')
-    assert len(section_labels) == 2
-
-    # First try the short title
-    doc.context['section_label'] = '{short}'
-    assert section_labels[0].label(target='.txt') == 'Section One-One'
-    assert section_labels[1].label(target='.txt') == 'Section Two-One'
-
-    # Next try the chapter and section number
-    doc.context['section_label'] = 'Section {chapter_number}.{section_number}'
-    assert section_labels[0].label(target='.txt') == 'Section 1.1'
-    assert section_labels[1].label(target='.txt') == 'Section 2.1'
+    assert heading_labels[0].title == 'First Chapter'
+    assert heading_labels[1].title == 'My First Section'
+    assert heading_labels[2].title == ('My First SubSection, '
+                                       'and it has multiple lines')

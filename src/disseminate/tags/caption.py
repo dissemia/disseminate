@@ -1,11 +1,13 @@
 """
 Tags for captions and references.
 """
+from copy import copy
+
 from lxml.builder import E
 
 from .core import Tag
+from .utils import format_label_tag, label_term
 from ..utils.string import hashtxt
-from ..attributes import get_attribute_value, remove_attribute
 
 
 class CaptionError(Exception):
@@ -29,6 +31,7 @@ class Caption(Tag):
 
     html_name = 'caption-text'
     tex_name = 'caption'
+    kind = None
     active = True
 
     def set_label(self, id=None, kind=None):
@@ -47,10 +50,9 @@ class Caption(Tag):
             If a label id is not specified, a short one based on the
             document and label count will be generated.
         """
-        # Get the id, if this caption has one
-        id = id if id is not None else get_attribute_value(self.attributes,
-                                                           'id')
-        self.attributes = remove_attribute(self.attributes, 'id')
+        # If an id was specified, use it. Otherwise, get the id from this tag,
+        # if it has one
+        id = id if id is not None else self.get_attribute(name='id', clear=True)
 
         # If an id still hasn't been specified, generate one from the caption's
         # contents
@@ -59,37 +61,58 @@ class Caption(Tag):
             id = 'caption-' + hashtxt(text)
 
         kind = ('caption',) if kind is None else kind
-
         super(Caption, self).set_label(id=id, kind=kind)
 
-    def default(self):
+        self.kind = ('caption',) if kind is None else (kind, 'caption')
+
+    def default(self, content=None):
         """Add newline to the end of a caption"""
-        default = super(Caption, self).default()
+        label = self.label
+        if label is not None:
+            label_tag = format_label_tag(tag=self, target=None)
+            # add the label to the caption
+            return (label_tag.default() + ' ' +
+                    super(Caption, self).default())
+        else:
+            return super(Caption, self).default()
+
+    def html(self, level=1, content=None):
+        label = self.label
+        if self.label is not None:
+            label_tag = format_label_tag(tag=self, target='.html')
+
+            kwargs = {'class': ' '.join(self.kind),
+                      'id': label.id}
+            return E('span',
+                     label_tag.html(level+1),
+                     label_term(tag=self, target='.html') + ' ',
+                     super(Caption, self).html(level+1),
+                     **kwargs)
+        else:
+            return super(Caption, self).html(level+1)
+
+    def tex(self, level=1, mathmode=False, content=None):
+        content = content if content is not None else self.content
+        label = self.label
 
         if self.label is not None:
-            # add the label to the caption
-            return ' '.join((self.label.label(target='default'), default))
-        else:
-            return default
+            label_tag = format_label_tag(tag=self, target='.tex')
 
-    def html(self, level=1):
-        html = super(Caption, self).html(level+1)
-        if self.label is not None:
-            # add the label to the caption
-            label = self.label.label(target='.html')
-            kwargs = {'class': 'caption'}
-            return E('span', label, html, **kwargs)
-        else:
-            return html
+            # Format the label and add it to the caption
+            string = label_tag.tex(level+1, mathmode)
+            string += label_term(tag=self, target='.tex') + ' '
 
-    def tex(self, level=1, mathmode=False):
-        tex = super(Caption, self).tex(level + 1, mathmode)
+            if isinstance(content, list):
+                content = [string] + content
+            elif isinstance(content, str):
+                content = string + content
 
-        if self.label is not None:
-            # add the label to the caption
-            return ' '.join((self.label.label(target='.tex'), tex)) + '\n'
+            # Format the caption
+            return ("  " +
+                    super(Caption, self).tex(level + 1, mathmode, content) +
+                    " \\label{{{id}}}".format(id=label.id) + "\n")
         else:
-            return tex + '\n'
+            return super(Caption, self).tex(level + 1, mathmode, content)
 
 
 class Ref(Tag):
@@ -107,22 +130,30 @@ class Ref(Tag):
             raise RefError(msg.format(str(self.content)))
         self.label_id = self.content.strip()
 
-    def get_label(self):
-        """Retrieve a label from the label_manager."""
-        assert 'label_manager' in self.context
-        label_manager = self.context['label_manager']
-        label = label_manager.get_label(id=self.label_id)
+    def default(self, content=None):
+        label_tag = format_label_tag(tag=self)
+        return label_tag.default(content)
 
-        return label
+    def html(self, level=1, content=None):
+        label = self.label
+        label_tag = format_label_tag(tag=self, target='.html')
 
-    def default(self, level=1):
-        label = self.get_label()
-        return label.ref(target='default')
+        # Wrap the label_tag in a link to the label's target
+        # TODO: Replace forward slash with custom url path from settings
+        link = "/" + label.document.target_filepath(target='.html',
+                                                    render_path=False)
 
-    def html(self, level=1):
-        label = self.get_label()
-        return label.ref(target='.html')
+        # Add the id to the link, if it's not a link to the whole document
+        if label.kind[0] != 'document':
+            link += '#' + label.id
 
-    def tex(self, level=1, mathmode=False):
-        label = self.get_label()
-        return label.ref(target='.tex')
+        kwargs = {'href': link}
+        return E('a', label_tag.html(level+1), **kwargs)
+
+    def tex(self, level=1, mathmode=False, content=None):
+        label = self.label
+        label_tag = format_label_tag(tag=self, target='.tex')
+
+        tex = label_tag.tex(level+1, mathmode)
+        #return "\\hyperlink{{{id}}}{{{content}}}".format(id=label.id, content=tex)
+        return "\\hyperref[{id}]{{{content}}}".format(id=label.id, content=tex)

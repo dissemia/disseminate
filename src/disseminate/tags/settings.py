@@ -1,6 +1,23 @@
 #: Tags settings
 #: -------------
 
+#: Labels
+
+#: Label formats should be formatted as they should appear as references to
+#: labels
+label_fmt = {'heading': '{label.title}',
+             'heading_html': '@number{{{label.tree_number}}}. '
+                             '{label.title}',
+             'heading_tex': '{label.title}',
+
+             'figure': '@b{{Fig. {label.chapter_number}.{label.number}}}',
+
+             # Separator between numbers in a tree number
+             'label_sep': '.',
+
+             # Terminator placed after a label.
+             'label_term': '.',
+             }
 #: HTML Tags
 #: ~~~~~~~~~
 
@@ -39,7 +56,7 @@ tex_macros = {"caption", "chapter",
               "ensuremath",
               "marginnote", "marginpar",
               "paragraph",
-              "section", "subsection", "subsubsection",
+              "setcounter", "section", "subsection", "subsubsection",
               "textbf", "textit"}
 
 tex_commands = {"item"}

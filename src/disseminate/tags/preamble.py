@@ -53,10 +53,10 @@ class Authors(Tag):
             else:
                 return ', '.join(others) + ', ' + ' and '.join(last_two)
 
-    def html(self, level=1):
+    def html(self, level=1, content=None):
         return E('div', self.author_string(), **{'class': 'authors'})
 
-    def tex(self, level=1, mathmode=False):
+    def tex(self, level=1, mathmode=False, content=None):
         return self.author_string()
 
 
@@ -97,11 +97,11 @@ class Titlepage(Tag):
         if 'author' in self.context:
             return self.context['author']
 
-    def html(self, level=1):
+    def html(self, level=1, content=None):
         return E('div',
                  E('h1', self.title, **{'class': 'title'}),
-                 self.authors_tag.html(level+1),
+                 self.authors_tag.html(level+1, content),
                  **{'class': 'title-page'})
 
-    def tex(self, level=1, mathmode=False):
+    def tex(self, level=1, mathmode=False, content=None):
         return "\n\\maketitle\n\n"

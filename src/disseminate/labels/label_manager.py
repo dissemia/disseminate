@@ -158,6 +158,8 @@ class LabelManager(object):
             local_counter = dict()  # Keep track of global count
             chapter_label = None
             section_label = None
+            subsection_label = None
+            subsubsection_label = None
 
             # If there are collected labels for the given src_filepath, use
             # those labels. Otherwise, use those that are already registered
@@ -178,6 +180,9 @@ class LabelManager(object):
                 if label.kind:
                     if label.kind[-1] == 'chapter':
                         chapter_label = label
+                        section_label = None
+                        subsection_label = None
+                        subsubsection_label = None
 
                         # Reset the local_counter for sections, subsections
                         local_counter['section'] = 0
@@ -186,12 +191,17 @@ class LabelManager(object):
 
                     elif label.kind[-1] == 'section':
                         section_label = label
+                        subsection_label = None
+                        subsubsection_label = None
 
                         # Reset the local_counter for sections, subsections
                         local_counter['subsection'] = 0
                         local_counter['subsubsection'] = 0
 
                     elif label.kind[-1] == 'subsection':
+                        subsection_label = label
+                        subsubsection_label = None
+
                         # Reset the local_counter for sections, subsections
                         local_counter['subsubsection'] = 0
 
@@ -209,6 +219,8 @@ class LabelManager(object):
 
                 label.chapter_label = chapter_label
                 label.section_label = section_label
+                label.subsection_label = subsection_label
+                label.subsubsection_label = subsubsection_label
                 label.local_order = tuple(local_order)
                 label.global_order = tuple(global_order)
 
