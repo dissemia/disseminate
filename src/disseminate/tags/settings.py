@@ -5,10 +5,12 @@
 
 #: Label formats should be formatted as they should appear as references to
 #: labels
-label_fmt = {'heading': '{label.title}',
-             'heading_html': '@number{{{label.tree_number}}}. '
-                             '{label.title}',
-             'heading_tex': '{label.title}',
+label_fmt = {'document': '{label.short}',
+
+             'heading': '{label.short}',
+             'heading_html': '@number{{{label.tree_number}.}} '
+                             '{label.short}',
+             'heading_tex': '{label.short}',
 
              'figure': '@b{{Fig. {label.chapter_number}.{label.number}}}',
 

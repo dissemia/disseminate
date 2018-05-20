@@ -166,7 +166,8 @@ class Label(object):
         """
         tag = self.tag
         if tag is None:
-            return ""
+            return self.document.title if self.document is not None else ""
+
         title = Tag.default(tag)  # The parent default functions is called to
                                   # avoid recursions when labels refer to a
                                   # tag's title.
@@ -187,6 +188,16 @@ class Label(object):
             return " ".join(new_lines)
         else:
             return ""
+
+    @property
+    def short(self):
+        """The short title for the tag or document."""
+        tag = self.tag
+        if tag is None or not hasattr(tag, 'short'):
+            # Get the short from the document
+            return self.document.short if self.document is not None else ""
+
+        return tag.short if tag is not None else ""
 
     @property
     def content(self):

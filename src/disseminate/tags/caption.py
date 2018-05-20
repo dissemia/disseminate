@@ -150,10 +150,16 @@ class Ref(Tag):
         kwargs = {'href': link}
         return E('a', label_tag.html(level+1), **kwargs)
 
-    def tex(self, level=1, mathmode=False, content=None):
+    def tex(self, level=1, mathmode=False, content=None, page=False):
         label = self.label
         label_tag = format_label_tag(tag=self, target='.tex')
 
         tex = label_tag.tex(level+1, mathmode)
-        #return "\\hyperlink{{{id}}}{{{content}}}".format(id=label.id, content=tex)
-        return "\\hyperref[{id}]{{{content}}}".format(id=label.id, content=tex)
+
+        if self.get_attribute(name='page') or page:
+            # If the 'page' attribute is set, return a reference for the page.
+            return "\\pageref{{{id}}}".format(id=label.id)
+        else:
+            # Otherwise just return a link to the label
+            return "\\hyperref[{id}]{{{content}}}".format(id=label.id,
+                                                          content=tex)

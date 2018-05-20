@@ -7,9 +7,11 @@ from lxml.builder import E
 from lxml import etree
 
 from .headings import toc_levels as heading_toc_levels
-from ..attributes import get_attribute_value, remove_attribute
+from .caption import Ref
+from .utils import format_label_tag
 from ..tags.headings import Chapter
 from .core import Tag
+from ..attributes import set_attribute
 from .. import settings
 
 
@@ -65,82 +67,6 @@ def process_context_toc(context, target):
         context['toc'] = toc.default()
 
 
-def tree_to_html(elements, context, tag='ol', level=1):
-    """Convert a nested tree to html"""
-    returned_elements = []
-    for e in elements:
-        if isinstance(e, tuple) and len(e) == 2:
-            # Unpack the element if it's a tuple with the order and the element
-            order, e = e
-        if isinstance(e, list):
-            returned_elements.append(tree_to_html(e, context, tag, level+1))
-        else:
-            kwargs = {'class': 'li-' + e.kind[-1] if e.kind else ''}
-            returned_elements.append(E('li', e.ref(target='.html'),
-                                       **kwargs))
-
-    kwargs = {'class': 'toc-level-' + str(level)}
-    return E(tag, *returned_elements, **kwargs)
-
-
-def tree_to_tex(elements, context, level=1,
-                listing=settings.toc_listing,
-                pageref_width=settings.toc_pageref_width,
-                bolded_kinds=settings.toc_bolded_kinds,
-                dotted_kinds=settings.toc_dotted_kinds):
-    """Convert a nested tree to tex.
-
-    Parameters
-    ----------
-    elements : list of :obj:`disseminate.labels.Label`
-        A nested list of label objects.
-    context : dict
-        The document's context dict.
-    level : int, optional
-        The toc entry level, starting at 1.
-    listing : str, optional
-        The type of latex list environment to use.
-    pageref_width : str, optional
-        The width reserved for the page number in the pageref
-    bolded_kinds : tuple of str, optional
-        These entries will be bolded.
-    dotted_kinds : tuple of str, optional
-        When placing the pageref of latex entries, either an \hfill or \dotfill
-        is used. The \dotfill will be used for labels of the given kind.
-    """
-    returned_elements = []
-    for e in elements:
-        if isinstance(e, tuple) and len(e) == 2:
-            # Unpack the element if it's a tuple with the order and the element
-            order, e = e
-        if isinstance(e, list):
-            returned_elements.append(tree_to_tex(e, context, level+1))
-        else:
-            # Prepare the entry
-            entry = "  " * level
-            entry += "\\item "
-            if e.kind[-1] in bolded_kinds:
-                entry += "\\textbf{"
-            entry += e.ref(target='.tex')
-            entry += (" \\dotfill " if e.kind[-1] in dotted_kinds
-                      else " \\hfill ")
-            entry += "\\makebox[" + pageref_width + "][r]{"
-            entry += e.pageref(target='.tex')
-            entry += "}"
-            if e.kind[-1] in bolded_kinds:
-                entry += "}"
-            entry += "\n"
-
-            returned_elements.append(entry)
-
-    if returned_elements:
-        return ("  " * (level - 1) + "\\begin{{{}}}\n".format(listing) +
-                ''.join(returned_elements) +
-                "  " * (level - 1) + "\\end{{{}}}\n".format(listing))
-    else:
-        return ''
-
-
 class Toc(Tag):
     """Table of contents and listings.
 
@@ -160,7 +86,11 @@ class Toc(Tag):
 
     active = True
     toc_kind = None
+    toc_elements = None
     header_tag = None
+
+    _mtime = None
+    ref_tags = None
 
     def __init__(self, name, content, attributes, context):
         super(Toc, self).__init__(name, content, attributes, context)
@@ -170,62 +100,11 @@ class Toc(Tag):
                          else '')
 
         # Setup the TOC header, if specified
-        header = get_attribute_value(self.attributes, 'header')
-        self.attributes = remove_attribute(self.attributes, 'header')
+        header = self.get_attribute(name='header', clear=True)
 
         if header is not None:
             self.header_tag = Chapter(name='TOC', content='Table of Contents',
                                       attributes=('nolabel',), context=context)
-
-    def construct_tree(self, labels, order_function):
-        """Construct a toc tree for the given target.
-
-        Parameters
-        ----------
-        labels : list of :obj:`disseminate.labels.Label`
-           The labels to construct a tree from.
-        order_function : :function:
-            A function which returns the order of a given label item. The
-            function takes a label and returns an integer. The base TOC levels
-            start at 0, and the sub-levels return higher numbers.
-        target : str
-            The target for the tree to construct.
-            ex: '.html', '.tex' or None (for default)
-        """
-        # Get the label_manager and labels
-        elements = []
-
-        # Got through the labels and keep track of the heading levels
-        max_level = 0
-        for label in labels:
-            try:
-                level = order_function(label)
-            except ValueError:
-                level = 0
-
-            if level > max_level:
-                max_level = level
-
-            # Create the item
-            elements.append((level, label))
-
-        # Group the levels
-        for level in reversed(range(0, max_level)):
-            groups = [(k, list(g)) for k, g in
-                      groupby(elements, lambda x: x[0] > level)]
-
-            elements = []
-            for above_level, g in groups:
-                if above_level is False:
-                    # These are smaller than the current level. Do not
-                    # group these values and add them back to the list
-                    elements += list(g)
-                else:
-                    # These are as large as the current level. Group them
-                    # in their own sub-list
-                    elements.append((level, [j[1] for j in g]))
-
-        return elements
 
     def get_labels(self):
         """Get the labels, ordering function and labeling type."""
@@ -331,7 +210,77 @@ class Toc(Tag):
         else:
             return default_return_value
 
-    def html(self, level=1):
+    def update_tags(self):
+        """Populate this tag's content by adding TocRef items.
+
+        Parameters
+        ----------
+        labels : list of :obj:`disseminate.labels.Label`
+           The labels to construct a tree from.
+        order_function : :function:
+            A function which returns the order of a given label item. The
+            function takes a label and returns an integer. The base TOC levels
+            start at 0, and the sub-levels return higher numbers.
+        """
+        # Get labels and determine their latest modification time (mtime).
+        # We poll the fresh list of labels instead of the cached ref_tags
+        # because the entries in the TOC may have changed since the ref_tags
+        # were last loaded.
+        labels, order_function, heading_type = self.get_labels()
+        label_mtimes = [label.mtime for label in labels]
+        latest_mtime = max(label_mtimes)
+
+        # Determine whether the labels are up to date and whether tags have
+        # already been prepared. If so, use those.
+        if (self.ref_tags is not None and
+            self._mtime is not None and
+           self._mtime >= latest_mtime):
+            return self.ref_tags
+
+        # The labels have changed. Update the ref tags.
+        # Collect the created tags.
+        tags = []
+
+        # Got through the labels and keep track of the heading levels
+        max_level = 0
+        for label in labels:
+            try:
+                level = order_function(label)
+            except ValueError:
+                level = 0
+
+            if level > max_level:
+                max_level = level
+
+            # Create the tag and add it to the tags list
+            tag_name = 'toc-' + label.kind[-1]
+            tag = Ref(name=tag_name, content=label.id,
+                      attributes=self.attributes, context=self.context)
+
+            # Add the tag to a flat list
+            tags.append((level, tag))
+
+        # Group the levels
+        for level in reversed(range(0, max_level)):
+            groups = [(k, list(g)) for k, g in
+                      groupby(tags, lambda x: x[0] > level)]
+
+            tags = []
+            for above_level, g in groups:
+                if above_level is False:
+                    # These are smaller than the current level. Do not
+                    # group these values and add them back to the list
+                    tags += list(g)
+                else:
+                    # These are as large as the current level. Group them
+                    # in their own sub-list
+                    tags.append((level, [j[1] for j in g]))
+
+        # Cache the ref tags and update the modification time for labels
+        self.ref_tags = tags
+        self._mtime = latest_mtime
+
+    def html(self, level=1, content=None, elements=None, listtype='ul'):
         """Convert the tag to an html listing.
 
         .. note:: The 'document' toc is special since it uses the documents
@@ -343,25 +292,43 @@ class Toc(Tag):
         html : str or html element
             A string in HTML format or an HTML element (:obj:`lxml.builder.E`).
         """
-        labels, order_function, heading_type = self.get_labels()
+        # Update the ref tags, if it's the root invocation--i.e. an elements
+        # list hasn't been passed by this function to itself.
+        if elements is None:
+            self.update_tags()
 
-        if len(labels) > 0:
-            elements = self.construct_tree(labels=labels,
-                                           order_function=order_function)
-            html = tree_to_html(elements=elements, context=self.context)
+        # Get the content. It should be a list of TocRef tags.
+        content = content if content is not None else self.ref_tags
+        elements = elements if elements is not None else content
 
-            # Add the class to the HTML element
-            if heading_type:
-                html.attrib['class'] = 'toc-' + heading_type
+        if elements is None:
+            return ''
 
-            if self.header_tag is not None:
-                html = [self.header_tag.html(level+1), html]
-        else:
-            html = E('span', '', **{'class': 'root'})
+        if not hasattr(elements, '__iter__'):
+            elements = [elements]
 
-        return html
+        returned_elements = []
+        for e in elements:
 
-    def tex(self, level=1, mathmode=False):
+            if isinstance(e, tuple) and len(e) == 2:
+                # Unpack the element if it's a tuple with the order and the
+                # element
+                order, e = e
+
+            if isinstance(e, list):
+                # The element is a list of tags. Process this list as a group.
+                returned_elements.append(self.html(level+1, content=None,
+                                                   elements=e))
+            else:
+                # Otherwise it's a ref tag, get its html and wrap it in a list
+                # item
+                returned_elements.append(E('li', e.html(level+1)))
+
+        kwargs = {'class': 'toc-level-' + str(level)}
+        return E(listtype, *returned_elements, **kwargs)
+
+    def tex(self, level=1, mathmode=False, content=None, elements=None,
+            listtype='toclist'):
         """Convert the tag to a tex listing.
 
         .. note:: The 'document' toc is special since it uses the documents
@@ -373,16 +340,53 @@ class Toc(Tag):
         tex : str
             A string in TEX format
         """
-        labels, order_function, heading_type = self.get_labels()
+        # Update the ref tags, if it's the root invocation--i.e. an elements
+        # list hasn't been passed by this function to itself.
+        if elements is None:
+            self.update_tags()
 
-        if len(labels) > 0:
-            elements = self.construct_tree(labels=labels,
-                                           order_function=order_function)
-            tex = tree_to_tex(elements=elements, context=self.context)
+        # Get the content. It should be a list of TocRef tags.
+        content = content if content is not None else self.ref_tags
+        elements = elements if elements is not None else content
 
-            if self.header_tag is not None:
-                tex = self.header_tag.tex(level+1) + tex
+        if elements is None:
+            return ''
+
+        if not hasattr(elements, '__iter__'):
+            elements = [elements]
+
+        returned_elements = []
+        for e in elements:
+
+            if isinstance(e, tuple) and len(e) == 2:
+                # Unpack the element if it's a tuple with the order and the
+                # element
+                order, e = e
+
+            if isinstance(e, list):
+                # The element is a list of tags. Process this list as a group.
+                returned_elements.append(self.tex(level + 1, content=None,
+                                                   elements=e))
+            else:
+                # Otherwise it's a ref tag, get its tex and wrap it in a list
+                # item
+                entry = "  " * level
+                entry += "\\item " + e.tex(level + 1)
+
+
+                # Format the page numbers
+                entry += (" \\dotfill " if True
+                          else " \\hfill ")
+                #entry += "\\makebox[" + pageref_width + "][r]{"
+                entry += e.tex(level + 1, page=True)
+
+                entry += '\n'
+
+                returned_elements.append(entry)
+
+        if returned_elements:
+            return ("  " * (level - 1) + "\\begin{{{}}}\n".format(listtype) +
+                    ''.join(returned_elements) +
+                    "  " * (level - 1) + "\\end{{{}}}\n".format(listtype))
         else:
-            tex = ''
-
-        return tex
+            return ''

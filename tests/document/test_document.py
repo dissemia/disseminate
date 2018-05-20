@@ -457,11 +457,12 @@ def test_document_toc(tmpdir):
     context = dict(doc.context)
     process_context_toc(context, target='.html')
 
-    key = """<ol class="toc-document">
-      <li class="li-document-level-1">
-        <a class="document-level-1-ref" href="/file.html">My first title</a>
-      </li>
-    </ol>
-    """
-
-    assert strip_leading_space(key) == context['toc']
+    key = """<ul class="toc-level-1">
+  <li>
+    <a href="/file.html">
+      <span class="label">My first title</span>
+    </a>
+  </li>
+</ul>
+"""
+    assert key == context['toc']

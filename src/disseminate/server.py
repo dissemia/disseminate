@@ -62,6 +62,9 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
         if '?' in path:
             path, _ = path.split('?', 1)
 
+        # See if any files need to be rendered
+        render(self.documents)
+
         # See if the file is in the targets of one of the documents
         render_path = translate_path(self.path, self.documents)
 

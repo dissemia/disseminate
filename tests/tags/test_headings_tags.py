@@ -110,28 +110,28 @@ def test_heading_labels_html(tmpdir):
 
     markups = {
         '@chapter{Chapter 1}': '<h1 id="ch:chapter-1">\n'
-                               '    <span class="chapter"><span class="number">1</span>. Chapter 1</span>\n'
+                               '    <span class="chapter"><span class="number">1.</span> Chapter 1</span>\n'
                                '  </h1>',
         '@section{Section 1}': '<h2 id="sec:section-1">\n'
-                               '    <span class="section"><span class="number">1</span>. Section 1</span>\n'
+                               '    <span class="section"><span class="number">1.</span> Section 1</span>\n'
                                '  </h2>',
         '@subsection{Section 2}': '<h3 id="subsec:section-2">\n'
-                                  '    <span class="subsection"><span class="number">1</span>. Section 2</span>\n'
+                                  '    <span class="subsection"><span class="number">1.</span> Section 2</span>\n'
                                   '  </h3>',
         '@subsubsection{Section 3}': '<h4 id="subsubsec:section-3">\n'
-                                     '    <span class="subsubsection"><span class="number">1</span>. Section 3</span>\n'
+                                     '    <span class="subsubsection"><span class="number">1.</span> Section 3</span>\n'
                                      '  </h4>',
         '@h1{Chapter 1}': '<h1 id="ch:chapter-1">\n'
-                               '    <span class="chapter"><span class="number">1</span>. Chapter 1</span>\n'
+                               '    <span class="chapter"><span class="number">1.</span> Chapter 1</span>\n'
                                '  </h1>',
         '@h2{Section 2}': '<h2 id="sec:section-2">\n'
-                               '    <span class="section"><span class="number">1</span>. Section 2</span>\n'
+                               '    <span class="section"><span class="number">1.</span> Section 2</span>\n'
                                '  </h2>',
         '@h3{Section 3}': '<h3 id="subsec:section-3">\n'
-                                  '    <span class="subsection"><span class="number">1</span>. Section 3</span>\n'
+                                  '    <span class="subsection"><span class="number">1.</span> Section 3</span>\n'
                                   '  </h3>',
         '@h4{Section 4}': '<h4 id="subsubsec:section-4">\n'
-                          '    <span class="subsubsection"><span class="number">1</span>. Section 4</span>\n'
+                          '    <span class="subsubsection"><span class="number">1.</span> Section 4</span>\n'
                           '  </h4>',
                }
 
