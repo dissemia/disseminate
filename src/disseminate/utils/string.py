@@ -11,6 +11,41 @@ def hashtxt(text, truncate=10):
             hashlib.md5(text.encode()).hexdigest()[:truncate])
 
 
+def titlelize(string, truncate=True, capitalize=False):
+    """Given a string, generate a condensed title.
+
+    >>> titlelize("My example caption. It has 2 sentences")
+    'My example caption'
+    >>> titlelize("My example caption. It has 2 sentences", capitalize=True)
+    'My Example Caption'
+    """
+    # Strip extra newlines and join to a single string
+    lines = list(filter(bool, string.split('\n')))
+    string = ' '.join(lines)
+
+    # Break at end of sentence periods
+    pieces = string.split('. ')
+
+    # Truncate, if needed
+    if truncate:
+        string = pieces[0]
+    else:
+        string = ". ".join(pieces)
+
+    # capitalize words, if specified, and return the joined string.
+    # This function also strips extra spaces between words
+    pieces = string.split(' ')
+    pieces = list(filter(bool, pieces))
+    if capitalize:
+        if len(pieces) > 2:
+            pieces = ([pieces[0].title()] +
+                      [piece.title() if piece not in ('in', 'to', 'a')
+                       else piece for piece in pieces[1:]])
+    string = " ".join(pieces)
+
+    return string.strip('.')
+
+
 def find_basestring(strings):
     """Evaluate the common base string amongst a list of strings.
 

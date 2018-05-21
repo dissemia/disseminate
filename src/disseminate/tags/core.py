@@ -4,10 +4,11 @@ Core classes and functions for tags.
 from lxml.builder import E
 from lxml import etree
 
-from disseminate.attributes import (parse_attributes, set_attribute,
-                                    kwargs_attributes, format_tex_attributes,
-                                    filter_attributes, get_attribute_value,
-                                    remove_attribute)
+from ..attributes import (parse_attributes, set_attribute,
+                          kwargs_attributes, format_tex_attributes,
+                          filter_attributes, get_attribute_value,
+                          remove_attribute)
+from ..utils.string import titlelize
 from . import settings
 
 
@@ -154,6 +155,21 @@ class Tag(object):
                    "tag contents are not a list")
             raise TagError(msg.format(self.__repr__()))
         return self.content[item]
+
+    @property
+    def title(self):
+        """A title string converted from the content"""
+        # Get the string for the content. The parent default function is called
+        # to prevent recursion problems from child default methods calling
+        # title.
+        string = Tag.default(self)
+        return titlelize(string)
+
+    @property
+    def short(self):
+        """The short title for the tag"""
+        short_attr = self.get_attribute('short')
+        return short_attr if short_attr is not None else self.title
 
     def get_attribute(self, name, target=None, clear=False):
         """Retrieve an attribute from the tag and optionally clear it from

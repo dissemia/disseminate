@@ -1,8 +1,6 @@
 """
 Tags for captions and references.
 """
-from copy import copy
-
 from lxml.builder import E
 
 from .core import Tag

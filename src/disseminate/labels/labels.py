@@ -22,8 +22,6 @@ class Label(object):
         The kind of the label is a tuple that identified the kind of a label
         from least specific to most specific. ex: ('figure',), ('chapter',),
         ('equation',), ('heading', 'h1',)
-    contents : str, optional
-        The short description for the label that can be used in the reference.
     local_order : tuple of int or None
         The number of the label in the current document. Since the kind is a
         tuple, the local_order corresponds to the count for each kind.
@@ -32,34 +30,6 @@ class Label(object):
         document.
     global_order : tuple of int or None
         The number of the label in all labels for the label manager.
-
-    .. note:: Labels and references comprise a few components:
-
-              label: {name} {document_number}.{number}{separator} {caption}
-
-                  ex: Fig. 2.1. My first figure on the second chapter.
-
-                      name: 'Fig.'
-                      document_number: '2
-                      number: 1 (the local_order number in the document)
-                      seperator: '.'
-                      caption: 'My first figure on the second chapter'
-
-              Labels and references take a format (string) that can be used
-              to format the label or reference. A kwargs dict is passed with
-              the following variables.
-
-              - name: the name of the label. ex: 'Fig.', 'Section', 'Chapter'
-              - document_number: the number (order) of the document, starting
-                from 1.
-              - local_number: the number (order) of the label within the
-                document.
-              - global_number: the number (order) of the label between all
-                documents in the label manager.
-              - separator: a character or string to end the label. ex: '.'
-              - caption: The caption of the label linked to this label.
-              - short: The short caption of the label linked to this label.
-
     """
     __slots__ = ('id', '_document', '_tag', '_kind',
                  '_local_order', '_global_order',
@@ -167,37 +137,18 @@ class Label(object):
         tag = self.tag
         if tag is None:
             return self.document.title if self.document is not None else ""
-
-        title = Tag.default(tag)  # The parent default functions is called to
-                                  # avoid recursions when labels refer to a
-                                  # tag's title.
-        title_lines = list(filter(bool, title.split('\n')))  # remove extra
-                                                             # newlines
-
-        if len(title_lines) > 0:
-            # Find the first line with a period.
-            new_lines = []
-            for line in title_lines:
-                # Get the string up to a period and strip extra space
-                partition = line.partition('.')
-                new_lines.append(partition[0].strip())
-
-                # If a period was found, then the title is done.
-                if partition[1] == '.':
-                    break
-            return " ".join(new_lines)
         else:
-            return ""
+            return tag.title
 
     @property
     def short(self):
         """The short title for the tag or document."""
         tag = self.tag
-        if tag is None or not hasattr(tag, 'short'):
+        if tag is None:
             # Get the short from the document
             return self.document.short if self.document is not None else ""
-
-        return tag.short if tag is not None else ""
+        else:
+            return tag.short
 
     @property
     def content(self):

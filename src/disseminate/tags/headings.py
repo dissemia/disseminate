@@ -64,18 +64,6 @@ class Heading(Tag):
             self.attributes = set_attribute(self.attributes, ('id', id))
             self.set_label(id=id, kind=kind)
 
-    @property
-    def title(self):
-        # Use the default method to strip any formatting tags.
-        # The parent default function (Tag) is called to avoid recursions
-        # since this tag's default function calls this title method
-        return Tag.default(self)
-
-    @property
-    def short(self):
-        short_attr = self.get_attribute(name='short')
-        return short_attr if short_attr is not None else self.title
-
     def default(self, content=None):
         name = self.__class__.__name__.lower()
         label = self.label
