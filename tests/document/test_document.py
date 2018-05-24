@@ -86,14 +86,14 @@ def test_ast_caching(tmpdir):
                    str(tmpdir))
 
     ast = doc._ast
-    mtime = doc._mtime
+    mtime = doc.mtime
     assert ast is not None
     assert mtime is not None
 
     # Try loading the AST again. At this point, it shouldn't be different
     doc.get_ast()
     assert ast == doc._ast
-    assert mtime == doc._mtime
+    assert mtime == doc.mtime
 
 
 def test_target_list():

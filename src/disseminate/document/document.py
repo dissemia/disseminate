@@ -15,7 +15,6 @@ from ..tags import Tag
 from ..macros import replace_macros
 from ..convert import convert
 from ..labels import LabelManager
-from ..labels.utils import label_latest_mtime
 from ..dependency_manager import DependencyManager
 from ..tags.toc import process_context_toc
 from ..utils import mkdir_p
@@ -154,10 +153,6 @@ class Document(object):
         # The cached AST
         self._ast = None
 
-        # The last modification time of the document since its AST was last
-        # processed
-        self._mtime = None
-
         # Read in the AST
         self.get_ast()
 
@@ -219,6 +214,10 @@ class Document(object):
         if self._temp_dir is None:
             self._temp_dir = mkdtemp()
         return self._temp_dir
+
+    @property
+    def mtime(self):
+        return self.context.get('mtime', None)
 
     @property
     def project_root(self):
@@ -382,6 +381,8 @@ class Document(object):
              - collection: include all sub-documents in the render--i.e. for
                a book.
           9. document: a weakref to this document.
+          10. mtime: The modification time of the source document. This is
+              populated by the get_ast method.
         """
         # Remove everything from the context dict except for objects that
         # need to be preserved between documents, like the label_manager and
@@ -396,7 +397,7 @@ class Document(object):
 
         # Copy over the context values from parent context. The excluded_items
         # do not pertain to sub-documents.
-        excluded_items = ('include', 'title', 'short', 'render')
+        excluded_items = ('include', 'title', 'short', 'render', 'mtime')
         if self._parent_context is not None:
             for k, v in self._parent_context.items():
                 if k in excluded_items:
@@ -580,10 +581,11 @@ class Document(object):
         stat = os.stat(self.src_filepath)
         time = stat.st_mtime
 
+        last_mtime = self.mtime
+
         # Update the AST, if needed
         if (getattr(self, '_ast', None) is None or
-           getattr(self, '_mtime', None) is None or
-           time > self._mtime or
+           last_mtime is None or time > last_mtime or
            reload):
 
             # Check to make sure the file is reasonable
@@ -632,7 +634,7 @@ class Document(object):
 
             # cache the ast
             self._ast = ast
-            self._mtime = time
+            self.context['mtime'] = time
 
         # Run get_ast for the sub-documents. This should be done after loading
         # this document's AST since this document's header may have includes
@@ -731,13 +733,15 @@ class Document(object):
                           "is older than source.".format(self, target_filepath))
             return True
 
-        # 3. A render is required if the labels used by this document hase been
-        #    updated since the target file was written. This is because the
-        #    label numbers for this document may have changed if other
-        #    documents have added or removed labels
-        ast = self.get_ast()
-        latest_mtime = label_latest_mtime(ast=ast, context=self.context)
-        if latest_mtime is not None and target_mtime < latest_mtime:
+        # 3. A render is required if the tags or labels used by this document
+        #    have been updated since the target file was written. This is
+        #    because the label numbers and contents for *other* documents may
+        #    have changed.
+        tag_mtime = (self._ast.mtime if hasattr(self, '_ast') and
+                                        hasattr(self._ast, 'mtime') else None)
+        if tag_mtime is not None and target_mtime < tag_mtime:
+            logging.debug("Render required for {}:  The tags reference a "
+                          "document that's been updated.".format(self))
             return True
 
         # 4. A render is required if the template is not up to date. Simply

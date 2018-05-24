@@ -79,6 +79,6 @@ def label_term(tag, target=None):
     label_term_attr = tag.get_attribute('label_term', clear=True, target=target)
 
     if label_term_attr is not None:
-        label_sep = label_term_attr
+        label_term = label_term_attr
 
     return label_term

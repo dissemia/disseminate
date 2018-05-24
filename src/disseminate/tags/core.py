@@ -171,6 +171,34 @@ class Tag(object):
         short_attr = self.get_attribute('short')
         return short_attr if short_attr is not None else self.title
 
+    @property
+    def mtime(self):
+        """The last modification time of this tag's (and subtag) document and
+        for the documents of all labels reference by this tag."""
+        # All tags and sub-tags have the same mtime, which is stored in the
+        # context
+        mtimes = [self.context.get('mtime', None)]
+
+        # Get the labels and their mtimes. Some of the tags may reference other
+        # documents with later mtimes, so this will fetch those mtimes.
+        if 'label_manager' in self.context:
+            label_manager = self.context['label_manager']
+
+            # Get all the labels referenced by this tag (and sub-tags) and find
+            # their mtimes.
+            flattened_list = self.flatten(filter_tags=True)
+            label_ids = {t.label_id for t in flattened_list
+                         if hasattr(t, 'label_id')}
+
+            labels = [l for l in label_manager.labels if l.id in label_ids]
+            mtimes += [l.mtime for l in labels]
+
+        # Remove None values from mtimes
+        mtimes = list(filter(bool, mtimes))
+
+        # The mtime is the latest mtime of all the tags and labels
+        return max(mtimes)
+
     def get_attribute(self, name, target=None, clear=False):
         """Retrieve an attribute from the tag and optionally clear it from
         the list of attributes.
@@ -236,6 +264,48 @@ class Tag(object):
             label_manager = self.context['label_manager']
             return label_manager.get_label(id=self.label_id)
         return None
+
+    def flatten(self, tag=None, filter_tags=True):
+        """Generate a flat list with this tag and all sub-tags and elements.
+
+        Parameters
+        ----------
+        tag : :obj:`Tag`, optional
+            If specified, flatten the given tag, instead of this tag.
+        filter_tags : bool, optional
+            If True, only return a list of tag objects. Otherwise, include all
+            content items, including strings and lists.
+
+        Returns
+        -------
+        flattened_list : list of tags or list of tags or str or list
+            The flattened list.
+        """
+        tag = tag if tag is not None else self
+        flattened_list = [tag]
+
+        # Process the tag's contents if present
+        if hasattr(tag, 'content'):
+            tag = tag.content
+
+        # Convert the AST to a list, if it isn't already
+        if not hasattr(tag, '__iter__'):
+            tag = [tag]
+
+        # Traverse the items and process each
+        for item in tag:
+            # Add the item to the ast
+            flattened_list.append(item)
+
+            # Process tag's sub-items, if present
+            if hasattr(item, 'content') and isinstance(item.content, list):
+                # Process lists recursively
+                flattened_list += self.flatten(tag=item.content,
+                                               filter_tags=filter_tags)
+
+        if filter_tags:
+            flattened_list = [t for t in flattened_list if isinstance(t, Tag)]
+        return flattened_list
 
     def default(self, content=None):
         """Convert the tag to a text string.

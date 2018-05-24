@@ -235,3 +235,125 @@ def test_label_title(tmpdir):
     assert heading_labels[1].title == 'My First Section'
     assert heading_labels[2].title == ('My First SubSection, '
                                        'and it has multiple lines')
+
+
+def test_label_number(tmpdir):
+    """Test the number properties for labels."""
+    # Create a test document
+    src_filepath = tmpdir.join('src').join('main.dm')
+    tmpdir.join('src').mkdir()
+    src_filepath.write("""
+    ---
+    targets: html, txt
+    ---
+    @chapter{First Chapter}
+    @section{My First Section. It has periods.}
+    @subsection{My First SubSection, and
+      it has multiple lines.}
+    """)
+
+    doc = Document(str(src_filepath), str(tmpdir))
+
+    # Check the labels
+    label_man = doc.context['label_manager']
+
+    # There should be 4 labels: 1 for the document, 1 for chapter,
+    # 1 for section and 1 for subsection
+    assert len(label_man.labels) == 4
+
+    # Get the heading labels
+    heading_labels = label_man.get_labels(kinds='heading')
+    assert len(heading_labels) == 3
+
+    assert heading_labels[0].number == 1
+    assert heading_labels[1].number == 1
+    assert heading_labels[2].number == 1
+
+    assert heading_labels[0].tree_number == '1'
+    assert heading_labels[1].tree_number == '1.1'
+    assert heading_labels[2].tree_number == '1.1.1'
+
+
+def test_label_mtime(tmpdir):
+    """Test the label_latest_mtime function."""
+    # 1. Setup a document with 3 chapters
+    tmpdir.join('src').mkdir()
+    src_filepath = tmpdir.join('src').join('test.dm')
+
+    src_filepath.write("""
+    ---
+    targets: html
+    ---
+    @chapter[id=chapter-1]{Chapter 1}
+    @ref{chapter-3}
+    @chapter[id=chapter-2]{Chapter 2}
+    @chapter[id=chapter-3]{Chapter 3}
+    """)
+
+    # Load the document
+    doc = Document(str(src_filepath), str(tmpdir))
+    doc.render()
+
+    # Check that the labels were correctly loaded: 1 for the document and 1
+    # for each of the 3 chapters.
+    label_manager = doc.context['label_manager']
+
+    assert len(label_manager.labels) == 4
+
+    # The labels should all have the same modification time as the document
+    doc_mtime = src_filepath.mtime()
+    assert doc.context['mtime'] == doc_mtime
+    assert label_manager.labels[0].mtime == doc_mtime  # document label
+    assert label_manager.labels[1].mtime == doc_mtime  # chapter 1 label
+    assert label_manager.labels[2].mtime == doc_mtime  # chapter 2 label
+    assert label_manager.labels[3].mtime == doc_mtime  # chapter 3 label
+
+    for label in label_manager.labels:
+        assert label.document == doc
+
+    # Determine the ids for the labels
+    ids = [id(label) for label in label_manager.labels]
+
+    # Change the first chapter. The labels should all now have an updated mtime
+    src_filepath.write("""
+    ---
+    targets: html
+    ---
+    @chapter[id=chapter-1-intro]{Chapter 1}
+    @ref{chapter-3}
+    @chapter[id=chapter-2]{Chapter 2}
+    @chapter[id=chapter-3]{Chapter 3}
+    """)
+
+    # Reload the AST
+    doc.get_ast()
+
+    # Check to see which labels have been created new. The label.id for
+    # chapter 1 has changed, so a new label object should have been created
+    new_ids = [id(label) for label in label_manager.labels]
+    assert ids[0] == new_ids[0]  # document label
+    assert ids[1] != new_ids[1]  # chapter 1 label
+    assert ids[2] == new_ids[2]  # chapter 2 label
+    assert ids[3] == new_ids[3]  # chapter 3 label
+
+    # Check the label modification times. The labels were updated after the
+    # original document's modification time.
+    assert label_manager.labels[0].mtime > doc_mtime  # document label
+    assert label_manager.labels[1].mtime > doc_mtime  # chapter 1 label
+    assert label_manager.labels[2].mtime > doc_mtime  # chapter 2 label
+    assert label_manager.labels[3].mtime > doc_mtime  # chapter 3 label
+
+    # Check the label modification times. The labels were updated after the
+    # last modification (i.e. when doc.get_ast() was issues).
+    doc_mtime = src_filepath.mtime()
+    assert doc.context['mtime'] == doc_mtime
+
+    for label in label_manager.labels:
+        assert label.document == doc
+
+    # The label modification times should now match the new document's
+    # modification time
+    assert label_manager.labels[0].mtime == doc_mtime  # document label
+    assert label_manager.labels[1].mtime == doc_mtime  # chapter 1 label
+    assert label_manager.labels[2].mtime == doc_mtime  # chapter 2 label
+    assert label_manager.labels[3].mtime == doc_mtime  # chapter 3 label

@@ -3,9 +3,138 @@ Tests the core Tag and TagFactory classes.
 """
 import pytest
 
+from disseminate.document import Document
+from disseminate.ast import process_ast
 from disseminate.tags import Tag, TagError
 from disseminate.tags.text import P
 
+
+def test_flatten_tag():
+    """Test the flatten method."""
+    # Setup a test source string
+    test = """
+            This is my test document. It has multiple paragraphs.
+
+            Here is a new one with @b{bolded} text as an example.
+            @figuretag[offset=-1.0em]{
+              @imgtag{media/files}
+              @captiontag{This is my @i{first} figure.}
+            }
+
+            This is a @13C variable, but this is an email address: justin@lorieau.com
+
+            Here is a @i{new} paragraph."""
+
+    # Parse it
+    root = process_ast(test)
+
+    # Convert the root tag to a flattened list and check the items
+    flattened_tag = root.flatten(filter_tags=False)
+
+    assert len(flattened_tag) == 18
+    assert flattened_tag[0].name == 'root'
+    assert isinstance(flattened_tag[1], str)
+    assert flattened_tag[2].name == 'b'
+    assert isinstance(flattened_tag[3], str)
+    assert flattened_tag[4].name == 'figuretag'
+    assert isinstance(flattened_tag[5], list)
+    assert isinstance(flattened_tag[6], str)
+    assert flattened_tag[7].name == 'imgtag'
+    assert isinstance(flattened_tag[8], str)
+    assert flattened_tag[9].name == 'captiontag'
+    assert isinstance(flattened_tag[10], list)
+    assert isinstance(flattened_tag[11], str)
+    assert flattened_tag[12].name == 'i'
+    assert isinstance(flattened_tag[13], str)
+    assert isinstance(flattened_tag[14], str)
+    assert isinstance(flattened_tag[15], str)
+    assert flattened_tag[16].name == 'i'
+    assert isinstance(flattened_tag[17], str)
+
+    # Convert the root tag to a flattened list with only tags
+    flattened_tag = root.flatten(filter_tags=True)
+
+    assert len(flattened_tag) == 7
+    assert flattened_tag[0].name == 'root'
+    assert flattened_tag[1].name == 'b'
+    assert flattened_tag[2].name == 'figuretag'
+    assert flattened_tag[3].name == 'imgtag'
+    assert flattened_tag[4].name == 'captiontag'
+    assert flattened_tag[5].name == 'i'
+    assert flattened_tag[6].name == 'i'
+
+
+def test_tag_mtime(tmpdir):
+    """Test the calculation of mtimes for labels."""
+    # Prepare two files
+    tmpdir.mkdir('src')
+    src_filepath1 = tmpdir.join('src').join('main.dm')
+    src_filepath2 = tmpdir.join('src').join('sub.dm')
+
+    # Write to the files
+    src_filepath1.write("""
+    ---
+    target: html
+    include:
+        sub.dm
+    ---
+    @chapter[id=chapter-one]{Chapter One}
+    """)
+
+    src_filepath2.write("""
+    ---
+    target: html
+    ---
+    @chapter[id=chapter-two]{Chapter Two}
+    """)
+
+    doc = Document(str(src_filepath1), tmpdir)  # main.dm
+
+    # Get the two documents
+    docs = doc.documents_list(only_subdocuments=False, recursive=False)
+    assert len(docs) == 2
+    doc1, doc2 = docs  # doc1 == doc; doc2 is sub.dm
+
+    # Get the root tag and the mtimes
+    root1 = doc1.get_ast()
+    root2 = doc2.get_ast()
+
+    # Check that the mtimes match the file modification times
+    assert src_filepath1.mtime() == root1.mtime
+    assert src_filepath2.mtime() == root2.mtime
+
+    # Now change the two src files. The first file references a label in the
+    # 2nd, so its mtime should match of the 2nd file--not the first
+    src_filepath1.write("""
+    ---
+    target: html
+    include:
+        sub.dm
+    ---
+    @ref{chapter-two}
+    @chapter[id=chapter-one]{Chapter One}
+    """)
+
+    src_filepath2.write("""
+    ---
+    target: html
+    ---
+    @chapter[id=chapter-two]{Chapter Two}
+    """)
+
+    # Get the root tag and the mtimes
+    root1 = doc1.get_ast()
+    root2 = doc2.get_ast()
+
+    # Check that the first file was written before the second.
+    assert src_filepath1.mtime() < src_filepath2.mtime()
+
+    # Both root tags should have the modification time of the 2nd file
+    assert src_filepath2.mtime() == root1.mtime
+    assert src_filepath2.mtime() == root2.mtime
+
+
+# Tests for html targets
 
 def test_html():
     """Test the conversion of tags to html strings."""
@@ -80,6 +209,7 @@ def test_html_nested():
                            '  <p>paragraph</p>\n'
                            '</span>\n')
 
+# Tests for tex targets
 
 def test_tex():
     """Tests the rendering of latex tags."""

@@ -205,6 +205,9 @@ class LabelManager(object):
                         # Reset the local_counter for sections, subsections
                         local_counter['subsubsection'] = 0
 
+                    elif label.kind[-1] == 'subsubsection':
+                        subsubsection_label = label
+
                 # Get the count for each of the kind items
                 local_order, global_order = [], []
                 for item in label.kind:
