@@ -188,7 +188,7 @@ class Tag(object):
             # their mtimes.
             flattened_list = self.flatten(filter_tags=True)
             label_ids = {t.label_id for t in flattened_list
-                         if hasattr(t, 'label_id')}
+                         if hasattr(t, 'label_id') if t.label_id is not None}
 
             labels = [l for l in label_manager.labels if l.id in label_ids]
             mtimes += [l.mtime for l in labels]

@@ -120,7 +120,8 @@ class Document(object):
     context_processors = [process_context_toc,
                           ]
 
-    def __init__(self, src_filepath, target_root=None, context=None):
+    def __init__(self, src_filepath, target_root=None, context=None,
+                 load_ast=True):
         self.src_filepath = str(src_filepath)
         self.subdocuments = dict()
         self.context = dict()
@@ -154,7 +155,8 @@ class Document(object):
         self._ast = None
 
         # Read in the AST
-        self.get_ast()
+        if load_ast:
+            self.get_ast()
 
     def __del__(self):
         """Clean up any temp directories no longer in use."""
@@ -505,8 +507,12 @@ class Document(object):
                 self._subdocuments_src_filepaths.append(src_filepath)
 
                 # Create the target_root relative to the project's target_root
+                # The AST isn't loaded at this stage to prevent the registration
+                # of labels before all documents are loaded. The ASTs of sub
+                # documents are loaded by this document's get_ast method.
                 doc = Document(src_filepath=a_src_filepath,
-                               context=self.context)
+                               context=self.context,
+                               load_ast=False)
                 self.subdocuments[src_filepath] = doc
 
             # Remove missing documents
@@ -629,6 +635,7 @@ class Document(object):
             self.load_subdocuments()
 
             # Register the labels added from parsing the AST
+            # TODO: only run this register_labels once--move out of get_ast?
             if register_labels:
                 self.register_labels()
 

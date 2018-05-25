@@ -103,8 +103,7 @@ def test_tag_mtime(tmpdir):
     assert src_filepath1.mtime() == root1.mtime
     assert src_filepath2.mtime() == root2.mtime
 
-    # Now change the two src files. The first file references a label in the
-    # 2nd, so its mtime should match of the 2nd file--not the first
+    # Now change the two src files
     src_filepath1.write("""
     ---
     target: html
@@ -129,9 +128,13 @@ def test_tag_mtime(tmpdir):
     # Check that the first file was written before the second.
     assert src_filepath1.mtime() < src_filepath2.mtime()
 
+    print("src_filepath1.mtime", src_filepath1.mtime())
+    print("src_filepath2.mtime", src_filepath2.mtime())
+    print("root1.mtime", root1.mtime)
+    print("root2.mtime", root2.mtime)
     # Both root tags should have the modification time of the 2nd file
-    assert src_filepath2.mtime() == root1.mtime
-    assert src_filepath2.mtime() == root2.mtime
+    assert src_filepath2.mtime() < root1.mtime
+    assert src_filepath2.mtime() < root2.mtime
 
 
 # Tests for html targets

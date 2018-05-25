@@ -2,12 +2,15 @@
 Test the function of document trees and subdocuments.
 """
 import weakref
-
-import pytest
+import os
 
 from disseminate.document import Document
-from disseminate.labels import DuplicateLabel
 from disseminate.utils.tests import strip_leading_space
+
+
+def touch(fname, times=None):
+    with open(fname, 'a'):
+        os.utime(fname, times)
 
 
 def test_documents_list():
@@ -440,3 +443,99 @@ def test_document_tree_updates_with_labels(tmpdir):
     assert mtime1 != tmpdir.join('html').join('file1.html').mtime()
     assert mtime2 != tmpdir.join('html').join('file2.html').mtime()
     assert mtime3 != tmpdir.join('html').join('file3.html').mtime()
+
+
+def test_render_required(tmpdir):
+    """Tests the render_required method with multiple files."""
+    # Create a document tree.
+    src_path = tmpdir.join('src')
+    src_path.mkdir()
+
+    src_filepath1 = src_path.join('file1.dm')
+    src_filepath2 = src_path.join('file2.dm')
+    src_filepath3 = src_path.join('file3.dm')
+
+    src_filepath1.write("""
+    ---
+    include:
+      file2.dm
+      file3.dm
+    targets: html
+    ---
+    @chapter{file1}
+    """)
+    src_filepath2.write("""
+    @chapter{file2}
+    """)
+    src_filepath3.write("""
+    @chapter{file3}
+    """)
+
+    # Load the root document. This will load the AST for all documents,
+    # but not render (and therefore create) the target files, so a render is
+    # required.
+    doc = Document(src_filepath=src_filepath1, target_root=str(tmpdir))
+    label_manager = doc.context['label_manager']
+
+    # 1. Test that a render is required when the target file hasn't been created
+    assert not tmpdir.join('html').join('file1.html').exists()
+    assert not tmpdir.join('html').join('file2.html').exists()
+    assert not tmpdir.join('html').join('file3.html').exists()
+
+    # Check that all documents need to be rendered
+    doc_list = doc.documents_list(only_subdocuments=False, recursive=True)
+    assert len(doc_list) == 3
+
+    # Check the mtimes of the tags and labels
+    mtime1 = doc_list[0].mtime
+    mtime2 = doc_list[1].mtime
+    mtime3 = doc_list[2].mtime
+
+    # The problem here is that the register_labels is run for the root doc
+    # and sub docs, reordering the local_order every time.
+    assert mtime1 < mtime2 < mtime3
+    assert doc_list[0].get_ast().mtime == mtime1
+    assert doc_list[1].get_ast().mtime == mtime2
+    assert doc_list[2].get_ast().mtime == mtime3
+
+    # 3 invocations of the render_required method
+    for d in doc_list:
+        target_filepath = d.targets['.html']
+        assert d.render_required(target_filepath)
+
+    # Now render the targets and a render should not be required
+    # Altogether 6 invocations of the render_required method
+    for d in doc_list:
+        target_filepath = d.targets['.html']
+        d.render()
+        assert not d.render_required(target_filepath)
+
+    # The target files should exist
+    assert tmpdir.join('html').join('file1.html').exists()
+    assert tmpdir.join('html').join('file2.html').exists()
+    assert tmpdir.join('html').join('file3.html').exists()
+
+    # 2. Test that a render is required when the source file modification time
+    #    is updated. We'll update the 2nd document, and only its mtime should
+    #    get updated once we get_ast()
+
+    old_mtime = src_filepath2.mtime()
+    touch(str(src_filepath2))
+    assert old_mtime < src_filepath2.mtime()
+
+    assert doc_list[0].get_ast().mtime == mtime1
+    assert doc_list[1].get_ast().mtime != mtime2
+    assert doc_list[2].get_ast().mtime == mtime3
+
+    # Check the mtimes of the tags and labels
+    mtime1 = doc_list[0].context.get('mtime')
+    mtime2 = doc_list[1].context.get('mtime')
+    mtime3 = doc_list[2].context.get('mtime')
+
+    assert doc_list[0].get_ast().mtime == mtime1
+    assert doc_list[1].get_ast().mtime == mtime2
+    assert doc_list[2].get_ast().mtime == mtime3
+
+    for d, answer in zip(doc_list, [False, True, False]):
+        target_filepath = d.targets['.html']
+        assert d.render_required(target_filepath) is answer

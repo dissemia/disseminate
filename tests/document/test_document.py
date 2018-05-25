@@ -247,11 +247,6 @@ def test_custom_template(tmpdir):
     assert "Disseminate Project Index" not in out_file.read()
 
 
-def test_render_required(tmpdir):
-    """Tests the render_required method."""
-    assert False
-
-
 def test_template_updates(tmpdir):
     """Tests the update of rendered targets when the template changes."""
 
