@@ -40,7 +40,7 @@ class Label(object):
     # The following attributes will not update the mtime if replaced. This
     # includes the 'tag', since this is recreated every time the AST is reloaded
     # and it contains its own 'mtime'
-    exclude_update = ('document', 'tag',)
+    exclude_update = ('document', 'tag', 'kind')
 
     def __init__(self, document, id=None, tag=None, kind=None,
                  local_order=None, global_order=None,):

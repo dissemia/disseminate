@@ -1,9 +1,6 @@
 """
 Tests the label manager and label classes.
 """
-import pytest
-
-from disseminate.labels import LabelNotFound
 from disseminate import Document
 
 
@@ -24,46 +21,38 @@ def test_basic_labels(tmpdir):
     label_man.add_label(document=doc, kind='figure')
     label_man.add_label(document=doc, kind='figure')
 
-    # These are collected labels right now, and aren't registered. The only
-    # registered label right now is the document label. There are 2 collected
-    # labels for this document.
-    assert len(label_man.labels) == 1
-    assert len(label_man.collected_labels[doc.src_filepath]) == 2
+    # These are collected labels right now, and aren't registered. Labels
+    # have to be retrieved with get_labels to register them.
+    assert len(label_man.labels) == 0
+    assert len(label_man.collected_labels[doc.src_filepath]) == 3
 
     # Getting labels returns only the document label
-    labels = label_man.get_labels(document=doc)
-    assert len(labels) == 1
+    labels = label_man.get_labels(document=doc)  # register labels
+    assert len(labels) == 3
 
-    # Now register the labels. This will replace all registered labels with the
-    # collected ones, thus removing the document label
-    label_man.register_labels()
-    labels = label_man.get_labels(document=doc)
-    assert len(labels) == 2
+    label1 = labels[0]  # document label
+    label2 = labels[1]  # figure label
+    label3 = labels[2]  # figure label
 
-    label1 = labels[0]
-    label2 = labels[1]
+    assert label1.kind == ('document', 'document-level-1')
+    assert label2.kind == ('figure',)
+    assert label3.kind == ('figure',)
 
-    # Try to get the labels. These are generic labels, which cannot be
-    # retrieved.
-    assert label1.id is None
-    with pytest.raises(LabelNotFound):
-        assert label1 == label_man.get_label(label1.id)
-
-    assert label1.local_order == (1,)
-    assert label1.global_order == (1,)
-    assert label2.local_order == (2,)
-    assert label2.global_order == (2,)
+    assert label1.local_order == (1, 1)
+    assert label1.global_order == (1, 1)
+    assert label2.local_order == (1,)
+    assert label2.global_order == (1,)
+    assert label3.local_order == (2,)
+    assert label3.global_order == (2,)
 
     # Generate a couple of specific labels
     label_man.add_label(document=doc, kind='figure', id='fig:image1')
     label_man.add_label(document=doc, kind='figure', id='fig:image2')
 
-    # These aren't registered. They only get included once they're registered.
-    # Since a registration was executed after adding label1 and label2, these
-    # two labels replace those labels
-    labels = label_man.get_labels(document=doc)
+    # Getting the labels will register the new labels, removing the old labels,
+    # and leaving the 2 new labels
+    labels = label_man.get_labels(document=doc)  # registers labels
     assert len(labels) == 2
-    label_man.register_labels()
     labels = label_man.get_labels(document=doc)
     assert len(labels) == 2
 
@@ -98,20 +87,14 @@ def test_get_labels(tmpdir):
     label_man.add_label(document=doc, kind='figure')
     label_man.add_label(document=doc, kind='figure')
 
-    # Get all labels. There should only be 1 registered label: the document's
-    # label
+    # Get all labels and register them. There should only be 3 registered
+    # labels: the document's label and the 3 figure labels
     labels = label_man.get_labels()
-    assert len(labels) == 1
-
-    # Register the labels. Since we didn't add a new document label, there
-    # should only be 2 labels: one for each figure.
-    label_man.register_labels()
-    labels = label_man.get_labels()
-    assert len(labels) == 2
+    assert len(labels) == 3
 
     # Get labels for this document
     labels = label_man.get_labels(document=doc)
-    assert len(labels) == 2
+    assert len(labels) == 3
 
     # Get labels for another document (a string is used since the type is not
     # checked)
@@ -162,44 +145,63 @@ def test_label_reordering(tmpdir):
     label_man.add_label(document=doc2, kind='figure')
     label_man.add_label(document=doc2, kind='figure')
 
-    # Register the labels. This will only register the newly collected labels:
-    # i.e. the 4 label figures. Running it twice shouldn't impact the results
+    # Get and register the labels. This will include 2 document labels and 4
+    # figure labels
     for i in range(2):
-        label_man.register_labels()
-        label1, label2, label3, label4 = label_man.get_labels()
+        labels = label_man.get_labels()
+        assert len(labels) == 6
 
-        # Check the numbers
-        assert label1.local_order == (1,)
-        assert label1.global_order == (1,)
+        label1, label2, label3, label4, label5, label6 = labels
 
-        assert label2.local_order == (2,)
-        assert label2.global_order == (2,)
+        # Check the numbers and kind
+        assert label1.kind == ('document', 'document-level-1')
+        assert label1.local_order == (1, 1)
+        assert label1.global_order == (1, 1)
 
-        assert label3.local_order == (1,)
-        assert label3.global_order == (3,)
+        assert label2.kind == ('figure',)
+        assert label2.local_order == (1,)
+        assert label2.global_order == (1,)
 
-        assert label4.local_order == (2,)
-        assert label4.global_order == (4,)
+        assert label3.kind == ('figure',)
+        assert label3.local_order == (2,)
+        assert label3.global_order == (2,)
 
-    # Now reset the registration of labels for the first document. The
-    # corresponding labels should also disappear.
+        assert label4.kind == ('document', 'document-level-2')
+        assert label4.local_order == (1, 1)
+        assert label4.global_order == (2, 1)
+
+        assert label5.kind == ('figure',)
+        assert label5.local_order == (1,)
+        assert label5.global_order == (3,)
+
+        assert label6.kind == ('figure',)
+        assert label6.local_order == (2,)
+        assert label6.global_order == (4,)
+
+    # Now reset the labels for the first document. The
+    # corresponding labels should also disappear, leaving 3 labels.
     label_man.reset(document=doc)
-    label_man.register_labels()
 
     labels = label_man.get_labels()
-    assert len(labels) == 2
-    label3, label4 = labels
+    assert len(labels) == 3
+    label4, label5, label6 = labels
 
-    # Check the numbers
-    assert label3.global_order == (1,)
-    assert label3.local_order == (1,)
-    assert label4.global_order == (2,)
-    assert label4.local_order == (2,)
+    # Check the labels
+    assert label4.kind == ('document', 'document-level-2')
+    assert label4.local_order == (1, 1)
+    assert label4.global_order == (1, 1)
+
+    assert label5.kind == ('figure',)
+    assert label5.local_order == (1,)
+    assert label5.global_order == (1,)
+
+    assert label6.kind == ('figure',)
+    assert label6.local_order == (2,)
+    assert label6.global_order == (2,)
 
     # Now delete the 2nd document and the labels should be removed too.
     doc2 = None
     doc.subdocuments.clear()
-    label_man.register_labels()
     assert len(label_man.get_labels()) == 0
 
 
@@ -225,7 +227,8 @@ def test_label_title(tmpdir):
 
     # There should be 4 labels: 1 for the document, 1 for chapter,
     # 1 for section and 1 for subsection
-    assert len(label_man.labels) == 4
+    labels = label_man.get_labels()
+    assert len(labels) == 4
 
     # Get the heading labels
     heading_labels = label_man.get_labels(kinds='heading')
@@ -259,7 +262,8 @@ def test_label_number(tmpdir):
 
     # There should be 4 labels: 1 for the document, 1 for chapter,
     # 1 for section and 1 for subsection
-    assert len(label_man.labels) == 4
+    labels = label_man.get_labels()
+    assert len(labels) == 4
 
     # Get the heading labels
     heading_labels = label_man.get_labels(kinds='heading')
@@ -275,7 +279,7 @@ def test_label_number(tmpdir):
 
 
 def test_label_mtime(tmpdir):
-    """Test the label_latest_mtime function."""
+    """Test the label mtime method."""
     # 1. Setup a document with 3 chapters
     tmpdir.join('src').mkdir()
     src_filepath = tmpdir.join('src').join('test.dm')
@@ -298,7 +302,8 @@ def test_label_mtime(tmpdir):
     # for each of the 3 chapters.
     label_manager = doc.context['label_manager']
 
-    assert len(label_manager.labels) == 4
+    labels = label_manager.get_labels()
+    assert len(labels) == 4
 
     # The labels should all have the same modification time as the document
     doc_mtime = src_filepath.mtime()
@@ -328,9 +333,11 @@ def test_label_mtime(tmpdir):
     # Reload the AST
     doc.get_ast()
 
-    # Check to see which labels have been created new. The label.id for
-    # chapter 1 has changed, so a new label object should have been created
-    new_ids = [id(label) for label in label_manager.labels]
+    # Check to see which labels have been created new.
+    # The get_labels method registers the label changes.
+    # The label.id for chapter 1 has changed, so a new label object should
+    # have been created
+    new_ids = [id(label) for label in label_manager.get_labels()]
     assert ids[0] == new_ids[0]  # document label
     assert ids[1] != new_ids[1]  # chapter 1 label
     assert ids[2] == new_ids[2]  # chapter 2 label

@@ -26,8 +26,8 @@ class LabelManager(object):
 
     Labels are added with the :meth:`add_label` method. These labels are
     collected and are only available after the :meth:`register_label` method
-    is executed. When registering labels, old labels that aren't reference
-    anymore are remove.
+    is executed. Labels are automatically registered when the :meth:`get_label`
+    and :meth:`get_labels` methods are used.
 
     Attributes
     ----------
@@ -83,7 +83,7 @@ class LabelManager(object):
         if isinstance(kind, str):
             kind = (kind,)
 
-        # See if the label already exists
+        # See if the label already exists and that it points to this document
         existing_labels = [label for label in self.labels if label.id == id]
 
         if len(existing_labels) == 0 or id is None:
@@ -112,7 +112,7 @@ class LabelManager(object):
         Labels are added with the :meth:`add_label` method. These labels are
         collected and are only available after the :meth:`register_label` method
         is executed. When registering labels, old labels that aren't referenced
-        anymore are remove.
+        anymore are removed.
 
         Additionally, this function does the following:
 
@@ -155,23 +155,24 @@ class LabelManager(object):
         global_counter = dict()  # Keep track of global count
 
         for src_filepath in src_filepaths:
-            local_counter = dict()  # Keep track of global count
+            local_counter = dict()  # Keep track of local count
             chapter_label = None
             section_label = None
             subsection_label = None
             subsubsection_label = None
 
+            collected_labels = src_filepath in self.collected_labels
+
             # If there are collected labels for the given src_filepath, use
             # those labels. Otherwise, use those that are already registered
-            if src_filepath not in self.collected_labels:
-
-                # Use the existing registered label
-                labels = [l for l in self.labels
-                          if l.document.src_filepath == src_filepath]
-            else:
+            if collected_labels:
                 # Use the collected labels
                 labels = self.collected_labels[src_filepath]
                 updated_label_count += len(labels)
+            else:
+                # Use the existing registered label
+                labels = [l for l in self.labels
+                          if l.document.src_filepath == src_filepath]
 
             # Process each label. Set the local_order and global_order count
             # for each label, set the corresponding chapter and section labels,
@@ -247,6 +248,8 @@ class LabelManager(object):
     def get_label(self, id):
         """Return the label for the given label id.
 
+        .. note:: This function registers the added labels.
+
         Parameters
         ----------
         id : str
@@ -263,6 +266,9 @@ class LabelManager(object):
             A LabelNotFound exception is raised if a label with the given id
             could not be found.
         """
+        # Make sure the labels are registered
+        self.register_labels()
+
         # Find the label
         existing_labels = {i for i in self.labels if i.id == id and
                            i.document is not None}
@@ -276,6 +282,8 @@ class LabelManager(object):
     def get_labels(self, document=None, kinds=None):
         """Return a filtered and sorted list of all labels for the given
         document.
+
+        .. note:: This function registers the added labels.
 
         Parameters
         ----------
@@ -293,18 +301,27 @@ class LabelManager(object):
         list of :obj:`disseminate.labels.Label`
             A list of label objects.
         """
-        # Filter labels by document. Labels are sorted first by the order of a
-        # document in a document tree, then by their global_order
+        # Make sure the labels are registered
+        self.register_labels()
+
+        # Filter labels by document.
+        # Labels are then sorted first by:
+        #   1. the order of a document in a document tree (i.e. its document
+        #      number)
+        #   2. it's most general kind (i.e. 'heading' or 'document'),
+        #   3. then by their global_order.
         if document is not None:
             document_labels = sorted([l for l in self.labels
                                       if l.document is not None and
                                       l.document == document],
                                      key=lambda l: (l.document_number,
+                                                    l.kind[0],
                                                     l.global_order))
         else:
             document_labels = sorted([l for l in self.labels
                                       if l.document is not None],
                                      key=lambda l: (l.document_number,
+                                                    l.kind[0],
                                                     l.global_order))
 
         if kinds is None:

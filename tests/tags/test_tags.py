@@ -89,6 +89,7 @@ def test_tag_mtime(tmpdir):
     """)
 
     doc = Document(str(src_filepath1), tmpdir)  # main.dm
+    label_manager = doc.context['label_manager']
 
     # Get the two documents
     docs = doc.documents_list(only_subdocuments=False, recursive=False)
@@ -103,7 +104,8 @@ def test_tag_mtime(tmpdir):
     assert src_filepath1.mtime() == root1.mtime
     assert src_filepath2.mtime() == root2.mtime
 
-    # Now change the two src files
+    # Now change the two src files. Add a reference to the 2nd file in the
+    # first.
     src_filepath1.write("""
     ---
     target: html
@@ -128,13 +130,17 @@ def test_tag_mtime(tmpdir):
     # Check that the first file was written before the second.
     assert src_filepath1.mtime() < src_filepath2.mtime()
 
-    print("src_filepath1.mtime", src_filepath1.mtime())
-    print("src_filepath2.mtime", src_filepath2.mtime())
-    print("root1.mtime", root1.mtime)
-    print("root2.mtime", root2.mtime)
-    # Both root tags should have the modification time of the 2nd file
-    assert src_filepath2.mtime() < root1.mtime
-    assert src_filepath2.mtime() < root2.mtime
+    # The labels haven't been registered yet, so the root tags should have the
+    # same modification time as the files
+    assert src_filepath1.mtime() == root1.mtime
+    assert src_filepath2.mtime() == root2.mtime
+
+    # Registering the labels with the 'get_labels' method will update the tag
+    # mtimes so that root1, which references the 2nd document, gets its mtime,
+    # while root2 stays the same
+    labels = label_manager.get_labels()
+    assert src_filepath2.mtime() == root1.mtime
+    assert src_filepath2.mtime() == root2.mtime
 
 
 # Tests for html targets
@@ -211,6 +217,7 @@ def test_html_nested():
     assert root.html() == ('<span class="root">\n'
                            '  <p>paragraph</p>\n'
                            '</span>\n')
+
 
 # Tests for tex targets
 

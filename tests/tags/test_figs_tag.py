@@ -66,8 +66,8 @@ def test_figure_caption_no_id(tmpdir):
     # A label should have been registered. Altogether, there should be 1 label
     # for the figure. The document's label was wiped out by the
     # 'register_labels' function above.
-    assert len(label_man.labels) == 1
     labels = label_man.get_labels(kinds='figure')
+    assert len(labels) == 1
     label = labels[0]
     assert label.id is not None
     assert label.kind == ('figure',)
@@ -107,8 +107,8 @@ def test_figure_caption_with_id(tmpdir):
         assert caption.content == 'This is my caption'
 
         # 1 label should be registered for the figure
-        assert len(label_man.labels) == 1
         labels = label_man.get_labels(kinds='figure')
+        assert len(labels) == 1
         label = labels[0]
 
         assert label.id == 'fig-1'

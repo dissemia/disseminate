@@ -3,31 +3,9 @@ Tests for Document classes and functions.
 """
 import pytest
 import os.path
-from shutil import copyfile
 
 from disseminate.document import Document, DocumentError
-from disseminate.dependency_manager import MissingDependency
-from disseminate.tags.toc import process_context_toc
 from disseminate.utils.tests import strip_leading_space
-
-
-def test_basic_conversion_html(tmpdir):
-    """Tests the conversion of a basic html file."""
-    # Get a path to a temporary file
-    temp_file = str(tmpdir.join("html")) + '/dummy.html'
-
-    # Load the document and render it with no template
-    doc = Document("tests/document/example1/dummy.dm",
-                   str(tmpdir))
-    doc.render()
-    # Make sure the output matches the answer key
-    with open(temp_file, 'r') as f, \
-         open("tests/document/example1/test_basic_conversion_html.html") as g:
-        assert f.read() == g.read()
-
-    # An invalid file raises an error
-    with pytest.raises(DocumentError):
-        doc = Document("tests/document/missing.dm")
 
 
 def test_number_property(tmpdir):
@@ -258,9 +236,9 @@ def test_template_updates(tmpdir):
 
     template.write("""test1""")
     in_file.write("""---
-targets: html
-template: index
----""")
+    targets: html
+    template: index
+    ---""")
 
     # Load the document and test its contents
     doc = Document(str(in_file))
@@ -353,111 +331,22 @@ def test_macros(tmpdir):
     assert '<i>example</i>' in rendered_html
 
 
-def test_dependencies_img(tmpdir):
-    """Tests that the image dependencies are correctly reset when the AST is
-    reprocessed."""
-    # Setup the project_root in a temp directory
-    project_root = tmpdir.join('src')
-    project_root.mkdir()
-    target_root = str(tmpdir)
+# Test html targets
 
-    # Copy a dependency image file to this directory
-    img_path = str(project_root.join('sample.png'))
-    copyfile('tests/document/example3/sample.png',
-             img_path)
+def test_basic_conversion_html(tmpdir):
+    """Tests the conversion of a basic html file."""
+    # Get a path to a temporary file
+    temp_file = str(tmpdir.join("html")) + '/dummy.html'
 
-    # Make a document source file
-    markup = """
-    ---
-    targets: html
-    ---
-    @img{sample.png}
-    """
-
-    src_filepath = project_root.join('test.dm')
-    src_filepath.write(strip_leading_space(markup))
-
-    # Create a document
-    doc = Document(str(src_filepath), tmpdir)
-
-    # Check that the document and dependency manager paths are correct
-    assert doc.project_root == str(project_root)
-    assert doc.target_root == str(target_root)
-
-    dep = doc.context['dependency_manager']
-    assert dep.project_root == str(project_root)
-    assert dep.target_root == str(target_root)
-
-    # Render the document
+    # Load the document and render it with no template
+    doc = Document("tests/document/example1/dummy.dm",
+                   str(tmpdir))
     doc.render()
+    # Make sure the output matches the answer key
+    with open(temp_file, 'r') as f, \
+         open("tests/document/example1/test_basic_conversion_html.html") as g:
+        assert f.read() == g.read()
 
-    # The img file should be a dependency in the '.html' target
-    d = dep.get_dependency(target='.html', src_filepath=img_path)
-    assert d.dep_filepath == 'sample.png'
-
-    # Rewrite the document source file without the dependency
-    markup = ""
-    src_filepath.write(markup)
-
-    # Render the document and the dependency should have been removed.
-    doc.render()
-
-    # A missing dependency raises a MissingDependency exception
-    with pytest.raises(MissingDependency):
-        d = dep.get_dependency(target='.html', src_filepath=img_path)
-
-
-def test_document_labels(tmpdir):
-    """Test the correct assignment of labels for a document."""
-
-    # Setup the project_root in a temp directory
-    project_root = tmpdir.join('src')
-    project_root.mkdir()
-    target_root = tmpdir
-
-    # Make a document source file
-    src_filepath = project_root.join('test.dm')
-    src_filepath.ensure(file=True)  # touch the file
-
-    # Create a document
-    doc = Document(str(src_filepath), str(target_root))
-
-    # 1. Test the label when the '_project_root' value is not assigned in the
-    #    global_context. In this case, the label is identified by the document's
-    #    src_filepath
-
-    # The label should have been created on document creation and calling the
-    # get_ast method
-    man = doc.context['label_manager']
-    assert len(man.labels) == 1
-    label = man.get_label(id="doc:test.dm")
-    assert label.id == "doc:test.dm"
-    assert label.kind == ('document', 'document-level-1')
-
-
-def test_document_toc(tmpdir):
-    """Test the generation of a toc from the header of a document."""
-    # Load example4, which has a file.dm with a 'toc' entry in the heading
-    # for documents.
-    doc = Document('tests/document/example4/src/file.dm',
-                   target_root=str(tmpdir))
-
-    # Render the doc
-    doc.render()
-
-    # Make sure the 'toc' context entry is correct
-    assert doc.context['toc'] == 'documents'
-
-    # Make a context and process the toc
-    context = dict(doc.context)
-    process_context_toc(context, target='.html')
-
-    key = """<ul class="toc-level-1">
-  <li>
-    <a href="/file.html">
-      <span class="label">My first title</span>
-    </a>
-  </li>
-</ul>
-"""
-    assert key == context['toc']
+    # An invalid file raises an error
+    with pytest.raises(DocumentError):
+        doc = Document("tests/document/missing.dm")
