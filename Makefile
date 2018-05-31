@@ -1,4 +1,4 @@
-#.PHONY: inplace inplace-force clean docs test test-all test-cli build-data develop clean-data help docs profile
+#.PHONY: test coverage develop bench bench-all bench-preview clean docs install help
 .DEFAULT_GOAL := help
 
 PYTHON ?= python
@@ -13,6 +13,17 @@ coverage:  ## Test the coverage of tests
 
 develop: ## Prepare the package for active development
 	$(PYTHON) setup.py develop
+
+bench: ## Run benchmarks on the current version
+	asv run
+	asv publish
+
+bench-all: ## Run benchmarks on all tagged versions
+	asv run "--no-walk --tags"
+	asv publish
+
+bench-preview: ## Run the benchmark webserver
+	asv preview
 
 clean:  ## Safely clean compiled package files, docs and test files
 	find . -name '*.pyc' -exec rm -f {} +
