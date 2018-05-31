@@ -331,20 +331,30 @@ def test_macros(tmpdir):
     assert '<i>example</i>' in rendered_html
 
 
-# Test html targets
+# Test targets
+@pytest.fixture(params=['.html', '.tex'])
+def target(request):
+    return request.param
 
-def test_basic_conversion_html(tmpdir):
+
+def test_render(tmpdir, target):
     """Tests the conversion of a basic html file."""
+    ext = target
+    stripped_ext = ext.strip('.')
+
     # Get a path to a temporary file
-    temp_file = str(tmpdir.join("html")) + '/dummy.html'
+    temp_file = str(tmpdir.join(stripped_ext, 'dummy' + ext))
 
     # Load the document and render it with no template
     doc = Document("tests/document/example1/dummy.dm",
                    str(tmpdir))
-    doc.render()
+
+    targets = {k: v for k, v in doc.targets.items() if k == ext}
+    doc.render(targets=targets)
+
     # Make sure the output matches the answer key
     with open(temp_file, 'r') as f, \
-         open("tests/document/example1/test_basic_conversion_html.html") as g:
+         open("tests/document/example1/dummy" + ext) as g:
         assert f.read() == g.read()
 
     # An invalid file raises an error
