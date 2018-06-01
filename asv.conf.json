@@ -124,7 +124,7 @@
     // skipped for the matching benchmark.
     //
     // "regressions_first_commits": {
-    //    "some_benchmark": "352cdf",  // Consider regressions only after this commit
+        "some_benchmark": "12d59aef",  // Consider regressions only after this commit
     //    "another_benchmark": null,   // Skip regression detection altogether
     // }
 
