@@ -75,10 +75,10 @@ class Suite:
         """Benchmark the render performance of independent files."""
         # Render the file
         targets = {k: v for k, v in self.doc.targets.items() if k == '.html'}
-        self.doc.render(targets=targets)
+        self.doc.render(targets=targets, update_only=False)
 
     def time_render_independent_files_tex(self):
         """Benchmark the render performance of independent files."""
         # Render the file
         targets = {k: v for k, v in self.doc.targets.items() if k == '.tex'}
-        self.doc.render(targets=targets)
+        self.doc.render(targets=targets, update_only=False)
