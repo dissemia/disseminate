@@ -168,48 +168,6 @@ def test_document_garbage_collection(tmpdir):
     assert doc3_ref() is None
 
 
-# Change in behavior: When a recursion exists, a recursion limit exception is
-# raised. This is the desired behavior, rather than silently remove the
-# recursion
-#
-# def test_document_tree_recursive_reference(tmpdir):
-#     """Test the loading of trees and sub-documents with recursive references."""
-#
-#     # Setup the project_root in a temp directory
-#     project_root = tmpdir.join('src').mkdir()
-#
-#     # Populate some files
-#     file1 = project_root.join('file1.dm')
-#     markup = """---
-#     include:
-#       file2.dm
-#     targets: txt, tex
-#     ---
-#     """
-#     file1.write(strip_leading_space(markup))
-#
-#     file2 = project_root.join('file2.dm')
-#     markup = """---
-#     include:
-#       file1.dm
-#     targets: txt, tex
-#     ---
-#     """
-#     file2.write(strip_leading_space(markup))
-#
-#     # Create the root document. The file2 subdocument *should not* have file1
-#     # as a subdocument
-#     doc1 = Document(src_filepath=str(file1))
-#     assert doc1.src_filepath == str(file1)
-#
-#     assert len(doc1.subdocuments) == 1
-#
-#     doc2 = doc1.documents_list(only_subdocuments=True)[0]
-#     assert doc2.src_filepath == str(file2)
-#
-#     assert len(doc2.subdocuments) == 0
-
-
 def test_document_tree_matching_filenames(tmpdir):
     """Test the loading of trees with matching filenames in sub-directories."""
 
@@ -237,7 +195,15 @@ def test_document_tree_matching_filenames(tmpdir):
 
 
 def test_document_tree_updates(tmpdir):
-    """Test the updates to the document tree and labels."""
+    """Test the updates to the document tree and labels.
+
+    Note that this test was previously conducted by checking the python 'id' of
+    objects to determine whether a new document object was created. However,
+    when an old object was deleted, there was a small change (~2%) that the new
+    object would get the same id, making this test fail. Instead, the document
+    objects are marked with a 'test_object' attribute, which disappears when
+    a new object is created.
+    """
     # Create a document tree.
     src_path = tmpdir.join('src')
     src_path.mkdir()
@@ -265,10 +231,13 @@ def test_document_tree_updates(tmpdir):
     assert doc_list[1].src_filepath == str(src_filepath2)
     assert doc_list[2].src_filepath == str(src_filepath3)
 
-    # Get the python ids for the document objects
-    id_1 = id(doc_list[0])
-    id_2 = id(doc_list[1])
-    id_3 = id(doc_list[2])
+    # Mark the document objects by setting a test attribute
+    for d in doc_list:
+        assert not hasattr(d, 'test_object')
+
+    doc_list[0].test_object = 1
+    doc_list[1].test_object = 1
+    doc_list[2].test_object = 1
 
     # 2. Now change the order of the sub-documents and reload the ast
     src_filepath1.write("""---
@@ -286,10 +255,10 @@ def test_document_tree_updates(tmpdir):
     assert doc_list[1].src_filepath == str(src_filepath3)
     assert doc_list[2].src_filepath == str(src_filepath2)
 
-    # Check that the document objects are the same
-    assert id_1 == id(doc_list[0])
-    assert id_3 == id(doc_list[1])
-    assert id_2 == id(doc_list[2])
+    # Check that the document objects are the same by making sure they still
+    # have their attribute marking
+    for d in doc_list:
+        assert hasattr(d, 'test_object')
 
     # 3. Now remove one document
     src_filepath1.write("""---
@@ -313,8 +282,9 @@ def test_document_tree_updates(tmpdir):
     assert doc_list[0].src_filepath == str(src_filepath1)
     assert doc_list[1].src_filepath == str(src_filepath2)
 
-    assert id_1 == id(doc_list[0])
-    assert id_2 == id(doc_list[1])
+    # Check that the two remaining objects have their attribute marking
+    for d in doc_list:
+        assert hasattr(d, 'test_object')
 
     # 4. Now add the document back
     src_filepath1.write("""---
@@ -332,10 +302,10 @@ def test_document_tree_updates(tmpdir):
     assert doc_list[2].src_filepath == str(src_filepath3)
 
     # Check that the objects are all the same, except for the 3rd document,
-    # which was re-created
-    assert id_1 == id(doc_list[0])
-    assert id_2 == id(doc_list[1])
-    assert id_3 != id(doc_list[2])
+    # which was re-created. This 3rd object shouldn't have the test attribute.
+    assert hasattr(doc_list[0], 'test_object')
+    assert hasattr(doc_list[1], 'test_object')
+    assert not hasattr(doc_list[2], 'test_object')
 
 
 def test_render_required(tmpdir):

@@ -34,7 +34,7 @@ def test_dependencies_img(tmpdir):
     src_filepath.write(strip_leading_space(markup))
 
     # Create a document
-    doc = Document(str(src_filepath), tmpdir)
+    doc = Document(str(src_filepath), str(tmpdir))
 
     # Check that the document and dependency manager paths are correct
     assert doc.project_root == str(project_root)

@@ -8,6 +8,7 @@ from ..attributes import (parse_attributes, set_attribute,
                           kwargs_attributes, format_tex_attributes,
                           filter_attributes, get_attribute_value,
                           remove_attribute)
+from .utils import set_html_tag_attributes
 from ..utils.string import titlelize
 from . import settings
 
@@ -452,17 +453,23 @@ class Tag(object):
                                       target='.html')
 
         if name in settings.html_valid_tags:
+            # Create the html tag
+            e = E(name, *elements) if elements else E(name)
+
+            # Set the attributes for the tag, in order.
             kwargs = kwargs_attributes(attrs)
-            e = (E(name, *elements, **kwargs) if elements else
-                 E(name, **kwargs))
+            set_html_tag_attributes(html_tag=e, attrs_dict=kwargs)
         else:
             # Create a span element if it not an allowed element
             # Add the tag type to the class attribute
             attrs = set_attribute(attrs, ('class', name), 'a')
 
+            # Create the html tag
+            e = E('span', *elements) if len(elements) else E('span')
+
+            # Set the attributes for the tag, in order.
             kwargs = kwargs_attributes(attrs)
-            e = (E('span', *elements, **kwargs) if len(elements) else
-                 E('span', **kwargs))
+            set_html_tag_attributes(html_tag=e, attrs_dict=kwargs)
 
         # Render the root tag if this is the first level
         if level == 1:

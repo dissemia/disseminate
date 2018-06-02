@@ -5,6 +5,17 @@ from .. import ast
 from . import settings
 
 
+def set_html_tag_attributes(html_tag, attrs_dict):
+    """Set the attributes for a (html) tag with the values in the given ordered
+    dict.
+
+    This function is needed to preserve the order of attributes set for an
+    html tag.
+    """
+    for k, v in attrs_dict.items():
+        html_tag.set(k, v)
+
+
 def format_label_tag(tag, target=None):
     """Produce a string for a reference or label to or from a tag.
 

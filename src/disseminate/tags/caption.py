@@ -1,10 +1,12 @@
 """
 Tags for captions and references.
 """
+from collections import OrderedDict
+
 from lxml.builder import E
 
 from .core import Tag
-from .utils import format_label_tag, label_term
+from .utils import format_label_tag, label_term, set_html_tag_attributes
 from ..utils.string import hashtxt
 
 
@@ -79,13 +81,18 @@ class Caption(Tag):
         if self.label is not None:
             label_tag = format_label_tag(tag=self, target='.html')
 
-            kwargs = {'class': ' '.join(self.kind),
-                      'id': label.id}
-            return E('span',
-                     label_tag.html(level+1),
-                     label_term(tag=self, target='.html') + ' ',
-                     super(Caption, self).html(level+1),
-                     **kwargs)
+            tag = E('span',
+                    label_tag.html(level+1),
+                    label_term(tag=self, target='.html') + ' ',
+                    super(Caption, self).html(level+1))
+
+            # Set the html tag attributes, in order
+            kwargs = OrderedDict()
+            kwargs['class'] = ' '.join(self.kind)
+            kwargs['id'] = label.id
+            set_html_tag_attributes(html_tag=tag, attrs_dict=kwargs)
+
+            return tag
         else:
             return super(Caption, self).html(level+1)
 

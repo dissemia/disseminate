@@ -35,10 +35,10 @@ def test_pdflatex(tmpdir):
 
     # Try an unavailable: pdf->pdf
     with pytest.raises(ConverterError):
-        target_filepath = convert(src_filepath=invalid_tex_file,
-                                  target_basefilepath=target_basefilepath,
+        target_filepath = convert(src_filepath=str(invalid_tex_file),
+                                  target_basefilepath=str(target_basefilepath),
                                   targets=['.pdf'])
-    assert not os.path.isfile(target_basefilepath + '.pdf')
+    assert not os.path.isfile(str(target_basefilepath) + '.pdf')
 
     # write an invalid tex file
     valid_tex_file = tmpdir.join('valid.tex')
@@ -48,8 +48,8 @@ def test_pdflatex(tmpdir):
     target_basefilepath = tmpdir.join('valid')
 
     # Try a tex->pdf run
-    target_filepath = convert(src_filepath=valid_tex_file,
-                              target_basefilepath=target_basefilepath,
+    target_filepath = convert(src_filepath=str(valid_tex_file),
+                              target_basefilepath=str(target_basefilepath),
                               targets=['.pdf'])
 
     # See if the file was created
@@ -67,6 +67,12 @@ def test_tex2svg(tmpdir):
     # Setup a target_filepath
     target_basefilepath = tmpdir.join('invalid')
 
+    # Try a tex->svg run. It should fail.
+    with pytest.raises(ConverterError):
+        target_filepath = convert(src_filepath=str(invalid_tex_file),
+                                  target_basefilepath=str(target_basefilepath),
+                                  targets=['.svg'])
+
     # write a valid tex file
     valid_tex_file = tmpdir.join('valid.tex')
     valid_tex_file.write(valid_tex)
@@ -75,8 +81,8 @@ def test_tex2svg(tmpdir):
     target_basefilepath = tmpdir.join('valid')
 
     # Try a tex->svg run
-    target_filepath = convert(src_filepath=valid_tex_file,
-                              target_basefilepath=target_basefilepath,
+    target_filepath = convert(src_filepath=str(valid_tex_file),
+                              target_basefilepath=str(target_basefilepath),
                               targets=['.svg'])
 
     # See if the file was created

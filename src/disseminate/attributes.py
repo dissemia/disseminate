@@ -15,7 +15,7 @@ The 'html.width' keyword argument will be parsed as 'width=300' for '.html'
 targets.
 
 """
-
+from collections import OrderedDict
 import regex
 
 
@@ -381,7 +381,7 @@ def kwargs_attributes(attrs, attribute_names=None, target=None,
                                         target=target,
                                         raise_error=raise_error)
 
-    kwargs = dict()
+    kwargs = OrderedDict()
     for attr in processed_attrs:
         if hasattr(attr, '__iter__') and len(attr) == 2:
             kwargs[attr[0]] = attr[1]

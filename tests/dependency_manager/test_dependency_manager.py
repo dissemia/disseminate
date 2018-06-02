@@ -127,7 +127,7 @@ def test_add_file(tmpdir):
     assert (dep.get_dependency('.html',src_filepath).dep_filepath ==
             'media/css/default.css')
 
-    assert os.path.isfile(tmpdir.join('html/media/css/default.css'))
+    assert os.path.isfile(str(tmpdir.join('html/media/css/default.css')))
 
     # Now try adding a file that requires a conversion. The example2 directory
     # has a pdf file in 'media/images/sample.pdf'. This file will need to be

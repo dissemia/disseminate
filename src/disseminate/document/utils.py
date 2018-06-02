@@ -1,11 +1,13 @@
 import os.path
 import glob
 from datetime import datetime
+from collections import OrderedDict
 
 from lxml.builder import E
 from lxml import etree
 
 from .document import Document
+from ..tags.utils import set_html_tag_attributes
 from .. import settings
 
 
@@ -149,17 +151,18 @@ def render_tree_html(documents, level=1):
 
     for document in documents:
         # Column 1: the document number
-        kwargs = {'class': 'num'}
-        num = E('td', str(document.number), **kwargs)
+        kwargs = OrderedDict((('class', 'num'),))
+        num = E('td', str(document.number))
+        set_html_tag_attributes(html_tag=num, attrs_dict=kwargs)
 
         # Column 2: the source file
-        kwargs = {'class': 'src'}
+        kwargs = OrderedDict((('class', 'src'),))
         src = E('td',
-                E('a', document.src_filepath, href='/' + document.src_filepath),
-                **kwargs)
+                E('a', document.src_filepath, href='/' + document.src_filepath))
+        set_html_tag_attributes(html_tag=src, attrs_dict=kwargs)
 
         # Column 3: target files
-        kwargs = {'class': 'tgt'}
+        kwargs = OrderedDict((('class', 'tgt'),))
         tgt_links = [E('a', target.strip('.'),
                        href=document.target_filepath(target, render_path=False))
                      for target in document.targets.keys()]
@@ -170,19 +173,21 @@ def render_tree_html(documents, level=1):
                 new_tgt_links.append(", ")
                 new_tgt_links.append(tgt_link)
             tgt_links = new_tgt_links
-        tgt = (E('td', "(", *tgt_links, ")", **kwargs) if len(tgt_links) > 0
-               else E('td', **kwargs))
+        tgt = E('td', "(", *tgt_links, ")") if len(tgt_links) > 0 else E('td')
+        set_html_tag_attributes(html_tag=tgt, attrs_dict=kwargs)
 
         # Column 4: src mtime
-        kwargs = {'class': 'date'}
+        kwargs = OrderedDict((('class', 'date'),))
         mtime = os.path.getmtime(document.src_filepath)
         d = datetime.fromtimestamp(mtime)
         date_str = d.strftime("%b %d, %Y at %I:%M%p").replace(" 0", " ")
-        date = E('td', date_str, **kwargs)
+        date = E('td', date_str)
+        set_html_tag_attributes(html_tag=date, attrs_dict=kwargs)
 
         # Add the document row to the document_elements
-        kwargs = {'class': 'level-' + str(level)}
-        row = E('tr', num, src, tgt, date, **kwargs)
+        kwargs = OrderedDict((('class', 'level-' + str(level)),))
+        row = E('tr', num, src, tgt, date)
+        set_html_tag_attributes(html_tag=row, attrs_dict=kwargs)
         document_elements.append(row)
 
         # Add sub-documents
@@ -201,14 +206,16 @@ def render_tree_html(documents, level=1):
                        E('th', 'source'),
                        E('th', 'targets'),
                        E('th', 'last saved')))
-            kwargs = {'class': 'tablesorter', 'id': 'index'}
-            table = E('table', title, head, *document_elements, **kwargs)
+            kwargs = OrderedDict((('class', 'tablesorter'), ('id', 'index')))
+            table = E('table', title, head, *document_elements)
+            set_html_tag_attributes(html_tag=table, attrs_dict=kwargs)
             tables.append(table)
 
     if level == 1:
         if tables:
-            kwargs = {'class': 'tableset'}
-            div = E('div', *tables, **kwargs)
+            kwargs = OrderedDict((('class', 'tableset'),))
+            div = E('div', *tables)
+            set_html_tag_attributes(html_tag=div, attrs_dict=kwargs)
             html = etree.tostring(div, pretty_print=True)
             return html.decode('utf-8')
         else:

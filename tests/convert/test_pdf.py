@@ -104,29 +104,31 @@ def test_caching(tmpdir):
                               cache=False)
 
     # See if the file was created and get its mtime and ino
-    stats = os.stat(tmpdir.join('sample.svg'))
-    mtime = stats.st_mtime
     assert target_filepath == str(tmpdir.join('sample.svg'))
     assert tmpdir.join('sample.svg').check()
+    stats = os.stat(target_filepath)
+    mtime = stats.st_mtime
 
     # Try the conversion again with caching
-    target_filepath = convert(src_filepath=pdf_file,
-                              target_basefilepath=target_basefilepath,
-                              crop=False, targets=['.svg'],
-                              cache=True)
+    new_target_filepath = convert(src_filepath=pdf_file,
+                                  target_basefilepath=target_basefilepath,
+                                  crop=False, targets=['.svg'],
+                                  cache=True)
 
     # See if the file has changed
-    new_stats = os.stat(tmpdir.join('sample.svg'))
+    assert target_filepath == new_target_filepath
+    new_stats = os.stat(target_filepath)
     assert mtime == new_stats.st_mtime
 
     # Now try to get a new version
-    target_filepath = convert(src_filepath=pdf_file,
-                              target_basefilepath=target_basefilepath,
-                              crop=False, targets=['.svg'],
-                              cache=False)
+    new_target_filepath = convert(src_filepath=pdf_file,
+                                  target_basefilepath=target_basefilepath,
+                                  crop=False, targets=['.svg'],
+                                  cache=False)
 
     # See if the file has changed
-    new_stats = os.stat(tmpdir.join('sample.svg'))
+    assert new_target_filepath == target_filepath
+    new_stats = os.stat(target_filepath)
     assert mtime != new_stats.st_mtime
 
 

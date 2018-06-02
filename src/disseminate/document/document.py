@@ -282,7 +282,8 @@ class Document(object):
         project_basefilename = os.path.splitext(project_filename)[0]
 
         for target_ext, stripped_ext in zip(target_list, stripped_exts):
-            t = (os.path.join(base_target, stripped_ext, project_basefilename) +
+            t = (os.path.join(str(base_target), str(stripped_ext),
+                              str(project_basefilename)) +
                  target_ext)
             targets[target_ext] = t
         return targets
