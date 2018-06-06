@@ -35,7 +35,8 @@ text_extensions = ['.tex', ]
 #: Context
 #: -------
 
-#default_context = {}
+default_context = {
+}
 
 #: Template Defaults
 #: -----------------

@@ -125,7 +125,7 @@ class Document(object):
     def __init__(self, src_filepath, target_root=None, context=None):
         self.src_filepath = str(src_filepath)
         self.subdocuments = OrderedDict()
-        self.context = dict()
+        self.context = dict(settings.default_context)  # create a copy
         self._templates = dict()
 
         self._parent_context = context
