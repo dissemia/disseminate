@@ -8,11 +8,8 @@ from lxml import etree
 
 from .headings import toc_levels as heading_toc_levels
 from .caption import Ref
-from .utils import format_label_tag
 from ..tags.headings import Chapter
 from .core import Tag
-from ..attributes import set_attribute
-from .. import settings
 
 
 class TocError(Exception):

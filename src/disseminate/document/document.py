@@ -105,15 +105,22 @@ class Document(object):
     #: Cached template objects for this document.
     _templates = None
 
+    #: String processors, before loading the AST.
+    #: def string_processor(s, context)
     string_processors = [load_yaml_header,  # Process YAML headers
                          replace_macros,  # Process macros
                          ]
+
+    #: Abstract Syntax Tree (AST) processors.
+    #: def ast_processor(ast, context, src_filepath)
     ast_processors = [process_ast,
                       process_paragraphs,
                       process_typography,
                       ]
-    context_processors = [process_context_toc,
-                          ]
+
+    #: Context processors
+    context_processors = [process_context_toc,  # TODO: Move to ast_processors
+                          ]                     # to find tags in context
 
     def __init__(self, src_filepath, target_root=None, context=None):
         self.src_filepath = str(src_filepath)

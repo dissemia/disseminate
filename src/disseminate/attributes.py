@@ -371,10 +371,10 @@ def kwargs_attributes(attrs, attribute_names=None, target=None,
     Examples
     --------
     >>> kwargs_attributes((('class', 'base'), ('style', 'media'), 'red'))
-    {'class': 'base', 'style': 'media'}
+    OrderedDict([('class', 'base'), ('style', 'media')])
     >>> kwargs_attributes((('html.class', 'html'), ('tex.class', 'tex')),
     ...                   target='.html')
-    {'class': 'html'}
+    OrderedDict([('class', 'html')])
     """
     processed_attrs = filter_attributes(attrs=attrs,
                                         attribute_names=attribute_names,

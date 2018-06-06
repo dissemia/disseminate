@@ -10,7 +10,7 @@ from ..attributes import (parse_attributes, set_attribute,
                           remove_attribute)
 from .utils import set_html_tag_attributes
 from ..utils.string import titlelize
-from . import settings
+from .. import settings
 
 
 class TagError(Exception):

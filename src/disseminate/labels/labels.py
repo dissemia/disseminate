@@ -1,8 +1,7 @@
 import time
 import weakref
 
-from ..tags import settings as tag_settings
-from ..tags import Tag
+from .. import settings
 
 
 class Label(object):
@@ -211,7 +210,7 @@ class Label(object):
 
         # Get the label separator character, first from the settings module,
         # then, if available, in the context or the tag's attributes
-        label_sep = tag_settings.label_fmt['label_sep']
+        label_sep = settings.label_fmt['label_sep']
 
         if self.tag is not None:
             # Replace with a value in the context, if available

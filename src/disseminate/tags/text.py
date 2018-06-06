@@ -8,7 +8,7 @@ from lxml.builder import E
 
 from .core import Tag, TagError
 from ..attributes import set_attribute
-from . import settings
+from .. import settings
 
 
 class P(Tag):

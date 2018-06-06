@@ -9,7 +9,6 @@ from ..attributes import set_attribute, format_tex_attributes
 from ..utils.file import mkdir_p
 from ..templates import get_template
 from .. import settings
-from . import settings as tag_settings
 
 
 class Img(Tag):
@@ -52,7 +51,7 @@ class Img(Tag):
         path = dep.dep_filepath
 
         # get the attributes for tex
-        valid_attrs = tag_settings.tex_valid_attributes.get('img', None)
+        valid_attrs = settings.tex_valid_attributes.get('img', None)
         attrs_str = format_tex_attributes(self.attributes,
                                           attribute_names=valid_attrs)
         return "\\includegraphics" + attrs_str + "{{{}}}".format(path)

@@ -2,7 +2,7 @@
 Utilities for tags.
 """
 from .. import ast
-from . import settings
+from .. import settings
 
 
 def set_html_tag_attributes(html_tag, attrs_dict):
