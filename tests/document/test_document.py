@@ -262,12 +262,18 @@ def test_context_update(tmpdir):
     doc = Document("tests/document/example2/withheader.dm", str(tmpdir))
     doc.get_ast()
 
-    # Check the contents  of the local_context
+    # Check the contents  of the context.
+    # The title entry is converted to a tag.
     assert 'title' in doc.context
-    assert doc.context['title'] == 'My first title'
+    title_tag = doc.context['title']
+    assert title_tag.name == 'title'
+    assert title_tag.content == 'My first title'
 
+    # The author entry is converted to a tag.
     assert 'author' in doc.context
-    assert doc.context['author'] == 'Justin L Lorieau'
+    author_tag = doc.context['author']
+    assert author_tag.name == 'author'
+    assert author_tag.content == ['Justin L Lorieau']
 
     assert 'macros' in doc.context
 

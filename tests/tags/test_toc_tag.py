@@ -5,49 +5,8 @@ from lxml.html import etree
 from lxml.builder import E
 
 from disseminate import Document
-from disseminate.tags.toc import Toc, process_context_toc
+from disseminate.tags.toc import Toc
 from disseminate.utils.tests import strip_leading_space
-
-
-def test_process_toc(tmpdir):
-    """Test the process_toc function"""
-    # Setup paths
-    target_root = str(tmpdir)
-
-    # The 'tests/tags/toc_example1' directory contains one markup in the root
-    # directory, file1.dm, and two files, file21.dm and file22.dm, in the
-    # 'sub' sub-directory. file1.dm includes file21.dm and file22.dm
-    doc = Document('tests/tags/toc_example1/file1.dm',
-                   target_root=target_root)
-
-    # Put a toc in the context for all documents collapsed
-    doc.context['toc'] = 'all documents collapsed'
-
-    # Load the html version of the toc
-    context = dict(doc.context)
-    process_context_toc(context=context, target='.html')
-
-    key = """<ul class="toc-level-1">
-  <li>
-    <a href="/file1.html">
-      <span class="label">tests/tags/toc_example1/file1</span>
-    </a>
-  </li>
-  <ul class="toc-level-2">
-    <li>
-      <a href="/sub/file21.html">
-        <span class="label">tests/tags/toc_example1/sub/file21</span>
-      </a>
-    </li>
-    <li>
-      <a href="/sub/file22.html">
-        <span class="label">tests/tags/toc_example1/sub/file22</span>
-      </a>
-    </li>
-  </ul>
-</ul>
-"""
-    assert key == context['toc']
 
 
 # html tests
@@ -121,8 +80,7 @@ def test_toc_heading_html(tmpdir):
   </li>
 </ul>
 """
-    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
-    assert key == html
+    assert key == toc.html()
 
     # The 'tests/tags/toc_example2' directory contains three markup files:
     # file1.dm, file2.dm and file3.dm. The 'file1.dm' includes 'file2.dm' and
@@ -154,14 +112,25 @@ def test_toc_heading_html(tmpdir):
     </li>
   </ul>
   <li>
-    <a href="/file3.html#heading-3">
-      <span class="label"><span class="number">1.</span> Heading 3</span>
+    <a href="/file2.html#br:my-second-document">
+      <span class="label"><span class="number">1.</span> My second document</span>
+    </a>
+  </li>
+  <ul class="toc-level-2">
+    <li>
+      <a href="/file3.html#heading-3">
+        <span class="label"><span class="number">1.</span> Heading 3</span>
+      </a>
+    </li>
+  </ul>
+  <li>
+    <a href="/file3.html#br:the-third-document">
+      <span class="label"><span class="number">2.</span> The third document</span>
     </a>
   </li>
 </ul>
 """
-    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
-    assert key == html
+    assert key == toc.html()
 
     # Create a toc for the root document, file1.dm, only.
     toc = Toc(name='toc', content='headings', attributes=tuple(),
@@ -175,8 +144,7 @@ def test_toc_heading_html(tmpdir):
   </li>
 </ul>
 """
-    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
-    assert key == html
+    assert key == toc.html()
 
 
 def test_toc_header_html(tmpdir):
@@ -204,24 +172,22 @@ def test_toc_header_html(tmpdir):
   </li>
 </ul>
 """
-    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
-    assert key == html
+    assert key == toc.html()
 
     # Now try adding the header
     toc = Toc(name='toc', content='headings', attributes=('header',),
               context=doc.context)
 
-    key = """<div>
+    key = """<ul class="toc-level-1">
   <li>
     <a href="/file1.html#heading-1">
       <span class="label"><span class="number">1.</span> Heading 1</span>
     </a>
   </li>
-</div>
+</ul>
 """
     e = E('div', *toc.html())
-    html = etree.tostring(e, pretty_print=True).decode('utf-8')
-    assert key == html
+    assert key == toc.html()
 
     # Make sure a label was not created for the heading
     label_manager = doc.context['label_manager']
@@ -264,14 +230,12 @@ def test_toc_document_html(tmpdir):
   </ul>
 </ul>
 """
-    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
-    assert key == html
+    assert key == toc.html()
 
     # Match the collapsed toc
     toc = Toc(name='toc', content='all documents collapsed', attributes=tuple(),
               context=doc.context)
-    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
-    assert key == html
+    assert key == toc.html()
 
     # Match the expanded toc
     toc = Toc(name='toc', content='all documents expanded', attributes=tuple(),
@@ -347,8 +311,7 @@ def test_toc_document_html(tmpdir):
   </li>
 </ul>
 """
-    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
-    assert key == html
+    assert key == toc.html()
 
     # Match the abbreviated toc
     toc = Toc(name='toc', content='all documents abbreviated',
@@ -425,8 +388,7 @@ def test_toc_document_html(tmpdir):
   </li>
 </ul>
 """
-    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
-    assert key == html
+    assert key == toc.html()
 
     # Test the collapsed toc for only the root document
     toc = Toc(name='toc', content='documents', attributes=tuple(),
@@ -441,8 +403,7 @@ def test_toc_document_html(tmpdir):
   </li>
 </ul>
 """
-    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
-    assert key == html
+    assert key == toc.html()
 
 
 # tex tests
@@ -500,7 +461,11 @@ def test_toc_heading_tex(tmpdir):
   \\begin{toclist}
     \item \hyperref[subheading-2]{sub-Heading 2} \dotfill \pageref{subheading-2}
   \end{toclist}
-  \item \hyperref[heading-3]{Heading 3} \dotfill \pageref{heading-3}
+  \item \hyperref[br:my-second-document]{My second document} \dotfill \pageref{br:my-second-document}
+  \\begin{toclist}
+    \item \hyperref[heading-3]{Heading 3} \dotfill \pageref{heading-3}
+  \end{toclist}
+  \item \hyperref[br:the-third-document]{The third document} \dotfill \pageref{br:the-third-document}
 \end{toclist}
 """
     assert key == toc.tex()
@@ -618,10 +583,14 @@ def test_toc_changes(tmpdir):
       </a>
     </li>
   </ul>
+  <li>
+    <a href="/test.html#br:my-first-file">
+      <span class="label"><span class="number">1.</span> my first file</span>
+    </a>
+  </li>
 </ul>
 """
-    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
-    assert key == html
+    assert key == toc.html()
 
     # Change the document
     markup = """
@@ -657,8 +626,12 @@ def test_toc_changes(tmpdir):
         </a>
       </li>
     </ul>
+    <li>
+      <a href="/test.html#br:my-first-file">
+        <span class="label"><span class="number">1.</span> my first file</span>
+      </a>
+    </li>
   </ul>
 </ul>
 """
-    html = etree.tostring(toc.html(), pretty_print=True).decode('utf-8')
-    assert key == html
+    assert key == toc.html()

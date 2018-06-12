@@ -35,7 +35,7 @@ def test_labels_heading_formatting(tmpdir):
     assert len(label_man.labels) == 6
 
     # Check the formatted string of the labels
-    chapter_labels = label_man.get_labels(kinds='chapter')
+    chapter_labels = label_man.get_labels(kinds='branch')
     assert len(chapter_labels) == 3
 
     key = """
@@ -109,8 +109,8 @@ def test_heading_labels_html(tmpdir):
     # 1. Test with default labels
 
     markups = {
-        '@chapter{Chapter 1}': '<h1 id="ch:chapter-1">\n'
-                               '    <span class="chapter"><span class="number">1.</span> Chapter 1</span>\n'
+        '@chapter{Chapter 1}': '<h1 id="br:chapter-1">\n'
+                               '    <span class="branch"><span class="number">1.</span> Chapter 1</span>\n'
                                '  </h1>',
         '@section{Section 1}': '<h2 id="sec:section-1">\n'
                                '    <span class="section"><span class="number">1.</span> Section 1</span>\n'
@@ -121,8 +121,8 @@ def test_heading_labels_html(tmpdir):
         '@subsubsection{Section 3}': '<h4 id="subsubsec:section-3">\n'
                                      '    <span class="subsubsection"><span class="number">1.</span> Section 3</span>\n'
                                      '  </h4>',
-        '@h1{Chapter 1}': '<h1 id="ch:chapter-1">\n'
-                               '    <span class="chapter"><span class="number">1.</span> Chapter 1</span>\n'
+        '@h1{Chapter 1}': '<h1 id="br:chapter-1">\n'
+                               '    <span class="branch"><span class="number">1.</span> Chapter 1</span>\n'
                                '  </h1>',
         '@h2{Section 2}': '<h2 id="sec:section-2">\n'
                                '    <span class="section"><span class="number">1.</span> Section 2</span>\n'
@@ -194,7 +194,7 @@ def test_heading_labels_tex(tmpdir):
     # 1. Test with default labels
 
     markups = {
-        '@chapter{Chapter 1}': '\n\setcounter{chapter}{1}\n\chapter{Chapter 1} \label{ch:chapter-1}\n\n',
+        '@chapter{Chapter 1}': '\n\setcounter{chapter}{1}\n\chapter{Chapter 1} \label{br:chapter-1}\n\n',
         '@section{Section 1}': '\n\setcounter{section}{1}\n\section{Section 1} \label{sec:section-1}\n\n',
         '@subsection{Section 2}': '\n\setcounter{subsection}{1}\n\subsection{Section 2} \label{subsec:section-2}\n\n',
         '@subsubsection{Section 3}': '\n\setcounter{subsubsection}{1}\n\subsubsection{Section 3} \label{subsubsec:section-3}\n\n',

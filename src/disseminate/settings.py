@@ -93,7 +93,7 @@ custom_macros = ('title',)
 #: Tags
 #: ----
 
-default_attrs = {'Toc': "bolded='chapter' "
+default_attrs = {'Toc': "bolded='branch' "
                         "dotted='section subsection subsubsection'"}
 
 toc_listing = 'toclist'
@@ -112,7 +112,7 @@ label_fmt = {'document': '{label.short}',
                              '{label.short}',
              'heading_tex': '{label.short}',
 
-             'figure': '@b{{Fig. {label.chapter_number}.{label.number}}}',
+             'figure': '@b{{Fig. {label.branch_number}.{label.number}}}',
 
              # Separator between numbers in a tree number
              'label_sep': '.',

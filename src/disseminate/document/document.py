@@ -9,7 +9,8 @@ import logging
 import os
 import os.path
 
-from ..ast import process_ast, process_paragraphs, process_typography
+from ..ast import (process_ast, process_paragraphs, process_typography,
+                   process_context_tags)
 from ..templates import get_template
 from ..header import load_yaml_header
 from ..tags import Tag
@@ -17,7 +18,6 @@ from ..macros import replace_macros
 from ..convert import convert
 from ..labels import LabelManager
 from ..dependency_manager import DependencyManager
-from ..tags.toc import process_context_toc
 from ..utils import mkdir_p
 from .. import settings
 
@@ -116,11 +116,11 @@ class Document(object):
     ast_processors = [process_ast,
                       process_paragraphs,
                       process_typography,
+                      process_context_tags,
                       ]
 
     #: Context processors
-    context_processors = [process_context_toc,  # TODO: Move to ast_processors
-                          ]                     # to find tags in context
+    context_processors = []
 
     def __init__(self, src_filepath, target_root=None, context=None):
         self.src_filepath = str(src_filepath)
@@ -178,14 +178,24 @@ class Document(object):
     def title(self):
         """The title for the document."""
         if 'title' in self.context:
-            return self.context['title']
+            # The title entry could be a string or a tag. If it's a tag, just
+            # get the text for the tag.
+            title = self.context['title']
+            title_str = (title.default().strip() if hasattr(title, 'default')
+                         else title)
+            return title_str
         return self.src_filepath.strip(settings.document_extension)
 
     @property
     def short(self):
         """The short title for the document."""
         if 'short' in self.context:
-            return self.context['short']
+            # The short entry could be a string or a tag. If it's a tag, just
+            # get the text for the tag.
+            short = self.context['short']
+            short_str = (short.default().strip() if hasattr(short, 'default')
+                         else short)
+            return short_str
         else:
             return self.title
 

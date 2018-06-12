@@ -268,7 +268,6 @@ def test_label_number(tmpdir):
     # Get the heading labels
     heading_labels = label_man.get_labels(kinds='heading')
     assert len(heading_labels) == 3
-
     assert heading_labels[0].number == 1
     assert heading_labels[1].number == 1
     assert heading_labels[2].number == 1

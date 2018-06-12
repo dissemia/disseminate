@@ -8,60 +8,14 @@ from lxml import etree
 
 from .headings import toc_levels as heading_toc_levels
 from .caption import Ref
-from ..tags.headings import Chapter
 from .core import Tag
+from ..tags.headings import Heading
+from .. import settings
 
 
 class TocError(Exception):
     """An error was encountered while processing a table of contents tag."""
     pass
-
-
-def process_context_toc(context, target):
-    """Process a the 'toc' in the context by replacing it with a toc string.
-
-    A 'toc' field may optionally be placed in the context of a document.
-    If present, this function will read in the options for the 'toc' field and
-    return a string for the given target.
-
-    Parameters
-    ----------
-    context : dict
-        The context dict containing values for the document.
-    target : str
-        The target (extension) for the output TOC. ex: '.html', '.tex'
-    """
-    # Get the toc kind from the context and store it in the 'toc_kind' entry
-    if 'toc_kind' in context:
-        toc_kind = context['toc_kind']
-    else:
-        if 'toc' in context:
-            toc_kind = context['toc']
-            context['toc_kind'] = toc_kind
-        else:
-            return None
-    attributes = tuple()
-
-    # Create the tag
-    toc = Toc(name='toc', content=toc_kind, attributes=attributes,
-              context=context)
-
-    # Render the toc
-    target_stripped = (target if not target.startswith('.') else
-                       target[1:])
-    render_func = getattr(toc, target_stripped, None)
-
-    if render_func is not None and callable(render_func):
-        result = render_func()
-        if target == '.html':
-            # For the '.html' target, the element tree has to be converted
-            # to an html string
-            html = etree.tostring(result, pretty_print=True).decode('utf-8')
-            context['toc'] = html
-        else:
-            context['toc'] = result
-    else:
-        context['toc'] = toc.default()
 
 
 class Toc(Tag):
@@ -100,7 +54,7 @@ class Toc(Tag):
         header = self.get_attribute(name='header', clear=True)
 
         if header is not None:
-            self.header_tag = Chapter(name='TOC', content='Table of Contents',
+            self.header_tag = Heading(name='TOC', content='Table of Contents',
                                       attributes=('nolabel',), context=context)
 
     def get_labels(self):
@@ -225,12 +179,13 @@ class Toc(Tag):
         # were last loaded.
         labels, order_function, heading_type = self.get_labels()
         label_mtimes = [label.mtime for label in labels]
-        latest_mtime = max(label_mtimes)
+        latest_mtime = max(label_mtimes) if len(label_mtimes) > 0 else None
 
         # Determine whether the labels are up to date and whether tags have
         # already been prepared. If so, use those.
         if (self.ref_tags is not None and
             self._mtime is not None and
+            latest_mtime is not None and
            self._mtime >= latest_mtime):
             return self.ref_tags
 
@@ -322,7 +277,15 @@ class Toc(Tag):
                 returned_elements.append(E('li', e.html(level+1)))
 
         kwargs = {'class': 'toc-level-' + str(level)}
-        return E(listtype, *returned_elements, **kwargs)
+        e = E(listtype, *returned_elements, **kwargs)
+
+        # Render the root tag if this is the first level
+        if level == 1:
+            return (etree
+                .tostring(e, pretty_print=settings.html_pretty)
+                .decode("utf-8"))
+        else:
+            return e
 
     def tex(self, level=1, mathmode=False, content=None, elements=None,
             listtype='toclist'):

@@ -21,7 +21,7 @@ class LabelNotFound(LabelError):
 class LabelManager(object):
     """Manage labels and references.
 
-    Manages labels for a project. Labels have a kind (ex: 'figure', 'chapter')
+    Manages labels for a project. Labels have a kind (ex: 'figure', 'branch')
     and a id (ex: inept_introduction').
 
     Labels are added with the :meth:`add_label` method. These labels are
@@ -63,7 +63,7 @@ class LabelManager(object):
         tag : None or :obj:`disseminate.Tag`
             The tag that owns the label.
         kind : tuple or str
-            The kind of the label. ex: 'figure', 'chapter', 'equation'
+            The kind of the label. ex: 'figure', 'branch', 'equation'
         id : str, optional
             The label of the label ex: 'ch:nmr-introduction'
             If a label id is not specified, a short one based on the
@@ -120,10 +120,10 @@ class LabelManager(object):
                tags. The global_number is the number for a given kind in the
                project and the local_number is the number for a given kind in
                the document.
-            2. For heading labels, like chapter, section and subsection, the
-               local_order is reset after elements like a chapter or section
+            2. For heading labels, like branch, section and subsection, the
+               local_order is reset after elements like a branch or section
                are encountered.
-            3. A weakref to the chapter label or section label is placed in
+            3. A weakref to the branch label or section label is placed in
                labels under these headings.
         """
         # See if there are collected_labels. If there aren't then all labels
@@ -156,7 +156,7 @@ class LabelManager(object):
 
         for src_filepath in src_filepaths:
             local_counter = dict()  # Keep track of local count
-            chapter_label = None
+            branch_label = None
             section_label = None
             subsection_label = None
             subsubsection_label = None
@@ -175,12 +175,12 @@ class LabelManager(object):
                           if l.document.src_filepath == src_filepath]
 
             # Process each label. Set the local_order and global_order count
-            # for each label, set the corresponding chapter and section labels,
+            # for each label, set the corresponding branch and section labels,
             # and add it to the new list of registered labels
             for label in labels:
                 if label.kind:
-                    if label.kind[-1] == 'chapter':
-                        chapter_label = label
+                    if label.kind[-1] == 'branch':
+                        branch_label = label
                         section_label = None
                         subsection_label = None
                         subsubsection_label = None
@@ -221,7 +221,7 @@ class LabelManager(object):
                     local_order.append(local_count)
                     global_order.append(global_count)
 
-                label.chapter_label = chapter_label
+                label.branch_label = branch_label
                 label.section_label = section_label
                 label.subsection_label = subsection_label
                 label.subsubsection_label = subsubsection_label

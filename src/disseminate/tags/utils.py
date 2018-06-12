@@ -73,7 +73,6 @@ def format_label_tag(tag, target=None):
 
     # A label format string has been found. Now format it.
     label_string = label_fmt.format(label=label)
-
     # Format any tags
     label_tag = ast.process_ast(label_string, context=tag.context)
     label_tag.name = 'label'  # convert tag name from 'root' to 'label'

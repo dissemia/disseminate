@@ -30,7 +30,7 @@ def test_format_tag_label_basic(tmpdir):
     assert label_tag.default() == 'Chapter One'
 
     # Try changing the label format in the context
-    doc.context['chapter_label'] = '{label.tree_number}. {label.chapter_title}'
+    doc.context['branch_label'] = '{label.tree_number}. {label.branch_title}'
     label_tag = format_label_tag(tag)
     assert label_tag.default() == '1. Chapter One'
 

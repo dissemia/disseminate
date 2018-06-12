@@ -2,7 +2,6 @@
 Tests the management of labels with documents.
 """
 from disseminate.document import Document
-from disseminate.tags.toc import process_context_toc
 
 
 def test_document_labels(tmpdir):
@@ -43,11 +42,9 @@ def test_document_toc(tmpdir):
     doc.render()
 
     # Make sure the 'toc' context entry is correct
-    assert doc.context['toc'] == 'documents'
-
-    # Make a context and process the toc
-    context = dict(doc.context)
-    process_context_toc(context, target='.html')
+    toc_tag = doc.context['toc']
+    assert toc_tag.name == 'toc'
+    assert toc_tag.content == 'documents'
 
     key = """<ul class="toc-level-1">
   <li>
@@ -57,7 +54,7 @@ def test_document_toc(tmpdir):
   </li>
 </ul>
 """
-    assert key == context['toc']
+    assert key == toc_tag.html()
 
 
 def test_document_tree_updates_document_labels(tmpdir):
@@ -224,14 +221,14 @@ def test_document_tree_updates_with_section_labels(tmpdir):
     # Check the ordering of labels
     label_manager = doc.context['label_manager']
     labels = label_manager.get_labels()
-    chapter_labels = label_manager.get_labels(kinds='chapter')
+    title_labels = label_manager.get_labels(kinds='heading')
 
     # Check the number of labels: 3 for documents, 3 for chapters
     assert len(labels) == 6
-    assert len(chapter_labels) == 3  # one for each file
-    assert chapter_labels[0].id == 'ch:file1'
-    assert chapter_labels[1].id == 'ch:file2'
-    assert chapter_labels[2].id == 'ch:file3'
+    assert len(title_labels) == 3  # one for each file
+    assert title_labels[0].id == 'br:file1'
+    assert title_labels[1].id == 'br:file2'
+    assert title_labels[2].id == 'br:file3'
 
     # Render the files and check their mtimes
     doc.render()
@@ -259,15 +256,14 @@ def test_document_tree_updates_with_section_labels(tmpdir):
     assert doc_list[2].src_filepath == str(src_filepath2)
     assert doc_list[2].number == 3
 
-    chapter_labels = label_manager.get_labels(kinds='chapter')  # register
-                                                                # labels
+    title_labels = label_manager.get_labels(kinds='heading')  # register labels
 
     # Check the number of labels: 3 for documents, 3 for chapters
     assert len(label_manager.labels) == 6
-    assert len(chapter_labels) == 3  # one for each file
-    assert chapter_labels[0].id == 'ch:file1'
-    assert chapter_labels[1].id == 'ch:file3'
-    assert chapter_labels[2].id == 'ch:file2'
+    assert len(title_labels) == 3  # one for each file
+    assert title_labels[0].id == 'br:file1'
+    assert title_labels[1].id == 'br:file3'
+    assert title_labels[2].id == 'br:file2'
 
     # A render should be required since the labels have changed
     doc1, doc2, doc3 = doc.documents_list(only_subdocuments=False,

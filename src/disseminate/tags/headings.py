@@ -9,7 +9,7 @@ from ..attributes import set_attribute, kwargs_attributes
 from ..utils.string import slugify
 
 
-toc_levels = ('chapter', 'section', 'subsection', 'subsubsection')
+toc_levels = ('branch', 'section', 'subsection', 'subsubsection')
 
 
 class Heading(Tag):
@@ -32,7 +32,7 @@ class Heading(Tag):
     def get_id(self):
         # Get the id mappings, if not set yet
         if Heading._id_mappings is None:
-            Heading._id_mappings = {'chapter': 'ch',
+            Heading._id_mappings = {'branch': 'br',
                                     'section': 'sec',
                                     'subsection': 'subsec',
                                     'subsubsection': 'subsubsec',
@@ -114,9 +114,8 @@ class Heading(Tag):
                     + "\n\n")
 
 
-class Chapter(Heading):
-    """A section heading tag."""
-    aliases = ("h1", "title" )
+class Branch(Heading):
+    aliases = ("h1", "chapter", "title")
     html_name = "h1"
     tex_name = "chapter"
     active = True

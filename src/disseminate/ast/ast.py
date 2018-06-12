@@ -164,3 +164,43 @@ def process_ast(ast=None, context=None, src_filepath=None, level=1):
                               context=context)
 
     return new_ast
+
+
+def process_context_tags(ast=None, context=None, src_filepath=None, level=1):
+    """Process the ASTs of tags in the context.
+
+    Parameters
+    ----------
+    ast : list
+        An optional AST to build from or a list of strings.
+    context : dict, optional
+        The context with values for the document.
+    src_filepath : str, optional
+        The path for the document (source markup) file being processed.
+    level : int, optional
+        The current level of the ast.
+
+    Returns
+    -------
+    ast : :obj:`disseminate.Tag`, list of ast elements or string
+        The unmodified AST.
+    """
+    # Setup the tag factor to generate tags
+    factory = TagFactory()
+
+    # See if there are entries in the context that share the same name as tags
+    context_tag_keys = context.keys() & factory.tag_types.keys()
+
+    # Convert the context tag entries to tags
+    for key in context_tag_keys:
+        entry_text = context[key]
+        tag = factory.tag(tag_name=key,
+                          tag_content=entry_text,
+                          tag_attributes=None,
+                          context=context)
+
+        # Replace the entry in the context with the tag itself
+        context[key] = tag
+
+    # Return the AST unmodified
+    return ast

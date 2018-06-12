@@ -33,7 +33,7 @@ class Label(object):
 
     # The following attributes are stored as weak references
     weakref_attrs = ('_document', '_tag', '_document_label',
-                     '_chapter_label', '_section_label',
+                     '_branch_label', '_section_label',
                      '_subsection_label', '_subsubsection_label')
 
     # The following attributes will not update the mtime if replaced. This
@@ -151,15 +151,15 @@ class Label(object):
         return tag.content if tag is not None else None
 
     @property
-    def chapter_number(self):
-        chapter_label = self.chapter_label
-        return (chapter_label.global_order[-1] if chapter_label is not None
+    def branch_number(self):
+        branch_label = self.branch_label
+        return (branch_label.global_order[-1] if branch_label is not None
                 else '')
 
     @property
-    def chapter_title(self):
-        chapter_label = self.chapter_label
-        return chapter_label.title if chapter_label is not None else ''
+    def branch_title(self):
+        branch_label = self.branch_label
+        return branch_label.title if branch_label is not None else ''
 
     @property
     def section_number(self):
@@ -197,10 +197,10 @@ class Label(object):
 
     @property
     def tree_number(self):
-        """The string for the number for the chapter, section, subsection and
+        """The string for the number for the branch, section, subsection and
         so on. i.e. Section 3.2.1."""
         # Get a tuple of the numbers, remove empty string items and None
-        numbers = filter(bool, (self.chapter_number,
+        numbers = filter(bool, (self.branch_number,
                                 self.section_number,
                                 self.subsection_number,
                                 self.subsubsection_number))
