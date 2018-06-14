@@ -43,7 +43,6 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
                                     template_basename="tree",
                                     target=".html",
                                     module_only=True)
-            # html = template.render(body=self.tree.html())
             html = template.render(body=render_tree_html(self.documents))
 
             self.send_response(200)

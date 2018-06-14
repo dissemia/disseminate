@@ -57,7 +57,7 @@ class Caption(Tag):
         # If an id still hasn't been specified, generate one from the caption's
         # contents
         if id is None:
-            text = self.default()
+            text = self.default_fmt()
             id = 'caption-' + hashtxt(text)
 
         kind = ('caption',) if kind is None else kind
@@ -65,26 +65,26 @@ class Caption(Tag):
 
         self.kind = ('caption',) if kind is None else (kind, 'caption')
 
-    def default(self, content=None):
+    def default_fmt(self, content=None):
         """Add newline to the end of a caption"""
         label = self.label
         if label is not None:
             label_tag = format_label_tag(tag=self, target=None)
             # add the label to the caption
-            return (label_tag.default() + ' ' +
-                    super(Caption, self).default())
+            return (label_tag.default_fmt() + ' ' +
+                    super(Caption, self).default_fmt())
         else:
-            return super(Caption, self).default()
+            return super(Caption, self).default_fmt()
 
-    def html(self, level=1, content=None):
+    def html_fmt(self, level=1, content=None):
         label = self.label
         if self.label is not None:
             label_tag = format_label_tag(tag=self, target='.html')
 
             tag = E('span',
-                    label_tag.html(level+1),
+                    label_tag.html_fmt(level+1),
                     label_term(tag=self, target='.html') + ' ',
-                    super(Caption, self).html(level+1))
+                    super(Caption, self).html_fmt(level+1))
 
             # Set the html tag attributes, in order
             kwargs = OrderedDict()
@@ -94,9 +94,9 @@ class Caption(Tag):
 
             return tag
         else:
-            return super(Caption, self).html(level+1)
+            return super(Caption, self).html_fmt(level+1)
 
-    def tex(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, level=1, mathmode=False, content=None):
         content = content if content is not None else self.content
         label = self.label
 
@@ -104,7 +104,7 @@ class Caption(Tag):
             label_tag = format_label_tag(tag=self, target='.tex')
 
             # Format the label and add it to the caption
-            string = label_tag.tex(level+1, mathmode)
+            string = label_tag.tex_fmt(level+1, mathmode)
             string += label_term(tag=self, target='.tex') + ' '
 
             if isinstance(content, list):
@@ -114,10 +114,10 @@ class Caption(Tag):
 
             # Format the caption
             return ("  " +
-                    super(Caption, self).tex(level + 1, mathmode, content) +
+                    super(Caption, self).tex_fmt(level + 1, mathmode, content) +
                     " \\label{{{id}}}".format(id=label.id) + "\n")
         else:
-            return super(Caption, self).tex(level + 1, mathmode, content)
+            return super(Caption, self).tex_fmt(level + 1, mathmode, content)
 
 
 class Ref(Tag):
@@ -135,11 +135,11 @@ class Ref(Tag):
             raise RefError(msg.format(str(self.content)))
         self.label_id = self.content.strip()
 
-    def default(self, content=None):
+    def default_fmt(self, content=None):
         label_tag = format_label_tag(tag=self)
-        return label_tag.default(content)
+        return label_tag.default_fmt(content)
 
-    def html(self, level=1, content=None):
+    def html_fmt(self, level=1, content=None):
         label = self.label
         label_tag = format_label_tag(tag=self, target='.html')
 
@@ -153,13 +153,13 @@ class Ref(Tag):
             link += '#' + label.id
 
         kwargs = {'href': link}
-        return E('a', label_tag.html(level+1), **kwargs)
+        return E('a', label_tag.html_fmt(level+1), **kwargs)
 
-    def tex(self, level=1, mathmode=False, content=None, page=False):
+    def tex_fmt(self, level=1, mathmode=False, content=None, page=False):
         label = self.label
         label_tag = format_label_tag(tag=self, target='.tex')
 
-        tex = label_tag.tex(level+1, mathmode)
+        tex = label_tag.tex_fmt(level+1, mathmode)
 
         if self.get_attribute(name='page') or page:
             # If the 'page' attribute is set, return a reference for the page.

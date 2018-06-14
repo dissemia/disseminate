@@ -110,7 +110,7 @@ def test_default_conversion():
 
     # Generate the txt string
     ast = process_ast(test)
-    txt = ast.default()
+    txt = ast.default
     assert txt == test_txt
 
 
@@ -120,12 +120,12 @@ def test_double_convert():
 
     # Generate the txt string
     ast = process_ast(test)
-    txt = ast.default()
+    txt = ast.default
     assert txt == test_txt
 
     # Generate the txt string
     ast2 = process_ast(ast)
-    txt = ast2.default()
+    txt = ast2.default
     assert txt == test_txt
 
     assert ast == ast2
@@ -135,7 +135,7 @@ def test_basic_html_conversion():
     """Test the generation of html strings from tags."""
     # Generate the html string
     ast = process_ast(test)
-    html = ast.html()
+    html = ast.html
     assert html == test_html
 
     # Validate the html
@@ -184,7 +184,7 @@ def test_basic_triple_html_conversion():
     ast = process_ast(test)
     ast = process_ast(ast)
     ast = process_ast(ast)
-    html = ast.html()
+    html = ast.html
 
     assert html == test_html
 

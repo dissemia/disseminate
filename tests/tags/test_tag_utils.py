@@ -27,14 +27,14 @@ def test_format_tag_label_basic(tmpdir):
 
     # Get the label tag for the chapter using the default label format
     label_tag = format_label_tag(tag)
-    assert label_tag.default() == 'Chapter One'
+    assert label_tag.default == 'Chapter One'
 
     # Try changing the label format in the context
     doc.context['branch_label'] = '{label.tree_number}. {label.branch_title}'
     label_tag = format_label_tag(tag)
-    assert label_tag.default() == '1. Chapter One'
+    assert label_tag.default == '1. Chapter One'
 
     # Try changing the label format in the attributes
     tag.attributes = (('fmt', 'format string'),)
     label_tag = format_label_tag(tag)
-    assert label_tag.default() == 'format string'
+    assert label_tag.default == 'format string'

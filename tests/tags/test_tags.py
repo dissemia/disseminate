@@ -151,21 +151,21 @@ def test_html():
     # Generate a simple root tag with a string as content
     root = Tag(name='root', content='base string', attributes=None,
                context=dict())
-    assert root.html() == '<span class="root">base string</span>\n'
+    assert root.html == '<span class="root">base string</span>\n'
 
     # Generate a nested root tag with sub-tags
     b = Tag(name='b', content='bolded', attributes=None, context=dict())
     elements = ["my first", b, "string"]
     root = Tag(name='root', content=elements, attributes=None, context=dict())
-    assert root.html() == ('<span class="root">'
-                           'my first<b>bolded</b>string'
-                           '</span>\n')
+    assert root.html == ('<span class="root">'
+                         'my first<b>bolded</b>string'
+                         '</span>\n')
 
     # Test the rendering of a tag with content for an invalid type.
     # This should raise an exception
     root = Tag(name='root', content=set(), attributes=None, context=dict())
     with pytest.raises(TagError):
-        root.html()
+        root.html
 
 
 def test_html_invalid_tag():
@@ -175,9 +175,9 @@ def test_html_invalid_tag():
     eqn = Tag(name='eqn', content='my eqn', attributes=None, context=dict())
     elements = ["my first", eqn, "string"]
     root = Tag(name='root', content=elements, attributes=None, context=dict())
-    assert root.html() == ('<span class="root">my first'
-                           '<span class=\"eqn\">my eqn</span>'
-                           'string</span>\n')
+    assert root.html == ('<span class="root">my first'
+                         '<span class=\"eqn\">my eqn</span>'
+                         'string</span>\n')
 
 
 def test_html_excluded_tag():
@@ -188,9 +188,9 @@ def test_html_excluded_tag():
     eqn = Tag(name='script', content='my eqn', attributes=None, context=dict())
     elements = ["my first", eqn, "string"]
     root = Tag(name='root', content=elements, attributes=None, context=dict())
-    assert root.html() == ('<span class="root">my first'
-                           '<span class=\"script\">my eqn</span>'
-                           'string</span>\n')
+    assert root.html == ('<span class="root">my first'
+                         '<span class=\"script\">my eqn</span>'
+                         'string</span>\n')
 
 
 def test_html_unsafe_tag():
@@ -203,9 +203,9 @@ def test_html_unsafe_tag():
     elements = ["my first", eqn, "string"]
     root = Tag(name='root', content=elements, attributes=None,
                context=dict())
-    assert root.html() == ('<span class="root">my first'
-                           '<span class=\"script\">&lt;script&gt;</span>'
-                           'string</span>\n')
+    assert root.html == ('<span class="root">my first'
+                         '<span class=\"script\">&lt;script&gt;</span>'
+                         'string</span>\n')
 
 
 def test_html_nested():
@@ -214,9 +214,9 @@ def test_html_nested():
     # Test a basic string without additional tags
     p = P(name='p', content='paragraph', attributes=None, context=dict())
     root = Tag(name='root', content=p, attributes=None, context=dict())
-    assert root.html() == ('<span class="root">\n'
-                           '  <p>paragraph</p>\n'
-                           '</span>\n')
+    assert root.html == ('<span class="root">\n'
+                         '  <p>paragraph</p>\n'
+                         '</span>\n')
 
 
 # Tests for tex targets
@@ -227,7 +227,7 @@ def test_tex():
     # Generate a simple root tag with a string as content
     root = Tag(name='root', content='base string', attributes=None,
                context=dict())
-    assert root.tex() == "base string"
+    assert root.tex == "base string"
 
     # Generate a nested root tag with sub-tags
     b = Tag(name='textbf', content='bolded', attributes=None,
@@ -235,14 +235,14 @@ def test_tex():
     elements = ["my first", b, "string"]
     root = Tag(name='root', content=elements, attributes=None,
                context=dict())
-    assert root.tex() == "my first\\textbf{bolded}string"
+    assert root.tex == "my first\\textbf{bolded}string"
 
     # Test the rendering of a tag with content for an invalid type.
     # This should raise an exception
     root = Tag(name='root', content=set(), attributes=None,
                context=dict())
     with pytest.raises(TagError):
-        root.tex()
+        root.tex
 
 
 def test_tex_nested():
@@ -257,14 +257,14 @@ def test_tex_nested():
     elements = ["my first", enum, "string"]
     root = Tag(name='root', content=elements, attributes=None,
                context=dict())
-    assert root.tex() == ('my first\n'
-                          '\\begin{enumerate}\n'
-                          '\\item item 1\n'
-                          '\\item item 2\n'
-                          '\\end{enumerate}\n'
-                          'string')
+    assert root.tex == ('my first\n'
+                        '\\begin{enumerate}\n'
+                        '\\item item 1\n'
+                        '\\item item 2\n'
+                        '\\end{enumerate}\n'
+                        'string')
 
     # Test a basic string without additional tags
     p = P(name='p', content='paragraph', attributes=None, context=dict())
     root = Tag(name='root', content=p, attributes=None, context=dict())
-    assert root.tex() == '\nparagraph\n'
+    assert root.tex == '\nparagraph\n'

@@ -48,7 +48,7 @@ def test_img_html(tmpdir):
     root = process_ast(src, context)
 
     # Remove the root tag
-    root_html = root.html()
+    root_html = root.html
 
     # Remove the root tag
     root_html = root_html[len(root_start):]  # strip the start
@@ -69,7 +69,7 @@ def test_img_html(tmpdir):
     root = process_ast(src, context)
 
     # Remove the root tag
-    root_html = root.html()
+    root_html = root.html
 
     # Remove the root tag
     root_html = root_html[len(root_start):]  # strip the start
@@ -96,7 +96,7 @@ def test_img_tex(tmpdir):
     root = process_ast(src, context=context)
 
     # Remove the root tag
-    root_tex = root.tex()
+    root_tex = root.tex
     assert root_tex == tex
 
     # Now test an tex-specific attribute
@@ -108,5 +108,5 @@ def test_img_tex(tmpdir):
     root = process_ast(src, context=context)
 
     # Remove the root tag
-    root_tex = root.tex()
+    root_tex = root.tex
     assert root_tex == tex

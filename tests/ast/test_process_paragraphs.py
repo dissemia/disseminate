@@ -4,7 +4,6 @@ Test the proces_paragraphs function.
 from disseminate.ast import process_ast, process_paragraphs
 from disseminate.macros import replace_macros
 from disseminate.tags.text import P
-from disseminate.tags.text import Bold
 
 
 test_paragraphs = """
@@ -103,7 +102,7 @@ def test_process_paragraphs_edgecases():
     assert ast.name == 'root'
     assert ast.content.name == 'p'
     assert ast.content.content == 'basic'
-    assert ast.tex() == '\nbasic\n'
+    assert ast.tex == '\nbasic\n'
 
 
 def test_process_paragraphs_macros():

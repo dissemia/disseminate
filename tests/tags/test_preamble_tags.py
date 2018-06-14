@@ -20,7 +20,7 @@ def test_authors_tag_html():
         tag = Authors(name='authors', content='', attributes=tuple(),
                       context=context)
 
-        html = etree.tostring(tag.html()).decode('utf-8')
+        html = etree.tostring(tag.html).decode('utf-8')
 
         assert key == html
 
@@ -39,7 +39,7 @@ def test_authors_tag_tex():
         tag = Authors(name='authors', content='', attributes=tuple(),
                       context=context)
 
-        tex = tag.tex()
+        tex = tag.tex
 
         assert key == tex
 
@@ -53,7 +53,7 @@ def test_titlepage_tag_html():
     tag = Titlepage(name='titlepage', content='', attributes=tuple(),
                     context=context)
 
-    html = etree.tostring(tag.html()).decode('utf-8')
+    html = etree.tostring(tag.html).decode('utf-8')
 
     key = ('<div class="title-page">'
            '<h1 class="title">My Title</h1>'
@@ -72,7 +72,7 @@ def test_titlepage_tag_tex():
     tag = Titlepage(name='titlepage', content='', attributes=tuple(),
                     context=context)
 
-    tex = tag.tex()
+    tex = tag.tex
 
     key = "\n\\maketitle\n\n"
     assert key == tex

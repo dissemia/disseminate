@@ -22,7 +22,7 @@ def test_html():
     for src, html in markups.items():
         root = process_ast(src)
         # Remove the root tag
-        root_html = root.html()[len(root_start):]  # strip the start
+        root_html = root.html[len(root_start):]  # strip the start
         root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
         assert root_html == html
 
@@ -37,7 +37,7 @@ def test_html():
     for src, html in markups.items():
         root = process_ast(src)
         # Remove the root tag
-        root_html = root.html()[len(root_start):]  # strip the start
+        root_html = root.html[len(root_start):]  # strip the start
         root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
         assert root_html == html
 
@@ -57,7 +57,7 @@ def test_tex():
         root = process_ast(src)
 
         # Remove the root tag
-        root_tex = root.tex()
+        root_tex = root.tex
         assert root_tex == tex
 
 
@@ -65,9 +65,9 @@ def test_paragraph_tex():
     """Test the formatting of paragraph tags for tex."""
 
     p = P(name='p', content='content', attributes=(), context=dict())
-    assert p.html() == '<span class="root">content</span>\n'
-    assert p.tex() == '\ncontent\n'
-    assert p.default() == 'content'
+    assert p.html == '<span class="root">content</span>\n'
+    assert p.tex == '\ncontent\n'
+    assert p.default == 'content'
 
 
 def test_verbatim():
@@ -79,9 +79,9 @@ def test_verbatim():
     verb = root.content
 
     # Match targets
-    assert verb.default() == "@bold{bolded}"
-    assert tostring(verb.html(level=2)) == b'<code>@bold{bolded}</code>'
-    assert verb.tex() == "\\verb|@bold{bolded}|"
+    assert verb.default == "@bold{bolded}"
+    assert tostring(verb.html_fmt(level=2)) == b'<code>@bold{bolded}</code>'
+    assert verb.tex == "\\verb|@bold{bolded}|"
 
     # Test a verbatim block
     test = "@verbatim{@bold{bolded}}"
@@ -89,8 +89,9 @@ def test_verbatim():
     verb = root.content
 
     # Match targets
-    assert verb.default() == "@bold{bolded}"
-    assert tostring(verb.html(level=2)) == (b'<code class="block">@bold{bolded}'
-                                            b'</code>')
-    assert verb.tex() == ("\n\\begin{verbatim}\n"
-                          "@bold{bolded}\\end{verbatim}\n")
+    assert verb.default == "@bold{bolded}"
+    assert tostring(verb.html_fmt(level=2)) == (b'<code class="block">'
+                                                b'@bold{bolded}'
+                                                b'</code>')
+    assert verb.tex == ("\n\\begin{verbatim}\n"
+                        "@bold{bolded}\\end{verbatim}\n")

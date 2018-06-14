@@ -1,8 +1,6 @@
 """
 Tests for the figure tags.
 """
-from lxml import etree
-
 from disseminate import Document
 from disseminate.ast import process_ast
 from disseminate.tags.caption import Caption
@@ -51,8 +49,8 @@ def test_figure_caption_no_id(tmpdir):
     caption = [i for i in fig.content if isinstance(i, Caption)][0]
     assert caption.name == 'caption'
     assert caption.attributes == tuple()
-    assert caption.default() == ('Fig. 1. This is my caption.\n'
-                                 'It has multiple lines')
+    assert caption.default == ('Fig. 1. This is my caption.\n'
+                               'It has multiple lines')
 
     # Get the caption, next with a caption title.
     doc.context['figure_label'] = "@b{{Figure. {label.number}}}."
@@ -60,8 +58,8 @@ def test_figure_caption_no_id(tmpdir):
     caption = [i for i in fig.content if isinstance(i, Caption)][0]
     assert caption.name == 'caption'
     assert caption.attributes == tuple()
-    assert caption.default() == ('Figure. 1. This is my caption.\n'
-                                 'It has multiple lines')
+    assert caption.default == ('Figure. 1. This is my caption.\n'
+                               'It has multiple lines')
 
     # A label should have been registered. Altogether, there should be 1 label
     # for the figure. The document's label was wiped out by the
@@ -144,7 +142,7 @@ def test_figure_caption_no_id_html(tmpdir):
     root_start = '<span class="root">\n  '
     root_end = '\n</span>\n'
 
-    root_html = root.html()
+    root_html = root.html
 
     # Remove the root tag
     root_html = root_html[len(root_start):]  # strip the start
@@ -190,7 +188,7 @@ def test_figure_caption_with_id_html(tmpdir):
         root_start = '<span class="root">'
         root_end = '</span>\n'
 
-        root_html = root.html()
+        root_html = root.html
 
         # Remove the root tag
         root_html = root_html[len(root_start):]  # strip the start
@@ -220,7 +218,7 @@ def test_figure_caption_no_id_tex(tmpdir):
     root = process_ast(src, context=doc.context)
     label_man.register_labels()
 
-    root_tex = root.tex()
+    root_tex = root.tex
     key = """
     \\begin{marginfigure}
       \caption{Fig. 1. This is my caption} \label{caption-92042fbb8b}
@@ -251,7 +249,7 @@ def test_figure_caption_with_id_tex(tmpdir):
         root = process_ast(src, context=doc.context)
         label_man.register_labels()
 
-        root_tex = root.tex()
+        root_tex = root.tex
         assert root_tex == ('\n\\begin{marginfigure}\n'
                             '  \caption{Fig. 1. This is my caption} \label{fig-1}\n'
                             '\\end{marginfigure}\n')

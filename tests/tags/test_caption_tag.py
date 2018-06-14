@@ -56,7 +56,7 @@ def test_ref_missing(tmpdir):
     # Trying to convert the root ast to a target type, like html, will raise
     # an LabelNotFound error
     with pytest.raises(LabelNotFound):
-        root.html()
+        root.html
 
     # There should be only one label for the document
     assert len(label_man.labels) == 1
@@ -90,7 +90,7 @@ def test_ref_figure_html(tmpdir):
 
     # Generate a reference tag and html
     ref = Ref(name='ref', content=label1.id, attributes=(), context=doc.context)
-    html = etree.tostring(ref.html()).decode('utf-8')
+    html = etree.tostring(ref.html).decode('utf-8')
 
     key = ('<a href="/main.html#fig:image1">'
            '<span class="label"><strong>Fig. .1</strong></span>'
@@ -119,7 +119,7 @@ def test_ref_html(tmpdir):
     label_man.register_labels()
 
     #  Test the ref's html
-    root_html = root.html()
+    root_html = root.html
 
     # The following root tags have to be stripped for the html strings
     root_start = '<span class="root">'
@@ -160,7 +160,7 @@ def test_ref_tex(tmpdir):
     # Rendering the tex raises the LabelNotFound exception since the label
     # with id 'test' wasn't defined.
     with pytest.raises(LabelNotFound):
-        root.tex()
+        root.tex
 
     # Generate the markup with an id. The marginfig tag is needed to
     # set the kind of the label.
@@ -171,5 +171,5 @@ def test_ref_tex(tmpdir):
     label_man.register_labels()
 
     #  Test the ref's html
-    root_tex = root.tex()
+    root_tex = root.tex
     assert root_tex.startswith('\\hyperref[test]{Fig. 1}')

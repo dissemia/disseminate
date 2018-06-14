@@ -1,7 +1,6 @@
 """
 Test the TOC tag.
 """
-from lxml.html import etree
 from lxml.builder import E
 
 from disseminate import Document
@@ -80,7 +79,7 @@ def test_toc_heading_html(tmpdir):
   </li>
 </ul>
 """
-    assert key == toc.html()
+    assert key == toc.html
 
     # The 'tests/tags/toc_example2' directory contains three markup files:
     # file1.dm, file2.dm and file3.dm. The 'file1.dm' includes 'file2.dm' and
@@ -130,7 +129,7 @@ def test_toc_heading_html(tmpdir):
   </li>
 </ul>
 """
-    assert key == toc.html()
+    assert key == toc.html
 
     # Create a toc for the root document, file1.dm, only.
     toc = Toc(name='toc', content='headings', attributes=tuple(),
@@ -144,7 +143,7 @@ def test_toc_heading_html(tmpdir):
   </li>
 </ul>
 """
-    assert key == toc.html()
+    assert key == toc.html
 
 
 def test_toc_header_html(tmpdir):
@@ -172,7 +171,7 @@ def test_toc_header_html(tmpdir):
   </li>
 </ul>
 """
-    assert key == toc.html()
+    assert key == toc.html
 
     # Now try adding the header
     toc = Toc(name='toc', content='headings', attributes=('header',),
@@ -186,8 +185,8 @@ def test_toc_header_html(tmpdir):
   </li>
 </ul>
 """
-    e = E('div', *toc.html())
-    assert key == toc.html()
+    e = E('div', *toc.html)
+    assert key == toc.html
 
     # Make sure a label was not created for the heading
     label_manager = doc.context['label_manager']
@@ -230,12 +229,12 @@ def test_toc_document_html(tmpdir):
   </ul>
 </ul>
 """
-    assert key == toc.html()
+    assert key == toc.html
 
     # Match the collapsed toc
     toc = Toc(name='toc', content='all documents collapsed', attributes=tuple(),
               context=doc.context)
-    assert key == toc.html()
+    assert key == toc.html
 
     # Match the expanded toc
     toc = Toc(name='toc', content='all documents expanded', attributes=tuple(),
@@ -311,7 +310,7 @@ def test_toc_document_html(tmpdir):
   </li>
 </ul>
 """
-    assert key == toc.html()
+    assert key == toc.html
 
     # Match the abbreviated toc
     toc = Toc(name='toc', content='all documents abbreviated',
@@ -388,7 +387,7 @@ def test_toc_document_html(tmpdir):
   </li>
 </ul>
 """
-    assert key == toc.html()
+    assert key == toc.html
 
     # Test the collapsed toc for only the root document
     toc = Toc(name='toc', content='documents', attributes=tuple(),
@@ -403,7 +402,7 @@ def test_toc_document_html(tmpdir):
   </li>
 </ul>
 """
-    assert key == toc.html()
+    assert key == toc.html
 
 
 # tex tests
@@ -442,7 +441,7 @@ def test_toc_heading_tex(tmpdir):
   \item \hyperref[sec:heading-4]{Heading 4} \dotfill \pageref{sec:heading-4}
 \end{toclist}
 """
-    assert key == toc.tex()
+    assert key == toc.tex
 
     # The 'tests/tags/toc_example2' directory contains three markup files:
     # file1.dm, file2.dm and file3.dm. The 'file1.dm' includes 'file2.dm' and
@@ -468,7 +467,7 @@ def test_toc_heading_tex(tmpdir):
   \item \hyperref[br:the-third-document]{The third document} \dotfill \pageref{br:the-third-document}
 \end{toclist}
 """
-    assert key == toc.tex()
+    assert key == toc.tex
 
     # Create a toc for the headings of file1.dm only.
     toc = Toc(name='toc', content='headings', attributes=tuple(),
@@ -478,7 +477,7 @@ def test_toc_heading_tex(tmpdir):
   \item \hyperref[heading-1]{Heading 1} \dotfill \pageref{heading-1}
 \end{toclist}
 """
-    assert key == toc.tex()
+    assert key == toc.tex
 
 
 def test_toc_header_tex(tmpdir):
@@ -502,7 +501,7 @@ def test_toc_header_tex(tmpdir):
   \item \hyperref[heading-1]{Heading 1} \dotfill \pageref{heading-1}
 \end{toclist}
 """
-    tex = toc.tex()
+    tex = toc.tex
     assert key == tex
 
     # Now try adding the header
@@ -513,7 +512,7 @@ def test_toc_header_tex(tmpdir):
   \item \hyperref[heading-1]{Heading 1} \dotfill \pageref{heading-1}
 \end{toclist}
 """
-    tex = toc.tex()
+    tex = toc.tex
     assert key == tex
 
     # Make sure a label was not created for the heading
@@ -544,7 +543,7 @@ def test_toc_document_tex(tmpdir):
   \end{toclist}
 \end{toclist}
 """
-    assert key == toc.tex()
+    assert key == toc.tex
 
 
 def test_toc_changes(tmpdir):
@@ -590,7 +589,7 @@ def test_toc_changes(tmpdir):
   </li>
 </ul>
 """
-    assert key == toc.html()
+    assert key == toc.html
 
     # Change the document
     markup = """
@@ -634,4 +633,4 @@ def test_toc_changes(tmpdir):
   </ul>
 </ul>
 """
-    assert key == toc.html()
+    assert key == toc.html

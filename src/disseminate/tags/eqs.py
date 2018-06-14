@@ -16,7 +16,7 @@ def raw_content_string(content):
         return ''.join(map(raw_content_string, content))
 
     elif isinstance(content, Tag) and hasattr(content, 'tex'):
-        return content.tex(mathmode=True)
+        return content.tex_fmt(mathmode=True)
 
     elif hasattr(content, 'content'):
         return raw_content_string(content.content)
@@ -81,7 +81,7 @@ class Eq(RenderedImg):
         # Save the raw content and raw attributes and format the content in tex
         self._raw_attributes = attributes
         self._raw_content = content
-        content = self.tex()
+        content = self.tex
 
         super(Eq, self).__init__(name=name, content=content,
                                  attributes=attributes,
@@ -89,16 +89,16 @@ class Eq(RenderedImg):
                                  render_target='.tex',
                                  template=eq_template)
 
-    def html(self, level=1, content=None):
+    def html_fmt(self, level=1, content=None):
         if self.block_equation:
             self.attributes = set_attribute(self.attributes,
                                             ('class', 'eq blockeq'))
         else:
             self.attributes = set_attribute(self.attributes,
                                             ('class', 'eq'))
-        return super(Eq, self).html(level, content)
+        return super(Eq, self).html_fmt(level, content)
 
-    def tex(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, level=1, mathmode=False, content=None):
         raw_content = raw_content_string(self._raw_content).strip(' \t\n')
         content = raw_content
 
@@ -113,7 +113,8 @@ class Eq(RenderedImg):
         else:
             if self.block_equation:
                 attrs = format_tex_attributes(self._raw_attributes,
-                                              left_bracket="{", right_bracket="}")
+                                              left_bracket="{",
+                                              right_bracket="}")
                 return self.tex_block_format.format(env=self.env, attrs=attrs,
                                                     content=content)
             else:

@@ -16,8 +16,8 @@ class P(Tag):
     active = True
     include_paragraphs = False
 
-    def tex(self, level=1, mathmode=False, content=None):
-        tex = super(P, self).tex(level, mathmode, content)
+    def tex_fmt(self, level=1, mathmode=False, content=None):
+        tex = super(P, self).tex_fmt(level, mathmode, content)
 
         # Rewrap the text
         if settings.tex_paragraph_width > 0:
@@ -51,11 +51,11 @@ class Sup(Tag):
     active = True
     include_paragraphs = False
 
-    def tex(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, level=1, mathmode=False, content=None):
         content = content if content is not None else self.content
         # Collect the content elements
         if isinstance(content, list):
-            elements = ''.join([i.tex(level + 1, mathmode)
+            elements = ''.join([i.tex_fmt(level + 1, mathmode)
                                 if hasattr(i, 'tex') else i
                                 for i in self.content])
         elif isinstance(content, str):
@@ -73,11 +73,11 @@ class Sub(Tag):
     active = True
     include_paragraphs = False
 
-    def tex(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, level=1, mathmode=False, content=None):
         content = content if content is not None else self.content
         # Collect the content elements
         if isinstance(content, list):
-            elements = ''.join([i.tex(level + 1, mathmode)
+            elements = ''.join([i.tex_fmt(level + 1, mathmode)
                                 if hasattr(i, 'tex') else i
                                 for i in content])
         elif isinstance(content, str):
@@ -122,11 +122,11 @@ class Supsub(Tag):
         self._sup = sup.strip()
         self._sub = sub.strip()
 
-    def html(self, level=1, content=None):
+    def html_fmt(self, level=1, content=None):
         kwargs = {'class': 'supsub'}
         return E('span', self._sup, E('br'), self._sub, **kwargs)
 
-    def tex(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, level=1, mathmode=False, content=None):
         formatted = "^{" + self._sup + "}_{" + self._sub + "}"
         return ("\\ensuremath{" + formatted + "}"
                 if not mathmode else formatted)
@@ -145,11 +145,11 @@ class Symbol(Tag):
             msg = "The @greek tag cannot have tags nested within it."
             raise TagError(msg)
 
-    def html(self, level=1, content=None):
+    def html_fmt(self, level=1, content=None):
         self.assert_not_nested()
         return Entity(self.content.strip())
 
-    def tex(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, level=1, mathmode=False, content=None):
         content = content if content is not None else self.content
         self.assert_not_nested()
         content = "\\" + content
@@ -166,14 +166,14 @@ class Verb(Tag):
 
     html_name = 'code'
 
-    def html(self, level=1, content=None):
+    def html_fmt(self, level=1, content=None):
         if self.name == "verbatim":
             self.attributes = set_attribute(self.attributes, ('class', 'block'))
-        return super(Verb, self).html(level)
+        return super(Verb, self).html_fmt(level=level+1, content=content)
 
-    def tex(self, *args, **kwargs):
+    def tex_fmt(self, *args, **kwargs):
         if self.name == "verbatim":
-            return ("\n\\begin{verbatim}\n" + self.default() +
+            return ("\n\\begin{verbatim}\n" + self.default_fmt() +
                     "\\end{verbatim}\n")
         else:
-            return "\\verb|" + self.default() + "|"
+            return "\\verb|" + self.default_fmt() + "|"

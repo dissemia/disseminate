@@ -163,7 +163,7 @@ class Tag(object):
         # Get the string for the content. The parent default function is called
         # to prevent recursion problems from child default methods calling
         # title.
-        string = Tag.default(self)
+        string = Tag.default_fmt(self)
         return titlelize(string)
 
     @property
@@ -308,7 +308,15 @@ class Tag(object):
             flattened_list = [t for t in flattened_list if isinstance(t, Tag)]
         return flattened_list
 
-    def default(self, content=None):
+    @property
+    def default(self):
+        return self.default_fmt()
+
+    @property
+    def txt(self):
+        return self.default_fmt()
+
+    def default_fmt(self, content=None):
         """Convert the tag to a text string.
 
         Strips the tag information and simply return the content of the tag.
@@ -326,17 +334,21 @@ class Tag(object):
         """
         content = content if content is not None else self.content
         if isinstance(content, list):
-            items = [i.default() if hasattr(i, 'default') else i
+            items = [i.default_fmt() if hasattr(i, 'default_fmt') else i
                             for i in content]
             items = filter(bool, items)
             return "".join(items)
         elif isinstance(content, Tag):
-            return content.default()
+            return content.default_fmt()
         else:
             # strings and other types of content
             return content
 
-    def tex(self, level=1, mathmode=False, content=None):
+    @property
+    def tex(self):
+        return self.tex_fmt()
+
+    def tex_fmt(self, level=1, mathmode=False, content=None):
         """Format the tag in latex format.
 
         Parameters
@@ -358,13 +370,13 @@ class Tag(object):
         content = content if content is not None else self.content
         # Collect the content elements
         if isinstance(content, list):
-            elements = ''.join([i.tex(level + 1, mathmode)
+            elements = ''.join([i.tex_fmt(level + 1, mathmode)
                                 if hasattr(i, 'tex') else i
                                 for i in content])
         elif isinstance(content, str):
             elements = content
         elif isinstance(content, Tag):
-            elements = content.tex(level+1)
+            elements = content.tex_fmt(level+1)
         else:
             msg = "Tag element '{}' of type '{}' cannot be rendered."
             raise(TagError(msg.format(content, type(content))))
@@ -403,7 +415,11 @@ class Tag(object):
         else:
             return elements
 
-    def html(self, level=1, content=None):
+    @property
+    def html(self):
+        return self.html_fmt()
+
+    def html_fmt(self, level=1, content=None):
         """Convert the tag to an html string or html element.
 
         Parameters
@@ -422,12 +438,12 @@ class Tag(object):
         content = content if content is not None else self.content
         # Collect the content elements
         if isinstance(content, list):
-            elements = [i.html(level + 1) if hasattr(i, 'html') else i
+            elements = [i.html_fmt(level + 1) if hasattr(i, 'html') else i
                         for i in content]
         elif isinstance(content, str):
             elements = content
         elif isinstance(content, Tag):
-            elements = [content.html(level+1)]
+            elements = [content.html_fmt(level+1)]
         else:
             msg = "Tag element '{}' of type '{}' cannot be rendered."
             raise (TagError(msg.format(content, type(content))))

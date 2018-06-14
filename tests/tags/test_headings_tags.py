@@ -146,7 +146,7 @@ def test_heading_labels_html(tmpdir):
         label_man.register_labels()
 
         # Remove the root tag
-        root_html = root.html()[len(root_start):]  # strip the start
+        root_html = root.html[len(root_start):]  # strip the start
         root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
         assert root_html == html
 
@@ -169,7 +169,7 @@ def test_heading_labels_html(tmpdir):
         label_man.register_labels()
 
         # Remove the root tag
-        root_html = root.html()[len(root_start):]  # strip the start
+        root_html = root.html[len(root_start):]  # strip the start
         root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
         assert root_html == html
 
@@ -210,7 +210,7 @@ def test_heading_labels_tex(tmpdir):
         root = process_ast(src, context=doc.context)
         label_man.register_labels()
 
-        assert root.tex() == tex
+        assert root.tex == tex
 
     # 2. Test with 'nolabel' specified
 
@@ -230,4 +230,4 @@ def test_heading_labels_tex(tmpdir):
         root = process_ast(src, context=doc.context)
         label_man.register_labels()
 
-        assert root.tex() == tex
+        assert root.tex == tex

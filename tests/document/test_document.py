@@ -250,7 +250,6 @@ def test_template_updates(tmpdir):
     # Change the template and see if the rendered output changes
     template.write("""test2""")
 
-    print(out_file.read(), os.path.isfile(str(out_file)))
     assert doc.render_required(str(out_file))
     doc.render()
     assert out_file.read() == 'test2'

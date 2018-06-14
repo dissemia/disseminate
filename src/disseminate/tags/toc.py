@@ -232,7 +232,7 @@ class Toc(Tag):
         self.ref_tags = tags
         self._mtime = latest_mtime
 
-    def html(self, level=1, content=None, elements=None, listtype='ul'):
+    def html_fmt(self, level=1, content=None, elements=None, listtype='ul'):
         """Convert the tag to an html listing.
 
         .. note:: The 'document' toc is special since it uses the documents
@@ -269,12 +269,12 @@ class Toc(Tag):
 
             if isinstance(e, list):
                 # The element is a list of tags. Process this list as a group.
-                returned_elements.append(self.html(level+1, content=None,
+                returned_elements.append(self.html_fmt(level+1, content=None,
                                                    elements=e))
             else:
                 # Otherwise it's a ref tag, get its html and wrap it in a list
                 # item
-                returned_elements.append(E('li', e.html(level+1)))
+                returned_elements.append(E('li', e.html_fmt(level+1)))
 
         kwargs = {'class': 'toc-level-' + str(level)}
         e = E(listtype, *returned_elements, **kwargs)
@@ -287,8 +287,8 @@ class Toc(Tag):
         else:
             return e
 
-    def tex(self, level=1, mathmode=False, content=None, elements=None,
-            listtype='toclist'):
+    def tex_fmt(self, level=1, mathmode=False, content=None, elements=None,
+                listtype='toclist'):
         """Convert the tag to a tex listing.
 
         .. note:: The 'document' toc is special since it uses the documents
@@ -325,20 +325,18 @@ class Toc(Tag):
 
             if isinstance(e, list):
                 # The element is a list of tags. Process this list as a group.
-                returned_elements.append(self.tex(level + 1, content=None,
-                                                   elements=e))
+                returned_elements.append(self.tex_fmt(level + 1, content=None,
+                                                      elements=e))
             else:
                 # Otherwise it's a ref tag, get its tex and wrap it in a list
                 # item
                 entry = "  " * level
-                entry += "\\item " + e.tex(level + 1)
-
+                entry += "\\item " + e.tex_fmt(level + 1)
 
                 # Format the page numbers
                 entry += (" \\dotfill " if True
                           else " \\hfill ")
-                #entry += "\\makebox[" + pageref_width + "][r]{"
-                entry += e.tex(level + 1, page=True)
+                entry += e.tex_fmt(level + 1, page=True)
 
                 entry += '\n'
 

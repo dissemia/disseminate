@@ -54,7 +54,7 @@ def test_document_toc(tmpdir):
   </li>
 </ul>
 """
-    assert key == toc_tag.html()
+    assert key == toc_tag.html
 
 
 def test_document_tree_updates_document_labels(tmpdir):

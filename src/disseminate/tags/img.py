@@ -35,7 +35,7 @@ class Img(Tag):
             msg = "An image path must be used with the img tag."
             raise TagError(msg)
 
-    def tex(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, level=1, mathmode=False, content=None):
         # Get the file dependency
         assert 'dependency_manager' in self.context
 
@@ -56,7 +56,7 @@ class Img(Tag):
                                           attribute_names=valid_attrs)
         return "\\includegraphics" + attrs_str + "{{{}}}".format(path)
 
-    def html(self, level=1, content=None):
+    def html_fmt(self, level=1, content=None):
         # Add the file dependency
         assert 'dependency_manager' in self.context
 
@@ -76,7 +76,7 @@ class Img(Tag):
 
         self.attributes = set_attribute(self.attributes, ('src', url),
                                         method='r')
-        return super(Img, self).html(level)
+        return super(Img, self).html_fmt(level)
 
 
 class RenderedImg(Img):

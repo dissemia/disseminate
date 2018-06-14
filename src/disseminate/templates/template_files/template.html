@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>(( title ))</title>
+  (% if title %)<title>(( title.txt ))</title>(% endif %)
   (% if description %)<meta name="description" content="(( description ))">(% endif %)
   (% if author %)<meta name="author" content="(( author ))">(% endif %)
   (% block css %)
@@ -13,7 +13,7 @@
 <body>
   <article>
     (% block body %)
-    (( body|safe ))
+    (( body.html|safe ))
     (% endblock %)
   </article>
 </body>

@@ -181,7 +181,8 @@ class Document(object):
             # The title entry could be a string or a tag. If it's a tag, just
             # get the text for the tag.
             title = self.context['title']
-            title_str = (title.default().strip() if hasattr(title, 'default')
+            title_str = (title.default_fmt().strip()
+                         if hasattr(title, 'default_fmt')
                          else title)
             return title_str
         return self.src_filepath.strip(settings.document_extension)
@@ -193,7 +194,8 @@ class Document(object):
             # The short entry could be a string or a tag. If it's a tag, just
             # get the text for the tag.
             short = self.context['short']
-            short_str = (short.default().strip() if hasattr(short, 'default')
+            short_str = (short.default_fmt().strip()
+                         if hasattr(short, 'default_fmt')
                          else short)
             return short_str
         else:
@@ -929,13 +931,8 @@ class Document(object):
         # render and save to output file
         target_name = target.strip('.')
 
-        if hasattr(ast, target_name):
-            output_string = getattr(ast, target_name)()
-        else:
-            output_string = ast.default()
-
-        # Add the output string to the context
-        context['body'] = output_string
+        # Set the body variable to the AST
+        context['body'] = ast
 
         # Get a template. Reload is set to True to make sure that the latest
         # version of the template is loaded.
@@ -957,6 +954,11 @@ class Document(object):
                 meth = getattr(dep, 'add_' + target_name, None)
                 if meth is not None:
                     meth(output_string)
+        else:
+            if hasattr(ast, target_name):
+                output_string = getattr(ast, target_name)
+            else:
+                output_string = ast.default
 
         # Write the file
         with open(target_filepath, 'w') as f:

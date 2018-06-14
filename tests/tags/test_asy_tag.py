@@ -35,14 +35,14 @@ def test_asy_html(tmpdir):
     root = process_ast(src, context=context)
 
     # get the root tag
-    root_html = root.html()
+    root_html = root.html
 
     # The following root tags have to be stripped for the html strings
     root_start = '<span class="root">\n  '
     root_end = '\n</span>\n'
 
     # Remove the root tag
-    root_html = root.html()[len(root_start):]  # strip the start
+    root_html = root_html[len(root_start):]  # strip the start
     root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
 
     # Check the rendered tag and that the asy and svg files were properly
@@ -69,10 +69,10 @@ def test_asy_html(tmpdir):
     root = process_ast(src, context=context)
 
     # get the root tag
-    root_html = root.html()
+    root_html = root.html
 
     # Remove the root tag
-    root_html = root.html()[len(root_start):]  # strip the start
+    root_html = root.html[len(root_start):]  # strip the start
     root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
 
     # Check the rendered tag and that the asy and svg files were properly
@@ -118,7 +118,7 @@ def test_asy_html_attribute(tmpdir):
     root_end = '\n</span>\n'
 
     # Remove the root tag
-    root_html = root.html()[len(root_start):]  # strip the start
+    root_html = root.html[len(root_start):]  # strip the start
     root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
 
     # Check the rendered tag and that the asy and svg files were properly

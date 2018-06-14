@@ -64,7 +64,7 @@ class Heading(Tag):
             self.attributes = set_attribute(self.attributes, ('id', id))
             self.set_label(id=id, kind=kind)
 
-    def default(self, content=None):
+    def default_fmt(self, content=None):
         name = self.__class__.__name__.lower()
         label = self.label
         if label is not None:
@@ -73,11 +73,11 @@ class Heading(Tag):
             # Replace the label_tag name to this heading's name, ex: 'Chapter'
             label_tag.name = name
             return ("\n" +
-                    label_tag.default(content) + "\n\n")
+                    label_tag.default_fmt(content) + "\n\n")
         else:
-            return "\n" + super(Heading, self).default(content) + "\n\n"
+            return super(Heading, self).default_fmt(content)
 
-    def html(self, level=1, content=None):
+    def html_fmt(self, level=1, content=None):
         name = self.__class__.__name__.lower()
         label = self.label
 
@@ -87,11 +87,11 @@ class Heading(Tag):
             # Replace the label_tag name to this heading's name, ex: 'chapter'
             label_tag.name = name
             kwargs = kwargs_attributes(self.attributes)
-            return E(self.html_name, label_tag.html(level+1), **kwargs)
+            return E(self.html_name, label_tag.html_fmt(level+1), **kwargs)
         else:
-            return super(Heading, self).html(level+1, content)
+            return super(Heading, self).html_fmt(level+1, content)
 
-    def tex(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, level=1, mathmode=False, content=None):
         name = (self.tex_name if self.tex_name is not None else
                 self.__class__.__name__.lower())
 
@@ -110,7 +110,8 @@ class Heading(Tag):
                        "\\label{{{id}}}".format(id=label.id) + "\n\n")
             return string
         else:
-            return ("\n" + super(Heading, self).tex(level+1, mathmode, content)
+            return ("\n" + super(Heading, self).tex_fmt(level+1, mathmode,
+                                                        content)
                     + "\n\n")
 
 
