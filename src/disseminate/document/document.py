@@ -12,7 +12,7 @@ import os.path
 from ..ast import (process_ast, process_paragraphs, process_typography,
                    process_context_tags)
 from ..templates import get_template
-from ..header import load_yaml_header
+from ..header import load_header
 from ..tags import Tag
 from ..macros import replace_macros
 from ..convert import convert
@@ -107,7 +107,7 @@ class Document(object):
 
     #: String processors, before loading the AST.
     #: def string_processor(s, context)
-    string_processors = [load_yaml_header,  # Process YAML headers
+    string_processors = [load_header,  # Process header
                          replace_macros,  # Process macros
                          ]
 

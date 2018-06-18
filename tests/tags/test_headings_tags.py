@@ -60,7 +60,7 @@ def test_labels_heading_formatting(tmpdir):
     src_filepath.write(strip_leading_space("""
     ---
     targets: html, txt
-    heading_label: "{label.tree_number}. {label.title}"
+    heading_label: {label.tree_number}. {label.title}
     ---
     @chapter{First Chapter}
     @section{Section One-One}

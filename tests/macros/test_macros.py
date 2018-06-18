@@ -50,7 +50,7 @@ def test_macros_specific():
 def test_macros_multiple_substitutions():
     """Test multiple substitutions of macros."""
 
-    context = {'macros': {'@p90x': '90@deg@sub{x}'}}
+    context = {'@p90x': '90@deg@sub{x}'}
 
     result = replace_macros("My @p90x pulse.", context=context )
     assert result == "My 90@sup{○}@sub{x} pulse."
@@ -59,7 +59,7 @@ def test_macros_multiple_substitutions():
 def test_macros_attributes():
     """Test the replacement of macros and values with attributes."""
 
-    context = {'macros': {"@feature": "@div[class=col-md-4]"}}
+    context = {"@feature": "@div[class=col-md-4]"}
 
     result = replace_macros("My @feature{is good}.", context=context)
     assert result == "My @div[class=col-md-4]{is good}."

@@ -17,11 +17,12 @@ _submodule_macros = None
 def replace_macros(s, context):
     """Replace the macros and return a processed string.
 
-    .. note:: A set of macros from this submodule are loaded as well as macros
-             that are defined in the local_context and global_context. In cases
-             where macros are defined multiple times, the local_context takes
-             precedence over the global_context, and the global_context takes
-             precedence over the submodule_macros.
+    .. note:: Macros are loaded from the following sources:
+
+        1. submodule macros (like science macros)
+        2. custom macros in the settings
+        3. macro entries in the context.
+
 
     Parameters
     ----------
@@ -66,10 +67,11 @@ def replace_macros(s, context):
         if entry in context:
             macros['@' + entry] = context[entry]
 
-    # See if the context already has a dict of macros. These will
-    # potentially overwrite the submodule_macros.
-    if 'macros' in context and isinstance(context['macros'], dict):
-        macros.update(context['macros'])
+    # Import macros from the context
+    for k,v in context.items():
+        if not k.startswith('@'):
+            continue
+        macros[k] = v
 
     # Replace the macros
     def _substitute(m):

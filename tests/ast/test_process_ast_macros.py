@@ -44,7 +44,7 @@ def test_process_ast_basic_macros():
 def test_process_ast_nested_macros():
     """Test the process_ast with a nested macros."""
 
-    context = {'macros': {'@p90x': '90@deg@sub{x}'}}
+    context = {'@p90x': '90@deg@sub{x}'}
 
     result = replace_macros("My @p90x pulse.", context=context)
     ast = process_ast(result, context=context)

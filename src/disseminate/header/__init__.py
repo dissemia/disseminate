@@ -2,4 +2,4 @@
 String processor functions for loading headers from source strings.
 """
 
-from .yaml_header import load_yaml_header
+from .header import parse_header_str, load_header

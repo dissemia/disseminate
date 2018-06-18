@@ -274,7 +274,7 @@ def test_context_update(tmpdir):
     assert author_tag.name == 'author'
     assert author_tag.content == ['Justin L Lorieau']
 
-    assert 'macros' in doc.context
+    assert '@macro' in doc.context
 
     # Get the local_context id to make sure it stays the same
     context_id = id(doc.context)
@@ -286,7 +286,7 @@ def test_context_update(tmpdir):
     # Check the contents  of the local_context
     assert 'title' not in doc.context
     assert 'author' not in doc.context
-    assert 'macros' not in doc.context
+    assert '@macro' not in doc.context
 
     assert id(doc.context) == context_id
 

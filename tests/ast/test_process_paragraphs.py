@@ -109,7 +109,7 @@ def test_process_paragraphs_macros():
     """Test the process_paragraphs function with macros."""
 
     # setup a test ast with a macro
-    context = {'macros': {'@p90x': '90@deg@sub{x}'}}
+    context = {'@p90x': '90@deg@sub{x}'}
 
     result = replace_macros("My @p90x pulse.", context=context)
     ast = process_paragraphs([result], context=context)

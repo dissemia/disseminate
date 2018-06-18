@@ -100,10 +100,12 @@ def str_to_list(string, delimiter=','):
     ['my friend', 'the robot']
     >>> str_to_list(['my friend', ' the robot'])
     ['my friend', 'the robot']
+    >>> str_to_list("src/file1.tex\\nsrc/file2.tex\\nsrc/file 3.tex")
+    ['src/file1.tex', 'src/file2.tex', 'src/file 3.tex']
     """
     # Convert the string to a list
     if isinstance(string, str):
-        lst = [string]
+        lst = string.splitlines()
     elif hasattr(string, '__iter__'):
         lst = list(string)
 
