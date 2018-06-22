@@ -8,6 +8,86 @@ from disseminate.tags.toc import Toc
 from disseminate.utils.tests import strip_leading_space
 
 
+def test_toc_changes(tmpdir):
+    """Test the generation of tocs when the label manager changes."""
+    # Setup a test document
+    src_path = tmpdir.join('src')
+    src_path.mkdir()
+    src_filepath = src_path.join('test.dm')
+
+    markup = """
+    ---
+    title: my first file
+    ---
+    @section[id=heading1]{My first heading}
+    """
+    src_filepath.write(strip_leading_space(markup))
+
+    # Create the document and render
+    doc = Document(src_filepath=src_filepath, target_root=str(tmpdir))
+    doc.render()
+
+    # Match the abbreviated toc
+    toc = Toc(name='toc', content='all documents abbreviated',
+              attributes=tuple(),
+              context=doc.context)
+    key = """<ul class="toc-level-1">
+  <li>
+    <a href="/test.html">
+      <span class="label">my first file</span>
+    </a>
+  </li>
+  <ul class="toc-level-2">
+    <li>
+      <a href="/test.html#heading1">
+        <span class="label"><span class="number">1.</span> My first heading</span>
+      </a>
+    </li>
+  </ul>
+</ul>
+"""
+    assert key == str(toc.html)
+
+    # Change the document
+    markup = """
+    ---
+    title: my first file
+    ---
+    @section[id=heading1]{My first heading}
+    @subsection[id=subheading1]{My first sub-heading}
+    """
+    src_filepath.write(strip_leading_space(markup))
+    doc.render()
+
+    # Match the abbreviated toc
+    toc = Toc(name='toc', content='all documents abbreviated',
+              attributes=tuple(),
+              context=doc.context)
+    key = """<ul class="toc-level-1">
+  <li>
+    <a href="/test.html">
+      <span class="label">my first file</span>
+    </a>
+  </li>
+  <ul class="toc-level-2">
+    <li>
+      <a href="/test.html#heading1">
+        <span class="label"><span class="number">1.</span> My first heading</span>
+      </a>
+    </li>
+    <ul class="toc-level-3">
+      <li>
+        <a href="/test.html#subheading1">
+          <span class="label"><span class="number">1.1.</span> My first sub-heading</span>
+        </a>
+      </li>
+    </ul>
+  </ul>
+</ul>
+"""
+    assert key == toc.html
+
+
 # html tests
 
 def test_toc_heading_html(tmpdir):
@@ -111,20 +191,8 @@ def test_toc_heading_html(tmpdir):
     </li>
   </ul>
   <li>
-    <a href="/file2.html#br:my-second-document">
-      <span class="label"><span class="number">1.</span> My second document</span>
-    </a>
-  </li>
-  <ul class="toc-level-2">
-    <li>
-      <a href="/file3.html#heading-3">
-        <span class="label"><span class="number">1.</span> Heading 3</span>
-      </a>
-    </li>
-  </ul>
-  <li>
-    <a href="/file3.html#br:the-third-document">
-      <span class="label"><span class="number">2.</span> The third document</span>
+    <a href="/file3.html#heading-3">
+      <span class="label"><span class="number">1.</span> Heading 3</span>
     </a>
   </li>
 </ul>
@@ -460,11 +528,7 @@ def test_toc_heading_tex(tmpdir):
   \\begin{toclist}
     \item \hyperref[subheading-2]{sub-Heading 2} \dotfill \pageref{subheading-2}
   \end{toclist}
-  \item \hyperref[br:my-second-document]{My second document} \dotfill \pageref{br:my-second-document}
-  \\begin{toclist}
-    \item \hyperref[heading-3]{Heading 3} \dotfill \pageref{heading-3}
-  \end{toclist}
-  \item \hyperref[br:the-third-document]{The third document} \dotfill \pageref{br:the-third-document}
+  \item \hyperref[heading-3]{Heading 3} \dotfill \pageref{heading-3}
 \end{toclist}
 """
     assert key == toc.tex
@@ -544,93 +608,3 @@ def test_toc_document_tex(tmpdir):
 \end{toclist}
 """
     assert key == toc.tex
-
-
-def test_toc_changes(tmpdir):
-    """Test the generation of tocs when the label manager changes."""
-    # Setup a test document
-    src_path = tmpdir.join('src')
-    src_path.mkdir()
-    src_filepath = src_path.join('test.dm')
-
-    markup = """
-    ---
-    title: my first file
-    ---
-    @section[id=heading1]{My first heading}
-    """
-    src_filepath.write(strip_leading_space(markup))
-
-    # Create the document and render
-    doc = Document(src_filepath=src_filepath, target_root=str(tmpdir))
-    doc.render()
-
-    # Match the abbreviated toc
-    toc = Toc(name='toc', content='all documents abbreviated',
-              attributes=tuple(),
-              context=doc.context)
-    key = """<ul class="toc-level-1">
-  <li>
-    <a href="/test.html">
-      <span class="label">my first file</span>
-    </a>
-  </li>
-  <ul class="toc-level-2">
-    <li>
-      <a href="/test.html#heading1">
-        <span class="label"><span class="number">1.</span> My first heading</span>
-      </a>
-    </li>
-  </ul>
-  <li>
-    <a href="/test.html#br:my-first-file">
-      <span class="label"><span class="number">1.</span> my first file</span>
-    </a>
-  </li>
-</ul>
-"""
-    assert key == toc.html
-
-    # Change the document
-    markup = """
-    ---
-    title: my first file
-    ---
-    @section[id=heading1]{My first heading}
-    @subsection[id=subheading1]{My first sub-heading}
-    """
-    src_filepath.write(strip_leading_space(markup))
-    doc.render()
-
-    # Match the abbreviated toc
-    toc = Toc(name='toc', content='all documents abbreviated',
-              attributes=tuple(),
-              context=doc.context)
-    key = """<ul class="toc-level-1">
-  <li>
-    <a href="/test.html">
-      <span class="label">my first file</span>
-    </a>
-  </li>
-  <ul class="toc-level-2">
-    <li>
-      <a href="/test.html#heading1">
-        <span class="label"><span class="number">1.</span> My first heading</span>
-      </a>
-    </li>
-    <ul class="toc-level-3">
-      <li>
-        <a href="/test.html#subheading1">
-          <span class="label"><span class="number">1.1.</span> My first sub-heading</span>
-        </a>
-      </li>
-    </ul>
-    <li>
-      <a href="/test.html#br:my-first-file">
-        <span class="label"><span class="number">1.</span> my first file</span>
-      </a>
-    </li>
-  </ul>
-</ul>
-"""
-    assert key == toc.html

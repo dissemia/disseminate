@@ -26,8 +26,6 @@ def replace_macros(s, context):
 
     Parameters
     ----------
-    s : str
-        The string to process for macros
     context : dict
         A dict containing variables defined for a specific document.
 
@@ -88,3 +86,26 @@ def replace_macros(s, context):
         s, num_subs = re_macro.subn(_substitute, s)
 
     return Metastring(s, **meta)
+
+
+def process_context_macros(context):
+    """""Process the macros of strings in a context.
+
+    This function replaces macros in strings in the context--and not tags.
+    Consequently, it should be executed before tags are created in the context.
+
+    Parameters
+    ----------
+    context : dict, optional
+        The context with values for the document.
+    """
+    # Go through the entries in the context and determine which are tags
+    for k, v in context.items():
+        # Skip macros and non-string entries
+        if k.startswith('@') or not isinstance(v, str):
+            continue
+
+        # Process the entry in the context
+        context[k] = replace_macros(s=v, context=context)
+
+    return None

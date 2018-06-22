@@ -4,6 +4,7 @@ Functions to load basic headers.
 import regex
 
 from ..utils.string import Metastring
+from .. import settings
 
 re_header_block = regex.compile(r'^[\s\n]*(-{3,})\s*\n'
                                 r'(?P<header>.+?)'
@@ -69,14 +70,13 @@ def parse_header_str(s):
     return d
 
 
-def load_header(s, context):
-    """Load a basic header from a string to the context and return the
-    string with the header removed.
+def load_header(context):
+    """Load a basic header from a string in the 'body' entry
+    (see settings.body_attr) of the context and replace it with the header
+    removed.
 
     Parameters
     ----------
-    s : str
-        The string to process for the header
     context : dict
         A dict containing variables defined for a specific document.
 
@@ -85,6 +85,10 @@ def load_header(s, context):
     processed_string : str
         A string with the header removed.
     """
+    body_attr = settings.body_attr
+    assert body_attr in context
+    s = context[body_attr]
+
     # Initialize the metastring dict
     meta = s.__dict__ if hasattr(s, '__dict__') else dict()
 
@@ -98,9 +102,10 @@ def load_header(s, context):
             if (k in context and isinstance(v, dict) and
                     isinstance(context[k], dict)):
                 # For dict entries, update the dict with the context's values
-                v.update(context[k])
-            # Replace the entry
-            context[k] = v
+                context[k].update(v)
+            else:
+                # Otherwise, replace the entry
+                context[k] = v
 
         # Determine the start and end position of the header
         start, end = m.span()
@@ -115,4 +120,8 @@ def load_header(s, context):
         # meta information
         s = Metastring(s[end:], **meta)
 
-    return s
+        # Place the new string in the context
+        context[body_attr] = s
+
+    return None
+

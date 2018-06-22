@@ -1,9 +1,11 @@
 """
 Test the proces_paragraphs function.
 """
-from disseminate.ast import process_ast, process_paragraphs
+from disseminate.ast import (process_ast, process_paragraphs,
+                             process_context_asts, process_context_paragraphs)
 from disseminate.macros import replace_macros
 from disseminate.tags.text import P
+from disseminate import settings
 
 
 test_paragraphs = """
@@ -86,6 +88,23 @@ def test_process_paragraphs_leading_spaces():
 
     ast = process_ast(test_paragraphs2)
     ast = process_paragraphs(ast)
+
+    assert ast.content[0] == '  '
+    assert ast.content[1].name == 'section'
+    assert ast.content[2] == '  \n  This is my paragraph.'
+
+
+def test_process_context_paragraphs():
+    """Test the process_context_paragraphs function."""
+
+    body_attr = settings.body_attr
+    context = {body_attr: test_paragraphs2,
+               'src_filepath': ''}
+
+    process_context_asts(context)
+    process_context_paragraphs(context)
+
+    ast = context[body_attr]
 
     assert ast.content[0] == '  '
     assert ast.content[1].name == 'section'

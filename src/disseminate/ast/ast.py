@@ -150,8 +150,9 @@ def process_ast(ast=None, context=None, src_filepath=None, level=1):
     if len(new_ast) == 1:
         new_ast = new_ast[0]
 
-    # Wrap in a root tag, if it's the first level
-    if level == 1:  # root level
+    # Wrap in a root tag, if it's the first level and the new_ast isn't already
+    # a tag
+    if level == 1 and not isinstance(new_ast, Tag):  # root level
         # If this is the root tag, validate and clean the ast
         line_offset = ast.line_offset if hasattr(ast, 'line_offset') else 1
         validator = ValidateAndCleanAST(name=src_filepath,
@@ -166,41 +167,36 @@ def process_ast(ast=None, context=None, src_filepath=None, level=1):
     return new_ast
 
 
-def process_context_tags(ast=None, context=None, src_filepath=None, level=1):
+def process_context_asts(context):
     """Process the ASTs of tags in the context.
+
+    This function converts strings with tag substrings (ex: '@b{bold}') into
+    tags.
 
     Parameters
     ----------
-    ast : list
-        An optional AST to build from or a list of strings.
     context : dict, optional
         The context with values for the document.
-    src_filepath : str, optional
-        The path for the document (source markup) file being processed.
-    level : int, optional
-        The current level of the ast.
-
-    Returns
-    -------
-    ast : :obj:`disseminate.Tag`, list of ast elements or string
-        The unmodified AST.
     """
-    # Setup the tag factor to generate tags
-    factory = TagFactory()
+    # Setup the needed variables for process_ast
+    assert 'src_filepath' in context
+    src_filefile = context['src_filepath']
 
-    # See if there are entries in the context that share the same name as tags
-    context_tag_keys = context.keys() & factory.tag_types.keys()
+    # Go through the entries in the context and determine which can be converted
+    # to an AST
+    for k, v in context.items():
+        # Skip macros and non-string entries
+        if k.startswith('@') or not isinstance(v, str):
+            continue
 
-    # Convert the context tag entries to tags
-    for key in context_tag_keys:
-        entry_text = context[key]
-        tag = factory.tag(tag_name=key,
-                          tag_content=entry_text,
-                          tag_attributes=None,
-                          context=context)
+        # Process the entry in the context
+        ast = process_ast(ast=v, context=context, src_filepath=src_filefile)
 
-        # Replace the entry in the context with the tag itself
-        context[key] = tag
+        # Replace the context entry if it's a valid ast with tags. If 'v' was
+        # just a string without tags, then the returned ast is a root tag whose
+        # content is just a string.
+        if not isinstance(ast.content, str):
+            ast.name = k
+            context[k] = ast
 
-    # Return the AST unmodified
-    return ast
+    return None

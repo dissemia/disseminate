@@ -2,10 +2,10 @@
 Tests for Document classes and functions.
 """
 import pytest
-import os.path
 
 from disseminate.document import Document, DocumentError
 from disseminate.utils.tests import strip_leading_space
+from disseminate import settings
 
 
 def test_number_property(tmpdir):
@@ -38,13 +38,13 @@ include:
     assert doc_list[2].src_filepath == str(src_filepath3)
     assert doc_list[2].number == 3
 
-    # Reorder the documents and reload the ast.
+    # Reorder the documents and reload the document.
     src_filepath1.write("""---
 include:
   file3.dm
   file2.dm
 ---""")
-    doc.get_ast()
+    doc.load_document()
 
     doc_list = doc.documents_list(only_subdocuments=False)
     assert doc.number == 1
@@ -55,22 +55,20 @@ include:
 
 def test_ast_caching(tmpdir):
     """Tests the caching of the AST based on file modification times."""
-    # Get a path to a temporary file
-    temp_file = str(tmpdir.join("html")) + '/dummy.html'
-
     # Load the document and render it with no template. Opening the document
     # loads the ast.
     doc = Document("tests/document/example1/dummy.dm",
                    str(tmpdir))
 
-    ast = doc._ast
+    body_attr = settings.body_attr
+    ast = doc.context[body_attr]
     mtime = doc.mtime
     assert ast is not None
     assert mtime is not None
 
     # Try loading the AST again. At this point, it shouldn't be different
-    doc.get_ast()
-    assert ast == doc._ast
+    doc.load_document()
+    assert ast == doc.context[body_attr]
     assert mtime == doc.mtime
 
 
@@ -259,20 +257,15 @@ def test_context_update(tmpdir):
     """Tests that the context is properly updated in subsequent renders."""
     # First load a file with a header
     doc = Document("tests/document/example2/withheader.dm", str(tmpdir))
-    doc.get_ast()
 
-    # Check the contents  of the context.
+    # Check the contents of the context.
     # The title entry is converted to a tag.
     assert 'title' in doc.context
-    title_tag = doc.context['title']
-    assert title_tag.name == 'title'
-    assert title_tag.content == 'My first title'
+    assert doc.context['title'] == 'My first title'
 
     # The author entry is converted to a tag.
     assert 'author' in doc.context
-    author_tag = doc.context['author']
-    assert author_tag.name == 'author'
-    assert author_tag.content == ['Justin L Lorieau']
+    assert doc.context['author'] == 'Justin L Lorieau'
 
     assert '@macro' in doc.context
 
@@ -281,7 +274,7 @@ def test_context_update(tmpdir):
     # Now switch to a file without a header and make sure the header values
     # are removed
     doc.src_filepath = "tests/document/example2/noheader.dm"
-    doc.get_ast(reload=True)
+    doc.load_document(reload=True)
 
     # Check the contents  of the local_context
     assert 'title' not in doc.context
@@ -314,12 +307,12 @@ def test_target_list_update(tmpdir):
         ---
         """
     src_filepath.write(strip_leading_space(markup))
-    doc.get_ast()
+    doc.load_document()
 
     assert doc.target_list == ['.tex']
 
 
-def test_macros(tmpdir):
+def test_document_macros(tmpdir):
     """Tests that macros defined in the header of a document are properly
     processed."""
     temp_file = tmpdir.join('html').join('withheader.html')
@@ -327,8 +320,8 @@ def test_macros(tmpdir):
     # First load a file with a header
     doc = Document("tests/document/example2/withheader.dm",
                    str(tmpdir))
-    doc.render()
 
+    doc.render()
     # See if the macro was properly replaced
     rendered_html = temp_file.read()
 

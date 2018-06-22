@@ -3,6 +3,7 @@ Core classes and functions for tags.
 """
 from lxml.builder import E
 from lxml import etree
+from markupsafe import Markup
 
 from ..attributes import (parse_attributes, set_attribute,
                           kwargs_attributes, format_tex_attributes,
@@ -449,12 +450,8 @@ class Tag(object):
             raise (TagError(msg.format(content, type(content))))
 
         # Construct the tag name
-        if level > 1:
-            name = (self.html_name if self.html_name is not None else
-                    self.name.lower())
-
-        else:
-            name = settings.html_root_tag
+        name = (self.html_name if self.html_name is not None else
+                self.name.lower())
 
         # Filter and prepare the attributes
         attrs = self.attributes if self.attributes else []
@@ -489,8 +486,8 @@ class Tag(object):
 
         # Render the root tag if this is the first level
         if level == 1:
-            return (etree
-                    .tostring(e, pretty_print=settings.html_pretty)
-                    .decode("utf-8"))
+            s = (etree.tostring(e, pretty_print=settings.html_pretty)
+                      .decode("utf-8"))
+            return Markup(s)  # Mark string as safe, since it's escaped by lxml
         else:
             return e

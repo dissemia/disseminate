@@ -38,6 +38,10 @@ text_extensions = ['.tex', ]
 default_context = {
 }
 
+#: Attribute in the context in which the body of a file (the string and AST)
+#: is stored in.
+body_attr = 'body'
+
 #: Template Defaults
 #: -----------------
 
@@ -123,16 +127,13 @@ label_fmt = {'document': '{label.short}',
 #: HTML Tags
 #: ~~~~~~~~~
 
-#: The tag to use for the document in the HTML page
-html_root_tag = 'root'
-
 #: Render HTML pages with newlines and indentation
 html_pretty = True
 
 #: Allowed HTML tags. Tags that don't match these values will be rendered as
 #: span tags in html
 html_valid_tags = {"a",
-                   "b", "blockquote", "body",
+                   "b", "blockquote",
                    "code",
                    "dd", "div", "dl", "dt",
                    "em",

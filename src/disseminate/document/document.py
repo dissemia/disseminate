@@ -9,12 +9,12 @@ import logging
 import os
 import os.path
 
-from ..ast import (process_ast, process_paragraphs, process_typography,
-                   process_context_tags)
+from ..ast import (process_context_asts, process_context_paragraphs,
+                   process_context_typography)
 from ..templates import get_template
 from ..header import load_header
 from ..tags import Tag
-from ..macros import replace_macros
+from ..macros import process_context_macros
 from ..convert import convert
 from ..labels import LabelManager
 from ..dependency_manager import DependencyManager
@@ -62,29 +62,9 @@ class Document(object):
         documents should be made. (i.e. when the subdocuments dict is cleared,
         the memory for the document objects should be released)
 
-    string_processors : list of functions, **class attribute**
-        A list of functions to process the string before conversion to the
-        AST. These functions are executed in sequence and simply accept the
-        string, local_context and global_context as arguments and return a
-        processed string. The processed string can either be a 'str' or a
-        'Metastring' with additional meta information.
-
-        .. note:: String processors are run asynchronously, and the
-                  local_context and global_context dicts may not be fully
-                  populated.
-
-    ast_processors : list of functions, **class attribute**
-        A list of functions to process the AST. These functions are executed in
-        sequence and simply accept a AST argument and return a processed AST.
-
-        .. note:: AST processors are run asynchronously, and the
-                  local_context and global_context dicts may not be fully
-                  populated.
-
-    context_processors : list of functions, **class attribute**
-        A list of functions to process the document's context while the target
-        is being rendered. The context_processor functions take a context and a
-        target as parameters.
+    processors : list of functions, **class attribute**
+        A list of functions to process the context. These functions are
+        executed in sequence and simply accept a context dict.
     """
 
     src_filepath = None
@@ -105,22 +85,14 @@ class Document(object):
     #: Cached template objects for this document.
     _templates = None
 
-    #: String processors, before loading the AST.
-    #: def string_processor(s, context)
-    string_processors = [load_header,  # Process header
-                         replace_macros,  # Process macros
-                         ]
-
-    #: Abstract Syntax Tree (AST) processors.
-    #: def ast_processor(ast, context, src_filepath)
-    ast_processors = [process_ast,
-                      process_paragraphs,
-                      process_typography,
-                      process_context_tags,
-                      ]
-
     #: Context processors
-    context_processors = []
+    #: def processor(context)
+    processors = [load_header,  # Process header
+                  process_context_macros,  # Process macros
+                  process_context_asts,  # Process ASTs in the context
+                  process_context_paragraphs,  # Process tag paragraphs
+                  process_context_typography,  # Process tag typography
+                  ]
 
     def __init__(self, src_filepath, target_root=None, context=None):
         self.src_filepath = str(src_filepath)
@@ -152,11 +124,8 @@ class Document(object):
         # Reset the context
         self.reset_contexts()
 
-        # The cached AST
-        self._ast = None
-
-        # Read in the AST and load subdocuments
-        self.get_ast()
+        # Read in the document and load sub-documents
+        self.load_document()
 
     def __del__(self):
         """Clean up any temp directories no longer in use."""
@@ -250,8 +219,8 @@ class Document(object):
     @property
     def target_list(self):
         """The list of targets from the context."""
-        # Refresh the context
-        self.get_ast()
+        # Reload the document
+        self.load_document()
 
         # Get the targets from the context
         targets = self.context.get('targets', settings.document_target_list)
@@ -591,19 +560,9 @@ class Document(object):
 
         return self._templates[template_basename]
 
-    def get_ast(self, reload=False):
-        """Process and return the AST.
-
-        This method generates and caches the AST. This step is conducted
-        asynchronously. (i.e. the local_context and global_context may not be
-        completed populated while the AST is processed.)
-
-        The cached AST is updated if the source file is updated.
-
-        Whenever the AST is generated, the local_context is reset to avoid
-        keeping stale values.
-
-        See the :meth:`render` method for more details.
+    # TODO: rename to load(...)
+    def load_document(self, reload=False):
+        """Load or reload the document into the context.
 
         Parameters
         ----------
@@ -625,8 +584,9 @@ class Document(object):
 
         last_mtime = self.mtime
 
-        # Update the AST, if needed
-        if (getattr(self, '_ast', None) is None or
+        # Update the context, if needed
+        body_attr = settings.body_attr
+        if (self.context.get(body_attr, None) is None or
            last_mtime is None or time > last_mtime or
            reload):
 
@@ -638,10 +598,6 @@ class Document(object):
                 raise DocumentError(msg.format(self.src_filepath,
                                             filesize / 1024,
                                             settings.document_max_size / 1024))
-
-            # Load the string from the src_filepath,
-            with open(self.src_filepath) as f:
-                string = f.read()
 
             # Reset the local_context. When reloading an AST, the old
             # local_context is invalidated since some of the entries may have
@@ -655,35 +611,37 @@ class Document(object):
             # document's label
             self.reset_labels()
 
-            # Process the string
-            for processor in self.string_processors:
-                string = processor(string, self.context)
+            # Load the string from the src_filepath,
+            with open(self.src_filepath) as f:
+                string = f.read()
 
-            # Process and validate the AST
-            ast = string
-            for processor in self.ast_processors:
-                ast = processor(ast=ast, context=self.context,
-                                src_filepath=self.src_filepath)
+            # Place the text of the string in the 'body' attribute of the
+            # context (see settings.body_attr)
+            body_attr = settings.body_attr
+            self.context[body_attr] = string
+
+            # Process the context
+            for processor in self.processors:
+                processor(self.context)
 
             # Load the sub-documents. This is done after processing the string
             # and ast since these may include sub-files, which should be read
             # in before being loaded.
             self.load_subdocuments()
 
-            # cache the ast
-            self._ast = ast
+            # Reset the modification time with the current modification time of
+            # the document.
             self.context['mtime'] = time
 
-        # Run get_ast for the sub-documents. This should be done after loading
-        # this document's AST since this document's header may have includes
+        # Run 'load_document' for the sub-documents. This should be done after
+        # loading this documentsince this document's header may have includes
         for document in self.documents_list(only_subdocuments=True):
-            document.get_ast(reload=reload)
+            document.load_document(reload=reload)
 
-        # Return this document's AST
-        return self._ast
+        return None
 
-    def get_grouped_asts(self, target, reload=False):
-        """Group the ASTs for the given document and sub-documents for the given
+    def set_grouped_body(self, target, reload=False):
+        """Group the bodies for this document and sub-documents for the given
         target.
 
         Parameters
@@ -699,10 +657,10 @@ class Document(object):
         ast : list or :obj:`disseminate.tag.Tag`
             A root tag object for the AST.
          """
-        asts = []
+        bodies = []
 
-        # Load the ASTs for all documents
-        self.get_ast()
+        # Reload this document (and all sub-documents)
+        self.load_document()
 
         # Get a listing of all documents (recursively and including the root
         # document) in order.
@@ -712,23 +670,28 @@ class Document(object):
         # target_list
         documents = [d for d in documents if target in d.target_list]
 
-        # Group the ASTs
+        # Group the bodies
+        body_attr = settings.body_attr
         for doc in documents:
-            ast = doc.get_ast()
+            body = doc.context.get(body_attr, None)
 
             # Unwrap the root tag, if present
-            if isinstance(ast, Tag) and ast.name == 'root':
-                ast = ast.content
+            if isinstance(body, Tag) and body.name == 'root':
+                body = body.content
 
-            if isinstance(ast, list):
-                asts += ast
+            if isinstance(body, list):
+                bodies += body
             else:
-                asts.append(ast)
+                bodies.append(body)
 
-        # Wrap the ast in a root tag
-        root = Tag(name='root', content=asts, attributes=None,
+        # Wrap the body in a root tag
+        root = Tag(name='root', content=bodies, attributes=None,
                    context=self.context)
-        return root
+
+        # Set the body as this context's body
+        self.context[body_attr] = root
+
+        return None
 
     def render_required(self, target_filepath):
         """Evaluate whether a render is required to write the target file.
@@ -775,9 +738,10 @@ class Document(object):
         #    have been updated since the target file was written. This is
         #    because the label numbers and contents for *other* documents may
         #    have changed.
-        tag_mtime = (self._ast.mtime if hasattr(self, '_ast') and
-                                        hasattr(self._ast, 'mtime') else None)
-        if tag_mtime is not None and target_mtime < tag_mtime:
+        tag_mtimes = [t.mtime for t in self.context.values()
+                      if hasattr(t, 'mtime')]
+        max_tag_mtime = max(tag_mtimes) if len(tag_mtimes) > 0 else None
+        if max_tag_mtime is not None and target_mtime < max_tag_mtime:
             logging.debug("Render required for {}:  The tags reference a "
                           "document that's been updated.".format(self))
             return True
@@ -850,55 +814,25 @@ class Document(object):
             if update_only and not self.render_required(target_filepath):
                 continue
 
-            # Get the ast
-            if 'collection' == self.context.get('render', None):
-                ast = self.get_grouped_asts(target=target)
-            else:
-                ast = self.get_ast()
+            # Reload the document
+            self.load_document()
 
             # Determine whether it's a compiled target or uncompiled target
             if target in settings.compiled_exts:
                 self.render_compiled(target=target,
                                      target_filepath=target_filepath,
-                                     targets=targets,
-                                     ast=ast)
+                                     targets=targets)
             else:
                 self.render_uncompiled(target=target,
-                                       target_filepath=target_filepath,
-                                       ast=ast)
+                                       target_filepath=target_filepath)
 
         return True
 
-    def render_uncompiled(self, target, target_filepath, ast=None):
+    def render_uncompiled(self, target, target_filepath):
         """Render a text target format.
 
         For many output formats, like .html and .tex, the rendered file is
         simply another text file. This render_uncompiled method handles these.
-
-        The rending has the following steps:
-
-        *Asynchronous*.
-        Depends only on the source file and does not depend on variables from
-        other documents in the context. Consequently, it can be run in
-        a multi-threaded mode, and this part does not need to be repeated as
-        long as the source file has not changed.
-
-            1. get_ast (:meth:`get_ast`)
-
-        **After this step** for all documents, the `context` is populated.
-        Nothing in the subsequent steps should change these.
-
-        *Synchronous*.
-        The synchronous step depends on the target type as well as the
-        global_context. Consequently, all other documents in a tree must be
-        loaded and their ASTs processed to conduct this step.
-
-            2. convert to the target type
-
-                a. Convert the AST to target string using an AST conversion
-                   function.
-
-                b. Render this string in a template.
 
         Parameters
         ----------
@@ -906,33 +840,9 @@ class Document(object):
             The target extension to render. ex: '.html' or '.tex'
         target_filepath: str
             The final render path of the target file. ex : 'html/index.html'
-        ast : list or tag, optional
-            If specified, use the given AST instead of the one from the get_ast
-            method.
         """
-        # Step 1: Asynchronous
-        # get the ast
-        if ast is None:
-            ast = self.get_ast()
-
-        # Step 2: Synchronous
-
-        # Prepare the context
-
-        # Add non-private variables from the  context
-        context = {k: v for k, v in self.context.items()
-                   if not str(k).startswith("_")}
-
-        # Further process the context. The context_processors render target-
-        # specific information.
-        for processor in self.context_processors:
-            processor(context, target)
-
-        # render and save to output file
+        # Prepare the filename to render and save to output file
         target_name = target.strip('.')
-
-        # Set the body variable to the AST
-        context['body'] = ast
 
         # Get a template. Reload is set to True to make sure that the latest
         # version of the template is loaded.
@@ -943,7 +853,7 @@ class Document(object):
 
         if template is not None:
             # generate a new ouput_string
-            output_string = template.render(**context)
+            output_string = template.render(**self.context)
 
             # Add template to dependencies, if able
             if ('dependency_manager' in self.context and
@@ -955,16 +865,22 @@ class Document(object):
                 if meth is not None:
                     meth(output_string)
         else:
-            if hasattr(ast, target_name):
-                output_string = getattr(ast, target_name)
+            # If there is no template, simply use the context's body tag as the
+            # string
+            body_attr = settings.body_attr
+            body = self.context.get(body_attr, None)
+            if hasattr(body, target_name):
+                output_string = getattr(body, target_name)
+            elif hasattr(body, 'default'):
+                output_string = getattr(body, 'default')
             else:
-                output_string = ast.default
+                output_string = body
 
         # Write the file
         with open(target_filepath, 'w') as f:
             f.write(output_string)
 
-    def render_compiled(self, target, target_filepath, targets, ast=None):
+    def render_compiled(self, target, target_filepath, targets):
         """Render a compiled target format.
 
         For some formats, like .pdf, these have to be compiled after generating
@@ -981,9 +897,6 @@ class Document(object):
         targets : dict
             This is a dict with the extension as keys and the target_filepath
             (as a render path) as the value.
-        ast : list or tag, optional
-            If specified, use the given AST instead of the one from the get_ast
-            method.
         """
         # Render the intermediate target. First, see if the
         # intermediary extension is already in targets. If not, create
@@ -992,8 +905,7 @@ class Document(object):
         if inter_ext in targets:
             inter_target_filepath = targets[inter_ext]
             self.render_uncompiled(target=inter_ext,
-                                   target_filepath=inter_target_filepath,
-                                   ast=ast)
+                                   target_filepath=inter_target_filepath)
             src_filepath = inter_target_filepath
         else:
             temp_dir = self.temp_dir
@@ -1002,8 +914,7 @@ class Document(object):
                              inter_ext)
             temp_path = os.path.join(temp_dir, temp_filename)
             self.render_uncompiled(target=inter_ext,
-                                   target_filepath=temp_path,
-                                   ast=ast)
+                                   target_filepath=temp_path)
             src_filepath = temp_path
 
         # Now convert the file and continue

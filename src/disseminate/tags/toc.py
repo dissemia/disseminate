@@ -5,6 +5,7 @@ from itertools import groupby
 
 from lxml.builder import E
 from lxml import etree
+from markupsafe import Markup
 
 from .headings import toc_levels as heading_toc_levels
 from .caption import Ref
@@ -270,7 +271,7 @@ class Toc(Tag):
             if isinstance(e, list):
                 # The element is a list of tags. Process this list as a group.
                 returned_elements.append(self.html_fmt(level+1, content=None,
-                                                   elements=e))
+                                                       elements=e))
             else:
                 # Otherwise it's a ref tag, get its html and wrap it in a list
                 # item
@@ -281,9 +282,9 @@ class Toc(Tag):
 
         # Render the root tag if this is the first level
         if level == 1:
-            return (etree
-                .tostring(e, pretty_print=settings.html_pretty)
-                .decode("utf-8"))
+            s = (etree.tostring(e, pretty_print=settings.html_pretty)
+                      .decode("utf-8"))
+            return Markup(s)  # Mark string as safe, since it's escaped by lxml
         else:
             return e
 

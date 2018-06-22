@@ -3,6 +3,7 @@ Test the utility functions for tags.
 """
 from disseminate import Document
 from disseminate.tags.utils import format_label_tag
+from disseminate import settings
 
 
 def test_format_tag_label_basic(tmpdir):
@@ -22,7 +23,8 @@ def test_format_tag_label_basic(tmpdir):
     doc.render()
 
     # Get the chapter tag.
-    ast = doc.get_ast()
+    body_attr = settings.body_attr
+    ast = doc.context[body_attr]
     tag = ast.content[1]
 
     # Get the label tag for the chapter using the default label format

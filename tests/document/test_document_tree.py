@@ -6,6 +6,7 @@ import os
 
 from disseminate.document import Document
 from disseminate.utils.tests import strip_leading_space
+from disseminate import settings
 
 
 def touch(fname, times=None):
@@ -83,7 +84,7 @@ def test_document_tree(tmpdir):
     ---
     """
     file1.write(strip_leading_space(markup))
-    doc.get_ast()
+    doc.load_document()
 
     # Test the paths
     assert len(doc.subdocuments) == 1
@@ -245,7 +246,7 @@ def test_document_tree_updates(tmpdir):
       file3.dm
       file2.dm
     ---""")
-    doc.get_ast()
+    doc.load_document()
 
     # Check the ordering of documents
     doc_list = doc.documents_list()
@@ -275,7 +276,7 @@ def test_document_tree_updates(tmpdir):
     assert doc_list[2].src_filepath == str(src_filepath2)
 
     # Reload the ast
-    doc.get_ast()
+    doc.load_document()
 
     doc_list = doc.documents_list()
     assert len(doc_list) == 2
@@ -294,7 +295,7 @@ def test_document_tree_updates(tmpdir):
     ---""")
 
     # Reload the ast
-    doc.get_ast()
+    doc.load_document()
     doc_list = doc.documents_list()
     assert len(doc_list) == 3
     assert doc_list[0].src_filepath == str(src_filepath1)
@@ -349,17 +350,18 @@ def test_render_required(tmpdir):
     doc_list = doc.documents_list(only_subdocuments=False, recursive=True)
     assert len(doc_list) == 3
 
-    # Check the mtimes of the tags and labels
+    # Check the mtimes of the document
+    body_attr = settings.body_attr
     mtime1 = doc_list[0].mtime
     mtime2 = doc_list[1].mtime
     mtime3 = doc_list[2].mtime
 
-    # The problem here is that the register_labels is run for the root doc
-    # and sub docs, reordering the local_order every time.
+    # Check that these match the modification times for the body tag in the
+    # context
     assert mtime1 < mtime2 < mtime3
-    assert doc_list[0].get_ast().mtime == mtime1
-    assert doc_list[1].get_ast().mtime == mtime2
-    assert doc_list[2].get_ast().mtime == mtime3
+    assert doc_list[0].context[body_attr].mtime == mtime1
+    assert doc_list[1].context[body_attr].mtime == mtime2
+    assert doc_list[2].context[body_attr].mtime == mtime3
 
     # All three documents have a render_required
     for d in doc_list:
@@ -380,25 +382,27 @@ def test_render_required(tmpdir):
 
     # 2. Test that a render is required when the source file modification time
     #    is updated. We'll update the 2nd document, and only its mtime should
-    #    get updated once we get_ast()
+    #    get updated once we load the document
 
-    old_mtime = src_filepath2.mtime()
     touch(str(src_filepath2))
-    assert old_mtime < src_filepath2.mtime()
+    assert mtime2 < src_filepath2.mtime()
 
-    assert doc_list[0].get_ast().mtime == mtime1
-    assert doc_list[1].get_ast().mtime != mtime2
-    assert doc_list[2].get_ast().mtime == mtime3
+    for doc in doc_list:
+        doc.load_document()
 
-    # Check the mtimes of the tags and labels
-    mtime1 = doc_list[0].mtime
-    mtime2 = doc_list[1].mtime
-    mtime3 = doc_list[2].mtime
+    assert doc_list[0].context[body_attr].mtime == mtime1
+    assert doc_list[1].context[body_attr].mtime != mtime2
+    assert doc_list[1].context[body_attr].mtime == src_filepath2.mtime()
+    assert doc_list[2].context[body_attr].mtime == mtime3
 
-    assert doc_list[0].get_ast().mtime == mtime1
-    assert doc_list[1].get_ast().mtime == mtime2
-    assert doc_list[2].get_ast().mtime == mtime3
+    # Update the mtimes and check that the body tag now matches the new mtimes
+    mtime2 = src_filepath2.mtime()
 
+    assert doc_list[0].context[body_attr].mtime == mtime1
+    assert doc_list[1].context[body_attr].mtime == mtime2
+    assert doc_list[2].context[body_attr].mtime == mtime3
+
+    # Only the 2nd document requires a render now
     for d, answer in zip(doc_list, [False, True, False]):
         target_filepath = d.targets['.html']
         assert d.render_required(target_filepath) is answer
@@ -475,7 +479,9 @@ def test_render_required(tmpdir):
     assert template.filename == str(template_filepath)
     assert template.is_up_to_date
 
-    # Now update the template, and the 3rd document will require a render
+    # Now update the template, and the 3rd document will require a render.
+    # However, since the source file itself hasn't changed, the 2nd document
+    # doesn't require a render.
     template_filepath.write("""
     <html><body></body></html>
     """)

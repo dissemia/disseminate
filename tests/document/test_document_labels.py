@@ -44,15 +44,15 @@ def test_document_toc(tmpdir):
     # Make sure the 'toc' context entry is correct
     toc_tag = doc.context['toc']
     assert toc_tag.name == 'toc'
-    assert toc_tag.content == 'documents'
-
-    key = """<ul class="toc-level-1">
-  <li>
-    <a href="/file.html">
-      <span class="label">My first title</span>
-    </a>
-  </li>
-</ul>
+    key = """<span class="toc">
+  <ul class="toc-level-2">
+    <li>
+      <a href="/file.html">
+        <span class="label">My first title</span>
+      </a>
+    </li>
+  </ul>
+</span>
 """
     assert key == toc_tag.html
 
@@ -101,13 +101,13 @@ def test_document_tree_updates_document_labels(tmpdir):
     assert label_list[1].id == 'doc:file2.dm'
     assert label_list[2].id == 'doc:file3.dm'
 
-    # 2. Now change the order of the sub-documents and reload the ast
+    # 2. Now change the order of the sub-documents and reload the document
     src_filepath1.write("""---
     include:
       file3.dm
       file2.dm
     ---""")
-    doc.get_ast()
+    doc.load_document()
 
     # Check the ordering of documents
     doc_list = doc.documents_list()
@@ -144,8 +144,8 @@ def test_document_tree_updates_document_labels(tmpdir):
     assert doc_list[1].src_filepath == str(src_filepath3)
     assert doc_list[2].src_filepath == str(src_filepath2)
 
-    # Reload the ast
-    doc.get_ast()
+    # Reload the document
+    doc.load_document()
 
     doc_list = doc.documents_list()
     assert len(doc_list) == 2
@@ -164,8 +164,8 @@ def test_document_tree_updates_document_labels(tmpdir):
       file3.dm
     ---""")
 
-    # Reload the ast
-    doc.get_ast()
+    # Reload the document
+    doc.load_document()
     doc_list = doc.documents_list()
     assert len(doc_list) == 3
     assert doc_list[0].src_filepath == str(src_filepath1)
@@ -245,7 +245,7 @@ def test_document_tree_updates_with_section_labels(tmpdir):
     ---
     @chapter{file1}
     """)
-    doc.get_ast()  # reload the file
+    doc.load_document()  # reload the file
 
     # Check the order of the documents
     doc_list = doc.documents_list(only_subdocuments=False, recursive=True)

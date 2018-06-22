@@ -76,6 +76,7 @@ def get_template(src_filepath, target,
                   'variable_end_string': settings.template_variable_end,
                   'comment_start_string': settings.template_comment_start,
                   'comment_end_string': settings.template_comment_end,
+                  'keep_trailing_newline': True,
                   }
 
         ae = jinja2.select_autoescape(['html', 'htm', 'xml'])

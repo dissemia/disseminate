@@ -12,6 +12,7 @@ from ..tags.headings import Heading
 re_para = regex.compile(r'(\n{2,}|^)')
 
 
+# TODO: This function should not unwrap a tag and create a new tag object
 def process_paragraphs(ast=None, context=None, src_filepath=None, level=1):
     """Process the paragraphs for an AST. Paragraphs are blocks of text with
     zero or more tags.
@@ -172,3 +173,34 @@ def process_paragraphs(ast=None, context=None, src_filepath=None, level=1):
         return root
     else:
         return new_ast
+
+
+def process_context_paragraphs(context):
+    """Process paragraphs in the tags of the given context.
+
+    This function parses paragraph tags from tags in the context. Consequently,
+    it should be executed after tags are created in the context.
+
+    Parameters
+    ----------
+    context : dict, optional
+        The context with values for the document.
+
+    """
+    # Setup the needed variables for process_ast
+    assert 'src_filepath' in context
+    src_filefile = context['src_filepath']
+
+    # Go through the entries in the context and determine which are tags
+    for k, v in context.items():
+        # Skip macros and non-string entries
+        if k.startswith('@') or not isinstance(v, Tag):
+            continue
+
+        # Process the entry in the context
+        ast = process_paragraphs(ast=v, context=context,
+                                 src_filepath=src_filefile)
+        ast.name = k
+        context[k] = ast
+
+    return None

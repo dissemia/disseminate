@@ -70,7 +70,7 @@ setup(
     packages=find_packages("src"),
     package_dir={"": "src"},
     include_package_data=True,  # include MANIFEST.in
-    install_requires=['regex', 'jinja2', 'pyyaml', 'lxml', 'python-slugify'],
+    install_requires=['regex', 'jinja2', 'lxml', 'python-slugify'],
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc', 'asv'],
         'test': ['pytest', 'tox', 'coverage'],

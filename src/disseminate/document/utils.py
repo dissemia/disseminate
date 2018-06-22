@@ -5,6 +5,7 @@ from collections import OrderedDict
 
 from lxml.builder import E
 from lxml import etree
+from markupsafe import Markup
 
 from .document import Document
 from ..tags.utils import set_html_tag_attributes
@@ -216,8 +217,8 @@ def render_tree_html(documents, level=1):
             kwargs = OrderedDict((('class', 'tableset'),))
             div = E('div', *tables)
             set_html_tag_attributes(html_tag=div, attrs_dict=kwargs)
-            html = etree.tostring(div, pretty_print=True)
-            return html.decode('utf-8')
+            s = etree.tostring(div, pretty_print=True).decode('utf-8')
+            return Markup(s)  # Mark string as safe, since it's escaped by lxml
         else:
             return ''
     else:

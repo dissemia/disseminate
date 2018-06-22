@@ -1,8 +1,9 @@
 """
 Test the header functions.
 """
-from disseminate.header import parse_header_str
+from disseminate.header import parse_header_str, load_header
 from disseminate.utils.string import str_to_list
+from disseminate import settings
 
 
 def test_parse_header_str():
@@ -59,7 +60,7 @@ def test_parse_header_str():
     """
     d = parse_header_str(header)
     assert ( d == {'include':
-                       '  src/file1.tex\n  src/file2.tex\n  src/file 3.tex'})
+                    '  src/file1.tex\n  src/file2.tex\n  src/file 3.tex'})
 
     l = str_to_list(d['include'])
     assert l == ['src/file1.tex', 'src/file2.tex', 'src/file 3.tex']
@@ -70,3 +71,31 @@ def test_parse_header_str():
     assert (d == {'targets': 'pdf, tex'})
     l = str_to_list(d['targets'])
     assert l == ['pdf', 'tex']
+
+
+def test_load_header():
+    """Test the load header function."""
+
+    test = """
+    ---
+    contact:
+      address: 1,2,3 lane
+      phone: 333-333-4123.
+    name: Justin L Lorieau
+    ---
+    body
+    """
+    body_attr = settings.body_attr
+    context = {body_attr: test}
+    load_header(context)
+
+    assert context[body_attr] == '    body\n    '
+
+    assert 'contact' in context
+    assert context['contact'] == '  address: 1,2,3 lane\n  phone: 333-333-4123.'
+
+    assert 'name' in context
+    assert context['name'] == 'Justin L Lorieau'
+
+    assert 'address' not in context
+    assert 'phone' not in context

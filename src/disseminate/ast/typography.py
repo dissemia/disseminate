@@ -74,3 +74,32 @@ def process_typography(ast=None, context=None, src_filepath=None, level=1):
         new_ast.append(i)
 
     return new_ast
+
+
+def process_context_typography(context):
+    """Process typography in the tags of the given context.
+
+    This function parses the typography of tags in the context. Consequently,
+    it should be executed after tags are created in the context.
+
+    Parameters
+    ----------
+    context : dict, optional
+        The context with values for the document.
+
+    """
+    # Go through the entries in the context and determine which are tags
+    for k, v in context.items():
+        # Skip macros and non-string entries
+        if (k.startswith('@') or
+           not (isinstance(v, Tag) or isinstance(v, str))):
+            continue
+
+        # Process the entry in the context
+        ast = process_typography(ast=v, context=context,
+                                 src_filepath='')
+
+        # Replace the context entry
+        context[k] = ast
+
+    return None

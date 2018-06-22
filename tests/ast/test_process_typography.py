@@ -1,9 +1,11 @@
 """
 Test the process_typography function.
 """
-from disseminate.ast.typography import process_typography
+from disseminate.ast.typography import (process_typography,
+                                        process_context_typography)
 from disseminate.ast.ast import process_ast
 from disseminate.tags import Tag
+from disseminate import settings
 
 
 def test_process_typography_dashes():
@@ -71,3 +73,21 @@ def test_process_typography_verbatim():
     ast = process_typography(ast)
 
     assert ast.content.content == "An emdash---this is a test of that"
+
+
+def test_process_context_typography():
+    """Test the process_context_typography function."""
+
+    texts = ("This is Justin's string.",
+             "This is 'Justin's' string.",
+             "This is \"Justin's\" string.")
+    results = ("This is Justin’s string.",
+               "This is ‘Justin’s’ string.",
+               "This is “Justin’s” string.")
+
+    body_attr = settings.body_attr
+
+    for text, result in zip(texts, results):
+        context = {body_attr: text}
+        process_context_typography(context)
+        assert context[body_attr] == result

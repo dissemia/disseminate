@@ -329,8 +329,8 @@ def test_label_mtime(tmpdir):
     @chapter[id=chapter-3]{Chapter 3}
     """)
 
-    # Reload the AST
-    doc.get_ast()
+    # Reload the document
+    doc.load_document()
 
     # Check to see which labels have been created new.
     # The get_labels method registers the label changes.
@@ -350,7 +350,7 @@ def test_label_mtime(tmpdir):
     assert label_manager.labels[3].mtime > doc_mtime  # chapter 3 label
 
     # Check the label modification times. The labels were updated after the
-    # last modification (i.e. when doc.get_ast() was issues).
+    # last modification (i.e. when doc.load_document() was issues).
     doc_mtime = src_filepath.mtime()
     assert doc.context['mtime'] == doc_mtime
 

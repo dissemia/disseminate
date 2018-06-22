@@ -7,6 +7,7 @@ from disseminate.document import Document
 from disseminate.ast import process_ast
 from disseminate.tags import Tag, TagError
 from disseminate.tags.text import P
+from disseminate import settings
 
 
 def test_flatten_tag():
@@ -96,9 +97,10 @@ def test_tag_mtime(tmpdir):
     assert len(docs) == 2
     doc1, doc2 = docs  # doc1 == doc; doc2 is sub.dm
 
-    # Get the root tag and the mtimes
-    root1 = doc1.get_ast()
-    root2 = doc2.get_ast()
+    # Get the body root tag and the mtimes
+    body_attr = settings.body_attr
+    root1 = doc1.context[body_attr]
+    root2 = doc2.context[body_attr]
 
     # Check that the mtimes match the file modification times
     assert src_filepath1.mtime() == root1.mtime
@@ -123,9 +125,13 @@ def test_tag_mtime(tmpdir):
     @chapter[id=chapter-two]{Chapter Two}
     """)
 
+    # Reload the documents
+    doc1.load_document()
+    doc2.load_document()
+
     # Get the root tag and the mtimes
-    root1 = doc1.get_ast()
-    root2 = doc2.get_ast()
+    root1 = doc1.context[body_attr]
+    root2 = doc2.context[body_attr]
 
     # Check that the first file was written before the second.
     assert src_filepath1.mtime() < src_filepath2.mtime()
