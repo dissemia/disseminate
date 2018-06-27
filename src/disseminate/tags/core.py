@@ -372,7 +372,7 @@ class Tag(object):
         # Collect the content elements
         if isinstance(content, list):
             elements = ''.join([i.tex_fmt(level + 1, mathmode)
-                                if hasattr(i, 'tex') else i
+                                if hasattr(i, 'tex_fmt') else i
                                 for i in content])
         elif isinstance(content, str):
             elements = content
@@ -439,7 +439,7 @@ class Tag(object):
         content = content if content is not None else self.content
         # Collect the content elements
         if isinstance(content, list):
-            elements = [i.html_fmt(level + 1) if hasattr(i, 'html') else i
+            elements = [i.html_fmt(level + 1) if hasattr(i, 'html_fmt') else i
                         for i in content]
         elif isinstance(content, str):
             elements = content

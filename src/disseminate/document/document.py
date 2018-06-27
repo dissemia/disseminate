@@ -13,7 +13,6 @@ from ..ast import (process_context_asts, process_context_paragraphs,
                    process_context_typography)
 from ..templates import get_template
 from ..header import load_header
-from ..tags import Tag
 from ..macros import process_context_macros
 from ..convert import convert
 from ..labels import LabelManager
@@ -97,7 +96,7 @@ class Document(object):
     def __init__(self, src_filepath, target_root=None, context=None):
         self.src_filepath = str(src_filepath)
         self.subdocuments = OrderedDict()
-        self.context = dict(settings.default_context)  # create a copy
+        self.context = dict()
         self._templates = dict()
 
         self._parent_context = context
@@ -219,11 +218,17 @@ class Document(object):
     @property
     def target_list(self):
         """The list of targets from the context."""
-        # Reload the document
-        self.load_document()
-
-        # Get the targets from the context
-        targets = self.context.get('targets', settings.document_target_list)
+        # Get the targets from the context.
+        # In the default context, this is set as the 'targets' entry, which
+        # may be over-written by the user. However, a 'target' entry could be
+        # used as well (for convenience), and it should be checked first, since
+        # it overrides the default 'targets' entry.
+        if 'target' in self.context:
+            targets = self.context['target']
+        elif 'targets' in self.context:
+            targets = self.context['targets']
+        else:
+            targets = ''
 
         # Convert to a list, if needed
         target_list = (targets.split(',') if isinstance(targets, str) else
@@ -341,6 +346,9 @@ class Document(object):
             if k in excluded_items:
                 continue
             del self.context[k]
+
+        # Copy over the default context
+        self.context.update(settings.default_context)
 
         # Copy over the context values from parent context. The excluded_items
         # do not pertain to sub-documents.
@@ -640,61 +648,13 @@ class Document(object):
 
         return None
 
-    def set_grouped_body(self, target, reload=False):
-        """Group the bodies for this document and sub-documents for the given
-        target.
-
-        Parameters
-        ----------
-        target : str
-            Only include ASTs for the document and sub-documents that have this
-            target in their target_list.
-        reload : bool, str
-            If True, force the reload of the AST.
-
-        Returns
-        -------
-        ast : list or :obj:`disseminate.tag.Tag`
-            A root tag object for the AST.
-         """
-        bodies = []
-
-        # Reload this document (and all sub-documents)
-        self.load_document()
-
-        # Get a listing of all documents (recursively and including the root
-        # document) in order.
-        documents = self.documents_list(only_subdocuments=False, recursive=True)
-
-        # Remove documents that don't have the target listed in their
-        # target_list
-        documents = [d for d in documents if target in d.target_list]
-
-        # Group the bodies
-        body_attr = settings.body_attr
-        for doc in documents:
-            body = doc.context.get(body_attr, None)
-
-            # Unwrap the root tag, if present
-            if isinstance(body, Tag) and body.name == 'root':
-                body = body.content
-
-            if isinstance(body, list):
-                bodies += body
-            else:
-                bodies.append(body)
-
-        # Wrap the body in a root tag
-        root = Tag(name='root', content=bodies, attributes=None,
-                   context=self.context)
-
-        # Set the body as this context's body
-        self.context[body_attr] = root
-
-        return None
-
     def render_required(self, target_filepath):
         """Evaluate whether a render is required to write the target file.
+
+        .. note:: This method re-loads the documents since it checks the
+                  modification time of tags in the context, which may become
+                  updated if the source file (or other source files) are
+                  updated.
 
         Parameters
         ----------
@@ -706,7 +666,10 @@ class Document(object):
             True, if a render is required.
             False if a render isn't required.
         """
-        render_mode = self.context.get('render', 'single')
+        # Reload document
+        self.load_document()
+
+        # Setup variables
         target = os.path.splitext(target_filepath)[1]
 
         # 1. A render is required if the target_filepath doesn't exist
@@ -716,13 +679,7 @@ class Document(object):
             return True
 
         # Get the modification time for the source file(s) (src_filepath)
-        if render_mode == 'collection':
-            # Get the latest modification time for the included source files
-            mtimes = map(lambda x: os.path.getmtime(x.src_filepath),
-                         self.documents_list())
-            src_mtime = max(mtimes)
-        else:
-            src_mtime = os.path.getmtime(self.src_filepath)
+        src_mtime = os.path.getmtime(self.src_filepath)
 
         # Get the modification for the target file (target_filepath)
         target_mtime = os.path.getmtime(target_filepath)
@@ -811,11 +768,9 @@ class Document(object):
 
             # Skip if we should update_only and the src_filepath is older
             # than the target_filepath, if target_filepath exists.
-            if update_only and not self.render_required(target_filepath):
+            # The 'render_required' also reloads the document.
+            if not self.render_required(target_filepath) and update_only:
                 continue
-
-            # Reload the document
-            self.load_document()
 
             # Determine whether it's a compiled target or uncompiled target
             if target in settings.compiled_exts:

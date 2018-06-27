@@ -1,7 +1,7 @@
 ---
 title: My first title
 author: Justin L Lorieau
-targets: html
+targets: html, tex
 @macro: @i{example}
 ---
 

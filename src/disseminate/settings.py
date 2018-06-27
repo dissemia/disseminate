@@ -10,9 +10,6 @@ document_src_directory = 'src'
 #: Maximum file size
 document_max_size = 204800  # 200kB
 
-#: Default target_list
-document_target_list = ['.html']
-
 #: If True, directories for target files will be created, if they not already
 #: exist
 create_dirs = True
@@ -36,6 +33,7 @@ text_extensions = ['.tex', ]
 #: -------
 
 default_context = {
+    'targets': 'html',
 }
 
 #: Attribute in the context in which the body of a file (the string and AST)

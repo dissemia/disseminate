@@ -136,65 +136,6 @@ def test_target_filepath():
             "tests/document/example5/html/sub3/index.html")
 
 
-def test_get_grouped_asts(tmpdir):
-    """Test the get_grouped_asts function."""
-
-    # 1. Load documents from example7. Example7 has one target ('.html')
-    #    specified in the root file, 'src/file1.dm'. This file also includes
-    #    a file, 'sub1/file11.dm', which in turn includes
-    #    'sub1/subsub1/file111.dm'. All 3 files have content.
-    target_root7 = tmpdir.join('example7')
-    target_root7.mkdir()
-
-    doc = Document('tests/document/example7/src/file1.dm', str(target_root7))
-
-    # A non-existent target should return an empty ast
-    ast = doc.get_grouped_asts(target='.tex')
-
-    assert ast.content == []
-
-    # An existing target should include all the asts.
-    ast = doc.get_grouped_asts(target='.html')
-    assert ast[0].content == 'file1.dm'
-    assert ast[1].content == 'file11.dm'
-    assert ast[2].content == 'file111.dm'
-
-
-def test_render_collection(tmpdir):
-    """Test the rendering of a collection of documents."""
-    # 1. Load documents from example7. Example7 has one target ('.html')
-    #    specified in the root file, 'src/file1.dm'. This file also includes
-    #    a file, 'sub1/file11.dm', which in turn includes
-    #    'sub1/subsub1/file111.dm'. All 3 files have content.
-    target_root7 = tmpdir.join('example7')
-    target_root7.mkdir()
-
-    doc = Document('tests/document/example7/src/file1.dm', str(target_root7))
-
-    # Try rendering the file. By default only the root document is rendered
-    doc.render()
-
-    assert target_root7.join('html').join('file1.html').check()
-
-    html = target_root7.join('html').join('file1.html').read()
-    assert '<p>file1.dm</p>' in html
-    assert '<p>file11.dm</p>' not in html
-    assert '<p>file111.dm</p>' not in html
-
-    # Render the collection. Since the source file hasn't changed, we have to
-    # delete the target to trigger a render.
-    doc.context['render'] = 'collection'
-    target_root7.join('html').join('file1.html').remove()
-    doc.render()
-
-    assert target_root7.join('html').join('file1.html').check()
-
-    html = target_root7.join('html').join('file1.html').read()
-    assert '<p>file1.dm</p>' in html
-    assert '<p>file11.dm</p>' in html
-    assert '<p>file111.dm</p>' in html
-
-
 def test_custom_template(tmpdir):
     """Tests the loading of custom templates from the yaml header."""
     # Write a temporary file. We'll use the tree.html template, which contains
@@ -206,7 +147,7 @@ def test_custom_template(tmpdir):
     markup = """
     ---
     template: tree
-    targets: html
+    targets: html, tex
     ---
     """
     in_file.write(strip_leading_space(markup))
@@ -219,6 +160,8 @@ def test_custom_template(tmpdir):
     # Write to the file again, but don't include the template. This time it
     # shouldn't contain the text "Disseminate Project Index"
     in_file.write("test")
+    target_filepath = doc.targets['.html']
+    assert doc.render_required(target_filepath=target_filepath)
     doc.render()
     assert "Disseminate Project Index" not in out_file.read()
 
@@ -267,10 +210,17 @@ def test_context_update(tmpdir):
     assert 'author' in doc.context
     assert doc.context['author'] == 'Justin L Lorieau'
 
+    # The target 'tex' is specified. It should not match the default setting,
+    # for the later test.
+    assert 'targets' in doc.context
+    assert doc.context['targets'] != settings.default_context['targets']
+    assert doc.context['targets'] == 'html, tex'
+
     assert '@macro' in doc.context
 
     # Get the local_context id to make sure it stays the same
     context_id = id(doc.context)
+
     # Now switch to a file without a header and make sure the header values
     # are removed
     doc.src_filepath = "tests/document/example2/noheader.dm"
@@ -280,6 +230,9 @@ def test_context_update(tmpdir):
     assert 'title' not in doc.context
     assert 'author' not in doc.context
     assert '@macro' not in doc.context
+
+    # The 'targets' entry should revert to the default
+    assert doc.context['targets'] == settings.default_context['targets']
 
     assert id(doc.context) == context_id
 
