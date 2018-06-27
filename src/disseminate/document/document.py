@@ -242,6 +242,9 @@ class Document(object):
         if 'none' in target_list:
             return []
 
+        # Remove empty entries
+        target_list = list(filter(bool, target_list))
+
         # Add trailing period to extensions in target_list
         return [t if t.startswith('.') else '.' + t for t in target_list]
 
@@ -746,7 +749,7 @@ class Document(object):
         if subdocuments:
             for doc in self.documents_list(only_subdocuments=True):
                 doc.render(targets=targets, create_dirs=create_dirs,
-                                update_only=update_only)
+                           update_only=update_only)
 
         # Workup the targets into a dict, like self.targets
         if targets is None:

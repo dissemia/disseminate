@@ -79,6 +79,10 @@ def test_target_list():
     # dummy.dm has the entry 'html, tex' set in the header.
     assert doc.target_list == ['.html', '.tex']
 
+    # Test an empty target list
+    doc.context['targets'] = ''
+    assert doc.target_list == []
+
 
 def test_target_filepath():
     """Test the target_filepath method."""
