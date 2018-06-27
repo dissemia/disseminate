@@ -84,7 +84,7 @@ def test_collection_selective_target(doc):
     body_attr = settings.body_attr
     root1 = doc.context[body_attr]
     assert root1.tex.strip() == ('\\setcounter{chapter}{1}\n'
-                                 '\\chapter{one} \\label{br:one}\n\n        \n'
+                                 '\\chapter{one} \\label{br:one}\n\n\n    \n    \n'
                                  '\\setcounter{chapter}{2}\n'
                                  '\\chapter{two} \\label{br:two}')
 
@@ -98,8 +98,8 @@ def test_collection_default(doc):
     # main document
     body_attr = settings.body_attr
     root1 = doc.context[body_attr]
-    assert root1.default.strip() == ('one\n\n        \n'
-                                     'two\n\n    \n'
+    assert root1.default.strip() == ('one\n\n\n    \n    \n'
+                                     'two\n\n\n    \n'
                                      'three')
 
 
@@ -113,9 +113,9 @@ def test_collection_tex(doc):
     body_attr = settings.body_attr
     root1 = doc.context[body_attr]
     assert root1.tex.strip() == ('\\setcounter{chapter}{1}\n'
-                                 '\\chapter{one} \\label{br:one}\n\n        \n'
+                                 '\\chapter{one} \\label{br:one}\n\n\n    \n    \n'
                                  '\\setcounter{chapter}{2}\n'
-                                 '\\chapter{two} \\label{br:two}\n\n    \n'
+                                 '\\chapter{two} \\label{br:two}\n\n\n    \n'
                                  '\\setcounter{chapter}{3}\n'
                                  '\\chapter{three} \\label{br:three}')
 
@@ -130,12 +130,12 @@ def test_collection_html(doc):
     body_attr = settings.body_attr
     root1 = doc.context[body_attr]
     assert root1.html.strip() == ('<span class="body">'
-                                  '    <h1 id="br:one"><span class="branch"><span class="number">1.</span> one</span></h1>'
+                                  '    <h1 id="br:one"><span class="branch"><span class="number">1.</span> one</span></h1>\n'
                                   '    <span class="collection">'
-                                  '<span class="body">'
+                                  '<span class="body">\n'
                                   '    <h1 id="br:two"><span class="branch"><span class="number">2.</span> two</span></h1>'
                                   '</span>'
-                                  '<span class="body">'
+                                  '<span class="body">\n'
                                   '    <h1 id="br:three"><span class="branch"><span class="number">3.</span> three</span></h1>'
                                   '</span></span>'
                                   '</span>')
@@ -144,8 +144,10 @@ def test_collection_html(doc):
     tag = Collection(name='collection', content='', attributes=tuple(),
                      context=doc.context)
     assert tag.html == ('<span class="collection">\n'
-                        '  <span class="body">    <h1 id="br:two"><span class="branch"><span class="number">2.</span> two</span></h1></span>\n'
-                        '  <span class="body">    <h1 id="br:three"><span class="branch"><span class="number">3.</span> three</span></h1></span>\n'
+                        '  <span class="body">\n'
+                        '    <h1 id="br:two"><span class="branch"><span class="number">2.</span> two</span></h1></span>\n'
+                        '  <span class="body">\n'
+                        '    <h1 id="br:three"><span class="branch"><span class="number">3.</span> three</span></h1></span>\n'
                         '</span>\n')
 
     # Now remove the collection tag to the root document. The sub-documents
@@ -168,5 +170,6 @@ def test_collection_html(doc):
                                   '<h1 id="br:one">'
                                   '<span class="branch">'
                                   '<span class="number">1.</span> '
-                                  'one</span></h1>    </span>')
+                                  'one</span></h1>\n'
+                                  '    </span>')
 

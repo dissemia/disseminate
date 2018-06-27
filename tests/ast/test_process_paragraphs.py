@@ -50,7 +50,7 @@ def test_process_paragraphs():
 
     # Check the individual items of the ast.
     assert isinstance(ast[0], P)
-    assert ast[0].content[0] == 'This is my '
+    assert ast[0].content[0] == '\nThis is my '
     assert ast[0].content[1].name == 'b'  # bolded
     assert ast[0].content[2] == ' paragraph.'
 
@@ -79,7 +79,7 @@ def test_process_paragraphs():
     assert ast[6].content[3].name == 'marginfig'  # margin tag
 
     assert isinstance(ast[7], P)
-    assert ast[7].content == 'My final paragraph.'
+    assert ast[7].content == 'My final paragraph.\n'
 
 
 def test_process_paragraphs_leading_spaces():
@@ -89,9 +89,9 @@ def test_process_paragraphs_leading_spaces():
     ast = process_ast(test_paragraphs2)
     ast = process_paragraphs(ast)
 
-    assert ast.content[0] == '  '
+    assert ast.content[0] == '\n  '
     assert ast.content[1].name == 'section'
-    assert ast.content[2] == '  \n  This is my paragraph.'
+    assert ast.content[2] == '\n  \n  This is my paragraph.\n'
 
 
 def test_process_context_paragraphs():
@@ -106,9 +106,9 @@ def test_process_context_paragraphs():
 
     ast = context[body_attr]
 
-    assert ast.content[0] == '  '
+    assert ast.content[0] == '\n  '
     assert ast.content[1].name == 'section'
-    assert ast.content[2] == '  \n  This is my paragraph.'
+    assert ast.content[2] == '\n  \n  This is my paragraph.\n'
 
 
 def test_process_paragraphs_edgecases():
@@ -144,3 +144,15 @@ def test_process_paragraphs_macros():
     # Test paragraph processing after process_ast
     ast = process_ast(result, context={})
     ast = process_paragraphs(ast, context=context)
+
+
+def test_process_paragraphs_newlines():
+    """Test the preservation of newlines in a parapgraph with macros."""
+
+    text = """The purpose of the @abrv{INEPT} sequenceMorris1979 is to
+transfer the large magnetization from high-@gamma nuclei, like @sup{1}H or
+@19F, to low-@gamma nuclei (labeled 'X'), like @13C and @15N."""
+    result = replace_macros(text, context=dict())
+    result = process_ast(result)
+    result = process_paragraphs(result)
+    assert "or\n<sup>19</sup>F" in result.html

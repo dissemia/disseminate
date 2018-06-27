@@ -101,9 +101,10 @@ def process_paragraphs(ast=None, context=None, src_filepath=None, level=1):
 
             else:
                 # Otherwise it's just a string with text. Just add it to the
-                # current paragraph
+                # current paragraph. Newlines aren't stripped to avoid removing
+                # natural newlines within the paragraph.
 
-                cur_para.append(i.strip('\n'))
+                cur_para.append(i)
 
         elif isinstance(i, Tag) and i.include_paragraphs:
             # Process a Tag item.
