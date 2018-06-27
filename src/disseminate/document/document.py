@@ -32,8 +32,8 @@ class Document(object):
     Parameters
     ----------
     src_filepath : str
-        The path (relative to the current directory) for the document (markup
-        source) file of this document.
+        The path (a render path, relative to the current directory or an
+        absolute path) for the document (markup source) file of this document.
     target_root : str, optional
         The path for the rendered target files. To this directly, the target
         extension subdirectories (ex: 'html' 'tex') will be created.
@@ -325,19 +325,12 @@ class Document(object):
              the project.
 
         Context variables that can be local to a document are:
-          1. targets: a listing of target formats to render to.
-          2. include: the sub-documents to include under a document.
-          3. title: the title of a document.
-          4. short: the short title of a document.
-          5. toc: the kind of table-of-contents to render for a document.
-          6. template: the template file to use in rendering a document.
-          7. render: the specific render mode.
-             - single: render only the given document (default)
-             - collection: include all sub-documents in the render--i.e. for
-               a book.
-          9. document: a weakref to this document.
-          10. mtime: The modification time of the source document. This is
-              populated by the get_ast method.
+          1. include: the sub-documents to include under a document.
+          2. title: the title of a document.
+          3. short: the short title of a document.
+          4. document: a weakref to this document.
+          5. mtime: The modification time of the source document. This is
+             populated by the get_ast method.
         """
         # Remove everything from the context dict except for objects that
         # need to be preserved between documents, like the label_manager and
@@ -355,7 +348,7 @@ class Document(object):
 
         # Copy over the context values from parent context. The excluded_items
         # do not pertain to sub-documents.
-        excluded_items = ('include', 'title', 'short', 'render', 'mtime')
+        excluded_items = ('include', 'title', 'short', 'mtime')
         if self._parent_context is not None:
             for k, v in self._parent_context.items():
                 if k in excluded_items:
