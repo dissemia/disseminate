@@ -17,6 +17,7 @@ from ..macros import process_context_macros
 from ..convert import convert
 from ..labels import LabelManager
 from ..dependency_manager import DependencyManager
+from ..context.utils import context_targets, context_includes
 from ..utils import mkdir_p
 from .. import settings
 
@@ -218,35 +219,7 @@ class Document(object):
     @property
     def target_list(self):
         """The list of targets from the context."""
-        # Get the targets from the context.
-        # In the default context, this is set as the 'targets' entry, which
-        # may be over-written by the user. However, a 'target' entry could be
-        # used as well (for convenience), and it should be checked first, since
-        # it overrides the default 'targets' entry.
-        if 'target' in self.context:
-            targets = self.context['target']
-        elif 'targets' in self.context:
-            targets = self.context['targets']
-        else:
-            targets = ''
-
-        # Convert to a list, if needed
-        target_list = (targets.split(',') if isinstance(targets, str) else
-                       targets)
-
-        if len(target_list) == 1:
-            target_list = [t.strip() for t in target_list[0].split(" ")]
-        else:
-            target_list = [t.strip() for t in target_list]
-
-        if 'none' in target_list:
-            return []
-
-        # Remove empty entries
-        target_list = list(filter(bool, target_list))
-
-        # Add trailing period to extensions in target_list
-        return [t if t.startswith('.') else '.' + t for t in target_list]
+        return context_targets(self.context)
 
     @property
     def targets(self):
@@ -499,39 +472,29 @@ class Document(object):
         # reference to it.
         self.subdocuments.clear()
 
-        if 'include' in self.context:
-            # Get the included subdocument paths
-            src_filepaths = self.context['include']
-            if isinstance(src_filepaths, str):
-                src_filepaths = src_filepaths.split()
-            src_filepaths = [s for s in src_filepaths if isinstance(s, str)]
+        # Retrieve the file paths of included files in the context, as render
+        # paths
+        src_filepaths = context_includes(context=self.context,
+                                         render_paths=True)
 
-            # Move the document to this document's subdocuments ordered
-            # directory, if the document already exists, or create a new
-            # document for missing documents.
-            current_src_path = os.path.split(self.src_filepath)[0]
+        for src_filepath in src_filepaths:
+            # If the document is already loaded, copy it to the subdocuments
+            # ordered dict
+            if src_filepath in root_dict:
+                subdoc = root_dict[src_filepath]
 
-            for src_filepath in src_filepaths:
-                # Add the current path to make it a render_path
-                render_filepath = os.path.join(current_src_path, src_filepath)
+                if self.src_filepath not in subdoc.subdocuments:
+                    self.subdocuments[src_filepath] = subdoc
+                continue
 
-                # If the document is already loaded, copy it to the subdocuments
-                # ordered dict
-                if render_filepath in root_dict:
-                    subdoc = root_dict[render_filepath]
+            # The document could not be found, at this point. Create it.
+            logging.debug("Creating document: {}".format(src_filepath))
 
-                    if self.src_filepath not in subdoc.subdocuments:
-                        self.subdocuments[render_filepath] = subdoc
-                    continue
-
-                # The document could not be found, at this point. Create it.
-                logging.debug("Creating document: {}".format(render_filepath))
-
-                # Create the document and add it to the subdocuments ordered
-                # dict.
-                subdoc = Document(src_filepath=render_filepath,
-                                  context=self.context)
-                self.subdocuments[render_filepath] = subdoc
+            # Create the document and add it to the subdocuments ordered
+            # dict.
+            subdoc = Document(src_filepath=src_filepath,
+                              context=self.context)
+            self.subdocuments[src_filepath] = subdoc
 
     def get_template(self, target, reload=False):
         """Get the template for this document.
