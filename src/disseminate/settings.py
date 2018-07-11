@@ -34,6 +34,7 @@ text_extensions = ['.tex', ]
 
 default_context = {
     'targets': 'html',
+    'paths': [],
 }
 
 #: Attribute in the context in which the body of a file (the string and AST)

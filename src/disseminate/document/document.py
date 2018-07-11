@@ -87,11 +87,25 @@ class Document(object):
 
     #: Context processors
     #: def processor(context)
-    processors = [load_header,  # Process header
-                  process_context_macros,  # Process macros
-                  process_context_asts,  # Process ASTs in the context
-                  process_context_paragraphs,  # Process tag paragraphs
-                  process_context_typography,  # Process tag typography
+    processors = [
+        # Process header. This should be loaded first or near the very start
+        # since it loads in the values in the context (other than body)
+        load_header,
+        # Process macros. This will convert macros in the context that have
+        # just been loaded from the header
+        process_context_macros,
+        # Process the ASTs in the context. ASTs are simply nested trees of Tag
+        # objects. After the header and context are loaded and prepared, this
+        # function converts the entry values in the context to ASTs, if it can.
+        process_context_asts,
+        # Process AST paragraphs. After the appropriate context values have
+        # been converted to ASTs, go through these ASTs and identify and tag
+        # paragraphs.
+        process_context_paragraphs,
+        # Process the AST typography. After the appropriate context values have
+        # been converted to ASTs, identify the appropriate typography elements
+        # like quotes, endashes and emdashes.
+        process_context_typography,
                   ]
 
     def __init__(self, src_filepath, target_root=None, context=None):
@@ -344,14 +358,24 @@ class Document(object):
             self.context['project_root'] = self.project_root
         if 'target_root' not in self.context:
             self.context['target_root'] = self.target_root
-        if 'label_manager' not in self.context:
-            self.context['label_manager'] = LabelManager()
+        if 'root_document' not in self.context:
+            self.context['root_document'] = weakref.ref(self)
+
+        # Setup the paths, starting with the project_root
+        self.context['paths'] = [self.project_root]
+
+        # Setup the managers. These will be inserted in the context as
+        # 'label_manager' and 'dependency_manager'
+        self.dependency_manager
+        self.label_manager
+
+    @property
+    def dependency_manager(self):
         if 'dependency_manager' not in self.context:
             dep = DependencyManager(project_root=self.project_root,
                                     target_root=self.target_root)
             self.context['dependency_manager'] = dep
-        if 'root_document' not in self.context:
-            self.context['root_document'] = weakref.ref(self)
+        return self.context['dependency_manager']
 
     def reset_dependencies(self):
         """Clear and repopulate the dependencies for this document in the
@@ -360,6 +384,12 @@ class Document(object):
             document_src_filepath = self.src_filepath
             dep = self.context['dependency_manager']
             dep.reset(document_src_filepath=document_src_filepath)
+
+    @property
+    def label_manager(self):
+        if 'label_manager' not in self.context:
+            self.context['label_manager'] = LabelManager()
+        return self.context['label_manager']
 
     def reset_labels(self):
         """Reset the labels for this document in the label manager.
