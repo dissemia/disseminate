@@ -3,6 +3,8 @@ Context objects.
 """
 from copy import deepcopy
 
+from ..utils.classes import all_parent_attributes
+
 
 class BaseContext(dict):
     """A context object with variables used for rendering target documents.
@@ -10,6 +12,10 @@ class BaseContext(dict):
     Contexts are suppose to be data containers--i.e. there are no sophisticated
     processing or rendering functions. The available functions only manage the
     data and set of the context.
+
+    The BaseContext is basically a heritable dict. It keeps track of dict
+    lineage and initial values so that it can be reset to its state when it
+    was initialized.
 
     Contexts are optionally populated by:
         1. a default context (default_context class attribute).
@@ -38,36 +44,24 @@ class BaseContext(dict):
 
     #: The following are context entries that should not be copied (inherited)
     #: from the parent context.
-    do_not_inherit = set()
+    do_not_inherit = {'_parent_context', '_initial_values'}
 
     #: The following are context entries that should not be removed when the
-    #: context is cleared.
-    exclude_from_clear = set()
+    #: context is reset.
+    exclude_from_reset = {'_parent_context', '_initial_values'}
 
-    def __init__(self, *args, **kwargs):
-        # Get optional parameters
-        if 'parent_context' in kwargs and kwargs['parent_context'] is not None:
-            parent_context = kwargs['parent_context']
-        else:
-            parent_context = dict()
-
+    def __init__(self, parent_context=None, *args, **kwargs):
         # Store the parent context
-        self.parent_context = parent_context
+        parent_context = (dict() if parent_context is None else
+                          dict(parent_context))
+        self['_parent_context'] = parent_context
+
+        # Store the initial values
+        initial_values = dict(*args, **kwargs)
+        self['_initial_values'] = initial_values
 
         # Reset the dict with the default_context and parent_context values
         self.reset()
-
-        # Copy in the specified arguments. These should override those in the
-        # parent_context
-        self.update(*args, **kwargs)
-
-    @property
-    def parent_context(self):
-        return self['_parent_context']
-
-    @parent_context.setter
-    def parent_context(self, value):
-        self['_parent_context'] = value
 
     def reset(self):
         """(Selectively) resets the context.
@@ -76,9 +70,16 @@ class BaseContext(dict):
         'exclude_from_clear' class attribute, then repopulating the dict with
         values from the default context and and parent_context.
         """
-        keys_to_remove = (self.keys() -
-                          self.exclude_from_clear - {'_parent_context'})
+        # Get a set of keys to remove from the current class and all parent
+        # classes
+        parent_attrs = all_parent_attributes(cls=self.__class__,
+                                             attribute='exclude_from_reset')
+        keys_to_remove = self.keys() - self.exclude_from_reset
 
+        for attr in parent_attrs:
+            keys_to_remove -= attr
+
+        # Now remove the entries that are remaining
         for k in keys_to_remove:
             del self[k]
 
@@ -87,13 +88,25 @@ class BaseContext(dict):
         if self.default_context:
             self.update(**deepcopy(self.default_context))
 
-        # Copy from the parent_context. We want to conduct a shalow copy
+        # Copy from the parent_context. We want to conduct a shallow copy
         # since this context will use the same objects as the parent_context.
-        # (exclude entries listed in the do_not_inherit attribute.
-        self.update({k: v for k, v in self.parent_context.items()
-                     if k not in self.do_not_inherit})
+        # (exclude entries listed in the do_not_inherit attribute for this
+        # class and all parent classes).
+        parent_attrs = all_parent_attributes(cls=self.__class__,
+                                             attribute='do_not_inherit')
+        keys_to_inherit = self['_parent_context'].keys() - self.do_not_inherit
 
-    def is_valid(self, must_exist=True):
+        for attr in parent_attrs:
+            keys_to_inherit -= attr
+
+        self.update({key: self['_parent_context'][key]
+                     for key in keys_to_inherit})
+
+        # Copy in the initial value arguments
+        initial_values = self['_initial_values']
+        self.update(**initial_values)
+
+    def is_valid(self, keys=None, must_exist=True):
         """Validate the entries in the context dict.
 
         This function checks that the keys denoted by the validate_types
@@ -101,6 +114,10 @@ class BaseContext(dict):
 
         Parameters
         ----------
+        keys : tuple of str, optional
+            If specified, only the given keys will be checked if they're in
+            the validate_types class attribute. Otherwise all validate_types
+            will be checked.
         must_exist : bool, optional
             If True (default), then the entry must also exist in addition to
             having the correct type.
@@ -113,7 +130,18 @@ class BaseContext(dict):
             True if the context is valid.
             False if the context is not valid
         """
-        for key, value_type in self.validation_types.items():
+        # Determine which keys to use
+        if keys is None:
+            # Use all keys
+            keys = self.validation_types.keys()
+        else:
+            # Use the specified keys that are also in the validation_types
+            # class attribute
+            keys = self.validation_types.keys() & set(keys)
+
+        for key in keys:
+            value_type = self.validation_types[key]
+
             if key not in self:
                 if must_exist:
                     return False

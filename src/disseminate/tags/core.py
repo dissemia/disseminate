@@ -11,18 +11,13 @@ from ..attributes import (parse_attributes, set_attribute,
                           remove_attribute)
 from .utils import set_html_tag_attributes
 from ..utils.string import titlelize
+from ..utils.classes import all_subclasses
 from .. import settings
 
 
 class TagError(Exception):
     """An error was encountered while interpreting a tag."""
     pass
-
-
-def _all_subclasses(cls):
-    """Retrieve all subclasses, sub-subclasses and so on for a class"""
-    return cls.__subclasses__() + [g for s in cls.__subclasses__()
-                                   for g in _all_subclasses(s)]
 
 
 class TagFactory(object):
@@ -37,7 +32,7 @@ class TagFactory(object):
         if TagFactory.tag_types is None:
             # Initialize the tag types dict.
             TagFactory.tag_types = dict()
-            for scls in _all_subclasses(Tag):
+            for scls in all_subclasses(Tag):
                 # Tag must be active
                 if not scls.active:
                     continue

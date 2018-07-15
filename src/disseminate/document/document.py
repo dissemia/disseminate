@@ -4,19 +4,17 @@ Classes and functions for rendering documents.
 from tempfile import mkdtemp
 from shutil import rmtree
 from collections import OrderedDict
-import weakref
 import logging
 import os
 import os.path
 
+from .document_context import DocumentContext
 from ..ast import (process_context_asts, process_context_paragraphs,
                    process_context_typography)
 from ..templates import get_template
 from ..header import load_header
 from ..macros import process_context_macros
 from ..convert import convert
-from ..labels import LabelManager
-from ..dependency_manager import DependencyManager
 from ..context.utils import context_targets, context_includes
 from ..utils import mkdir_p
 from .. import settings
@@ -28,7 +26,8 @@ class DocumentError(Exception):
 
 
 class Document(object):
-    """A base class document rendered from a source file to a target file.
+    """A base class document rendered from a source file to one or more
+    target files.
 
     Parameters
     ----------
@@ -50,8 +49,8 @@ class Document(object):
         file should exist. This path is a render path: it's either an absolute
         path or a path relative to the current directory.
         ex: 'src/chapter1/chapter1.dm'
-    context : dict
-        The context with values for the document.
+    context: :obj:`disseminate.document.DocumentContext`
+        A context dict with the values needed to render a target document.
     subdocuments : :collections:`OrderedDict`
         An ordered dict with the sub-documents included in this document.
         The keys are src_filepath values as render paths, and the values
@@ -61,7 +60,6 @@ class Document(object):
         This document owns the subdocuments and only weak references to these
         documents should be made. (i.e. when the subdocuments dict is cleared,
         the memory for the document objects should be released)
-
     processors : list of functions, **class attribute**
         A list of functions to process the context. These functions are
         executed in sequence and simply accept a context dict.
@@ -70,20 +68,6 @@ class Document(object):
     src_filepath = None
     context = None
     subdocuments = None
-
-    #: The context dict for the document that owns this document. For the root
-    #: document, this attribute is None
-    _parent_context = None
-
-    #: The calculated target_root, based on the value specified or a value
-    #: evaluated from the project_root
-    _target_root = None
-
-    #: The path of a temporary directory created for this document, if needed.
-    _temp_dir = None
-
-    #: Cached template objects for this document.
-    _templates = None
 
     #: Context processors
     #: def processor(context)
@@ -108,25 +92,42 @@ class Document(object):
         process_context_typography,
                   ]
 
-    def __init__(self, src_filepath, target_root=None, context=None):
+    #: The directory for the root document of a project (a document and its
+    #: subdocuments.
+    _project_root = None
+
+    #: The calculated target_root, based on the value specified or a value
+    #: evaluated from the project_root
+    _target_root = None
+
+    #: The path of a temporary directory created for this document, if needed.
+    _temp_dir = None
+
+    #: Cached template objects for this document.
+    _templates = None
+
+    def __init__(self, src_filepath, target_root=None, parent_context=None):
+        logging.debug("Creating document: {}".format(src_filepath))
+
+        # Populate the attributes
         self.src_filepath = str(src_filepath)
         self.subdocuments = OrderedDict()
-        self.context = dict()
         self._templates = dict()
-
-        self._parent_context = context
         src_path = os.path.split(self.src_filepath)[0]
 
-        # Set the src_filepaths of the document and sub-documents
-        self._subdocuments_src_filepaths = []
+        # Set the project_root, if needed.
+        if parent_context is None or 'project_root' not in parent_context:
+            self._project_root = src_path
 
-        # Set the target_root.
-        # Otherwise use the directory above the src_path
+        # Set the target_root, if needed.
         if target_root is not None:
             # Use the specified value, if available.
             self._target_root = target_root
-        elif isinstance(context, dict) and 'target_root' in context:
-            self._target_root = context['target_root']
+        elif parent_context is not None and 'target_root' in parent_context:
+            # Otherwise use the one in the parent context, if available.
+            self._target_root = parent_context['target_root']
+        # In these situations, there is no 'target_root' in the parent context,
+        # so we have to figure one out.
         elif src_path.endswith(settings.document_src_directory):
             # If the src_path is in a src_directory, use the directory above
             # this directory
@@ -135,8 +136,9 @@ class Document(object):
             # Otherwise just use the same directory as the src directory
             self._target_root = src_path
 
-        # Reset the context
-        self.reset_contexts()
+        # Create the context
+        self.context = DocumentContext(document=self,
+                                       parent_context=parent_context)
 
         # Read in the document and load sub-documents
         self.load_document()
@@ -146,12 +148,8 @@ class Document(object):
         if self._temp_dir is not None:
             rmtree(self._temp_dir, ignore_errors=True)
 
-        # Reset the labels for this document
-        label_manager = self.context.get('label_manager', None)
-        if label_manager is not None:
-            label_manager.reset(document=self)
-
-        # Reset the dependencies for this document
+        # Reset the labels and dependencies for this document
+        self.reset_labels()
         self.reset_dependencies()
 
     def __repr__(self):
@@ -218,17 +216,13 @@ class Document(object):
 
     @property
     def project_root(self):
-        if 'project_root' in self.context:
-            return self.context['project_root']
-        else:
-            return os.path.split(self.src_filepath)[0]
+        return (self._project_root if self._project_root is not None else
+                self.context.get('project_root', None))
 
     @property
     def target_root(self):
-        if 'target_root' in self.context:
-            return self.context['target_root']
-        else:
-            return self._target_root
+        return (self._target_root if self._target_root is not None else
+                self.context.get('target_root', None))
 
     @property
     def target_list(self):
@@ -296,7 +290,7 @@ class Document(object):
         return self.targets[target]
 
     def reset_contexts(self):
-        """Clear and repopulate the local_context and global_context.
+        """Load, clear and reset the context.
 
         The context contains one of the following for all documents in a root
         document:
@@ -319,63 +313,11 @@ class Document(object):
           5. mtime: The modification time of the source document. This is
              populated by the get_ast method.
         """
-        # Remove everything from the context dict except for objects that
-        # need to be preserved between documents, like the label_manager and
-        # dependency_manager
-        excluded_items = ('label_manager', 'dependency_manager',
-                          'project_root', 'target_root', 'root_document')
-        context_keys = list(self.context.keys())
-        for k in context_keys:
-            if k in excluded_items:
-                continue
-            del self.context[k]
-
-        # Copy over the default context
-        self.context.update(settings.default_context)
-
-        # Copy over the context values from parent context. The excluded_items
-        # do not pertain to sub-documents.
-        excluded_items = ('include', 'title', 'short', 'mtime')
-        if self._parent_context is not None:
-            for k, v in self._parent_context.items():
-                if k in excluded_items:
-                    continue
-                self.context[k] = v
-
-        self.context['document'] = weakref.ref(self)
-
-        # The following tests whether the context values came from a parent
-        # document
-        if self.context.get('src_filepath', None) != self.src_filepath:
-            # Set the document's level. The root document is level 1, its'
-            # sub-documents are level 2, their sub-documents are level 3
-            self.context['level'] = self.context.get('level', 0) + 1
-
-        self.context['src_filepath'] = self.src_filepath
-
-        # The following should only be set by the root target document
-        if 'project_root' not in self.context:
-            self.context['project_root'] = self.project_root
-        if 'target_root' not in self.context:
-            self.context['target_root'] = self.target_root
-        if 'root_document' not in self.context:
-            self.context['root_document'] = weakref.ref(self)
-
-        # Setup the paths, starting with the project_root
-        self.context['paths'] = [self.project_root]
-
-        # Setup the managers. These will be inserted in the context as
-        # 'label_manager' and 'dependency_manager'
-        self.dependency_manager
-        self.label_manager
+        self.context.reset()
 
     @property
     def dependency_manager(self):
-        if 'dependency_manager' not in self.context:
-            dep = DependencyManager(project_root=self.project_root,
-                                    target_root=self.target_root)
-            self.context['dependency_manager'] = dep
-        return self.context['dependency_manager']
+        return self.context.get('dependency_manager', None)
 
     def reset_dependencies(self):
         """Clear and repopulate the dependencies for this document in the
@@ -387,9 +329,7 @@ class Document(object):
 
     @property
     def label_manager(self):
-        if 'label_manager' not in self.context:
-            self.context['label_manager'] = LabelManager()
-        return self.context['label_manager']
+        return self.context.get('label_manager', None)
 
     def reset_labels(self):
         """Reset the labels for this document in the label manager.
@@ -518,12 +458,11 @@ class Document(object):
                 continue
 
             # The document could not be found, at this point. Create it.
-            logging.debug("Creating document: {}".format(src_filepath))
 
             # Create the document and add it to the subdocuments ordered
             # dict.
             subdoc = Document(src_filepath=src_filepath,
-                              context=self.context)
+                              parent_context=self.context)
             self.subdocuments[src_filepath] = subdoc
 
     def get_template(self, target, reload=False):

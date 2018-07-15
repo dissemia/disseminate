@@ -54,9 +54,11 @@ def test_base_context_reset():
     default_context = BaseContext.default_context
     BaseContext.default_context = {'a': 2, 'b': 3, 'c': 4}
 
-    parent_context = {'d': 5, 'e': 6}
+    # Reset preserve the default_context, parent_context and initial values
+    parent_context = {'d': 5, 'e': 6, 'h': []}
     context = BaseContext(parent_context=parent_context, f=7, g=8)
-    assert len(context) >= 7
+    context['i'] = 9
+
     assert context['a'] == 2
     assert context['b'] == 3
     assert context['c'] == 4
@@ -64,17 +66,27 @@ def test_base_context_reset():
     assert context['e'] == 6
     assert context['f'] == 7
     assert context['g'] == 8
+    assert context['h'] == [] and id(context['h']) == id(parent_context['h'])
+    assert context['i'] == 9
 
-    # Reset should remove entries but keep the default context and
-    # parent_context entries
+    # Try changing default_context, parent_context entries
+    context['a'] = -2
+    context['d'] = 5
+
+    # Reset should remove entries but keep the default context, parent_context
+    # and initial_value entries
     context.reset()
     assert context['a'] == 2
     assert context['b'] == 3
     assert context['c'] == 4
     assert context['d'] == 5
     assert context['e'] == 6
-    assert 'f' not in context
-    assert 'g' not in context
+    assert context['f'] == 7
+    assert context['g'] == 8
+    assert context['h'] == [] and id(context['h']) == id(parent_context['h'])
+    assert 'i' not in context
+
+    BaseContext.default_context = default_context
 
 
 def test_base_context_copy():
@@ -92,10 +104,10 @@ def test_base_context_copy():
     assert id(context['a']) != id(l)
 
     # But parent context objects are preserved.
-    parent_context = {'a': l}
+    parent_context = {'a': [1,2,3]}
     context = BaseContext(parent_context=parent_context)
-    assert context['a'] == []
-    assert id(context['a']) == id(l)
+    assert context['a'] == [1,2,3]
+    assert id(context['a']) == id(parent_context['a'])
 
 
 def test_base_context_is_valid():
@@ -119,3 +131,6 @@ def test_base_context_is_valid():
     assert context.is_valid(must_exist=False)
 
     BaseContext.validation_types = default_validation_types
+
+    # 4. Alternatively, we could only check specific keys
+    assert context.is_valid(keys=('int', 'float'))
