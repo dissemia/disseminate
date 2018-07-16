@@ -146,11 +146,23 @@ def test_document_context_simple_documents(tmpdir):
         assert subdocs[0].src_filepath == 'tests/document/example7/src/sub1/file11.dm'
         assert subdocs[1].src_filepath == 'tests/document/example7/src/sub1/subsub1/file111.dm'
 
-
-
     # Test the context
     test_context_entries(doc)
 
     # Reset the context, and test again
     doc.reset_contexts()
     test_context_entries(doc)
+
+
+def test_document_context_is_valid(tmpdir):
+    """Test the is_valid method for document contexts."""
+    # Load example4. It has a main document (file.dm)
+    doc = Document('tests/document/example4/src/file.dm', str(tmpdir))
+    context = doc.context
+
+    # The initial context is valid.
+    assert context.is_valid()
+
+    # Now remove the mtime key and this should invalidate the context
+    del context['mtime']
+    assert not context.is_valid()

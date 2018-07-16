@@ -23,8 +23,8 @@ class DocumentContext(BaseContext):
         'project_root': str,
         'target_root': str,
         'paths': list,
-        'label_manager': None,
-        'dependency_manager': None,
+        'label_manager': LabelManager,
+        'dependency_manager': DependencyManager,
         'mtime': float}
 
     default_context = settings.default_context

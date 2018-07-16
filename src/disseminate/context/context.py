@@ -1,6 +1,7 @@
 """
 Context objects.
 """
+import logging
 from copy import deepcopy
 
 from ..utils.classes import all_parent_attributes
@@ -143,12 +144,20 @@ class BaseContext(dict):
             value_type = self.validation_types[key]
 
             if key not in self:
+                msg = "The key '{}' could not be found in the context."
+                logging.debug(msg.format(key))
+
                 if must_exist:
                     return False
                 continue
 
-            valid_entry = isinstance(self[key], value_type)
-            if value_type is not None and not valid_entry:
-                return False
+            if value_type is not None:
+                valid_entry = isinstance(self[key], value_type)
+                if value_type is not None and not valid_entry:
+                    msg = ("The key '{}' has a value '{}' that is not valid; a "
+                           "value type of '{}' is expected.")
+                    logging.debug(msg.format(key, self[key], value_type))
+
+                    return False
 
         return True
