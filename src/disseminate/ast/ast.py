@@ -179,7 +179,7 @@ def process_context_asts(context):
         The context with values for the document.
     """
     # Setup the needed variables for process_ast
-    assert 'src_filepath' in context
+    assert context.is_valid('src_filepath')
     src_filefile = context['src_filepath']
 
     # Go through the entries in the context and determine which can be converted

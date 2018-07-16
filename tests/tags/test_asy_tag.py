@@ -6,7 +6,7 @@ from disseminate.dependency_manager import DependencyManager
 from disseminate import settings
 
 
-def test_asy_html(tmpdir):
+def test_asy_html(tmpdir, context_cls):
     """Test the handling of html with the asy tag."""
     # Since this tag requires creating a cache directory, we will copy the
     # project_root to a temporary directory
@@ -21,9 +21,11 @@ def test_asy_html(tmpdir):
     # convert images by the img tag.
     dep = DependencyManager(project_root=project_root,
                             target_root=target_root)
-    context = {'dependency_manager': dep,
-               'project_root': project_root,
-               'target_root': target_root}
+    context_cls.validation_types = {'dependency_manager': DependencyManager,
+                                    'project_root': str,
+                                    'target_root': str}
+    context = context_cls(dependency_manager=dep, project_root=project_root,
+                          target_root=target_root)
 
     # Generate the markup
     src = """@asy{
@@ -60,10 +62,10 @@ def test_asy_html(tmpdir):
     # in 'src'
     dep = DependencyManager(project_root=project_root,
                             target_root=target_root)
-    context = {'dependency_manager': dep,
-               'src_filepath': 'src/chapter/test.dm',
-               'project_root': 'src',
-               'target_root': target_root}
+    context = context_cls(dependency_manager=dep,
+                          src_filepath='src/chapter/test.dm',
+                          project_root='src',
+                          target_root=target_root)
 
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context=context)
@@ -77,14 +79,13 @@ def test_asy_html(tmpdir):
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    print(root_html)
     assert root_html == '<img src="/media/chapter/test_69a34c39e1.svg"/>'
     assert tmpdir.ensure(settings.media_dir, 'chapter', 'test_69a34c39e1.svg')
     assert tmpdir.ensure('.html', settings.media_dir, 'chapter',
                          'test_69a34c39e1.svg')
 
 
-def test_asy_html_attribute(tmpdir):
+def test_asy_html_attribute(tmpdir, context_cls):
     """Test the handling of html with the asy tag including attributes"""
 
     # Since this tag requires creating a cache directory, we will copy the
@@ -100,9 +101,11 @@ def test_asy_html_attribute(tmpdir):
     # to find and convert images by the img tag.
     dep = DependencyManager(project_root=project_root,
                             target_root=target_root)
-    context = {'dependency_manager': dep,
-               'project_root': project_root,
-               'target_root': target_root}
+    context_cls.validation_types = {'dependency_manager': DependencyManager,
+                                    'project_root': str,
+                                    'target_root': str}
+    context = context_cls(dependency_manager=dep, project_root=project_root,
+                          target_root=target_root)
 
     # Generate the markup
     src = """@asy[scale=2.0]{

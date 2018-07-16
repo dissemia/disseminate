@@ -37,7 +37,7 @@ class Img(Tag):
 
     def tex_fmt(self, level=1, mathmode=False, content=None):
         # Get the file dependency
-        assert 'dependency_manager' in self.context
+        assert self.context.is_valid('dependency_manager')
 
         deps = self.context['dependency_manager']
         document_src_filepath = (self.context['src_filepath']
@@ -58,7 +58,7 @@ class Img(Tag):
 
     def html_fmt(self, level=1, content=None):
         # Add the file dependency
-        assert 'dependency_manager' in self.context
+        assert self.context.is_valid('dependency_manager')
 
         deps = self.context['dependency_manager']
         document_src_filepath = (self.context['src_filepath']
@@ -100,6 +100,7 @@ class RenderedImg(Img):
 
     def __init__(self, name, content, attributes, context, render_target,
                  template=None):
+
         self.template = template
         if isinstance(content, list):
             content = ''.join(content).strip()
@@ -111,7 +112,7 @@ class RenderedImg(Img):
             pass
         else:
             # Get the cache path from the dependency manager
-            assert 'dependency_manager' in context
+            assert context.is_valid('dependency_manager')
             deps = context['dependency_manager']
 
             # ex: cache_path = '.cache'

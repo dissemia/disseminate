@@ -189,7 +189,7 @@ def process_context_paragraphs(context):
 
     """
     # Setup the needed variables for process_ast
-    assert 'src_filepath' in context
+    assert context.is_valid('src_filepath')
     src_filefile = context['src_filepath']
 
     # Go through the entries in the context and determine which are tags

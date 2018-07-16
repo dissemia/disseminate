@@ -123,13 +123,14 @@ def test_default_conversion():
     assert txt == test_txt
 
 
-def test_process_context_asts():
+def test_process_context_asts(context_cls):
     """Test the process_context_asts function."""
     body_attr = settings.body_attr
-    context = {body_attr: test,
-               'src_filepath': ''}
-    process_context_asts(context)
 
+    context_cls.validation_types = {'src_filepath': str}
+    context = context_cls(src_filepath='', **{body_attr: test})
+
+    process_context_asts(context)
     assert context[body_attr].default == test_txt
 
 

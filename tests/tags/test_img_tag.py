@@ -26,7 +26,7 @@ def test_img_attribute(tmpdir):
     assert img.attributes == (('width', '100'),)
 
 
-def test_img_html(tmpdir):
+def test_img_html(tmpdir, context_cls):
     """Test the handling of html with the img tag."""
     target_root = str(tmpdir)
 
@@ -34,7 +34,9 @@ def test_img_html(tmpdir):
     # to find and convert images by the img tag.
     dep = DependencyManager(project_root='tests/tags/img_example1',
                             target_root=target_root)
-    context = {'dependency_manager': dep}
+
+    context_cls.validation_types = {'dependency_manager': DependencyManager}
+    context = context_cls(dependency_manager=dep)
 
     # Generate the markup
     src = "@img{sample.pdf}"
@@ -77,7 +79,7 @@ def test_img_html(tmpdir):
     assert root_html == html
 
 
-def test_img_tex(tmpdir):
+def test_img_tex(tmpdir, context_cls):
     """Test the handling of LaTeX with the img tag."""
     target_root = str(tmpdir)
 
@@ -85,8 +87,9 @@ def test_img_tex(tmpdir):
     # to find and convert images by the img tag.
     dep = DependencyManager(project_root='tests/tags/img_example1',
                             target_root=target_root)
-    local_context = {'_targets': {'.tex': 'html/main.tex'}}
-    context = {'dependency_manager': dep}
+
+    context_cls.validation_types = {'dependency_manager': DependencyManager}
+    context = context_cls(dependency_manager=dep)
 
     # Generate the markup
     src = "@img{sample.pdf}"

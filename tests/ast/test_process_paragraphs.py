@@ -94,12 +94,13 @@ def test_process_paragraphs_leading_spaces():
     assert ast.content[2] == '\n  \n  This is my paragraph.\n'
 
 
-def test_process_context_paragraphs():
+def test_process_context_paragraphs(context_cls):
     """Test the process_context_paragraphs function."""
 
     body_attr = settings.body_attr
-    context = {body_attr: test_paragraphs2,
-               'src_filepath': ''}
+
+    context_cls.validation_types = {'src_filepath': str}
+    context = context_cls(src_filepath='', **{body_attr: test_paragraphs2})
 
     process_context_asts(context)
     process_context_paragraphs(context)

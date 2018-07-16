@@ -8,7 +8,7 @@ from disseminate.ast import process_ast
 from disseminate import settings
 
 
-def test_inline_equation(tmpdir):
+def test_inline_equation(tmpdir, context_cls):
     """Test the tex rendering of simple inline equations."""
 
     # Setup the test paths
@@ -20,8 +20,9 @@ def test_inline_equation(tmpdir):
     dep = DependencyManager(project_root=project_root,
                             target_root=target_root)
 
-    context = {'dependency_manager': dep,
-               'project_root': project_root}
+    context_cls.validation_types = {'dependency_manager': DependencyManager,
+                                    'project_root': str}
+    context = context_cls(dependency_manager=dep, project_root=project_root)
 
     # Example 1 - simple inline equation
     eq1 = Eq(name='eq', content='y=x', attributes=tuple(), context=context)
@@ -55,7 +56,7 @@ def test_inline_equation(tmpdir):
     assert eq7.tex == "\ensuremath{\\boldsymbol{this is my y=x}}"
 
 
-def test_block_equation(tmpdir):
+def test_block_equation(tmpdir, context_cls):
     """Test the tex rendering of a simple block equations."""
 
     # Setup the test paths
@@ -66,8 +67,9 @@ def test_block_equation(tmpdir):
     # to find and convert images by the img tag.
     dep = DependencyManager(project_root=project_root,
                             target_root=target_root)
-    context = {'dependency_manager': dep,
-               'project_root': project_root}
+    context_cls.validation_types = {'dependency_manager': DependencyManager,
+                                    'project_root': str}
+    context = context_cls(dependency_manager=dep, project_root=project_root)
 
     # Example 1 - simple block equation
     eq1 = Eq(name='eq', content='y=x', attributes=tuple(),context=context,
@@ -86,7 +88,7 @@ def test_block_equation(tmpdir):
     assert eq3.tex == '\\begin{alignat*}{3} %\ny=x\n\\end{alignat*}'
 
 
-def test_simple_inline_equation_html(tmpdir):
+def test_simple_inline_equation_html(tmpdir, context_cls):
     """Test the rendering of simple inline equations for html."""
 
     # Setup the test paths
@@ -97,8 +99,9 @@ def test_simple_inline_equation_html(tmpdir):
     # to find and convert images by the img tag.
     dep = DependencyManager(project_root=project_root,
                             target_root=target_root)
-    context = {'dependency_manager': dep,
-               'project_root': project_root}
+    context_cls.validation_types = {'dependency_manager': DependencyManager,
+                                    'project_root': str}
+    context = context_cls(dependency_manager=dep, project_root=project_root)
 
     # Setup the equation tag
     eq = Eq(name='eq', content='y = x', attributes=tuple(), context=context)
@@ -130,7 +133,7 @@ def test_simple_inline_equation_html(tmpdir):
                          '86f37f32e2.svg')
 
 
-def test_simple_inline_equation_tex(tmpdir):
+def test_simple_inline_equation_tex(tmpdir, context_cls):
     """Test the rendering of simple inline equations for tex."""
 
     # Setup the test paths
@@ -141,8 +144,9 @@ def test_simple_inline_equation_tex(tmpdir):
     # to find and convert images by the img tag.
     dep = DependencyManager(project_root=project_root,
                             target_root=target_root)
-    context = {'dependency_manager': dep,
-               'project_root': project_root}
+    context_cls.validation_types = {'dependency_manager': DependencyManager,
+                                    'project_root': str}
+    context = context_cls(dependency_manager=dep, project_root=project_root)
 
     # Setup the equation tag
     eq = Eq(name='eq', content='y = x', attributes=tuple(), context=context)
@@ -150,7 +154,7 @@ def test_simple_inline_equation_tex(tmpdir):
     assert eq.tex == "\\ensuremath{y = x}"
 
 
-def test_block_equation_tex(tmpdir):
+def test_block_equation_tex(tmpdir, context_cls):
     """Test the rendering of block equations for tex."""
 
     # Setup the test paths
@@ -161,8 +165,9 @@ def test_block_equation_tex(tmpdir):
     # to find and convert images by the img tag.
     dep = DependencyManager(project_root=project_root,
                             target_root=target_root)
-    context = {'dependency_manager': dep,
-               'project_root': project_root}
+    context_cls.validation_types = {'dependency_manager': DependencyManager,
+                                    'project_root': str}
+    context = context_cls(dependency_manager=dep, project_root=project_root)
 
     # Test markup
     test = """
