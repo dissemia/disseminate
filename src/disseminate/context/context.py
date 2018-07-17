@@ -132,17 +132,10 @@ class BaseContext(dict):
             False if the context is not valid
         """
         # Determine which keys to use
-        if keys is None:
-            # Use all keys
-            keys = self.validation_types.keys()
-        else:
-            # Use the specified keys that are also in the validation_types
-            # class attribute
-            keys = self.validation_types.keys() & set(keys)
+        keys = self.validation_types.keys() if keys is None else keys
+        keys = [keys] if isinstance(keys, str) else keys  # wrap in list
 
         for key in keys:
-            value_type = self.validation_types[key]
-
             if key not in self:
                 msg = "The key '{}' could not be found in the context."
                 logging.debug(msg.format(key))
@@ -150,6 +143,8 @@ class BaseContext(dict):
                 if must_exist:
                     return False
                 continue
+
+            value_type = self.validation_types.get(key, None)
 
             if value_type is not None:
                 valid_entry = isinstance(self[key], value_type)

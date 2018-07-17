@@ -18,9 +18,7 @@ module_templates_relpath = '../templates'
 
 
 def procress_context_template(context):
-    ## Update context
-
-    # Create the template renderer
+    # Create the template renderer.
     context['template_renderer'] = JinjaRenderer(context,
                                                  module_only=False)
 
@@ -40,6 +38,9 @@ class BaseRenderer(object):
     def __init__(self, context, module_only=False):
         self.module_only = module_only
         self.template = context.get('template', 'default/template')
+
+        # Set the paths for this renderer in the context
+        self.set_context_paths(context)
 
     @property
     def mtime(self):
@@ -93,9 +94,25 @@ class BaseRenderer(object):
         """
         raise NotImplementedError
 
-    def template_paths(self):
-        """A set of absolute (render_paths) for the templates."""
-        raise NotImplementedError
+    def set_context_paths(self, context):
+        """Add the paths for the used templates in the context's paths entry."""
+        assert context.is_valid('paths')
+        context_paths = context['paths']
+
+        try:
+            template_filepaths = self.template_filepaths()
+            template_paths = [os.path.split(path)[0]
+                              for path in template_filepaths]
+        except NotImplementedError:
+            template_paths = []
+
+        for path in template_paths:
+            if path in context_paths:
+                continue
+            context_paths.append(path)
+
+    def load_context(self, context):
+        pass
 
     def render(self, context, target):
         """Render the given context into a string for the given target."""
@@ -112,7 +129,7 @@ class JinjaRenderer(BaseRenderer):
     _environment = None
 
     def __init__(self, context, module_only=False):
-        super(JinjaRenderer, self).__init__(context, module_only)
+        assert context.is_valid('src_filepath')
 
         # Prepare the cached templates dict
         self._jinja_templates = dict()
@@ -154,6 +171,8 @@ class JinjaRenderer(BaseRenderer):
         ae = jinja2.select_autoescape(['html', 'htm', 'xml'])
         env = jinja2.Environment(autoescape=ae, loader=cl, **kwargs)
         self._environment = env
+
+        super(JinjaRenderer, self).__init__(context, module_only)
 
         # Load and cache the template objects
         self.load_templates(context=context)
@@ -235,18 +254,6 @@ class JinjaRenderer(BaseRenderer):
                           if filename not in filenames]
 
         return filenames
-
-    def template_paths(self):
-        template_filepaths = self.template_filepaths()
-        template_paths = [os.path.split(template_filepath)[0]
-                          for template_filepath in template_filepaths]
-
-        # Return unique paths while preserving order
-        unique_paths = []
-        for path in template_paths:
-            if path not in unique_paths:
-                unique_paths.append(path)
-        return unique_paths
 
     def render(self, context, target):
         # get the template
