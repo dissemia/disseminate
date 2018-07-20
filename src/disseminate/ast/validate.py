@@ -31,6 +31,11 @@ class ValidateAndCleanAST:
     def validate(self, ast):
         """Validate unmatched strings and regex matches."""
 
+        # If the tag's contents are simply a string, the there isn't anything
+        # to validate.
+        if isinstance(ast, str):
+            return ast
+
         # First format the ast
         ast = self.join_strings(ast)
         self.count_tags(ast)
