@@ -17,9 +17,19 @@ from .. import settings
 module_templates_relpath = '../templates'
 
 
-def procress_context_template(context):
+def process_context_template(context):
     # Create the template renderer.
-    context['template_renderer'] = JinjaRenderer(context,
+    template = context.get('template', 'default/template')
+    targets = context_targets(context)
+    context['template_renderer'] = JinjaRenderer(context=context,
+                                                 template=template,
+                                                 targets=targets,
+                                                 module_only=False)
+
+    equation_template = context.get('equation_template', 'default/eq')
+    context['equation_renderer'] = JinjaRenderer(context=context,
+                                                 template=equation_template,
+                                                 targets=['.tex'],
                                                  module_only=False)
 
 
@@ -33,11 +43,15 @@ class BaseRenderer(object):
     #: The base name for the template file
     template = None
 
+    #: The targets (extensions) of the files to render to.
+    targets = None
+
     _module_templates_abspath = None
 
-    def __init__(self, context, module_only=False):
+    def __init__(self, context, template, targets, module_only=False):
         self.module_only = module_only
-        self.template = context.get('template', 'default/template')
+        self.template = template
+        self.targets = targets
 
         # Set the paths for this renderer in the context
         self.set_context_paths(context)
@@ -118,6 +132,10 @@ class BaseRenderer(object):
         """Render the given context into a string for the given target."""
         raise NotImplementedError
 
+    def is_available(self, target):
+        """Is a template available for the given target?"""
+        return False
+
 
 class JinjaRenderer(BaseRenderer):
     """Manage templates and the rendering of files.
@@ -128,7 +146,7 @@ class JinjaRenderer(BaseRenderer):
     _jinja_templates = None
     _environment = None
 
-    def __init__(self, context, module_only=False):
+    def __init__(self, context, template, targets, module_only=False):
         assert context.is_valid('src_filepath')
 
         # Prepare the cached templates dict
@@ -172,13 +190,15 @@ class JinjaRenderer(BaseRenderer):
         env = jinja2.Environment(autoescape=ae, loader=cl, **kwargs)
         self._environment = env
 
-        super(JinjaRenderer, self).__init__(context, module_only)
+        super(JinjaRenderer, self).__init__(context, template, targets,
+                                            module_only)
 
         # Load and cache the template objects
-        self.load_templates(context=context)
+        self.load_templates()
 
     @property
     def mtime(self):
+
         # Get all of the template objects
         templates = self._jinja_templates.values()
 
@@ -191,6 +211,7 @@ class JinjaRenderer(BaseRenderer):
 
     @property
     def from_module(self):
+
         # Get a template for one of the targets
         templates = list(self._jinja_templates.values())
         if len(templates) == 0:
@@ -211,6 +232,7 @@ class JinjaRenderer(BaseRenderer):
             return False
 
     def template_filepaths(self, target=None):
+
         # Load all of the template objects
         if target is None or target not in self._jinja_templates:
             templates = self._jinja_templates.values()
@@ -256,25 +278,40 @@ class JinjaRenderer(BaseRenderer):
         return filenames
 
     def render(self, context, target):
+        self.load_templates()
+
         # get the template
         template = self.get_template(target)
         return template.render(**context)
 
-    def load_templates(self, context):
+    def is_available(self, target):
+        """Is a template available for the given target?"""
+        return self.get_template(target) is not None
+
+    def load_templates(self):
         """Loads all the Jinja2 template objects needed to render the targets
         specified in the context."""
         # Get the targets specified in the context
-        targets = context_targets(context)
+        targets = self.targets
 
-        # find templates that haven't been loaded yet
+        # Replace intermediary targets. Ex: 'pdf' targets, which need to be
+        # compiled, should be replaced with their source format (.tex)
+        targets = [settings.compiled_exts[t]
+                   if t in settings.compiled_exts else t
+                   for t in targets]
+
+        # find templates that haven't been loaded yet or need to be updated
+        stale_targets = {k for k, v in self._jinja_templates.items()
+                         if not v.is_up_to_date}  # set
         missing_targets = targets - self._jinja_templates.keys()
+        reload_targets = missing_targets | stale_targets
 
         # Get the name of the template. This may or may not include the
         # actual name of the template file.
         template = self.template
 
         # Load missing templates
-        for target in missing_targets:
+        for target in reload_targets:
             # Construct the template file name. The the template name may
             # include the the template file's base filename (without extension)
             # ex: template = 'books/tufte/template',
@@ -295,6 +332,7 @@ class JinjaRenderer(BaseRenderer):
             # May raise a jinja2.TemplateNotFound exception
             jinja_template = env.select_template([template_file1,
                                                   template_file2])
+
             self._jinja_templates[target] = jinja_template
 
     def get_template(self, target):
@@ -315,5 +353,6 @@ class JinjaRenderer(BaseRenderer):
         jinja2.TemplateNotFound
             Raised exception if the template file could not be found.
         """
+        self.load_templates()
         # Return the cached version, if one is available
         return self._jinja_templates.get(target, None)

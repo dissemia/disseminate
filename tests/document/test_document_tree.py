@@ -475,7 +475,8 @@ def test_render_required(tmpdir):
         assert not d.render_required(target_filepath)
 
     # Make sure the right template file was loaded
-    template = doc_list[2].get_template(target='.html')
+    renderer = doc_list[2].get_renderer()
+    template = renderer.get_template(target='.html')
     assert template.filename == str(template_filepath)
     assert template.is_up_to_date
 

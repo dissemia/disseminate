@@ -151,7 +151,7 @@ def test_custom_template(tmpdir):
     markup = """
     ---
     template: tree
-    targets: html, tex
+    targets: html
     ---
     """
     in_file.write(strip_leading_space(markup))

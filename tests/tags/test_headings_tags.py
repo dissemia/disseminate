@@ -53,6 +53,8 @@ def test_labels_heading_formatting(tmpdir):
 
     Third Chapter
 
+
+
     """
     assert target_filepath.read() == strip_leading_space(key)
 
@@ -84,6 +86,8 @@ def test_labels_heading_formatting(tmpdir):
 
 
     3. Third Chapter
+
+
 
     """
     assert target_filepath.read() == strip_leading_space(key)

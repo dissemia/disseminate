@@ -11,7 +11,7 @@ import os.path
 from .document_context import DocumentContext
 from ..ast import (process_context_asts, process_context_paragraphs,
                    process_context_typography)
-from ..templates import get_template
+from ..renderers import process_context_template
 from ..header import load_header
 from ..macros import process_context_macros
 from ..convert import convert
@@ -78,6 +78,9 @@ class Document(object):
         # Process macros. This will convert macros in the context that have
         # just been loaded from the header
         process_context_macros,
+        # Populate the template renderers. This needs to be done after the
+        # header is loaded.
+        process_context_template,
         # Process the ASTs in the context. ASTs are simply nested trees of Tag
         # objects. After the header and context are loaded and prepared, this
         # function converts the entry values in the context to ASTs, if it can.
@@ -465,36 +468,14 @@ class Document(object):
                               parent_context=self.context)
             self.subdocuments[src_filepath] = subdoc
 
-    def get_template(self, target, reload=False):
-        """Get the template for this document.
-
-        Parameters
-        ----------
-        target : str
-            The target for the template. ex: '.html'
-        reload : bool, optional
-            By default, this method returns cached template objects. If this
-            flag is set to True, then the template object will be reloaded and
-            returned. This needs to be done if the template object needs to be
-            updated.
+    def get_renderer(self):
+        """Get the template renderer for this document.
 
         Returns
         -------
         template
         """
-        template_basename = settings.template_basename
-        if 'template' in self.context:
-            template_basename = self.context['template']
-
-        # Generate a cached template, if needed. Using the same template object
-        # between renders is needed so that the 'is_up_to_date' attribute
-        # is properly updated if the template file is re-written
-        if template_basename not in self._templates or reload:
-            template = get_template(self.src_filepath, target=target,
-                                    template_basename=template_basename)
-            self._templates[template_basename] = template
-
-        return self._templates[template_basename]
+        return self.context.get('template_renderer', None)
 
     # TODO: rename to load(...)
     def load_document(self, reload=False):
@@ -619,27 +600,13 @@ class Document(object):
                           "is older than source.".format(self, target_filepath))
             return True
 
-        # 3. A render is required if the tags or labels used by this document
-        #    have been updated since the target file was written. This is
-        #    because the label numbers and contents for *other* documents may
-        #    have changed.
-        tag_mtimes = [t.mtime for t in self.context.values()
-                      if hasattr(t, 'mtime')]
-        max_tag_mtime = max(tag_mtimes) if len(tag_mtimes) > 0 else None
-        if max_tag_mtime is not None and target_mtime < max_tag_mtime:
+        # 3. A render is required if any of the context entriesn to be updated.
+        entry_mtimes = [e.mtime for e in self.context.values()
+                        if hasattr(e, 'mtime')]
+        max_entry_mtime = max(entry_mtimes) if len(entry_mtimes) > 0 else None
+        if max_entry_mtime is not None and target_mtime < max_entry_mtime:
             logging.debug("Render required for {}:  The tags reference a "
                           "document that's been updated.".format(self))
-            return True
-
-        # 4. A render is required if the template is not up to date. Simply
-        #    calling the 'get_template' method will return the current template
-        #    object, which can be used to test whether it's up to date. In the
-        #    render_uncompiled method, the template is reloaded to guarantee
-        #    that the latest template is loaded.
-        template = self.get_template(target=target)
-        if not template.is_up_to_date:
-            logging.debug("Render required for {}:  The template has been "
-                          "updated.".format(self))
             return True
 
         # All tests passed. No new render is needed
@@ -729,18 +696,17 @@ class Document(object):
 
         # Get a template. Reload is set to True to make sure that the latest
         # version of the template is loaded.
-        template = self.get_template(target=target, reload=True)
+        renderer = self.get_renderer()
 
         # If a template is available, use it to render the string.
         # Otherwise, just write the string
 
-        if template is not None:
+        if renderer.is_available(target=target):
             # generate a new ouput_string
-            output_string = template.render(**self.context)
+            output_string = renderer.render(self.context, target=target)
 
             # Add template to dependencies, if able
-            if ('dependency_manager' in self.context and
-                    hasattr(template, 'filename')):
+            if 'dependency_manager' in self.context:
                 dep = self.context['dependency_manager']
 
                 # See if the dependencies has a method for this target
