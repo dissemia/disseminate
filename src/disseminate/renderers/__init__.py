@@ -1,1 +1,2 @@
-from .base_renderer import JinjaRenderer, process_context_template
+from .base_renderer import process_context_template
+from .jinja_renderer import JinjaRenderer
