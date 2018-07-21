@@ -14,9 +14,12 @@ coverage:  ## Test the coverage of tests
 develop: ## Prepare the package for active development
 	$(PYTHON) setup.py develop
 
-bench: ## Run benchmarks on the current version
+bench: ## Run benchmarks
 	asv run
 	asv publish
+
+bench-current:  ## Run benchmark on the latest commit
+	asv run `git log --pretty=format:'%h' -n 2|tail -n1`..`git log --pretty=format:'%h' -n 2|head -n1`
 
 bench-all: ## Run benchmarks on all tagged versions
 	asv run "--no-walk --tags"
@@ -24,6 +27,9 @@ bench-all: ## Run benchmarks on all tagged versions
 
 bench-preview: ## Run the benchmark webserver
 	asv preview
+
+bench-profile-1:
+	asv profile bench_render.Suite.time_render_independent_files_html `git log --pretty=format:'%h' -n 1` -o profile
 
 clean:  ## Safely clean compiled package files, docs and test files
 	find . -name '*.pyc' -exec rm -f {} +
