@@ -72,26 +72,28 @@ class Document(object):
     #: Context processors
     #: def processor(context)
     processors = [
-        # Process header. This should be loaded first or near the very start
-        # since it loads in the values in the context (other than body)
+        # Required. Processes the document's header. This should be loaded
+        # first or near the very start since it loads in the values in the
+        # context (other than body)
         load_header,
-        # Process macros. This will convert macros in the context that have
-        # just been loaded from the header
+        # Optional. Process macros. This will convert macros in the context
+        # that have just been loaded from the header
         process_context_macros,
-        # Populate the template renderers. This needs to be done after the
-        # header is loaded.
+        # Required. Populate the template renderers. This needs to be done
+        # after the header is loaded.
         process_context_template,
-        # Process the ASTs in the context. ASTs are simply nested trees of Tag
-        # objects. After the header and context are loaded and prepared, this
-        # function converts the entry values in the context to ASTs, if it can.
+        # Required. Process the ASTs in the context. ASTs are simply nested
+        # trees of Tag objects. After the header and context are loaded and
+        # prepared, this function converts the entry values in the context to
+        # ASTs, if it can.
         process_context_asts,
-        # Process AST paragraphs. After the appropriate context values have
-        # been converted to ASTs, go through these ASTs and identify and tag
-        # paragraphs.
+        # Optional. Process AST paragraphs. After the appropriate context
+        # values have been converted to ASTs, go through these ASTs and
+        # identify and tag paragraphs.
         process_context_paragraphs,
-        # Process the AST typography. After the appropriate context values have
-        # been converted to ASTs, identify the appropriate typography elements
-        # like quotes, endashes and emdashes.
+        # Optional. Process the AST typography. After the appropriate context
+        # values have been converted to ASTs, identify the appropriate
+        # typography elements like quotes, endashes and emdashes.
         process_context_typography,
                   ]
 

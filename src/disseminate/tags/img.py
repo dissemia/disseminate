@@ -7,7 +7,6 @@ import hashlib
 from .core import Tag, TagError
 from ..attributes import set_attribute, format_tex_attributes
 from ..utils.file import mkdir_p
-from ..templates import get_template
 from .. import settings
 
 
@@ -89,7 +88,7 @@ class RenderedImg(Img):
 
     Attributes
     ----------
-    template : str, optional
+    template : template object, optional
         If specified, use this template to render the file. The contents of the
         tag will be passed as the 'body' variable.
     """
@@ -143,15 +142,10 @@ class RenderedImg(Img):
             # Use a template, if specified
             if self.template:
                 src_filepath = context.get('src_filepath', '')
-                template = get_template(src_filepath=src_filepath,
-                                        target='.tex',
-                                        template_basename=self.template)
 
                 # Get the kwargs and args to pass to the template
                 kwargs = self.template_kwargs()
-                kwargs = kwargs if kwargs is not None else dict()
                 args = self.template_args()
-                args = args if args is not None else tuple()
                 kwargs['args'] = args
 
                 content = template.render(body=content, **kwargs)
@@ -193,7 +187,7 @@ class RenderedImg(Img):
         None or dict
             A dict or keyword arguments to pass to the template.
         """
-        return None
+        return dict()
 
     def template_args(self):
         """Get the args to pass to the template
@@ -207,4 +201,4 @@ class RenderedImg(Img):
             A tuple of arguments to pass to the template as the 'args'
             parameter/variable.
         """
-        return None
+        return tuple()

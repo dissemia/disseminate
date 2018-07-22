@@ -107,7 +107,7 @@ class BaseContext(dict):
         initial_values = self['_initial_values']
         self.update(**initial_values)
 
-    def is_valid(self, keys=None, must_exist=True):
+    def is_valid(self, *keys, must_exist=True):
         """Validate the entries in the context dict.
 
         This function checks that the keys denoted by the validate_types
@@ -131,9 +131,10 @@ class BaseContext(dict):
             True if the context is valid.
             False if the context is not valid
         """
-        # Determine which keys to use
-        keys = self.validation_types.keys() if keys is None else keys
-        keys = [keys] if isinstance(keys, str) else keys  # wrap in list
+
+        # Determine which keys to use. Use all validation keys, if not keys
+        # were given
+        keys = self.validation_types.keys() if len(keys) == 0 else keys
 
         for key in keys:
             if key not in self:

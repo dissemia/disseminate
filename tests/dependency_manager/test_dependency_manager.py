@@ -8,8 +8,9 @@ import pytest
 from disseminate.dependency_manager import DependencyManager, MissingDependency
 
 # Get the template path for disseminate
-from disseminate.templates import __file__ as template_path
-template_path = os.path.split(template_path)[0]
+from disseminate import __file__ as root_path
+template_path = os.path.join(os.path.split(root_path)[0],
+                             'templates')
 
 
 def test_target_path():

@@ -4,8 +4,8 @@ Tests the initialize project method.
 import os
 import glob
 
-from disseminate.templates.init_project import (init_project, template_root,
-                                                info_file)
+from disseminate.templates.quickstart import (init_project, template_root,
+                                              info_file)
 
 
 def test_init_project(tmpdir, capsys):

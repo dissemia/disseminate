@@ -6,7 +6,7 @@ import shutil
 import glob
 import sys
 
-from ..utils.file import mkdir_p
+#from ..utils.file import mkdir_p
 
 
 # Get the current path
@@ -48,7 +48,7 @@ def init_project(dest='.', overwrite=False):
     # Create the destination directory, if needed
     if dest not in ('', '.', '/') and not os.path.isdir(dest):
         sys.stdout.write("\tcreating project directory: {}".format(dest))
-        mkdir_p(dest)
+        #mkdir_p(dest)
 
     # glob through the template project
     for i in glob.iglob(os.path.join(template_root, '**'), recursive=True):

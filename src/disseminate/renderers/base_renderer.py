@@ -15,8 +15,7 @@ module_templates_relpath = '../templates'
 
 def process_context_template(context):
     # Get the subclasses of the BaseRenderer
-    renderer_clses = sorted(BaseRenderer.__subclasses__(),
-                            key=lambda r: r.order)
+    renderer_clses = BaseRenderer.renderer_subclasses()
     renderer_cls = renderer_clses[0]
 
     # Create the template renderer.
@@ -90,6 +89,11 @@ class BaseRenderer(object):
         in which case, this question would answer False.
         """
         raise NotImplementedError
+
+    @classmethod
+    def renderer_subclasses(cls):
+        """An ordered list of BaseRenderer subclasses."""
+        return sorted(cls.__subclasses__(), key=lambda r: r.order)
 
     def template_filepaths(self, target=None):
         """A list of the template absolute (render) file paths.

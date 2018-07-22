@@ -46,12 +46,14 @@ class Eq(RenderedImg):
                         "{content}\n\\end{{{env}}}")
     default_block_env = "align*"
 
-    def __init__(self, name, content, attributes, context, block_equation=False,
-                 eq_template=None):
+    def __init__(self, name, content, attributes, context,
+                 block_equation=False):
+        assert context.is_valid('equation_renderer')
         self.block_equation = block_equation
 
         # Set the equation template for rendering pdf/svg versions of equations
-        eq_template = 'eq' if eq_template is None else eq_template
+        renderer = context['equation_renderer']
+        eq_template = renderer.get_template(target='.tex')
 
         # Get the environment type
         env = get_attribute_value(attributes, attribute_name='env',

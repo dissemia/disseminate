@@ -11,7 +11,7 @@ if __debug__:
 from disseminate import __path__
 from disseminate.document.utils import (load_root_documents, render_tree_html,
                                         translate_path)
-from .templates import get_template
+from .renderers import BaseRenderer
 from . import settings
 
 
@@ -28,9 +28,12 @@ def render(documents):
             print("{} render time {:.1f} ms".format(document,
                                                     1000. * (t1 - t0)))
 
+
 class RequestHandler(http.server.SimpleHTTPRequestHandler):
     """A specialized request handler to serve index trees, files from the
     package or files from the document (source markup) directories."""
+
+    renderer = None
 
     def do_GET(self):
         # cut off a query string
@@ -39,10 +42,12 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
 
         # The root path is special because it renders the tree
         if self.path == "/":
-            template = get_template(src_filepath="",
-                                    template_basename="tree",
-                                    target=".html",
-                                    module_only=True)
+            if self.renderer is None:
+                renderer_cls = BaseRenderer.renderer_subclasses()[0]
+                renderer = renderer_cls(context=dict(), template='server/tree',
+                                        targets=['.html'], module_only=True)
+                self.renderer = renderer
+            template = self.renderer.get_template(target=".html")
             html = template.render(body=render_tree_html(self.documents))
 
             self.send_response(200)

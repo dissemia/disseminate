@@ -133,4 +133,8 @@ def test_base_context_is_valid():
     BaseContext.validation_types = default_validation_types
 
     # 4. Alternatively, we could only check specific keys
-    assert context.is_valid(keys=('int', 'float'))
+    assert context.is_valid('int', 'float')
+
+    # 5. and missing keys
+    with pytest.raises(AssertionError):
+        assert context.is_valid('missing')

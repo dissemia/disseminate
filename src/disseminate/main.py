@@ -7,7 +7,7 @@ import argparse
 import os.path
 
 from .server import run
-from .templates import init_project
+from .templates import quickstart
 from . import settings
 
 
@@ -89,7 +89,7 @@ def main():
 
     # Handle the sub-commands
     if args.command == 'init':
-        init_project(args.destination)
+        quickstart(args.destination)
 
     if args.command == 'render':
         #tree1 = Tree(project_root=args.i, target_root=args.o,
