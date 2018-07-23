@@ -10,16 +10,16 @@ def test_path_seggregation():
 
     src_path = SourcePath('src', 'main.dm')
     assert str(src_path) == 'src/main.dm'
-    assert src_path.project_root == 'src'
-    assert src_path.subpath == 'main.dm'
+    assert str(src_path.project_root) == 'src'
+    assert str(src_path.subpath) == 'main.dm'
 
     tgt_path = TargetPath(target_root='target',
                           target='.html',
                           subpath='sub1/file.jpg')
     assert str(tgt_path) == 'target/html/sub1/file.jpg'
-    assert tgt_path.target_root == 'target'
-    assert tgt_path.target == 'html'
-    assert tgt_path.subpath == 'sub1/file.jpg'
+    assert str(tgt_path.target_root) == 'target'
+    assert str(tgt_path.target) == 'html'
+    assert str(tgt_path.subpath) == 'sub1/file.jpg'
 
 
 def test_path_immutability():
@@ -53,3 +53,48 @@ def test_path_filesystem(tmpdir):
     src_path.touch()
     assert src_path.exists()
     assert src_path.is_file()
+
+
+def test_path_empty_attributes():
+    """Test the behavior of the ProjectPath and TargetPath with empty optional
+    arguments."""
+    src_path = SourcePath(project_root='src')
+    assert str(src_path) == 'src'
+    assert str(src_path.project_root) == 'src'
+    assert src_path.subpath is None
+
+    tgt_path = TargetPath(target_root='tgt', target='html')
+    assert str(tgt_path) == 'tgt/html'
+    assert str(tgt_path.target_root) == 'tgt'
+    assert str(tgt_path.target) == 'html'
+    assert tgt_path.subpath is None
+
+
+def test_path_target_get_url():
+    """Test the get_url method for TargetPath objects."""
+    # Default
+    tgt_path = TargetPath(target_root='tgt', target='html')
+    assert tgt_path.get_url() == '/html'
+
+    tgt_path = TargetPath(target_root='tgt')
+    assert tgt_path.get_url() == ''
+
+    tgt_path = TargetPath(target_root='tgt', subpath='sub1/main.jpg')
+    assert tgt_path.get_url() == '/sub1/main.jpg'
+
+    tgt_path = TargetPath(target_root='tgt', target='.html')
+    assert tgt_path.get_url() == '/html'
+
+    # Custom
+    context = {'base_url': 'https://app.disseminate.press/{target}/{subpath}'}
+    tgt_path = TargetPath(target_root='tgt', target='html', subpath='test.html')
+    key = 'https://app.disseminate.press/html/test.html'
+    assert tgt_path.get_url(context) == key
+
+    tgt_path = TargetPath(target_root='tgt', subpath='test.html')
+    key = 'https://app.disseminate.press/test.html'
+    assert tgt_path.get_url(context) == key
+
+    tgt_path = TargetPath(target_root='tgt')
+    key = 'https://app.disseminate.press'
+    assert tgt_path.get_url(context) == key
