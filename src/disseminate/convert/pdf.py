@@ -5,6 +5,7 @@ import os
 
 from .converter import Converter
 from .arguments import PositiveIntArgument, PositiveFloatArgument
+from ..paths import TargetPath
 
 
 class Pdf2svg(Converter):
@@ -38,15 +39,25 @@ class Pdf2svg(Converter):
                           if scale is not None else None)
 
     def target_filepath(self):
-        target_basefilepath = self.target_basefilepath.value_string
+        target_basefilepath = self.target_basefilepath.value
+
+        target_root = target_basefilepath.target_root
+        target = target_basefilepath.target
+        subpath = str(target_basefilepath.subpath)
+
+        # Modify the target_basefilepath subpath string
         if self.crop:
-            target_basefilepath += '_crop'
+            subpath += '_crop'
         if self.page_no is not None:
-            target_basefilepath += '_pg' + str(self.page_no.value_string)
+            subpath += '_pg' + str(self.page_no.value)
         if self.scale is not None:
-            scale = round(float(self.scale.value_string), 0)
-            target_basefilepath += '_scale{:.1f}'.format(scale)
-        return target_basefilepath + self.target
+            scale = round(float(self.scale.value), 0)
+            subpath += '_scale{:.1f}'.format(scale)
+
+        # Add a suffix to the target_basefilepath and return
+        return TargetPath(target_root=target_root,
+                          target=target,
+                          subpath=subpath + self.target)
 
     def convert(self):
         """Convert a pdf to an svg file."""
@@ -55,17 +66,19 @@ class Pdf2svg(Converter):
         rsvg_exec = self.find_executable('rsvg-convert')
 
         # Setup temp file. The returned file path is a .svg; get the .pdf and
-        # .svg temp filepaths
+        # intermediary .svg temp filepaths
         temp_filepath_svg = self.temp_filepath()
-        temp_filepath_svg2 = os.path.splitext(temp_filepath_svg)[0] + '2.svg'
-        temp_filepath_pdf = os.path.splitext(temp_filepath_svg)[0] + '.pdf'
-        current_pdf = self.src_filepath.value_string
+        temp_filepath_svg2 = (temp_filepath_svg
+                              .with_name(temp_filepath_svg.stem + '2')
+                              .with_suffix('.svg'))
+        temp_filepath_pdf = temp_filepath_svg.with_suffix('.pdf')
+        current_pdf = self.src_filepath.value
         current_svg = temp_filepath_svg
 
         # Crop the pdf, if specified
         if self.crop and pdfcrop_exec:
             # pdfcrop infile.pdf outfile.pdf
-            args = [pdfcrop_exec, current_pdf, temp_filepath_pdf]
+            args = [pdfcrop_exec, str(current_pdf), str(temp_filepath_pdf)]
             self.run(args, raise_error=False)
 
             # Move the current pdf
@@ -73,15 +86,16 @@ class Pdf2svg(Converter):
 
         # Convert the file to svg
         # pdf2svg infile.pdf outfile.svg [page_no]
-        args = [pdf2svg_exec, current_pdf, current_svg]
+        args = [pdf2svg_exec, str(current_pdf), str(current_svg)]
         if self.page_no is not None:
-            args += self.page_no.value_string
+            args += self.page_no.value
         self.run(args, raise_error=True)
 
         if self.scale and pdfcrop_exec:
             # rsvg-convert -z {scale} -f svg -o {target_filepath}
-            args = [rsvg_exec, "-z", self.scale.value_string,
-                    "-f", "svg", "-o", temp_filepath_svg2, current_svg]
+            args = [rsvg_exec, "-z", self.scale.value,
+                    "-f", "svg", "-o",
+                    str(temp_filepath_svg2), str(current_svg)]
             self.run(args, raise_error=False)
 
             current_svg = temp_filepath_svg2

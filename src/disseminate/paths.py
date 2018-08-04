@@ -1,6 +1,8 @@
 """
 Classes for different kinds of paths.
 """
+# TODO: Implement equivalence tests.
+
 import pathlib
 import os
 import re
@@ -19,6 +21,7 @@ class PosixPath(pathlib.PosixPath):
     pass
 
 
+# TODO: change project_root to src_root
 class SourcePath(object):
     """A path for a file in the source directory that keeps track of the
     project_root and subpath.
@@ -27,7 +30,11 @@ class SourcePath(object):
     subpath = None
     __mixclass__ = None
 
-    def __new__(cls, project_root, subpath=None, *args, **kwargs):
+    def __new__(cls, project_root=None, subpath=None):
+        subpath = pathlib.Path(subpath or '')
+        assert not subpath.is_absolute(), ("The subpath argument cannot be an "
+                                           "absolute path")
+
         # Create the mixclass, if needed, this is the class with either
         # PosixPath or WindowsPath mixed in with SourcePath
         if cls.__mixclass__ is None:
@@ -35,16 +42,14 @@ class SourcePath(object):
 
             class MixClass(flavor_cls, SourcePath):
                 pass
-
+            MixClass.__name__ = cls.__name__
             cls.__mixclass__ = MixClass
 
         obj = pathlib.Path.__new__(cls.__mixclass__,
-                                   project_root,
-                                   subpath or '',
-                                   *args, **kwargs)
-        obj.project_root = (cls.__mixclass__(project_root)
-                            if project_root is not None else None)
-        obj.subpath = cls.__mixclass__(subpath) if subpath is not None else None
+                                   project_root or '',
+                                   subpath or '')
+        obj.project_root = cls.__mixclass__(project_root or '', '')
+        obj.subpath = cls.__mixclass__('', subpath or '')
         return obj
 
 
@@ -57,7 +62,11 @@ class TargetPath(object):
     subpath = None
     __mixclass__ = None
 
-    def __new__(cls, target_root, target=None, subpath=None, *args, **kwargs):
+    def __new__(cls, target_root=None, target=None, subpath=None):
+        subpath = pathlib.Path(subpath or '')
+        assert not subpath.is_absolute(), ("The subpath argument cannot be an "
+                                           "absolute path")
+
         # Create the mixclass, if needed, this is the class with either
         # PosixPath or WindowsPath mixed in with TargetPath
         if cls.__mixclass__ is None:
@@ -65,28 +74,31 @@ class TargetPath(object):
 
             class MixClass(flavor_cls, TargetPath):
                 pass
+            MixClass.__name__ = cls.__name__
             cls.__mixclass__ = MixClass
 
         if isinstance(target, str):
             target = target.strip('.')  # '.html' -> 'html'
 
         obj = pathlib.Path.__new__(cls.__mixclass__,
-                                   target_root,
+                                   target_root or '',
                                    target or '',
-                                   subpath or '',
-                                   *args, **kwargs)
-        obj.target_root = cls.__mixclass__(target_root)
-        obj.target = cls.__mixclass__(target) if target is not None else None
-        obj.subpath = cls.__mixclass__(subpath) if subpath is not None else None
-
+                                   subpath or '')
+        obj.target_root = cls.__mixclass__(target_root or '', '', '')
+        obj.target = cls.__mixclass__('', target or '', '')
+        obj.subpath = cls.__mixclass__('', '', subpath or '')
         return obj
 
     def get_url(self, context=None):
         context = context if isinstance(context, dict) else dict()
         url_str = context.get('base_url', '/{target}/{subpath}')
-        url = url_str.format(target_root=self.target_root or '',
-                             target=self.target or '',
-                             subpath=self.subpath or '')
+        target_root = str(self.target_root).strip('.')
+        target = str(self.target).strip('.')
+        subpath = str(self.subpath).strip('.')
+
+        url = url_str.format(target_root=target_root,
+                             target=target,
+                             subpath=subpath)
 
         # Cleanup the url by  and double slashes
         url = url.rstrip('/')  # stripping leading slashes

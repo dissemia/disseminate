@@ -1,10 +1,12 @@
 """
 Test the caption and reg tags.
 """
+import pathlib
+
 import pytest
 from lxml.html import etree
 
-from disseminate import Document
+from disseminate import Document, SourcePath, TargetPath
 from disseminate.ast import process_ast
 from disseminate.tags.caption import Ref
 from disseminate.labels import LabelManager, LabelNotFound
@@ -37,11 +39,13 @@ def test_naked_caption():
 def test_ref_missing(tmpdir):
     """Test the ref tag for a missing caption"""
     # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
+    src_path = pathlib.Path(tmpdir, 'src')
+    src_path.mkdir()
+    src_filepath = SourcePath(project_root=src_path, subpath='main.dm')
+    src_filepath.touch()
+    target_root = TargetPath(tmpdir)
 
-    doc = Document(src_filepath=src_filepath)
+    doc = Document(src_filepath=src_filepath, target_root=target_root)
     doc.context['figure_label'] = "Fig. {number}."
     doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
@@ -67,18 +71,21 @@ def test_ref_missing(tmpdir):
 
 def test_ref_figure_html(tmpdir):
     """Tests the generation of figure references for html"""
-    # Create a test document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
+    # Create a temporary document
+    src_path = pathlib.Path(tmpdir, 'src')
+    src_path.mkdir()
+    src_filepath = SourcePath(project_root=src_path, subpath='main.dm')
+    src_filepath.touch()
+    target_root = TargetPath(tmpdir)
 
     markup = """
     ---
     targets: html
     ---
     """
-    src_filepath.write(markup)
+    src_filepath.write_text(markup)
 
-    doc = Document(str(src_filepath), str(tmpdir))
+    doc = Document(src_filepath, target_root)
 
     # Get the label manager
     label_man = doc.context['label_manager']
@@ -92,7 +99,7 @@ def test_ref_figure_html(tmpdir):
     ref = Ref(name='ref', content=label1.id, attributes=(), context=doc.context)
     html = etree.tostring(ref.html).decode('utf-8')
 
-    key = ('<a href="/main.html#fig:image1">'
+    key = ('<a href="/html/main.html#fig:image1">'
            '<span class="label"><strong>Fig. .1</strong></span>'
            '</a>')
     assert html == key
@@ -101,11 +108,13 @@ def test_ref_figure_html(tmpdir):
 def test_ref_html(tmpdir):
     """Test the ref tag for a present caption in the html format"""
     # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
+    src_path = pathlib.Path(tmpdir, 'src')
+    src_path.mkdir()
+    src_filepath = SourcePath(project_root=src_path, subpath='main.dm')
+    src_filepath.touch()
+    target_root = TargetPath(tmpdir)
 
-    doc = Document(src_filepath=src_filepath)
+    doc = Document(src_filepath=src_filepath, target_root=target_root)
     doc.context['figure_label'] = "Fig. {label.number}."
     doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
@@ -129,7 +138,7 @@ def test_ref_html(tmpdir):
     root_html = root_html[len(root_start):]  # strip the start
     root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
 
-    key = '<a href="/main.html#test"><span class="label">Fig. 1.</span></a>'
+    key = '<a href="/html/main.html#test"><span class="label">Fig. 1.</span></a>'
 
     assert key in root_html
 
@@ -139,11 +148,13 @@ def test_ref_html(tmpdir):
 def test_ref_tex(tmpdir):
     """Test the ref tag for a present caption in the texformat"""
     # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
+    src_path = pathlib.Path(tmpdir, 'src')
+    src_path.mkdir()
+    src_filepath = SourcePath(project_root=src_path, subpath='main.dm')
+    src_filepath.touch()
+    target_root = TargetPath(tmpdir)
 
-    doc = Document(src_filepath=src_filepath)
+    doc = Document(src_filepath=src_filepath, target_root=target_root)
     label_man = doc.context['label_manager']
 
     doc.context['figure_label'] = "Fig. {label.number}"

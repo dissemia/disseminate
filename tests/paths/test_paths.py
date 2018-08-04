@@ -2,7 +2,7 @@
 Tests for Paths objects.
 """
 
-from disseminate.utils.paths import SourcePath, TargetPath
+from disseminate.paths import SourcePath, TargetPath
 
 
 def test_path_seggregation():
@@ -10,15 +10,20 @@ def test_path_seggregation():
 
     src_path = SourcePath('src', 'main.dm')
     assert str(src_path) == 'src/main.dm'
+    assert isinstance(src_path.project_root, SourcePath)
     assert str(src_path.project_root) == 'src'
+    assert isinstance(src_path.subpath, SourcePath)
     assert str(src_path.subpath) == 'main.dm'
 
     tgt_path = TargetPath(target_root='target',
                           target='.html',
                           subpath='sub1/file.jpg')
     assert str(tgt_path) == 'target/html/sub1/file.jpg'
+    assert isinstance(tgt_path.target_root, TargetPath)
     assert str(tgt_path.target_root) == 'target'
+    assert isinstance(tgt_path.target, TargetPath)
     assert str(tgt_path.target) == 'html'
+    assert isinstance(tgt_path.subpath, TargetPath)
     assert str(tgt_path.subpath) == 'sub1/file.jpg'
 
 
@@ -61,13 +66,13 @@ def test_path_empty_attributes():
     src_path = SourcePath(project_root='src')
     assert str(src_path) == 'src'
     assert str(src_path.project_root) == 'src'
-    assert src_path.subpath is None
+    assert src_path.subpath == SourcePath('.')
 
     tgt_path = TargetPath(target_root='tgt', target='html')
     assert str(tgt_path) == 'tgt/html'
     assert str(tgt_path.target_root) == 'tgt'
     assert str(tgt_path.target) == 'html'
-    assert tgt_path.subpath is None
+    assert tgt_path.subpath == TargetPath('.')
 
 
 def test_path_target_get_url():
@@ -98,3 +103,22 @@ def test_path_target_get_url():
     tgt_path = TargetPath(target_root='tgt')
     key = 'https://app.disseminate.press'
     assert tgt_path.get_url(context) == key
+
+
+def test_path_types():
+    """Test the behavior of the Path classes."""
+    src_path = SourcePath(project_root='src')
+    assert isinstance(src_path, SourcePath)
+
+    tgt_path = TargetPath(target_root='tgt', target='html')
+    assert isinstance(tgt_path, TargetPath)
+
+    # Test the equivalence of paths
+    assert SourcePath(project_root='src') == SourcePath(project_root='src')
+    assert SourcePath(project_root='src2') != SourcePath(project_root='src')
+
+
+def test_path_repr():
+    """Test the repr of Path classes."""
+    src_path = SourcePath(project_root='src')
+    assert repr(src_path) == "SourcePath('src')"

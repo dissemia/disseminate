@@ -1,7 +1,7 @@
 """
 Renderer using the Jinja2 template rendering system.
 """
-import os.path
+import pathlib
 
 import jinja2
 import jinja2.meta
@@ -27,23 +27,21 @@ class JinjaRenderer(BaseRenderer):
 
         # Load the template environment
         # Get the src_path
-        src_filepath = context.get('src_filepath', None)
-        src_path = (os.path.dirname(src_filepath) if src_filepath is not None
-                    else None)
+        src_filepath = context['src_filepath']
+        src_path = src_filepath.parent
 
         # Create the filesystem loader to search paths for the template
         fsl = None
-        if not self.module_only and src_path is not None:
+        if not self.module_only:
             # Create a jinja2 FileSystemLoader that checks the directory of
             # src_path
             # and all parent directories.
             dir_tree = []
 
             parent_dir = src_path
-            while parent_dir != "" and parent_dir != "/":
+            while str(parent_dir) != "." and str(parent_dir) != "/":
                 dir_tree.append(parent_dir)
-                parent_dir = os.path.dirname(parent_dir)
-
+                parent_dir = parent_dir.parent
             fsl = jinja2.FileSystemLoader(dir_tree)
 
         dl = jinja2.PackageLoader('disseminate', 'templates')
@@ -66,8 +64,15 @@ class JinjaRenderer(BaseRenderer):
         super(JinjaRenderer, self).__init__(context, template, targets,
                                             module_only)
 
-        # Load and cache the template objects
+        # Load and cache the template objects. This is done after calling the
+        # parent __init__ function since this function sets the 'template'
+        # attribute needed by self.load_templates()
         self.load_templates()
+
+        # Reset the paths for this renderer in the context. This must be done
+        # after the templates are loaded since the paths of the templates must
+        # be used in setting the context paths
+        self._set_context_paths(context)
 
     @property
     def mtime(self):
@@ -76,10 +81,10 @@ class JinjaRenderer(BaseRenderer):
         templates = self._jinja_templates.values()
 
         # Get all of the filenames for the templates
-        filenames = [t.filename for t in templates]
+        files = [pathlib.Path(t.filename) for t in templates]
 
         # Get the maximum modification time
-        mtimes = [os.path.getmtime(filename) for filename in filenames]
+        mtimes = [file.stat().st_mtime for file in files]
         return max(mtimes) if len(mtimes) > 0 else None
 
     @property
@@ -95,11 +100,13 @@ class JinjaRenderer(BaseRenderer):
         # For Jinja2 templates, the name for a template from the module is
         # relative to the module path directory. We will see if the filename
         # of the template matches its location in the module path
-        abs_filepath = template.filename
+        abs_filepath = pathlib.Path(template.filename).resolve()
         name = template.name
+        module_template = (self.module_path / name
+                           if name is not None else None)
 
         if (name is not None and abs_filepath is not None and
-           os.path.join(self.module_path, name) == abs_filepath):
+           module_template == abs_filepath):
             return True
         else:
             return False
@@ -125,7 +132,7 @@ class JinjaRenderer(BaseRenderer):
             name = template.name
 
             # Get the template's filename and add it to the filenames set
-            filenames.append(template.filename)
+            filenames.append(pathlib.Path(template.filename))
 
             # Load the source code for the template using the loader
             source = loader.get_source(env, name)
@@ -141,7 +148,8 @@ class JinjaRenderer(BaseRenderer):
             parent_templates = [env.get_template(parent_name)
                                 for parent_name in parent_names]
 
-            parent_filenames = [t.filename for t in parent_templates
+            parent_filenames = [pathlib.Path(t.filename)
+                                for t in parent_templates
                                 if t.filename is not None]
 
             # Append new filenames
@@ -150,12 +158,18 @@ class JinjaRenderer(BaseRenderer):
 
         return filenames
 
-    def render(self, context, target):
+    def render(self, target, context):
         self.load_templates()
 
-        # get the template
+        # get the template and render
         template = self.get_template(target)
-        return template.render(**context)
+        rendering = template.render(**context)
+
+        # add the dependencies
+        self._add_dependencies(rendering=rendering, target=target,
+                               context=context)
+
+        return rendering
 
     def is_available(self, target):
         """Is a template available for the given target?"""
@@ -189,22 +203,22 @@ class JinjaRenderer(BaseRenderer):
             # include the the template file's base filename (without extension)
             # ex: template = 'books/tufte/template',
             #     template_file1 = 'books/tufte/template.html'
-            template_file1 = "".join((template, target))
+            template_file1 = pathlib.Path(template).with_suffix(target)
 
             # Or, it may just be a path. If it's a path, use 'template' as the
             # default base filename
             # ex: template = 'books/tufte'
             #     template_file2 = 'books/tufte/template.html'
-            template_path = os.path.join(template, 'template')
-            template_file2 = "".join((template_path, target))
+            template_path = pathlib.Path(template, 'template')
+            template_file2 = template_path.with_suffix(target)
 
             # Get the template environment
             env = self._environment
 
             # Load the template and cache it in the jinja_templates
             # May raise a jinja2.TemplateNotFound exception
-            jinja_template = env.select_template([template_file1,
-                                                  template_file2])
+            jinja_template = env.select_template([str(template_file1),
+                                                  str(template_file2)])
 
             self._jinja_templates[target] = jinja_template
 

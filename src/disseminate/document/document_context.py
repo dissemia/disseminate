@@ -6,6 +6,7 @@ import weakref
 from ..context import BaseContext
 from ..labels import LabelManager
 from ..dependency_manager import DependencyManager
+from ..paths import SourcePath, TargetPath
 from .. import settings
 
 
@@ -19,9 +20,9 @@ class DocumentContext(BaseContext):
     #: None types are not check for the type of object stored in that entry.
     validation_types = {
         'document': None,
-        'src_filepath': str,
-        'project_root': str,
-        'target_root': str,
+        'src_filepath': SourcePath,
+        'project_root': SourcePath,
+        'target_root': TargetPath,
         'paths': list,
         'label_manager': LabelManager,
         'dependency_manager': DependencyManager,
@@ -39,7 +40,7 @@ class DocumentContext(BaseContext):
         # A subdocument shouldn't have the same subdocument 'include' entries
         # as the parent. Otherwise, documents could be included multiple times
         # or they may not be found.
-        'include',
+        'include', 'includes',
         # Each document should have a unique title
         'title',
         # Each document should have its own short title

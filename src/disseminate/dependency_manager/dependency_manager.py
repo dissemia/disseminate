@@ -1,30 +1,18 @@
 """
 A manager for dependencies.
 """
+import pathlib
 import os
 from collections import namedtuple
 import urllib.parse
+import logging
 
 import regex
 
 from ..convert import convert
 from ..attributes import re_attrs, kwargs_attributes
-from ..utils.file import mkdir_p
+from ..paths import SourcePath, TargetPath
 from .. import settings
-
-# Get the template path for the disseminate project
-current_filepath = os.path.realpath(__file__)
-current_path = os.path.split(current_filepath)[0]
-template_path = os.path.realpath(os.path.join(current_path, '../templates'))
-
-
-#: regex for processing <link> tags in html headers
-_re_link = regex.compile(r'\<[\n\s]*link[\n\s]+'
-                         r'(?P<contents>[^\>]+)'
-                         r'\>')
-
-#: regex for processing html tag attributes
-_re_attrs = re_attrs
 
 
 class MissingDependency(Exception):
@@ -32,34 +20,25 @@ class MissingDependency(Exception):
     pass
 
 
-class FileDependency(namedtuple('FileDependency', ['src_filepath',
-                                                   'target_filepath',
-                                                   'dep_filepath',
-                                                   'document_src_filepath',
+class FileDependency(namedtuple('FileDependency', ['dep_filepath',
+                                                   'dest_filepath',
                                                    ])):
     """A dependency on a file.
 
     Attributes
     ----------
-    src_filepath : str
-        The actual (render) path of the existing dependency file
+    dep_filepath : :obj:`disseminate.SourcePath`
+        The path of the existing dependency file.
         ex: 'src/media/images/fig1.png'
-    target_filepath: str
-        The actual (render) path for the existing dependency file for the
-        target.
+    dest_filepath: :obj:`disseminate.TargetPath`
+        The destination path for the dependency file to be placed in a
+        document's target directory.
         ex: 'html/media/images/fig1.png
-    dep_filepath : str
-        The path of the file relative to the target_path
-        ex: 'media/images/fig1.png'
-    document_src_filepath : str or None
-        The src_filepath (render path) of the document source markup file that
-        owns the dependency.
-        ex: 'src/chapter2/introduction.dm'
     """
-    @property
-    def url(self):
+
+    def get_url(self, context=None):
         """Produce the url for this dependency."""
-        return settings.dep_root_url + self.dep_filepath
+        return self.dest_filepath.get_url(context)
 
 
 class DependencyManager(object):
@@ -68,15 +47,22 @@ class DependencyManager(object):
     Keep track, convert and manage dependencies (such as files) needed to
     construct a target.
 
+    .. note: The dependency manager doesn't keep a reference to a context since
+             many documents and subdocuments in a project use the same
+             dependency manager, and each document has its own context.
+
     Parameters
     ----------
-    project_root : str
+    project_root : :obj:`disseminate.SourcePath`
         The root directory for the document (source markup) files. (i.e. the
         input directory)
         ex: 'src/'
-    target_root : str
+    target_root : :obj:`disseminate.TargetPath`
         The target directory for the output documents (i.e. the output
         directory). The final output directory also depends on the
+    create_dir : bool, optional
+        If True, the dependency manager will create directories in the target
+        that do not exist.
 
     Attributes
     ----------
@@ -88,316 +74,438 @@ class DependencyManager(object):
 
     project_root = None
     target_root = None
+    create_dirs = None
     dependencies = None
 
-    def __init__(self, project_root, target_root):
+    def __init__(self, project_root, target_root,
+                 create_dirs=settings.create_dirs):
+        assert isinstance(project_root, SourcePath)
+        assert isinstance(target_root, TargetPath)
+
         self.project_root = project_root
         self.target_root = target_root
+        self.create_dirs = create_dirs
         self.dependencies = dict()
 
-    def target_path(self, target):
-        """The final render path for the given target."""
-        return os.path.join(self.target_root, target.strip('.'))
-
+    @property
     def cache_path(self):
-        """Return the render path for the cache directory."""
-        return os.path.join(self.target_root, settings.cache_dir)
+        cache_path = SourcePath(project_root=self.target_root,
+                                subpath=settings.cache_path)
+        cache_path.mkdir(parents=True, exist_ok=True)
+        return cache_path
 
-    def get_dependency(self, target, src_filepath):
-        """Return the FileDependency for a given target and src_filepath."""
-        # Get the render_path for the src_filepath
-        _, render_path = self.search_file(src_filepath)
-
-        # Find the matching render_path
-        dependencies = filter(lambda x: x.src_filepath == render_path,
-                              self.dependencies[target])
-
-        # Get the dependency's dep_path, if a match was found
-        try:
-            dependency = next(dependencies)
-            return dependency
-        except StopIteration:
-            msg = "Could not find dependency file '{}'"
-            raise MissingDependency(msg.format(src_filepath))
-
-    def search_file(self, path, raise_error=True):
-        """Find a file for the given path.
-
-        The file will be searched in the following order:
-            - as a render path 'src/media/images/fig1.png'
-            - relative to the project_root 'media/images/fig1.png'
-            - in the cache_dir
-            - in the disseminate module templates.
+    def add_dependency(self, dep_filepath, target, context, attributes=None):
+        """Add a file dependency to the target directory of a rendered
+        document.
 
         Parameters
         ----------
-        path : str
-            The path of the file to be searched. This may either me a path
-            relative to the project_root, a render path or a path in the
-            disseminate module templates.
-        raise_error : bool, optional
-            If True (default), a MissingDependency exception is raised if the
-            file couldn't be found.
+        dep_filepath : :obj:`pathlib.Path` or :obj:`disseminate.SourcePath`
+            A subpath to the dependency file. An absolute path cannot work
+            since the subpath cannot be determined. (If an absolute path was
+            used, the whole directory tree leading up to the dependency file
+            would be created in the target directory)
+        target : str
+            The extension for the target to add this dependency for. ex: .html,
+            .tex
+        context : :obj:`disseminate.document.DocumentContext`
+            The context for a document to render.
 
         Returns
         -------
-        (dep_path, render_path) or False
-            If the file is found, a dep_path and render_path is returned.
-            If not, False is returned.
+        dependency : set of :obj:`disseminate.dependency_manager.FileDependency`
+            The created FileDependency object(s).
+            A set is returned, rather than a single object, because the file
+            may contain other dependencies that must be added. Examples include
+            html files that reference local css files.
 
         Raises
         ------
-        MissingDependency
-            Raised when a file was not found (and raise_error is True).
+        FileNotFoundError
+            Raised if the file identified by path could not be found in the
+            paths given by context.
         """
-        if isinstance(path, str):
-            # Search as a render path
-            if os.path.exists(path):
-                dep_path = os.path.relpath(path, self.project_root)
-                return dep_path, path
+        assert context.is_valid('src_filepath', 'paths')
+        src_filepath = context['src_filepath']
 
-            # Search relative to the project_root
-            path1 = os.path.join(self.project_root, path)  # generate render path
-            if os.path.exists(path1):
-                dep_path = os.path.relpath(path1, self.project_root)
-                return dep_path, path1
+        # Convert the dep_filepath, if needed
+        if not isinstance(dep_filepath, SourcePath):
+            dep_filepath = pathlib.Path(dep_filepath)
+            dep_filepath = SourcePath(project_root=dep_filepath.parent,
+                                      subpath=dep_filepath.name)
 
-            # Search the cache_dir
-            path2 = os.path.join(self.cache_path(), path)
-            if os.path.exists(path2):
-                dep_path = os.path.relpath(path2, self.cache_path())
-                return dep_path, path2
+        deps = set()
 
-            # Search in the module
-            path3 = os.path.join(template_path, path)  # generate render path
-            if os.path.exists(path3):
-                dep_path = os.path.relpath(path3, template_path)
-                return dep_path, path3
+        # Workup the dep_filepath
+        path = None
+        if dep_filepath.is_file():
+            # Source files can be used, since they have already parsed the
+            # subpath of the file. However, the file must exist.
+            path = dep_filepath
+        else:
+            # Otherwise, try to find the dep_filepath by searching the paths
+            # in the context
+            subpath = pathlib.Path(dep_filepath)
+            basepaths = context['paths']
+            path_func = lambda b, s: SourcePath(project_root=b, subpath=s)
+            path = self._search_file(path_func=path_func, basepaths=basepaths,
+                                     subpaths=subpath)
 
-        if raise_error:
-            msg = "Could not find dependency file '{}'"
-            raise MissingDependency(msg.format(path))
-        return False
+        # Raise an exception if the file was not found
+        if path is None:
+            msg = "The file '{}' was not found.".format(str(dep_filepath))
+            raise FileNotFoundError(msg)
 
-    def copy_file(self, target, src_filepath, dep_filepath):
-        """Copy or link a file for the given (render) src_filepath to the
-        target's directory (dep_filepath).
+        # See if a dest_filepath already exists
+        tracked_deps = settings.tracked_deps[target]
+        path_func = lambda b, s: TargetPath(target_root=self.target_root,
+                                            target=target,
+                                            subpath=path.subpath.with_suffix(s))
+        dest_filepath = self._search_file(path_func=path_func,
+                                          basepaths='',
+                                          subpaths=tracked_deps)
+
+        # If a valid dest_filepath was not found, the file needs to be copied
+        # or converted
+        if dest_filepath is None:
+            dest_filepath = self._add_file(dep_filepath=path, target=target,
+                                           attributes=attributes)
+
+        # See if a valid dest_filepath has been found or created. If so, create
+        # a dependency.
+        if dest_filepath is not None:
+            dep = FileDependency(dep_filepath=path,
+                                 dest_filepath=dest_filepath)
+
+            # Add the dependency to the returned deps set
+            deps.add(dep)
+
+            # See if the added file corresponds to an extension that can be
+            # scraped. This may add additional dependencies
+
+            # dep_ext = path.suffix.strip('.')
+            # scrape_method = getattr(self, 'scrape_' + dep_ext, None)
+            # if scrape_method is not None:
+            #     deps.add(scrape_method(path, target=target, context=context))
+
+            # Add the dependendencies to the manager's dependencies dict
+            s = self.dependencies.setdefault(src_filepath, set())
+            s |= deps
+
+        return deps
+
+    def _search_file(self, path_func, basepaths, subpaths):
+        """Search for files given a path function and a combination of
+        base paths and subpaths. The first valid file is returned
+
+        Parameters
+        ----------
+        path_func : function
+            A function that takes (basepath, subpath) arguments to create a
+            new path. This path will be checked to see if the file exists.
+        basepaths : list of :obj:`pathlib.Path` or :obj:`pathlib.Path` or str
+            One or more starting parts of a path.
+        subpaths : list of :obj:`pathlib.Path` or :obj:`pathlib.Path` or str
+            One or more ending parts of a path.
 
         Returns
         -------
-        src_filepath : str
-            The string for the src_filepath (a render path) for the original
-            file.
-        dep_path : str
-            The string for the file to copy or link in the target_root.
+        path : :obj:`pathlib.Path` or None
+            A path pointing to a valid file.
+            None is returned if no valid file is found.
         """
-        # Get the target src_filepath in a render src_filepath
-        target_filepath = os.path.join(self.target_path(target), dep_filepath)
+        # Convert to lists, if these are strings or path objects.
+        basepaths = ([basepaths] if not isinstance(basepaths, list)
+                     else basepaths)
+        subpaths = [subpaths] if not isinstance(subpaths, list) else subpaths
 
-        # Make sure the target's dep_filepath exists
-        mkdir_p(target_filepath)
+        # Iterate over the combinations of basepaths and subpaths
+        for basepath in basepaths:
+            for subpath in subpaths:
+                # Get the path from the path_func and see if it's a file
+                path = path_func(basepath, subpath)
+                if path.is_file():
+                    return path
 
-        # copy the file at src_filepath to the target_path
+        # No valid filepath was found.
+        return None
+
+    def _add_file(self, dep_filepath, target, attributes=None):
+        """Add the src_filepath dependency to target_filepath.
+
+        This function checks to see if the document target is compatible with
+        the file format given in src_filepath. If it is the file will be copied
+        (hard linked) to the target_root. If it isn't the function will try to
+        convert it to a file type that is compatible with target. In either
+        case, the subpath of the src_filepath will be recreated in the target
+        directory.
+
+        Parameters
+        ----------
+        dep_filepath : :obj:`disseminate.SourcePath`
+            The path of the dependency file.
+        target : str
+            The type of document target for which this dependency is created.
+
+        Returns
+        -------
+        dest_filepath : str
+            The destination filepath (:obj:`disseminate.TargetPath`) for the
+            copied file
+        """
+        target_root = self.target_root
+        src_suffix = dep_filepath.suffix
+
+        # See if the extension of the src_filepath is compatible with an
+        # extension that can be used with this target. If so, add it directly.
+        if src_suffix in settings.tracked_deps[target]:
+            # The file can be used directly with the given source_filepath
+            # extension. Simply copy it over.
+            dest_filepath = TargetPath(target_root=target_root,
+                                       target=target,
+                                       subpath=dep_filepath.subpath)
+
+            self._copy_file(dep_filepath=dep_filepath,
+                            dest_filepath=dest_filepath)
+
+        else:
+            # The file cannot be used directly for the given target. See if it
+            # can be converted.
+            dest_filepath = self._convert_file(dep_filepath=dep_filepath,
+                                               target=target,
+                                               attributes=attributes)
+
+        return dest_filepath
+
+    def _copy_file(self, dep_filepath, dest_filepath):
+        """Copy or link a file for the given source_filepath to the given
+        target_filepath.
+
+        Parameters
+        ----------
+        dep_filepath : :obj:`disseminate.SourcePath`
+            The path of the dependency file, either in the project_root or in the
+            module.
+        dest_filepath : :obj:`disseminate.TargetPath`
+            The path of the file to copy/link to.
+
+        Returns
+        -------
+        dest_filepath : str
+            The target filepath (:obj:`disseminate.TargetPath`) for the copied
+            file
+        """
+        assert isinstance(dep_filepath, SourcePath)
+        assert isinstance(dest_filepath, TargetPath)
+
+        # Do nothing if the target file is already copied
+        if (dest_filepath.is_file() and
+            (dest_filepath.stat().st_mtime >=
+             dep_filepath.stat().st_mtime)):
+            return None
+
+        # In this case, the target file needs to be copied.
+        # First, create the target directory
+        if self.create_dirs:
+            target_parent = dest_filepath.parent
+            target_parent.mkdir(parents=True, exist_ok=True)
+
+        # The link or copy the file
+        logging.debug("Linking file '{}'".format(str(dep_filepath)))
         try:
-            os.link(src_filepath, target_filepath)
+            os.link(str(dep_filepath), str(dest_filepath))
         except FileExistsError:
-            os.remove(target_filepath)
-            os.link(src_filepath, target_filepath)
+            # If the file exists, the link will fail. Remove it first.
+            os.remove(str(dest_filepath))
+            os.link(str(dep_filepath), str(dest_filepath))
 
-        return target_filepath
+    def _convert_file(self, dep_filepath, target, attributes=None):
+        target_root = self.target_root
 
-    def add_file(self, targets, path, document_src_filepath=None,
-                 attributes=None):
-        """Add a file dependency for the given path.
+        # Get a listing a valid extensions to convert the source_filepath to
+        # for the given target
+        convert_targets = settings.tracked_deps[target]
 
-        The file will be converted to a suitable formant for the target, if
-        needed.
+        # Format the attributes to a kwargs dict for this target,
+        # suitable for the convert function
+        if attributes:
+            kwargs = kwargs_attributes(attrs=attributes, target=target)
+        else:
+            kwargs = dict()
 
-        .. note:: Files are added when generating the target document. (i.e.
-                  after the AST is created.)
+        # Convert the file
+        base_subpath = dep_filepath.subpath.with_suffix('')  # strip ext
+        dest_basefilepath = TargetPath(target_root=target_root,
+                                       target=target,
+                                       subpath=base_subpath)
+        new_path = convert(src_filepath=dep_filepath,
+                           target_basefilepath=dest_basefilepath,
+                           targets=convert_targets, **kwargs)
+        return new_path
+
+    #: regex for processing <link> tags in html headers
+    _re_html_link = regex.compile(r'\<[\n\s]*link[\n\s]+'
+                                  r'(?P<contents>[^\>]+)'
+                                  r'\>')
+
+    def scrape_html(self, html, target, context):
+        """Scrape an html string for dependencies, like css and js files.
 
         Parameters
         ----------
-        targets : list of str
-            The targets for the dependency. ex: ['.html', '.tex']
-        path : str
-            The path of the dependency file. The file will be searched using
-            :meth:`DependencyManager.search_file`.
-        document_src_filepath: : str, optional
-            The src_filepath (render path) of the document source markup files
-            that own the dependency.
-        attributes : tuple
-            The attributes of a tag.
+        html : str or :obj:`pathlib.Path`
+            Either a path to an html file or a string in html format.
+        target : str
+            The type of document target for which this dependency is created.
+        context : :obj:`disseminate.document.DocumentContext`
+            The context for a document to render.
 
         Returns
         -------
-        targets_added : list of str
-            A list of targets for which the dependency was added.
+        dependencies : list of :obj:`disseminate.dependency_manager.FileDependency`
+            A list of the newly created dependencies
 
         Raises
         ------
         MissingDependency
             Raised when a file was not found.
         """
-        targets_added = []
+        assert context.is_valid('paths')
 
-        # Only go through targets that have tracked dependencies
-        for target in [t for t in targets if t in settings.tracked_deps]:
-            # Find the file
-            dep_path, render_path = self.search_file(path, raise_error=True)
-
-            # Get the extension for the file's path
-            ext = os.path.splitext(path)[1]
-
-            # See if the extension is compatible with an extension that can
-            # be used with this target. If so, add it directly.
-            if ext in settings.tracked_deps[target]:
-                # Link the file
-                target_path = self.copy_file(target=target,
-                                             src_filepath=render_path,
-                                             dep_filepath=dep_path)
-
-                # Add the dependency
-                doc_src_filepath = document_src_filepath
-                dep = FileDependency(src_filepath=render_path,
-                                     target_filepath=target_path,
-                                     dep_filepath=dep_path,
-                                     document_src_filepath=doc_src_filepath)
-                self.dependencies.setdefault(target, set()).add(dep)
-
-                # Add it to the targets_added returned
-                targets_added.append(target)
-
-            # If the file cannot be used directly, try converting it. This
-            # will change its dep_filepath and target_filepath, since the
-            # extension (and possibly the filename) will change.
-            else:
-                # Get the suitable paths for the conversion. 'path' is the
-                # location of the file (render path) and the target_basefilepath
-                # is the path we want the final file to be created in (in
-                # render path)
-                target_filepath = os.path.join(self.target_path(target),
-                                               dep_path)
-
-                # Strip the extension to make the target_basefilepath. The
-                # directories must be created as well
-                mkdir_p(target_filepath)
-                target_basefilepath = os.path.splitext(target_filepath)[0]
-
-                # The targets for the convert function are the allowed
-                # extensions for this target.
-                convert_targets = settings.tracked_deps[target]
-
-                # Format the attributes to a kwargs dict for this target,
-                # suitable for the convert function
-                if attributes:
-                    kwargs = kwargs_attributes(attrs=attributes, target=target)
-                else:
-                    kwargs = dict()
-
-                # Convert the file
-                new_path = convert(src_filepath=render_path,
-                                   target_basefilepath=target_basefilepath,
-                                   targets=convert_targets, **kwargs)
-
-                # The new_path is a render path for the newly generated file
-                # We will need to get the dep_path for this path.
-                if new_path:
-                    dep_path = os.path.relpath(new_path,
-                                               self.target_path(target))
-
-                    # add the dependency
-                    doc_src_filepath = document_src_filepath
-                    dep = FileDependency(src_filepath=render_path,
-                                         target_filepath=new_path,
-                                         dep_filepath=dep_path,
-                                         document_src_filepath=doc_src_filepath)
-                    self.dependencies.setdefault(target, set()).add(dep)
-
-                    # Add it to the targets_added returned
-                    targets_added.append(target)
-
-        return targets_added
-
-    def reset(self, document_src_filepath=None):
-        """Reset the dependencies tracked by the DependencyManager.
-
-        Parameters
-        ----------
-        document_src_filepath : str or None
-            If specified, remove all dependencies for the given src_filepath of
-            a document markup source file for all targets.
-            If not specified (None), all dependencies are removed.
-        """
-        if isinstance(document_src_filepath, str):
-            # Go through all targets
-            for deps in self.dependencies.values():
-                # Find the dependencies that match the document_src_filepath
-                search = (lambda x: x.document_src_filepath ==
-                          document_src_filepath)
-                deps_to_remove = set(filter(search, deps))
-
-                # Remove dependencies
-                deps.difference_update(deps_to_remove)
-
-            # Remove targets with empty dependency sets
-            keys = list(self.dependencies.keys())
-            for key in keys:
-                if len(self.dependencies[key]) == 0:
-                    del self.dependencies[key]
-
-            # TODO: optional remove the untracked files
-        else:
-            self.dependencies.clear()
-
-    def add_html(self, html):
-        """Add dependencies, like css and js files, from html.
-
-        Parameters
-        ----------
-        html : str
-            Either a path to an html file (a render path) or a string in html
-            format.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        MissingDependency
-            Raised when a file was not found.
-        """
-        # Load the html string
-        if os.path.exists(html.strip()):
-            with open(html, 'r') as f:
-                html_str = f.read()
-        else:
-            html_str = html
+        deps = set()
 
         # Find link tags and parse their attributes
-        for m in _re_link.finditer(html_str):
+        matches = self._scrape_file(string=html, regexpr=self._re_html_link,
+                                    context=context)
+        for m in matches:
             # Parse the attributes of the link tag
             contents = m.groupdict()['contents']
 
             # Match the attributes, and find files
             attrs = dict()
-            for n in _re_attrs.finditer(contents):
+            for n in re_attrs.finditer(contents):
                 d = n.groupdict()
                 if isinstance(d['value'], str):
                     attrs[d['key']] = d['value'].strip('"').strip("'").strip()
 
             # Check to see if a 'href' attribute is present and that it doesn't
-            # point to a url. If so, skip this link
+            # point to a url--urls aren't file dependencies. If so, skip this
+            # link.
             if ('href' not in attrs or
-                urllib.parse.urlparse(attrs['href']).scheme != ''):
+                    urllib.parse.urlparse(attrs['href']).scheme != ''):
                 continue
 
             # Get the filepath. The href may have a leading '/', and this should
             # be stripped
             path = (attrs['href'] if not attrs['href'].startswith('/') else
-                    attrs['href'][1:])
+            attrs['href'][1:])
 
             # Now see if it can be found and added. This will only add files
             # that are in settings.tracked_deps.
-            self.add_file(targets=['.html', ], path=path)
+            dep = self.add_dependency(dep_filepath=path, target=target,
+                                      context=context)
+            deps |= dep
+
+        return deps
+
+    #: regex for processing @import tags in css
+    _re_css_import = regex.compile(r'@import\s*'
+                                   r'[^"\']*'
+                                   r'(["\'])'
+                                   r'(?P<link>[^"\']+)'
+                                   r'(\1)')
+
+    def scrape_css(self, css, target, context):
+        """Scrape a css string for dependencies, like css files.
+
+        Parameters
+        ----------
+        css : str or :obj:`pathlib.Path`
+            Either a path to a css file or a string in css format.
+        target : str
+            The type of document target for which this dependency is created.
+        context : :obj:`disseminate.document.DocumentContext`
+            The context for a document to render.
+
+        Returns
+        -------
+        dependencies : list of :obj:`disseminate.dependency_manager.FileDependency`
+            A list of the newly created dependencies
+
+        Raises
+        ------
+        MissingDependency
+            Raised when a file was not found.
+        """
+        assert context.is_valid('paths')
+
+        deps = set()
+
+        # Find import commands
+        matches = self._scrape_file(string=css, regexpr=self._re_css_import,
+                                    context=context)
+        for m in matches:
+            # Parse the attributes of the link tag
+            contents = m.groupdict()['link']
+
+            # See if it's a url. If so, don't add it as a file dependency.
+            parsed = urllib.parse.urlparse(contents)
+            if parsed.scheme != '':
+               continue
+
+            # Get the path of the file, a strip the leading '/' if present.
+            path = (parsed.path if not parsed.path.startswith('/')
+                    else parsed.path[1:])
+
+            # Now see if it can be found and added. This will only add files
+            # that are in settings.tracked_deps.
+            dep = self.add_dependency(dep_filepath=path, target=target,
+                                      context=context)
+            deps |= dep
+
+        return deps
+
+    def _scrape_file(self, string, regexpr, context):
+        """Parse a filename specified by string, or the string itself, for
+        matches of the given regex.
+
+        Parameters
+        ----------
+        string : str or :obj:`pathlib.Path`
+            Either a path to a text file or a string to parse.
+        regexpr : generator of :obj:`Match`
+            A generator of regex match objects.
+        """
+        # Load the string either as a file with a filename or the string itself.
+        if isinstance(string, pathlib.Path):
+            # It's a path object. Use it directly
+            parse_str = string.read_text()
+        else:
+            # It's a filepath. Find the file and load its text.
+            basepaths = context['paths']
+            subpath = string.split('\n', 1)[0]
+
+            path_func = lambda b, s: SourcePath(project_root=b, subpath=s)
+            path = self._search_file(path_func=path_func, basepaths=basepaths,
+                                     subpaths=subpath)
+
+            # If it's a valid file, 'path' is not None. If it's not a valid
+            # file, try parsing the string itself.
+            parse_str = path.read_text() if path is not None else string
+
+        return regexpr.finditer(parse_str)
+
+    def reset(self, src_filepath=None):
+        """Reset the dependencies tracked by the DependencyManager.
+
+        Parameters
+        ----------
+        src_filepath : str or None
+            If specified, remove all dependencies for the given document
+            src_filepath.
+            If not specified (None), all dependencies are removed.
+        """
+        if src_filepath in self.dependencies:
+            del self.dependencies[src_filepath]
+        else:
+            self.dependencies.clear()

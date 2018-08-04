@@ -3,6 +3,7 @@ Context objects.
 """
 import logging
 from copy import deepcopy
+from pprint import pprint
 
 from ..utils.classes import all_parent_attributes
 
@@ -157,3 +158,7 @@ class BaseContext(dict):
                     return False
 
         return True
+
+    def print(self):
+        """Pretty print this context"""
+        pprint(self)

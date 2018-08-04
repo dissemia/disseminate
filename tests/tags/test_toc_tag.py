@@ -3,7 +3,7 @@ Test the TOC tag.
 """
 from lxml.builder import E
 
-from disseminate import Document
+from disseminate import Document, SourcePath, TargetPath
 from disseminate.tags.toc import Toc
 from disseminate.utils.tests import strip_leading_space
 
@@ -11,9 +11,10 @@ from disseminate.utils.tests import strip_leading_space
 def test_toc_changes(tmpdir):
     """Test the generation of tocs when the label manager changes."""
     # Setup a test document
-    src_path = tmpdir.join('src')
+    src_path = SourcePath(project_root=tmpdir, subpath='src')
     src_path.mkdir()
-    src_filepath = src_path.join('test.dm')
+    src_filepath = SourcePath(project_root=src_path, subpath='test.dm')
+    target_root = TargetPath(tmpdir)
 
     markup = """
     ---
@@ -21,11 +22,14 @@ def test_toc_changes(tmpdir):
     ---
     @section[id=heading1]{My first heading}
     """
-    src_filepath.write(strip_leading_space(markup))
+    src_filepath.write_text(strip_leading_space(markup))
 
     # Create the document and render
-    doc = Document(src_filepath=src_filepath, target_root=str(tmpdir))
+    doc = Document(src_filepath=src_filepath, target_root=target_root)
     doc.render()
+
+    # Make sure the 'base_url' entry matches a basic format.
+    doc.context['base_url'] = '/{target}/{subpath}'
 
     # Match the abbreviated toc
     toc = Toc(name='toc', content='all documents abbreviated',
@@ -33,13 +37,13 @@ def test_toc_changes(tmpdir):
               context=doc.context)
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/test.html">
+    <a href="/html/test.html">
       <span class="label">my first file</span>
     </a>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/test.html#heading1">
+      <a href="/html/test.html#heading1">
         <span class="label"><span class="number">1.</span> My first heading</span>
       </a>
     </li>
@@ -56,7 +60,7 @@ def test_toc_changes(tmpdir):
     @section[id=heading1]{My first heading}
     @subsection[id=subheading1]{My first sub-heading}
     """
-    src_filepath.write(strip_leading_space(markup))
+    src_filepath.write_text(strip_leading_space(markup))
     doc.render()
 
     # Match the abbreviated toc
@@ -65,19 +69,19 @@ def test_toc_changes(tmpdir):
               context=doc.context)
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/test.html">
+    <a href="/html/test.html">
       <span class="label">my first file</span>
     </a>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/test.html#heading1">
+      <a href="/html/test.html#heading1">
         <span class="label"><span class="number">1.</span> My first heading</span>
       </a>
     </li>
     <ul class="toc-level-3">
       <li>
-        <a href="/test.html#subheading1">
+        <a href="/html/test.html#subheading1">
           <span class="label"><span class="number">1.1.</span> My first sub-heading</span>
         </a>
       </li>
@@ -92,14 +96,18 @@ def test_toc_changes(tmpdir):
 
 def test_toc_heading_html(tmpdir):
     """Test the generation of tocs from headings for html"""
-    # Setup paths
-    target_root = str(tmpdir)
-
     # The 'tests/tags/toc_example1' directory contains one markup in the root
     # directory, file1.dm, and two files, file21.dm and file22.dm, in the
     # 'sub' sub-directory. file1.dm includes file21.dm and file22.dm
-    doc = Document('tests/tags/toc_example1/file1.dm',
-                   target_root=target_root)
+    # Setup paths
+    src_filepath = SourcePath(project_root='tests/tags/toc_example1',
+                              subpath='file1.dm')
+    target_root = TargetPath(tmpdir)
+
+    doc = Document(src_filepath, target_root)
+
+    # Make sure the 'base_url' entry matches a basic format.
+    doc.context['base_url'] = '/{target}/{subpath}'
 
     # Create a toc for all headings
     toc = Toc(name='toc', content='all headings', attributes=tuple(),
@@ -107,53 +115,53 @@ def test_toc_heading_html(tmpdir):
 
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/file1.html#sec:heading-1">
+    <a href="/html/file1.html#sec:heading-1">
       <span class="label"><span class="number">1.</span> Heading 1</span>
     </a>
   </li>
   <li>
-    <a href="/file1.html#sec:heading-2">
+    <a href="/html/file1.html#sec:heading-2">
       <span class="label"><span class="number">2.</span> Heading 2</span>
     </a>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/file1.html#subsec:sub-heading-2-1">
+      <a href="/html/file1.html#subsec:sub-heading-2-1">
         <span class="label"><span class="number">2.1.</span> sub-Heading 2.1</span>
       </a>
     </li>
     <li>
-      <a href="/file1.html#subsec:sub-heading-2-2">
+      <a href="/html/file1.html#subsec:sub-heading-2-2">
         <span class="label"><span class="number">2.2.</span> sub-Heading 2.2</span>
       </a>
     </li>
     <ul class="toc-level-3">
       <li>
-        <a href="/file1.html#subsubsec:sub-sub-header-2-2-1">
+        <a href="/html/file1.html#subsubsec:sub-sub-header-2-2-1">
           <span class="label"><span class="number">2.2.1.</span> sub-sub-Header 2.2.1</span>
         </a>
       </li>
     </ul>
     <li>
-      <a href="/file1.html#subsec:sub-heading-2-3">
+      <a href="/html/file1.html#subsec:sub-heading-2-3">
         <span class="label"><span class="number">2.3.</span> sub-Heading 2.3</span>
       </a>
     </li>
   </ul>
   <li>
-    <a href="/file1.html#sec:heading-3">
+    <a href="/html/file1.html#sec:heading-3">
       <span class="label"><span class="number">3.</span> Heading 3</span>
     </a>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/file1.html#subsubsec:sub-sub-header-3-1-1">
+      <a href="/html/file1.html#subsubsec:sub-sub-header-3-1-1">
         <span class="label"><span class="number">3.1.</span> sub-sub-header 3.1.1</span>
       </a>
     </li>
   </ul>
   <li>
-    <a href="/file1.html#sec:heading-4">
+    <a href="/html/file1.html#sec:heading-4">
       <span class="label"><span class="number">4.</span> Heading 4</span>
     </a>
   </li>
@@ -165,8 +173,12 @@ def test_toc_heading_html(tmpdir):
     # file1.dm, file2.dm and file3.dm. The 'file1.dm' includes 'file2.dm' and
     # 'file3.dm' The 'file2.dm' has a header and a sub-header.
     # This test has headers with id anchors specified.
-    doc = Document('tests/tags/toc_example2/file1.dm',
-                   target_root=target_root)
+    src_filepath = SourcePath(project_root='tests/tags/toc_example2',
+                              subpath='file1.dm')
+    doc = Document(src_filepath, target_root)
+
+    # Make sure the 'base_url' entry matches a basic format.
+    doc.context['base_url'] = '/{target}/{subpath}'
 
     # Create a toc for all headings
     toc = Toc(name='toc', content='all headings', attributes=tuple(),
@@ -174,24 +186,24 @@ def test_toc_heading_html(tmpdir):
 
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/file1.html#heading-1">
+    <a href="/html/file1.html#heading-1">
       <span class="label"><span class="number">1.</span> Heading 1</span>
     </a>
   </li>
   <li>
-    <a href="/file2.html#heading-2">
+    <a href="/html/file2.html#heading-2">
       <span class="label"><span class="number">1.</span> Heading 2</span>
     </a>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/file2.html#subheading-2">
+      <a href="/html/file2.html#subheading-2">
         <span class="label"><span class="number">1.1.</span> sub-Heading 2</span>
       </a>
     </li>
   </ul>
   <li>
-    <a href="/file3.html#heading-3">
+    <a href="/html/file3.html#heading-3">
       <span class="label"><span class="number">1.</span> Heading 3</span>
     </a>
   </li>
@@ -205,7 +217,7 @@ def test_toc_heading_html(tmpdir):
 
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/file1.html#heading-1">
+    <a href="/html/file1.html#heading-1">
       <span class="label"><span class="number">1.</span> Heading 1</span>
     </a>
   </li>
@@ -217,15 +229,18 @@ def test_toc_heading_html(tmpdir):
 def test_toc_header_html(tmpdir):
     """Test the creation of a chapter header for TOCs in html."""
 
-    # Setup paths
-    target_root = str(tmpdir)
-
     # The 'tests/tags/toc_example2' directory contains three markup files:
     # file1.dm, file2.dm and file3.dm. The 'file1.dm' includes 'file2.dm' and
     # 'file3.dm' The 'file2.dm' has a header and a sub-header.
     # This test has headers with id anchors specified.
-    doc = Document('tests/tags/toc_example2/file1.dm',
-                   target_root=target_root)
+    # Setup paths
+    src_filepath = SourcePath(project_root='tests/tags/toc_example2',
+                              subpath='file1.dm')
+    target_root = TargetPath(tmpdir)
+    doc = Document(src_filepath, target_root)
+
+    # Make sure the 'base_url' entry matches a basic format.
+    doc.context['base_url'] = '/{target}/{subpath}'
 
     # Create a toc for the root document, file1.dm, only.
     toc = Toc(name='toc', content='headings', attributes=tuple(),
@@ -233,7 +248,7 @@ def test_toc_header_html(tmpdir):
 
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/file1.html#heading-1">
+    <a href="/html/file1.html#heading-1">
       <span class="label"><span class="number">1.</span> Heading 1</span>
     </a>
   </li>
@@ -247,7 +262,7 @@ def test_toc_header_html(tmpdir):
 
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/file1.html#heading-1">
+    <a href="/html/file1.html#heading-1">
       <span class="label"><span class="number">1.</span> Heading 1</span>
     </a>
   </li>
@@ -263,14 +278,17 @@ def test_toc_header_html(tmpdir):
 
 def test_toc_document_html(tmpdir):
     """Test the generation of tocs for documents in html."""
-    # Setup paths
-    target_root = str(tmpdir)
-
     # The 'tests/tags/toc_example1' directory contains three markup files:
     # file1.dm, in the root folder, and file21.dm and file2.dm in the 'sub'
     # folder. The 'file1.dm' includes 'file21.dm' and 'file22.dm'.
-    doc = Document('tests/tags/toc_example1/file1.dm',
-                   target_root=target_root)
+    # Setup the paths
+    src_filepath = SourcePath(project_root='tests/tags/toc_example1',
+                              subpath='file1.dm')
+    target_root = TargetPath(tmpdir)
+    doc = Document(src_filepath, target_root)
+
+    # Make sure the 'base_url' entry matches a basic format.
+    doc.context['base_url'] = '/{target}/{subpath}'
 
     # Create the tag for document2
     toc = Toc(name='toc', content='all documents', attributes=tuple(),
@@ -279,19 +297,19 @@ def test_toc_document_html(tmpdir):
     # Match the default toc (format: 'collapsed')
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/file1.html">
-      <span class="label">tests/tags/toc_example1/file1</span>
+    <a href="/html/file1.html">
+      <span class="label">file1</span>
     </a>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/sub/file21.html">
-        <span class="label">tests/tags/toc_example1/sub/file21</span>
+      <a href="/html/sub/file21.html">
+        <span class="label">sub/file21</span>
       </a>
     </li>
     <li>
-      <a href="/sub/file22.html">
-        <span class="label">tests/tags/toc_example1/sub/file22</span>
+      <a href="/html/sub/file22.html">
+        <span class="label">sub/file22</span>
       </a>
     </li>
   </ul>
@@ -309,71 +327,71 @@ def test_toc_document_html(tmpdir):
               context=doc.context)
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/file1.html">
-      <span class="label">tests/tags/toc_example1/file1</span>
+    <a href="/html/file1.html">
+      <span class="label">file1</span>
     </a>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/file1.html#sec:heading-1">
+      <a href="/html/file1.html#sec:heading-1">
         <span class="label"><span class="number">1.</span> Heading 1</span>
       </a>
     </li>
     <li>
-      <a href="/file1.html#sec:heading-2">
+      <a href="/html/file1.html#sec:heading-2">
         <span class="label"><span class="number">2.</span> Heading 2</span>
       </a>
     </li>
     <ul class="toc-level-3">
       <li>
-        <a href="/file1.html#subsec:sub-heading-2-1">
+        <a href="/html/file1.html#subsec:sub-heading-2-1">
           <span class="label"><span class="number">2.1.</span> sub-Heading 2.1</span>
         </a>
       </li>
       <li>
-        <a href="/file1.html#subsec:sub-heading-2-2">
+        <a href="/html/file1.html#subsec:sub-heading-2-2">
           <span class="label"><span class="number">2.2.</span> sub-Heading 2.2</span>
         </a>
       </li>
       <ul class="toc-level-4">
         <li>
-          <a href="/file1.html#subsubsec:sub-sub-header-2-2-1">
+          <a href="/html/file1.html#subsubsec:sub-sub-header-2-2-1">
             <span class="label"><span class="number">2.2.1.</span> sub-sub-Header 2.2.1</span>
           </a>
         </li>
       </ul>
       <li>
-        <a href="/file1.html#subsec:sub-heading-2-3">
+        <a href="/html/file1.html#subsec:sub-heading-2-3">
           <span class="label"><span class="number">2.3.</span> sub-Heading 2.3</span>
         </a>
       </li>
     </ul>
     <li>
-      <a href="/file1.html#sec:heading-3">
+      <a href="/html/file1.html#sec:heading-3">
         <span class="label"><span class="number">3.</span> Heading 3</span>
       </a>
     </li>
     <ul class="toc-level-3">
       <li>
-        <a href="/file1.html#subsubsec:sub-sub-header-3-1-1">
+        <a href="/html/file1.html#subsubsec:sub-sub-header-3-1-1">
           <span class="label"><span class="number">3.1.</span> sub-sub-header 3.1.1</span>
         </a>
       </li>
     </ul>
     <li>
-      <a href="/file1.html#sec:heading-4">
+      <a href="/html/file1.html#sec:heading-4">
         <span class="label"><span class="number">4.</span> Heading 4</span>
       </a>
     </li>
   </ul>
   <li>
-    <a href="/sub/file21.html">
-      <span class="label">tests/tags/toc_example1/sub/file21</span>
+    <a href="/html/sub/file21.html">
+      <span class="label">sub/file21</span>
     </a>
   </li>
   <li>
-    <a href="/sub/file22.html">
-      <span class="label">tests/tags/toc_example1/sub/file22</span>
+    <a href="/html/sub/file22.html">
+      <span class="label">sub/file22</span>
     </a>
   </li>
 </ul>
@@ -386,71 +404,71 @@ def test_toc_document_html(tmpdir):
               context=doc.context)
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/file1.html">
-      <span class="label">tests/tags/toc_example1/file1</span>
+    <a href="/html/file1.html">
+      <span class="label">file1</span>
     </a>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/file1.html#sec:heading-1">
+      <a href="/html/file1.html#sec:heading-1">
         <span class="label"><span class="number">1.</span> Heading 1</span>
       </a>
     </li>
     <li>
-      <a href="/file1.html#sec:heading-2">
+      <a href="/html/file1.html#sec:heading-2">
         <span class="label"><span class="number">2.</span> Heading 2</span>
       </a>
     </li>
     <ul class="toc-level-3">
       <li>
-        <a href="/file1.html#subsec:sub-heading-2-1">
+        <a href="/html/file1.html#subsec:sub-heading-2-1">
           <span class="label"><span class="number">2.1.</span> sub-Heading 2.1</span>
         </a>
       </li>
       <li>
-        <a href="/file1.html#subsec:sub-heading-2-2">
+        <a href="/html/file1.html#subsec:sub-heading-2-2">
           <span class="label"><span class="number">2.2.</span> sub-Heading 2.2</span>
         </a>
       </li>
       <ul class="toc-level-4">
         <li>
-          <a href="/file1.html#subsubsec:sub-sub-header-2-2-1">
+          <a href="/html/file1.html#subsubsec:sub-sub-header-2-2-1">
             <span class="label"><span class="number">2.2.1.</span> sub-sub-Header 2.2.1</span>
           </a>
         </li>
       </ul>
       <li>
-        <a href="/file1.html#subsec:sub-heading-2-3">
+        <a href="/html/file1.html#subsec:sub-heading-2-3">
           <span class="label"><span class="number">2.3.</span> sub-Heading 2.3</span>
         </a>
       </li>
     </ul>
     <li>
-      <a href="/file1.html#sec:heading-3">
+      <a href="/html/file1.html#sec:heading-3">
         <span class="label"><span class="number">3.</span> Heading 3</span>
       </a>
     </li>
     <ul class="toc-level-3">
       <li>
-        <a href="/file1.html#subsubsec:sub-sub-header-3-1-1">
+        <a href="/html/file1.html#subsubsec:sub-sub-header-3-1-1">
           <span class="label"><span class="number">3.1.</span> sub-sub-header 3.1.1</span>
         </a>
       </li>
     </ul>
     <li>
-      <a href="/file1.html#sec:heading-4">
+      <a href="/html/file1.html#sec:heading-4">
         <span class="label"><span class="number">4.</span> Heading 4</span>
       </a>
     </li>
   </ul>
   <li>
-    <a href="/sub/file21.html">
-      <span class="label">tests/tags/toc_example1/sub/file21</span>
+    <a href="/html/sub/file21.html">
+      <span class="label">sub/file21</span>
     </a>
   </li>
   <li>
-    <a href="/sub/file22.html">
-      <span class="label">tests/tags/toc_example1/sub/file22</span>
+    <a href="/html/sub/file22.html">
+      <span class="label">sub/file22</span>
     </a>
   </li>
 </ul>
@@ -464,8 +482,8 @@ def test_toc_document_html(tmpdir):
     # Match the default toc (collapsed)
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/file1.html">
-      <span class="label">tests/tags/toc_example1/file1</span>
+    <a href="/html/file1.html">
+      <span class="label">file1</span>
     </a>
   </li>
 </ul>
@@ -477,15 +495,15 @@ def test_toc_document_html(tmpdir):
 
 def test_toc_heading_tex(tmpdir):
     """Test the generation of tocs from headings for tex"""
-    # Setup paths
-    target_root = str(tmpdir)
-
     # The 'tests/tags/toc_example1' directory contains one markup in the root
     # directory, file1.dm, and two files, file21.dm and file22.dm, in the
     # 'sub' sub-directory. file1.dm includes file21.dm and file22.dm
     # None of these files have explicit header ids, so generic ones are created.
-    doc = Document('tests/tags/toc_example1/file1.dm',
-                   target_root=target_root)
+    # Setup paths
+    src_filepaths = SourcePath(project_root='tests/tags/toc_example1',
+                               subpath='file1.dm')
+    target_root = TargetPath(tmpdir)
+    doc = Document(src_filepaths, target_root)
 
     # Create a toc for all headings
     toc = Toc(name='toc', content='all headings', attributes=tuple(),
@@ -515,8 +533,10 @@ def test_toc_heading_tex(tmpdir):
     # file1.dm, file2.dm and file3.dm. The 'file1.dm' includes 'file2.dm' and
     # 'file3.dm' The 'file2.dm' has a header and a sub-header.
     # This test has headers with id anchors specified.
-    doc = Document('tests/tags/toc_example2/file1.dm',
-                   target_root=target_root)
+    # Setup paths
+    src_filepaths = SourcePath(project_root='tests/tags/toc_example2',
+                               subpath='file1.dm')
+    doc = Document(src_filepaths, target_root)
 
     # Create a toc for all headings
     toc = Toc(name='toc', content='all headings', attributes=tuple(),
@@ -546,16 +566,15 @@ def test_toc_heading_tex(tmpdir):
 
 def test_toc_header_tex(tmpdir):
     """Test the creation of a chapter header for TOCs in tex."""
-
-    # Setup paths
-    target_root = str(tmpdir)
-
     # The 'tests/tags/toc_example2' directory contains three markup files:
     # file1.dm, file2.dm and file3.dm. The 'file1.dm' includes 'file2.dm' and
     # 'file3.dm' The 'file2.dm' has a header and a sub-header.
     # This test has headers with id anchors specified.
-    doc = Document('tests/tags/toc_example2/file1.dm',
-                   target_root=target_root)
+    # Setup paths
+    src_filepath = SourcePath(project_root='tests/tags/toc_example2',
+                              subpath='file1.dm')
+    target_root = TargetPath(tmpdir)
+    doc = Document(src_filepath, target_root)
 
     # Create a toc for the root document, file1.dm, only.
     toc = Toc(name='toc', content='headings', attributes=tuple(),
@@ -586,24 +605,24 @@ def test_toc_header_tex(tmpdir):
 
 def test_toc_document_tex(tmpdir):
     """Test the generation of tocs for documents in latex."""
-    # Setup paths
-    target_root = str(tmpdir)
-
     # The 'tests/tags/toc_example1' directory contains three markup files:
     # file1.dm, in the root folder, and file21.dm and file2.dm in the 'sub'
     # folder. The 'file1.dm' includes 'file21.dm' and 'file22.dm'.
-    doc = Document('tests/tags/toc_example1/file1.dm',
-                   target_root=target_root)
+    # Setup paths
+    src_filepath = SourcePath(project_root='tests/tags/toc_example1',
+                              subpath='file1.dm')
+    target_root = TargetPath(tmpdir)
+    doc = Document(src_filepath, target_root)
 
     # Create the tag for document2
     toc = Toc(name='toc', content='all documents', attributes=tuple(),
               context=doc.context)
 
     key = """\\begin{toclist}
-  \item \hyperref[doc:file1.dm]{tests/tags/toc_example1/file1} \dotfill \pageref{doc:file1.dm}
+  \item \hyperref[doc:file1.dm]{file1} \dotfill \pageref{doc:file1.dm}
   \\begin{toclist}
-    \item \hyperref[doc:sub/file21.dm]{tests/tags/toc_example1/sub/file21} \dotfill \pageref{doc:sub/file21.dm}
-    \item \hyperref[doc:sub/file22.dm]{tests/tags/toc_example1/sub/file22} \dotfill \pageref{doc:sub/file22.dm}
+    \item \hyperref[doc:sub/file21.dm]{sub/file21} \dotfill \pageref{doc:sub/file21.dm}
+    \item \hyperref[doc:sub/file22.dm]{sub/file22} \dotfill \pageref{doc:sub/file22.dm}
   \end{toclist}
 \end{toclist}
 """

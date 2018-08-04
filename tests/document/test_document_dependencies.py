@@ -1,25 +1,25 @@
 """
 Test the dependency manager with documents.
 """
-import pytest
+import pathlib
 from shutil import copyfile
 
 from disseminate.document import Document
 from disseminate.utils.tests import strip_leading_space
-from disseminate.dependency_manager import MissingDependency
+from disseminate import SourcePath, TargetPath
 
 
 def test_dependencies_img(tmpdir):
     """Tests that the image dependencies are correctly reset when the AST is
     reprocessed."""
     # Setup the project_root in a temp directory
-    project_root = tmpdir.join('src')
+    project_root = SourcePath(project_root=tmpdir / 'src')
     project_root.mkdir()
-    target_root = str(tmpdir)
+    target_root = TargetPath(target_root=tmpdir)
 
     # Copy a dependency image file to this directory
-    img_path = str(project_root.join('sample.png'))
-    copyfile('tests/document/example3/sample.png',
+    img_path = project_root / 'sample.png'
+    copyfile(pathlib.Path('tests/document/example3/sample.png'),
              img_path)
 
     # Make a document source file
@@ -30,34 +30,51 @@ def test_dependencies_img(tmpdir):
     @img{sample.png}
     """
 
-    src_filepath = project_root.join('test.dm')
-    src_filepath.write(strip_leading_space(markup))
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='test.dm')
+    src_filepath.write_text(strip_leading_space(markup))
 
     # Create a document
-    doc = Document(str(src_filepath), str(tmpdir))
+    doc = Document(src_filepath, tmpdir)
+
+    # Get the template renderer
+    renderer = doc.context['template_renderer']
 
     # Check that the document and dependency manager paths are correct
-    assert doc.project_root == str(project_root)
-    assert doc.target_root == str(target_root)
+    assert doc.project_root == project_root
+    assert doc.target_root == target_root
 
-    dep = doc.context['dependency_manager']
-    assert dep.project_root == str(project_root)
-    assert dep.target_root == str(target_root)
+    dep_manager = doc.context['dependency_manager']
+    assert dep_manager.project_root == project_root
+    assert dep_manager.target_root == target_root
 
     # Render the document
     doc.render()
 
-    # The img file should be a dependency in the '.html' target
-    d = dep.get_dependency(target='.html', src_filepath=img_path)
-    assert d.dep_filepath == 'sample.png'
+    # The img file should be a dependency
+    deps = list(sorted(dep_manager.dependencies[src_filepath]))
+    dep1 = deps[0]
+    dep2 = deps[1]
+    assert (dep1.dep_filepath ==
+            SourcePath(project_root=renderer.module_path,
+                       subpath='default/media/css/default.css'))
+    assert (dep1.dest_filepath ==
+            TargetPath(target_root=target_root,
+                       target='html',
+                       subpath='media/css/default.css'))
+    assert dep2.dep_filepath == SourcePath(project_root=project_root,
+                                           subpath='sample.png')
+    assert dep2.dest_filepath == TargetPath(target_root=target_root,
+                                            target='html',
+                                            subpath='sample.png')
 
     # Rewrite the document source file without the dependency
     markup = ""
-    src_filepath.write(markup)
+    src_filepath.write_text(markup)
 
     # Render the document and the dependency should have been removed.
     doc.render()
 
-    # A missing dependency raises a MissingDependency exception
-    with pytest.raises(MissingDependency):
-        d = dep.get_dependency(target='.html', src_filepath=img_path)
+    # The rendered document no longer has a dependency on the image.
+    assert len(dep_manager.dependencies[src_filepath]) == 1
+    assert dep_manager.dependencies[src_filepath] == {dep1}

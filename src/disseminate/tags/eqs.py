@@ -1,6 +1,8 @@
 """
 Equation tags.
 """
+from copy import copy
+
 from .core import Tag
 from .img import RenderedImg
 from ..attributes import (set_attribute, remove_attribute, get_attribute_value,
@@ -51,10 +53,6 @@ class Eq(RenderedImg):
         assert context.is_valid('equation_renderer')
         self.block_equation = block_equation
 
-        # Set the equation template for rendering pdf/svg versions of equations
-        renderer = context['equation_renderer']
-        eq_template = renderer.get_template(target='.tex')
-
         # Get the environment type
         env = get_attribute_value(attributes, attribute_name='env',
                                   target='.tex')
@@ -88,8 +86,23 @@ class Eq(RenderedImg):
         super(Eq, self).__init__(name=name, content=content,
                                  attributes=attributes,
                                  context=context,
-                                 render_target='.tex',
-                                 template=eq_template)
+                                 render_target='.tex')
+
+    def render_content(self, content=None, context=None):
+        """Render the content in LaTeX into a valid .tex file."""
+        # Get the renderer for the equation
+        renderer = context['equation_renderer']
+
+        # Make a copy of the context and add the content as the 'body' entry.
+        context_cp = copy(context)
+        context_cp['body'] = content
+
+        # Get the kwargs and args to pass to the template
+        kwargs = self.template_kwargs()
+        args = self.template_args()
+        #kwargs['args'] = args
+
+        return renderer.render(context=context_cp, target='.tex', **kwargs)
 
     def html_fmt(self, level=1, content=None):
         if self.block_equation:

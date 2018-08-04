@@ -144,9 +144,10 @@ class Ref(Tag):
         label_tag = format_label_tag(tag=self, target='.html')
 
         # Wrap the label_tag in a link to the label's target
-        # TODO: Replace forward slash with custom url path from settings
-        link = "/" + label.document.target_filepath(target='.html',
-                                                    render_path=False)
+        target_filepath = label.document.target_filepath('.html')
+
+        # Generate the link for the document.
+        link = target_filepath.get_url(context=label.document.context)
 
         # Add the id to the link, if it's not a link to the whole document
         if label.kind[0] != 'document':

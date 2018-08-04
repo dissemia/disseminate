@@ -6,25 +6,34 @@ from disseminate.tags.eqs import Eq
 from disseminate.dependency_manager import DependencyManager
 from disseminate.renderers import process_context_template
 from disseminate.ast import process_ast
-from disseminate import settings
+from disseminate import settings, SourcePath, TargetPath
 
 
 def test_inline_equation(tmpdir, context_cls):
     """Test the tex rendering of simple inline equations."""
 
     # Setup the test paths
-    project_root = str(tmpdir.join('src'))
-    target_root = str(tmpdir)
+    project_root = SourcePath(project_root=tmpdir.join('src'))
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='test.dm')
+    target_root = TargetPath(target_root=tmpdir)
+    project_root.mkdir()
 
     # Setup the dependency manager in the global context. This is needed
     # to find and convert images by the img tag.
-    dep = DependencyManager(project_root=project_root,
-                            target_root=target_root)
+    dep_manager = DependencyManager(project_root=project_root,
+                                    target_root=target_root)
 
     context_cls.validation_types = {'dependency_manager': DependencyManager,
-                                    'project_root': str}
-    context = context_cls(dependency_manager=dep, project_root=project_root,
-                          src_filepath='', paths=[])
+                                    'project_root': SourcePath,
+                                    'target_root': TargetPath,
+                                    'src_filepath': SourcePath,
+                                    'paths': list}
+    context = context_cls(dependency_manager=dep_manager,
+                          src_filepath=src_filepath,
+                          project_root=project_root,
+                          target_root=target_root,
+                          paths=[])
     process_context_template(context)  # add the 'equation_renderer' entry
 
     # Example 1 - simple inline equation
@@ -63,17 +72,26 @@ def test_block_equation(tmpdir, context_cls):
     """Test the tex rendering of a simple block equations."""
 
     # Setup the test paths
-    project_root = str(tmpdir.join('src'))
-    target_root = str(tmpdir)
+    project_root = SourcePath(project_root=tmpdir.join('src'))
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='test.dm')
+    target_root = TargetPath(target_root=tmpdir)
+    project_root.mkdir()
 
     # Setup the dependency manager in the global context. This is needed
     # to find and convert images by the img tag.
-    dep = DependencyManager(project_root=project_root,
-                            target_root=target_root)
+    dep_manager = DependencyManager(project_root=project_root,
+                                    target_root=target_root)
     context_cls.validation_types = {'dependency_manager': DependencyManager,
-                                    'project_root': str}
-    context = context_cls(dependency_manager=dep, project_root=project_root,
-                          src_filepath='', paths=[])
+                                    'project_root': SourcePath,
+                                    'target_root': TargetPath,
+                                    'src_filepath': SourcePath,
+                                    'paths': list}
+    context = context_cls(dependency_manager=dep_manager,
+                          src_filepath=src_filepath,
+                          project_root=project_root,
+                          target_root=target_root,
+                          paths=[])
     process_context_template(context)  # add the 'equation_renderer' entry
 
     # Example 1 - simple block equation
@@ -97,17 +115,26 @@ def test_simple_inline_equation_html(tmpdir, context_cls):
     """Test the rendering of simple inline equations for html."""
 
     # Setup the test paths
-    project_root = str(tmpdir.join('src'))
-    target_root = str(tmpdir)
+    project_root = SourcePath(project_root=tmpdir.join('src'))
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='test.dm')
+    target_root = TargetPath(target_root=tmpdir)
+    project_root.mkdir()
 
     # Setup the dependency manager in the global context. This is needed
     # to find and convert images by the img tag.
-    dep = DependencyManager(project_root=project_root,
-                            target_root=target_root)
+    dep_manager = DependencyManager(project_root=project_root,
+                                    target_root=target_root)
     context_cls.validation_types = {'dependency_manager': DependencyManager,
-                                    'project_root': str}
-    context = context_cls(dependency_manager=dep, project_root=project_root,
-                          src_filepath='', paths=[])
+                                    'project_root': SourcePath,
+                                    'target_root': TargetPath,
+                                    'src_filepath': SourcePath,
+                                    'paths': list}
+    context = context_cls(dependency_manager=dep_manager,
+                          src_filepath=src_filepath,
+                          project_root=project_root,
+                          target_root=target_root,
+                          paths=[])
     process_context_template(context)  # add the 'equation_renderer' entry
 
     # Setup the equation tag
@@ -115,7 +142,8 @@ def test_simple_inline_equation_html(tmpdir, context_cls):
 
     # Check the paths. These are stored by the parent Img tag in the
     # 'src_filepath' attribute
-    assert eq.src_filepath == 'media/86f37f32e2.tex'
+    assert eq.img_filepath == SourcePath(project_root=dep_manager.cache_path,
+                                         subpath='media/test_86f37f32e2.tex')
 
     # Create a root tag and render the html
     root = Tag(name='root', content=["This is my test", eq, "equation"],
@@ -134,27 +162,34 @@ def test_simple_inline_equation_html(tmpdir, context_cls):
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert root_html == ('<img class="eq" src="/media/86f37f32e2.svg"/>')
-    assert tmpdir.ensure(settings.media_dir, '86f37f32e2.svg')
-    assert tmpdir.ensure('.html', settings.media_dir,
-                         '86f37f32e2.svg')
+    assert (root_html ==
+            '<img class="eq" src="/html/media/test_86f37f32e2.svg"/>')
 
 
 def test_simple_inline_equation_tex(tmpdir, context_cls):
     """Test the rendering of simple inline equations for tex."""
 
     # Setup the test paths
-    project_root = str(tmpdir.join('src'))
-    target_root = str(tmpdir)
+    project_root = SourcePath(project_root=tmpdir.join('src'))
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='test.dm')
+    target_root = TargetPath(target_root=tmpdir)
+    project_root.mkdir()
 
     # Setup the dependency manager in the global context. This is needed
     # to find and convert images by the img tag.
-    dep = DependencyManager(project_root=project_root,
-                            target_root=target_root)
+    dep_manager = DependencyManager(project_root=project_root,
+                                    target_root=target_root)
     context_cls.validation_types = {'dependency_manager': DependencyManager,
-                                    'project_root': str}
-    context = context_cls(dependency_manager=dep, project_root=project_root,
-                          src_filepath='', paths=[])
+                                    'project_root': SourcePath,
+                                    'target_root': TargetPath,
+                                    'src_filepath': SourcePath,
+                                    'paths': list}
+    context = context_cls(dependency_manager=dep_manager,
+                          src_filepath=src_filepath,
+                          project_root=project_root,
+                          target_root=target_root,
+                          paths=[])
     process_context_template(context)  # add the 'equation_renderer' entry
 
     # Setup the equation tag
@@ -167,17 +202,26 @@ def test_block_equation_tex(tmpdir, context_cls):
     """Test the rendering of block equations for tex."""
 
     # Setup the test paths
-    project_root = str(tmpdir.join('src'))
-    target_root = str(tmpdir)
+    project_root = SourcePath(project_root=tmpdir.join('src'))
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='test.dm')
+    target_root = TargetPath(target_root=tmpdir)
+    project_root.mkdir()
 
     # Setup the dependency manager in the global context. This is needed
     # to find and convert images by the img tag.
-    dep = DependencyManager(project_root=project_root,
-                            target_root=target_root)
+    dep_manager = DependencyManager(project_root=project_root,
+                                    target_root=target_root)
     context_cls.validation_types = {'dependency_manager': DependencyManager,
-                                    'project_root': str}
-    context = context_cls(dependency_manager=dep, project_root=project_root,
-                          src_filepath='', paths=[])
+                                    'project_root': SourcePath,
+                                    'target_root': TargetPath,
+                                    'src_filepath': SourcePath,
+                                    'paths': list}
+    context = context_cls(dependency_manager=dep_manager,
+                          src_filepath=src_filepath,
+                          project_root=project_root,
+                          target_root=target_root,
+                          paths=[])
     process_context_template(context)  # add the 'equation_renderer' entry
 
     # Test markup

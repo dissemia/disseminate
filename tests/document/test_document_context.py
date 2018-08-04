@@ -1,14 +1,15 @@
 """
 Tests the DocumentContext class.
 """
+from disseminate import SourcePath, TargetPath
 from disseminate.document import DocumentContext, Document
 
 
 # A DummyDocument class
 class DummyDocument(object):
-    src_filepath = ''
-    project_root = ''
-    target_root = ''
+    src_filepath = SourcePath()
+    project_root = SourcePath()
+    target_root = TargetPath()
 
 
 def test_document_context_basic_inheritence():
@@ -16,9 +17,9 @@ def test_document_context_basic_inheritence():
     # Create a DocumentContext with one entry in the class's 'do_not_inherit'
     # class attribute and one not in 'do_not_inherit'
     parent_context = {'paths': [],
-                      'src_filepath': 'src_filepath',
-                      'project_root': 'project_root',
-                      'target_root': 'target_root',
+                      'src_filepath': SourcePath('src_filepath'),
+                      'project_root': SourcePath('project_root'),
+                      'target_root': TargetPath('target_root'),
                       'label_manager': dict(),
                       'dependency_manager': dict(),
                       }
@@ -29,7 +30,7 @@ def test_document_context_basic_inheritence():
     def test_context_entries(context):
         # Check the entries that should be inherited by the parent
         assert context['src_filepath'] != parent_context['src_filepath']  # Not inherited
-        assert context['src_filepath'] == ''
+        assert context['src_filepath'] == SourcePath('')
         assert context['project_root'] == parent_context['project_root']
         assert context['target_root'] == parent_context['target_root']
         assert context['document']() == doc  # dereference weakref
@@ -49,7 +50,7 @@ def test_document_context_basic_inheritence():
         assert 'paths' in context.do_not_inherit
 
         assert 'paths' in context
-        assert context['paths'] == ['project_root']  # Entry for project_root
+        assert context['paths'] == [SourcePath('project_root')]
 
         # The 'paths' list itself should not have been inherited
         assert id(parent_context['paths']) != id(context['paths'])
@@ -65,8 +66,12 @@ def test_document_context_basic_inheritence():
 
 def test_document_context_simple_documents(tmpdir):
     """Test the preservation of the parent context with subdocuments."""
+    src_filepath = SourcePath(project_root='tests/document/example4/src',
+                              subpath='file.dm')
+    target_root = TargetPath(target_root=tmpdir)
+
     # Load example4. It has a main document (file.dm)
-    doc = Document('tests/document/example4/src/file.dm', str(tmpdir))
+    doc = Document(src_filepath, target_root)
     label_manager = doc.label_manager
     dependency_manager = doc.dependency_manager
 
@@ -76,9 +81,9 @@ def test_document_context_simple_documents(tmpdir):
     def test_context_entries(doc):
         context = doc.context
         # Check the entries that should be inherited by the parent
-        assert context['src_filepath'] == 'tests/document/example4/src/file.dm'
-        assert context['project_root'] == 'tests/document/example4/src'
-        assert context['target_root'] == str(tmpdir)
+        assert context['src_filepath'] == src_filepath
+        assert context['project_root'] == src_filepath.project_root
+        assert context['target_root'] == target_root
         assert context['document']() == doc  # dereference weakref
         assert context['root_document']() == doc  # dereference weakref
 
@@ -96,7 +101,7 @@ def test_document_context_simple_documents(tmpdir):
         assert 'paths' in context.do_not_inherit
 
         assert 'paths' in context
-        assert context['paths'] == ['tests/document/example4/src']
+        assert src_filepath.project_root in context['paths']
 
     # Test the context
     test_context_entries(doc)
@@ -107,7 +112,10 @@ def test_document_context_simple_documents(tmpdir):
 
     # Load example7. It has a main document (file1.dm) and 1 subdocuments
     # (sub1/file11.dm), which has its own subdocument (subsub1/file111.dm)
-    doc = Document('tests/document/example7/src/file1.dm', str(tmpdir))
+    src_filepath = SourcePath(project_root='tests/document/example7/src',
+                              subpath='file1.dm')
+    target_root = TargetPath(tmpdir)
+    doc = Document(src_filepath, target_root)
     label_manager = doc.label_manager
     dependency_manager = doc.dependency_manager
 
@@ -117,9 +125,9 @@ def test_document_context_simple_documents(tmpdir):
     def test_context_entries(doc):
         context = doc.context
         # Check the entries that should be inherited by the parent
-        assert context['src_filepath'] == 'tests/document/example7/src/file1.dm'
-        assert context['project_root'] == 'tests/document/example7/src'
-        assert context['target_root'] == str(tmpdir)
+        assert context['src_filepath'] == src_filepath
+        assert context['project_root'] == src_filepath.project_root
+        assert context['target_root'] == target_root
         assert context['document']() == doc  # dereference weakref
         assert context['root_document']() == doc  # dereference weakref
 
@@ -137,14 +145,18 @@ def test_document_context_simple_documents(tmpdir):
         assert 'paths' in context.do_not_inherit
 
         assert 'paths' in context
-        assert context['paths'] == ['tests/document/example7/src']
+        assert src_filepath.project_root in context['paths']
 
         # Test the subdocuments
         subdocs = doc.documents_list(only_subdocuments=True, recursive=True)
 
         assert len(subdocs) == 2
-        assert subdocs[0].src_filepath == 'tests/document/example7/src/sub1/file11.dm'
-        assert subdocs[1].src_filepath == 'tests/document/example7/src/sub1/subsub1/file111.dm'
+        src_filepath1 = SourcePath(project_root='tests/document/example7/src',
+                                   subpath='sub1/file11.dm')
+        src_filepath2 = SourcePath(project_root='tests/document/example7/src',
+                                   subpath='sub1/subsub1/file111.dm')
+        assert subdocs[0].src_filepath == src_filepath1
+        assert subdocs[1].src_filepath == src_filepath2
 
     # Test the context
     test_context_entries(doc)
@@ -156,8 +168,12 @@ def test_document_context_simple_documents(tmpdir):
 
 def test_document_context_is_valid(tmpdir):
     """Test the is_valid method for document contexts."""
+    src_filepath = SourcePath(project_root='tests/document/example4/src',
+                              subpath='file.dm')
+    target_root = TargetPath(target_root=tmpdir)
+
     # Load example4. It has a main document (file.dm)
-    doc = Document('tests/document/example4/src/file.dm', str(tmpdir))
+    doc = Document(src_filepath, target_root)
     context = doc.context
 
     # The initial context is valid.

@@ -1,29 +1,32 @@
 """The base Converter class."""
-import os.path
 import subprocess
 import logging
+import os
+from pathlib import Path
 from tempfile import mkdtemp
 from distutils.spawn import find_executable
 
-from .arguments import PathArgument, Argument
+from .arguments import SourcePathArgument, TargetPathArgument, Argument
+from ..paths import SourcePath, TargetPath
 from .. import settings
 
 
 def convert(src_filepath, target_basefilepath, targets, raise_error=True,
-            cache=settings.convert_cache, **kwargs):
+            cache=settings.convert_cache,
+            create_dirs=settings.create_dirs,
+            **kwargs):
     """Convert a source file to a target file.
 
     Parameters
     ----------
-    src_filepath : str
-        The path and filename for the file to convert. This file must exist,
-        and it's a render path.
-        ex: 'src/media/img1.svg'
-    target_basefilepath : str
+    src_filepath : :obj:`disseminate.SourcePath`
+        The path and filename for the file to convert.
+        ex: SourcePath('src/media/img1.svg')
+    target_basefilepath : :obj:`disseminate.TargetPath`
         The path and filename (without extension) that the target file should
         adopt. This is a render path, and the final target will be determined
         by this function, if a conversion is possible.
-        ex: 'tex/media/img'
+        ex: TargetPath('tex/media/img1')
     targets : list of strings
         A list of possible extensions for formats that the file can be
         converted to, depending on which programs are installed. This list
@@ -35,6 +38,8 @@ def convert(src_filepath, target_basefilepath, targets, raise_error=True,
     cache : bool, optional
         If True, return an existing target file, rather than convert it, if
         the target file is newer than the source file (src_filepath)
+    create_dirs : bool, optional
+        If True, create any neededdirectories in the target_basefilepath.
 
     Raises
     ------
@@ -44,24 +49,36 @@ def convert(src_filepath, target_basefilepath, targets, raise_error=True,
 
     Returns
     -------
-    target_filepath : str or bool
-        The final path (render path) of the converted target file that was
-        created.
+    target_filepath : :obj:`disseminate.utils.paths.TargetPath` or False
+        The final path of the converted target file that was  created.
         False is returned if the conversion was not possible.
         ex: 'tex/media/img.pdf'
     """
+    assert isinstance(src_filepath, SourcePath)
+    assert isinstance(target_basefilepath, TargetPath)
+
     # The src_filepath should exist
-    if not os.path.isfile(src_filepath):
+    if not src_filepath.is_file():
         if raise_error:
             msg = "Could not find the file to convert '{}'"
             raise ConverterError(msg.format(src_filepath))
         return False
     # The src file needs a valid extension
-    if os.path.splitext(src_filepath)[1] == '':
+    if src_filepath.suffix == '':
         if raise_error:
             msg = "The file '{}' requires a valid extension"
             raise ConverterError(msg.format(src_filepath))
         return False
+
+    # The target_basefilepath directory should exist
+    if not target_basefilepath.parent.is_dir():
+        if create_dirs:
+            target_basefilepath.parent.mkdir(parents=True)
+        else:
+            msg = ("The file '{}' cannot be converted because the target "
+                   "directory '{}' does not exist.")
+            raise ConverterError(msg.format(str(src_filepath),
+                                            str(target_basefilepath.parent)))
 
     # Get a suitable converter subclass
     try:
@@ -80,9 +97,8 @@ def convert(src_filepath, target_basefilepath, targets, raise_error=True,
     # See if a target already exists and return an existing version if available
     # and up to date
     if (cache and
-       os.path.isfile(target_filepath) and
-       os.path.getmtime(target_filepath) >= os.path.getmtime(src_filepath)):
-
+       target_filepath.is_file() and
+       target_filepath.stat().st_mtime >= src_filepath.stat().st_mtime):
         return target_filepath
 
     # A cached file wasn't used or found. Try to convert the file with the
@@ -94,7 +110,7 @@ def convert(src_filepath, target_basefilepath, targets, raise_error=True,
         if raise_error:
             raise e
 
-    if successful and os.path.isfile(target_filepath):
+    if successful and target_filepath.is_file():
         return target_filepath
     else:
         return False
@@ -127,14 +143,12 @@ class Converter(object):
 
     Parameters
     ----------
-    src_filepath : str
-        The path and filename for the file to convert. This file must exist,
-        and it's a render path.
+    src_filepath : :obj:`disseminate.utils.paths.SourcePath`
+        The path and filename for the file to convert.
         ex: 'src/media/img1.svg'
-    target_basefilepath : str
+    target_basefilepath : :obj:`disseminate.utils.paths.SourcePath`
         The path and filename (without extension) that the target file should
-        adopt. This is a render path, and the final target will be determined
-        by this function, if a conversion is possible.
+        adopt.
         ex: 'tex/media/img'
     target : str
         The desired extension format to convert to (ex: '.svg')
@@ -175,12 +189,11 @@ class Converter(object):
     _temp_dir = None
 
     def __init__(self, src_filepath, target_basefilepath, target, **kwargs):
-
-        self.src_filepath = PathArgument('src_filepath', str(src_filepath),
-                                         required=True)
-        self.target_basefilepath = PathArgument('target_basefilepath',
-                                                str(target_basefilepath),
-                                                required=True)
+        self.src_filepath = SourcePathArgument('src_filepath', src_filepath,
+                                               required=True)
+        self.target_basefilepath = TargetPathArgument('target_basefilepath',
+                                                      target_basefilepath,
+                                                      required=True)
         assert target in self.to_formats
         self.target = target
 
@@ -268,9 +281,9 @@ class Converter(object):
 
         Parameters
         ----------
-        src_filepath : str
+        src_filepath : :obj:`disseminate.SourcePath`
             The path with filename for the file to convert.
-        target_basefilepath : str
+        target_basefilepath : :obj:`disseminate.TargetPath`
             The path and filename (without extension) that the target file
             should adopt. This is a render path, and the final target will be
             determined by this function, if a conversion is possible.
@@ -286,13 +299,16 @@ class Converter(object):
         converter : instance of a Converter subclass (:obj:`Converter`)
             A valid converter in which the available executables are available.
         """
+        assert isinstance(src_filepath, SourcePath)
+        assert isinstance(target_basefilepath, TargetPath)
+
         # Setup the converter subclasses
         if cls._converters is None:
             cls._converters = sorted(_all_subclasses(cls),
                                      key=lambda s: s.order)
 
         # Get the extension of the src_filepath and target_filepath
-        from_format = os.path.splitext(src_filepath)[1]
+        from_format = src_filepath.suffix
 
         # Get a list of converters that could be used for this conversion
         valid_converters = []
@@ -306,7 +322,8 @@ class Converter(object):
         if len(valid_converters) == 0:
             msg = ("Could not find a converter for the file '{}' to any of the "
                    "following possible formats: {}")
-            raise ConverterError(msg.format(src_filepath, ", ".join(targets)))
+            raise ConverterError(msg.format(str(src_filepath),
+                                            ", ".join(targets)))
 
         # Check to make sure that the required executables are available
         available_converters = [c for c in valid_converters
@@ -350,19 +367,20 @@ class Converter(object):
 
         # Load the temp directory
         if getattr(Converter, '_temp_dir', None) is None:
-            Converter._temp_dir = mkdtemp()
+            Converter._temp_dir = Path(mkdtemp())
 
         # Generate the filename
         if isinstance(target_filepath, Argument):
-            filename = os.path.split(target_filepath.value_string)[1]
+            filename = target_filepath.value_string.name
         else:
-            filename = os.path.split(target_filepath)[1]
+            filename = target_filepath.name
 
-        return os.path.join(self._temp_dir, filename)
+        return self._temp_dir / filename
 
     def target_filepath(self):
-        """Return the full target_path with modifiers and an extension."""
-        return self.target_basefilepath.value_string + self.target
+        """Return the full target_path (:obj:`disseminate.TargetPath`) with
+        modifiers and an extension."""
+        return self.target_basefilepath.value.with_suffix(self.target)
 
     def convert(self):
         """Convert a file and return its new path.

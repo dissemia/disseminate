@@ -1,7 +1,7 @@
 """
 Utilities for managing context dicts.
 """
-import os.path
+from ..paths import SourcePath
 
 
 def context_targets(context):
@@ -61,9 +61,9 @@ def context_targets(context):
     return [t if t.startswith('.') else '.' + t for t in target_list]
 
 
-def context_includes(context, render_paths=True):
-    """Retrieve a list of included subdocuments from from the 'include' entry
-    of the context.
+def context_includes(context):
+    """Retrieve a list of included subdocument source paths from from the
+    'include' entry of the context.
 
     Parameters
     ----------
@@ -77,26 +77,11 @@ def context_includes(context, render_paths=True):
 
     Returns
     -------
-    include_list : list of str
+    include_list : list of sourcepaths
+        (:obj:`disseminate.utils.paths.SourcePath`)
         A list of the paths for the included subdocuments..
-
-    Examples
-    --------
-    >>> context_includes({'include': "  sub/file1.dm\\n  sub/file2.dm"})
-    ['sub/file1.dm', 'sub/file2.dm']
-    >>> context_includes({'include': "  sub/file 1.dm\\n  sub/file 2.dm"})
-    ['sub/file 1.dm', 'sub/file 2.dm']
-    >>> context_includes({'include': "  sub/file 1.dm\\n  \\nsub/file 2.dm"})
-    ['sub/file 1.dm', 'sub/file 2.dm']
-    >>> context_includes({'include': "  sub/file1.dm\\n  sub/file2.dm",
-    ...                  'src_filepath': 'src/main.dm'})
-    ['src/sub/file1.dm', 'src/sub/file2.dm']
-    >>> context_includes({'include': "  sub/file1.dm\\n  sub/file2.dm",
-    ...                  'src_filepath': 'src/main.dm'}, render_paths=False)
-    ['sub/file1.dm', 'sub/file2.dm']
-    >>> context_includes({})
-    []
     """
+    assert context.is_valid('src_filepath')
     # Retrieve the include entry
     if 'include' in context:
         includes = context['include']
@@ -112,12 +97,14 @@ def context_includes(context, render_paths=True):
     # Get the included subdocument paths. Strip extra space on the ends of
     # entries on each line and remove empty entries.
     includes = [path.strip() for path in includes.split('\n')
-                if not path.isspace()]
+                if not path.isspace() and path != '']
 
-    # Set the includes as render paths, if specified.
-    if render_paths and 'src_filepath' in context:
-        src_filepath = context['src_filepath']
-        src_path = os.path.split(src_filepath)[0]
-        includes = [os.path.join(src_path, path) for path in includes]
+    # Reconstruct the paths relative to the context's src_filepath.
+    src_filepath = context['src_filepath']
+    subpath = src_filepath.subpath.parent
+    project_root = src_filepath.project_root
 
+    includes = [SourcePath(project_root=project_root,
+                           subpath=subpath / path)
+                for path in includes]
     return includes

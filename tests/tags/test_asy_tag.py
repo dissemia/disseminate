@@ -3,15 +3,18 @@ Test the asy tag.
 """
 from disseminate.ast import process_ast
 from disseminate.dependency_manager import DependencyManager
-from disseminate import settings
+from disseminate import settings, SourcePath, TargetPath
 
 
 def test_asy_html(tmpdir, context_cls):
     """Test the handling of html with the asy tag."""
-    # Since this tag requires creating a cache directory, we will copy the
-    # project_root to a temporary directory
-    project_root = str(tmpdir.join('src'))
-    target_root = str(tmpdir)
+    # Since this tag requires creating a cache directory, we will create the
+    # target_root to a temporary directory
+    project_root = SourcePath(project_root=tmpdir.join('src'))
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='test.dm')
+    target_root = TargetPath(target_root=tmpdir)
+    project_root.mkdir()
 
     # First, we'll test the case when asy code is used directly in the tag.
     # We will not use a document src_filepath in the context, since
@@ -22,10 +25,15 @@ def test_asy_html(tmpdir, context_cls):
     dep = DependencyManager(project_root=project_root,
                             target_root=target_root)
     context_cls.validation_types = {'dependency_manager': DependencyManager,
-                                    'project_root': str,
-                                    'target_root': str}
-    context = context_cls(dependency_manager=dep, project_root=project_root,
-                          target_root=target_root)
+                                    'project_root': SourcePath,
+                                    'target_root': TargetPath,
+                                    'src_filepath': SourcePath,
+                                    'paths': list}
+    context = context_cls(dependency_manager=dep,
+                          src_filepath=src_filepath,
+                          project_root=project_root,
+                          target_root=target_root,
+                          paths=[])
 
     # Generate the markup
     src = """@asy{
@@ -49,9 +57,7 @@ def test_asy_html(tmpdir, context_cls):
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert root_html == '<img src="/media/69a34c39e1.svg"/>'
-    assert tmpdir.ensure(settings.media_dir, '69a34c39e1.svg')
-    assert tmpdir.ensure('.html', settings.media_dir, '69a34c39e1.svg')
+    assert root_html == '<img src="/html/media/test_69a34c39e1.svg"/>'
 
     # Second, we'll test the case when asy code is used directly in the tag.
     # We will now use a src_filepath of the markup document in the
@@ -60,12 +66,15 @@ def test_asy_html(tmpdir, context_cls):
     # Setup the dependency manager in the context. This is needed
     # to find and convert images by the img tag. We'll place the project root
     # in 'src'
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='chapter/test.dm')
     dep = DependencyManager(project_root=project_root,
                             target_root=target_root)
     context = context_cls(dependency_manager=dep,
-                          src_filepath='src/chapter/test.dm',
-                          project_root='src',
-                          target_root=target_root)
+                          src_filepath=src_filepath,
+                          project_root=project_root,
+                          target_root=target_root,
+                          paths=[])
 
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context=context)
@@ -79,19 +88,19 @@ def test_asy_html(tmpdir, context_cls):
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert root_html == '<img src="/media/chapter/test_69a34c39e1.svg"/>'
-    assert tmpdir.ensure(settings.media_dir, 'chapter', 'test_69a34c39e1.svg')
-    assert tmpdir.ensure('.html', settings.media_dir, 'chapter',
-                         'test_69a34c39e1.svg')
+    assert root_html == '<img src="/html/media/chapter/test_69a34c39e1.svg"/>'
 
 
 def test_asy_html_attribute(tmpdir, context_cls):
     """Test the handling of html with the asy tag including attributes"""
 
-    # Since this tag requires creating a cache directory, we will copy the
-    # project_root to a temporary directory
-    project_root = str(tmpdir.join('src'))
-    target_root = str(tmpdir)
+    # Since this tag requires creating a cache directory, we will create the
+    # target_root to a temporary directory
+    project_root = SourcePath(project_root=tmpdir.join('src'))
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='test.dm')
+    target_root = TargetPath(target_root=tmpdir)
+    project_root.mkdir()
 
     # First, we'll test the case when asy code is used directly in the tag.
     # We will not use a document's src_filepath in the global_context, since
@@ -102,10 +111,15 @@ def test_asy_html_attribute(tmpdir, context_cls):
     dep = DependencyManager(project_root=project_root,
                             target_root=target_root)
     context_cls.validation_types = {'dependency_manager': DependencyManager,
-                                    'project_root': str,
-                                    'target_root': str}
-    context = context_cls(dependency_manager=dep, project_root=project_root,
-                          target_root=target_root)
+                                    'project_root': SourcePath,
+                                    'target_root': TargetPath,
+                                    'src_filepath': SourcePath,
+                                    'paths': list}
+    context = context_cls(dependency_manager=dep,
+                          src_filepath=src_filepath,
+                          project_root=project_root,
+                          target_root=target_root,
+                          paths=[])
 
     # Generate the markup
     src = """@asy[scale=2.0]{
@@ -126,6 +140,4 @@ def test_asy_html_attribute(tmpdir, context_cls):
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert root_html == '<img src="/media/cd0ec1067e_scale2.0.svg"/>'
-    assert tmpdir.ensure(settings.media_dir, 'cd0ec1067e_scale2.0.svg')
-    assert tmpdir.ensure('.html', settings.media_dir, 'cd0ec1067e_scale2.0.svg')
+    assert root_html == '<img src="/html/media/test_cd0ec1067e_scale2.0.svg"/>'

@@ -1,5 +1,4 @@
-import os.path
-import glob
+import pathlib
 from datetime import datetime
 from collections import OrderedDict
 
@@ -20,7 +19,7 @@ def find_project_paths(path='', document_extension=settings.document_extension):
 
     Parameters
     ----------
-    path : str, optional
+    path : str or :obj:`pathlib.Path`, optional
         The path to search. By default, it is the current directory.
     document_extension : str, optional
         The source markup document extension. ex: '.dm'
@@ -31,35 +30,48 @@ def find_project_paths(path='', document_extension=settings.document_extension):
         A list of project paths as render paths.
     """
     # expand the user for the subpath directory
-    path = os.path.expanduser(path)
+    path = pathlib.Path(path).expanduser()
 
     # Create a glob pattern to get all of the disseminate files in the path
-    # and remove the filenames to retain the unique paths
-    glob_pattern = os.path.join(path, '**', '*' + document_extension)
-    paths = {os.path.split(i)[0]
-             for i in glob.glob(glob_pattern, recursive=True)}
+    # and remove the filenames to retain the unique paths. Convert the paths
+    # to strings so that they can be sorted more easily.
+    glob_pattern = pathlib.Path('**', '*' + document_extension)
+    paths = {str(p.parent) for p in path.glob(str(glob_pattern))}
 
     # Sort the paths by length so that root paths come up first. If two strings
     # have the same length, then they will be sorted alphabetically
     sorted_paths = sorted(paths, key=lambda i: (len(i), i), reverse=True)
 
     # Remove all entries that are subdirectories of the root project directories
-    root_paths = set()
+    basepaths = set()
 
     while sorted_paths:
-        # Add root path
-        root_path = sorted_paths.pop()
-        root_paths.add(root_path)
+        basepath = sorted_paths.pop()
+        basepaths.add(basepath)
 
         # Remove subdirectory
-        sorted_paths = [i for i in sorted_paths if not i.startswith(root_path)]
+        sorted_paths = [i for i in sorted_paths if not i.startswith(basepath)]
 
-    return root_paths
+    # Return the unique root paths as pathlib.Path objects.
+    return [pathlib.Path(basepath) for basepath in basepaths]
 
 
 def load_root_documents(path='',
                         document_extension=settings.document_extension):
-    """Load the root documents from the project paths for the given path."""
+    """Load the root documents from the project paths for the given path.
+
+    Parameters
+    ----------
+    path : str or :obj:`pathlib.Path`, optional
+        The path to search. By default, it is the current directory.
+    document_extension : str, optional
+        The source markup document extension. ex: '.dm'
+
+    Returns
+    -------
+    root_documents : list
+        A list of document objects (:obj:`disseminate.Document`).
+    """
     documents = list()
 
     # Get the project paths and find the disseminate files in the root of these
@@ -69,8 +81,8 @@ def load_root_documents(path='',
 
     for project_path in project_paths:
         # Find the paths for the root documents (non-recursive)
-        glob_pattern = os.path.join(project_path, '*' + document_extension)
-        src_filepaths = glob.glob(glob_pattern)
+        glob_pattern = pathlib.Path('*' + document_extension)
+        src_filepaths = project_path.glob(str(glob_pattern))
 
         # Load the documents. Note that recursive references in documents
         # will raise a DuplicateLabel error
@@ -99,42 +111,33 @@ def translate_path(path, documents):
     -------
     render_path : str or None
     """
-    # Strip the trailing slash, if present
-    path = path if not path.startswith('/') else path[1:]
+    # Strip leading '/' if present
+    if isinstance(path, str):
+        path = path if not path.startswith('/') else path[1:]
 
-    # See if the path is already a render path
-    if os.path.isfile(path):
+    # Make sure the path is a path object
+    path = pathlib.Path(path)
+
+    # See if the path is valid as is.
+    if path.is_file():
         return path
 
     # Loop through the documents and see if a project_root or target_root
     # path is found.
     for document in documents:
         # Try constructing a render src_filepath
-        src_filepath = os.path.join(document.project_root, path)
-        if os.path.isfile(src_filepath):
+        src_filepath = document.project_root / path
+        if src_filepath.is_file():
             return src_filepath
 
-        # Get all the targets for the document and sub-documents
+        # Check to see if the path can be constructed to a target_filepath
         targets = set()
         for subdoc in document.documents_list(only_subdocuments=False,
                                               recursive=True):
-            targets.update(subdoc.target_list)
-
-        for target in targets:
-            # Strip the target name of the preceeding period
-            stripped_target = target.strip('.')
-
-            # Try constructing a render target_filepath
-            target_filepath = os.path.join(document.target_root,
-                                           stripped_target, path)
-            if os.path.isfile(target_filepath):
-                return target_filepath
-
-            # Try constructing a render target_filepath not include the target
-            # sub-directory
-            target_filepath = os.path.join(document.target_root, path)
-            if os.path.isfile(target_filepath):
-                return target_filepath
+            targets = subdoc.targets
+            for target, target_filepath in targets.items():
+                if target_filepath.match(str(path)):
+                    return target_filepath
 
     return None
 
@@ -151,22 +154,26 @@ def render_tree_html(documents, level=1):
     document_elements = []
 
     for document in documents:
+        context = document.context
+
         # Column 1: the document number
         kwargs = OrderedDict((('class', 'num'),))
         num = E('td', str(document.number))
         set_html_tag_attributes(html_tag=num, attrs_dict=kwargs)
 
         # Column 2: the source file
+        src_filepath = document.src_filepath
         kwargs = OrderedDict((('class', 'src'),))
         src = E('td',
-                E('a', document.src_filepath, href='/' + document.src_filepath))
+                E('a', str(src_filepath.subpath), href='/' + str(src_filepath)))
         set_html_tag_attributes(html_tag=src, attrs_dict=kwargs)
 
         # Column 3: target files
         kwargs = OrderedDict((('class', 'tgt'),))
         tgt_links = [E('a', target.strip('.'),
-                       href=document.target_filepath(target, render_path=False))
+                       href=document.target_filepath(target).get_url(context))
                      for target in document.targets.keys()]
+
         # Add commas to targets
         if len(tgt_links) > 1:
             new_tgt_links = [tgt_links[0]]
@@ -179,7 +186,7 @@ def render_tree_html(documents, level=1):
 
         # Column 4: src mtime
         kwargs = OrderedDict((('class', 'date'),))
-        mtime = os.path.getmtime(document.src_filepath)
+        mtime = document.src_filepath.stat().st_mtime
         d = datetime.fromtimestamp(mtime)
         date_str = d.strftime("%b %d, %Y at %I:%M%p").replace(" 0", " ")
         date = E('td', date_str)
@@ -199,8 +206,8 @@ def render_tree_html(documents, level=1):
         if level == 1 and document_elements:
 
             title = E('div', E('strong', 'Project Title: '),
-                        document.title,
-                        **{'class': 'caption-title'})
+                      document.title,
+                      **{'class': 'caption-title'})
             head = E('thead',
                      E('tr',
                        E('th', 'num'),

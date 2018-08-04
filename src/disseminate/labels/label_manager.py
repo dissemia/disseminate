@@ -76,6 +76,8 @@ class LabelManager(object):
             label manager.
 
         """
+        assert document.context.is_valid('src_filepath')
+
         # Set up variables
         src_filepath = document.src_filepath
 

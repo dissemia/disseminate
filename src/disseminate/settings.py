@@ -35,7 +35,7 @@ text_extensions = ['.tex', ]
 default_context = {
     'targets': 'html',
     'paths': [],
-    'base_url': '/{target}'
+    'base_url': '/{target}/{subpath}'
 }
 
 #: Attribute in the context in which the body of a file (the string and AST)
@@ -69,8 +69,6 @@ tracked_deps = {'.html': ['.css', '.svg', '.png'],
                 '.css': ['.css', ]
                 }
 
-#: The root url prepended to dependency file paths
-dep_root_url = '/'
 
 #: Convert and Tag Defaults
 #: ------------------------
@@ -79,13 +77,11 @@ dep_root_url = '/'
 # converted files will always be updated
 convert_cache = True
 
-# The location in the target_root to store tempororary cached files
-cache_dir ='.cache'
+#: The location in the target_root to store temporary cached files
+cache_path = '.cache'
 
-# The directory to store converted media files
-media_dir = 'media'
-
-#media_url_root
+#: The default location for media (image, css, js) files.
+media_path = 'media'
 
 
 #: Macros

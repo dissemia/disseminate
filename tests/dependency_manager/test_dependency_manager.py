@@ -2,249 +2,444 @@
 Test the DependencyManager functionality
 """
 import os.path
+import pathlib
 
 import pytest
 
-from disseminate.dependency_manager import DependencyManager, MissingDependency
+from disseminate.dependency_manager import (DependencyManager,
+                                            MissingDependency,
+                                            FileDependency)
+from disseminate.renderers import process_context_template
+from disseminate import SourcePath, TargetPath
 
 # Get the template path for disseminate
 from disseminate import __file__ as root_path
-template_path = os.path.join(os.path.split(root_path)[0],
-                             'templates')
+template_path = pathlib.Path(pathlib.Path(root_path).parent, 'templates')
 
 
-def test_target_path():
-    """Tests the target_path method."""
-    target_root = 'tests/dependency_manager/examples1'
-    # With segregate_targets
-    dep = DependencyManager(project_root='', target_root=target_root)
-    assert dep.target_path('html') == target_root + '/html'
+def test_file_dependency_get_url(context_cls):
+    """Test the get_url method of FileDependency objects."""
+
+    context = context_cls(base_url='')
+
+    dep = FileDependency(dep_filepath=SourcePath(project_root='',
+                                                 subpath=''),
+                         dest_filepath=TargetPath(target_root='',
+                                                  target='.pdf',
+                                                  subpath='test.pdf'))
+
+    # Empty base_url gives an empty url
+    assert dep.get_url(context) == ''
+
+    # A base_url with just a subpath
+    context['base_url'] = '{subpath}'
+    assert dep.get_url(context) == 'test.pdf'
+
+    context['base_url'] = '{target}/{subpath}'
+    assert dep.get_url(context) == 'pdf/test.pdf'
+
+    context['base_url'] = '/{target}/{subpath}'
+    assert dep.get_url(context) == '/pdf/test.pdf'
+
+    context['base_url'] = 'https://www.test.com/{target}/{subpath}'
+    assert dep.get_url(context) == 'https://www.test.com/pdf/test.pdf'
 
 
-def test_search_file(tmpdir):
-    """Test the search_file method."""
-    # 1. Try finding a file in the disseminate templates directory
-    dep = DependencyManager(project_root='', target_root='')
-    path = dep.search_file('media/css/default.css')
+def test_dependency_manager_copy_file(tmpdir, context_cls):
+    """Tests the _copy_file method."""
+    tmpdir = pathlib.Path(tmpdir)
 
-    # The file should exist, and the media and render paths should be
-    # returned
-    assert path is not False
-    assert path[0] == 'media/css/default.css'
-    assert (os.path.abspath(path[1]) ==
-            os.path.abspath(os.path.join(template_path,
-                                         'media/css/default.css')))
+    # setup the paths
+    project_root = SourcePath(project_root='tests/dependency_manager/example1')
+    target_root = TargetPath(target_root=tmpdir)
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='index.dm')
 
-    # 2. Try finding a file in the project root. This path takes precedence
-    # over the module path. The example1 directory has a default.css file in
-    # the media/css directory
-    dep = DependencyManager(project_root='tests/dependency_manager/example1',
-                            target_root='')
-    path = dep.search_file('media/css/default.css')
+    # Setup the context_cls
+    context_cls.validation_types = {'src_filepath': SourcePath,
+                                    'paths': list}
+    paths = [target_root]
+    context = context_cls(src_filepath=src_filepath, paths=paths)
 
-    # The file should exist, and the media and render paths should be
-    # returned
-    assert path is not False
-    assert path[0] == 'media/css/default.css'
-    assert (os.path.abspath(path[1]) ==
-            os.path.abspath(os.path.join('tests/dependency_manager/example1',
-                                         'media/css/default.css')))
+    # Create the dependency manager
+    dep_manager = DependencyManager(project_root=project_root,
+                                    target_root=target_root)
 
-    # 3. Try finding a file with a render path.
-    dep = DependencyManager(project_root='tests/dependency_manager/example1',
-                            target_root='')
-    search_path = 'tests/dependency_manager/example1/media/css/default.css'
-    path = dep.search_file(search_path)
-
-    # The file should exist, and the media and render paths should be
-    # returned
-    assert path is not False
-    assert path[0] == 'media/css/default.css'
-    assert (os.path.abspath(path[1]) ==
-            os.path.abspath(os.path.join('tests/dependency_manager/example1',
-                                         'media/css/default.css')))
-
-    # 4. Try finding a file in a cache directory.
-    # The example4 has a file at '.cache/media/file.txt'
-    dep = DependencyManager(project_root='tests/dependency_manager/example4',
-                            target_root='tests/dependency_manager/example4')
-    path = dep.search_file('media/file.txt')
-    assert path is not False
-    assert path[0] == 'media/file.txt'
-    assert (os.path.abspath(path[1]) ==
-            os.path.abspath(os.path.join('tests/dependency_manager/example4/'
-                                         '.cache/media/file.txt')))
-
-
-def test_copy_file(tmpdir):
-    """Tests the copy_file method."""
-    # get a temporary target_root
-    target_root = str(tmpdir)
-
-    # Copy a file using segregate_targets
-    dep = DependencyManager(project_root='tests/dependency_manager/example1',
-                            target_root=target_root)
+    # Check that the file hasn't been copied yet
+    correct_path = TargetPath(target_root=tmpdir,
+                              target='.html',
+                              subpath='media/css/default.css')
+    assert not correct_path.is_file()
 
     # Copy the file.
-    path = 'tests/dependency_manager/example1/media/css/default.css'
-    target_path = dep.copy_file(target='.html',
-                                dep_filepath='media/css/default.css',
-                                src_filepath=path)
-    assert os.path.isfile(target_path)
-    assert str(tmpdir.join('html/media/css/default.css')) == target_path
+    dep_filepath = SourcePath(project_root='tests/dependency_manager/example1',
+                              subpath='media/css/default.css')
+
+    deps = dep_manager.add_dependency(dep_filepath=dep_filepath, target='.html',
+                                     context=context)
+
+    # Check the copied file
+    assert len(deps) == 1
+    dep = deps.pop()
+    assert dep_filepath == dep.dep_filepath
+    assert correct_path == dep.dest_filepath
+    assert correct_path.is_file()
+
+    # Make sure the dependencies dict was properly populated
+    assert src_filepath in dep_manager.dependencies
+    assert dep_manager.dependencies[src_filepath] == {dep}
 
 
-def test_add_file(tmpdir):
-    """Tests the add_file method."""
-    # get a temporary target_root
-    target_root = str(tmpdir)
+def test_dependency_manager_duplicates(tmpdir, context_cls):
+    """Tests the add of duplicate files."""
+    tmpdir = pathlib.Path(tmpdir)
 
-    # Setup a dependency manager
-    dep = DependencyManager(project_root='tests/dependency_manager/example1',
-                            target_root=target_root)
+    # setup the paths
+    project_root = SourcePath(project_root='tests/dependency_manager/example1')
+    target_root = TargetPath(target_root=tmpdir)
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='index.dm')
 
-    # Try adding a file for a target that doesn't support it. The add_file
-    # will return False in this case.
-    filepath = 'tests/dependency_manager/example1/media/css/default.css'
-    targets_added = dep.add_file(targets=['.misc'], path = filepath)
+    # Setup the context_cls
+    context_cls.validation_types = {'src_filepath': SourcePath,
+                                    'paths': list}
+    paths = [target_root]
+    context = context_cls(src_filepath=src_filepath, paths=paths)
 
-    # The targets_added should be empty in this case.
-    assert targets_added == []
+    # Create the dependency manager
+    dep_manager = DependencyManager(project_root=project_root,
+                                    target_root=target_root)
 
-    # Now try adding a file for a target that does support it.
-    targets_added = dep.add_file(targets=['.misc', '.html'], path=filepath)
+    # Copy the file.
+    dep_filepath = SourcePath(project_root='tests/dependency_manager/example1',
+                              subpath='media/css/default.css')
 
-    # Make sure the added file was correctly added to the dependency manager
-    # and that it was copied or linked to the right location
-    assert targets_added == ['.html', ]
-    dependency = list(dep.dependencies['.html'])[0]
+    deps = dep_manager.add_dependency(dep_filepath=dep_filepath, target='.html',
+                                      context=context)
+    deps = dep_manager.add_dependency(dep_filepath=dep_filepath, target='.html',
+                                      context=context)
 
-    src_filepath = 'tests/dependency_manager/example1/media/css/default.css'
-    assert dependency.src_filepath == src_filepath
-    assert dependency.target_filepath == tmpdir.join('html/media/css/'
-                                                      'default.css')
-    assert dependency.dep_filepath == 'media/css/default.css'
-
-    assert (dep.get_dependency('.html',src_filepath).dep_filepath ==
-            'media/css/default.css')
-
-    assert os.path.isfile(str(tmpdir.join('html/media/css/default.css')))
-
-    # Now try adding a file that requires a conversion. The example2 directory
-    # has a pdf file in 'media/images/sample.pdf'. This file will need to be
-    # converted to an .svg file for an .html target.
-    dep = DependencyManager(project_root='tests/dependency_manager/example2',
-                            target_root=target_root)
-    filepath = 'media/images/sample.pdf'
-    targets_added = dep.add_file(targets=['.misc', '.html'], path=filepath)
-
-    # Make sure the added file was correctly converted and added to the
-    # dependency manager and that it was copied or linked to the right location
-    assert targets_added == ['.html', ]
-    dependency = list(dep.dependencies['.html'])[0]
-
-    src_filepath = 'tests/dependency_manager/example2/media/images/sample.pdf'
-    assert dependency.src_filepath == src_filepath
-    assert dependency.target_filepath == (target_root +
-                                          '/html/media/images/sample.svg')
-    assert dependency.dep_filepath == 'media/images/sample.svg'
-
-    assert (dep.get_dependency('.html', src_filepath).dep_filepath ==
-            'media/images/sample.svg')
-
-    assert os.path.isfile(target_root + '/html/media/images/sample.svg')
-
-    # Try adding a dependency for missing files
-    with pytest.raises(MissingDependency):
-        targets_added = dep.add_file(targets=['.misc', '.html'],
-                                     path='missing.pdf')
-
-    with pytest.raises(MissingDependency):
-        targets_added = dep.add_file(targets=['.misc', '.html'],
-                                     path='missing.invalid')
+    # There should only be 1 dependency in the dependency manager
+    assert len(dep_manager.dependencies[src_filepath]) == 1
 
 
-def test_reset(tmpdir):
-    """Test the reset method."""
-    # get a temporary target_root
-    target_root = str(tmpdir)
+def test_dependency_manager_missing(tmpdir, context_cls):
+    """Test the dependency manager with a missing source file."""
+    tmpdir = pathlib.Path(tmpdir)
 
-    # Setup a dependency manager
-    dep = DependencyManager(project_root='tests/dependency_manager/example3',
-                            target_root=target_root)
+    # setup the paths
+    project_root = SourcePath(project_root='tests/dependency_manager/example1')
+    target_root = TargetPath(target_root=tmpdir)
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='index.dm')
 
-    # Add a file for a target with a sample document_src_filepath. The
-    # dependency is a '.png' file that works for .tex and .html targets
-    filepath = 'tests/dependency_manager/example3/sample.png'
-    targets_added = dep.add_file(targets=['.html', '.tex'], path=filepath,
-                                 document_src_filepath="src/sample.dm")
+    # Setup the context_cls
+    context_cls.validation_types = {'src_filepath': SourcePath,
+                                    'paths': list}
+    paths = [target_root]
+    context = context_cls(src_filepath=src_filepath, paths=paths)
 
-    # Make sure the added file was correctly added
-    assert len(dep.dependencies['.html']) == 1
-    dependency = list(dep.dependencies['.html'])[0]
-    assert dependency.document_src_filepath == "src/sample.dm"
-    assert len(dep.dependencies['.tex']) == 1
-    dependency = list(dep.dependencies['.tex'])[0]
-    assert dependency.document_src_filepath == "src/sample.dm"
+    # Copy a file using segregate_targets
+    dep_manager = DependencyManager(project_root=project_root,
+                                    target_root=target_root)
 
-    # Try resetting a mismatched document_src_filepath. This doesn't remove
-    # the dependencies
-    dep.reset(document_src_filepath='src/mismatch.dm')
-    assert len(dep.dependencies['.html']) == 1
-    assert len(dep.dependencies['.tex']) == 1
+    # Try to create the dependency
+    dep_filepath = SourcePath(project_root='tests/dependency_manager/example1',
+                              subpath='media/css/missing')
 
-    # Try resetting the correct document_src_filepath. This removes the
-    # dependencies and target, since the target has no dependencies
-    dep.reset(document_src_filepath='src/sample.dm')
-    assert '.html' not in dep.dependencies
-    assert '.tex' not in dep.dependencies
+    with pytest.raises(FileNotFoundError):
+        deps = dep_manager.add_dependency(dep_filepath=dep_filepath,
+                                          target='.html',
+                                          context=context)
 
 
-def test_add_file_duplicates(tmpdir):
-    """Tests the add_file method when adding a file twice."""
-    # get a temporary target_root
-    target_root = str(tmpdir)
+def test_dependency_manager_convert_file(tmpdir, context_cls):
+    """Tests the _convert_file method."""
+    # Test the converstion of pdf->svg for an .html target
 
-    # Setup a dependency manager
-    dep = DependencyManager(project_root='tests/dependency_manager/example1',
-                            target_root=target_root)
+    tmpdir = pathlib.Path(tmpdir)
 
-    # Try adding a file twice
-    filepath = 'tests/dependency_manager/example1/media/css/default.css'
-    targets_added = dep.add_file(targets=['.html'], path=filepath)
-    targets_added = dep.add_file(targets=['.html'], path=filepath)
+    # setup the paths
+    project_root = SourcePath(project_root='tests/dependency_manager/example2')
+    target_root = TargetPath(target_root=tmpdir)
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='index.dm')
 
-    # The number of dependencies should be 1, not 2. This is guaranteed because
-    # the DependencyManager uses sets.
-    assert len(dep.dependencies['.html']) == 1
+    # Setup the context_cls
+    context_cls.validation_types = {'src_filepath': SourcePath,
+                                    'paths': list}
+    paths = [target_root]
+    context = context_cls(src_filepath=src_filepath, paths=paths)
+
+    # Copy a file using segregate_targets
+    dep_manager = DependencyManager(project_root=project_root,
+                                    target_root=target_root)
+
+    # Check that the file hasn't been converted yet
+    correct_path = TargetPath(target_root=tmpdir,
+                              target='.html',
+                              subpath='media/images/sample.svg')
+    assert not correct_path.is_file()
+
+    # Convert the file.
+    dep_filepath = SourcePath(project_root=project_root,
+                              subpath='media/images/sample.pdf')
+
+    deps = dep_manager.add_dependency(dep_filepath=dep_filepath,
+                                      target='.html',
+                                      context=context)
+
+    # Check the copied file
+    assert len(deps) == 1
+    dep = deps.pop()
+    assert dep_filepath == dep.dep_filepath
+    assert correct_path == dep.dest_filepath
+    assert correct_path.is_file()
+
+    # Make sure the dependencies dict was properly populated
+    assert src_filepath in dep_manager.dependencies
+    assert dep_manager.dependencies[src_filepath] == {dep}
 
 
-def test_add_html(tmpdir):
-    """Tests the add_html method."""
-    # get a temporary target_root
-    target_root = str(tmpdir)
+def test_dependency_manager_covert_file_reuse(tmpdir, context_cls):
+    """Test the reuse of converted files with the dependency manager."""
+    # Test the converstion of pdf->svg for an .html target
 
-    # Setup the dependency manager
-    dep = DependencyManager(project_root='', target_root=target_root)
+    tmpdir = pathlib.Path(tmpdir)
 
-    # 1. Now try adding the 'template.html' file from the project. This file
-    #    has a dependency on the 'media/css/default.css' file.
-    dep.add_html(template_path + '/template_files/template.html')
+    # setup the paths
+    project_root = SourcePath(project_root='tests/dependency_manager/example2')
+    target_root = TargetPath(target_root=tmpdir)
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='index.dm')
 
-    # Make sure the dependency was added and that it exists
-    assert len(dep.dependencies) == 1
-    dependency = list(dep.dependencies['.html'])[0]
+    # Setup the context_cls
+    context_cls.validation_types = {'src_filepath': SourcePath,
+                                    'paths': list}
+    paths = [target_root]
+    context = context_cls(src_filepath=src_filepath, paths=paths)
 
-    assert dependency.src_filepath == os.path.realpath(template_path +
-                                                       '/media/css/default.css')
-    assert dependency.target_filepath == (target_root +
-                                          '/html/media/css/default.css')
-    assert dependency.dep_filepath == 'media/css/default.css'
+    # Copy a file using segregate_targets
+    dep_manager = DependencyManager(project_root=project_root,
+                                    target_root=target_root)
 
-    assert os.path.isfile(target_root + '/html/media/css/default.css')
+    # Check that the file hasn't been converted yet
+    correct_path = TargetPath(target_root=tmpdir,
+                              target='.html',
+                              subpath='media/images/sample.svg')
+    assert not correct_path.is_file()
 
-    # 2. Now try adding the 'tree.html' file from the project. This has a css
-    #    file, the same as 'template.html', and a link to a font, which should
-    #    not be added.
-    dep.add_html(template_path + '/template_files/tree.html')
-    assert len(dep.dependencies) == 1
+    # Convert the file.
+    dep_filepath = SourcePath(project_root=project_root,
+                              subpath='media/images/sample.pdf')
+
+    deps = dep_manager.add_dependency(dep_filepath=dep_filepath,
+                                      target='.html',
+                                      context=context)
+
+    # Get the information on the file
+    assert len(deps) == 1
+    dep = deps.pop()
+    mtime = dep.dest_filepath.stat().st_mtime
+    ino = dep.dest_filepath.stat().st_ino
+
+    # Try the conversion again and see if the file has changed. (It shouldn't)
+    deps = dep_manager.add_dependency(dep_filepath=dep_filepath,
+                                     target='.html',
+                                     context=context)
+
+    assert len(deps) == 1
+    dep = deps.pop()
+    assert mtime == dep.dest_filepath.stat().st_mtime
+    assert ino == dep.dest_filepath.stat().st_ino
+
+    # Make sure the dependencies dict was properly populated
+    assert src_filepath in dep_manager.dependencies
+    assert dep_manager.dependencies[src_filepath] == {dep}
+
+
+def test_dependency_manager_scape_html(tmpdir, context_cls):
+    """Test the scrape_html method."""
+    tmpdir = pathlib.Path(tmpdir)
+
+    # Setup the test html string
+    html = """
+    <html lang="en">
+    <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/media/css/default.css">
+    </head>
+    </html>"""
+
+    # setup the paths
+    project_root = SourcePath(project_root=tmpdir)
+    target_root = TargetPath(target_root=tmpdir)
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='index.dm')
+
+    # Setup the context_cls
+    context_cls.validation_types = {'src_filepath': SourcePath,
+                                    'paths': list}
+    paths = [target_root]
+    context = context_cls(src_filepath=src_filepath, paths=paths)
+
+    # Setup a file copy using segregate_targets
+    dep_manager = DependencyManager(project_root=project_root,
+                                    target_root=target_root)
+
+    # 1. Scrape the html with a missing file. The file is not found because
+    # the 'media/css/default.css' file is not in the paths entry of the context
+    with pytest.raises(FileNotFoundError):
+        deps = dep_manager.scrape_html(html=html, target='.html',
+                                      context=context)
+
+    # Add the path
+    context['paths'].append(pathlib.Path(template_path, 'default'))
+
+    # 2. Scrape the html with a file that can be found.
+    deps = dep_manager.scrape_html(html=html, target='.html', context=context)
+
+    # Check the dependency's paths
+    assert len(deps) == 1
+    dep = deps.pop()
+    assert (dep.dep_filepath ==
+            SourcePath(project_root=template_path,
+                       subpath='default/media/css/default.css'))
+    assert (dep.dest_filepath ==
+            TargetPath(target_root=tmpdir,
+                       target='html',
+                       subpath='media/css/default.css'))
+
+    # Make sure the dependencies dict was properly populated
+    assert src_filepath in dep_manager.dependencies
+    assert dep_manager.dependencies[src_filepath] == {dep}
+
+    # 3. Scrape the html with a url instead of a file. A url doesn't count
+    #    as a file dependency, so no file should be added to the dependency
+    #    manager.
+    dep_manager.dependencies.clear()  # reset dependencies
+
+    html = """
+    <html lang="en">
+    <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://www.google.com/default.css">
+    </head>
+    </html>"""
+
+    deps = dep_manager.scrape_html(html=html, target='.html', context=context)
+    assert len(deps) == 0
+
+    # Make sure the dependencies dict was properly populated
+    assert src_filepath not in dep_manager.dependencies
+
+
+def test_dependency_manager_scape_html_relative(tmpdir, context_cls):
+    """Test the scrape_html method for files that are referenced locally."""
+    tmpdir = pathlib.Path(tmpdir)
+
+    # setup the paths
+    project_root = SourcePath(project_root=tmpdir)
+    target_root = TargetPath(target_root=tmpdir)
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='index.dm')
+
+    # Setup the context_cls
+    context_cls.validation_types = {'src_filepath': SourcePath,
+                                    'paths': list}
+    paths = [target_root]
+    context = context_cls(src_filepath=src_filepath, paths=paths)
+
+    # Setup a file copy using segregate_targets
+    dep_manager = DependencyManager(project_root=project_root,
+                                    target_root=target_root)
+
+    # Load the 'templates/default/template.html' file. It includes a css link
+    # to templates/default/media/css/default.css'
+    context['paths'].append(pathlib.Path(template_path, 'default'))
+
+    # Try add the html file
+    deps = dep_manager.scrape_html(html='template.html',
+                                   target='.html', context=context)
+
+    # See if the css file was properly added
+    assert len(deps) == 1
+    dep = deps.pop()
+    correct_path = TargetPath(target_root=tmpdir, target='html',
+                              subpath='media/css/default.css')
+    assert dep.dest_filepath == correct_path
+    assert dep.get_url(context=context) == '/html/media/css/default.css'
+
+
+def test_dependency_manager_scape_css(tmpdir, context_cls):
+    """Test the scrape_css method."""
+    tmpdir = pathlib.Path(tmpdir)
+
+    # Setup the test html string
+    css = """
+    @import "/media/css/default.css";
+    body {
+        background-color: lightblue;
+    }"""
+
+    # setup the paths
+    project_root = SourcePath(project_root=tmpdir)
+    target_root = TargetPath(target_root=tmpdir)
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='index.dm')
+
+    # Setup the context_cls
+    context_cls.validation_types = {'src_filepath': SourcePath,
+                                    'paths': list}
+    paths = [target_root]
+    context = context_cls(src_filepath=src_filepath, paths=paths)
+
+    # Setup a file copy using segregate_targets
+    dep_manager = DependencyManager(project_root=project_root,
+                                    target_root=target_root)
+
+    # Add the path
+    context['paths'].append(pathlib.Path(template_path, 'default'))
+
+    # 2. Scrape the html with a file that can be found.
+    deps = dep_manager.scrape_css(css=css, target='.html', context=context)
+
+    # Check the dependency's paths
+    assert len(deps) == 1
+    dep = deps.pop()
+    assert (dep.dep_filepath ==
+            SourcePath(project_root=template_path,
+                       subpath='default/media/css/default.css'))
+    assert (dep.dest_filepath ==
+            TargetPath(target_root=tmpdir,
+                       target='html',
+                       subpath='media/css/default.css'))
+
+    # 3. Scrape the html with a url instead of a file. A url doesn't count
+    #    as a file dependency, so no file should be added to the dependency
+    #    manager.
+    dep_manager.dependencies.clear()  # reset dependencies
+
+    css = """
+    <html lang="en">
+    <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://www.google.com/default.css">
+    </head>
+    </html>"""
+
+    deps = dep_manager.scrape_css(css=css, target='.html', context=context)
+    assert len(deps) == 0
+
+
+# def test_dependency_manager_convert_file_attributes():
+#     raise NotImplementedError
+#
+#
+# def test_dependency_manager_unsupported_filetype():
+#     raise NotImplementedError
+#
+#
+# def test_dependency_manager_template_override(tmpdir, context_cls):
+#     """Test copying of template files and overriding them with files in the
+#     project directory."""

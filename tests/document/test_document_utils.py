@@ -1,7 +1,9 @@
 """
 Test the Document utilities functions.
 """
-from disseminate.document import Document
+from pathlib import Path
+
+from disseminate import Document, SourcePath, TargetPath
 from disseminate.document.utils import (find_project_paths, load_root_documents,
                                         render_tree_html, translate_path)
 from disseminate.utils.tests import strip_leading_space
@@ -14,20 +16,20 @@ def test_find_project_paths():
     project_paths = find_project_paths('tests')
 
     # Make sure the correct root paths are in the project_paths
-    assert 'tests/document/example1' in project_paths
-    assert 'tests/document/example2' in project_paths
-    assert 'tests/document/example4/src' in project_paths
+    assert Path('tests/document/example1') in project_paths
+    assert Path('tests/document/example2') in project_paths
+    assert Path('tests/document/example4/src') in project_paths
 
     # The following directory does not contain disseminate files and should not
     # be listed in the project_paths
-    assert 'tests/document/example3' not in project_paths
+    assert Path('tests/document/example3') not in project_paths
 
     # The following directory has subdirectories. Only the root path should be
     # listed in the project_paths
-    assert 'tests/document/example5' in project_paths
-    assert 'tests/document/example5/sub1' not in project_paths
-    assert 'tests/document/example5/sub2' not in project_paths
-    assert 'tests/document/example5/sub3' not in project_paths
+    assert Path('tests/document/example5') in project_paths
+    assert Path('tests/document/example5/sub1') not in project_paths
+    assert Path('tests/document/example5/sub2') not in project_paths
+    assert Path('tests/document/example5/sub3') not in project_paths
 
 
 def test_load_root_documents(tmpdir):
@@ -38,15 +40,16 @@ def test_load_root_documents(tmpdir):
 
     # Get the src_filepaths for these documents
     src_filepaths = [d.src_filepath for d in documents]
-    assert 'tests/document/example1/dummy.dm' in src_filepaths
-    assert 'tests/document/example2/withheader.dm' in src_filepaths
-    assert 'tests/document/example2/noheader.dm' in src_filepaths
-    assert 'tests/document/example4/src/file.dm' in src_filepaths
-    assert 'tests/document/example5/index.dm' in src_filepaths
+    assert Path('tests/document/example1/dummy.dm') in src_filepaths
+    assert Path('tests/document/example2/withheader.dm') in src_filepaths
+    assert Path('tests/document/example2/noheader.dm') in src_filepaths
+    assert Path('tests/document/example4/src/file.dm') in src_filepaths
+    assert Path('tests/document/example5/index.dm') in src_filepaths
 
     # 2. Create a srcfile in the tmpdir, render it and check the paths
-    src_path = tmpdir.join('src').mkdir()
-    src_filepath = src_path.join('test.dm')
+    src_path = SourcePath(tmpdir, 'src')
+    src_path.mkdir()
+    src_filepath = SourcePath(project_root=src_path, subpath='test.dm')
 
     markup = """
     ---
@@ -54,52 +57,54 @@ def test_load_root_documents(tmpdir):
     ---
     This is my first test
     """
-    src_filepath.write(strip_leading_space(markup))
+    src_filepath.write_text(strip_leading_space(markup))
 
     documents = load_root_documents(path=str(tmpdir))
 
     assert len(documents) == 1
     doc = documents.pop()
-    assert doc.src_filepath == str(src_filepath)
+    assert doc.src_filepath == src_filepath
 
     # Render and check the destination files
     doc.render()
-    assert tmpdir.join('html').join('test.html').exists()
+    target_filepath = tmpdir / 'html' / 'test.html'
+    assert target_filepath.exists()
 
 
 def test_translate_path(tmpdir):
     """Test the translate_path function."""
+    tmpdir = Path(tmpdir)
 
     # 1. Load a document from example4. Example4 has a file in the 'src'
     #    directory
-    target_root4 = tmpdir.join('example4')
+    target_root4 = tmpdir / 'example4'
     target_root4.mkdir()
 
-    doc = Document('tests/document/example4/src/file.dm', str(target_root4))
+    doc = Document('tests/document/example4/src/file.dm', target_root4)
     doc.render()
 
     # Find the document based on the src_filepath render path and relative to
     # the project root
     assert (translate_path('tests/document/example4/src/file.dm', [doc]) ==
-            'tests/document/example4/src/file.dm')
+            Path('tests/document/example4/src/file.dm'))
     assert (translate_path('file.dm', [doc]) ==
-            'tests/document/example4/src/file.dm')
+            Path('tests/document/example4/src/file.dm'))
 
     # Find the target based on the tgt_filepath relative to the target root
     # Test with and without the trailing slash
     assert (translate_path('file.html', [doc]) ==
-            str(target_root4.join('html').join('file.html')))
+            target_root4 / 'html' / 'file.html')
     assert (translate_path('/file.html', [doc]) ==
-            str(target_root4.join('html').join('file.html')))
+            target_root4 / 'html' / 'file.html')
     assert (translate_path('html/file.html', [doc]) ==
-            str(target_root4.join('html').join('file.html')))
+            target_root4 / 'html' / 'file.html')
     assert (translate_path('/html/file.html', [doc]) ==
-            str(target_root4.join('html').join('file.html')))
+            target_root4 / 'html' / 'file.html')
 
     # 2. Load documents from example5. Example5 has a file in the root
     #    directory, a file in the 'sub1', 'sub2' and 'sub3' directories and a
     #    file in the 'sub2/subsub2' directory
-    target_root5 = tmpdir.join('example5')
+    target_root5 = tmpdir / 'example5'
     target_root5.mkdir()
 
     doc = Document('tests/document/example5/index.dm', str(target_root5))
@@ -109,53 +114,51 @@ def test_translate_path(tmpdir):
     docs = [doc]
 
     assert (translate_path('tests/document/example5/index.dm', docs) ==
-            'tests/document/example5/index.dm')
+            Path('tests/document/example5/index.dm'))
     assert (translate_path('tests/document/example5/sub1/index.dm', docs) ==
-            'tests/document/example5/sub1/index.dm')
+            Path('tests/document/example5/sub1/index.dm'))
     assert (translate_path('tests/document/example5/sub2/index.dm', docs) ==
-            'tests/document/example5/sub2/index.dm')
+            Path('tests/document/example5/sub2/index.dm'))
     assert (translate_path('tests/document/example5/sub2/subsub2/index.dm',
                            docs) ==
-            'tests/document/example5/sub2/subsub2/index.dm')
+            Path('tests/document/example5/sub2/subsub2/index.dm'))
     assert (translate_path('tests/document/example5/sub3/index.dm', docs) ==
-            'tests/document/example5/sub3/index.dm')
+            Path('tests/document/example5/sub3/index.dm'))
 
     # Find the documents based on src_filepaths relative to the project_root.
     assert (translate_path('index.dm', docs) ==
-            'tests/document/example5/index.dm')
+            Path('tests/document/example5/index.dm'))
     assert (translate_path('sub1/index.dm', docs) ==
-            'tests/document/example5/sub1/index.dm')
+            Path('tests/document/example5/sub1/index.dm'))
     assert (translate_path('sub2/index.dm', docs) ==
-            'tests/document/example5/sub2/index.dm')
+            Path('tests/document/example5/sub2/index.dm'))
     assert (translate_path('sub2/subsub2/index.dm', docs) ==
-            'tests/document/example5/sub2/subsub2/index.dm')
+            Path('tests/document/example5/sub2/subsub2/index.dm'))
     assert (translate_path('sub3/index.dm', docs) ==
-            'tests/document/example5/sub3/index.dm')
+            Path('tests/document/example5/sub3/index.dm'))
 
     # Find the documents based on tgt_filepath render paths.
     assert (translate_path('/index.html', docs) ==
-            str(target_root5.join('html').join('index.html')))
+            target_root5 / 'html' / 'index.html')
     assert (translate_path('/sub1/index.html', docs) ==
-            str(target_root5.join('html').join('sub1').join('index.html')))
+            target_root5 / 'html' / 'sub1' / 'index.html')
     assert (translate_path('/sub2/index.html', docs) ==
-            str(target_root5.join('html').join('sub2').join('index.html')))
+            target_root5 / 'html' / 'sub2' / 'index.html')
     assert (translate_path('/sub2/subsub2/index.html', docs) ==
-            str(target_root5.join('html').join('sub2').join('subsub2')
-                .join('index.html')))
+            target_root5 / 'html' / 'sub2' / 'subsub2' / 'index.html')
     assert (translate_path('/sub3/index.html', docs) ==
-            str(target_root5.join('html').join('sub3').join('index.html')))
+            target_root5 / 'html' / 'sub3' / 'index.html')
 
     assert (translate_path('/html/index.html', docs) ==
-            str(target_root5.join('html').join('index.html')))
+            target_root5 / 'html' / 'index.html')
     assert (translate_path('/html/sub1/index.html', docs) ==
-            str(target_root5.join('html').join('sub1').join('index.html')))
+            target_root5 / 'html' / 'sub1' / 'index.html')
     assert (translate_path('/html/sub2/index.html', docs) ==
-            str(target_root5.join('html').join('sub2').join('index.html')))
+            target_root5 / 'html' / 'sub2' / 'index.html')
     assert (translate_path('/html/sub2/subsub2/index.html', docs) ==
-            str(target_root5.join('html').join('sub2').join('subsub2')
-                .join('index.html')))
+            target_root5 / 'html' / 'sub2' / 'subsub2' / 'index.html')
     assert (translate_path('/html/sub3/index.html', docs) ==
-            str(target_root5.join('html').join('sub3').join('index.html')))
+            target_root5 / 'html' / 'sub3' / 'index.html')
 
 
 def test_render_tree_html():
@@ -170,11 +173,15 @@ def test_render_tree_html():
     html = render_tree_html(docs[0:0])
     assert html == ''
 
+    # Set a default base_url
+    for doc in docs:
+        doc.context['base_url'] = '/{target}/{subpath}'
+
     # Render the html for file1.dm
     html = render_tree_html(docs[0:1])
     key = """<div class="tableset">
       <table class="tablesorter" id="index">
-        <div class="caption-title"><strong>Project Title: </strong>tests/document/example6/src/file1</div>
+        <div class="caption-title"><strong>Project Title: </strong>file1</div>
         <thead>
           <tr>
             <th>num</th>
@@ -186,17 +193,17 @@ def test_render_tree_html():
         <tr class="level-1">
           <td class="num">1</td>
           <td class="src">
-            <a href="/tests/document/example6/src/file1.dm">tests/document/example6/src/file1.dm</a>
+            <a href="/tests/document/example6/src/file1.dm">file1.dm</a>
           </td>
-          <td class="tgt">(<a href="file1.html">html</a>)</td>
+          <td class="tgt">(<a href="/html/file1.html">html</a>)</td>
           <td class="date">Apr 5, 2018 at 4:45PM</td>
         </tr>
         <tr class="level-2">
           <td class="num">2</td>
           <td class="src">
-            <a href="/tests/document/example6/src/file2.dm">tests/document/example6/src/file2.dm</a>
+            <a href="/tests/document/example6/src/file2.dm">file2.dm</a>
           </td>
-          <td class="tgt">(<a href="file2.html">html</a>)</td>
+          <td class="tgt">(<a href="/html/file2.html">html</a>)</td>
           <td class="date">Apr 5, 2018 at 4:45PM</td>
         </tr>
       </table>

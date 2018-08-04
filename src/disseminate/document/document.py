@@ -6,7 +6,7 @@ from shutil import rmtree
 from collections import OrderedDict
 import logging
 import os
-import os.path
+import pathlib
 
 from .document_context import DocumentContext
 from ..ast import (process_context_asts, process_context_paragraphs,
@@ -17,6 +17,7 @@ from ..macros import process_context_macros
 from ..convert import convert
 from ..context.utils import context_targets, context_includes
 from ..utils import mkdir_p
+from ..paths import SourcePath, TargetPath
 from .. import settings
 
 
@@ -32,8 +33,8 @@ class Document(object):
     Parameters
     ----------
     src_filepath : str
-        The path (a render path, relative to the current directory or an
-        absolute path) for the document (markup source) file of this document.
+        The path (an absolute path or a path relative to the current directory)
+        for the document (markup source) file of this document.
     target_root : str, optional
         The path for the rendered target files. To this directly, the target
         extension subdirectories (ex: 'html' 'tex') will be created.
@@ -114,32 +115,41 @@ class Document(object):
     def __init__(self, src_filepath, target_root=None, parent_context=None):
         logging.debug("Creating document: {}".format(src_filepath))
 
-        # Populate the attributes
-        self.src_filepath = str(src_filepath)
+        # Populate attributes
         self.subdocuments = OrderedDict()
         self._templates = dict()
-        src_path = os.path.split(self.src_filepath)[0]
+
+        # Process the src_filepath
+        if isinstance(src_filepath, SourcePath):
+            project_root = src_filepath.project_root
+            self.src_filepath = src_filepath
+        else:
+            src_filepath = pathlib.Path(src_filepath)
+            project_root = SourcePath(project_root=src_filepath.parent)
+            self.src_filepath = SourcePath(project_root=project_root,
+                                           subpath=src_filepath.name)
 
         # Set the project_root, if needed.
         if parent_context is None or 'project_root' not in parent_context:
-            self._project_root = src_path
+            self._project_root = project_root
 
         # Set the target_root, if needed.
         if target_root is not None:
-            # Use the specified value, if available.
-            self._target_root = target_root
+            # Use the specified value, if available, but convert to a
+            # TargetPath, whether it's a string, pathlib.Path or TargetPath
+            self._target_root = TargetPath(target_root=target_root)
         elif parent_context is not None and 'target_root' in parent_context:
             # Otherwise use the one in the parent context, if available.
             self._target_root = parent_context['target_root']
         # In these situations, there is no 'target_root' in the parent context,
-        # so we have to figure one out.
-        elif src_path.endswith(settings.document_src_directory):
-            # If the src_path is in a src_directory, use the directory above
+        # and None was specified, so we have to figure one out.
+        elif project_root.match(settings.document_src_directory):
+            # If the project_root is in a src directory, use the directory above
             # this directory
-            self._target_root = os.path.split(src_path)[0]
+            self._target_root = TargetPath(target_root=project_root.parent)
         else:
             # Otherwise just use the same directory as the src directory
-            self._target_root = src_path
+            self._target_root = TargetPath(target_root=project_root)
 
         # Create the context
         self.context = DocumentContext(document=self,
@@ -171,7 +181,7 @@ class Document(object):
                          if hasattr(title, 'default_fmt')
                          else title)
             return title_str
-        return self.src_filepath.strip(settings.document_extension)
+        return str(self.src_filepath.subpath.with_suffix(''))
 
     @property
     def short(self):
@@ -212,7 +222,7 @@ class Document(object):
     @property
     def temp_dir(self):
         if self._temp_dir is None:
-            self._temp_dir = mkdtemp()
+            self._temp_dir = pathlib.Path(mkdtemp())
         return self._temp_dir
 
     @property
@@ -249,28 +259,20 @@ class Document(object):
         """
         target_list = self.target_list
 
-        # Keep a list of extensions without the trailing period
-        # ex: ['html', 'pdf']
-        stripped_exts = [ext[1:] for ext in target_list]
-
         # Create the target dict
         targets = dict()
-        base_target = self.target_root
 
-        # Get the filename relative to the project root
-        project_filename = os.path.relpath(self.src_filepath, self.project_root)
+        # Get the filename relative to the project root (without the ext)
+        subpath = self.src_filepath.subpath
 
-        # Strip the extension
-        project_basefilename = os.path.splitext(project_filename)[0]
-
-        for target_ext, stripped_ext in zip(target_list, stripped_exts):
-            t = (os.path.join(str(base_target), str(stripped_ext),
-                              str(project_basefilename)) +
-                 target_ext)
-            targets[target_ext] = t
+        for target in target_list:
+            target_path = TargetPath(target_root=self.target_root,
+                                     target=target,
+                                     subpath=subpath.with_suffix(target))
+            targets[target] = target_path
         return targets
 
-    def target_filepath(self, target, render_path=True):
+    def target_filepath(self, target):
         """The filepath for the given target extension.
 
         Parameters
@@ -278,20 +280,7 @@ class Document(object):
         target : str
             The target extension for the target file.
             ex: '.html' or '.tex'
-        render_path : bool
-            If True, the returned target_filepath is a render path---i.e. it
-            is an absolute path or relative to the current directory.
-            If False, the returned target_filepath is relative to the target
-            root, including the target subdirectory.
         """
-        assert target in self.targets
-
-        if not render_path:
-            # Get the target_root. The actual target path includes the target
-            # extension as a subdirectory.
-            target_root = os.path.join(self.target_root, target.strip('.'))
-            return os.path.relpath(self.targets[target], target_root)
-
         return self.targets[target]
 
     def reset_contexts(self):
@@ -328,9 +317,8 @@ class Document(object):
         """Clear and repopulate the dependencies for this document in the
         dependency manager."""
         if 'dependency_manager' in self.context:
-            document_src_filepath = self.src_filepath
             dep = self.context['dependency_manager']
-            dep.reset(document_src_filepath=document_src_filepath)
+            dep.reset(src_filepath=self.src_filepath)
 
     @property
     def label_manager(self):
@@ -349,8 +337,7 @@ class Document(object):
             # Reset the labels for this document
             label_manager.reset(document=self)
 
-            project_filepath = os.path.relpath(self.src_filepath,
-                                               self.project_root)
+            subpath_str = str(self.src_filepath.subpath)
 
             # Get the level of the document
             level = self.context.get('level', 1)
@@ -358,7 +345,7 @@ class Document(object):
             # Set the label for this document
             kind = ('document', 'document-level-' + str(level))
             label_manager.add_label(document=self, kind=kind,
-                                    id='doc:' + project_filepath)
+                                    id='doc:' + subpath_str)
 
     def documents_dict(self, document=None, only_subdocuments=False,
                        recursive=False):
@@ -447,10 +434,8 @@ class Document(object):
         # reference to it.
         self.subdocuments.clear()
 
-        # Retrieve the file paths of included files in the context, as render
-        # paths
-        src_filepaths = context_includes(context=self.context,
-                                         render_paths=True)
+        # Retrieve the file paths of included files in the context
+        src_filepaths = context_includes(context=self.context)
 
         for src_filepath in src_filepaths:
             # If the document is already loaded, copy it to the subdocuments
@@ -470,15 +455,6 @@ class Document(object):
                               parent_context=self.context)
             self.subdocuments[src_filepath] = subdoc
 
-    def get_renderer(self):
-        """Get the template renderer for this document.
-
-        Returns
-        -------
-        template
-        """
-        return self.context.get('template_renderer', None)
-
     # TODO: rename to load(...)
     def load_document(self, reload=False):
         """Load or reload the document into the context.
@@ -494,7 +470,7 @@ class Document(object):
             A root tag object for the AST.
         """
         # Check to make sure the file exists
-        if not os.path.isfile(self.src_filepath):  # file must exist
+        if not self.src_filepath.is_file():  # file must exist
             msg = "The source document '{}' must exist."
             raise DocumentError(msg.format(self.src_filepath))
 
@@ -531,8 +507,7 @@ class Document(object):
             self.reset_labels()
 
             # Load the string from the src_filepath,
-            with open(self.src_filepath) as f:
-                string = f.read()
+            string = self.src_filepath.read_text()
 
             # Place the text of the string in the 'body' attribute of the
             # context (see settings.body_attr)
@@ -559,6 +534,15 @@ class Document(object):
 
         return None
 
+    def get_renderer(self):
+        """Get the template renderer for this document.
+
+        Returns
+        -------
+        template
+        """
+        return self.context.get('template_renderer', None)
+
     def render_required(self, target_filepath):
         """Evaluate whether a render is required to write the target file.
 
@@ -577,23 +561,25 @@ class Document(object):
             True, if a render is required.
             False if a render isn't required.
         """
+        target_filepath = pathlib.Path(target_filepath)
+
         # Reload document
         self.load_document()
 
         # Setup variables
-        target = os.path.splitext(target_filepath)[1]
+        target = target_filepath.suffix
 
         # 1. A render is required if the target_filepath doesn't exist
-        if not os.path.isfile(target_filepath):
+        if not target_filepath.is_file():
             logging.debug("Render required for {}: '{}' target file "
                           "does not exist.".format(self, target_filepath))
             return True
 
         # Get the modification time for the source file(s) (src_filepath)
-        src_mtime = os.path.getmtime(self.src_filepath)
+        src_mtime = self.src_filepath.stat().st_mtime
 
         # Get the modification for the target file (target_filepath)
-        target_mtime = os.path.getmtime(target_filepath)
+        target_mtime = target_filepath.stat().st_mtime
 
         # 2. A render is required if the src_filepath mtime is newer than the
         # target_filepath
@@ -671,16 +657,16 @@ class Document(object):
 
             # Determine whether it's a compiled target or uncompiled target
             if target in settings.compiled_exts:
-                self.render_compiled(target=target,
-                                     target_filepath=target_filepath,
-                                     targets=targets)
+                self._render_compiled(target=target,
+                                      target_filepath=target_filepath,
+                                      targets=targets)
             else:
-                self.render_uncompiled(target=target,
-                                       target_filepath=target_filepath)
+                self._render_uncompiled(target=target,
+                                        target_filepath=target_filepath)
 
         return True
 
-    def render_uncompiled(self, target, target_filepath):
+    def _render_uncompiled(self, target, target_filepath):
         """Render a text target format.
 
         For many output formats, like .html and .tex, the rendered file is
@@ -704,17 +690,11 @@ class Document(object):
         # Otherwise, just write the string
 
         if renderer.is_available(target=target):
-            # generate a new ouput_string
-            output_string = renderer.render(self.context, target=target)
+            # generate a new ouput_string. The render function adds
+            # dependencies.
+            output_string = renderer.render(target=target,
+                                            context=self.context)
 
-            # Add template to dependencies, if able
-            if 'dependency_manager' in self.context:
-                dep = self.context['dependency_manager']
-
-                # See if the dependencies has a method for this target
-                meth = getattr(dep, 'add_' + target_name, None)
-                if meth is not None:
-                    meth(output_string)
         else:
             # If there is no template, simply use the context's body tag as the
             # string
@@ -731,7 +711,7 @@ class Document(object):
         with open(target_filepath, 'w') as f:
             f.write(output_string)
 
-    def render_compiled(self, target, target_filepath, targets):
+    def _render_compiled(self, target, target_filepath, targets):
         """Render a compiled target format.
 
         For some formats, like .pdf, these have to be compiled after generating
@@ -743,33 +723,43 @@ class Document(object):
         ----------
         target: str
             The target extension to render. ex: '.pdf'
-        target_filepath : str
+        target_filepath : :obj:`disseminate.TargetPath`
             The final render path of the target file. ex : 'pdf/index.pdf'
         targets : dict
             This is a dict with the extension as keys and the target_filepath
             (as a render path) as the value.
         """
+        assert isinstance(target_filepath, TargetPath)
+
         # Render the intermediate target. First, see if the
         # intermediary extension is already in targets. If not, create
         # a temporary one.
         inter_ext = settings.compiled_exts[target]
         if inter_ext in targets:
+            # In this case, the intermediate target is also a specified target
+            # for this document. Use that target.
             inter_target_filepath = targets[inter_ext]
-            self.render_uncompiled(target=inter_ext,
-                                   target_filepath=inter_target_filepath)
-            src_filepath = inter_target_filepath
+
+            self._render_uncompiled(target=inter_ext,
+                                    target_filepath=inter_target_filepath)
+
+            # The convert function expects a SourcePath
+            src_filepath = SourcePath(project_root=inter_target_filepath.parent,
+                                      subpath=inter_target_filepath.name)
         else:
+            # In this case, we have to create an temporary intermediary target.
             temp_dir = self.temp_dir
-            temp_filename = os.path.split(target_filepath)[1]
-            temp_filename = (os.path.splitext(temp_filename)[0] +
-                             inter_ext)
-            temp_path = os.path.join(temp_dir, temp_filename)
-            self.render_uncompiled(target=inter_ext,
-                                   target_filepath=temp_path)
-            src_filepath = temp_path
+            inter_filename = target_filepath.with_suffix(inter_ext).name
+
+            # The convert function expects a SourcePath
+            src_filepath = SourcePath(project_root=temp_dir,
+                                      subpath=inter_filename)
+
+            self._render_uncompiled(target=inter_ext,
+                                    target_filepath=src_filepath)
 
         # Now convert the file and continue
-        target_basefilepath = os.path.splitext(target_filepath)[0]
+        target_basefilepath = target_filepath.with_suffix('')
         filepath = convert(src_filepath=src_filepath,
                            target_basefilepath=target_basefilepath,
                            targets=[target])
