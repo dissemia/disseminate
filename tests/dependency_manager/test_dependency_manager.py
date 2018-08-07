@@ -7,9 +7,7 @@ import pathlib
 import pytest
 
 from disseminate.dependency_manager import (DependencyManager,
-                                            MissingDependency,
                                             FileDependency)
-from disseminate.renderers import process_context_template
 from disseminate import SourcePath, TargetPath
 
 # Get the template path for disseminate
@@ -281,7 +279,8 @@ def test_dependency_manager_scape_html(tmpdir, context_cls):
     context_cls.validation_types = {'src_filepath': SourcePath,
                                     'paths': list}
     paths = [target_root]
-    context = context_cls(src_filepath=src_filepath, paths=paths)
+    context = context_cls(src_filepath=src_filepath, paths=paths,
+                          base_url='/{target}/{subpath}')
 
     # Setup a file copy using segregate_targets
     dep_manager = DependencyManager(project_root=project_root,
@@ -290,29 +289,23 @@ def test_dependency_manager_scape_html(tmpdir, context_cls):
     # 1. Scrape the html with a missing file. The file is not found because
     # the 'media/css/default.css' file is not in the paths entry of the context
     with pytest.raises(FileNotFoundError):
-        deps = dep_manager.scrape_html(html=html, target='.html',
-                                      context=context)
+        html = dep_manager.scrape_html(html=html, target='.html',
+                                       context=context)
 
     # Add the path
     context['paths'].append(pathlib.Path(template_path, 'default'))
 
     # 2. Scrape the html with a file that can be found.
-    deps = dep_manager.scrape_html(html=html, target='.html', context=context)
+    html = dep_manager.scrape_html(html=html, target='.html', context=context)
 
-    # Check the dependency's paths
-    assert len(deps) == 1
-    dep = deps.pop()
-    assert (dep.dep_filepath ==
-            SourcePath(project_root=template_path,
-                       subpath='default/media/css/default.css'))
-    assert (dep.dest_filepath ==
-            TargetPath(target_root=tmpdir,
-                       target='html',
-                       subpath='media/css/default.css'))
+    # Check that the url has been correctly inserted. These should be
+    # rewritten for the target directory.
+    assert 'href="/media/css/default.css"' not in html
+    assert 'href="/html/media/css/default.css"' in html
 
     # Make sure the dependencies dict was properly populated
     assert src_filepath in dep_manager.dependencies
-    assert dep_manager.dependencies[src_filepath] == {dep}
+    assert len(dep_manager.dependencies[src_filepath]) == 1
 
     # 3. Scrape the html with a url instead of a file. A url doesn't count
     #    as a file dependency, so no file should be added to the dependency
@@ -327,48 +320,11 @@ def test_dependency_manager_scape_html(tmpdir, context_cls):
     </head>
     </html>"""
 
-    deps = dep_manager.scrape_html(html=html, target='.html', context=context)
-    assert len(deps) == 0
+    html = dep_manager.scrape_html(html=html, target='.html', context=context)
+    assert 'href="https://www.google.com/default.css"' in html
 
     # Make sure the dependencies dict was properly populated
     assert src_filepath not in dep_manager.dependencies
-
-
-def test_dependency_manager_scape_html_relative(tmpdir, context_cls):
-    """Test the scrape_html method for files that are referenced locally."""
-    tmpdir = pathlib.Path(tmpdir)
-
-    # setup the paths
-    project_root = SourcePath(project_root=tmpdir)
-    target_root = TargetPath(target_root=tmpdir)
-    src_filepath = SourcePath(project_root=project_root,
-                              subpath='index.dm')
-
-    # Setup the context_cls
-    context_cls.validation_types = {'src_filepath': SourcePath,
-                                    'paths': list}
-    paths = [target_root]
-    context = context_cls(src_filepath=src_filepath, paths=paths)
-
-    # Setup a file copy using segregate_targets
-    dep_manager = DependencyManager(project_root=project_root,
-                                    target_root=target_root)
-
-    # Load the 'templates/default/template.html' file. It includes a css link
-    # to templates/default/media/css/default.css'
-    context['paths'].append(pathlib.Path(template_path, 'default'))
-
-    # Try add the html file
-    deps = dep_manager.scrape_html(html='template.html',
-                                   target='.html', context=context)
-
-    # See if the css file was properly added
-    assert len(deps) == 1
-    dep = deps.pop()
-    correct_path = TargetPath(target_root=tmpdir, target='html',
-                              subpath='media/css/default.css')
-    assert dep.dest_filepath == correct_path
-    assert dep.get_url(context=context) == '/html/media/css/default.css'
 
 
 def test_dependency_manager_scape_css(tmpdir, context_cls):
@@ -402,9 +358,15 @@ def test_dependency_manager_scape_css(tmpdir, context_cls):
     context['paths'].append(pathlib.Path(template_path, 'default'))
 
     # 2. Scrape the html with a file that can be found.
-    deps = dep_manager.scrape_css(css=css, target='.html', context=context)
+    css = dep_manager.scrape_css(css=css, target='.html', context=context)
 
-    # Check the dependency's paths
+    # Check the dependency's paths. These should be rewritten for the target
+    # directory.
+    assert '@import "/media/css/default.css";' not in css
+    assert '@import "/html/media/css/default.css";' in css
+
+    # Check the dependencies
+    deps = dep_manager.dependencies[src_filepath]
     assert len(deps) == 1
     dep = deps.pop()
     assert (dep.dep_filepath ==
@@ -421,15 +383,18 @@ def test_dependency_manager_scape_css(tmpdir, context_cls):
     dep_manager.dependencies.clear()  # reset dependencies
 
     css = """
-    <html lang="en">
-    <head>
-    <meta charset="utf-8">
-    <link rel="stylesheet" href="https://www.google.com/default.css">
-    </head>
-    </html>"""
+    @import "https://google.com/default.css";
+    body {
+        background-color: lightblue;
+    }"""
 
-    deps = dep_manager.scrape_css(css=css, target='.html', context=context)
-    assert len(deps) == 0
+    css = dep_manager.scrape_css(css=css, target='.html', context=context)
+
+    # Check that the paths remain unchanged
+    assert '@import "https://google.com/default.css"' in css
+
+    # Check that no dependencies were created
+    assert src_filepath not in dep_manager.dependencies
 
 
 # def test_dependency_manager_convert_file_attributes():

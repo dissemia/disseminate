@@ -9,8 +9,10 @@ import logging
 
 import regex
 
+from ..tags import Tag
 from ..convert import convert
-from ..attributes import re_attrs, kwargs_attributes
+from ..attributes import (parse_attributes, get_attribute_value, set_attribute,
+                          kwargs_attributes)
 from ..paths import SourcePath, TargetPath
 from .. import settings
 
@@ -351,6 +353,9 @@ class DependencyManager(object):
     def scrape_html(self, html, target, context):
         """Scrape an html string for dependencies, like css and js files.
 
+        .. note:: This function rewrites <link ...> tags to point to
+                  dependency destination files.
+
         Parameters
         ----------
         html : str or :obj:`pathlib.Path`
@@ -362,8 +367,8 @@ class DependencyManager(object):
 
         Returns
         -------
-        dependencies : list of :obj:`disseminate.dependency_manager.FileDependency`
-            A list of the newly created dependencies
+        html : string
+            The processed html string.
 
         Raises
         ------
@@ -372,41 +377,42 @@ class DependencyManager(object):
         """
         assert context.is_valid('paths')
 
-        deps = set()
-
-        # Find link tags and parse their attributes
-        matches = self._scrape_file(string=html, regexpr=self._re_html_link,
-                                    context=context)
-        for m in matches:
+        def repl_html(m):
             # Parse the attributes of the link tag
             contents = m.groupdict()['contents']
 
-            # Match the attributes, and find files
-            attrs = dict()
-            for n in re_attrs.finditer(contents):
-                d = n.groupdict()
-                if isinstance(d['value'], str):
-                    attrs[d['key']] = d['value'].strip('"').strip("'").strip()
+            # Convert the attributes to an attrs tuple
+            attrs = parse_attributes(contents)
+
+            # Get the value of the 'href' attribute
+            href = get_attribute_value(attrs=attrs, attribute_name='href')
 
             # Check to see if a 'href' attribute is present and that it doesn't
             # point to a url--urls aren't file dependencies. If so, skip this
             # link.
-            if ('href' not in attrs or
-                    urllib.parse.urlparse(attrs['href']).scheme != ''):
-                continue
+            if href is None or urllib.parse.urlparse(href).scheme != '':
+                return m.group()
 
             # Get the filepath. The href may have a leading '/', and this should
             # be stripped
-            path = (attrs['href'] if not attrs['href'].startswith('/') else
-            attrs['href'][1:])
+            path = href if not href.startswith('/') else href[1:]
 
             # Now see if it can be found and added. This will only add files
             # that are in settings.tracked_deps.
-            dep = self.add_dependency(dep_filepath=path, target=target,
-                                      context=context)
-            deps |= dep
+            deps = self.add_dependency(dep_filepath=path, target=target,
+                                       context=context)
+            dep = deps.pop()
 
-        return deps
+            # Recreate the <link ...> tag
+            url = dep.dest_filepath.get_url(context)
+            attrs = set_attribute(attrs=attrs, attribute=('href', url))
+            tag = Tag(name='link', content='', context=context,
+                      attributes=attrs)
+            return tag.html
+
+        # Find link tags and parse their attributes
+        return self._scrape_file(string=html, regexpr=self._re_html_link,
+                                 repl=repl_html, context=context)
 
     #: regex for processing @import tags in css
     _re_css_import = regex.compile(r'@import\s*'
@@ -417,6 +423,9 @@ class DependencyManager(object):
 
     def scrape_css(self, css, target, context):
         """Scrape a css string for dependencies, like css files.
+
+        .. note:: This function rewrites @import tags to point to
+                  dependency destination files.
 
         Parameters
         ----------
@@ -429,8 +438,8 @@ class DependencyManager(object):
 
         Returns
         -------
-        dependencies : list of :obj:`disseminate.dependency_manager.FileDependency`
-            A list of the newly created dependencies
+        css : string
+            The processed css string.
 
         Raises
         ------
@@ -439,19 +448,15 @@ class DependencyManager(object):
         """
         assert context.is_valid('paths')
 
-        deps = set()
-
         # Find import commands
-        matches = self._scrape_file(string=css, regexpr=self._re_css_import,
-                                    context=context)
-        for m in matches:
+        def repl_css(m):
             # Parse the attributes of the link tag
             contents = m.groupdict()['link']
 
             # See if it's a url. If so, don't add it as a file dependency.
             parsed = urllib.parse.urlparse(contents)
             if parsed.scheme != '':
-               continue
+               return m.group()
 
             # Get the path of the file, a strip the leading '/' if present.
             path = (parsed.path if not parsed.path.startswith('/')
@@ -459,13 +464,18 @@ class DependencyManager(object):
 
             # Now see if it can be found and added. This will only add files
             # that are in settings.tracked_deps.
-            dep = self.add_dependency(dep_filepath=path, target=target,
-                                      context=context)
-            deps |= dep
+            deps = self.add_dependency(dep_filepath=path, target=target,
+                                       context=context)
+            dep = deps.pop()
 
-        return deps
+            url = dep.dest_filepath.get_url(context)
 
-    def _scrape_file(self, string, regexpr, context):
+            return '@import "{}"'.format(url)
+
+        return self._scrape_file(string=css, regexpr=self._re_css_import,
+                                 repl=repl_css, context=context)
+
+    def _scrape_file(self, string, regexpr, repl, context):
         """Parse a filename specified by string, or the string itself, for
         matches of the given regex.
 
@@ -475,6 +485,8 @@ class DependencyManager(object):
             Either a path to a text file or a string to parse.
         regexpr : generator of :obj:`Match`
             A generator of regex match objects.
+        repl : function
+            The match replacing function
         """
         # Load the string either as a file with a filename or the string itself.
         if isinstance(string, pathlib.Path):
@@ -493,7 +505,7 @@ class DependencyManager(object):
             # file, try parsing the string itself.
             parse_str = path.read_text() if path is not None else string
 
-        return regexpr.finditer(parse_str)
+        return regexpr.sub(repl, parse_str)
 
     def reset(self, src_filepath=None):
         """Reset the dependencies tracked by the DependencyManager.

@@ -48,14 +48,14 @@ class Img(Tag):
                                           context=self.context,
                                           attributes=self.attributes)
         dep = deps.pop()
-        dep_filepath = dep.dep_filepath
-        dep_subpath = dep_filepath.subpath
+        dest_filepath = dep.dest_filepath
+        dest_subpath = dest_filepath.subpath
 
         # get the attributes for tex
         valid_attrs = settings.tex_valid_attributes.get('img', None)
         attrs_str = format_tex_attributes(self.attributes,
                                           attribute_names=valid_attrs)
-        return "\\includegraphics" + attrs_str + "{{{}}}".format(dep_subpath)
+        return "\\includegraphics" + attrs_str + "{{{}}}".format(dest_subpath)
 
     def html_fmt(self, level=1, content=None):
         # Add the file dependency

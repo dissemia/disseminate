@@ -380,7 +380,11 @@ class Converter(object):
     def target_filepath(self):
         """Return the full target_path (:obj:`disseminate.TargetPath`) with
         modifiers and an extension."""
-        return self.target_basefilepath.value.with_suffix(self.target)
+        target_basefilepath = self.target_basefilepath.value
+        subpath = target_basefilepath.subpath.with_suffix(self.target)
+        return TargetPath(target_root=target_basefilepath.target_root,
+                          target=target_basefilepath.target,
+                          subpath=subpath)
 
     def convert(self):
         """Convert a file and return its new path.

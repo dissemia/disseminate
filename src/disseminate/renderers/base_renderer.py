@@ -170,27 +170,31 @@ class BaseRenderer(object):
         assert context.is_valid('dependency_manager')
         dep_manager = context['dependency_manager']
 
+        # Keep track of the processed string of the rendering.
+        processed_rendering = rendering
+
         # See if there's a scrape method for the given target.
         # ex: 'scrape_html'
         method = getattr(dep_manager, 'scrape_' + target.strip('.'), None)
         if method is not None:
-            deps = method(rendering, target, context)
-            return deps
-        return None
+            processed_rendering = method(processed_rendering, target, context)
+        return processed_rendering
 
-    def _set_context_paths(self, context):
-        """Add the paths for the used templates in the context's paths entry."""
-        assert context.is_valid('paths')
-        context_paths = context['paths']
+    def _set_context_paths(self, context=None):
+        """Add the paths for the used templates in the context's paths entry,
+        if available."""
+        if context is not None:
+            assert context.is_valid('paths')
+            context_paths = context['paths']
 
-        try:
-            template_filepaths = self.template_filepaths()
-            template_paths = [template_filepath.parent
-                              for template_filepath in template_filepaths]
-        except NotImplementedError:
-            template_paths = []
+            try:
+                template_filepaths = self.template_filepaths()
+                template_paths = [template_filepath.parent
+                                  for template_filepath in template_filepaths]
+            except NotImplementedError:
+                template_paths = []
 
-        for path in template_paths:
-            if path in context_paths:
-                continue
-            context_paths.append(path)
+            for path in template_paths:
+                if path in context_paths:
+                    continue
+                context_paths.append(path)

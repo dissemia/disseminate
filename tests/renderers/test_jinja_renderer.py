@@ -267,8 +267,10 @@ def test_jinja_render_dependencies(tmpdir, context_cls):
     dep = list(dep_manager.dependencies[src_filepath])[0]
 
     module_template_path = renderer.module_path
-    template_path = pathlib.Path(module_template_path, 'default')
-    assert dep.dep_filepath == SourcePath(project_root=template_path,
+    default_template_path = pathlib.Path(module_template_path, 'default')
+    tufte_template_path = pathlib.Path(module_template_path, 'books/tufte')
+
+    assert dep.dep_filepath == SourcePath(project_root=default_template_path,
                                           subpath='media/css/default.css')
     assert dep.dest_filepath == TargetPath(target_root=target_root,
                                            target='html',
@@ -284,20 +286,21 @@ def test_jinja_render_dependencies(tmpdir, context_cls):
     # There should be 2 dependencies now in the dep_manager for the .css file
     # referenced by the default/template.html file.
     assert len(dep_manager.dependencies[src_filepath]) == 2
-    dep1, dep2 = sorted(dep_manager.dependencies[src_filepath])
+    dep1, dep2 = sorted(dep_manager.dependencies[src_filepath],
+                        key=lambda d: d.dest_filepath)
 
     module_template_path = renderer.module_path
-    template_path = pathlib.Path(module_template_path, 'default')
+    default_template_path = pathlib.Path(module_template_path, 'default')
 
     # dep1 points to default.css
-    assert dep1.dep_filepath == SourcePath(project_root=template_path,
+    assert dep1.dep_filepath == SourcePath(project_root=default_template_path,
                                            subpath='media/css/default.css')
     assert dep1.dest_filepath == TargetPath(target_root=target_root,
                                             target='html',
                                             subpath='media/css/default.css')
 
     # dep2 points to tufte.css
-    assert dep2.dep_filepath == SourcePath(project_root=template_path,
+    assert dep2.dep_filepath == SourcePath(project_root=tufte_template_path,
                                            subpath='media/css/tufte.css')
     assert dep2.dest_filepath == TargetPath(target_root=target_root,
                                             target='html',

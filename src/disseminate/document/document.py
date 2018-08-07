@@ -759,7 +759,11 @@ class Document(object):
                                     target_filepath=src_filepath)
 
         # Now convert the file and continue
-        target_basefilepath = target_filepath.with_suffix('')
+        basefilepath = TargetPath(target_root=target_filepath.target_root,
+                                  target=target_filepath.target,
+                                  subpath=(target_filepath
+                                           .subpath
+                                           .with_suffix('')))
         filepath = convert(src_filepath=src_filepath,
-                           target_basefilepath=target_basefilepath,
+                           target_basefilepath=basefilepath,
                            targets=[target])

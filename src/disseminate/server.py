@@ -44,7 +44,7 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
         if self.path == "/":
             if self.renderer is None:
                 renderer_cls = BaseRenderer.renderer_subclasses()[0]
-                renderer = renderer_cls(context=dict(), template='server/tree',
+                renderer = renderer_cls(context=None, template='server/tree',
                                         targets=['.html'], module_only=True)
                 self.renderer = renderer
             template = self.renderer.get_template(target=".html")

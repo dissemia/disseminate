@@ -3,9 +3,10 @@ Test the Document utilities functions.
 """
 from pathlib import Path
 
-from disseminate import Document, SourcePath, TargetPath
+from disseminate import Document, SourcePath
 from disseminate.document.utils import (find_project_paths, load_root_documents,
                                         render_tree_html, translate_path)
+from disseminate.document.document_context import DocumentContext
 from disseminate.utils.tests import strip_leading_space
 
 
@@ -37,6 +38,10 @@ def test_load_root_documents(tmpdir):
 
     # 1. load the root documents
     documents = load_root_documents('tests/document')
+
+    # Check the contexts
+    for doc in documents:
+        assert isinstance(doc.context, DocumentContext)
 
     # Get the src_filepaths for these documents
     src_filepaths = [d.src_filepath for d in documents]

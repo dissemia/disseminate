@@ -20,19 +20,20 @@ class JinjaRenderer(BaseRenderer):
     _environment = None
 
     def __init__(self, context, template, targets, module_only=False):
-        assert context.is_valid('src_filepath')
-
         # Prepare the cached templates dict
         self._jinja_templates = dict()
 
-        # Load the template environment
-        # Get the src_path
-        src_filepath = context['src_filepath']
-        src_path = src_filepath.parent
-
         # Create the filesystem loader to search paths for the template
         fsl = None
-        if not self.module_only:
+
+        if not self.module_only and context is not None:
+            assert context.is_valid('src_filepath')
+
+            # Load the template environment
+            # Get the src_path
+            src_filepath = context['src_filepath']
+            src_path = src_filepath.parent
+
             # Create a jinja2 FileSystemLoader that checks the directory of
             # src_path
             # and all parent directories.
@@ -76,7 +77,6 @@ class JinjaRenderer(BaseRenderer):
 
     @property
     def mtime(self):
-
         # Get all of the template objects
         templates = self._jinja_templates.values()
 
@@ -89,7 +89,6 @@ class JinjaRenderer(BaseRenderer):
 
     @property
     def from_module(self):
-
         # Get a template for one of the targets
         templates = list(self._jinja_templates.values())
         if len(templates) == 0:
@@ -112,7 +111,6 @@ class JinjaRenderer(BaseRenderer):
             return False
 
     def template_filepaths(self, target=None):
-
         # Load all of the template objects
         if target is None or target not in self._jinja_templates:
             templates = self._jinja_templates.values()
@@ -166,8 +164,8 @@ class JinjaRenderer(BaseRenderer):
         rendering = template.render(**context)
 
         # add the dependencies
-        self._add_dependencies(rendering=rendering, target=target,
-                               context=context)
+        rendering = self._add_dependencies(rendering=rendering, target=target,
+                                           context=context)
 
         return rendering
 
