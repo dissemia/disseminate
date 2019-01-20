@@ -2,6 +2,7 @@
 Test the Document utilities functions.
 """
 from pathlib import Path
+from datetime import datetime
 
 from disseminate import Document, SourcePath
 from disseminate.document.utils import (find_project_paths, load_root_documents,
@@ -182,6 +183,15 @@ def test_render_tree_html():
     for doc in docs:
         doc.context['base_url'] = '/{target}/{subpath}'
 
+    # Get the modification times for the source documents
+    mtime1 = docs[0].src_filepath.stat().st_mtime
+    datetime1 = datetime.fromtimestamp(mtime1)
+    mtime_str1 = datetime1.strftime("%b %d, %Y at %I:%M%p").replace(" 0", " ")
+
+    mtime2 = docs[1].src_filepath.stat().st_mtime
+    datetime2 = datetime.fromtimestamp(mtime2)
+    mtime_str2 = datetime2.strftime("%b %d, %Y at %I:%M%p").replace(" 0", " ")
+
     # Render the html for file1.dm
     html = render_tree_html(docs[0:1])
     key = """<div class="tableset">
@@ -201,7 +211,7 @@ def test_render_tree_html():
             <a href="/tests/document/example6/src/file1.dm">file1.dm</a>
           </td>
           <td class="tgt">(<a href="/html/file1.html">html</a>)</td>
-          <td class="date">Apr 5, 2018 at 4:45PM</td>
+          <td class="date">{mtime1}</td>
         </tr>
         <tr class="level-2">
           <td class="num">2</td>
@@ -209,9 +219,9 @@ def test_render_tree_html():
             <a href="/tests/document/example6/src/file2.dm">file2.dm</a>
           </td>
           <td class="tgt">(<a href="/html/file2.html">html</a>)</td>
-          <td class="date">Apr 5, 2018 at 4:45PM</td>
+          <td class="date">{mtime2}</td>
         </tr>
       </table>
     </div>
-    """
+    """.format(mtime1=mtime_str1, mtime2=mtime_str2)
     assert html == strip_leading_space(key)
