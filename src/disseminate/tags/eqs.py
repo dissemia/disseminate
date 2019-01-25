@@ -1,5 +1,5 @@
 """
-Equation tags.
+Tags to render equations
 """
 from copy import copy
 
@@ -28,11 +28,27 @@ def raw_content_string(content):
 
 
 class Eq(RenderedImg):
-    """The inline equation tag"""
+    """The inline equation tag
+
+    Render an equation in native LaTeX or into a rendered SVG image using
+    LaTeX.
+
+    Attributes
+    ----------
+    aliases : list of str, default: ('term', 'termb')
+        A list of strs for other names a tag goes by
+    active : bool, default: True
+        If True, the Tag can be used by the TagFactory.
+    block_equation : bool
+        If True, the equation will be rendered as a LaTeX block equation using
+        a math environment. ex: \begin{equation}...\end{equation}
+        If False, the equation will be rendered as a LaTeX inline equation.
+        ex: "\ensuremath{y=x}
+    """
     # TODO: "@eq[bold color=blue]{y=x}"
 
     aliases = ('term', 'termb')
-    src_filepath = None
+    # src_filepath = None
     active = True
 
     block_equation = None

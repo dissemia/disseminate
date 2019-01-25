@@ -1,12 +1,13 @@
-"""Objects for collection tags.
+"""Tags to render collections of documents
 """
+
 from .core import Tag
 from .. import settings
 
 
 class Collection(Tag):
     """Collections are simple tags used to render tags of a document as well as
-    all sub-tags."""
+    the tags of all sub-documents."""
 
     active = True
 

@@ -12,7 +12,15 @@ from .. import settings
 
 
 class P(Tag):
-    """A Paragraph tag"""
+    """A Paragraph tag
+
+    Attributes
+    ----------
+    active : bool, default: True
+        This tag is active.
+    include_paragraphs : bool, default: False
+        The contents of this tag can include paragraphs.
+    """
     active = True
     include_paragraphs = False
 
@@ -28,7 +36,23 @@ class P(Tag):
 
 
 class Bold(Tag):
-    """A bold tag."""
+    """A bold tag.
+
+    Attributes
+    ----------
+    aliases : list of str, default: ("b", "textbf", "strong")
+        A list of strs for other names a tag goes by
+    html_name : str, default: "strong"
+        If specified, use this name when rendering the tag to html. Otherwise,
+        use name.
+    tex_name : str, default: "textbf"
+        If specified, use this name when rendering the tag to tex. Otherwise,
+        use name.
+    active : bool, default: True
+        This tag is active.
+    include_paragraphs : bool, default: False
+        The contents of this tag can include paragraphs.
+    """
     aliases = ("b", "textbf", "strong")
     html_name = "strong"
     tex_name = "textbf"
@@ -37,7 +61,23 @@ class Bold(Tag):
 
 
 class Italics(Tag):
-    """An italics tag."""
+    """An italics tag.
+
+    Attributes
+    ----------
+    aliases : list of str, default: ("i", "textit")
+        A list of strs for other names a tag goes by
+    html_name : str, default: "i"
+        If specified, use this name when rendering the tag to html. Otherwise,
+        use name.
+    tex_name : str, default: "textit"
+        If specified, use this name when rendering the tag to tex. Otherwise,
+        use name.
+    active : bool, default: True
+        This tag is active.
+    include_paragraphs : bool, default: False
+        The contents of this tag can include paragraphs.
+    """
     aliases = ("i", "textit")
     html_name = "i"
     tex_name = "textit"
@@ -46,7 +86,18 @@ class Italics(Tag):
 
 
 class Sup(Tag):
-    """A superscript tag."""
+    """A superscript tag.
+
+    Attributes
+    ----------
+    html_name : str, default: "sup"
+        If specified, use this name when rendering the tag to html. Otherwise,
+        use name.
+    active : bool, default: True
+        This tag is active.
+    include_paragraphs : bool, default: False
+        The contents of this tag can include paragraphs.
+    """
     html_name = "sup"
     active = True
     include_paragraphs = False
@@ -68,7 +119,18 @@ class Sup(Tag):
 
 
 class Sub(Tag):
-    """A subscript tag."""
+    """A subscript tag.
+
+    Attributes
+    ----------
+    html_name : str, default: "sub"
+        If specified, use this name when rendering the tag to html. Otherwise,
+        use name.
+    active : bool, default: True
+        This tag is active.
+    include_paragraphs : bool, default: False
+        The contents of this tag can include paragraphs.
+    """
     html_name = "sub"
     active = True
     include_paragraphs = False
@@ -95,6 +157,13 @@ class Supsub(Tag):
 
     The content of the tag consists of two elements separated by a '&&'
     character. ex: @supsub{superscript && subscript}
+
+    Attributes
+    ----------
+    active : bool, default: True
+        This tag is active.
+    include_paragraphs : bool, default: False
+        The contents of this tag can include paragraphs.
     """
     include_paragraphs = False
     active = True
@@ -133,7 +202,17 @@ class Supsub(Tag):
 
 
 class Symbol(Tag):
-    """One or more greek characters."""
+    """One or more greek characters.
+
+    Attributes
+    ----------
+    aliases : list of str, default: ("smb",)
+        A list of strs for other names a tag goes by
+    active : bool, default: True
+        This tag is active.
+    include_paragraphs : bool, default: False
+        The contents of this tag can include paragraphs.
+    """
 
     aliases = ("smb ",)
     active = True
@@ -158,7 +237,20 @@ class Symbol(Tag):
 
 
 class Verb(Tag):
-    """A verbatim tag for displaying unformatted blocks of text."""
+    """A verbatim tag for displaying unformatted blocks of text.
+
+    Attributes
+    ----------
+    aliases : list of str, default: ("v", "pre", "verbatim")
+        A list of strs for other names a tag goes by
+    html_name : str, default: "code"
+        If specified, use this name when rendering the tag to html. Otherwise,
+        use name.
+    active : bool, default: True
+        This tag is active.
+    include_paragraphs : bool, default: False
+        The contents of this tag can include paragraphs.
+    """
 
     aliases = ("v", "pre", "verbatim")
     active = True

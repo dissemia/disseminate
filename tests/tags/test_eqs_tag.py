@@ -86,7 +86,7 @@ def test_block_equation(tmpdir, context_cls):
                                     'project_root': SourcePath,
                                     'target_root': TargetPath,
                                     'src_filepath': SourcePath,
-                                    'paths': list}
+                                    'paths': []}
     context = context_cls(dependency_manager=dep_manager,
                           src_filepath=src_filepath,
                           project_root=project_root,
@@ -95,7 +95,7 @@ def test_block_equation(tmpdir, context_cls):
     process_context_template(context)  # add the 'equation_renderer' entry
 
     # Example 1 - simple block equation
-    eq1 = Eq(name='eq', content='y=x', attributes=tuple(),context=context,
+    eq1 = Eq(name='eq', content='y=x', attributes=tuple(), context=context,
              block_equation=True)
     assert eq1.tex == '\\begin{align*} %\ny=x\n\\end{align*}'
 
@@ -129,7 +129,7 @@ def test_simple_inline_equation_html(tmpdir, context_cls):
                                     'project_root': SourcePath,
                                     'target_root': TargetPath,
                                     'src_filepath': SourcePath,
-                                    'paths': list}
+                                    'paths': []}
     context = context_cls(dependency_manager=dep_manager,
                           src_filepath=src_filepath,
                           project_root=project_root,
@@ -184,7 +184,7 @@ def test_simple_inline_equation_tex(tmpdir, context_cls):
                                     'project_root': SourcePath,
                                     'target_root': TargetPath,
                                     'src_filepath': SourcePath,
-                                    'paths': list}
+                                    'paths': []}
     context = context_cls(dependency_manager=dep_manager,
                           src_filepath=src_filepath,
                           project_root=project_root,
@@ -216,7 +216,7 @@ def test_block_equation_tex(tmpdir, context_cls):
                                     'project_root': SourcePath,
                                     'target_root': TargetPath,
                                     'src_filepath': SourcePath,
-                                    'paths': list}
+                                    'paths': []}
     context = context_cls(dependency_manager=dep_manager,
                           src_filepath=src_filepath,
                           project_root=project_root,

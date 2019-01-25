@@ -1,5 +1,5 @@
 """
-Tags for captions and references.
+Tags for figure captions and references.
 """
 from collections import OrderedDict
 
@@ -26,7 +26,16 @@ class Caption(Tag):
     .. note:: The use of a naked caption tag is allowed (i.e. a caption not
               nested within a figure or table), but this won't register a label
               with the label manager. This is because the 'add_label' method
-              will not be called.
+              will not be called. The @caption tag is designed to work in
+              coordination with the @fig tag.
+
+              :example:
+
+                 ::
+
+                    @fig{@img{image.svg}
+                         @caption{My first figure}
+                        }
     """
 
     html_name = 'caption-text'

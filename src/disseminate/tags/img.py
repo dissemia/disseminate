@@ -11,12 +11,22 @@ from .. import settings
 
 
 class Img(Tag):
-    """The img tag for inserting images."""
+    """The img tag for inserting images.
+
+    Attributes
+    ----------
+    active : bool, default: True
+        If True, the Tag can be used by the TagFactory.
+    html_name : str, default: img
+        If specified, use this name when rendering the tag to html. Otherwise,
+        use name.
+    img_filepath : str
+        The path for the image.
+    """
 
     active = True
     html_name = 'img'
     img_filepath = None
-    dependency_manager = None
 
     def __init__(self, name, content, attributes, context):
         super(Img, self).__init__(name, content, attributes, context)
@@ -89,14 +99,13 @@ class RenderedImg(Img):
 
     Attributes
     ----------
-    template : template object, optional
-        If specified, use this template to render the file. The contents of the
-        tag will be passed as the 'body' variable.
+    active : bool, default: True
+        If True, the Tag can be used by the TagFactory.
     """
 
     active = False
 
-    renderer = None
+    # renderer = None
 
     def __init__(self, name, content, attributes, context, render_target):
         if isinstance(content, list):

@@ -1,0 +1,416 @@
+@media (min-width: 1200px){
+  .container {
+    max-width: 900px;
+  }
+}
+
+body {
+  padding: 5rem 0;
+  font-size: 14pt;
+  font-family: lato;
+  color: #444444;
+}
+
+p {
+  margin: 1rem 0;
+}
+
+h1 {
+  font-size: 28px;
+}
+
+h2 {
+  font-size: 22px;
+  margin-top: 2rem;
+}
+
+h3 {
+  font-size: 20px;
+  margin-top: 1rem;
+  margin-left: 1rem;
+}
+
+.main-template {
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.jumbotron {
+  display: block;
+  font-size: 14pt;
+  background-color: #fafafa;
+  padding: 2rem 1rem;
+  border-top: 1pt solid #aaaaaa;
+  border-left: 1pt solid #aaaaaa;
+}
+
+.jumbotron img {
+  width: 70px;
+  margin-right: 1.0rem;
+  float: left;
+}
+
+.container {
+  display: block;
+}
+
+a.headerlink {
+  display: none;
+}
+
+.sbar {
+  padding: 0;
+}}
+
+.sbar-contents {
+  position: fixed;
+}
+
+.sbar .heading img {
+  width: 45px;
+  float: left;
+  margin-right: 0.5rem;
+}
+
+.sbar .heading h3 {
+  font-size: 1.6rem;
+  margin-bottom: 0.25rem;
+  margin-left: 0;
+  display: inline;
+}
+
+.sbar .heading h4 {
+  font-size: 0.9rem;
+}
+
+.sbar .heading a {
+  color: #444444;
+}
+
+.caption {
+    margin: 0;
+}
+
+.toc ul {
+  list-style-type: none;
+  padding-left: 0.5rem;
+}
+
+.toctree11 li {
+  padding-top: 0.5rem;
+  padding-bottom: 0;
+}
+
+.toc ul ul {
+  padding-left: 1.5rem;
+}
+
+.toc ul ul ul li {
+  padding-top: 0;
+  padding-bottom: 0rem;
+}
+
+pre {
+  margin: 0 1rem;
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 95%;
+}
+
+code {
+  white-space: pre-wrap;
+  color: #e0584b;
+  font-size: 100%;
+  font-family: monospace;
+}
+
+
+code.block {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.highlight {
+  background: none;
+}
+
+.highlight .nd {
+    color: #da3525;
+    font-weight: normal;
+}
+
+span.paragraph {
+  margin-right: 0;
+}
+
+span.pre {
+  font-family: monospace;
+}
+
+dl.docutils {
+  margin: 0 0 0 1rem;
+}
+
+dl.docutils dt {
+  background: #eeeeee;
+  border-color: #ccc;
+  border-style: solid;
+  border-width: 1px 1px 0 1px;
+  border-radius: 5px 5px 0 0;
+  padding: 0.25rem 0 0.25rem 0.35rem;
+}  
+
+dl.docutils dd {
+  margin-top: 0;
+  border-color: #ccc;
+  border-style: solid;
+  border-width: 0 1px 1px 1px;
+  border-radius: 0 0 5px 5px;
+  padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+}
+
+
+dl.docutils dd table {
+  font-size: 12pt;
+  margin-bottom: 5px;
+}
+
+dl.docutils pre {
+  margin: 0;
+}
+
+table.docutils td, table.docutils th {
+  min-width: 80%;
+  font-size: 12pt;
+  margin-left: 1rem;
+  padding: 1px 8px 1px 5px;
+  border-top: 1px solid #ccc;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 1px solid #ccc;
+}
+
+table.docutils th {
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #999;
+}
+
+table.docutils tr.row-even {
+  background: #f5f5f5;
+}
+
+/*
+.feature {
+    display: block;
+    max-width: 30%;
+    margin: 14px 1.66%;
+    padding: 0.75rem 1.0rem 0.75rem 1.5rem;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #fcfcfc;
+}
+
+
+.feature .icon {
+  float: left;
+  width: 26px;
+  margin: 0 0.4rem 0 -0.4rem;
+}
+
+.feature .btn {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+}
+
+.feature h4 {
+  position: relative;
+  font-size: 16pt;
+}
+
+.list-group-item{
+  padding: 0.5rem 0.25rem;
+  margin-left: 0.75rem;
+}
+
+.paragraph {
+  font-style: italic;
+  margin-right: 0.5rem;
+}
+
+.entries {
+  border: 1px solid #00000020;
+  border-radius: 5px;
+  margin: 0 0 0 1rem;
+}
+
+.entries li:nth-of-type(odd) {
+  padding: 0.7rem 0 0.5rem 0;
+  margin: 0.0;
+  background-color: #f0f0f0;
+}
+
+.entries li:nth-of-type(even) {
+  padding: 0.7rem 0 0.5rem 0;
+  margin: 0.0;
+  background-color: #ffffff;
+}
+
+.entries .entry code {
+  font-size: large;
+}
+
+.entries .entry {
+  padding-right: 0;
+}
+
+.entries .entry li {
+  padding: 0;
+  margin: 0 0 0.25rem 0.0rem;
+  list-style: none;
+  background-color: transparent;
+}
+
+.entries .entry li code {
+    font-size: medium;
+}
+
+.entries .entry li:first-child {
+  font-weight: 600;
+  margin-left: 0;
+}
+
+.entries .entry li:first-child code {
+  font-size: large;
+}
+
+.entries .media-body .row {
+  margin-left: 0.25rem;
+  padding-top: 0.75rem;
+  line-height: 1.2;
+}
+
+.attribute {
+  font-size: 13pt;
+}
+
+.attribute ul {
+  padding: 0;
+}
+
+.attribute li:nth-of-type(even),
+.attribute li:nth-of-type(odd),
+.attribute li {
+  background-color: transparent;
+  padding-top: 0;
+  list-style: none;
+}
+
+.attribute dl {
+  margin-bottom: 0;
+}
+
+.attribute dt {
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  float: left;
+}
+
+.attribute dd {
+
+}
+*/
+
+/* Markup - Macros */
+
+.macro-card {
+  display: inline-block;
+  margin: 0.35rem;
+  background: #fdfdfd;
+  border: 1pt dashed #ccc;
+  width: 22%;
+  padding: 0.5rem;
+}
+
+.macro-card code {
+  padding-right: 0.5em;
+}
+
+/* API */
+
+dl.class {
+  border-left: 5px solid #c1dbf7;
+  border-top: 1px solid #c1dbf7;
+  border-bottom: 1px solid #e8eef5;
+  border-radius: 5px 0 0 5px;
+  padding: 0.25rem 0 0 0.5rem;
+}
+
+dl.class dd {
+  padding-left: 2rem;
+  font-size: 90%;
+}
+
+dl.exception {
+  border-left: 5px solid #f185c5;
+  border-top: 1px solid #f9cae6;
+  border-bottom: 1px solid #f3e7ee;
+  border-radius: 5px 0 0 5px;
+  padding: 0.25rem 0 0 0.5rem;
+}
+
+dl.exception dd {
+  padding-left: 2rem;
+  font-size: 90%;
+}
+
+
+dl.method {
+  border-left: 5px solid #fbecd0;
+  border-top: 1px solid #fbecd0;
+  border-radius: 5px;
+  padding: 0.25rem 0 0 0.5rem;
+}
+
+dl.attribute {
+  border-left: 5px solid #efd0d0;
+  border-top: 1px solid #efd0d0;
+  border-radius: 5px;
+  padding: 0.25rem 0 0 0.5rem;
+}
+
+
+dl.class dl.docutils {
+  font-size: 95%;
+}
+
+dl.class dl.docutils dt {
+  color: #444444;
+  background: #f1f1f1;
+  border-color: #eee;
+  border-style: solid;
+  border-width: 1px 1px 0 1px;
+  border-radius: 5px 5px 0 0;
+  padding: 0.15rem 0 0.15rem 0.25rem;
+}  
+
+dl.class dl.docutils dd {
+  font-size: 95%;
+  margin-top: 0;
+  margin-bottom: 0.35rem;
+  border-color: #eee;
+  border-style: solid;
+  border-width: 0 1px 1px 1px;
+  border-radius: 0 0 5px 5px;
+  padding: 0.25rem 0.25rem 0.25rem 1.0rem;
+}
+
+del.class dl.docutils .classifier-delimiter {
+  color: #777777;
+}
+
+dl.class dl.docutils .classifier {
+  font-weight: normal;
+  color: #777777;
+}

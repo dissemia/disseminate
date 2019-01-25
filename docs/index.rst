@@ -73,18 +73,14 @@ The dependencies are only required depending on which features are used.
 
 Table of Contents
 -----------------
-.. toctree::
-   :hidden:
-   :caption: Overview
-
-   self
    
 .. toctree::
    :maxdepth: 2
    :caption: Markup Language
 
-   language/tags
-   language/macros
+   language/header/index
+   language/tags/index
+   language/macros/index
 
 .. toctree::
    :maxdepth: 2
@@ -95,13 +91,8 @@ Table of Contents
 .. toctree::
    :maxdepth: 2
    :caption: API Documentation
-             
-   api/tags
-   api/ast
-   api/document
-   api/tree
-   api/server
 
+   api/tags/index
 
 
 Indices and tables

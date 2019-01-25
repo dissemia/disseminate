@@ -1,5 +1,5 @@
 """
-Asymptote tags
+Tags to render asymptote (asy) figures and diagrams
 """
 from .img import RenderedImg
 

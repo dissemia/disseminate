@@ -66,10 +66,9 @@ class Tag(object):
     """A tag to format text in the markup document.
 
     .. note:: Tags are created asynchroneously, so the creation of a tag
-              should not depend on the `local_context` of other tags or
-              `global_context`. These will only be partially populated at
-              creation time. The target specific methods (html, tex, ...), by
-              contrast, may depend on local_context and global_context
+              should not depend on the `context`. These will only be partially
+              populated at creation time. The target specific methods
+              (html, tex, ...), by contrast, may depend on the context
               attributes populated by other tags.
 
     Parameters
@@ -80,7 +79,9 @@ class Tag(object):
         The contents of the tag. It can either be None, a string, or a list
         of tags and strings. (i.e. a sub-ast)
     attributes : tuple of tuples or strings
-        The attributes of the tag.
+        The attributes of the tag. These are distinct from the Tag class
+        attributes; they're the customization attributes specified by the user
+        to change the appearance of a rendered tag.
     context : dict
         The context with values for the document.
 
