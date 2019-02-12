@@ -38,34 +38,34 @@ def test_inline_equation(tmpdir, context_cls):
 
     # Example 1 - simple inline equation
     eq1 = Eq(name='eq', content='y=x', attributes=tuple(), context=context)
-    assert eq1.tex == "\ensuremath{y=x}"
+    assert eq1.tex == "\\ensuremath{y=x}"
 
     # Example 2 - nested inline equation with subtag as content
     eq2 = Eq(name='eq', content=eq1, attributes=tuple(), context=context)
-    assert eq2.tex == "\ensuremath{y=x}"
+    assert eq2.tex == "\\ensuremath{y=x}"
 
     # Example 3 - nested inline equation with subtag as list
     eq3 = Eq(name='eq', content=['test is my ', eq2], attributes=tuple(),
              context=context)
-    assert eq3.tex == "\ensuremath{test is my y=x}"
+    assert eq3.tex == "\\ensuremath{test is my y=x}"
 
     # Example 4 - a bold equation
     eq4 = Eq(name='eq', content="y=x", attributes=('bold',), context=context)
-    assert eq4.tex == "\ensuremath{\\boldsymbol{y=x}}"
+    assert eq4.tex == "\\ensuremath{\\boldsymbol{y=x}}"
 
     # Example 5 - an equation with a bold equation subtag
     eq5 = Eq(name='eq', content=eq4, attributes=tuple(), context=context)
-    assert eq5.tex == "\ensuremath{\\boldsymbol{y=x}}"
+    assert eq5.tex == "\\ensuremath{\\boldsymbol{y=x}}"
 
     # Example 6 - an equation with a  bold equation subtag in a list
     eq6 = Eq(name='eq', content=['this is my ', eq4], attributes=tuple(),
              context=context)
-    assert eq6.tex == "\ensuremath{this is my \\boldsymbol{y=x}}"
+    assert eq6.tex == "\\ensuremath{this is my \\boldsymbol{y=x}}"
 
     # Example 7 - a bold equation with an equation subtag in a list
     eq7 = Eq(name='eq', content=['this is my ', eq1], attributes=('bold',),
              context=context)
-    assert eq7.tex == "\ensuremath{\\boldsymbol{this is my y=x}}"
+    assert eq7.tex == "\\ensuremath{\\boldsymbol{this is my y=x}}"
 
 
 def test_block_equation(tmpdir, context_cls):
@@ -86,7 +86,7 @@ def test_block_equation(tmpdir, context_cls):
                                     'project_root': SourcePath,
                                     'target_root': TargetPath,
                                     'src_filepath': SourcePath,
-                                    'paths': []}
+                                    'paths': list}
     context = context_cls(dependency_manager=dep_manager,
                           src_filepath=src_filepath,
                           project_root=project_root,
@@ -129,7 +129,7 @@ def test_simple_inline_equation_html(tmpdir, context_cls):
                                     'project_root': SourcePath,
                                     'target_root': TargetPath,
                                     'src_filepath': SourcePath,
-                                    'paths': []}
+                                    'paths': list}
     context = context_cls(dependency_manager=dep_manager,
                           src_filepath=src_filepath,
                           project_root=project_root,
@@ -184,7 +184,7 @@ def test_simple_inline_equation_tex(tmpdir, context_cls):
                                     'project_root': SourcePath,
                                     'target_root': TargetPath,
                                     'src_filepath': SourcePath,
-                                    'paths': []}
+                                    'paths': list}
     context = context_cls(dependency_manager=dep_manager,
                           src_filepath=src_filepath,
                           project_root=project_root,
@@ -216,7 +216,7 @@ def test_block_equation_tex(tmpdir, context_cls):
                                     'project_root': SourcePath,
                                     'target_root': TargetPath,
                                     'src_filepath': SourcePath,
-                                    'paths': []}
+                                    'paths': list}
     context = context_cls(dependency_manager=dep_manager,
                           src_filepath=src_filepath,
                           project_root=project_root,

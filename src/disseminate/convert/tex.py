@@ -1,5 +1,5 @@
 """
-Converters for TEX files.
+Converters to convert from ``.tex`` TEX files to pdf using pdflatex.
 """
 import os
 import pathlib

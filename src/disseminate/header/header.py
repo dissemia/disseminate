@@ -18,7 +18,18 @@ re_entry = regex.compile(r'^(?P<space_level>\s*)'
 
 
 def parse_header_str(s):
-    """Parse a header string into a dict."""
+    """Parse a header string into a dict.
+
+    Parameters
+    ----------
+    s : str
+        The header in string format.
+
+    Returns
+    -------
+    dict
+        The parsed header in dict format.
+    """
     d = dict()
 
     # Split the string into lines and see which lines have an entry of the

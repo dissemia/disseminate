@@ -1,5 +1,5 @@
 """
-Converters for ASY files.
+Converters to convert from ``.asy`` files using the ``asy`` program.
 """
 from .converter import Converter
 from .pdf import Pdf2svg

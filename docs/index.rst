@@ -73,7 +73,13 @@ The dependencies are only required depending on which features are used.
 
 Table of Contents
 -----------------
-   
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Overview
+
+   overview/motivation
+
 .. toctree::
    :maxdepth: 2
    :caption: Markup Language
@@ -84,15 +90,26 @@ Table of Contents
 
 .. toctree::
    :maxdepth: 2
-   :caption: Development
+   :caption: Projects
 
-   development/development
+   projects/document/index
+   projects/templates/index
+   projects/dependency_manager/index
+   projects/converter/index
 
 .. toctree::
    :maxdepth: 2
-   :caption: API Documentation
+   :caption: Interfaces
 
-   api/tags/index
+   interfaces/cli/index
+   interfaces/server/index
+   
+.. toctree::
+   :maxdepth: 2
+   :caption: Development
+
+   development/development
+   api/index
 
 
 Indices and tables

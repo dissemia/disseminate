@@ -34,11 +34,11 @@ to introduce special characters.
 
     :examples:
 
-        ``@italics{This text is in italics}``
-
-        ``@i{This text is in italics}``
-
-        ``@textit{This text is in italics}``
+       ::
+       
+           @italics{This text is in italics}
+           @i{This text is in italics}
+           @textit{This text is in italics}
 
 ``@sup{...}``
     Superscript text
@@ -48,7 +48,9 @@ to introduce special characters.
         
     :examples:
 
-        ``@sup{1}H``
+       ::
+          
+          @sup{1}H
 
 
 ``@sub{...}``

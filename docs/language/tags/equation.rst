@@ -1,20 +1,32 @@
+.. _language-tags-eq:
+
 Equations
 =========
 
 Tags to insert and format equations
 
+.. _tags-eq:
+
 ``@eq{...}``
    Insert an equation
 
    .. index::
-      single: tags; @img
+      single: tags; @eq
 
+   :contents:
+
+      The equation in LaTeX format.
+      
    :attributes:
 
-      ``env`` -- The LaTeX environment to use in rendering the equation.
-      By default, equations are rendered inline.
+      ``env=x``
 
-      ``bold`` -- Render the equation in bold
+         The LaTeX environment to use in rendering the equation.  By
+         default, equations are rendered inline.
+
+      ``bold``
+
+         Render the equation in bold
 
    :html: For ``html`` targets, equations are rendered using LaTeX and
           inserted as ``.svg`` files.
@@ -34,6 +46,7 @@ Dependencies
 ------------
 
 ``html`` targets
+~~~~~~~~~~~~~~~~
 
 Equations are rendered in ``html`` using LaTeX and ``svg``
 files. Javascript libraries are available to render
@@ -62,6 +75,7 @@ For ``html`` targets, the following software dependencies are needed:
 +--------------+----------------------------------------------------+
 
 ``pdf`` targets
+~~~~~~~~~~~~~~~
 
 For ``pdf`` targets, the following software dependencies are needed:
 

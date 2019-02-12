@@ -183,4 +183,4 @@ def test_asy_tex(tmpdir, context_cls):
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert root_tex == '\includegraphics{media/test_48a82ce699.pdf}'
+    assert root_tex == '\\includegraphics{media/test_48a82ce699.pdf}'

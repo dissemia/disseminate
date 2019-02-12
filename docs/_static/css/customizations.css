@@ -1,33 +1,42 @@
+@media (min-width: 992px){
+  .container {
+    max-width: 880px;
+  }
+}
+
 @media (min-width: 1200px){
   .container {
-    max-width: 900px;
+    max-width: 880px;
   }
 }
 
 body {
   padding: 5rem 0;
-  font-size: 14pt;
-  font-family: lato;
+  font-size: 13pt;
+  font-family: lato, arial;
   color: #444444;
+}
+
+h1 {
+  font-size: 20pt;
+}
+
+h2 {
+  font-size: 16pt;
+  margin: 2rem 0 1rem 0;
+}
+
+h3 {
+  font-size: 14pt;
+  margin-top: 1rem;
 }
 
 p {
   margin: 1rem 0;
 }
 
-h1 {
-  font-size: 28px;
-}
-
-h2 {
-  font-size: 22px;
-  margin-top: 2rem;
-}
-
-h3 {
-  font-size: 20px;
-  margin-top: 1rem;
-  margin-left: 1rem;
+li {
+  text-indent: 0;
 }
 
 .main-template {
@@ -59,13 +68,16 @@ a.headerlink {
 }
 
 .sbar {
+  font-family: lato, arial;
   padding: 0;
-}}
-
+  line-height: 1.3rem;
+  font-size: 12pt;
+}
+/*
 .sbar-contents {
   position: fixed;
 }
-
+*/
 .sbar .heading img {
   width: 45px;
   float: left;
@@ -88,21 +100,22 @@ a.headerlink {
 }
 
 .caption {
-    margin: 0;
+  margin: 0;
+  text-transform: uppercase;
+  font-size: 11pt;
+}
+
+.toc {
+    margin: 1rem 0 0 1rem;
 }
 
 .toc ul {
   list-style-type: none;
-  padding-left: 0.5rem;
-}
-
-.toctree11 li {
-  padding-top: 0.5rem;
-  padding-bottom: 0;
+  padding-left: 1.0rem;
 }
 
 .toc ul ul {
-  padding-left: 1.5rem;
+  padding-left: 1.0rem;
 }
 
 .toc ul ul ul li {
@@ -111,9 +124,9 @@ a.headerlink {
 }
 
 pre {
-  margin: 0 1rem;
+  padding: 0 1rem;
   white-space: pre-wrap;
-  font-family: monospace;
+  font-family: 'Anonymous Pro', monospace;
   font-size: 95%;
 }
 
@@ -121,7 +134,7 @@ code {
   white-space: pre-wrap;
   color: #e0584b;
   font-size: 100%;
-  font-family: monospace;
+  font-family: 'Anonymous Pro', monospace;;
 }
 
 
@@ -145,7 +158,7 @@ span.paragraph {
 }
 
 span.pre {
-  font-family: monospace;
+  font-family: 'Anonymous Pro', monospace;
 }
 
 dl.docutils {
@@ -168,6 +181,7 @@ dl.docutils dd {
   border-width: 0 1px 1px 1px;
   border-radius: 0 0 5px 5px;
   padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+  background: #fefefe;
 }
 
 
@@ -180,11 +194,16 @@ dl.docutils pre {
   margin: 0;
 }
 
+dl.docutils blockquote {
+  margin-bottom: 0.5rem;
+  font-size: 11pt;
+}
+
 table.docutils td, table.docutils th {
   min-width: 80%;
   font-size: 12pt;
   margin-left: 1rem;
-  padding: 1px 8px 1px 5px;
+  padding: 2px 8px 2px 5px;
   border-top: 1px solid #ccc;
   border-left: 0;
   border-right: 0;
@@ -192,135 +211,19 @@ table.docutils td, table.docutils th {
 }
 
 table.docutils th {
-  border-top: 1px solid #ccc;
-  border-bottom: 1px solid #999;
+  border-top: 1px solid #aaa;
+  border-bottom: 1px solid #777;
+  padding: 0px 8px 4px 5px;
+  background: #ffffff;
 }
 
-table.docutils tr.row-even {
+table.docutils tr.row-odd {
   background: #f5f5f5;
 }
 
-/*
-.feature {
-    display: block;
-    max-width: 30%;
-    margin: 14px 1.66%;
-    padding: 0.75rem 1.0rem 0.75rem 1.5rem;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    background-color: #fcfcfc;
+td.field-body blockquote {
+  margin-left: 1rem;
 }
-
-
-.feature .icon {
-  float: left;
-  width: 26px;
-  margin: 0 0.4rem 0 -0.4rem;
-}
-
-.feature .btn {
-  position: absolute;
-  bottom: 0.5rem;
-  right: 0.5rem;
-}
-
-.feature h4 {
-  position: relative;
-  font-size: 16pt;
-}
-
-.list-group-item{
-  padding: 0.5rem 0.25rem;
-  margin-left: 0.75rem;
-}
-
-.paragraph {
-  font-style: italic;
-  margin-right: 0.5rem;
-}
-
-.entries {
-  border: 1px solid #00000020;
-  border-radius: 5px;
-  margin: 0 0 0 1rem;
-}
-
-.entries li:nth-of-type(odd) {
-  padding: 0.7rem 0 0.5rem 0;
-  margin: 0.0;
-  background-color: #f0f0f0;
-}
-
-.entries li:nth-of-type(even) {
-  padding: 0.7rem 0 0.5rem 0;
-  margin: 0.0;
-  background-color: #ffffff;
-}
-
-.entries .entry code {
-  font-size: large;
-}
-
-.entries .entry {
-  padding-right: 0;
-}
-
-.entries .entry li {
-  padding: 0;
-  margin: 0 0 0.25rem 0.0rem;
-  list-style: none;
-  background-color: transparent;
-}
-
-.entries .entry li code {
-    font-size: medium;
-}
-
-.entries .entry li:first-child {
-  font-weight: 600;
-  margin-left: 0;
-}
-
-.entries .entry li:first-child code {
-  font-size: large;
-}
-
-.entries .media-body .row {
-  margin-left: 0.25rem;
-  padding-top: 0.75rem;
-  line-height: 1.2;
-}
-
-.attribute {
-  font-size: 13pt;
-}
-
-.attribute ul {
-  padding: 0;
-}
-
-.attribute li:nth-of-type(even),
-.attribute li:nth-of-type(odd),
-.attribute li {
-  background-color: transparent;
-  padding-top: 0;
-  list-style: none;
-}
-
-.attribute dl {
-  margin-bottom: 0;
-}
-
-.attribute dt {
-  margin-right: 0.5rem;
-  margin-bottom: 0.5rem;
-  float: left;
-}
-
-.attribute dd {
-
-}
-*/
 
 /* Markup - Macros */
 
@@ -340,46 +243,31 @@ table.docutils tr.row-even {
 /* API */
 
 dl.class {
+  font-size: 13pt;
   border-left: 5px solid #c1dbf7;
   border-top: 1px solid #c1dbf7;
   border-bottom: 1px solid #e8eef5;
   border-radius: 5px 0 0 5px;
-  padding: 0.25rem 0 0 0.5rem;
+  padding: 0.25rem 0 0 2.5rem;
+  text-indent: -2em;
+}
+
+dl.class dt {
+  font-family: 'Anonymous Pro', monospace;
 }
 
 dl.class dd {
-  padding-left: 2rem;
-  font-size: 90%;
+  padding-left: 1rem;
+  font-size: 11pt;
 }
 
-dl.exception {
-  border-left: 5px solid #f185c5;
-  border-top: 1px solid #f9cae6;
-  border-bottom: 1px solid #f3e7ee;
-  border-radius: 5px 0 0 5px;
-  padding: 0.25rem 0 0 0.5rem;
+dl.class th {
+  font-size: 11pt;
 }
 
-dl.exception dd {
-  padding-left: 2rem;
-  font-size: 90%;
+dl.class p {
+  text-indent: 0;
 }
-
-
-dl.method {
-  border-left: 5px solid #fbecd0;
-  border-top: 1px solid #fbecd0;
-  border-radius: 5px;
-  padding: 0.25rem 0 0 0.5rem;
-}
-
-dl.attribute {
-  border-left: 5px solid #efd0d0;
-  border-top: 1px solid #efd0d0;
-  border-radius: 5px;
-  padding: 0.25rem 0 0 0.5rem;
-}
-
 
 dl.class dl.docutils {
   font-size: 95%;
@@ -392,7 +280,7 @@ dl.class dl.docutils dt {
   border-style: solid;
   border-width: 1px 1px 0 1px;
   border-radius: 5px 5px 0 0;
-  padding: 0.15rem 0 0.15rem 0.25rem;
+  padding: 0.15rem 0 0.15rem 2.5rem;
 }  
 
 dl.class dl.docutils dd {
@@ -403,7 +291,7 @@ dl.class dl.docutils dd {
   border-style: solid;
   border-width: 0 1px 1px 1px;
   border-radius: 0 0 5px 5px;
-  padding: 0.25rem 0.25rem 0.25rem 1.0rem;
+  padding: 0.25rem 0.25rem 0.25rem 2.5rem;
 }
 
 del.class dl.docutils .classifier-delimiter {
@@ -413,4 +301,129 @@ del.class dl.docutils .classifier-delimiter {
 dl.class dl.docutils .classifier {
   font-weight: normal;
   color: #777777;
+}
+
+code.descclassname {
+  color: #ff978c;
+}
+
+code.descname {
+  color: #e0584b;
+  font-size: 1.1em;
+}
+
+/* Add new line just before class name */
+code.descclassname:after {
+    content: "\a";
+    white-space: pre;
+}
+
+dl.exception {
+  border-left: 5px solid #f185c5;
+  border-top: 1px solid #f9cae6;
+  border-bottom: 1px solid #f3e7ee;
+  border-radius: 5px 0 0 5px;
+  padding: 0.25rem 0 0 2.75rem;
+  text-indent: -2em;
+}
+
+dl.exception dt {
+  font-family: 'Anonymous Pro', monospace;
+}
+
+dl.exception dd {
+  padding-left: 2rem;
+  font-size: 90%;
+}
+
+
+dl.method {
+  border-left: 5px solid #fbecd0;
+  border-top: 1px solid #fbecd0;
+  border-radius: 5px;
+  padding: 0.25rem 0 0 2.5rem;
+  margin-left: -2em;
+}
+
+dl.method dt {
+  font-family: 'Anonymous Pro', monospace;
+}
+
+
+dl.attribute {
+  border-left: 5px solid #efd0d0;
+  border-top: 1px solid #efd0d0;
+  border-radius: 5px;
+  padding: 0.25rem 0 0 2.5rem;
+  margin-left: -2em;
+}
+
+dl.attribute dt {
+  font-family: 'Anonymous Pro', monospace;
+}
+
+dl.data {
+  font-size: 13pt;
+  padding: 0.25rem 0 0 2.25rem;
+  text-indent: -2em;
+}
+
+dl.data dt {
+  font-family: 'Anonymous Pro', monospace;
+}
+
+dl.data dd {
+    padding: 0.25rem 0.25rem 0.25rem 2.5rem;
+}
+
+dl.function {
+  border-left: 5px solid #f9efde;
+  border-top: 1px solid #fbefde;
+  border-radius: 5px;
+  padding: 0.25rem 0 0 2.5rem;
+  text-indent: -2em;
+}
+
+dl.function dt {
+  font-family: 'Anonymous Pro', monospace;
+}
+
+dl.function dd {
+  padding-left: 1rem;
+  font-size: 11pt;
+}
+
+dl.function th {
+  font-size: 11pt;
+}
+
+dl.function p {
+  text-indent: 0;
+}
+
+
+dl.function dl.docutils {
+  font-size: 95%;
+}
+
+dl.function dl.docutils dt {
+  color: #444444;
+  background: #f1f1f1;
+  border-color: #eee;
+  border-style: solid;
+  border-width: 1px 1px 0 1px;
+  border-radius: 5px 5px 0 0;
+  padding: 0.15rem 0 0.15rem 2.5rem;
+}  
+
+dl.function dl.docutils dd {
+  font-size: 95%;
+  margin-top: 0;
+  margin-bottom: 0.35rem;
+  border-color: #eee;
+  border-style: solid;
+  border-width: 0 1px 1px 1px;
+  border-radius: 0 0 5px 5px;
+  padding: 0.25rem 0.25rem 0.25rem 2.5rem;
+  text-indent: 0;
 }

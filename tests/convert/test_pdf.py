@@ -1,7 +1,6 @@
 """
 Test converters for pdf files
 """
-import os
 from distutils.spawn import find_executable
 from pathlib import Path
 

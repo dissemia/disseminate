@@ -11,16 +11,25 @@ Headings are used to group and demarcate parts of the document's text.
         single: tags; @h1
 
     :aliases: ``@h1``
+              
     :attributes:
 
-        ``id`` -- The section heading's marker label
+        ``id=x``
+
+           The heading's marker label
         
-        ``nolabel`` -- If specified, a label is not created with this
-        heading for TOC entries and links
+        ``nolabel``
+
+           If specified, a label is not created with this heading for
+           TOC entries and links
         
-        ``short`` -- The short title, which can be used in the TOC
+        ``short=x``
+
+           The short title, which can be used in the TOC
         
-        ``fmt`` -- The format for a tag’s label
+        ``fmt=x``
+
+           The format for a tag’s label
 
     :examples:
 
@@ -38,17 +47,26 @@ Headings are used to group and demarcate parts of the document's text.
         single: tags; @h2
 
     :aliases: ``@h2``
+
     :attributes:
 
-        ``id`` -- The section heading's marker label
-        
-        ``nolabel`` -- If specified, a label is not created with this
-        heading for TOC entries and links
-        
-        ``short`` -- The short title, which can be used in the TOC
-        
-        ``fmt`` -- The format for a tag’s label
+        ``id=x``
 
+           The heading's marker label
+        
+        ``nolabel``
+
+           If specified, a label is not created with this heading for
+           TOC entries and links
+        
+        ``short=x``
+
+           The short title, which can be used in the TOC
+        
+        ``fmt=x``
+
+           The format for a tag’s label
+       
     :examples:
 
        ::
@@ -65,17 +83,26 @@ Headings are used to group and demarcate parts of the document's text.
         single: tags; @h3
 
     :aliases: ``@h3``
+
     :attributes:
 
-        ``id`` -- The subsection heading's marker label
+        ``id=x``
 
-        ``nolabel`` -- If specified, a label is not created with this
-        heading for TOC entries and links
+           The heading's marker label
         
-        ``short`` -- The short title, which can be used in the TOC
-        
-        ``fmt`` -- The format for a tag’s label
+        ``nolabel``
 
+           If specified, a label is not created with this heading for
+           TOC entries and links
+        
+        ``short=x``
+
+           The short title, which can be used in the TOC
+        
+        ``fmt=x``
+
+           The format for a tag’s label
+       
     :examples:
 
        ::
@@ -91,17 +118,26 @@ Headings are used to group and demarcate parts of the document's text.
         single: tags; @h4
 
     :aliases: ``@h4``
+              
     :attributes:
 
-        ``id`` -- The subsubsection heading's marker label
+        ``id=x``
 
-        ``nolabel`` -- If specified, a label is not created with this
-        heading for TOC entries and links
+           The heading's marker label
         
-        ``short`` -- The short title, which can be used in the TOC
-        
-        ``fmt`` -- The format for a tag’s label
+        ``nolabel``
 
+           If specified, a label is not created with this heading for
+           TOC entries and links
+        
+        ``short=x``
+
+           The short title, which can be used in the TOC
+        
+        ``fmt=x``
+
+           The format for a tag’s label
+       
     :examples:
 
        ::
@@ -117,9 +153,12 @@ Headings are used to group and demarcate parts of the document's text.
         single: tags; @h5
 
     :aliases: ``@h5``
+              
     :attributes:
 
-        ``id`` -- The paragraph heading's marker label.
+       ``id=x``
+
+           The paragraph's marker label
 
     :html: In html, this tag will be rendered as a
            ``<span class="paragraph-heading">`` instead of an ``<h5>`` element.

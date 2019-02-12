@@ -1,5 +1,6 @@
 """
-Arguments for converters
+Arguments for converters. Argument classes are used to validate the values
+passed to external converion programs.
 """
 import logging
 from ..paths import SourcePath, TargetPath

@@ -1,5 +1,6 @@
 """
-Converters for PDF files.
+Converters to convert from ``.pdf`` files using pdf2svg and, optionally,
+pdfcrop and rsvg-convert.
 """
 import os
 

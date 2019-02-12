@@ -25,35 +25,51 @@ contents or site map of a project.
     .. index::
         single: tags; @toc
 
-    :attributes:
-
-        ``header`` -- Include a ‘Table of Contents’ heading for the
-        TOC. Note that this heading won’t appear in the TOC.
-
     :contents:
 
-        ``all`` -- Include labels from all sub-documents in the
-        TOC. If all is not specified, only the labels for the current
-        document will be presented.
-        
-        ``documents`` -- Render a document TOC with the document and
-        heading entries.
-        
-        ``headings`` -- Render a TOC with heading entries.
+        ``all``
 
-        ``figure`` -- Render a TOC with figure caption entries.
+           Include labels from all sub-documents in the TOC. If all is
+           not specified, only the labels for the current document
+           will be presented.
+        
+        ``documents``
+
+           Render a document TOC with the document and heading
+           entries.
+        
+        ``headings``
+
+           Render a TOC with heading entries.
+
+        ``figure``
+
+           Render a TOC with figure caption entries.
 
     :content modifiers:
 
-        ``collapsed`` -- (default) Show only the documents without
-        headings. Pertains to ``all documents`` and ``all headings``.
-        
-        ``expanded`` -- Show all documents are including all
-        headings. Pertains to ``all documents`` and ``all headings``.
+        ``collapsed`` (default)
 
-        ``abbreviated`` -- show all documents but only show headings
-        for the current document. Pertains to ``all documents`` and
-        ``all headings``.
+           Show only the documents without headings. Pertains to ``all
+           documents`` and ``all headings``.
+        
+        ``expanded``
+
+           Show all documents are including all headings. Pertains to
+           ``all documents`` and ``all headings``.
+
+        ``abbreviated``
+
+           show all documents but only show headings for the current
+           document. Pertains to ``all documents`` and ``all
+           headings``.
+        
+    :attributes:
+
+        ``header``
+
+           Include a ‘Table of Contents’ heading for the TOC. Note
+           that this heading won’t appear in the TOC.
 
     :examples:
 

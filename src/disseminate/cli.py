@@ -15,9 +15,9 @@ def is_directory(value):
     if not is_dir and value == 'src':
         value = '.'
     if not os.path.isdir(value):
-         raise argparse.ArgumentTypeError("'{}' is not a directory. The input "
-                                          "and output must be "
-                                          "directories".format(value))
+        raise argparse.ArgumentTypeError("'{}' is not a directory. The input "
+                                         "and output must be "
+                                         "directories".format(value))
     return value
 
 
@@ -28,6 +28,8 @@ def format_ext(value):
 
 # TODO: add clean or clear option to remove targets and .cache
 def main():
+    """The main command-line interface (CLI) for rendering disseminate
+    documents."""
     # Create the argument parser
     parser = argparse.ArgumentParser(description='disseminate documents')
     base_parser = parser.add_subparsers(description='processor commands',

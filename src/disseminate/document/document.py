@@ -52,7 +52,7 @@ class Document(object):
         ex: 'src/chapter1/chapter1.dm'
     context: :obj:`disseminate.document.DocumentContext`
         A context dict with the values needed to render a target document.
-    subdocuments : :collections:`OrderedDict`
+    subdocuments : :obj:`collections.OrderedDict`
         An ordered dict with the sub-documents included in this document.
         The keys are src_filepath values as render paths, and the values
         are the subdocuments themselves. The documents are ordered according
@@ -288,6 +288,7 @@ class Document(object):
 
         The context contains one of the following for all documents in a root
         document:
+
           1. label_manager: Manages labels and references to labels.
           2. dependency_manager: Manages the media dependencies (like image
              files) for documents
@@ -300,6 +301,7 @@ class Document(object):
              the project.
 
         Context variables that can be local to a document are:
+
           1. include: the sub-documents to include under a document.
           2. title: the title of a document.
           3. short: the short title of a document.
@@ -466,7 +468,7 @@ class Document(object):
 
         Returns
         -------
-        :obj:`disseminate.tag.Tag`
+        :obj:`disseminate.tags.core.Tag`
             A root tag object for the AST.
         """
         # Check to make sure the file exists

@@ -64,10 +64,14 @@ template_comment_end = '#)'
 #: to translate these files to a useable form, if needed.
 #: The keys are the targets. The values are lists of valid extensions that
 #: can be included for the target, in order of decreasing preference.
-tracked_deps = {'.html': ['.css', '.svg', '.png'],
-                '.tex': ['.pdf', '.png'],
-                '.css': ['.css', ]
-                }
+tracked_deps = {
+    # html targets ca use .css style files, .svg and .png images
+    '.html': ['.css', '.svg', '.png'],
+    # tex (and pdf) target can use .pdf and .pdf images
+    '.tex': ['.pdf', '.png'],
+    # css files can include .css files
+    '.css': ['.css', ]
+    }
 
 
 #: Convert and Tag Defaults

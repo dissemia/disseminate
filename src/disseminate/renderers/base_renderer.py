@@ -14,7 +14,7 @@ module_templates_relpath = '../templates'
 
 
 def process_context_template(context):
-    """Process the template entries in a given conext"""
+    """Process the template entries in a given context"""
     # Get the subclasses of the BaseRenderer
     renderer_clses = BaseRenderer.renderer_subclasses()
     renderer_cls = renderer_clses[0]

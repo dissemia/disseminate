@@ -1,6 +1,8 @@
 Tags
 ====
 
+.. automodule:: disseminate.tags
+
 .. toctree::
    :maxdepth: 2
    :caption: Tags

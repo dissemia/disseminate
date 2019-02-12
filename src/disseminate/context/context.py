@@ -1,5 +1,5 @@
 """
-Context objects.
+The base class for Context objects that include functions to validate a context.
 """
 import logging
 from copy import deepcopy
@@ -20,6 +20,7 @@ class BaseContext(dict):
     was initialized.
 
     Contexts are optionally populated by:
+
         1. a default context (default_context class attribute).
            Mutable objects from the default context are copies to new objects.
         2. a parent_context

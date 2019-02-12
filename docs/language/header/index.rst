@@ -96,6 +96,7 @@ Basic Variables
 
          template: book/tufte
 
+.. _header-includes:
 
 Includes
 --------
@@ -125,3 +126,6 @@ statement lists the sub-documents directly subordinate to a document.
            part1/introduction.dm
            part1/cakes.dm
            part1/tarts.dm
+
+Inheritance
+-----------

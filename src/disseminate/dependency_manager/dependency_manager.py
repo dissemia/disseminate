@@ -89,6 +89,7 @@ class DependencyManager(object):
         self.create_dirs = create_dirs
         self.dependencies = dict()
 
+    # TODO: Refactor to remove cache_path.
     @property
     def cache_path(self):
         cache_path = SourcePath(project_root=self.target_root,
