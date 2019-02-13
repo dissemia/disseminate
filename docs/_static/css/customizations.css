@@ -11,7 +11,7 @@
 }
 
 body {
-  padding: 5rem 0;
+  padding: 3rem 0;
   font-size: 13pt;
   font-family: lato, arial;
   color: #444444;
@@ -238,6 +238,29 @@ td.field-body blockquote {
 
 .macro-card code {
   padding-right: 0.5em;
+}
+
+/* Interfaces -> Command-line */
+
+.console {
+    background: #222;
+    border-radius: 5pt;
+    padding: 5px 10px;
+}
+
+.console pre {
+    color: #eee;
+    margin: 0;
+    padding: 2px;
+    font-size: 11pt;
+}
+
+.console .go {
+    color: #eee;
+}
+
+.highlight .gp {
+  color: #3bd818;
 }
 
 /* API */

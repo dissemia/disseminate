@@ -68,7 +68,7 @@ def main():
                            "(default: {})".format("current directory"))
 
     # serve arguments
-    serve.add_argument('-p', '--port',
+    serve.add_argument('-p',
                        action='store', default=settings.default_port,
                        type=int,
                        help="The port to listen to for the webserver "

@@ -7,6 +7,9 @@ test:  ## Test the package with the current python version
 	pip install 'pytest'
 	pytest
 
+test-cli:  ## Test the command-line interface
+        @$(MAKE) --no-print-directory -C tests/cli test
+
 coverage:  ## Test the coverage of tests
 	pip install 'pytest' 'pytest-cov'
 	pytest --cov=src --cov-report html
