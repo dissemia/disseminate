@@ -5,7 +5,6 @@ from tempfile import mkdtemp
 from shutil import rmtree
 from collections import OrderedDict
 import logging
-import os
 import pathlib
 
 from .document_context import DocumentContext
@@ -24,6 +23,26 @@ from .. import settings
 class DocumentError(Exception):
     """An error generated while loading and processing a document."""
     pass
+
+
+def set_document_label(context):
+    """A context processor to set the document label in the label manager."""
+    assert context.is_valid('label_manager', 'document', 'src_filepath')
+
+    label_manager = context['label_manager']
+    src_filepath = context['src_filepath']
+    doc = context['document']()  # de-reference weakref
+
+    subpath_str = str(src_filepath.subpath)
+
+    # Get the level of the document
+    level = context.get('level', 1)
+
+    # Set the label for this document
+    kind = ('document', 'document-level-' + str(level))
+    label_manager.add_heading_label(id='doc:' + subpath_str,
+                                    kind=kind, title=doc.short,
+                                    context=context)
 
 
 class Document(object):
@@ -77,6 +96,10 @@ class Document(object):
         # first or near the very start since it loads in the values in the
         # context (other than body)
         load_header,
+        # Optional. Set the document label in the label manager. This should
+        # be run after the header is loaded because the header may contain
+        # the title for the document,
+        set_document_label,
         # Optional. Process macros. This will convert macros in the context
         # that have just been loaded from the header
         process_context_macros,
@@ -111,6 +134,9 @@ class Document(object):
 
     #: Cached template objects for this document.
     _templates = None
+
+    #: A flag to determine whether the document was successfully loaded
+    _succesfully_loaded = False
 
     def __init__(self, src_filepath, target_root=None, parent_context=None):
         logging.debug("Creating document: {}".format(src_filepath))
@@ -156,7 +182,7 @@ class Document(object):
                                        parent_context=parent_context)
 
         # Read in the document and load sub-documents
-        self.load_document()
+        self.load()
 
     def __del__(self):
         """Clean up any temp directories no longer in use."""
@@ -169,6 +195,17 @@ class Document(object):
 
     def __repr__(self):
         return "Document({})".format(self.src_filepath)
+
+    @property
+    def doc_id(self):
+        """The unique string identifier (within a project) for the document."""
+        # The subpath of the src_filepath is guaranteed to be unique.
+        return str(self.src_filepath.subpath)
+
+    @property
+    def doc_ids(self):
+        """The list of all doc_id for this document and all subdocuments."""
+        return [doc.doc_id for doc in self.documents_list(recursive=True)]
 
     @property
     def title(self):
@@ -196,28 +233,6 @@ class Document(object):
             return short_str
         else:
             return self.title
-
-    @property
-    def number(self):
-        """The number of the document.
-
-        Returns
-        -------
-        number : int or None
-            The number (order) of the document in relation to all documents in
-            a project or,
-            None, if the document's number hasn't yet been assigned.
-        """
-        root_document = self.context.get('root_document', None)
-        root_document = root_document() if root_document is not None else None
-
-        # Get all documents from the root document
-        if root_document is not None:
-            all_docs = root_document.documents_list(only_subdocuments=False,
-                                                    recursive=True)
-            return all_docs.index(self) + 1 if self in all_docs else None
-        else:
-            return None
 
     @property
     def temp_dir(self):
@@ -327,28 +342,14 @@ class Document(object):
         return self.context.get('label_manager', None)
 
     def reset_labels(self):
-        """Reset the labels for this document in the label manager.
-
-        .. note:: This function is invoked as part of the get_ast method, after
-                  parsing the source file, so that the 'title' attribute can be
-                  retrieved from the local_context.
-        """
+        """Reset the labels for this document in the label manager."""
         if 'label_manager' in self.context:
             label_manager = self.context['label_manager']
 
-            # Reset the labels for this document
-            label_manager.reset(document=self)
+            # Reset the labels for this document.
+            label_manager.reset(context=self.context)
 
-            subpath_str = str(self.src_filepath.subpath)
-
-            # Get the level of the document
-            level = self.context.get('level', 1)
-
-            # Set the label for this document
-            kind = ('document', 'document-level-' + str(level))
-            label_manager.add_label(document=self, kind=kind,
-                                    id='doc:' + subpath_str)
-
+    # TODO: rename to documents_by_src_filepath
     def documents_dict(self, document=None, only_subdocuments=False,
                        recursive=False):
         """Produce an ordered dict of a document and all its sub-documents.
@@ -389,6 +390,22 @@ class Document(object):
                 doc_dict[subdoc.src_filepath] = subdoc
 
         return doc_dict
+
+    def documents_by_id(self, document=None, only_subdocuments=False,
+                        recursive=True):
+        doc_dict = self.documents_dict(document=document,
+                                       only_subdocuments=only_subdocuments,
+                                       recursive=recursive)
+        dict_by_id = OrderedDict([(doc.doc_id, doc)
+                                  for doc in doc_dict.values()])
+
+        if len(dict_by_id) < len(doc_dict):
+            # there are duplicate doc_ids
+            msg = ("The project has multiple documents with the same doc_id. "
+                   "The doc_id should be unique for each document.")
+            raise DocumentError(msg)
+
+        return dict_by_id
 
     def documents_list(self, document=None, only_subdocuments=False,
                        recursive=False):
@@ -457,14 +474,13 @@ class Document(object):
                               parent_context=self.context)
             self.subdocuments[src_filepath] = subdoc
 
-    # TODO: rename to load(...)
-    def load_document(self, reload=False):
+    def load(self, reload=False):
         """Load or reload the document into the context.
 
         Parameters
         ----------
         reload : bool, optional
-            If True, force the reload of the AST.
+            If True, force the reload of the document.
 
         Returns
         -------
@@ -476,36 +492,45 @@ class Document(object):
             msg = "The source document '{}' must exist."
             raise DocumentError(msg.format(self.src_filepath))
 
-        stat = os.stat(self.src_filepath)
+        stat = self.src_filepath.stat()
         time = stat.st_mtime
-
         last_mtime = self.mtime
 
-        # Update the context, if needed
+        # Update the context, if:
+        #   1. The document hasn't been successfully loaded.
+        #   2. The body attribute hasn't been set yet.
+        #   3. The mtime for the file is now later than the one stored in the
+        #      context--i.e. the user saved the file.
+        #   4. A reload is forced
         body_attr = settings.body_attr
-        if (self.context.get(body_attr, None) is None or
-           last_mtime is None or time > last_mtime or
-           reload):
+        if (not self._succesfully_loaded or
+            self.context.get(body_attr, None) is None or
+            last_mtime is None or time > last_mtime or
+            reload):
+
+            # The document hasn't been loaded yet. Reset the flat
+            self._succesfully_loaded = False
 
             # Check to make sure the file is reasonable
             filesize = stat.st_size
             if filesize > settings.document_max_size:
                 msg = ("The source document '{}' has a file size ({} kB) "
                        "that exceeds the maximum setting size of {} kB.")
+                actual_filesize = filesize / 1024
+                max_filesize = settings.document_max_size / 1024
                 raise DocumentError(msg.format(self.src_filepath,
-                                            filesize / 1024,
-                                            settings.document_max_size / 1024))
+                                               actual_filesize,
+                                               max_filesize))
 
             # Reset the local_context. When reloading an AST, the old
             # local_context is invalidated since some of the entries may have
-            # changed
+            # changed. Resetting the context also sets the updated mtime.
             self.reset_contexts()
 
             # Clear the dependencies for this document
             self.reset_dependencies()
 
-            # Reset the registered labels for this document and set the
-            # document's label
+            # Reset the registered labels for this document
             self.reset_labels()
 
             # Load the string from the src_filepath,
@@ -525,14 +550,13 @@ class Document(object):
             # in before being loaded.
             self.load_subdocuments()
 
-            # Reset the modification time with the current modification time of
-            # the document.
-            self.context['mtime'] = time
+            # The document has been loaded
+            self._succesfully_loaded = True
 
-        # Run 'load_document' for the sub-documents. This should be done after
+        # Run 'load' for the sub-documents. This should be done after
         # loading this documentsince this document's header may have includes
         for document in self.documents_list(only_subdocuments=True):
-            document.load_document(reload=reload)
+            document.load(reload=reload)
 
         return None
 
@@ -566,7 +590,7 @@ class Document(object):
         target_filepath = pathlib.Path(target_filepath)
 
         # Reload document
-        self.load_document()
+        self.load()
 
         # Setup variables
         target = target_filepath.suffix
@@ -590,7 +614,7 @@ class Document(object):
                           "is older than source.".format(self, target_filepath))
             return True
 
-        # 3. A render is required if any of the context entriesn to be updated.
+        # 3. A render is required if any of the context entries to be updated.
         entry_mtimes = [e.mtime for e in self.context.values()
                         if hasattr(e, 'mtime')]
         max_entry_mtime = max(entry_mtimes) if len(entry_mtimes) > 0 else None

@@ -3,6 +3,7 @@ Tags for figure environments.
 """
 from .core import Tag
 from .caption import Caption, CaptionError
+from ..attributes import get_attribute_value, remove_attribute
 
 
 class BaseFigure(Tag):

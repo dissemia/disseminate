@@ -3,13 +3,15 @@ Test the utility functions for contexts.
 """
 from disseminate.context.utils import context_includes
 from disseminate.paths import SourcePath
+from copy import deepcopy
 
 
 def test_context_includes(context_cls):
     """Test the context_includes function."""
     context_cls.validation_types = {'src_filepath': SourcePath}
 
-    src_filepath=SourcePath(project_root='.',)
+    src_filepath = SourcePath(project_root='.',)
+    src_filepath = deepcopy(src_filepath)
     context = context_cls(include="  sub/file1.dm\n  sub/file2.dm",
                           src_filepath=src_filepath)
     paths = context_includes(context)

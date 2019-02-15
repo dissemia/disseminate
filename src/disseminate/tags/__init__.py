@@ -6,4 +6,4 @@ equations and tables.
 
 from .core import TagFactory, Tag, TagError
 from . import (headings, text, img, asy, notes, figs, caption, eqs, toc,
-               preamble, collection)
+               preamble, collection, ref)

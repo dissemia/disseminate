@@ -52,6 +52,12 @@ class SourcePath(object):
         obj.subpath = cls.__mixclass__('', subpath or '')
         return obj
 
+    def __copy__(self):
+        return SourcePath(project_root=self.project_root, subpath=self.subpath)
+
+    def __deepcopy__(self, memo):
+        return SourcePath(project_root=self.project_root, subpath=self.subpath)
+
 
 class TargetPath(object):
     """A path for a file in a target directory that keeps track of the
@@ -88,6 +94,14 @@ class TargetPath(object):
         obj.target = cls.__mixclass__('', target or '', '')
         obj.subpath = cls.__mixclass__('', '', subpath or '')
         return obj
+
+    def __copy__(self):
+        return TargetPath(target_root=self.target_root, target=self.target,
+                          subpath=self.subpath)
+
+    def __deepcopy__(self, memo):
+        return TargetPath(target_root=self.target_root, target=self.target,
+                          subpath=self.subpath)
 
     def get_url(self, context=None):
         context = context if isinstance(context, dict) else dict()

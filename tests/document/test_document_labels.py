@@ -5,7 +5,7 @@ from disseminate.document import Document
 from disseminate import SourcePath, TargetPath
 
 
-def test_document_labels(tmpdir, context_cls):
+def test_document_labels(tmpdir):
     """Test the correct assignment of labels for a document."""
     # Setup the paths
     project_root = SourcePath(project_root=tmpdir, subpath='src')
@@ -14,11 +14,6 @@ def test_document_labels(tmpdir, context_cls):
                               subpath='test.dm')
     project_root.mkdir()
     src_filepath.touch()
-
-    context_cls.validation_types = {'src_filepath': SourcePath,
-                                    'paths': list}
-    paths = [project_root]
-    context = context_cls(src_filepath=src_filepath, paths=paths)
 
     # Create a document
     doc = Document(src_filepath, target_root)
@@ -58,9 +53,9 @@ def test_document_toc(tmpdir):
     key = """<span class="toc">
   <ul class="toc-level-2">
     <li>
-      <a href="/html/file.html">
-        <span class="label">My first title</span>
-      </a>
+      <span class="toc-document-level-1">
+        <a href="/html/file.html">My first title</a>
+      </span>
     </li>
   </ul>
 </span>
@@ -119,7 +114,7 @@ def test_document_tree_updates_document_labels(tmpdir):
       file3.dm
       file2.dm
     ---""")
-    doc.load_document()
+    doc.load()
 
     # Check the ordering of documents
     doc_list = doc.documents_list()
@@ -157,7 +152,7 @@ def test_document_tree_updates_document_labels(tmpdir):
     assert doc_list[2].src_filepath == src_filepath2
 
     # Reload the document
-    doc.load_document()
+    doc.load()
 
     doc_list = doc.documents_list()
     assert len(doc_list) == 2
@@ -177,7 +172,7 @@ def test_document_tree_updates_document_labels(tmpdir):
     ---""")
 
     # Reload the document
-    doc.load_document()
+    doc.load()
     doc_list = doc.documents_list()
     assert len(doc_list) == 3
     assert doc_list[0].src_filepath == src_filepath1
@@ -193,6 +188,8 @@ def test_document_tree_updates_document_labels(tmpdir):
 
 def test_document_tree_updates_with_section_labels(tmpdir):
     """Test how updating the document tree impacts the numbering of labels."""
+
+    # 1. First, test decoupled documents
 
     # Create a document tree.
     src_path = SourcePath(tmpdir, 'src')
@@ -219,22 +216,19 @@ def test_document_tree_updates_with_section_labels(tmpdir):
     @chapter{file3}
     """)
 
-    # 1. Load the root document
+    # Load the root document
     doc = Document(src_filepath=src_filepath1, target_root=target_root)
 
     # Check the order of the documents
     doc_list = doc.documents_list(only_subdocuments=False, recursive=True)
     assert doc_list[0].src_filepath == src_filepath1
-    assert doc_list[0].number == 1
     assert doc_list[1].src_filepath == src_filepath2
-    assert doc_list[1].number == 2
     assert doc_list[2].src_filepath == src_filepath3
-    assert doc_list[2].number == 3
 
     # Check the ordering of labels
     label_manager = doc.context['label_manager']
     labels = label_manager.get_labels()
-    title_labels = label_manager.get_labels(kinds='heading')
+    title_labels = label_manager.get_labels(kinds='branch')
 
     # Check the number of labels: 3 for documents, 3 for chapters
     assert len(labels) == 6
@@ -261,18 +255,15 @@ def test_document_tree_updates_with_section_labels(tmpdir):
     ---
     @chapter{file1}
     """)
-    doc.load_document()  # reload the file
+    doc.load()  # reload the file
 
     # Check the order of the documents
     doc_list = doc.documents_list(only_subdocuments=False, recursive=True)
     assert doc_list[0].src_filepath == src_filepath1
-    assert doc_list[0].number == 1
     assert doc_list[1].src_filepath == src_filepath3
-    assert doc_list[1].number == 2
     assert doc_list[2].src_filepath == src_filepath2
-    assert doc_list[2].number == 3
 
-    title_labels = label_manager.get_labels(kinds='heading')  # register labels
+    title_labels = label_manager.get_labels(kinds='branch')  # register labels
 
     # Check the number of labels: 3 for documents, 3 for chapters
     assert len(label_manager.labels) == 6
@@ -281,16 +272,54 @@ def test_document_tree_updates_with_section_labels(tmpdir):
     assert title_labels[1].id == 'br:file3'
     assert title_labels[2].id == 'br:file2'
 
-    # A render should be required since the labels have changed
+    # A render should be required only for document 1 since it was the only
+    # One to change, and the other documents don't depend on this document
     doc1, doc2, doc3 = doc.documents_list(only_subdocuments=False,
                                           recursive=True)
 
     assert doc1.render_required(target_filepath1)
-    assert doc2.render_required(target_filepath2)
-    assert doc3.render_required(target_filepath3)
+    assert not doc2.render_required(target_filepath2)
+    assert not doc3.render_required(target_filepath3)
 
     # The files have therefore been updated
     doc.render()
     assert mtime1 != target_filepath1.stat().st_mtime
-    assert mtime2 != target_filepath2.stat().st_mtime
-    assert mtime3 != target_filepath3.stat().st_mtime
+    assert mtime2 == target_filepath2.stat().st_mtime
+    assert mtime3 == target_filepath3.stat().st_mtime
+
+    # 2. Test coupled documents
+
+    # 1. First, test decoupled documents
+
+    src_filepath1.write_text("""
+        ---
+        include:
+          file2.dm
+        targets: html
+        ---
+        @chapter{file1}
+        @ref{br:file2}
+        """)
+    src_filepath2.write_text("""
+        @chapter{file2}
+        """)
+
+    # 1. Load the root document
+    doc = Document(src_filepath=src_filepath1, target_root=target_root)
+
+    # Check the order of the documents
+    doc_list = doc.documents_list(only_subdocuments=False, recursive=True)
+    assert doc_list[0].src_filepath == src_filepath1
+    assert doc_list[1].src_filepath == src_filepath2
+
+    # Render the documents
+    doc.render()
+    assert not doc_list[0].render_required(target_filepath1)
+    assert not doc_list[1].render_required(target_filepath2)
+
+    # Now touch the second document. Since the first has a label dependency
+    # on this document, it should require a render too.
+    src_filepath2.touch()
+
+    assert doc_list[0].render_required(target_filepath1)
+    assert doc_list[1].render_required(target_filepath2)

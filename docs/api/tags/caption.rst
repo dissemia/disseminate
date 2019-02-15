@@ -2,6 +2,6 @@ Caption Tags
 ------------
 
 .. automodule:: disseminate.tags.caption
-    :members: Caption, RefError, CaptionError
+    :members: Caption, CaptionError
     :imported-members:
     :show-inheritance:

@@ -153,12 +153,13 @@ def render_tree_html(documents, level=1):
     tables = []
     document_elements = []
 
-    for document in documents:
+    for number, document in enumerate(documents, 1):
         context = document.context
 
         # Column 1: the document number
         kwargs = OrderedDict((('class', 'num'),))
-        num = E('td', str(document.number))
+
+        num = E('td', str(number))
         set_html_tag_attributes(html_tag=num, attrs_dict=kwargs)
 
         # Column 2: the source file

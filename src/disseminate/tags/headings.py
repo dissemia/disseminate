@@ -4,7 +4,6 @@ Tags for headings.
 from lxml.builder import E
 
 from .core import Tag
-from .utils import format_label_tag
 from ..attributes import set_attribute, kwargs_attributes
 from ..utils.string import slugify
 
@@ -64,11 +63,33 @@ class Heading(Tag):
             self.attributes = set_attribute(self.attributes, ('id', id))
             self.set_label(id=id, kind=kind)
 
+    def set_label(self, id, kind, title=None):
+        assert id is not None
+
+        document = (self.context['document']() if 'document' in self.context
+                    else None)
+        title = self.title if title is None else title
+
+        if 'label_manager' in self.context and document is not None:
+            label_manager = self.context['label_manager']
+
+            # Create the label
+            label_manager.add_heading_label(id=id, kind=kind, title=title,
+                                            context=self.context)
+            self.label_id = id
+
+    def _get_label_fmt_str(self, tag_name=None, target=None):
+        # Specify a _get_label_fmt_str that has 'heading' as the tag name,
+        # instead of the name of the tag for Heading subclasses, like 'branch'
+        # or 'section'.
+        return super(Heading, self)._get_label_fmt_str(tag_name='heading',
+                                                       target=target)
+
     def default_fmt(self, content=None):
         name = self.__class__.__name__.lower()
         label = self.label
         if label is not None:
-            label_tag = format_label_tag(tag=self)
+            label_tag = self.get_label_tag()
 
             # Replace the label_tag name to this heading's name, ex: 'Chapter'
             label_tag.name = name
@@ -82,7 +103,7 @@ class Heading(Tag):
         label = self.label
 
         if label is not None:
-            label_tag = format_label_tag(tag=self, target='.html')
+            label_tag = self.get_label_tag(target='.html')
 
             # Replace the label_tag name to this heading's name, ex: 'chapter'
             label_tag.name = name

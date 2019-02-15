@@ -62,8 +62,8 @@ def context_targets(context):
 
 
 def context_includes(context):
-    """Retrieve a list of included subdocument source paths from from the
-    'include' entry of the context.
+    """Retrieve a list of included subdocument source paths from the 'include'
+    entry of the context.
 
     Parameters
     ----------

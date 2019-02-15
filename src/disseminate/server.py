@@ -4,7 +4,7 @@ The localhost http server for managing trees and documents.
 import http.server
 import os.path
 import logging
-from traceback import format_exception
+
 if __debug__:
     import time
 
@@ -25,8 +25,8 @@ def render(documents):
 
         if __debug__:
             t1 = time.time()
-            print("{} render time {:.1f} ms".format(document,
-                                                    1000. * (t1 - t0)))
+            logging.debug("{} render time {:.1f} ms".format(document,
+                                                            1000. * (t1 - t0)))
 
 
 class RequestHandler(http.server.SimpleHTTPRequestHandler):

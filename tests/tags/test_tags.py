@@ -1,13 +1,15 @@
 """
 Tests the core Tag and TagFactory classes.
 """
+import pathlib
+
 import pytest
 
 from disseminate.document import Document
 from disseminate.ast import process_ast
 from disseminate.tags import Tag, TagError
 from disseminate.tags.text import P
-from disseminate import settings
+from disseminate import settings, SourcePath, TargetPath
 
 
 def test_flatten_tag():
@@ -126,8 +128,8 @@ def test_tag_mtime(tmpdir):
     """)
 
     # Reload the documents
-    doc1.load_document()
-    doc2.load_document()
+    doc1.load()
+    doc2.load()
 
     # Get the root tag and the mtimes
     root1 = doc1.context[body_attr]
@@ -147,6 +149,58 @@ def test_tag_mtime(tmpdir):
     labels = label_manager.get_labels()
     assert src_filepath2.mtime() == root1.mtime
     assert src_filepath2.mtime() == root2.mtime
+
+
+# TODO: create test_doc fixture
+def test_label_tags(tmpdir):
+    """Test the generation of label tags from the labels of a tag."""
+    # Prepare test document
+    tmpdir = pathlib.Path(tmpdir)
+    src_path = tmpdir / 'src'
+    src_path.mkdir()
+    src_filepath = SourcePath(project_root=src_path, subpath='test.dm')
+    target_root = TargetPath(target_root=tmpdir)
+    src_filepath.touch()
+
+    doc = Document(src_filepath, target_root)
+    label_manager = doc.context['label_manager']
+
+    # Create a tag and label
+    root = Tag(name='root', content='base string', attributes=None,
+               context=doc.context)
+    root.set_label(id='test', kind='test')
+
+    # Generate the tag for the label. This will raise an exception because
+    # the context doesn't have a label_fmt for the kind 'test'
+    with pytest.raises(KeyError):
+        label_tag = root.get_label_tag()
+
+    # Create a label_fmt for 'test'
+    doc.context['label_fmts']['tag_test'] = 'test'
+    label_tag = root.get_label_tag()
+
+    assert label_tag.default == 'test'
+    assert label_tag.html == '<span class="label">test</span>\n'
+    assert label_tag.tex == 'test'
+
+    # Create a label_fmt with formatting for 'test'
+    doc.context['label_fmts']['tag_test'] = '@b{test}'
+    label_tag = root.get_label_tag()
+
+    assert label_tag.default == 'test'
+    assert label_tag.html == ('<span class="label">\n'
+                              '  <strong>test</strong>\n'
+                              '</span>\n')
+    assert label_tag.tex == '\\textbf{test}'
+
+    # Test different label_fmts for different targets. These take priority.
+    doc.context['label_fmts']['tag_test_html'] = 'html'
+    doc.context['label_fmts']['tag_test_tex'] = 'tex'
+    label_tag_html = root.get_label_tag(target='.html')
+    label_tag_tex = root.get_label_tag(target='.tex')
+
+    assert label_tag_html.html == '<span class="label">html</span>\n'
+    assert label_tag_tex.tex == 'tex'
 
 
 # Tests for html targets

@@ -31,6 +31,7 @@ def test_figure_caption_no_id(tmpdir):
     doc = Document(src_filepath=src_filepath)
     doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
+    label_fmts = doc.context['label_fmts']
 
     # Generate the markup without an id
     src = "@marginfig{@caption{This is my caption.\nIt has multiple lines}}"
@@ -44,7 +45,7 @@ def test_figure_caption_no_id(tmpdir):
     assert fig.attributes == tuple()
 
     # 1. Get the caption, first with a basic figure label
-    doc.context['figure_label'] = "Fig. {label.number}."
+    label_fmts['caption_figure'] = "Fig. $label.number."
     assert isinstance(fig.content, list)
     caption = [i for i in fig.content if isinstance(i, Caption)][0]
     assert caption.name == 'caption'
@@ -53,7 +54,7 @@ def test_figure_caption_no_id(tmpdir):
                                'It has multiple lines')
 
     # Get the caption, next with a caption title.
-    doc.context['figure_label'] = "@b{{Figure. {label.number}}}."
+    label_fmts['caption_figure'] = "@b{Figure. $label.number}."
     assert isinstance(fig.content, list)
     caption = [i for i in fig.content if isinstance(i, Caption)][0]
     assert caption.name == 'caption'
@@ -81,7 +82,7 @@ def test_figure_caption_with_id(tmpdir):
     src_filepath.ensure(file=True)
 
     doc = Document(src_filepath=src_filepath)
-    doc.context['figure_label'] = "Fig. {number}."
+    doc.context['label_fmts']['caption_figure'] = "Fig. $number."
     doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
 
@@ -126,7 +127,7 @@ def test_figure_caption_no_id_html(tmpdir):
     src_filepath.ensure(file=True)
 
     doc = Document(src_filepath=src_filepath)
-    doc.context['figure_label'] = "Fig. {label.number}."
+    doc.context['label_fmts']['caption_figure'] = "Fig. $label.number."
     doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
 
@@ -149,7 +150,10 @@ def test_figure_caption_no_id_html(tmpdir):
     root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
 
     key = """<span class="marginfig">
-        <span class="figure caption" id="caption-92042fbb8b"><span class="label">Fig. 1.</span>. <span class="caption-text">This is my caption</span></span>
+        <span class="figure caption" id="caption-92042fbb8b">
+          <span class="label">Fig. 1.</span>
+          <span class="caption-text">This is my caption</span>
+        </span>
       </span>"""
     assert root_html == strip_leading_space(key)
 
@@ -163,7 +167,7 @@ def test_figure_caption_with_id_html(tmpdir):
     src_filepath.ensure(file=True)
 
     doc = Document(src_filepath=src_filepath)
-    doc.context['figure_label'] = "Fig. {label.number}."
+    doc.context['label_fmts']['caption_figure'] = "@b{Fig. $label.number.}"
     doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
 
@@ -174,7 +178,12 @@ def test_figure_caption_with_id_html(tmpdir):
 
     key = """
       <span class="marginfig">
-        <span class="figure caption" id="fig-1"><span class="label">Fig. 1.</span>. <span class="caption-text">This is my caption</span></span>
+        <span class="figure caption" id="fig-1">
+          <span class="label">
+            <strong>Fig. 1.</strong>
+          </span>
+          <span class="caption-text">This is my caption</span>
+        </span>
       </span>
     """
 
@@ -207,7 +216,7 @@ def test_figure_caption_no_id_tex(tmpdir):
     src_filepath.ensure(file=True)
 
     doc = Document(src_filepath=src_filepath)
-    doc.context['figure_label'] = "Fig. {label.number}"
+    doc.context['label_fmts']['caption_figure'] = "Fig. $label.number."
     doc.context['targets'] = '.tex'
     label_man = doc.context['label_manager']
 
@@ -219,9 +228,10 @@ def test_figure_caption_no_id_tex(tmpdir):
     label_man.register_labels()
 
     root_tex = root.tex
+
     key = """
     \\begin{marginfigure}
-      \caption{Fig. 1. This is my caption} \label{caption-92042fbb8b}
+      \\caption{Fig. 1. This is my caption} \\label{caption-92042fbb8b}
     \\end{marginfigure}
     """
     assert root_tex == strip_leading_space(key)
@@ -236,7 +246,7 @@ def test_figure_caption_with_id_tex(tmpdir):
     src_filepath.ensure(file=True)
 
     doc = Document(src_filepath=src_filepath)
-    doc.context['figure_label'] = "Fig. {label.number}"
+    doc.context['label_fmts']['caption_figure'] = "Fig. $label.number."
     doc.context['targets'] = '.tex'
     label_man = doc.context['label_manager']
 
@@ -251,5 +261,5 @@ def test_figure_caption_with_id_tex(tmpdir):
 
         root_tex = root.tex
         assert root_tex == ('\n\\begin{marginfigure}\n'
-                            '  \caption{Fig. 1. This is my caption} \label{fig-1}\n'
+                            '  \\caption{Fig. 1. This is my caption} \\label{fig-1}\n'
                             '\\end{marginfigure}\n')

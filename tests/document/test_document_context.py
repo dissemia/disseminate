@@ -12,32 +12,35 @@ class DummyDocument(object):
     target_root = TargetPath()
 
 
-def test_document_context_basic_inheritence():
+def test_document_context_basic_inheritence(tmpdir):
     """Test the proper inheritence of the document context."""
     # Create a DocumentContext with one entry in the class's 'do_not_inherit'
     # class attribute and one not in 'do_not_inherit'
     parent_context = {'paths': [],
-                      'src_filepath': SourcePath('src_filepath'),
-                      'project_root': SourcePath('project_root'),
-                      'target_root': TargetPath('target_root'),
+                      'src_filepath': SourcePath('tests/document/example1',
+                                                 'dummy.dm'),
+                      'project_root': SourcePath('tests/document/example1'),
+                      'target_root': TargetPath('tmpdir'),
                       'label_manager': dict(),
                       'dependency_manager': dict(),
                       }
 
     doc = DummyDocument()
-    context = DocumentContext(document=doc, parent_context=parent_context)
+    context = DocumentContext(document=doc, parent_context=parent_context,
+                              doc_id='dummy.dm', mtime=1)
 
     def test_context_entries(context):
         # Check the entries that should be inherited by the parent
         assert context['src_filepath'] != parent_context['src_filepath']  # Not inherited
         assert context['src_filepath'] == SourcePath('')
+        assert context['doc_id'] == 'dummy.dm'
+        assert isinstance(context['mtime'], float)
         assert context['project_root'] == parent_context['project_root']
         assert context['target_root'] == parent_context['target_root']
         assert context['document']() == doc  # dereference weakref
         assert context['label_manager'] == parent_context['label_manager']
         assert (context['dependency_manager'] ==
                 parent_context['dependency_manager'])
-        assert 'mtime' not in context
 
         # Check that the persistent objects, like the label_manager, are the
         # *same* object
@@ -50,7 +53,7 @@ def test_document_context_basic_inheritence():
         assert 'paths' in context.do_not_inherit
 
         assert 'paths' in context
-        assert context['paths'] == [SourcePath('project_root')]
+        assert context['paths'] == [SourcePath('tests/document/example1')]
 
         # The 'paths' list itself should not have been inherited
         assert id(parent_context['paths']) != id(context['paths'])
@@ -86,6 +89,7 @@ def test_document_context_simple_documents(tmpdir):
         assert context['target_root'] == target_root
         assert context['document']() == doc  # dereference weakref
         assert context['root_document']() == doc  # dereference weakref
+        assert context['doc_id'] == doc.doc_id
 
         assert context['label_manager'] == label_manager
         assert context['dependency_manager'] == dependency_manager
@@ -182,3 +186,39 @@ def test_document_context_is_valid(tmpdir):
     # Now remove the mtime key and this should invalidate the context
     del context['mtime']
     assert not context.is_valid()
+
+
+def test_document_context_shallow_copy():
+    """Test the behavior of shallow copied entries in document contexts."""
+    # Make an object that tracks deletion
+    class Obj(object):
+
+        def __del__(self):
+            raise NotImplementedError
+
+        def __delete__(self, instance):
+            raise NotImplementedError
+
+    class SubDocumentContext(DocumentContext):
+        shallow_copy = {'obj'}
+
+    # Create the document context objects
+    doc = DummyDocument()
+    doc.doc_id = 'doc_id'
+    parent_context = SubDocumentContext(document=doc, obj=Obj())
+    context = SubDocumentContext(document=doc, parent_context=parent_context)
+
+    assert parent_context['obj'] == context['obj']
+    assert id(parent_context['obj']) == id(context['obj'])
+
+    # If the shallow_copy attribute is not set, then deep copies are made.
+    parent_context = DocumentContext(document=doc, obj=Obj())
+    context = DocumentContext(document=doc, parent_context=parent_context)
+
+    assert parent_context['obj'] != context['obj']
+    assert id(parent_context['obj']) != id(context['obj'])
+
+    # Reset the delete functions of Obj so that the objects can now be safely
+    # deleted
+    del Obj.__del__
+    del Obj.__delete__

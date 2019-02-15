@@ -35,7 +35,63 @@ text_extensions = ['.tex', ]
 default_context = {
     'targets': 'html',
     'paths': [],
-    'base_url': '/{target}/{subpath}'
+    'base_url': '/{target}/{subpath}',
+
+    # The following are strings to present labels. They are substituted with
+    # values from their respective label and parsed in disseminate format.
+    # The label format strings are identified first by the tag that uses
+    # the label, then the kind(s) of the label, and finally, and optionally,
+    # the target for the rendered document.
+    'label_fmts': {
+        'document': '$label.title',
+
+        # caption tags
+        'caption_figure': '@b{Fig. $label.branch_number.$label.number}.',
+
+        'ref_figure': '@b{Fig. $label.branch_number.$label.number}',
+        'ref_figure_html': '@a[href="$link"]{'
+                           '@b{Fig. $label.branch_number.$label.number}}',
+        'ref_figure_tex': '\\hyperref[$label.id]{'
+                           '@b{Fig. $label.branch_number.$label.number}}',
+
+        # Headings tags
+        'heading': '$label.title',
+
+        # html specific formatting
+        'heading_html': '@number{$label.tree_number.} '
+                        '$label.title',
+
+        # Ref tags
+        'ref_heading_html': '@a[href="$link"]{$label.title}',
+
+        # TOCRef Tags
+        'tocref_document_html': '@a[href="$link"]{$label.title}',
+        'tocref_document_tex': '\\hyperref[$label.id]'
+                               '{$label.title} '
+                               '\\hfill \\pageref{$label.id}',
+        'tocref_heading_html': '@a[href="$link"]{'
+                               '@number{$label.tree_number.} '
+                               '$label.title}',
+        'tocref_heading_tex': '\\hyperref[$label.id]'
+                              '{$label.tree_number. $label.title} '
+                              '\\hfill \\pageref{$label.id}',
+
+        # Citation formats
+        # 'citation': '@sup{label.number}',
+        #
+        # 'citation_ref': '({refs})',
+        # 'citation_id': 'citation.number',
+        # 'citation_ref_sep': ',',
+        #
+        # 'citation_journal': '$journal.authors, $journal.title, '
+        #                     '@b{$journal.journal}',
+        #
+        # 'citation_author_sep': ',',
+        # 'citation_author_and': True,
+        # 'citation_author_initials_point': True,
+
+    },
+
 }
 
 #: Attribute in the context in which the body of a file (the string and AST)
@@ -105,25 +161,6 @@ toc_pageref_width = '5ex'
 toc_bolded_kinds = ('part', 'chapter')
 toc_dotted_kinds = ('section', 'subsection', 'subsubsection')
 
-#: Labels
-
-#: Label formats should be formatted as they should appear as references to
-#: labels
-label_fmt = {'document': '{label.short}',
-
-             'heading': '{label.short}',
-             'heading_html': '@number{{{label.tree_number}.}} '
-                             '{label.short}',
-             'heading_tex': '{label.short}',
-
-             'figure': '@b{{Fig. {label.branch_number}.{label.number}}}',
-
-             # Separator between numbers in a tree number
-             'label_sep': '.',
-
-             # Terminator placed after a label.
-             'label_term': '.',
-             }
 #: HTML Tags
 #: ~~~~~~~~~
 

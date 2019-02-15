@@ -1,7 +1,27 @@
 """
 The manager for labels.
 """
-from .labels import Label, LabelError, LabelNotFound, DuplicateLabel
+from .labels import (LabelError, LabelNotFound, find_duplicates,
+                     transfer_labels, order_labels)
+from .content_label import ContentLabel, HeadingLabel, curate_content_labels
+
+
+# Wrap curation functions
+def find_duplicates_partial(registered_labels, *args, **kwargs):
+    # The find_duplicates function identifies multiple documents (with distinct
+    # doc_ids) that share the same ids for labels. A label's id should be
+    # unique for a project. However, multiple citation labels may be referenced
+    # between multiple documents.
+    return find_duplicates(registered_labels=registered_labels,
+                           *args, **kwargs)
+
+
+def order_labels_partial(registered_labels, *args, **kwargs):
+    # The order_labels function will set the local_order and global_order for
+    # all labels, except for HeadingLabels, which are set by
+    # curate_content_labels
+    return order_labels(registered_labels=registered_labels,
+                        exclude_labels=(HeadingLabel,), *args, **kwargs)
 
 
 class LabelManager(object):
@@ -15,10 +35,20 @@ class LabelManager(object):
     is executed. Labels are automatically registered when the :meth:`get_label`
     and :meth:`get_labels` methods are used.
 
+    The collection/register method is used because labels keep track of their
+    modification times (mtimes) and update these if their parameters change. A
+    change in the label's mtime indicates that a document needs to be
+    re-rendered.
+
+    Parameters
+    ----------
+    root_context : :obj:`disseminate.document.DocumentContext`
+        The context for the root document.
+
     Attributes
     ----------
-    labels : set
-        A set of labels
+    labels : list
+        A list of labels
     collected_labels : dict
         A dictionary organized by document src_filepath (key, str) and a list
         of labels collected by the :meth:`add_label`. Collected labels aren't
@@ -27,14 +57,37 @@ class LabelManager(object):
         and sets their order.
     """
 
+    root_context = None
     labels = None
     collected_labels = None
 
-    def __init__(self):
+    curators = [
+                # The find_duplicates curator function will find labels from
+                # different documents (with different doc_ids) that have the
+                # same id in the collected_labels. CitationLabels are excluded
+                # in this wrapped function as these may have the same id
+                # between documents.
+                find_duplicates_partial,
+
+                # Transfer collected (and unregistered) labels from the
+                # collected_labels dict to the list of registered labels.
+                transfer_labels,
+
+                # Set the local_order and global_order of labels. ContentLabels
+                # are excluded because heading labels are treated separately.
+                order_labels_partial,
+
+                # Set the local_order and global_order of ContentLabels and set
+                # the label references to the heading labels.
+                curate_content_labels
+    ]
+
+    def __init__(self, root_context):
         self.labels = []
         self.collected_labels = dict()
+        self.root_context = root_context
 
-    def add_label(self, document, tag=None, kind=None, id=None):
+    def _add_label(self, id, kind, context, label_cls, *args, **kwargs):
         """Add a label.
 
         The add_label function adds a new or existing label to the
@@ -44,16 +97,16 @@ class LabelManager(object):
 
         Parameters
         ----------
-        document : :obj:`disseminate.Document`
-            The document that owns the label.
-        tag : None or :obj:`disseminate.Tag`
-            The tag that owns the label.
+        id : str
+            The unique identifier (within a project of documents) for the label.
+            ex: 'ch:nmr-introduction'
         kind : tuple or str
-            The kind of the label. ex: 'figure', 'branch', 'equation'
-        id : str, optional
-            The label of the label ex: 'ch:nmr-introduction'
-            If a label id is not specified, a short one based on the
-            document and label count will be generated.
+            The kind of the label. ex: 'figure', ('heading', 'branch'),
+            'equation'
+        context : :obj:`disseminate.BaseContext`
+            The context for the document adding the label.
+        label_cls : :class:`disseminate.labels.Label`
+            The label class to use in creating the label.
 
         Raises
         ------
@@ -62,176 +115,76 @@ class LabelManager(object):
             label manager.
 
         """
-        assert document.context.is_valid('src_filepath')
+        assert context.is_valid('doc_id', 'mtime')
 
-        # Set up variables
-        src_filepath = document.src_filepath
+        # Get the values needed from the context
+        doc_id = context['doc_id']
+        mtime = context['mtime']
+
+        # The objective here is to reuse labels, if possible, since this
+        # produces an accurate mtime if the label is changed.
 
         # Organize the kind into a tuple, if needed
         if isinstance(kind, str):
             kind = (kind,)
 
-        # See if the label already exists and that it points to this document
+        # First see if it's already been added to the collected labels.
+        # If it has, simply return that.
+        collected_labels = self.collected_labels.setdefault(doc_id, [])
+        existing_collected_labels = [label for label in collected_labels
+                                     if label.id == id]
+
+        if len(existing_collected_labels) > 0:
+            return existing_collected_labels[0]
+
+        # Next, see if the label already exists in the registered labels.
+        # If an existing label is found, we must transfer it to the
+        # collected_labels.
+
         existing_labels = [label for label in self.labels if label.id == id]
 
-        if len(existing_labels) == 0 or id is None:
-            # If label doesn't exist or it's a generic label (i.e. no id),
-            # create it.
-
-            # Add the label
-            label = Label(document=document, tag=tag, kind=kind, id=id,
-                          local_order=None,
-                          global_order=None)
-        else:
-            # A label with a match id was found. Use that one and make sure
-            # its document, tag and kind match those given by this function
+        # Get the existing label, if found, and update it.
+        label = None
+        if len(existing_labels) > 0:
             label = existing_labels[0]
-            label.document = document
-            label.tag = tag
             label.kind = kind
-        collected_labels = self.collected_labels.setdefault(src_filepath, [])
+            label.mtime = mtime  # update the mtime
+
+        # If no matching label was found. Create a new one.
+        if label is None:
+            label = label_cls(doc_id=doc_id, id=id, kind=kind, mtime=mtime,
+                              local_order=None, global_order=None,
+                              *args, **kwargs)
+
+        collected_labels = self.collected_labels.setdefault(doc_id, [])
         collected_labels.append(label)
 
-        return None
+        return label
 
-    def register_labels(self):
-        """Process collected labels and register them in the label_manager.
+    def add_content_label(self, id, kind, title, context):
+        label = self._add_label(id=id, kind=kind, context=context,
+                                label_cls=ContentLabel, title=title)
+        label.title = title
+        return label
 
-        Labels are added with the :meth:`add_label` method. These labels are
-        collected and are only available after the :meth:`register_label` method
-        is executed. When registering labels, old labels that aren't referenced
-        anymore are removed.
+    def add_heading_label(self, id, kind, title, context):
+        label = self._add_label(id=id, kind=kind, context=context,
+                                label_cls=HeadingLabel, title=title)
+        label.title = title
+        return label
 
-        Additionally, this function does the following:
+    def reset(self, context):
+        """Reset the registration for the labels of the given document.
 
-            1. Sets the local_number and global_number of the newly registered
-               tags. The global_number is the number for a given kind in the
-               project and the local_number is the number for a given kind in
-               the document.
-            2. For heading labels, like branch, section and subsection, the
-               local_order is reset after elements like a branch or section
-               are encountered.
-            3. A weakref to the branch label or section label is placed in
-               labels under these headings.
+        Parameters
+        ----------
+        context : :obj:`disseminate.BaseContext`
+            The context for the document whose labels are being reset.
         """
-        # See if there are collected_labels. If there aren't then all labels
-        # are registered, and there's nothing to do.
-        if len(self.collected_labels.keys()) == 0:
-            return 0
+        assert context.is_valid('doc_id')
+        doc_id = context['doc_id']
 
-        # Remove any labels for documents that no longer exist
-        invalid_labels = [l for l in self.labels if l.document is None]
-        for invalid_label in invalid_labels:
-            self.labels.remove(invalid_label)
-
-        # Now organize the labels and transfer the collected labels
-        # First, get a list of all the document src_filepaths organized in
-        # document number order. The document's number may not be set at this
-        # point, in which case the document.number property will return None.
-        # In this case, give it a default order of 0.
-        documents = [l.document for l in self.labels]
-        documents += [l.document for lst in self.collected_labels.values()
-                      for l in lst]
-        documents = filter(bool, documents)  # Remove 'None' items
-        documents_dict = {d.src_filepath: d.number or 0 for d in documents}
-        src_filepaths = sorted(documents_dict.keys(),
-                               key=lambda k: documents_dict[k])
-
-        # Create a new list of registered labels
-        new_labels = []
-        updated_label_count = 0
-        global_counter = dict()  # Keep track of global count
-
-        for src_filepath in src_filepaths:
-            local_counter = dict()  # Keep track of local count
-            branch_label = None
-            section_label = None
-            subsection_label = None
-            subsubsection_label = None
-
-            collected_labels = src_filepath in self.collected_labels
-
-            # If there are collected labels for the given src_filepath, use
-            # those labels. Otherwise, use those that are already registered
-            if collected_labels:
-                # Use the collected labels
-                labels = self.collected_labels[src_filepath]
-                updated_label_count += len(labels)
-            else:
-                # Use the existing registered label
-                labels = [l for l in self.labels
-                          if l.document.src_filepath == src_filepath]
-
-            # Process each label. Set the local_order and global_order count
-            # for each label, set the corresponding branch and section labels,
-            # and add it to the new list of registered labels
-            for label in labels:
-                if label.kind:
-                    if label.kind[-1] == 'branch':
-                        branch_label = label
-                        section_label = None
-                        subsection_label = None
-                        subsubsection_label = None
-
-                        # Reset the local_counter for sections, subsections
-                        local_counter['section'] = 0
-                        local_counter['subsection'] = 0
-                        local_counter['subsubsection'] = 0
-
-                    elif label.kind[-1] == 'section':
-                        section_label = label
-                        subsection_label = None
-                        subsubsection_label = None
-
-                        # Reset the local_counter for sections, subsections
-                        local_counter['subsection'] = 0
-                        local_counter['subsubsection'] = 0
-
-                    elif label.kind[-1] == 'subsection':
-                        subsection_label = label
-                        subsubsection_label = None
-
-                        # Reset the local_counter for sections, subsections
-                        local_counter['subsubsection'] = 0
-
-                    elif label.kind[-1] == 'subsubsection':
-                        subsubsection_label = label
-
-                # Get the count for each of the kind items
-                local_order, global_order = [], []
-                for item in label.kind:
-                    local_count = local_counter.setdefault(item, 0) + 1
-                    global_count = global_counter.setdefault(item, 0) + 1
-
-                    local_counter[item] = local_count
-                    global_counter[item] = global_count
-
-                    local_order.append(local_count)
-                    global_order.append(global_count)
-
-                label.branch_label = branch_label
-                label.section_label = section_label
-                label.subsection_label = subsection_label
-                label.subsubsection_label = subsubsection_label
-                label.local_order = tuple(local_order)
-                label.global_order = tuple(global_order)
-
-                new_labels.append(label)
-
-            # Remove the collected labels
-            if src_filepath in self.collected_labels:
-                del self.collected_labels[src_filepath]
-
-        # Move the new_labels to the registered labels
-        self.labels.clear()
-        self.labels += new_labels
-
-        return updated_label_count
-
-    def reset(self, document):
-        """Reset the registration for the labels of the given document."""
-        src_filepath = document.src_filepath
-        self.collected_labels[src_filepath] = []
+        self.collected_labels[doc_id] = []
 
     def get_label(self, id):
         """Return the label for the given label id.
@@ -258,8 +211,7 @@ class LabelManager(object):
         self.register_labels()
 
         # Find the label
-        existing_labels = {i for i in self.labels if i.id == id and
-                           i.document is not None}
+        existing_labels = {i for i in self.labels if i.id == id}
 
         if len(existing_labels) == 0 or id is None:
             msg = "Could not find label '{}'"
@@ -267,7 +219,7 @@ class LabelManager(object):
 
         return existing_labels.pop()
 
-    def get_labels(self, document=None, kinds=None):
+    def get_labels(self, context=None, kinds=None):
         """Return a filtered and sorted list of all labels for the given
         document.
 
@@ -275,9 +227,10 @@ class LabelManager(object):
 
         Parameters
         ----------
-        document : :obj:`disseminate.Document` or None
-            The document to search labels for.
-            If None is specified, labels for all documents are returned.
+        context : :obj:`disseminate.BaseContext`
+            The context for the document whose labels are being retrieved.
+            If None is specified, then all labels from all documents in a
+            project will be selected.
         kinds : str or list of str or None
             If None, all label kinds are returned.
             If string, all labels matching the kind string will be returned.
@@ -292,25 +245,15 @@ class LabelManager(object):
         # Make sure the labels are registered
         self.register_labels()
 
+        # Get the doc_id from the document's context
+        doc_id = context.get('doc_id', None) if context is not None else None
+
         # Filter labels by document.
-        # Labels are then sorted first by:
-        #   1. the order of a document in a document tree (i.e. its document
-        #      number)
-        #   2. it's most general kind (i.e. 'heading' or 'document'),
-        #   3. then by their global_order.
-        if document is not None:
-            document_labels = sorted([l for l in self.labels
-                                      if l.document is not None and
-                                      l.document == document],
-                                     key=lambda l: (l.document_number,
-                                                    l.kind[0],
-                                                    l.global_order))
+        if context is not None and 'doc_id' in context:
+            doc_id = context['doc_id']
+            document_labels = [l for l in self.labels if l.doc_id == doc_id]
         else:
-            document_labels = sorted([l for l in self.labels
-                                      if l.document is not None],
-                                     key=lambda l: (l.document_number,
-                                                    l.kind[0],
-                                                    l.global_order))
+            document_labels = self.labels
 
         if kinds is None:
             return list(document_labels)
@@ -324,3 +267,32 @@ class LabelManager(object):
             returned_labels += [l for l in document_labels if kind in l.kind]
 
         return returned_labels
+
+    def register_labels(self):
+        """Process collected labels and register them in the label_manager.
+
+        This function:
+            1. Transfers the collected_labels to the list of registered labels
+               (self.labels)
+            2. Sets the local order (within a document) and global order
+               (between multiple documents in a document tree) for labels.
+            3. Sets references to the heading labels and the counts for
+               heading labels.
+        """
+        assert self.root_context.is_valid('document')
+
+        # Get the doc_ids from the root document
+        root_document = self.root_context['document']()  # de-reference weakref
+        doc_ids = root_document.doc_ids
+
+        # See if there are collected_labels. If there aren't then all labels
+        # are registered, and there's nothing to do.
+        if len(self.collected_labels.keys()) == 0:
+            return None
+
+        for curator in self.curators:
+            curator(registered_labels=self.labels,
+                    collected_labels=self.collected_labels,
+                    doc_ids=doc_ids)
+
+        return None

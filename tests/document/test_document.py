@@ -41,53 +41,6 @@ def test_document_paths(tmpdir):
     assert str(doc.target_root.target_root) == str(tmpdir)
 
 
-def test_document_numbers(tmpdir):
-    """Tests the document number property."""
-    tmpdir = pathlib.Path(tmpdir)
-
-    # Create a document tree.
-    src_path = tmpdir / 'src'
-    src_path.mkdir()
-
-    src_filepath1 = src_path / 'file1.dm'
-    src_filepath2 = src_path / 'file2.dm'
-    src_filepath3 = src_path / 'file3.dm'
-
-    src_filepath1.write_text("""---
-include:
-  file2.dm
-  file3.dm
----""")
-    src_filepath2.touch()
-    src_filepath3.touch()
-
-    # 1. Load the root document
-    doc = Document(src_filepath=src_filepath1, target_root=tmpdir)
-
-    doc_list = doc.documents_list(only_subdocuments=False)
-    assert doc.number == 1
-    assert doc_list[0].src_filepath == src_filepath1
-    assert doc_list[0].number == 1
-    assert doc_list[1].src_filepath == src_filepath2
-    assert doc_list[1].number == 2
-    assert doc_list[2].src_filepath == src_filepath3
-    assert doc_list[2].number == 3
-
-    # Reorder the documents and reload the document.
-    src_filepath1.write_text("""---
-include:
-  file3.dm
-  file2.dm
----""")
-    doc.load_document()
-
-    doc_list = doc.documents_list(only_subdocuments=False)
-    assert doc.number == 1
-    assert doc_list[0].number == 1
-    assert doc_list[1].number == 2
-    assert doc_list[2].number == 3
-
-
 def test_document_src_filepaths():
     """Test the src_filepaths of documents."""
     # 1. Example1 does not have markup source files in a src
@@ -287,7 +240,7 @@ def test_document_target_list_update(tmpdir):
         ---
         """
     src_filepath.write_text(strip_leading_space(markup))
-    doc.load_document()
+    doc.load()
 
     assert doc.target_list == ['.tex']
 
@@ -307,9 +260,97 @@ def test_document_ast_caching(tmpdir):
     assert mtime is not None
 
     # Try loading the AST again. At this point, it shouldn't be different
-    doc.load_document()
+    doc.load()
     assert ast == doc.context[body_attr]
     assert mtime == doc.mtime
+
+
+def test_document_label_mtime(tmpdir):
+    """Test the label mtime method."""
+    # 1. Setup a document with 3 chapters
+    tmpdir.join('src').mkdir()
+    src_filepath = tmpdir.join('src').join('test.dm')
+
+    src_filepath.write("""
+    ---
+    targets: html
+    ---
+    @chapter[id=chapter-1]{Chapter 1}
+    @ref{chapter-3}
+    @chapter[id=chapter-2]{Chapter 2}
+    @chapter[id=chapter-3]{Chapter 3}
+    """)
+
+    # Load the document
+    doc = Document(str(src_filepath), str(tmpdir))
+    doc.render()
+
+    # Check that the labels were correctly loaded: 1 for the document and 1
+    # for each of the 3 chapters.
+    label_manager = doc.context['label_manager']
+
+    labels = label_manager.get_labels()
+    assert len(labels) == 4
+    print(labels)
+    # Check that the labels were properly set
+    assert label_manager.labels[0].title == 'test'
+    assert label_manager.labels[1].title == 'Chapter 1'
+    assert label_manager.labels[2].title == 'Chapter 2'
+    assert label_manager.labels[3].title == 'Chapter 3'
+
+    # The labels have been created and not modified yet. In this case, their
+    # mtime attributes should match that of the source document
+    doc_mtime = src_filepath.mtime()
+    assert doc.context['mtime'] == doc_mtime
+    assert label_manager.labels[0].mtime == doc_mtime  # document label
+    assert label_manager.labels[1].mtime == doc_mtime  # chapter 1 label
+    assert label_manager.labels[2].mtime == doc_mtime  # chapter 2 label
+    assert label_manager.labels[3].mtime == doc_mtime  # chapter 3 label
+
+    for label in label_manager.labels:
+        assert label.doc_id == doc.doc_id
+
+    # Determine the ids for the labels
+    ids = [id(label) for label in label_manager.labels]
+
+    # Change the first chapter. The labels should all now have an updated mtime
+    src_filepath.write("""
+    ---
+    targets: html
+    ---
+    @chapter[id=chapter-1-intro]{Chapter 1}
+    @ref{chapter-3}
+    @chapter[id=chapter-2]{Chapter Two}
+    @chapter[id=chapter-3]{Chapter 3}
+    """)
+
+    # Reload the document
+    doc.load()
+
+    # Check to see which labels have been created new.
+    # The chapter 1 label has a new id, so its a new label
+    # The chapter 2 label has the same id, but its title has changed and it
+    # has been modified
+    new_ids = [id(label) for label in label_manager.get_labels()]
+    assert ids[0] == new_ids[0]  # document label
+    assert ids[1] != new_ids[1]  # chapter 1 label (new label)
+    assert ids[2] == new_ids[2]  # chapter 2 label
+    assert ids[3] == new_ids[3]  # chapter 3 label
+
+    # Check that the labels were properly set
+    assert label_manager.labels[0].title == 'test'
+    assert label_manager.labels[1].title == 'Chapter 1'
+    assert label_manager.labels[2].title == 'Chapter Two'
+    assert label_manager.labels[3].title == 'Chapter 3'
+
+    # Check the label modification times. All the labels should have the new
+    # mtime of the updated document.
+    new_doc_mtime = src_filepath.mtime()
+    assert doc.context['mtime'] == new_doc_mtime
+    assert label_manager.labels[0].mtime == new_doc_mtime  # document label
+    assert label_manager.labels[1].mtime == new_doc_mtime  # chapter 1 label
+    assert label_manager.labels[2].mtime == new_doc_mtime  # chapter 2 label
+    assert label_manager.labels[3].mtime == new_doc_mtime  # chapter 3 label
 
 
 def test_document_custom_template(tmpdir):
@@ -410,7 +451,7 @@ def test_document_context_update(tmpdir):
     # are removed
     doc.src_filepath = SourcePath(project_root="tests/document/example2",
                                   subpath="noheader.dm")
-    doc.load_document(reload=True)
+    doc.load(reload=True)
 
     # Check the contents  of the local_context
     assert 'title' not in doc.context

@@ -6,17 +6,12 @@ from collections import OrderedDict
 from lxml.builder import E
 
 from .core import Tag
-from .utils import format_label_tag, label_term, set_html_tag_attributes
+from .utils import set_html_tag_attributes
 from ..utils.string import hashtxt
 
 
 class CaptionError(Exception):
     """An error was encountered in processing a caption."""
-    pass
-
-
-class RefError(Exception):
-    """An error was encountered in a reference."""
     pass
 
 
@@ -43,7 +38,7 @@ class Caption(Tag):
     kind = None
     active = True
 
-    def set_label(self, id=None, kind=None):
+    def set_label(self, id=None, kind=None, title=None):
         """Add a label to the caption.
 
         .. note:: This function is run by the parent tag so that the kind is
@@ -70,7 +65,7 @@ class Caption(Tag):
             id = 'caption-' + hashtxt(text)
 
         kind = ('caption',) if kind is None else kind
-        super(Caption, self).set_label(id=id, kind=kind)
+        super(Caption, self).set_label(id=id, kind=kind, title=title)
 
         self.kind = ('caption',) if kind is None else (kind, 'caption')
 
@@ -78,7 +73,8 @@ class Caption(Tag):
         """Add newline to the end of a caption"""
         label = self.label
         if label is not None:
-            label_tag = format_label_tag(tag=self, target=None)
+            label_tag = self.get_label_tag()
+
             # add the label to the caption
             return (label_tag.default_fmt() + ' ' +
                     super(Caption, self).default_fmt())
@@ -88,11 +84,10 @@ class Caption(Tag):
     def html_fmt(self, level=1, content=None):
         label = self.label
         if self.label is not None:
-            label_tag = format_label_tag(tag=self, target='.html')
+            label_tag = self.get_label_tag(target='.html')
 
             tag = E('span',
                     label_tag.html_fmt(level+1),
-                    label_term(tag=self, target='.html') + ' ',
                     super(Caption, self).html_fmt(level+1))
 
             # Set the html tag attributes, in order
@@ -110,11 +105,10 @@ class Caption(Tag):
         label = self.label
 
         if self.label is not None:
-            label_tag = format_label_tag(tag=self, target='.tex')
+            label_tag = self.get_label_tag(target='.tex')
 
             # Format the label and add it to the caption
-            string = label_tag.tex_fmt(level+1, mathmode)
-            string += label_term(tag=self, target='.tex') + ' '
+            string = label_tag.tex_fmt(level+1, mathmode) + " "
 
             if isinstance(content, list):
                 content = [string] + content
@@ -128,53 +122,3 @@ class Caption(Tag):
         else:
             return super(Caption, self).tex_fmt(level + 1, mathmode, content)
 
-
-class Ref(Tag):
-    """A tag to reference a label."""
-
-    active = True
-
-    def __init__(self, name, content, attributes, context):
-        super(Ref, self).__init__(name, content, attributes, context)
-
-        # Set the label_id
-        # Get the identifier; it has to be a text string
-        if not isinstance(self.content, str):
-            msg = "The reference '{}' should be a simple text identifier."
-            raise RefError(msg.format(str(self.content)))
-        self.label_id = self.content.strip()
-
-    def default_fmt(self, content=None):
-        label_tag = format_label_tag(tag=self)
-        return label_tag.default_fmt(content)
-
-    def html_fmt(self, level=1, content=None):
-        label = self.label
-        label_tag = format_label_tag(tag=self, target='.html')
-
-        # Wrap the label_tag in a link to the label's target
-        target_filepath = label.document.target_filepath('.html')
-
-        # Generate the link for the document.
-        link = target_filepath.get_url(context=label.document.context)
-
-        # Add the id to the link, if it's not a link to the whole document
-        if label.kind[0] != 'document':
-            link += '#' + label.id
-
-        kwargs = {'href': link}
-        return E('a', label_tag.html_fmt(level+1), **kwargs)
-
-    def tex_fmt(self, level=1, mathmode=False, content=None, page=False):
-        label = self.label
-        label_tag = format_label_tag(tag=self, target='.tex')
-
-        tex = label_tag.tex_fmt(level+1, mathmode)
-
-        if self.get_attribute(name='page') or page:
-            # If the 'page' attribute is set, return a reference for the page.
-            return "\\pageref{{{id}}}".format(id=label.id)
-        else:
-            # Otherwise just return a link to the label
-            return "\\hyperref[{id}]{{{content}}}".format(id=label.id,
-                                                          content=tex)

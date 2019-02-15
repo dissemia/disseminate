@@ -48,7 +48,6 @@ class Eq(RenderedImg):
     # TODO: "@eq[bold color=blue]{y=x}"
 
     aliases = ('term', 'termb')
-    # src_filepath = None
     active = True
 
     block_equation = None

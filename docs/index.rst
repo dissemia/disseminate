@@ -112,6 +112,7 @@ The dependencies are only required depending on which features are used.
 
    development/development
    api/index
+   development/releasenotes
 
 
 Indices and tables

@@ -99,4 +99,4 @@ def main():
         pass
 
     if args.command == 'serve':
-        run(in_directory=args.i, out_directory=args.o, port=args.port)
+        run(in_directory=args.i, out_directory=args.o, port=args.p)

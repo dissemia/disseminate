@@ -79,6 +79,7 @@ class DependencyManager(object):
     create_dirs = None
     dependencies = None
 
+    # TODO: make the parameters root_context, like the label manager
     def __init__(self, project_root, target_root,
                  create_dirs=settings.create_dirs):
         assert isinstance(project_root, SourcePath)

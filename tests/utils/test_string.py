@@ -1,7 +1,12 @@
 """
 Test string utilities.
 """
-from disseminate.utils.string import hashtxt, titlelize
+from collections import namedtuple
+
+import pytest
+
+from disseminate.utils.string import (hashtxt, titlelize, str_to_dict,
+                                      str_to_list, StringTemplate)
 
 
 def test_hashtxt():
@@ -30,3 +35,160 @@ def test_titlelize():
     assert ("My First SubSection, and it "
             "has multiple lines") == titlelize("My First SubSection, and"
                                                "      it has multiple lines.")
+
+
+def test_str_to_list():
+    """Tests the parsing of strings into lists."""
+
+    # Test new lines
+    l = str_to_list('  src/file1.tex\n  src/file2.tex\n  src/file 3.tex')
+    assert l == ['src/file1.tex', 'src/file2.tex', 'src/file 3.tex']
+
+    # Test commas
+    l = str_to_list('src/file1.tex,  src/file2.tex,  src/file 3.tex')
+    assert l == ['src/file1.tex', 'src/file2.tex', 'src/file 3.tex']
+
+    # Test semicolons
+    l = str_to_list('src/file1.tex;  src/file2.tex;  src/file 3.tex')
+    assert l == ['src/file1.tex', 'src/file2.tex', 'src/file 3.tex']
+
+    # Test semicolons with commas
+    l = str_to_list('Lorieau, J;  Author, B;  Author, C')
+    assert l == ['Lorieau, J', 'Author, B', 'Author, C']
+
+
+def test_str_to_dict():
+    """Tests the parsing of strings into dicts."""
+
+    # Test simple 1-liners
+    assert str_to_dict("""entry: one""") == {'entry': 'one'}
+    assert str_to_dict("""entry: 1""") == {'entry': '1'}
+
+    # Test simple multiple entries
+    assert (str_to_dict("entry: one\ntest:two")
+                            == {'entry': 'one', 'test': 'two'})
+    assert (str_to_dict("entry: one\n@macro:two") ==
+            {'entry': 'one', '@macro': 'two'})
+
+    # Test macro entries
+    assert (str_to_dict('@feature: @div[class="col-md-4" id=4]') ==
+            {'@feature': '@div[class="col-md-4" id=4]'})
+
+    # Entries with tags
+    assert (str_to_dict("toc: @toc{all documents}") ==
+            {'toc': '@toc{all documents}'})
+    assert (str_to_dict("toc: @toc{all \n"
+                             "documents}") ==
+            {'toc': '@toc{all \ndocuments}'})
+    assert (str_to_dict("""toc: @toc{all
+                             documents}""") ==
+            {'toc': '@toc{all\n                             documents}'})
+
+    # Nested entries
+    header = """
+    contact:
+      address: 1,2,3 lane
+      phone: 333-333-4123.
+    name: Justin L Lorieau
+    """
+    d = str_to_dict(header)
+    assert (d == {'contact': '  address: 1,2,3 lane\n  phone: 333-333-4123.',
+                  'name': 'Justin L Lorieau'})
+
+    # Entries with colons
+    assert (str_to_dict("toc: name: Justin Lorieau") ==
+            {'toc': 'name: Justin Lorieau'})
+    assert (str_to_dict("""toc: name: Justin Lorieau
+    Phone\: xxx-yyy-zzz""") ==
+            {'toc': 'name: Justin Lorieau\n    Phone: xxx-yyy-zzz'})
+
+    # Include entries
+    header = """
+    include:
+      src/file1.tex
+      src/file2.tex
+      src/file 3.tex
+    """
+    d = str_to_dict(header)
+    assert (d == {'include':
+                  '  src/file1.tex\n  src/file2.tex\n  src/file 3.tex'})
+
+    # Target entries
+    header = "targets: pdf, tex"
+    d = str_to_dict(header)
+    assert (d == {'targets': 'pdf, tex'})
+    l = str_to_list(d['targets'])
+    assert l == ['pdf', 'tex']
+
+
+def test_string_template():
+    """Test the string Template class."""
+
+    # Basic empty substitutions
+    assert StringTemplate("My test $ string.").substitute() == "My test $ string."
+
+    with pytest.raises(KeyError):
+        assert StringTemplate("My test $string .").substitute() == "My test $string ."
+    assert StringTemplate("My test $string .").safe_substitute() == "My test $string ."
+
+    with pytest.raises(KeyError):
+        assert StringTemplate("My test $string.").substitute() == "My test $string."
+    assert StringTemplate("My test $string.").safe_substitute() == "My test $string."
+
+    with pytest.raises(KeyError):
+        assert (StringTemplate('My friend $friend is here.').substitute() ==
+                'My friend $friend is here.')
+    assert (StringTemplate('My friend $friend is here.').safe_substitute() ==
+            'My friend $friend is here.')
+
+    assert (StringTemplate("My test $ string.").substitute(string='pickle') ==
+            "My test $ string.")
+    assert (StringTemplate('My friend $friend is here.').substitute(friend='Ted') ==
+            'My friend Ted is here.')
+    assert (StringTemplate('My friend $friend is here.').substitute(friend=1) ==
+            'My friend 1 is here.')
+    assert (StringTemplate('My friend $friend.').substitute(friend='Ted') ==
+            'My friend Ted.')
+    assert (StringTemplate('My friend $friend.name.').substitute(friend='Ted') ==
+            'My friend Ted.name.')
+    assert (StringTemplate('My friend $$friend.name.').substitute(friend='Ted') ==
+            'My friend $$friend.name.')
+
+    # Basic string substitutions (case-sensitive)
+    with pytest.raises(KeyError):
+        assert (StringTemplate('My friend $FRIEND.name.').substitute(friend='Ted') ==
+                'My friend $FRIEND.name.')
+    with pytest.raises(KeyError):
+        assert (StringTemplate('My friend $friend.name.').substitute(FRIEND='Ted') ==
+                'My friend $friend.name.')
+
+    # Substitutions with objects.
+    class Friend(object):
+        def __repr__(self):
+            return "<friend>"
+
+    friend = Friend()
+    friend.name = 'Darryl'
+    friend.last = 'Smith'
+    assert (StringTemplate('My friend $friend.notname.').substitute(friend=friend) ==
+            'My friend <friend>.notname.')
+    assert (StringTemplate('My friend $friend.name.').substitute(friend=friend) ==
+            'My friend Darryl.')
+    assert (StringTemplate('$friend.name is my friend.').substitute(friend=friend) ==
+            'Darryl is my friend.')
+    assert (StringTemplate('My friend $friend.name.end.').substitute(friend=friend) ==
+            'My friend Darryl.end.')
+    assert (StringTemplate('$friend.name $friend.last').substitute(friend=friend) ==
+            'Darryl Smith')
+    assert (StringTemplate('$friend.name.$friend.last').substitute(friend=friend) ==
+            'Darryl.Smith')
+
+    # Substitutions with named tuples.
+    Vector = namedtuple('Vector', 'x y z')
+    vec = Vector(x='x', y='y', z='z')
+    assert (StringTemplate('My $vec.x component.').substitute(vec=vec) ==
+            'My x component.')
+    assert (StringTemplate('My {$vec.y} component.').substitute(vec=vec) ==
+            'My {y} component.')
+    assert (StringTemplate('My $vec component.').substitute(vec=vec) ==
+            "My Vector(x='x', y='y', z='z') component.")

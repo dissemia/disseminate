@@ -167,6 +167,7 @@ def test_translate_path(tmpdir):
             target_root5 / 'html' / 'sub3' / 'index.html')
 
 
+# TODO: Test with a larger source directory tree
 def test_render_tree_html():
     """Test the render_tree_html function."""
 
@@ -214,7 +215,7 @@ def test_render_tree_html():
           <td class="date">{mtime1}</td>
         </tr>
         <tr class="level-2">
-          <td class="num">2</td>
+          <td class="num">1</td>
           <td class="src">
             <a href="/tests/document/example6/src/file2.dm">file2.dm</a>
           </td>

@@ -1,7 +1,7 @@
 body {
-    font-size: 1.2rem;
+    font-size: 14pt;
     font-family: Palatino, serif;
-    line-height: 1.7;
+    line-height: 20pt;
     color: #212529;
     padding-left: 12.5%;
     margin-left: auto;
@@ -20,43 +20,55 @@ article {
     padding-top: 5rem;
     position: relative;
     width: 60%;
-    max-width: 46rem;
+    max-width: 36rem;
+}
+
+h1,h2,h3,h4,h5,h6 {
+  font-family: sans-serif;
 }
 
 h1 {
     display: block;
-    font-size: 1.8rem;
-    margin-top: 1.5rem;
-    marbin-bottom: 0.75rem;
+    font-size: 20pt;
+    margin-top: 20pt;
+    marbin-bottom: 20pt;
     font-weight: 400;
 }
 
 h2 {
     display: block;
-    font-size: 1.6rem;
-    margin-top: 1.25rem;
-    marbin-bottom: 0.75rem;
+    font-size: 14pt;
+    margin-top: 20pt;
+    marbin-bottom: 20pt;
     font-weight: 400;
+    text-transform: uppercase;
 }
 
 h3 {
     display: block;
-    font-size: 1.2rem;
-    margin-top: 1.0rem;
-    margin-bottom: 0.75rem;
+    font-size: 14pt;
+    margin-top: 20pt;
+    margin-bottom: 20pt;
     font-style: italic;
     font-weight: 400;
 }
 
-.chapter .number::before {
+p {
+  margin: 20pt 0;
+}
+
+.branch .number::before {
   content: "Chapter ";
   color: #b50202;
 }
 
-.chapter .number {
+.branch .number {
   color: #b50202;
   font-variant: small-caps;
-  font-size: 2.0rem;
+  font-size: 20pt;
+  display: block;
+  margin: 20pt;
+  border-bottom: solid 1pt;
 }
     
 img {
@@ -64,8 +76,15 @@ img {
     margin: 0 0.2rem;
 }
 
-sub,sup {
-    font-size: 70%;
+sup, sub {
+  font-size: 65%;
+  vertical-align: baseline;
+  position: relative;
+  top: -0.4em;
+}
+
+sub {
+  top: 0.3em;
 }
 
 .title {
@@ -88,9 +107,10 @@ span.paragraph {
 
 .authors {
     display: block;
-    font-size: 1.5rem;
-    padding: 0 0 1.5rem 0;
-    font-style: italic;
+    font-size: 13pt;
+    margin: 18pt 0 18pt 0;
+    font-family: sans-serif;
+    text-align: right;
 }
 
 .root {
@@ -113,26 +133,31 @@ span.paragraph {
     background-color: #fcfcfc;
 }
 
+/*
 .sidenote sub, sup {
   vertical-align: baseline;
   position: relative;
   top: -0.4em;
 }
 
-.marginfig sub, sup {
+.marginfig sup {
   vertical-align: baseline;
   position: relative;
-  top: -0.4em;
+  top: -0.3em;
 }
 
-.sidenote sub { 
-  top: 0.4em; 
+.sidenote sub {
+  vertical-align: baseline;
+  position: relative;
+  top: 0.3em; 
 }
 
-.marginfig sub { 
-  top: 0.4em; 
+.marginfig sub {
+  vertical-align: baseline;
+  position: relative;
+  top: 0.3em; 
 }
-
+*/
 .figure .number {
   font-weight: 600;
 }

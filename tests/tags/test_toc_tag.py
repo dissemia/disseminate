@@ -37,15 +37,15 @@ def test_toc_changes(tmpdir):
               context=doc.context)
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/html/test.html">
-      <span class="label">my first file</span>
-    </a>
+    <span class="toc-document-level-1">
+      <a href="/html/test.html">my first file</a>
+    </span>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/html/test.html#heading1">
-        <span class="label"><span class="number">1.</span> My first heading</span>
-      </a>
+      <span class="toc-section">
+        <a href="/html/test.html#heading1"><span class="number">1.</span> My first heading</a>
+      </span>
     </li>
   </ul>
 </ul>
@@ -69,21 +69,21 @@ def test_toc_changes(tmpdir):
               context=doc.context)
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/html/test.html">
-      <span class="label">my first file</span>
-    </a>
+    <span class="toc-document-level-1">
+      <a href="/html/test.html">my first file</a>
+    </span>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/html/test.html#heading1">
-        <span class="label"><span class="number">1.</span> My first heading</span>
-      </a>
+      <span class="toc-section">
+        <a href="/html/test.html#heading1"><span class="number">1.</span> My first heading</a>
+      </span>
     </li>
     <ul class="toc-level-3">
       <li>
-        <a href="/html/test.html#subheading1">
-          <span class="label"><span class="number">1.1.</span> My first sub-heading</span>
-        </a>
+        <span class="toc-subsection">
+          <a href="/html/test.html#subheading1"><span class="number">1.1.</span> My first sub-heading</a>
+        </span>
       </li>
     </ul>
   </ul>
@@ -115,55 +115,55 @@ def test_toc_heading_html(tmpdir):
 
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/html/file1.html#sec:heading-1">
-      <span class="label"><span class="number">1.</span> Heading 1</span>
-    </a>
+    <span class="toc-section">
+      <a href="/html/file1.html#sec:heading-1"><span class="number">1.</span> Heading 1</a>
+    </span>
   </li>
   <li>
-    <a href="/html/file1.html#sec:heading-2">
-      <span class="label"><span class="number">2.</span> Heading 2</span>
-    </a>
+    <span class="toc-section">
+      <a href="/html/file1.html#sec:heading-2"><span class="number">2.</span> Heading 2</a>
+    </span>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/html/file1.html#subsec:sub-heading-2-1">
-        <span class="label"><span class="number">2.1.</span> sub-Heading 2.1</span>
-      </a>
+      <span class="toc-subsection">
+        <a href="/html/file1.html#subsec:sub-heading-2-1"><span class="number">2.1.</span> sub-Heading 2.1</a>
+      </span>
     </li>
     <li>
-      <a href="/html/file1.html#subsec:sub-heading-2-2">
-        <span class="label"><span class="number">2.2.</span> sub-Heading 2.2</span>
-      </a>
+      <span class="toc-subsection">
+        <a href="/html/file1.html#subsec:sub-heading-2-2"><span class="number">2.2.</span> sub-Heading 2.2</a>
+      </span>
     </li>
     <ul class="toc-level-3">
       <li>
-        <a href="/html/file1.html#subsubsec:sub-sub-header-2-2-1">
-          <span class="label"><span class="number">2.2.1.</span> sub-sub-Header 2.2.1</span>
-        </a>
+        <span class="toc-subsubsection">
+          <a href="/html/file1.html#subsubsec:sub-sub-header-2-2-1"><span class="number">2.2.1.</span> sub-sub-Header 2.2.1</a>
+        </span>
       </li>
     </ul>
     <li>
-      <a href="/html/file1.html#subsec:sub-heading-2-3">
-        <span class="label"><span class="number">2.3.</span> sub-Heading 2.3</span>
-      </a>
+      <span class="toc-subsection">
+        <a href="/html/file1.html#subsec:sub-heading-2-3"><span class="number">2.3.</span> sub-Heading 2.3</a>
+      </span>
     </li>
   </ul>
   <li>
-    <a href="/html/file1.html#sec:heading-3">
-      <span class="label"><span class="number">3.</span> Heading 3</span>
-    </a>
+    <span class="toc-section">
+      <a href="/html/file1.html#sec:heading-3"><span class="number">3.</span> Heading 3</a>
+    </span>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/html/file1.html#subsubsec:sub-sub-header-3-1-1">
-        <span class="label"><span class="number">3.1.</span> sub-sub-header 3.1.1</span>
-      </a>
+      <span class="toc-subsubsection">
+        <a href="/html/file1.html#subsubsec:sub-sub-header-3-1-1"><span class="number">3.1.</span> sub-sub-header 3.1.1</a>
+      </span>
     </li>
   </ul>
   <li>
-    <a href="/html/file1.html#sec:heading-4">
-      <span class="label"><span class="number">4.</span> Heading 4</span>
-    </a>
+    <span class="toc-section">
+      <a href="/html/file1.html#sec:heading-4"><span class="number">4.</span> Heading 4</a>
+    </span>
   </li>
 </ul>
 """
@@ -186,26 +186,26 @@ def test_toc_heading_html(tmpdir):
 
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/html/file1.html#heading-1">
-      <span class="label"><span class="number">1.</span> Heading 1</span>
-    </a>
+    <span class="toc-section">
+      <a href="/html/file1.html#heading-1"><span class="number">1.</span> Heading 1</a>
+    </span>
   </li>
   <li>
-    <a href="/html/file2.html#heading-2">
-      <span class="label"><span class="number">1.</span> Heading 2</span>
-    </a>
+    <span class="toc-section">
+      <a href="/html/file2.html#heading-2"><span class="number">2.</span> Heading 2</a>
+    </span>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/html/file2.html#subheading-2">
-        <span class="label"><span class="number">1.1.</span> sub-Heading 2</span>
-      </a>
+      <span class="toc-subsection">
+        <a href="/html/file2.html#subheading-2"><span class="number">2.1.</span> sub-Heading 2</a>
+      </span>
     </li>
   </ul>
   <li>
-    <a href="/html/file3.html#heading-3">
-      <span class="label"><span class="number">1.</span> Heading 3</span>
-    </a>
+    <span class="toc-section">
+      <a href="/html/file3.html#heading-3"><span class="number">3.</span> Heading 3</a>
+    </span>
   </li>
 </ul>
 """
@@ -217,9 +217,9 @@ def test_toc_heading_html(tmpdir):
 
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/html/file1.html#heading-1">
-      <span class="label"><span class="number">1.</span> Heading 1</span>
-    </a>
+    <span class="toc-section">
+      <a href="/html/file1.html#heading-1"><span class="number">1.</span> Heading 1</a>
+    </span>
   </li>
 </ul>
 """
@@ -248,9 +248,9 @@ def test_toc_header_html(tmpdir):
 
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/html/file1.html#heading-1">
-      <span class="label"><span class="number">1.</span> Heading 1</span>
-    </a>
+    <span class="toc-section">
+      <a href="/html/file1.html#heading-1"><span class="number">1.</span> Heading 1</a>
+    </span>
   </li>
 </ul>
 """
@@ -262,9 +262,9 @@ def test_toc_header_html(tmpdir):
 
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/html/file1.html#heading-1">
-      <span class="label"><span class="number">1.</span> Heading 1</span>
-    </a>
+    <span class="toc-section">
+      <a href="/html/file1.html#heading-1"><span class="number">1.</span> Heading 1</a>
+    </span>
   </li>
 </ul>
 """
@@ -297,20 +297,20 @@ def test_toc_document_html(tmpdir):
     # Match the default toc (format: 'collapsed')
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/html/file1.html">
-      <span class="label">file1</span>
-    </a>
+    <span class="toc-document-level-1">
+      <a href="/html/file1.html">file1</a>
+    </span>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/html/sub/file21.html">
-        <span class="label">sub/file21</span>
-      </a>
+      <span class="toc-document-level-2">
+        <a href="/html/sub/file21.html">sub/file21</a>
+      </span>
     </li>
     <li>
-      <a href="/html/sub/file22.html">
-        <span class="label">sub/file22</span>
-      </a>
+      <span class="toc-document-level-2">
+        <a href="/html/sub/file22.html">sub/file22</a>
+      </span>
     </li>
   </ul>
 </ul>
@@ -327,72 +327,72 @@ def test_toc_document_html(tmpdir):
               context=doc.context)
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/html/file1.html">
-      <span class="label">file1</span>
-    </a>
+    <span class="toc-document-level-1">
+      <a href="/html/file1.html">file1</a>
+    </span>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/html/file1.html#sec:heading-1">
-        <span class="label"><span class="number">1.</span> Heading 1</span>
-      </a>
+      <span class="toc-section">
+        <a href="/html/file1.html#sec:heading-1"><span class="number">1.</span> Heading 1</a>
+      </span>
     </li>
     <li>
-      <a href="/html/file1.html#sec:heading-2">
-        <span class="label"><span class="number">2.</span> Heading 2</span>
-      </a>
+      <span class="toc-section">
+        <a href="/html/file1.html#sec:heading-2"><span class="number">2.</span> Heading 2</a>
+      </span>
     </li>
     <ul class="toc-level-3">
       <li>
-        <a href="/html/file1.html#subsec:sub-heading-2-1">
-          <span class="label"><span class="number">2.1.</span> sub-Heading 2.1</span>
-        </a>
+        <span class="toc-subsection">
+          <a href="/html/file1.html#subsec:sub-heading-2-1"><span class="number">2.1.</span> sub-Heading 2.1</a>
+        </span>
       </li>
       <li>
-        <a href="/html/file1.html#subsec:sub-heading-2-2">
-          <span class="label"><span class="number">2.2.</span> sub-Heading 2.2</span>
-        </a>
+        <span class="toc-subsection">
+          <a href="/html/file1.html#subsec:sub-heading-2-2"><span class="number">2.2.</span> sub-Heading 2.2</a>
+        </span>
       </li>
       <ul class="toc-level-4">
         <li>
-          <a href="/html/file1.html#subsubsec:sub-sub-header-2-2-1">
-            <span class="label"><span class="number">2.2.1.</span> sub-sub-Header 2.2.1</span>
-          </a>
+          <span class="toc-subsubsection">
+            <a href="/html/file1.html#subsubsec:sub-sub-header-2-2-1"><span class="number">2.2.1.</span> sub-sub-Header 2.2.1</a>
+          </span>
         </li>
       </ul>
       <li>
-        <a href="/html/file1.html#subsec:sub-heading-2-3">
-          <span class="label"><span class="number">2.3.</span> sub-Heading 2.3</span>
-        </a>
+        <span class="toc-subsection">
+          <a href="/html/file1.html#subsec:sub-heading-2-3"><span class="number">2.3.</span> sub-Heading 2.3</a>
+        </span>
       </li>
     </ul>
     <li>
-      <a href="/html/file1.html#sec:heading-3">
-        <span class="label"><span class="number">3.</span> Heading 3</span>
-      </a>
+      <span class="toc-section">
+        <a href="/html/file1.html#sec:heading-3"><span class="number">3.</span> Heading 3</a>
+      </span>
     </li>
     <ul class="toc-level-3">
       <li>
-        <a href="/html/file1.html#subsubsec:sub-sub-header-3-1-1">
-          <span class="label"><span class="number">3.1.</span> sub-sub-header 3.1.1</span>
-        </a>
+        <span class="toc-subsubsection">
+          <a href="/html/file1.html#subsubsec:sub-sub-header-3-1-1"><span class="number">3.1.</span> sub-sub-header 3.1.1</a>
+        </span>
       </li>
     </ul>
     <li>
-      <a href="/html/file1.html#sec:heading-4">
-        <span class="label"><span class="number">4.</span> Heading 4</span>
-      </a>
+      <span class="toc-section">
+        <a href="/html/file1.html#sec:heading-4"><span class="number">4.</span> Heading 4</a>
+      </span>
     </li>
   </ul>
   <li>
-    <a href="/html/sub/file21.html">
-      <span class="label">sub/file21</span>
-    </a>
+    <span class="toc-document-level-2">
+      <a href="/html/sub/file21.html">sub/file21</a>
+    </span>
   </li>
   <li>
-    <a href="/html/sub/file22.html">
-      <span class="label">sub/file22</span>
-    </a>
+    <span class="toc-document-level-2">
+      <a href="/html/sub/file22.html">sub/file22</a>
+    </span>
   </li>
 </ul>
 """
@@ -404,72 +404,72 @@ def test_toc_document_html(tmpdir):
               context=doc.context)
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/html/file1.html">
-      <span class="label">file1</span>
-    </a>
+    <span class="toc-document-level-1">
+      <a href="/html/file1.html">file1</a>
+    </span>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/html/file1.html#sec:heading-1">
-        <span class="label"><span class="number">1.</span> Heading 1</span>
-      </a>
+      <span class="toc-section">
+        <a href="/html/file1.html#sec:heading-1"><span class="number">1.</span> Heading 1</a>
+      </span>
     </li>
     <li>
-      <a href="/html/file1.html#sec:heading-2">
-        <span class="label"><span class="number">2.</span> Heading 2</span>
-      </a>
+      <span class="toc-section">
+        <a href="/html/file1.html#sec:heading-2"><span class="number">2.</span> Heading 2</a>
+      </span>
     </li>
     <ul class="toc-level-3">
       <li>
-        <a href="/html/file1.html#subsec:sub-heading-2-1">
-          <span class="label"><span class="number">2.1.</span> sub-Heading 2.1</span>
-        </a>
+        <span class="toc-subsection">
+          <a href="/html/file1.html#subsec:sub-heading-2-1"><span class="number">2.1.</span> sub-Heading 2.1</a>
+        </span>
       </li>
       <li>
-        <a href="/html/file1.html#subsec:sub-heading-2-2">
-          <span class="label"><span class="number">2.2.</span> sub-Heading 2.2</span>
-        </a>
+        <span class="toc-subsection">
+          <a href="/html/file1.html#subsec:sub-heading-2-2"><span class="number">2.2.</span> sub-Heading 2.2</a>
+        </span>
       </li>
       <ul class="toc-level-4">
         <li>
-          <a href="/html/file1.html#subsubsec:sub-sub-header-2-2-1">
-            <span class="label"><span class="number">2.2.1.</span> sub-sub-Header 2.2.1</span>
-          </a>
+          <span class="toc-subsubsection">
+            <a href="/html/file1.html#subsubsec:sub-sub-header-2-2-1"><span class="number">2.2.1.</span> sub-sub-Header 2.2.1</a>
+          </span>
         </li>
       </ul>
       <li>
-        <a href="/html/file1.html#subsec:sub-heading-2-3">
-          <span class="label"><span class="number">2.3.</span> sub-Heading 2.3</span>
-        </a>
+        <span class="toc-subsection">
+          <a href="/html/file1.html#subsec:sub-heading-2-3"><span class="number">2.3.</span> sub-Heading 2.3</a>
+        </span>
       </li>
     </ul>
     <li>
-      <a href="/html/file1.html#sec:heading-3">
-        <span class="label"><span class="number">3.</span> Heading 3</span>
-      </a>
+      <span class="toc-section">
+        <a href="/html/file1.html#sec:heading-3"><span class="number">3.</span> Heading 3</a>
+      </span>
     </li>
     <ul class="toc-level-3">
       <li>
-        <a href="/html/file1.html#subsubsec:sub-sub-header-3-1-1">
-          <span class="label"><span class="number">3.1.</span> sub-sub-header 3.1.1</span>
-        </a>
+        <span class="toc-subsubsection">
+          <a href="/html/file1.html#subsubsec:sub-sub-header-3-1-1"><span class="number">3.1.</span> sub-sub-header 3.1.1</a>
+        </span>
       </li>
     </ul>
     <li>
-      <a href="/html/file1.html#sec:heading-4">
-        <span class="label"><span class="number">4.</span> Heading 4</span>
-      </a>
+      <span class="toc-section">
+        <a href="/html/file1.html#sec:heading-4"><span class="number">4.</span> Heading 4</a>
+      </span>
     </li>
   </ul>
   <li>
-    <a href="/html/sub/file21.html">
-      <span class="label">sub/file21</span>
-    </a>
+    <span class="toc-document-level-2">
+      <a href="/html/sub/file21.html">sub/file21</a>
+    </span>
   </li>
   <li>
-    <a href="/html/sub/file22.html">
-      <span class="label">sub/file22</span>
-    </a>
+    <span class="toc-document-level-2">
+      <a href="/html/sub/file22.html">sub/file22</a>
+    </span>
   </li>
 </ul>
 """
@@ -482,9 +482,9 @@ def test_toc_document_html(tmpdir):
     # Match the default toc (collapsed)
     key = """<ul class="toc-level-1">
   <li>
-    <a href="/html/file1.html">
-      <span class="label">file1</span>
-    </a>
+    <span class="toc-document-level-1">
+      <a href="/html/file1.html">file1</a>
+    </span>
   </li>
 </ul>
 """
@@ -510,22 +510,22 @@ def test_toc_heading_tex(tmpdir):
               context=doc.context)
 
     key = """\\begin{toclist}
-  \item \hyperref[sec:heading-1]{Heading 1} \dotfill \pageref{sec:heading-1}
-  \item \hyperref[sec:heading-2]{Heading 2} \dotfill \pageref{sec:heading-2}
+  \\item \\hyperref[sec:heading-1]{1. Heading 1} \\hfill \\pageref{sec:heading-1}
+  \\item \\hyperref[sec:heading-2]{2. Heading 2} \\hfill \\pageref{sec:heading-2}
   \\begin{toclist}
-    \item \hyperref[subsec:sub-heading-2-1]{sub-Heading 2.1} \dotfill \pageref{subsec:sub-heading-2-1}
-    \item \hyperref[subsec:sub-heading-2-2]{sub-Heading 2.2} \dotfill \pageref{subsec:sub-heading-2-2}
+    \\item \\hyperref[subsec:sub-heading-2-1]{2.1. sub-Heading 2.1} \\hfill \\pageref{subsec:sub-heading-2-1}
+    \\item \\hyperref[subsec:sub-heading-2-2]{2.2. sub-Heading 2.2} \\hfill \\pageref{subsec:sub-heading-2-2}
     \\begin{toclist}
-      \item \hyperref[subsubsec:sub-sub-header-2-2-1]{sub-sub-Header 2.2.1} \dotfill \pageref{subsubsec:sub-sub-header-2-2-1}
-    \end{toclist}
-    \item \hyperref[subsec:sub-heading-2-3]{sub-Heading 2.3} \dotfill \pageref{subsec:sub-heading-2-3}
-  \end{toclist}
-  \item \hyperref[sec:heading-3]{Heading 3} \dotfill \pageref{sec:heading-3}
+      \\item \\hyperref[subsubsec:sub-sub-header-2-2-1]{2.2.1. sub-sub-Header 2.2.1} \\hfill \\pageref{subsubsec:sub-sub-header-2-2-1}
+    \\end{toclist}
+    \\item \\hyperref[subsec:sub-heading-2-3]{2.3. sub-Heading 2.3} \\hfill \\pageref{subsec:sub-heading-2-3}
+  \\end{toclist}
+  \\item \\hyperref[sec:heading-3]{3. Heading 3} \\hfill \\pageref{sec:heading-3}
   \\begin{toclist}
-    \item \hyperref[subsubsec:sub-sub-header-3-1-1]{sub-sub-header 3.1.1} \dotfill \pageref{subsubsec:sub-sub-header-3-1-1}
-  \end{toclist}
-  \item \hyperref[sec:heading-4]{Heading 4} \dotfill \pageref{sec:heading-4}
-\end{toclist}
+    \\item \\hyperref[subsubsec:sub-sub-header-3-1-1]{3.1. sub-sub-header 3.1.1} \\hfill \\pageref{subsubsec:sub-sub-header-3-1-1}
+  \\end{toclist}
+  \\item \\hyperref[sec:heading-4]{4. Heading 4} \\hfill \\pageref{sec:heading-4}
+\\end{toclist}
 """
     assert key == toc.tex
 
@@ -543,13 +543,13 @@ def test_toc_heading_tex(tmpdir):
               context=doc.context)
 
     key = """\\begin{toclist}
-  \item \hyperref[heading-1]{Heading 1} \dotfill \pageref{heading-1}
-  \item \hyperref[heading-2]{Heading 2} \dotfill \pageref{heading-2}
+  \\item \\hyperref[heading-1]{1. Heading 1} \\hfill \\pageref{heading-1}
+  \\item \\hyperref[heading-2]{2. Heading 2} \\hfill \\pageref{heading-2}
   \\begin{toclist}
-    \item \hyperref[subheading-2]{sub-Heading 2} \dotfill \pageref{subheading-2}
-  \end{toclist}
-  \item \hyperref[heading-3]{Heading 3} \dotfill \pageref{heading-3}
-\end{toclist}
+    \\item \\hyperref[subheading-2]{2.1. sub-Heading 2} \\hfill \\pageref{subheading-2}
+  \\end{toclist}
+  \\item \\hyperref[heading-3]{3. Heading 3} \\hfill \\pageref{heading-3}
+\\end{toclist}
 """
     assert key == toc.tex
 
@@ -558,8 +558,8 @@ def test_toc_heading_tex(tmpdir):
               context=doc.context)
 
     key = """\\begin{toclist}
-  \item \hyperref[heading-1]{Heading 1} \dotfill \pageref{heading-1}
-\end{toclist}
+  \\item \\hyperref[heading-1]{1. Heading 1} \\hfill \\pageref{heading-1}
+\\end{toclist}
 """
     assert key == toc.tex
 
@@ -581,8 +581,8 @@ def test_toc_header_tex(tmpdir):
               context=doc.context)
 
     key = """\\begin{toclist}
-  \item \hyperref[heading-1]{Heading 1} \dotfill \pageref{heading-1}
-\end{toclist}
+  \\item \\hyperref[heading-1]{1. Heading 1} \\hfill \\pageref{heading-1}
+\\end{toclist}
 """
     tex = toc.tex
     assert key == tex
@@ -592,8 +592,8 @@ def test_toc_header_tex(tmpdir):
               context=doc.context)
 
     key = """\\begin{toclist}
-  \item \hyperref[heading-1]{Heading 1} \dotfill \pageref{heading-1}
-\end{toclist}
+  \\item \\hyperref[heading-1]{1. Heading 1} \\hfill \\pageref{heading-1}
+\\end{toclist}
 """
     tex = toc.tex
     assert key == tex
@@ -619,11 +619,11 @@ def test_toc_document_tex(tmpdir):
               context=doc.context)
 
     key = """\\begin{toclist}
-  \item \hyperref[doc:file1.dm]{file1} \dotfill \pageref{doc:file1.dm}
+  \\item \\hyperref[doc:file1.dm]{file1} \\hfill \\pageref{doc:file1.dm}
   \\begin{toclist}
-    \item \hyperref[doc:sub/file21.dm]{sub/file21} \dotfill \pageref{doc:sub/file21.dm}
-    \item \hyperref[doc:sub/file22.dm]{sub/file22} \dotfill \pageref{doc:sub/file22.dm}
-  \end{toclist}
-\end{toclist}
+    \\item \\hyperref[doc:sub/file21.dm]{sub/file21} \\hfill \\pageref{doc:sub/file21.dm}
+    \\item \\hyperref[doc:sub/file22.dm]{sub/file22} \\hfill \\pageref{doc:sub/file22.dm}
+  \\end{toclist}
+\\end{toclist}
 """
     assert key == toc.tex

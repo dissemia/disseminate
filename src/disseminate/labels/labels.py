@@ -1,7 +1,4 @@
-import time
-import weakref
-
-from .. import settings
+from itertools import chain
 
 
 class LabelError(Exception):
@@ -22,20 +19,34 @@ class LabelNotFound(LabelError):
 class Label(object):
     """A label used for referencing.
 
+    Labels keep track of modification times (mtimes) through the @trackmtimes
+    class wrapper. Any *changes* to class attributes not listed in the
+    'excludeattrs' parameter to @trackmtimes will update the mtime attribute
+    with the time of the modification. The initial mtime should correspond to
+    the modification time of the source document that created this label.
+
+    The mtimes are tracked because updates to labels may require an
+    update of a rendered document. For example, a project may have two
+    documents, each owning a label. If the first document (and its label) is
+    updated, and the second document depends on this label, then the second
+    document should be re-rendered if the label has changed. However, if that
+    label hasn't changed, then the second document should not be re-rendered.
+
     Parameters
     ----------
-    document : :obj:`disseminate.Document`
-        The document that owns the label.
-    id : str or None
-        The (unique) identifier of the label. ex: 'nmr_introduction'.
-        If None is given, the label cannot be referenced; it is used for
-        counting only.
-    tag : None or :obj:`disseminate.Tag`
-        The tag that owns the label.
-    kind : tuple or None
+    doc_id : str
+        The unique identifier (for documents within a label manager) for the
+        document that owns the label.
+    id : str
+        The unique identifier(s) of the label. ex: 'nmr_introduction'. This
+        should be unique for the entire project.
+    kind : tuple of str
         The kind of the label is a tuple that identified the kind of a label
         from least specific to most specific. ex: ('figure',), ('chapter',),
         ('equation',), ('heading', 'h1',)
+    mtime : float or None
+        The modification time of the source document that created this label,
+        or the modification time for changes to the label.
     local_order : tuple of int or None
         The number of the label in the current document. Since the kind is a
         tuple, the local_order corresponds to the count for each kind.
@@ -46,201 +57,193 @@ class Label(object):
         The number of the label in all labels for the label manager.
     """
 
-    # The following attributes are stored as weak references
-    weakref_attrs = ('_document', '_tag', '_document_label',
-                     '_branch_label', '_section_label',
-                     '_subsection_label', '_subsubsection_label')
+    doc_id = None
+    id = None
+    kind = None
+    local_order = None
+    global_order = None
 
-    # The following attributes will not update the mtime if replaced. This
-    # includes the 'tag', since this is recreated every time the AST is reloaded
-    # and it contains its own 'mtime'
-    exclude_update = ('document', 'tag', 'kind')
-
-    def __init__(self, document, id=None, tag=None, kind=None,
-                 local_order=None, global_order=None,):
-        self.document = document
+    def __init__(self, doc_id, id, kind, mtime, local_order=None,
+                 global_order=None):
+        self.doc_id = doc_id
         self.id = id
-        self.tag = tag
-        self.kind = kind if kind is not None else ('default',)
+        self.mtime = mtime
         self.local_order = local_order
         self.global_order = global_order
+
+        # Make sure the label.kind is a tuple
+        self.kind = (kind,) if isinstance(kind, str) else kind
 
     def __repr__(self):
         name = self.id if self.id else ''
         return "({}: {} {})".format(self.kind, name, self.global_order)
 
     @property
-    def mtime(self):
-        document = self.document
-        mtimes = []
-        if document is not None and 'mtime' in document.context:
-            mtimes.append(document.context['mtime'])
-
-        tag = self.tag
-        if tag is not None and 'mtime' in tag.context:
-            mtimes.append(tag.context['mtime'])
-
-        # Get the latest mtime
-        mtime = self.__dict__.get('mtime')
-        if mtime is not None:
-            mtimes.append(mtime)
-
-        return max(mtimes) if len(mtimes) > 0 else None
-
-    def __getattr__(self, name):
-        attr_name = '_' + name
-        attr = (self.__dict__.get(attr_name, None) or
-                self.__dict__.get(name, None))
-        return attr() if callable(attr) else attr
-
-    def __setattr__(self, name, value):
-
-        # Determine the attribute's name
-        attr_name = '_' + name
-
-        # Get the current value. Dereference the weakref link, if needed.
-        current_value = (getattr(self, attr_name, None) or
-                         getattr(self, name, None))
-        current_value = (current_value() if callable(current_value) else
-                         current_value)
-
-        if value is None:
-            return
-
-        # Set the value, and create a weakref if needed
-        if attr_name in self.weakref_attrs:
-            self.__dict__[attr_name] = weakref.ref(value)
-        else:
-            self.__dict__[attr_name] = value
-
-        # Set the mtime if the value is changed or it has already been set
-        if (name not in self.exclude_update and
-            current_value != value and
-            current_value is not None):
-            self.__dict__['mtime'] = time.time()
-
-    @property
-    def document_number(self):
-        document = self.document
-        if document is not None:
-            return document.number or 0
-        else:
-            return 0
-
-    @property
     def number(self):
         """The (local) number for the label's kind."""
-        return self._local_order[-1]
+        return self.local_order[-1]
 
     @property
     def global_number(self):
         """The (global) number for the label's kind."""
-        return self._global_order[-1]
+        return self.global_order[-1]
 
     @property
-    def title(self):
-        """The title for the label from the tag's content.
+    def mtime(self):
+        return getattr(self, '_mtime', None)
 
-        The title is defined as the first sentence or line.
-        """
-        tag = self.tag
-        if tag is None:
-            return self.document.title if self.document is not None else ""
-        else:
-            return tag.title
+    @mtime.setter
+    def mtime(self, value):
+        """An mtime setter to make sure the modification time only increases"""
+        current_value = getattr(self, '_mtime', None)
+        if (not isinstance(current_value, float) or
+            (isinstance(value, float) and value > current_value)):
+            setattr(self, '_mtime', value)
 
-    @property
-    def short(self):
-        """The short title for the tag or document."""
-        tag = self.tag
-        if tag is None:
-            # Get the short from the document
-            return self.document.short if self.document is not None else ""
-        else:
-            return tag.short
 
-    @property
-    def content(self):
-        """The content of the tag."""
-        tag = self.tag
-        return tag.content if tag is not None else None
+def find_duplicates(registered_labels, collected_labels, exclude_labels=None,
+                    *args, **kwargs):
+    """Find duplicates in the collected_labels with those of labels that are
+    already registered.
 
-    @property
-    def branch_number(self):
-        branch_label = self.branch_label
-        return (branch_label.global_order[-1] if branch_label is not None
-                else '')
+    Parameters
+    ----------
+    registered_labels : list of :obj:`disseminate.labels.Label`
+        The list of labels that have been vetted, processed and registered.
+    collected_labels : dict of list of :obj:`disseminate.labels.Label`
+        The new labels that have been added but not yet registered. These will
+        be tested for labels with duplicate ids in the registered labels.
+        The keys are doc_id strings and the values are lists of labels.
+    exclude_labels : tuple of :class:`disseminate.labels.Label`
+        Labels that match the specified classes will not be checked for
+        duplicates.
 
-    @property
-    def branch_title(self):
-        branch_label = self.branch_label
-        return branch_label.title if branch_label is not None else ''
+    Raises
+    ------
+    DuplicateLabel
+        Exception raised if a label in the collected_labels has an id that is
+        already registered for another document (with a different doc_id).
+    """
+    # Create an empty tuple for exclude_kinds, if None is specified
+    if exclude_labels is None:
+        exclude_labels = tuple()
+    elif not isinstance(exclude_labels, tuple):
+        exclude_labels = (exclude_labels,)
 
-    @property
-    def section_number(self):
-        section_label = self.section_label
-        return (section_label.local_order[-1] if section_label is not None
-                else '')
+    # First get a mapping of the registered label ids and their corresponding
+    # doc_ids
+    label_ids = {label.id: label.doc_id for label in registered_labels}
 
-    @property
-    def section_title(self):
-        section_label = self.section_label
-        return section_label.title if section_label is not None else ''
+    # Go through the collected labels and see if there are labels with ids
+    # that have already been assigned to other doc_ids--provided the label
+    # doesn't have a kind listed in the exclude_kinds parameter.
+    duplicated_ids = [label for label in chain(*collected_labels.values())
+                      if label.id in label_ids and
+                      label_ids[label.id] != label.doc_id and
+                      not any(isinstance(label, cls) for cls in exclude_labels)]
 
-    @property
-    def subsection_number(self):
-        subsection_label = self.subsection_label
-        return (subsection_label.local_order[-1] if subsection_label is not None
-                else '')
+    # Raise an exception if duplicate ids were found.
+    if len(duplicated_ids) > 0:
+        msg = ("Label identifiers should be unique for all documents in a "
+               "project. The following label identifers are used in multiple "
+               "documents: "
+               "{}".format(", ".join([l.id for l in duplicated_ids])))
+        raise DuplicateLabel(msg)
 
-    @property
-    def subsection_title(self):
-        subsection_label = self.subsection_label
-        return subsection_label.title if subsection_label is not None else ''
 
-    @property
-    def subsubsection_number(self):
-        subsubsection_label = self.subsubsection_label
-        return (subsubsection_label.local_order[-1] if subsubsection_label is
-                not None else '')
+def transfer_labels(registered_labels, collected_labels,
+                    doc_ids, *args, **kwargs):
+    """Transfer collected labels to the labels registry list and reorder
+    labels according to their corresponding document's order.
 
-    @property
-    def subsubsection_title(self):
-        subsubsection_label = self.subsubsection_label
-        return (subsubsection_label.title if subsubsection_label is not None
-                else '')
+    Parameters
+    ----------
+    registered_labels : list of :obj:`disseminate.labels.Label`
+        The list of labels that have been vetted, processed and registered.
+    collected_labels : dict of list of :obj:`disseminate.labels.Label`
+        The new labels that have been added but not yet registered. These will
+        be tested for labels with duplicate ids in the registered labels.
+        The keys are doc_id strings and the values are lists of labels.
+    doc_ids : list of str
+        An ordered list of the document identifiers.
+    """
+    # Recontruct the labels list from existing, registered labels and
+    # collected labels. These should have the same order as the documents.
 
-    @property
-    def tree_number(self):
-        """The string for the number for the branch, section, subsection and
-        so on. i.e. Section 3.2.1."""
-        # Get a tuple of the numbers, remove empty string items and None
-        numbers = filter(bool, (self.branch_number,
-                                self.section_number,
-                                self.subsection_number,
-                                self.subsubsection_number))
+    # Create a dict of doc_ids and the order of the documents
+    doc_id_orders = {count: doc_id for count, doc_id in enumerate(doc_ids)}
 
-        # Convert the numbers to strings
-        numbers = map(str, numbers)
+    # Organize the registered labels by doc_id
+    registered_labels_dict = dict()
+    for label in registered_labels:
+        labels_list = registered_labels_dict.setdefault(label.doc_id, [])
+        labels_list.append(label)
 
-        # Get the label separator character, first from the settings module,
-        # then, if available, in the context or the tag's attributes
-        label_sep = settings.label_fmt['label_sep']
+    # Create an updated, ordered list of registered labels
+    new_labels = []
 
-        if self.tag is not None:
-            # Replace with a value in the context, if available
-            if 'label_sep' in self.tag.context:
-                label_sep = self.tag.context['label_sep']
+    for count, doc_id in sorted(doc_id_orders.items()):
+        if doc_id in collected_labels:
+            new_labels += collected_labels.pop(doc_id)
+        elif doc_id in registered_labels_dict:
+            new_labels += registered_labels_dict[doc_id]
 
-            # Replace with a value in the tag's attributes, if available
-            label_sep_attr = self.tag.get_attribute('label_sep', clear=True)
-            label_sep = label_sep if label_sep_attr is None else label_sep_attr
+    # Transfer the labels
+    registered_labels.clear()
+    registered_labels += new_labels
 
-        # Return a string with the numbers joined by a character.
-        return label_sep.join(numbers)
 
-    @property
-    def src_filepath(self):
-        """The src_filepath of the document which owns this label."""
-        document = self.document
-        return self.document.src_filepath if document is not None else None
+def order_labels(registered_labels, exclude_labels=None, *args, **kwargs):
+    """Set the local_order (within a document) and global_order (between
+    many documents) of registered_labels.
+
+    Parameters
+    ----------
+    registered_labels : list of :obj:`disseminate.registered_labels.Label`
+        The list of registered_labels that have been vetted, processed and
+        registered.
+    exclude_labels : tuple of :class:`disseminate.labels.Label`
+        Labels that match the specified classes will not be ordered. Presumably
+        they'll be ordered by another function.
+    """
+    # Create an empty tuple for exclude_kinds, if None is specified
+    if exclude_labels is None:
+        exclude_labels = tuple()
+    elif not isinstance(exclude_labels, tuple):
+        exclude_labels = (exclude_labels,)
+
+    # Keep track of the global count (the count between multiple documents
+    # in a document tree) and the local count (the count within a document)
+    global_counter = dict()
+    local_counter = dict()  # Keep track of local count
+
+    # Keep track of the doc_id for the document of the last label
+    doc_id = None
+
+    # Process each label.
+    for label in registered_labels:
+        # Skip if the label has a kind that is in the excluded kinds
+        if (label.kind is None or
+           any(isinstance(label, cls) for cls in exclude_labels)):
+            continue
+
+        # If the doc_id has changed, then its a new document.
+        # In this case, reset the local_counter
+        if doc_id != label.doc_id:
+            local_counter = dict()
+            doc_id = label.doc_id
+
+        # Get the count for each of the kind items
+        local_order, global_order = [], []
+        for item in label.kind:
+            local_count = local_counter.setdefault(item, 0) + 1
+            global_count = global_counter.setdefault(item, 0) + 1
+
+            local_counter[item] = local_count
+            global_counter[item] = global_count
+
+            local_order.append(local_count)
+            global_order.append(global_count)
+
+        label.local_order = tuple(local_order)
+        label.global_order = tuple(global_order)

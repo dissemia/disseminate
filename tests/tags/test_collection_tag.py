@@ -76,7 +76,7 @@ def test_collection_selective_target(doc):
     targets: html
     ---
     @chapter{three}""")
-    subdoc2.load_document()  # reload the document
+    subdoc2.load()  # reload the document
 
     # Now try rendering the collection for the root document in tex. Since tex
     # is not a listed target for the 2nd sub-document, it's contents (chapter
@@ -163,7 +163,7 @@ def test_collection_html(doc):
     ---
     @chapter{one}
     """)
-    doc.load_document()
+    doc.load()
 
     root1 = doc.context[body_attr]
     assert root1.html.strip() == ('<span class="body">    '

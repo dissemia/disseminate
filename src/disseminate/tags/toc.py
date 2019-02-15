@@ -8,7 +8,7 @@ from lxml import etree
 from markupsafe import Markup
 
 from .headings import toc_levels as heading_toc_levels
-from .caption import Ref
+from .ref import Ref
 from .core import Tag
 from ..tags.headings import Heading
 from .. import settings
@@ -19,21 +19,39 @@ class TocError(Exception):
     pass
 
 
+class TocRef(Ref):
+    """A Ref tag for the TOC.
+
+    This is a separate class so that the label_fmt may be different for TOC
+    entries.
+    """
+    pass
+
+
 class Toc(Tag):
     """Table of contents and listings.
 
     contents : str
-        The contents are the label types to list. ex: 'document', 'figure'
+        The contents are the label types to list. The following entries
+        are supported:
 
-    attributes : tuple
-        - For 'all documents' TOCs, the following attributes modify the
-          behavior:
-            - 'format': 'expanded' -- show all documents are including all
-                         headings.
-            - 'format': 'abbreviated' -- show all documents but only show
-                         headings for the current document.
-            - 'format': 'collapsed' -- show only the documents without headings.
-                        (default)
+        - document : list document labels
+        - heading : list heading labels
+        - figure : list figure labels
+        - table : list table labels
+
+        Additionally, the following modifiers have special meaning:
+        - all : list labels from all documents
+        - current : list labels from the current document (default)
+
+
+        - expanded : pertains to 'all document' and 'all headings'.
+                     Show all documents are including all headings.
+        - abbreviated : pertains to 'all document' and 'all headings'.
+                        show all documents but only show headings for the
+                        current document
+        - collapsed : pertains to 'all document' and 'all headings'.
+                     show only the documents without headings. (default)
     """
 
     active = True
@@ -48,8 +66,7 @@ class Toc(Tag):
         super(Toc, self).__init__(name, content, attributes, context)
 
         # Get the TOC's kind from the tag's content
-        self.toc_kind = (self.content.strip() if isinstance(self.content, str)
-                         else '')
+        self.toc_kind = self.content.split()
 
         # Setup the TOC header, if specified
         header = self.get_attribute(name='header', clear=True)
@@ -60,11 +77,18 @@ class Toc(Tag):
 
     def get_labels(self):
         """Get the labels, ordering function and labeling type."""
-        # Get the document from the context, which is a weakref to the document
-        current_document = self.context.get('document', None)
-        current_document = (current_document() if current_document is not None
-                            and callable(current_document) else None)
+        assert self.context.is_valid('label_manager')
 
+        # If 'all' is specified in the toc_kind, then all documents should be
+        # selected. This is done by having a context of None with the
+        # 'get_labels' method of the label manager. If 'all' is not
+        # specified, then use this document's context. This will return labels
+        # only for this document and its context from the 'get_labels' method
+        # of the label manager.
+        context = self.context if 'all' not in self.toc_kind else None
+
+        # Create a default function for order labels. This may be overwritten
+        # below, depending on the type of TOC.
         def default_order_function(label):
             return 0
 
@@ -75,9 +99,10 @@ class Toc(Tag):
         else:
             return default_return_value
 
-        if 'heading' in self.toc_kind:
-            document = current_document if 'all' not in self.toc_kind else None
-            labels = label_manager.get_labels(document=document,
+        if 'heading' in self.toc_kind or 'headings' in self.toc_kind:
+            # Retrieve heading labels, either for this document or all documents
+            # (depending on the value of context)
+            labels = label_manager.get_labels(context=context,
                                               kinds='heading')
 
             last_heading_level = None
@@ -104,13 +129,16 @@ class Toc(Tag):
 
             return labels, order_function, 'heading'
 
-        if 'document' in self.toc_kind:
-            document = current_document if 'all' not in self.toc_kind else None
+        if 'document' in self.toc_kind or 'documents' in self.toc_kind:
+            # Get the doc_id for the current document
+            doc_id = self.context['doc_id']
 
-            # Get the labels for the documents and the headings
-            document_labels = label_manager.get_labels(document=document,
+            # Retrieve the labels for the documents and the headings. Either
+            # for this document or all documents (depending on the value of
+            # context)
+            document_labels = label_manager.get_labels(context=context,
                                                        kinds='document')
-            heading_labels = label_manager.get_labels(document=document,
+            heading_labels = label_manager.get_labels(context=context,
                                                       kinds='heading')
 
             # Reorganize the document and heading labels such that the headings
@@ -124,10 +152,10 @@ class Toc(Tag):
                 # current document
                 if ('expanded' in self.toc_kind or
                    ('abbreviated' in self.toc_kind and
-                    document_label.document == current_document)):
+                    document_label.doc_id == doc_id)):
 
                     merged_labels += [l for l in heading_labels
-                                      if l.document == document_label.document]
+                                      if l.doc_id == document_label.doc_id]
 
             # Get a toc_levels for the document, based on the document_labels
             doc_toc_levels = {l.kind[-1] for l in document_labels}
@@ -207,8 +235,9 @@ class Toc(Tag):
 
             # Create the tag and add it to the tags list
             tag_name = 'toc-' + label.kind[-1]
-            tag = Ref(name=tag_name, content=label.id,
-                      attributes=self.attributes, context=self.context)
+            tag = TocRef(name=tag_name, content=label.id,
+                         attributes=self.attributes, context=self.context,
+                         doc_id=label.doc_id)
 
             # Add the tag to a flat list
             tags.append((level, tag))
@@ -331,15 +360,7 @@ class Toc(Tag):
             else:
                 # Otherwise it's a ref tag, get its tex and wrap it in a list
                 # item
-                entry = "  " * level
-                entry += "\\item " + e.tex_fmt(level + 1)
-
-                # Format the page numbers
-                entry += (" \\dotfill " if True
-                          else " \\hfill ")
-                entry += e.tex_fmt(level + 1, page=True)
-
-                entry += '\n'
+                entry = "  " * level + "\\item " + e.tex_fmt(level + 1) + "\n"
 
                 returned_elements.append(entry)
 

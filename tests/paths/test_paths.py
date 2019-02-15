@@ -1,6 +1,7 @@
 """
 Tests for Paths objects.
 """
+import copy
 
 from disseminate.paths import SourcePath, TargetPath
 
@@ -122,3 +123,40 @@ def test_path_repr():
     """Test the repr of Path classes."""
     src_path = SourcePath(project_root='src')
     assert repr(src_path) == "SourcePath('src')"
+
+
+def test_path_copy():
+    """Tests shallow and deep copy of Path classes."""
+    # test SourcePath
+    for project_root, subpath in (('.', None),
+                                  ('test', 'test.dm')):
+        src_filepath = SourcePath(project_root=project_root, subpath=subpath)
+        shallow_copy = copy.copy(src_filepath)
+        deep_copy = copy.deepcopy(src_filepath)
+
+        assert src_filepath == shallow_copy
+        assert src_filepath.project_root == shallow_copy.project_root
+        assert src_filepath.subpath == shallow_copy.subpath
+
+        assert src_filepath == deep_copy
+        assert src_filepath.project_root == deep_copy.project_root
+        assert src_filepath.subpath == deep_copy.subpath
+
+    # test TargetPath
+    for target_root, target, subpath in (('.', None, None),
+                                         ('test', None, 'test.dm'),
+                                         ('test', '.html', 'tester.dm')):
+        tgt_filepath = TargetPath(target_root=target_root, target=target,
+                                  subpath=subpath)
+        shallow_copy = copy.copy(tgt_filepath)
+        deep_copy = copy.deepcopy(tgt_filepath)
+
+        assert tgt_filepath == shallow_copy
+        assert tgt_filepath.target_root == shallow_copy.target_root
+        assert tgt_filepath.target == shallow_copy.target
+        assert tgt_filepath.subpath == shallow_copy.subpath
+
+        assert tgt_filepath == deep_copy
+        assert tgt_filepath.target_root == deep_copy.target_root
+        assert tgt_filepath.target == deep_copy.target
+        assert tgt_filepath.subpath == deep_copy.subpath

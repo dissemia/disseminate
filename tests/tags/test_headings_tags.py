@@ -56,13 +56,18 @@ def test_labels_heading_formatting(tmpdir):
 
 
     """
+
     assert target_filepath.read() == strip_leading_space(key)
 
     # Next try assigning a different default header label in the context
     src_filepath.write(strip_leading_space("""
     ---
     targets: html, txt
-    heading_label: {label.tree_number}. {label.title}
+    label_fmts: 
+        heading_branch: $label.tree_number. $label.title
+        heading_section: $label.tree_number. $label.title
+        heading_subsection: $label.tree_number. $label.title
+        heading_subsubsection: $label.tree_number. $label.title
     ---
     @chapter{First Chapter}
     @section{Section One-One}
@@ -198,14 +203,14 @@ def test_heading_labels_tex(tmpdir):
     # 1. Test with default labels
 
     markups = {
-        '@chapter{Chapter 1}': '\n\setcounter{chapter}{1}\n\chapter{Chapter 1} \label{br:chapter-1}\n\n',
-        '@section{Section 1}': '\n\setcounter{section}{1}\n\section{Section 1} \label{sec:section-1}\n\n',
-        '@subsection{Section 2}': '\n\setcounter{subsection}{1}\n\subsection{Section 2} \label{subsec:section-2}\n\n',
-        '@subsubsection{Section 3}': '\n\setcounter{subsubsection}{1}\n\subsubsection{Section 3} \label{subsubsec:section-3}\n\n',
-        '@h2{Section 2}': '\n\setcounter{section}{1}\n\section{Section 2} \label{sec:section-2}\n\n',
-        '@h3{Section 3}': '\n\setcounter{subsection}{1}\n\subsection{Section 3} \label{subsec:section-3}\n\n',
-        '@h4{Section 4}': '\n\setcounter{subsubsection}{1}\n\subsubsection{Section 4} \label{subsubsec:section-4}\n\n',
-        '@h5{Section 5}': '\paragraph{Section 5}',
+        '@chapter{Chapter 1}': '\n\\setcounter{chapter}{1}\n\\chapter{Chapter 1} \\label{br:chapter-1}\n\n',
+        '@section{Section 1}': '\n\\setcounter{section}{1}\n\\section{Section 1} \\label{sec:section-1}\n\n',
+        '@subsection{Section 2}': '\n\\setcounter{subsection}{1}\n\\subsection{Section 2} \\label{subsec:section-2}\n\n',
+        '@subsubsection{Section 3}': '\n\\setcounter{subsubsection}{1}\n\\subsubsection{Section 3} \\label{subsubsec:section-3}\n\n',
+        '@h2{Section 2}': '\n\\setcounter{section}{1}\n\\section{Section 2} \\label{sec:section-2}\n\n',
+        '@h3{Section 3}': '\n\\setcounter{subsection}{1}\n\\subsection{Section 3} \\label{subsec:section-3}\n\n',
+        '@h4{Section 4}': '\n\\setcounter{subsubsection}{1}\n\\subsubsection{Section 4} \\label{subsubsec:section-4}\n\n',
+        '@h5{Section 5}': '\\paragraph{Section 5}',
                }
 
     # Generate a tag for each and compare the generated html to the answer key
@@ -219,13 +224,13 @@ def test_heading_labels_tex(tmpdir):
     # 2. Test with 'nolabel' specified
 
     markups = {
-        '@section[nolabel]{Section 1}': '\n\section{Section 1}\n\n',
-        '@subsection[nolabel]{Section 2}': '\n\subsection{Section 2}\n\n',
-        '@subsubsection[nolabel]{Section 3}': '\n\subsubsection{Section 3}\n\n',
-        '@h2[nolabel]{Section 2}': '\n\section{Section 2}\n\n',
-        '@h3[nolabel]{Section 3}': '\n\subsection{Section 3}\n\n',
-        '@h4[nolabel]{Section 4}': '\n\subsubsection{Section 4}\n\n',
-        '@h5{Section 5}': '\paragraph{Section 5}',
+        '@section[nolabel]{Section 1}': '\n\\section{Section 1}\n\n',
+        '@subsection[nolabel]{Section 2}': '\n\\subsection{Section 2}\n\n',
+        '@subsubsection[nolabel]{Section 3}': '\n\\subsubsection{Section 3}\n\n',
+        '@h2[nolabel]{Section 2}': '\n\\section{Section 2}\n\n',
+        '@h3[nolabel]{Section 3}': '\n\\subsection{Section 3}\n\n',
+        '@h4[nolabel]{Section 4}': '\n\\subsubsection{Section 4}\n\n',
+        '@h5{Section 5}': '\\paragraph{Section 5}',
     }
 
     # Generate a tag for each and compare the generated html to the answer key

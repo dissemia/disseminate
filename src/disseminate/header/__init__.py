@@ -8,4 +8,4 @@ The header sub-module has the following responsibilities:
    for the context.
 """
 
-from .header import parse_header_str, load_header
+from .header import load_header

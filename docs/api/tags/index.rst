@@ -15,4 +15,5 @@ Tags
    asy
    figs
    caption
+   refs
    collection

@@ -94,7 +94,7 @@ def test_document_tree(tmpdir):
     ---
     """
     file1.write_text(strip_leading_space(markup))
-    doc.load_document()
+    doc.load()
 
     # Test the paths
     assert len(doc.subdocuments) == 1
@@ -274,7 +274,7 @@ def test_document_tree_updates(tmpdir):
       file3.dm
       file2.dm
     ---""")
-    doc.load_document()
+    doc.load()
 
     # Check the ordering of documents
     doc_list = doc.documents_list()
@@ -304,7 +304,7 @@ def test_document_tree_updates(tmpdir):
     assert doc_list[2].src_filepath == src_filepath2
 
     # Reload the ast
-    doc.load_document()
+    doc.load()
 
     doc_list = doc.documents_list()
     assert len(doc_list) == 2
@@ -323,7 +323,7 @@ def test_document_tree_updates(tmpdir):
     ---""")
 
     # Reload the ast
-    doc.load_document()
+    doc.load()
     doc_list = doc.documents_list()
     assert len(doc_list) == 3
     assert doc_list[0].src_filepath == src_filepath1
@@ -417,7 +417,7 @@ def test_render_required(tmpdir):
     assert mtime2 < src_filepath2.stat().st_mtime
 
     for doc in doc_list:
-        doc.load_document()
+        doc.load()
 
     assert doc_list[0].context[body_attr].mtime == mtime1
     assert doc_list[1].context[body_attr].mtime != mtime2
