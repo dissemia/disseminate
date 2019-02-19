@@ -29,6 +29,29 @@ default_port = 8899
 #: A list of extensions that will be sent with the 'text/plain' MIME type
 text_extensions = ['.tex', ]
 
+#: Convert and Tag Defaults
+#: ------------------------
+
+#: The default prefix for tags
+tag_prefix = r'@'
+
+#: Maximum depth of tag trees
+tag_max_depth = 30
+
+# If True, converted files will be updated only when they're changed. Otherwise
+# converted files will always be updated
+convert_cache = True
+
+#: The location in the target_root to store temporary cached files
+cache_path = '.cache'
+
+#: The default location for media (image, css, js) files.
+media_path = 'media'
+
+# The contents of the following tags will not be directly parsed by the
+# process_ast
+verbatim_tags = ('verb', 'v', 'pre', 'verbatim')
+
 #: Context
 #: -------
 
@@ -128,21 +151,6 @@ tracked_deps = {
     # css files can include .css files
     '.css': ['.css', ]
     }
-
-
-#: Convert and Tag Defaults
-#: ------------------------
-
-# If True, converted files will be updated only when they're changed. Otherwise
-# converted files will always be updated
-convert_cache = True
-
-#: The location in the target_root to store temporary cached files
-cache_path = '.cache'
-
-#: The default location for media (image, css, js) files.
-media_path = 'media'
-
 
 #: Macros
 #: ------

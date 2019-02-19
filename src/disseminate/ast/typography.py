@@ -4,7 +4,7 @@ Process AST functions for typography.
 import regex
 
 from ..tags import Tag
-from . import settings
+from .. import settings
 
 
 re_endash = regex.compile(r"[\s\u00a0]*(--|\u2013)[\s\u00a0]*")

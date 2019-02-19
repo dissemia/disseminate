@@ -5,6 +5,7 @@ from lxml.builder import E
 from lxml import etree
 from markupsafe import Markup
 
+from .exceptions import TagError
 from ..attributes import (parse_attributes, set_attribute,
                           kwargs_attributes, format_tex_attributes,
                           filter_attributes, get_attribute_value,
@@ -16,10 +17,6 @@ from ..utils.string import StringTemplate
 from .. import ast
 from .. import settings
 
-
-class TagError(Exception):
-    """An error was encountered while interpreting a tag."""
-    pass
 
 
 class TagFactory(object):

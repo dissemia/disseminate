@@ -5,7 +5,7 @@ import regex
 
 from ..tags import TagFactory, Tag
 from .validate import ValidateAndCleanAST
-from . import settings
+from .. import settings
 
 
 class AstException(Exception):
@@ -13,7 +13,10 @@ class AstException(Exception):
     pass
 
 
-re_open_tag = regex.compile(r'@(?P<tag>[A-Za-z][\w]*)(?P<attributes>\[[^\]]+\])?{')
+re_open_tag = regex.compile(settings.tag_prefix +  # default: '@'
+                            r'(?P<tag>[A-Za-z][\w]*)'
+                            r'(?P<attributes>\[[^\]]+\])?'
+                            r'{')
 re_brace = regex.compile(r'[}{]')
 
 
@@ -52,7 +55,7 @@ def process_ast(ast=None, context=None, src_filepath=None, level=1):
         attack.
     """
     # Conduct initial tests
-    if level >= settings.ast_max_depth:
+    if level >= settings.tag_max_depth:
         msg = ("The maximum depth of '{}' has been reached in the AST. "
                "Additional levels can be set by the 'settings.ast_max_depth'.")
         raise AstException(msg.format(settings.ast_max_depth))
@@ -66,9 +69,7 @@ def process_ast(ast=None, context=None, src_filepath=None, level=1):
 
     # Look at the ast and process it depending on whether it's a string, tag
     # or list
-    if isinstance(ast, str):
-        text = ast
-    elif isinstance(ast, list):
+    if isinstance(ast, list):
         return list(map(process, ast))
     elif isinstance(ast, Tag):
         if isinstance(ast.content, str) or isinstance(ast.content, Tag):
@@ -78,6 +79,7 @@ def process_ast(ast=None, context=None, src_filepath=None, level=1):
         return ast
 
     # The following only processes text
+    text = ast
 
     # Setup the tag factor to generate tags
     factory = TagFactory()
