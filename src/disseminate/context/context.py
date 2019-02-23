@@ -5,6 +5,7 @@ import logging
 from copy import deepcopy
 from pprint import pprint
 
+from .utils import set_context_attribute
 from ..utils.classes import all_attributes_values
 from ..utils.string import str_to_dict, str_to_list
 
@@ -53,7 +54,7 @@ class BaseContext(dict):
         The entries to populate in the context dict.
     """
 
-    __slots__ = ()  # A __dict__ attribute would be redundant
+    __slots__ = ('__weakref__',)  # A __dict__ attribute would be redundant
 
     #: A listing of entry keys and the types they should be
     validation_types = dict()
@@ -120,6 +121,10 @@ class BaseContext(dict):
         if not only_shallow:
             deep_copies = {k: deepcopy(v) for k, v in kwargs.items()
                            if k not in shallow_copy}
+
+            # Reassign the 'context' attributes for deep copied objects
+            set_context_attribute(element=deep_copies.values,
+                                  new_context=self)
         else:
             deep_copies = {k: v for k, v in kwargs.items()
                            if k not in shallow_copy}

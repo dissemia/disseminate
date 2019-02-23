@@ -1,9 +1,9 @@
 Tags
 ====
 
-Tags can add meaning to a block of text. In Disseminate, all tags are
+Tags can add meaning to a block of text. In disseminate, all tags are
 allowed. Tags start with an :code:`@` character, followed by a letter
-and one ore more letters or numbers. Tags have contents, which are
+and one ore more letters or numbers. Tags may have contents, which are
 contained within curly braces. The following list shows valid tags:
 
 ::
@@ -11,6 +11,7 @@ contained within curly braces. The following list shows valid tags:
   @example{...}
   @h1{...}
   @abhängigkeit{...}
+  @friendship
   
 .. rubric:: Attributes
 

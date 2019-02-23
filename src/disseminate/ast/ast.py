@@ -5,6 +5,7 @@ import regex
 
 from ..tags import TagFactory, Tag
 from .validate import ValidateAndCleanAST
+from ..context import BaseContext
 from .. import settings
 
 
@@ -13,10 +14,12 @@ class AstException(Exception):
     pass
 
 
-re_open_tag = regex.compile(settings.tag_prefix +  # default: '@'
-                            r'(?P<tag>[A-Za-z][\w]*)'
-                            r'(?P<attributes>\[[^\]]+\])?'
-                            r'{')
+re_open_tag = regex.compile(  # The character to use in identifying a tag. By
+                              # default, it's an '@' character.
+                                settings.tag_prefix +
+                                r'(?P<tag>[A-Za-z0-9][\w]*)'
+                                r'(?P<attributes>\[[^\]]+\])?'
+                                r'(?P<open>{)?')
 re_brace = regex.compile(r'[}{]')
 
 
@@ -62,7 +65,7 @@ def process_ast(ast=None, context=None, src_filepath=None, level=1):
 
     # Setup the AST and determine the kind of ast passed and how to process
     # it.
-    context = context if isinstance(context, dict) else dict()
+    context = context if isinstance(context, BaseContext) else BaseContext()
 
     new_ast = []
     process = lambda x: process_ast(x, context, src_filepath, level+1)
@@ -102,9 +105,14 @@ def process_ast(ast=None, context=None, src_filepath=None, level=1):
         position += match_tag.end()
         start_position = position
 
+        # Parse the tag contexts
+        d = match_tag.groupdict()
+        tag_name = d['tag']
+        tag_attributes = d['attributes']
+
         # Find open and close braces and advance the position
         # up until the match closing brace is found
-        brace_level = 1
+        brace_level = 1 if d['open'] is not None else 0
         match = re_brace.search(text[position:])
         while match and 0 < brace_level < 10:
             # Increment or decrement the match
@@ -118,16 +126,15 @@ def process_ast(ast=None, context=None, src_filepath=None, level=1):
             # Get the next match
             match = re_brace.search(text[position:])
 
-        # Parse and add the tag
-        d = match_tag.groupdict()
-        tag_name = d['tag']
-        tag_attributes = d['attributes']
-
-        # Parse the ast for the tag's content only if it's not a verbatim style
-        # tag.
+        # Parse the ast for the tag's content
         if tag_name in settings.verbatim_tags:
+            # If the tag_name is a verbatim tag, then don't process it further
             tag_content = text[start_position:position - 1]
+        elif d['open'] is None:
+            # For tags with no open/close braces, then the content is empty
+            tag_content = ''
         else:
+            # Otherwise process the text within the tag's braces
             tag_content = process(text[start_position:position - 1])
 
         tag = factory.tag(tag_name=tag_name,
@@ -163,7 +170,7 @@ def process_ast(ast=None, context=None, src_filepath=None, level=1):
 
         new_ast = factory.tag(tag_name='root',
                               tag_content=new_ast,
-                              tag_attributes=None,
+                              tag_attributes='',
                               context=context)
 
     return new_ast
@@ -188,7 +195,7 @@ def process_context_asts(context):
     # to an AST
     for k, v in context.items():
         # Skip macros and non-string entries
-        if k.startswith('@') or not isinstance(v, str):
+        if not isinstance(v, str):
             continue
 
         # Process the entry in the context

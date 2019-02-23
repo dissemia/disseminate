@@ -115,6 +115,8 @@ default_context = {
 
     },
 
+    # Macros
+    '1H': '@sup{1}H',
 }
 
 #: Attribute in the context in which the body of a file (the string and AST)

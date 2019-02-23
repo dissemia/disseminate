@@ -4,6 +4,7 @@ to other elements in the rendered document, like bold text, images, figures,
 equations and tables.
 """
 
-from .core import TagFactory, Tag, TagError
+from .core import Tag, TagError
+from .factory import TagFactory
 from . import (headings, text, img, asy, notes, figs, caption, eqs, toc,
-               preamble, collection, ref)
+               preamble, collection, ref, substitution)

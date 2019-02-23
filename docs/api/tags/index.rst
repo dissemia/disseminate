@@ -8,6 +8,7 @@ Tags
    :caption: Tags
              
    tags
+   factory
    heading
    text
    img

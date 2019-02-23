@@ -1,7 +1,7 @@
 """
 Test the utility functions for contexts.
 """
-from disseminate.context.utils import context_includes
+from disseminate.context.utils import context_includes, set_context_attribute
 from disseminate.paths import SourcePath
 from copy import deepcopy
 
@@ -51,3 +51,28 @@ def test_context_includes(context_cls):
 
     context = context_cls(src_filepath=src_filepath)
     assert context_includes(context) == []
+
+
+def test_set_context_attribute():
+    """Test the set_context_attribution function."""
+
+    context = {}
+
+    class A(object):
+        context = None
+
+    a = A()
+
+    # 1. Try a single object
+    set_context_attribute(element=a, new_context=context)
+    assert id(context) == id(a.context)
+
+    # 2. Try an object in a list
+    a.context = None
+    set_context_attribute(element=[1, 'a', a], new_context=context)
+    assert id(context) == id(a.context)
+
+    # 3. Try an object in a nested list
+    a.context = None
+    set_context_attribute(element=[1, 'a', [1, 2, a]], new_context=context)
+    assert id(context) == id(a.context)

@@ -4,6 +4,7 @@ The manager for labels.
 from .labels import (LabelError, LabelNotFound, find_duplicates,
                      transfer_labels, order_labels)
 from .content_label import ContentLabel, HeadingLabel, curate_content_labels
+from ..utils.classes import weakattr
 
 
 # Wrap curation functions
@@ -43,7 +44,8 @@ class LabelManager(object):
     Parameters
     ----------
     root_context : :obj:`disseminate.document.DocumentContext`
-        The context for the root document.
+        The context for the root document. The label manager does not own the
+        context object, so only a weak reference to the context is stored.
 
     Attributes
     ----------
@@ -57,7 +59,7 @@ class LabelManager(object):
         and sets their order.
     """
 
-    root_context = None
+    root_context = weakattr()
     labels = None
     collected_labels = None
 

@@ -12,8 +12,10 @@ from disseminate.tags.text import P
 from disseminate import settings, SourcePath, TargetPath
 
 
-def test_flatten_tag():
+def test_flatten_tag(context_cls):
     """Test the flatten method."""
+    context = context_cls()
+
     # Setup a test source string
     test = """
             This is my test document. It has multiple paragraphs.
@@ -24,17 +26,17 @@ def test_flatten_tag():
               @captiontag{This is my @i{first} figure.}
             }
 
-            This is a @13C variable, but this is an email address: justin@lorieau.com
+            This is a @13C variable.
 
             Here is a @i{new} paragraph."""
 
     # Parse it
-    root = process_ast(test)
+    root = process_ast(test, context=context)
 
     # Convert the root tag to a flattened list and check the items
     flattened_tag = root.flatten(filter_tags=False)
 
-    assert len(flattened_tag) == 18
+    assert len(flattened_tag) == 20
     assert flattened_tag[0].name == 'root'
     assert isinstance(flattened_tag[1], str)
     assert flattened_tag[2].name == 'b'
@@ -51,20 +53,23 @@ def test_flatten_tag():
     assert isinstance(flattened_tag[13], str)
     assert isinstance(flattened_tag[14], str)
     assert isinstance(flattened_tag[15], str)
-    assert flattened_tag[16].name == 'i'
+    assert flattened_tag[16].name == '13C'
     assert isinstance(flattened_tag[17], str)
+    assert flattened_tag[18].name == 'i'
+    assert isinstance(flattened_tag[19], str)
 
     # Convert the root tag to a flattened list with only tags
     flattened_tag = root.flatten(filter_tags=True)
 
-    assert len(flattened_tag) == 7
+    assert len(flattened_tag) == 8
     assert flattened_tag[0].name == 'root'
     assert flattened_tag[1].name == 'b'
     assert flattened_tag[2].name == 'figuretag'
     assert flattened_tag[3].name == 'imgtag'
     assert flattened_tag[4].name == 'captiontag'
     assert flattened_tag[5].name == 'i'
-    assert flattened_tag[6].name == 'i'
+    assert flattened_tag[6].name == '13C'
+    assert flattened_tag[7].name == 'i'
 
 
 def test_tag_mtime(tmpdir):
@@ -205,75 +210,85 @@ def test_label_tags(tmpdir):
 
 # Tests for html targets
 
-def test_html():
+def test_tag_html(context_cls):
     """Test the conversion of tags to html strings."""
+
+    context = context_cls()
 
     # Generate a simple root tag with a string as content
     root = Tag(name='root', content='base string', attributes=None,
-               context=dict())
+               context=context)
     assert root.html == '<span class="root">base string</span>\n'
 
     # Generate a nested root tag with sub-tags
-    b = Tag(name='b', content='bolded', attributes=None, context=dict())
+    b = Tag(name='b', content='bolded', attributes=None, context=context)
     elements = ["my first", b, "string"]
-    root = Tag(name='root', content=elements, attributes=None, context=dict())
+    root = Tag(name='root', content=elements, attributes=None, context=context)
     assert root.html == ('<span class="root">'
                          'my first<b>bolded</b>string'
                          '</span>\n')
 
     # Test the rendering of a tag with content for an invalid type.
     # This should raise an exception
-    root = Tag(name='root', content=set(), attributes=None, context=dict())
+    root = Tag(name='root', content=set(), attributes=None, context=context)
     with pytest.raises(TagError):
         root.html
 
 
-def test_html_invalid_tag():
+def test_tag_html_invalid_tag(context_cls):
     """Test the rendering of invalid tags into html."""
 
+    context = context_cls()
+
     # Generate a simple root tag with an invalid tag in its content
-    eqn = Tag(name='eqn', content='my eqn', attributes=None, context=dict())
+    eqn = Tag(name='eqn', content='my eqn', attributes=None, context=context)
     elements = ["my first", eqn, "string"]
-    root = Tag(name='root', content=elements, attributes=None, context=dict())
+    root = Tag(name='root', content=elements, attributes=None, context=context)
     assert root.html == ('<span class="root">my first'
                          '<span class=\"eqn\">my eqn</span>'
                          'string</span>\n')
 
 
-def test_html_excluded_tag():
+def test_tag_html_excluded_tag(context_cls):
     """Test the rendering of an excluded tag."""
+
+    context = context_cls()
 
     # The <script> tag is excluded in settings.html_excluded
     # Generate a simple root tag with an invalid tag in its content
-    eqn = Tag(name='script', content='my eqn', attributes=None, context=dict())
+    eqn = Tag(name='script', content='my eqn', attributes=None, context=context)
     elements = ["my first", eqn, "string"]
-    root = Tag(name='root', content=elements, attributes=None, context=dict())
+    root = Tag(name='root', content=elements, attributes=None, context=context)
     assert root.html == ('<span class="root">my first'
                          '<span class=\"script\">my eqn</span>'
                          'string</span>\n')
 
 
-def test_html_unsafe_tag():
+def test_tag_html_unsafe_tag(context_cls):
     """Test the rendering of an unsafe tag in the string content of a tag."""
+
+    context = context_cls()
 
     # The <script> tag is excluded in settings.html_excluded
     # Generate a simple root tag with an invalid tag in its content
     eqn = Tag(name='script', content='<script>', attributes=None,
-              context=dict())
+              context=context)
     elements = ["my first", eqn, "string"]
     root = Tag(name='root', content=elements, attributes=None,
-               context=dict())
+               context=context)
     assert root.html == ('<span class="root">my first'
                          '<span class=\"script\">&lt;script&gt;</span>'
                          'string</span>\n')
 
 
-def test_html_nested():
+def test_tag_html_nested(context_cls):
     """Nest nested tags with html"""
 
+    context = context_cls()
+
     # Test a basic string without additional tags
-    p = P(name='p', content='paragraph', attributes=None, context=dict())
-    root = Tag(name='root', content=p, attributes=None, context=dict())
+    p = P(name='p', content='paragraph', attributes=None, context=context)
+    root = Tag(name='root', content=p, attributes=None, context=context)
     assert root.html == ('<span class="root">\n'
                          '  <p>paragraph</p>\n'
                          '</span>\n')
@@ -281,42 +296,47 @@ def test_html_nested():
 
 # Tests for tex targets
 
-def test_tex():
+def test_tag_tex(context_cls):
     """Tests the rendering of latex tags."""
+
+    context = context_cls()
 
     # Generate a simple root tag with a string as content
     root = Tag(name='root', content='base string', attributes=None,
-               context=dict())
+               context=context)
     assert root.tex == "base string"
 
     # Generate a nested root tag with sub-tags
     b = Tag(name='textbf', content='bolded', attributes=None,
-            context=dict())
+            context=context)
     elements = ["my first", b, "string"]
     root = Tag(name='root', content=elements, attributes=None,
-               context=dict())
+               context=context)
     assert root.tex == "my first\\textbf{bolded}string"
 
     # Test the rendering of a tag with content for an invalid type.
     # This should raise an exception
     root = Tag(name='root', content=set(), attributes=None,
-               context=dict())
+               context=context)
     with pytest.raises(TagError):
         root.tex
 
 
-def test_tex_nested():
+def test_tag_tex_nested(context_cls):
     """Tests the rendering of nested tags in latex."""
+
+    context = context_cls()
+
     # Generate a nested root tag with sub-tags
     item1 = Tag(name='item', content='item 1', attributes=None,
-                context=dict())
+                context=context)
     item2 = Tag(name='item', content='item 2', attributes=None,
-                context=dict())
+                context=context)
     enum = Tag(name='enumerate', content=[item1, item2], attributes=None,
-               context=dict())
+               context=context)
     elements = ["my first", enum, "string"]
     root = Tag(name='root', content=elements, attributes=None,
-               context=dict())
+               context=context)
     assert root.tex == ('my first\n'
                         '\\begin{enumerate}\n'
                         '\\item item 1\n'
@@ -325,6 +345,6 @@ def test_tex_nested():
                         'string')
 
     # Test a basic string without additional tags
-    p = P(name='p', content='paragraph', attributes=None, context=dict())
-    root = Tag(name='root', content=p, attributes=None, context=dict())
+    p = P(name='p', content='paragraph', attributes=None, context=context)
+    root = Tag(name='root', content=p, attributes=None, context=context)
     assert root.tex == '\nparagraph\n'

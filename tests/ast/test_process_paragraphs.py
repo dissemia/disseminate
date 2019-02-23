@@ -42,11 +42,12 @@ test_paragraphs2 = """
 """
 
 
-def test_process_paragraphs():
+def test_process_paragraphs(context_cls):
     """Test the process_paragraphs function"""
 
-    ast = process_ast(test_paragraphs)
-    ast = process_paragraphs(ast)
+    context = context_cls()
+    ast = process_ast(test_paragraphs, context=context)
+    ast = process_paragraphs(ast, context=context)
 
     # Check the individual items of the ast.
     assert isinstance(ast[0], P)
@@ -82,12 +83,13 @@ def test_process_paragraphs():
     assert ast[7].content == 'My final paragraph.\n'
 
 
-def test_process_paragraphs_leading_spaces():
+def test_process_paragraphs_leading_spaces(context_cls):
     """Test the process_paragraphs function when trailing spaces are present.
     """
 
-    ast = process_ast(test_paragraphs2)
-    ast = process_paragraphs(ast)
+    context = context_cls()
+    ast = process_ast(test_paragraphs2, context=context)
+    ast = process_paragraphs(ast, context=context)
 
     assert ast.content[0] == '\n  '
     assert ast.content[1].name == 'section'
@@ -112,12 +114,13 @@ def test_process_context_paragraphs(context_cls):
     assert ast.content[2] == '\n  \n  This is my paragraph.\n'
 
 
-def test_process_paragraphs_edgecases():
+def test_process_paragraphs_edgecases(context_cls):
     """Test the process_paragraphs function for a series of edge cases."""
 
     # Test a basic string with no tags. This create a root tag
+    context = context_cls()
     test_edge = "basic"
-    ast = process_paragraphs(test_edge)
+    ast = process_paragraphs(test_edge, context=context)
 
     assert ast.name == 'root'
     assert ast.content.name == 'p'
@@ -125,11 +128,11 @@ def test_process_paragraphs_edgecases():
     assert ast.tex == '\nbasic\n'
 
 
-def test_process_paragraphs_macros():
+def test_process_paragraphs_macros(context_cls):
     """Test the process_paragraphs function with macros."""
 
     # setup a test ast with a macro
-    context = {'@p90x': '90@deg@sub{x}'}
+    context = context_cls(**{'@p90x': '90@deg@sub{x}'})
 
     result = replace_macros("My @p90x pulse.", context=context)
     ast = process_paragraphs([result], context=context)
@@ -143,17 +146,18 @@ def test_process_paragraphs_macros():
     assert ast.content.content == 'My @b{y = x} @sup{1}H pulse.'
 
     # Test paragraph processing after process_ast
-    ast = process_ast(result, context={})
+    ast = process_ast(result, context=context)
     ast = process_paragraphs(ast, context=context)
 
 
-def test_process_paragraphs_newlines():
+def test_process_paragraphs_newlines(context_cls):
     """Test the preservation of newlines in a parapgraph with macros."""
 
     text = """The purpose of the @abrv{INEPT} sequenceMorris1979 is to
 transfer the large magnetization from high-@gamma nuclei, like @sup{1}H or
 @19F, to low-@gamma nuclei (labeled 'X'), like @13C and @15N."""
-    result = replace_macros(text, context=dict())
-    result = process_ast(result)
-    result = process_paragraphs(result)
+    context = context_cls()
+    result = replace_macros(text, context=context)
+    result = process_ast(result, context=context)
+    result = process_paragraphs(result, context=context)
     assert "or\n<sup>19</sup>F" in result.html

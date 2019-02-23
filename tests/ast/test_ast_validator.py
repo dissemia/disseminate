@@ -8,7 +8,7 @@ from disseminate.ast.validate import ValidateAndCleanAST, ParseError
 from disseminate.tags import Tag
 
 
-def test_join_strings():
+def test_join_strings(context_cls):
     """Test the join_string method of the ValidateAndCleanAST class."""
 
     validate = ValidateAndCleanAST()
@@ -24,27 +24,31 @@ def test_join_strings():
             ['ab', [1, 'cd'], 'ef'])
 
     # Try with tags non-nested tag
-    tag = Tag(name='tag', content='test', attributes=(), context=dict())
+    tag = Tag(name='tag', content='test', attributes=(), context=context_cls())
     assert (validate.join_strings(['a', 'b', tag, 'c', 'd']) ==
             ['ab', tag, 'cd'])
 
     # Try with nested tags
-    tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(), context=dict())
+    tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(),
+              context=context_cls())
     assert (validate.join_strings(tag) == tag)
     assert tag.content == [1, 'cd']
 
-    tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(), context=dict())
+    tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(),
+              context=context_cls())
     assert (validate.join_strings([tag]) == [tag])
     assert tag.content == [1, 'cd']
 
-    tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(), context=dict())
+    tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(),
+              context=context_cls())
     assert (validate.join_strings(['a', 'b', tag, 'c', 'd']) ==
             ['ab', tag, 'cd'])
     assert tag.content == [1, 'cd']
 
-    tag1 = Tag(name='tag', content=[1, 'c', 'd'], attributes=(), context=dict())
+    tag1 = Tag(name='tag', content=[1, 'c', 'd'], attributes=(),
+               context=context_cls())
     tag2 = Tag(name='tag', content=[tag1, 'c', 'd'], attributes=(),
-               context=dict())
+               context=context_cls())
     assert (validate.join_strings(['a', 'b', tag2, 'c', 'd']) ==
             ['ab', tag2, 'cd'])
     assert tag1.content == [1, 'cd']
@@ -64,7 +68,7 @@ def test_ast_count():
       @captiontag{This is my @i{first} figure.}
     }
 
-    This is a @13C variable, but this is an email address: justin@lorieau.com
+    This is a @13C variable.
 
     Here is a @i{new} paragraph."""
 
@@ -77,7 +81,8 @@ def test_ast_count():
     assert ast[3][1].line_number == 6  # @imgtag
     assert ast[3][3].line_number == 7  # @captiontag
     assert ast[3][3][1].line_number == 7  # @i tag
-    assert ast[5].line_number == 12  # @i tag
+    assert ast[5].line_number == 10  # @13C tag
+    assert ast[7].line_number == 12  # @13C tag
 
 
 def test_ast_validation():
@@ -124,7 +129,7 @@ def test_ast_validation_cases():
 
     valid1 = """
     @tag{
-     y &= & \int_a^b{x} && \\mathrm{(first equation)}
+     y &= & \\int_a^b{x} && \\mathrm{(first equation)}
      }
     """
 
@@ -132,5 +137,5 @@ def test_ast_validation_cases():
 
     assert ast1.name == 'root'
     assert ast1.content[1].name == 'tag'
-    assert ast1.content[1].content == ('\n     y &= & \int_a^b{x} && '
+    assert ast1.content[1].content == ('\n     y &= & \\int_a^b{x} && '
                                        '\\mathrm{(first equation)}\n     ')

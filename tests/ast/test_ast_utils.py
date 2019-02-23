@@ -18,7 +18,7 @@ def test_count_ast_lines():
           @captiontag{This is my @i{first} figure.}
         }
 
-        This is a @13C variable, but this is an email address: justin@lorieau.com
+        This is a @13C variable.
 
         Here is a @i{new} paragraph."""
 
@@ -35,4 +35,8 @@ def test_count_ast_lines():
     assert count_ast_lines(ast[3]) == 4
     assert count_ast_lines(ast[3][1]) == 1
     assert count_ast_lines(ast[3][3]) == 1
-    assert count_ast_lines(ast[4]) == 5
+    assert count_ast_lines(ast[4]) == 3
+    assert count_ast_lines(ast[5]) == 1
+    assert count_ast_lines(ast[6]) == 3
+    assert count_ast_lines(ast[7]) == 1
+    assert count_ast_lines(ast[8]) == 1

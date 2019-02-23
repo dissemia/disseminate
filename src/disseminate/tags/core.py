@@ -11,54 +11,10 @@ from ..attributes import (parse_attributes, set_attribute,
                           filter_attributes, get_attribute_value,
                           remove_attribute)
 from .utils import set_html_tag_attributes
-from ..utils.string import titlelize
-from ..utils.classes import all_subclasses
-from ..utils.string import StringTemplate
+from ..utils.string import titlelize, StringTemplate
+from ..utils.classes import weakattr
 from .. import ast
 from .. import settings
-
-
-
-class TagFactory(object):
-    """Generates the appropriate tag for a given tag type.
-    """
-
-    tag_types = None
-
-    def __init__(self):
-        # Lazy initialization of the class. The tags can be cached because
-        # the source code is assumed static once the program has started.
-        if TagFactory.tag_types is None:
-            # Initialize the tag types dict.
-            TagFactory.tag_types = dict()
-            for scls in all_subclasses(Tag):
-                # Tag must be active
-                if not scls.active:
-                    continue
-
-                # Collect the name and aliases (alternative names) for the tag
-                aliases = (list(scls.aliases) if scls.aliases is not None else
-                           list())
-                names = [scls.__name__.lower(),] + aliases
-
-                for name in names:
-                    # duplicate or overwritten tag names are not allowed
-                    assert name not in self.tag_types
-                    TagFactory.tag_types[name] = scls
-
-    def tag(self, tag_name, tag_content, tag_attributes, context):
-        """Return the approriate tag, give a tag_type and tag_content"""
-
-        # Try to find the appropriate subclass
-        small_tag_type = tag_name.lower()
-        if small_tag_type in self.tag_types:
-            cls = self.tag_types[small_tag_type]
-        else:
-            cls = Tag
-
-        tag = cls(name=tag_name, content=tag_content, attributes=tag_attributes,
-                  context=context)
-        return tag
 
 
 class Tag(object):
@@ -82,7 +38,8 @@ class Tag(object):
         attributes; they're the customization attributes specified by the user
         to change the appearance of a rendered tag.
     context : dict
-        The context with values for the document.
+        The context with values for the document. The tag holds a weak reference
+        to the context, as it doesn't own the context.
 
     Attributes
     ----------
@@ -111,7 +68,7 @@ class Tag(object):
     name = None
     content = None
     attributes = None
-    context = None
+    context = weakattr()
 
     aliases = None
     html_name = None
