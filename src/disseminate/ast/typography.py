@@ -16,16 +16,16 @@ re_double_start = regex.compile(r"(?<!\w)\"(?=\S)")
 re_double_end = regex.compile(r"(?<=\S)\"(?!\w)")
 
 
-def process_typography(ast=None, context=None, src_filepath=None, level=1):
+def process_typography(ast, context, src_filepath=None, level=1):
     """Process the typography for an AST.
 
     .. note:: This function should be run after process_ast.
 
     Parameters
     ----------
-    ast : list
-        An optional AST to build from or a list of strings.
-    context : dict, optional
+    ast : str or list
+        A string to parse into an AST, a list of strings or an existing AST.
+    context : dict
         The context with values for the document.
     src_filepath : str, optional
         The path for the document (source markup) file being processed.

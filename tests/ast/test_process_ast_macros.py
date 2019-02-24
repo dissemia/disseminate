@@ -5,15 +5,16 @@ from disseminate.ast import process_ast
 from disseminate.macros import replace_macros
 
 
-def test_process_ast_basic_macros():
+def test_process_ast_basic_macros(context_cls):
     """Test process_ast with basic macros."""
+
+    context = context_cls()
 
     # 1. Try a basic side note.
     test1 = """The first pulse@sidenote{A                                                                                                             
     pulse rotates the magnetization by with a phase of `x'.}"""
 
     # Replace the macros and process ast
-    context = dict()
     s = replace_macros(test1, context)
     ast = process_ast(s, context)
 
@@ -41,10 +42,10 @@ def test_process_ast_basic_macros():
     assert ast.content[1].name == 'sidenote'
 
 
-def test_process_ast_nested_macros():
+def test_process_ast_nested_macros(context_cls):
     """Test the process_ast with a nested macros."""
 
-    context = {'@p90x': '90@deg@sub{x}'}
+    context = context_cls(**{'@p90x': '90@deg@sub{x}'})
 
     result = replace_macros("My @p90x pulse.", context=context)
     ast = process_ast(result, context=context)

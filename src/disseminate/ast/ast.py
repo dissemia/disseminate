@@ -5,7 +5,6 @@ import regex
 
 from ..tags import TagFactory, Tag
 from .validate import ValidateAndCleanAST
-from ..context import BaseContext
 from .. import settings
 
 
@@ -23,21 +22,18 @@ re_open_tag = regex.compile(  # The character to use in identifying a tag. By
 re_brace = regex.compile(r'[}{]')
 
 
-def process_ast(ast=None, context=None, src_filepath=None, level=1):
-    """Process an AST comprising a list of strings, lists or tags.
+def process_ast(ast, context, src_filepath=None, level=1):
+    """Process a string into an Abstract Syntax Tree (AST) of tags, strings and
+     lists of both.
 
     .. note:: The AST processing should be able to reprocess the generated AST
               without making changes.
 
-    .. warning:: The process_ast *can not* depend on the `local_context`
-                 and `global_context` since these may not be fully populated
-                 yet. However, it can populate these.
-
     Parameters
     ----------
-    ast : list
-        An optional AST to build from or a list of strings.
-    context : dict, optional
+    ast : str or list
+        A string to parse into an AST, a list of strings or an existing AST.
+    context : dict
         The context with values for the document.
     src_filepath : str, optional
         The path for the document (source markup) file being processed.
@@ -62,10 +58,6 @@ def process_ast(ast=None, context=None, src_filepath=None, level=1):
         msg = ("The maximum depth of '{}' has been reached in the AST. "
                "Additional levels can be set by the 'settings.ast_max_depth'.")
         raise AstException(msg.format(settings.ast_max_depth))
-
-    # Setup the AST and determine the kind of ast passed and how to process
-    # it.
-    context = context if isinstance(context, BaseContext) else BaseContext()
 
     new_ast = []
     process = lambda x: process_ast(x, context, src_filepath, level+1)

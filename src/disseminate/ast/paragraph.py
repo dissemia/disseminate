@@ -13,7 +13,7 @@ re_para = regex.compile(r'(\n{2,}|^)')
 
 
 # TODO: This function should not unwrap a tag and create a new tag object
-def process_paragraphs(ast=None, context=None, src_filepath=None, level=1):
+def process_paragraphs(ast, context, src_filepath=None, level=1):
     """Process the paragraphs for an AST. Paragraphs are blocks of text with
     zero or more tags.
 
@@ -21,10 +21,10 @@ def process_paragraphs(ast=None, context=None, src_filepath=None, level=1):
 
     Parameters
     ----------
-    ast : list
-        An optional AST to build from or a list of strings.
-    context : dict, optional
-        The context with values for the  document.
+    ast : str or list
+        A string to parse into an AST, a list of strings or an existing AST.
+    context : dict
+        The context with values for the document.
     src_filepath : str, optional
         The path for the document (source markup) file being processed.
     level : int, optional

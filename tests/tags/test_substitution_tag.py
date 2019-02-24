@@ -3,6 +3,7 @@ Test the substitution tag.
 """
 from disseminate.tags.substitution import Substitution
 from disseminate.ast import process_context_asts
+from disseminate.paths import SourcePath
 
 
 def test_substitution_basic(context_cls):
@@ -27,12 +28,12 @@ def test_substitution_multiple(context_cls):
     """Test the multiple substitution of macros."""
 
     context = context_cls(**{'p90x': '90@deg@sub{x}',
-                             'deg': '@sup{○}',
+                             'deg': '°',
                              'body': 'This is my @p90x pulse',
-                             'src_filepath': 'src'})
+                             'src_filepath': SourcePath('src')})
 
     # Process the entries in the context
     process_context_asts(context=context)
-
-    assert context['body'].txt != 'This is my 90@deg@sub{x} pulse'
+    print(context['p90x'])
+    assert context['body'].txt == 'This is my 90°x pulse'
 

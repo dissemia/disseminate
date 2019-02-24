@@ -180,21 +180,20 @@ class BaseRenderer(object):
             processed_rendering = method(processed_rendering, target, context)
         return processed_rendering
 
-    def _set_context_paths(self, context=None):
+    def _set_context_paths(self, context):
         """Add the paths for the used templates in the context's paths entry,
         if available."""
-        if context is not None:
-            assert context.is_valid('paths')
-            context_paths = context['paths']
+        assert context.is_valid('paths')
+        context_paths = context['paths']
 
-            try:
-                template_filepaths = self.template_filepaths()
-                template_paths = [template_filepath.parent
-                                  for template_filepath in template_filepaths]
-            except NotImplementedError:
-                template_paths = []
+        try:
+            template_filepaths = self.template_filepaths()
+            template_paths = [template_filepath.parent
+                              for template_filepath in template_filepaths]
+        except NotImplementedError:
+            template_paths = []
 
-            for path in template_paths:
-                if path in context_paths:
-                    continue
-                context_paths.append(path)
+        for path in template_paths:
+            if path in context_paths:
+                continue
+            context_paths.append(path)

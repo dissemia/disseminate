@@ -229,7 +229,8 @@ class LabelManager(object):
 
         Parameters
         ----------
-        context : :obj:`disseminate.BaseContext`
+        context : :obj:`BaseContext
+                  <disseminate.context.base_context.BaseContext>`, optional
             The context for the document whose labels are being retrieved.
             If None is specified, then all labels from all documents in a
             project will be selected.

@@ -11,6 +11,7 @@ from disseminate.tags import Tag
 def test_join_strings(context_cls):
     """Test the join_string method of the ValidateAndCleanAST class."""
 
+    context = context_cls()
     validate = ValidateAndCleanAST()
 
     # Try simple flat lists
@@ -24,39 +25,41 @@ def test_join_strings(context_cls):
             ['ab', [1, 'cd'], 'ef'])
 
     # Try with tags non-nested tag
-    tag = Tag(name='tag', content='test', attributes=(), context=context_cls())
+    tag = Tag(name='tag', content='test', attributes=(), context=context)
     assert (validate.join_strings(['a', 'b', tag, 'c', 'd']) ==
             ['ab', tag, 'cd'])
 
     # Try with nested tags
     tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(),
-              context=context_cls())
+              context=context)
     assert (validate.join_strings(tag) == tag)
     assert tag.content == [1, 'cd']
 
     tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(),
-              context=context_cls())
+              context=context)
     assert (validate.join_strings([tag]) == [tag])
     assert tag.content == [1, 'cd']
 
     tag = Tag(name='tag', content=[1, 'c', 'd'], attributes=(),
-              context=context_cls())
+              context=context)
     assert (validate.join_strings(['a', 'b', tag, 'c', 'd']) ==
             ['ab', tag, 'cd'])
     assert tag.content == [1, 'cd']
 
     tag1 = Tag(name='tag', content=[1, 'c', 'd'], attributes=(),
-               context=context_cls())
+               context=context)
     tag2 = Tag(name='tag', content=[tag1, 'c', 'd'], attributes=(),
-               context=context_cls())
+               context=context)
     assert (validate.join_strings(['a', 'b', tag2, 'c', 'd']) ==
             ['ab', tag2, 'cd'])
     assert tag1.content == [1, 'cd']
     assert tag2.content == [tag1, 'cd']
 
 
-def test_ast_count():
+def test_ast_count(context_cls):
     """Test the assignment of line_numbers in tags."""
+
+    context = context_cls()
 
     # Setup a test source string
     test = """
@@ -73,7 +76,7 @@ def test_ast_count():
     Here is a @i{new} paragraph."""
 
     # Parse it
-    ast = process_ast(test)
+    ast = process_ast(test, context=context)
 
     # Check the line numbers of tags.
     assert ast[1].line_number == 4  # @b tag
@@ -85,8 +88,10 @@ def test_ast_count():
     assert ast[7].line_number == 12  # @13C tag
 
 
-def test_ast_validation():
+def test_ast_validation(context_cls):
     """Test the correct validation when parsing an AST."""
+
+    context = context_cls()
 
     # Test an invalid tag with a root-level tag
     test_invalid = """
@@ -100,7 +105,7 @@ def test_ast_validation():
 
     # Process a string with an open tag
     with pytest.raises(ParseError) as e:
-        ast = process_ast(test_invalid)
+        ast = process_ast(test_invalid, context=context)
 
     # The error should pop up in line 5
     assert "line 5" in str(e.value)
@@ -118,14 +123,16 @@ def test_ast_validation():
 
     # Process a string with an open tag
     with pytest.raises(ParseError) as e:
-        ast = process_ast(test_invalid2)
+        ast = process_ast(test_invalid2, context=context)
 
     # The error should pop up in line 5
     assert "line 5" in str(e.value)
 
 
-def test_ast_validation_cases():
+def test_ast_validation_cases(context_cls):
     """Test specific cases of AST validation"""
+
+    context = context_cls()
 
     valid1 = """
     @tag{
@@ -133,7 +140,7 @@ def test_ast_validation_cases():
      }
     """
 
-    ast1 = process_ast(valid1, context=dict())
+    ast1 = process_ast(valid1, context=context)
 
     assert ast1.name == 'root'
     assert ast1.content[1].name == 'tag'

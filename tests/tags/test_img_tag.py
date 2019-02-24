@@ -6,7 +6,7 @@ from disseminate.dependency_manager import DependencyManager
 from disseminate import SourcePath, TargetPath
 
 
-def test_img_attribute(tmpdir):
+def test_img_attribute(tmpdir, context_cls):
     """Test the correct processing of attributes in an image tag."""
     project_root = SourcePath(project_root='tests/tags/img_example1')
     target_root = TargetPath(target_root=tmpdir)
@@ -15,7 +15,7 @@ def test_img_attribute(tmpdir):
     # to find and convert images by the img tag.
     dep = DependencyManager(project_root=project_root,
                             target_root=target_root)
-    context = {'dependency_manager': dep}
+    context = context_cls(dependency_manager=dep)
 
     # Generate the markup
     src = "@img[width=100]{sample.pdf}"

@@ -37,7 +37,7 @@ class Tag(object):
         The attributes of the tag. These are distinct from the Tag class
         attributes; they're the customization attributes specified by the user
         to change the appearance of a rendered tag.
-    context : dict
+    context : :obj:`BaseContext <disseminate.context.base_context.BaseContext>`
         The context with values for the document. The tag holds a weak reference
         to the context, as it doesn't own the context.
 

@@ -7,16 +7,18 @@ from disseminate.tags.caption import Caption
 from disseminate.utils.tests import strip_leading_space
 
 
-def test_marginfig_parsing():
+def test_marginfig_parsing(context_cls):
     """Test the parsing of marginfig tags."""
 
+    context = context_cls()
+
     test1 = "@marginfig{fig1}"
-    root = process_ast(test1)
+    root = process_ast(test1, context=context)
     assert root.content.name == 'marginfig'
     assert root.content.content == 'fig1'
 
     test2 = "@marginfig{{fig1}}"
-    root = process_ast(test2)
+    root = process_ast(test2, context=context)
     assert root.content.name == 'marginfig'
     assert root.content.content == '{fig1}'
 

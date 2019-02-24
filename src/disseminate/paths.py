@@ -21,7 +21,6 @@ class PosixPath(pathlib.PosixPath):
     pass
 
 
-# TODO: change project_root to src_root
 class SourcePath(object):
     """A path for a file in the source directory that keeps track of the
     project_root and subpath.
@@ -104,8 +103,8 @@ class TargetPath(object):
                           subpath=self.subpath)
 
     def get_url(self, context=None):
-        context = context if isinstance(context, dict) else dict()
-        url_str = context.get('base_url', '/{target}/{subpath}')
+        url_str = (context['base_url'] if isinstance(context, dict) and
+                   'base_url' in context else '/{target}/{subpath}')
         target_root = str(self.target_root).strip('.')
         target = str(self.target).strip('.')
         subpath = str(self.subpath).strip('.')

@@ -89,7 +89,7 @@ class Eq(RenderedImg):
 
         # Determine if a color was specified
         color = get_attribute_value(attributes, attribute_name='color',
-                                   target='.tex')
+                                    target='.tex')
         attributes = remove_attribute(attributes, 'color')
         self.color = color
 
@@ -103,7 +103,7 @@ class Eq(RenderedImg):
                                  context=context,
                                  render_target='.tex')
 
-    def render_content(self, content=None, context=None):
+    def render_content(self, content, context):
         """Render the content in LaTeX into a valid .tex file."""
         # Get the renderer for the equation
         renderer = context['equation_renderer']
@@ -114,8 +114,6 @@ class Eq(RenderedImg):
 
         # Get the kwargs and args to pass to the template
         kwargs = self.template_kwargs()
-        args = self.template_args()
-        #kwargs['args'] = args
 
         return renderer.render(context=context_cp, target='.tex', **kwargs)
 

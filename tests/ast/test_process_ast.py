@@ -58,9 +58,12 @@ author: Justin L Lorieau
 """
 
 
-def test_ast_basic_string():
+def test_ast_basic_string(context_cls):
     """Test the parsing of a basic string into an AST."""
-    ast = process_ast(test)
+
+    context = context_cls()
+
+    ast = process_ast(test, context=context)
 
     # Check the AST piece-by-piece
     assert isinstance(ast, Tag) and ast.name == 'root'  # root tag
@@ -102,26 +105,30 @@ def test_ast_basic_string():
     assert len(content) == 7
 
     # Now test a string with no tags
-    ast = process_ast("test")
+    ast = process_ast("test", context=context)
 
     assert isinstance(ast, Tag) and ast.name == 'root'  # root tag
     assert isinstance(ast.content, str)
     assert ast.content == 'test'
 
 
-def test_ast_basic_string_no_tags():
+def test_ast_basic_string_no_tags(context_cls):
     """Test the conversion of a string without tags."""
 
-    ast = process_ast("  empty  ")
+    context = context_cls()
+
+    ast = process_ast("  empty  ", context=context)
     assert type(ast.content) == str
     assert ast.content == "  empty  "
 
 
-def test_default_conversion():
+def test_default_conversion(context_cls):
     """Test the default conversion of an AST into a text string."""
 
+    context = context_cls()
+
     # Generate the txt string
-    ast = process_ast(test)
+    ast = process_ast(test, context=context)
     txt = ast.default
     assert txt == test_txt
 
@@ -137,26 +144,30 @@ def test_process_context_asts(context_cls):
     assert context[body_attr].default == test_txt
 
 
-def test_double_convert():
+def test_double_convert(context_cls):
     """Tests the default conversion run twice of an AST to make sure the
     AST stays the same."""
 
+    context = context_cls()
+
     # Generate the txt string
-    ast = process_ast(test)
+    ast = process_ast(test, context=context)
     txt = ast.default
     assert txt == test_txt
 
     # Generate the txt string
-    ast2 = process_ast(ast)
+    ast2 = process_ast(ast, context=context)
     txt = ast2.default
     assert txt == test_txt
 
     assert ast == ast2
 
 
-def test_ast_open_brace():
+def test_ast_open_brace(context_cls):
     """Test the identification of open braces (unclosed tags) in formatting
      an AST."""
+
+    context = context_cls()
 
     test_invalid = """
         This is my test document. It has multiple paragraphs.
@@ -167,14 +178,16 @@ def test_ast_open_brace():
           @caption{This is my @i{first} figure.}
     """
     with pytest.raises(ParseError):
-        ast = process_ast(test_invalid)
+        ast = process_ast(test_invalid, context=context)
 
 
-def test_ast_edge_cases():
+def test_ast_edge_cases(context_cls):
     """Tests the processing of ASTs with edge cases of source markup files."""
 
+    context = context_cls()
+
     test1 = "This is my @marginfig{{Margin figure}}."
-    ast = process_ast(test1)
+    ast = process_ast(test1, context=context)
     assert ast.content[0] == 'This is my '
     assert ast.content[1].name == 'marginfig'
     assert ast.content[1].content == '{Margin figure}'
@@ -210,13 +223,13 @@ def test_ast_substitutions(context_cls):
     assert context['test'].txt == 'substituted '
 
     # 3. Test with a cross-recursive substitution
-    context = {'a': '@b', 'b': '@a'}
+    context = context_cls(**{'a': '@b', 'b': '@a'})
     context['a'] = process_ast(context['b'], context=context)
     assert context['a'].txt == ''
     context['b'] = process_ast(context['a'], context=context)
     assert context['b'].txt == ''
 
-    context = {'a': '@b', 'b': '@a'}
+    context = context_cls(**{'a': '@b', 'b': '@a'})
     context['a'] = process_ast(context['a'], context=context)
     context['b'] = process_ast(context['b'], context=context)
     assert context['a'].txt == ''
@@ -225,10 +238,13 @@ def test_ast_substitutions(context_cls):
 
 # html targets
 
-def test_basic_triple_conversion():
+def test_basic_triple_conversion(context_cls):
     """Test the generation of html strings from tags after 3 conversions."""
+
+    context = context_cls()
+
     # Generate the html string and process the ast twice
-    ast = process_ast(test)
+    ast = process_ast(test, context=context)
     for i in range(3):
         html = ast.html
 
@@ -277,4 +293,4 @@ def test_basic_triple_conversion():
         with pytest.raises(StopIteration):
             e8 = next(root_iter)
 
-        ast = process_ast(ast)
+        ast = process_ast(ast, context=context)

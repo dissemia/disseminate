@@ -5,8 +5,10 @@ from disseminate.ast import process_ast
 from disseminate.ast.utils import count_ast_lines
 
 
-def test_count_ast_lines():
+def test_count_ast_lines(context_cls):
     """Test the count_ast_lines function."""
+
+    context = context_cls()
 
     # Setup a test source string
     test = """
@@ -23,7 +25,7 @@ def test_count_ast_lines():
         Here is a @i{new} paragraph."""
 
     # Parse it
-    ast = process_ast(test)
+    ast = process_ast(test, context=context)
 
     # The total number of lines
     assert count_ast_lines(ast) == 12
