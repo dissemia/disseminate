@@ -41,6 +41,9 @@ def test_substitution_multiple(context_cls):
     # Test basic substitution using the .html target.
     assert context['body'].html == ('<span class="body">'
                                     'This is my '
-                                    '<span class="p90x">90&#176;x</span> '
+                                    '<span class="p90x">90&#176;'
+                                    '<sub>x</sub></span> '
                                     'pulse</span>\n')
 
+    # Test basic substitution using the .tex target.
+    assert context['body'].tex == r'This is my 90°\ensuremath{_{x}} pulse'

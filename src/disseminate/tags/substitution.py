@@ -42,11 +42,12 @@ class Substitution(Tag):
             if self.name in self.context and self.name not in seen:
                 seen.add(self.name)
                 content = self.context[self.name]
+
+                # Unwrap the tag contents if it's a single tag
+                content = (content.content if hasattr(content, 'content') else
+                           content)
             else:
                 content = ''
-
-        # Unwrap the content if it's in a single root tag
-        content = content.content if hasattr(content, 'content') else content
 
         # Further process the content elements, which may include Substitution
         # sub tags
@@ -68,6 +69,9 @@ class Substitution(Tag):
             else:
                 seen.add(content.name)
                 content = self.context[content.name]
+        elif hasattr(content, 'content'):
+            content.content = self.get_content(content=content.content,
+                                               seen=seen)
 
         return content
 

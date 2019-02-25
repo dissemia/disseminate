@@ -39,3 +39,4 @@ Release Notes
 22. *Tag utils*. Added a repl_tags utility function for changing all tags of a
     specified class in an AST element or tag to a replacement string. Included
     tests.
+23. *Substitution*. Implement the substitution tag.
