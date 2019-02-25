@@ -442,7 +442,7 @@ def test_document_context_update(tmpdir):
     assert doc.context['targets'] != settings.default_context['targets']
     assert doc.context['targets'] == 'html, tex'
 
-    assert '@macro' in doc.context
+    assert 'macro' in doc.context
 
     # Get the local_context id to make sure it stays the same
     context_id = id(doc.context)
@@ -456,7 +456,7 @@ def test_document_context_update(tmpdir):
     # Check the contents  of the local_context
     assert 'title' not in doc.context
     assert 'author' not in doc.context
-    assert '@macro' not in doc.context
+    assert 'macro' not in doc.context
 
     # The 'targets' entry should revert to the default
     assert doc.context['targets'] == settings.default_context['targets']

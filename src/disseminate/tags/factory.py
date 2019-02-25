@@ -60,14 +60,12 @@ class TagFactory(object):
         :obj:`Tag subclass <disseminate.tags.core.Tag>`
             An tag.
         """
-
         # Try to find the appropriate subclass
-        small_tag_type = tag_name.lower()
-        if small_tag_type in self.tag_clses:
+        if tag_name.lower() in self.tag_clses:
             # First, see if the tag_name matches one of the tag subclasses (or
             # tag aliases) in disseminate
-            cls = self.tag_clses[small_tag_type]
-        elif small_tag_type in context and self.substitution_cls:
+            cls = self.tag_clses[tag_name.lower()]
+        elif tag_name in context and self.substitution_cls:
             # If not, this might be a substitution, which uses a 'Substitution'
             # tag to insert the contents of an entry in the context.
             cls = self.substitution_cls

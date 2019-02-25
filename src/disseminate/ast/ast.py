@@ -26,6 +26,9 @@ def process_ast(ast, context, src_filepath=None, level=1):
     """Process a string into an Abstract Syntax Tree (AST) of tags, strings and
      lists of both.
 
+     ASTs are created by having a tag whose contents are either tags, string or
+     lists of both.
+
     .. note:: The AST processing should be able to reprocess the generated AST
               without making changes.
 

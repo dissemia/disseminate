@@ -47,3 +47,23 @@ def test_substitution_multiple(context_cls):
 
     # Test basic substitution using the .tex target.
     assert context['body'].tex == r'This is my 90°\ensuremath{_{x}} pulse'
+
+
+def test_substitution_case_sensitive(context_cls):
+    """Ensure that substitutions are case sensitive."""
+
+    context = context_cls(**{'case': 'case',
+                             'CASE': 'CASE',
+                             '13c': '13c',
+                             '13C': '13C',
+                             'src_filepath': SourcePath('src')})
+
+    test = 'This is my lower @case and upper @CASE. Lower @13c and upper @13C.'
+    context['body'] = test
+
+    # Process the entries in the context
+    process_context_asts(context=context)
+
+    #  Test basic subsitution using the .txt target to strip tags
+    assert context['body'].txt == ('This is my lower case and upper CASE. '
+                                   'Lower 13c and upper 13C.')

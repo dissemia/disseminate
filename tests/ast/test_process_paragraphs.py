@@ -3,8 +3,8 @@ Test the proces_paragraphs function.
 """
 from disseminate.ast import (process_ast, process_paragraphs,
                              process_context_asts, process_context_paragraphs)
-from disseminate.macros import replace_macros
 from disseminate.tags.text import P
+from disseminate.paths import SourcePath
 from disseminate import settings
 
 
@@ -132,18 +132,24 @@ def test_process_paragraphs_macros(context_cls):
     """Test the process_paragraphs function with macros."""
 
     # setup a test ast with a macro
-    context = context_cls(**{'@p90x': '90@deg@sub{x}'})
+    context = context_cls(**{'p90x': '90@deg@sub{x}'})
 
-    result = replace_macros("My @p90x pulse.", context=context)
-    ast = process_paragraphs([result], context=context)
-    assert ast.content.content == "My 90@sup{○}@sub{x} pulse."
+    result = process_ast("My @p90x pulse.", context=context)
+    ast = process_paragraphs(result, context=context)
+    assert ast.content.content[0] == 'My '
+    assert ast.content.content[1].name == 'p90x'
+    assert ast.content.content[2] == ' pulse.'
 
     # Test paragraph processing with a macro and tag
-    result = replace_macros("My @b{y = x} @1H pulse.", context=context)
-    ast = process_paragraphs([result], context=context)
+    result = process_ast("My @b{y = x} @1H pulse.", context=context)
+    ast = process_paragraphs(result, context=context)
     assert ast.name == 'root'
     assert ast.content.name == 'p'
-    assert ast.content.content == 'My @b{y = x} @sup{1}H pulse.'
+    assert ast.content.content[0] == 'My '
+    assert ast.content.content[1].name == 'b'
+    assert ast.content.content[2] == ' '
+    assert ast.content.content[3].name == '1H'
+    assert ast.content.content[4] == ' pulse.'
 
     # Test paragraph processing after process_ast
     ast = process_ast(result, context=context)
@@ -153,11 +159,16 @@ def test_process_paragraphs_macros(context_cls):
 def test_process_paragraphs_newlines(context_cls):
     """Test the preservation of newlines in a parapgraph with macros."""
 
-    text = """The purpose of the @abrv{INEPT} sequenceMorris1979 is to
-transfer the large magnetization from high-@gamma nuclei, like @sup{1}H or
-@19F, to low-@gamma nuclei (labeled 'X'), like @13C and @15N."""
-    context = context_cls()
-    result = replace_macros(text, context=context)
-    result = process_ast(result, context=context)
-    result = process_paragraphs(result, context=context)
-    assert "or\n<sup>19</sup>F" in result.html
+    text = """The purpose of the @abrv{INEPT} sequenceMorris1979 is to 
+    transfer the large magnetization from high-@gamma nuclei, like @1H or
+    @19F, to low-@gamma nuclei (labeled 'X'), like @13C and @15N."""
+
+    context = context_cls(**{'1H': '@sup{1}H',
+                             '13C': '@sup{13}C', '15N': '@sup{15}N',
+                             '19F': '@sup{19}F', 'gamma': '@symbol{gamma}',
+                             'src_filepath': '.',
+                             'body': text})
+
+    process_context_asts(context=context)
+    result = process_paragraphs(context['body'], context=context)
+    assert 'or\n    <span class="19f"><sup>19</sup>F</span>' in result.html
