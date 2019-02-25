@@ -17,4 +17,5 @@ Tags
    figs
    caption
    refs
+   substitution
    collection

@@ -26,21 +26,48 @@ class Substitution(Tag):
     def content(self, value):
         pass
 
-    def get_content(self):
+    def get_content(self, content=None, seen=None):
         """Retrieve the tag's content from the context.
 
         This method replaces the inner substitution tags with strings to avoid
         recursion loops.
         """
-        content = self.context[self.name] if self.name in self.context else ''
+        # Setup the set for Substitution tag names that have already been
+        # retrieved so that they will only be retrieved once. This set avoids
+        # recursive substitutions
+        seen = set() if seen is None else seen
 
-        # Turn the content into a string, if needed
-        if not isinstance(content, str) and not isinstance(content, Tag):
-            content = str(content)
+        # Next retrieve the contents of this tag from the context, if needed
+        if content is None:
+            if self.name in self.context and self.name not in seen:
+                seen.add(self.name)
+                content = self.context[self.name]
+            else:
+                content = ''
 
-        # Remove any substitutions within contents
-        content = repl_tags(element=content, tag_class=Substitution,
-                            replacement='')
+        # Unwrap the content if it's in a single root tag
+        content = content.content if hasattr(content, 'content') else content
+
+        # Further process the content elements, which may include Substitution
+        # sub tags
+        if isinstance(content, list):
+            # If the content is a list, further process each item of the content
+            for i, item in enumerate(content):
+                if isinstance(item, Substitution):
+                    content[i] = (item.get_content(seen=seen) if item.name
+                                  not in seen else '')
+                else:
+                    # The item itself may have nested tags, so process these
+                    # as above
+                    content[i] = self.get_content(content=item, seen=seen)
+        elif isinstance(content, Substitution):
+            # If the content is a Substitution tag itself, retrieve its
+            # entry from the context if it hasn't been retrieved already.
+            if content.name in seen:
+                content = ''
+            else:
+                seen.add(content.name)
+                content = self.context[content.name]
 
         return content
 

@@ -200,7 +200,7 @@ class LabelManager(object):
 
         Returns
         -------
-        label : :obj:`Label`
+        label : :obj:`Label <disseminate.labels.labels.Label>`
             A named tuple with the label's information.
 
         Raises

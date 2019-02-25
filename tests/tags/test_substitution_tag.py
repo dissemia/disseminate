@@ -34,6 +34,13 @@ def test_substitution_multiple(context_cls):
 
     # Process the entries in the context
     process_context_asts(context=context)
-    print(context['p90x'])
+
+    # Test basic subsitution using the .txt target to strip tags
     assert context['body'].txt == 'This is my 90°x pulse'
+
+    # Test basic substitution using the .html target.
+    assert context['body'].html == ('<span class="body">'
+                                    'This is my '
+                                    '<span class="p90x">90&#176;x</span> '
+                                    'pulse</span>\n')
 
