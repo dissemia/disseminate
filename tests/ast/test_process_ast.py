@@ -5,8 +5,9 @@ import pytest
 import lxml.html
 
 from disseminate.ast import process_ast, process_context_asts
-from disseminate.ast.validate import ParseError
+from disseminate.ast.exceptions import ParseError
 from disseminate.tags import Tag
+from disseminate.utils.string import Metastring
 from disseminate import settings
 
 
@@ -133,17 +134,6 @@ def test_default_conversion(context_cls):
     assert txt == test_txt
 
 
-def test_process_context_asts(context_cls):
-    """Test the process_context_asts function."""
-    body_attr = settings.body_attr
-
-    context_cls.validation_types = {'src_filepath': str}
-    context = context_cls(src_filepath='', **{body_attr: test})
-
-    process_context_asts(context)
-    assert context[body_attr].default == test_txt
-
-
 def test_double_convert(context_cls):
     """Tests the default conversion run twice of an AST to make sure the
     AST stays the same."""
@@ -161,6 +151,39 @@ def test_double_convert(context_cls):
     assert txt == test_txt
 
     assert ast == ast2
+
+
+def test_ast_line_count(context_cls):
+    """Test the accurate counting of line numbers for created tags."""
+
+    context = context_cls()
+
+    # 1. Test the standard example
+
+    ast = process_ast(test, context=context)
+
+    # Check the AST piece-by-piece
+    content = ast.content
+    assert content[1].line_number == 4  # 'b' tag
+    assert content[3].line_number == 5  # 'marginfig' tag
+    assert content[3][1].line_number == 6  # 'imgtag' tag
+    assert content[3][3].line_number == 7  # 'caption' tag
+    assert content[3][3][1].line_number == 7  # 'i' tag
+    assert content[5].line_number == 10 # '13C' tag
+
+    # 2. Test an example with a verbatim tag and a MetaString with lineoffset
+
+    test2 = Metastring("""
+    This is my test with @verb{A
+    verbatim example}.
+    
+    And an extra @b{tag}.
+    """, line_offset=3)
+
+    ast = process_ast(test2, context=context)
+    content = ast.content
+    assert content[1].line_number == 4  # 'verb' tag
+    assert content[3].line_number == 7  # 'b' tag
 
 
 def test_ast_open_brace(context_cls):
@@ -294,3 +317,14 @@ def test_basic_triple_conversion(context_cls):
             e8 = next(root_iter)
 
         ast = process_ast(ast, context=context)
+
+
+def test_process_context_asts(context_cls):
+    """Test the process_context_asts function."""
+    body_attr = settings.body_attr
+
+    context_cls.validation_types = {'src_filepath': str}
+    context = context_cls(src_filepath='', **{body_attr: test})
+
+    process_context_asts(context)
+    assert context[body_attr].default == test_txt

@@ -213,6 +213,38 @@ def str_to_dict(string):
     return d
 
 
+class NewlineCounter(object):
+    """Count the newlines in strings.
+
+    Parameters
+    ----------
+    initial : int, optional
+        The line number to start the count.
+
+    Examples
+    --------
+    >>> line = NewlineCounter()
+    >>> line("my test\\nline\\nstring")
+    3
+    >>> line.number
+    3
+    >>> line("another")
+    3
+    >>> line("another\\ntwo lines")
+    4
+    """
+
+    number = None
+
+    def __init__(self, initial=1):
+        self.number = initial
+
+    def __call__(self, string):
+        """Add the newlines of the given string to the count."""
+        self.number += string.count('\n')
+        return self.number
+
+
 class Metastring(str):
     """A string class that holds metadata.
 

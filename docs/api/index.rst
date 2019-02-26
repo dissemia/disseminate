@@ -8,6 +8,7 @@ functions for disseminate.
    :maxdepth: 1
    :caption: API Documentation
 
+   ast/index
    cli/index
    context/index
    convert/index

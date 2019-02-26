@@ -3,14 +3,11 @@ Functions for processing Abstract Syntax Trees (ASTs).
 """
 import regex
 
+from .exceptions import ParseError, AstException
+from .cleaners import clean_strings
 from ..tags import TagFactory, Tag
-from .validate import ValidateAndCleanAST
+from ..utils.string import NewlineCounter
 from .. import settings
-
-
-class AstException(Exception):
-    """An error was encountered while processing the Abstract Syntax Tree"""
-    pass
 
 
 re_open_tag = regex.compile(  # The character to use in identifying a tag. By
@@ -22,7 +19,7 @@ re_open_tag = regex.compile(  # The character to use in identifying a tag. By
 re_brace = regex.compile(r'[}{]')
 
 
-def process_ast(ast, context, src_filepath=None, level=1):
+def process_ast(ast, context, src_filepath=None, line_counter=None, level=1):
     """Process a string into an Abstract Syntax Tree (AST) of tags, strings and
      lists of both.
 
@@ -62,8 +59,14 @@ def process_ast(ast, context, src_filepath=None, level=1):
                "Additional levels can be set by the 'settings.ast_max_depth'.")
         raise AstException(msg.format(settings.ast_max_depth))
 
+    # Setup the line counter, if needed
+    if line_counter is None:
+        line_offset = ast.line_offset if hasattr(ast, 'line_offset') else 1
+        line_counter = NewlineCounter(initial=line_offset)
+
     new_ast = []
-    process = lambda x: process_ast(x, context, src_filepath, level+1)
+    process = lambda x: process_ast(x, context, src_filepath, line_counter,
+                                    level+1)
 
     # Look at the ast and process it depending on whether it's a string, tag
     # or list
@@ -95,6 +98,7 @@ def process_ast(ast, context, src_filepath=None, level=1):
         # to be offset when referencing the full 'text' string
         match_tag_start = position + match_tag.start()
         new_ast.append(text[position:match_tag_start])
+        line_counter(text[position:match_tag_start])
 
         # Push up the position to the end of the tag match
         position += match_tag.end()
@@ -121,13 +125,25 @@ def process_ast(ast, context, src_filepath=None, level=1):
             # Get the next match
             match = re_brace.search(text[position:])
 
+        # Before parsing the rest of the tag's contents, get its current
+        # line number
+        line_number = line_counter.number
+
+        # Raise an error if the brace wasn't closed
+        if brace_level > 0:
+            msg = "The tag '{}' on line {} was not closed."
+            raise ParseError(msg.format(tag_name, line_number))
+
         # Parse the ast for the tag's content
         if tag_name in settings.verbatim_tags:
             # If the tag_name is a verbatim tag, then don't process it further
             tag_content = text[start_position:position - 1]
+            line_counter(text[start_position:position - 1])
+
         elif d['open'] is None:
             # For tags with no open/close braces, then the content is empty
             tag_content = ''
+
         else:
             # Otherwise process the text within the tag's braces
             tag_content = process(text[start_position:position - 1])
@@ -136,18 +152,15 @@ def process_ast(ast, context, src_filepath=None, level=1):
                           tag_content=tag_content,
                           tag_attributes=tag_attributes,
                           context=context,)
+        tag.line_number = line_number  # mark the line number
         new_ast.append(tag)
-
-        # If the tag didn't have a close brace, mark the open_brace attribute
-        # on the tag. The AST validator will deal with this.
-        if brace_level != 0:
-            tag.open_brace = True
 
         # Find the next tag
         match_tag = re_open_tag.search(text[position:])
 
     # Add the remainer
     new_ast.append(text[position:])
+    line_counter(text[position:])
 
     # If the new_ast has only one item, then return the item itself. (i.e.
     # don't wrap a single item in a list
@@ -157,16 +170,16 @@ def process_ast(ast, context, src_filepath=None, level=1):
     # Wrap in a root tag, if it's the first level and the new_ast isn't already
     # a tag
     if level == 1 and not isinstance(new_ast, Tag):  # root level
-        # If this is the root tag, validate and clean the ast
-        line_offset = ast.line_offset if hasattr(ast, 'line_offset') else 1
-        validator = ValidateAndCleanAST(name=src_filepath,
-                                        line_offset=line_offset)
-        new_ast = validator.validate(new_ast)
+        # remove empty strings
+        clean_strings(new_ast)
 
-        new_ast = factory.tag(tag_name='root',
-                              tag_content=new_ast,
-                              tag_attributes='',
-                              context=context)
+        # Unwrap lists with single items
+        new_ast = (new_ast[0] if isinstance(new_ast, list) and
+                   len(new_ast) == 1 else new_ast)
+
+        # Create a new root tag
+        new_ast = factory.tag(tag_name='root', tag_content=new_ast,
+                              tag_attributes='', context=context)
 
     return new_ast
 
