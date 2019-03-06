@@ -50,17 +50,15 @@ def test_document_toc(tmpdir):
     # Make sure the 'toc' context entry is correct
     toc_tag = doc.context['toc']
     assert toc_tag.name == 'toc'
-    key = """<span class="toc">
-  <ul class="toc-level-2">
-    <li>
-      <span class="toc-document-level-1">
-        <a href="/html/file.html">My first title</a>
-      </span>
-    </li>
-  </ul>
-</span>
+    key = """<ul class="toc-level-1">
+  <li>
+    <span class="ref">
+      <a href="/html/file.html">My first title</a>
+    </span>
+  </li>
+</ul>
 """
-    assert key == toc_tag.html
+    assert toc_tag.html == key
 
 
 def test_document_tree_updates_document_labels(tmpdir):
@@ -272,20 +270,24 @@ def test_document_tree_updates_with_section_labels(tmpdir):
     assert title_labels[1].id == 'br:file3'
     assert title_labels[2].id == 'br:file2'
 
-    # A render should be required only for document 1 since it was the only
-    # One to change, and the other documents don't depend on this document
+    # A render should be required for all 3 documents.
+    #   - file1.dm changed because its header changed
+    #   - file2.dm needs to be re-rendered because its chapter number changed
+    #     from 2 to 3
+    #   - file3.dm needs to be re-rendered because its chapter number changed
+    #     from 3 to 2
     doc1, doc2, doc3 = doc.documents_list(only_subdocuments=False,
                                           recursive=True)
 
     assert doc1.render_required(target_filepath1)
-    assert not doc2.render_required(target_filepath2)
-    assert not doc3.render_required(target_filepath3)
+    assert doc2.render_required(target_filepath2)
+    assert doc3.render_required(target_filepath3)
 
     # The files have therefore been updated
     doc.render()
     assert mtime1 != target_filepath1.stat().st_mtime
-    assert mtime2 == target_filepath2.stat().st_mtime
-    assert mtime3 == target_filepath3.stat().st_mtime
+    assert mtime2 != target_filepath2.stat().st_mtime
+    assert mtime3 != target_filepath3.stat().st_mtime
 
     # 2. Test coupled documents
 

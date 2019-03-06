@@ -182,8 +182,8 @@ def set_attribute(attrs, attribute, method='r'):
     attribute: 2-ple or str
         An attribute to set. It's either a 2 item tuple (attribute id,
         attribute value) or a positional attribute string.
-    method: char
-        'r': replace (short)
+    method: char, optional
+        'r': replace
         'a': append
 
     Returns

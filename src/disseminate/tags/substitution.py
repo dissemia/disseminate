@@ -42,10 +42,6 @@ class Substitution(Tag):
             if self.name in self.context and self.name not in seen:
                 seen.add(self.name)
                 content = self.context[self.name]
-
-                # Unwrap the tag contents if it's a single tag
-                content = (content.content if hasattr(content, 'content') else
-                           content)
             else:
                 content = ''
 
@@ -77,12 +73,28 @@ class Substitution(Tag):
 
     def default_fmt(self, content=None):
         content = self.get_content() if content is None else None
-        return super().default_fmt(content=content)
+        # If the content has a default format method, use that directly.
+        # Otherwise wrap the content in a substitution tag
+        if hasattr(content, 'default_fmt'):
+            return content.default_fmt()
+        else:
+            return super().default_fmt(content=content)
 
     def html_fmt(self, level=1, content=None):
         content = self.get_content() if content is None else None
-        return super().html_fmt(level=level, content=content)
+        # If the content has a html format method, use that directly.
+        # Otherwise wrap the content in a substitution tag
+        if hasattr(content, 'html_fmt'):
+            return content.html_fmt(level=level)
+        else:
+            return super().html_fmt(level=level, content=content)
 
     def tex_fmt(self, level=1, mathmode=False, content=None):
         content = self.get_content() if content is None else None
-        return super().tex_fmt(level=level, mathmode=mathmode, content=content)
+        # If the content has a default format method, use that directly.
+        # Otherwise wrap the content in a substitution tag
+        if hasattr(content, 'tex_fmt'):
+            return content.tex_fmt(level=level, mathmode=mathmode)
+        else:
+            return super().tex_fmt(level=level, mathmode=mathmode,
+                                   content=content)

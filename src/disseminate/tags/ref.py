@@ -80,9 +80,12 @@ class Ref(Tag):
         label_string = label_tmplt.substitute(label=label, link=link)
 
         # Format any tags
-        label_tag = ast.process_ast(label_string, context=self.context)
-        label_tag.name = self.name  # convert tag name from 'root' to 'ref'
-        return label_tag
+        content = ast.process_ast(label_string, context=self.context)
+
+        # Wrap the ast into ref tag in its own label tag
+        ref_tag = Tag(name='ref', content=content, attributes=tuple(),
+                      context=self.context)
+        return ref_tag
 
     def default_fmt(self, content=None):
         # Return the default result for the label tag created for the label

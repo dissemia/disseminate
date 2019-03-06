@@ -46,20 +46,9 @@ def test_asy_html(tmpdir, context_cls):
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context=context)
 
-    # get the root tag
-    root_html = root.html
-
-    # The following root tags have to be stripped for the html strings
-    root_start = '<span class="root">\n  '
-    root_end = '\n</span>\n'
-
-    # Remove the root tag
-    root_html = root_html[len(root_start):]  # strip the start
-    root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
-
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert root_html == '<img src="/html/media/test_69a34c39e1.svg"/>'
+    assert root.html == '<img src="/html/media/test_69a34c39e1.svg"/>\n'
 
     # Second, we'll test the case when asy code is used directly in the tag.
     # We will now use a src_filepath of the markup document in the
@@ -81,16 +70,10 @@ def test_asy_html(tmpdir, context_cls):
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context=context)
 
-    # get the root tag
-    root_html = root.html
-
-    # Remove the root tag
-    root_html = root.html[len(root_start):]  # strip the start
-    root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
-
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert root_html == '<img src="/html/media/chapter/test_69a34c39e1.svg"/>'
+    assert root.html == ('<img src="/html/media/chapter/test_69a34c39e1.svg"/>'
+                         '\n')
 
 
 def test_asy_html_attribute(tmpdir, context_cls):
@@ -128,17 +111,10 @@ def test_asy_html_attribute(tmpdir, context_cls):
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context=context)
 
-    # The following root tags have to be stripped for the html strings
-    root_start = '<span class="root">\n  '
-    root_end = '\n</span>\n'
-
-    # Remove the root tag
-    root_html = root.html[len(root_start):]  # strip the start
-    root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
-
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert root_html == '<img src="/html/media/test_cd0ec1067e_scale2.0.svg"/>'
+    assert root.html == ('<img src="/html/media/test_cd0ec1067e_scale2.0.svg"/>'
+                         '\n')
 
 
 # tex target

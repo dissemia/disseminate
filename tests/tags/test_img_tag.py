@@ -23,9 +23,8 @@ def test_img_attribute(tmpdir, context_cls):
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context)
 
-    img = root.content
-    assert img.name == 'img'
-    assert img.attributes == (('width', '100'),)
+    assert root.name == 'img'
+    assert root.attributes == (('width', '100'),)
 
 
 # html target
@@ -52,7 +51,6 @@ def test_img_html(tmpdir, context_cls):
 
     # Generate the markup
     src = "@img{sample.pdf}"
-    html = '<img src="/html/sample.svg"/>'  # create an svg by default
 
     # The following root tags have to be stripped for the html strings
     root_start = '<span class="root">\n  '
@@ -61,38 +59,17 @@ def test_img_html(tmpdir, context_cls):
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context)
 
-    # Remove the root tag
-    root_html = root.html
-
-    # Remove the root tag
-    root_html = root_html[len(root_start):]  # strip the start
-    root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
-
-    assert root_html == html
+    assert root.html == '<img src="/html/sample.svg"/>\n'
 
     # Now test an html-specific attribute
     # Generate the markup
     src = "@img[html.width=100 tex.height=20]{sample.pdf}"
-    html = '<img width="100" src="/html/sample.svg"/>'  # use svg by default
-
-    # The following root tags have to be stripped for the html strings
-    root_start = '<span class="root">\n  '
-    root_end = '\n</span>\n'
 
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context)
 
-    # Remove the root tag
-    root_html = root.html
+    assert root.html == '<img width="100" src="/html/sample.svg"/>\n'
 
-    # Remove the root tag
-    root_html = root_html[len(root_start):]  # strip the start
-    root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
-    assert root_html == html
-
-
-# def test_img_html_convert
-#     """Test the img tag when a file conversion is needed."""
 
 # tex targets
 

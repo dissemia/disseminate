@@ -10,6 +10,7 @@ class Collection(Tag):
     the tags of all sub-documents."""
 
     active = True
+    include_paragraphs = False
 
     def fetch_tags(self, content=None, target=None):
         """Collect the tags from the sub-documents into a list."""

@@ -54,7 +54,7 @@ class Tag(object):
     active : bool
         If True, the Tag can be used by the TagFactory.
     include_paragraphs : bool
-        If True, then the contents of this tag can include paragraphs.
+        If True, then the contents of this tag can be included in paragraphs.
         See :func:`disseminate.ast.process_paragraphs`.
     line_number : int or None
         The corresponding starting line number in the source file for the
@@ -75,7 +75,7 @@ class Tag(object):
     tex_name = None
 
     active = False
-    include_paragraphs = False
+    include_paragraphs = True
     line_number = None
 
     label_id = None
@@ -153,6 +153,28 @@ class Tag(object):
         # The mtime is the latest mtime of all the tags and labels
         return max(mtimes)
 
+    def set_attribute(self, attribute, method='r'):
+        """Set the tag attribute.
+
+        Parameters
+        ----------
+        attribute: 2-ple or str
+            An attribute to set. It's either a 2 item tuple (attribute id,
+            attribute value) or a positional attribute string.
+        method: char, optional
+            'r': replace
+            'a': append
+
+        Returns
+        -------
+        update_attributes, tuple
+            A tuple of updatedattributes comprising either 2-ple strings
+            (key, value) or strings (positional arguments)
+        """
+        self.attributes = set_attribute(attrs=self.attributes,
+                                        attribute=attribute, method=method)
+        return self.attributes
+
     def get_attribute(self, name, target=None, clear=False):
         """Retrieve an attribute from the tag and optionally clear it from
         the list of attributes.
@@ -175,6 +197,7 @@ class Tag(object):
         """
         value = get_attribute_value(attrs=self.attributes, attribute_name=name,
                                     target=target)
+
         if clear:
             self.attributes = remove_attribute(attrs=self.attributes,
                                                attribute_name=name)
@@ -222,13 +245,18 @@ class Tag(object):
                                             context=self.context)
             self.label_id = id
 
-    def get_label_tag(self, target=None):
+    def get_label_tag(self, target=None, wrap=True):
         """Create a new formatted tag for the label associated with this tag.
 
         Parameters
         ----------
         target : str, optional
             The optional target for the label's format string.
+        wrap : bool, optional
+            If True, ensure that the returned tag is wrapped in a tag named
+            'label'. Note that the tag may already get wrapped in a label
+            tag if the label consists of multiple tags. This flag simply
+            guarantees that it will be wrapped in a tag, if True.
 
         Returns
         -------
@@ -248,9 +276,14 @@ class Tag(object):
         # A label format string has been found. Now format it.
         label_string = label_tmplt.substitute(label=label)
 
-        # Format any tags
-        label_tag = ast.process_ast(label_string, context=self.context)
-        label_tag.name = 'label'  # convert tag name from 'root' to 'label'
+        # Format any tags into an ast
+        label_tag = ast.process_ast(label_string, context=self.context,
+                                    root_name='label')
+
+        # Wrap the label_tag in a Tag, if it's not already in onw
+        if wrap and not getattr(label_tag, 'name', '') == 'label':
+            label_tag = Tag(name='label', content=label_tag,
+                            attributes=tuple(), context=self.context)
         return label_tag
 
     def _get_label_fmt_str(self, tag_name=None, target=None):
@@ -405,6 +438,7 @@ class Tag(object):
             The formatted tex string.
         """
         content = content if content is not None else self.content
+
         # Collect the content elements
         if isinstance(content, list):
             elements = ''.join([i.tex_fmt(level + 1, mathmode)
@@ -419,11 +453,8 @@ class Tag(object):
             raise(TagError(msg.format(content, type(content))))
 
         # Construct the tag name
-        if level > 1:
-            name = (self.tex_name if self.tex_name is not None else
-                    self.name.lower())
-        else:
-            name = ''
+        name = (self.tex_name if self.tex_name is not None else
+                self.name.lower())
 
         # Filter and prepare the attributes
         attrs = self.attributes if self.attributes else []

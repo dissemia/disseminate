@@ -6,18 +6,145 @@ Functions for processing paragraphs in Abstract Syntax Trees (ASTs).
 import regex
 
 from ..tags import TagFactory, Tag
-from ..tags.headings import Heading
 
 
-re_para = regex.compile(r'(\n{2,}|^)')
+re_para = regex.compile(r'(?:\n{2,}|^)')
 
 
-# TODO: This function should not unwrap a tag and create a new tag object
-def process_paragraphs(ast, context, src_filepath=None, level=1):
+def group_paragraphs(ast):
+    """Given a list, group the items into sublists based on strings with
+    newlines.
+
+    .. note:: This function will not include items in the ast, including tags,
+              in paragraphs sublists that have an attribute 'include_paragraphs'
+              with a value of False.
+
+    .. note:: The function is idempotent. It will reprocess the generated AST
+              and not make changes.
+
+    Parameters
+    ----------
+    ast : list
+        The list of items and strings to group paragraphs.
+
+    Returns
+    -------
+    parse_list : list
+        The list with sublists denoting paragraph breaks.
+
+    Examples
+    --------
+    >>> group_paragraphs([1, 2, 'three', 'four\\n\\nfive', 6,
+    ...                   'seven\\n\\neight'])
+    [[1, 2, 'three', 'four'], ['five', 6, 'seven'], ['eight']]
+    """
+    if isinstance(ast, str):
+        ast = [ast]
+
+    overall_list = []
+    sublist = []
+
+    for item in ast:
+
+        # Add non-string elements to the sublist
+        if not isinstance(item, str):
+            if (getattr(item, 'include_paragraphs', True) and
+               not isinstance(item, list)):
+                # Include in the paragraph sublist
+                sublist.append(item)
+            else:
+                # Do not include in paragraphs; create a new paragraph sublist
+                if sublist:
+                    overall_list.append(sublist)
+                    sublist = []
+                # Append this non-paragraph item to the overall list, outside
+                # of a paragraph sublist
+                overall_list.append(item)
+            continue
+
+        # At this point, item is a string. See if there a paragraph break in
+        # the string.
+        pieces = re_para.split(item)
+
+        if len(pieces) == 1 and pieces[0]:
+            # In this case, no paragraph break was found. Just add the item
+            # to the sublist if it's not an empty string
+            sublist.append(pieces[0])
+            continue
+
+        # In this case, multiple pieces were found. Make these into new
+        # sublists
+        for i, piece in enumerate(pieces):
+            if piece:
+                # Add the piece to the paragraph sublist, if it's not an
+                # empty string
+                sublist.append(piece)
+
+            if i != len(pieces) - 1:
+                if sublist:
+                    overall_list.append(sublist)
+                sublist = []
+
+    if sublist:
+        overall_list.append(sublist)
+
+    ast.clear()
+    ast += overall_list
+
+    return ast
+
+
+def clean_paragraphs(ast):
+    """Remove invalid paragraphs from the sublists in an ast created by
+    group_paragraphs.
+
+    This function will:
+    1. Remove sublists created by group_paragraphs that only contain empty
+       strings and strings with space or newline characters.
+
+    Parameters
+    ----------
+    ast : list
+        The list of items and strings of grouped paragraphs.
+
+    Returns
+    -------
+    cleaned_list : list
+        The list with sublists denoting paragraph breaks.
+
+    Examples
+    --------
+    >>> group = group_paragraphs([1, 2, 'three', 'four\\n\\nfive', 6,
+    ...                           'seven\\n\\neight'])
+    >>> clean_paragraphs(group)
+    [[1, 2, 'three', 'four'], ['five', 6, 'seven'], ['eight']]
+    >>> group = group_paragraphs([1, 2, 'three', '\\n\\n', 6,
+    ...                           'seven\\n\\neight'])
+    >>> clean_paragraphs(group)
+    [[1, 2, 'three'], [6, 'seven'], ['eight']]
+    """
+    new_ast = []
+
+    for item in ast:
+        # Determine if item is a sublist with only empty strings or strings
+        # with space and newline characters. If so, don't make a paragraph
+        # with it, and skip it.
+        if (isinstance(item, list) and
+           all(isinstance(i, str) and not i.strip() for i in item)):
+            continue
+
+        new_ast.append(item)
+
+    # Copy over the new_ast to the given ast
+    ast.clear()
+    ast += new_ast
+
+    return ast
+
+
+def process_paragraphs(ast, context):
     """Process the paragraphs for an AST. Paragraphs are blocks of text with
     zero or more tags.
-
-    .. note:: This function should be run after process_ast.
 
     Parameters
     ----------
@@ -25,10 +152,6 @@ def process_paragraphs(ast, context, src_filepath=None, level=1):
         A string to parse into an AST, a list of strings or an existing AST.
     context : dict
         The context with values for the document.
-    src_filepath : str, optional
-        The path for the document (source markup) file being processed.
-    level : int, optional
-        The current level of the ast.
 
     Returns
     -------
@@ -36,144 +159,41 @@ def process_paragraphs(ast, context, src_filepath=None, level=1):
         The AST is a root tag with a content comprising a list of tags or
         strings.
     """
-    # Setup the parsing
+    # Setup the the tag factor
     factory = TagFactory()
 
-    # Format ast into a list
-    if isinstance(ast, list):
-        pass
-    elif isinstance(ast, Tag):
-        ast = ast.content if isinstance(ast.content, list) else [ast.content]
+    # Format ast to be used by the group_paragraphs function. The ast should
+    # be a list
+    if hasattr(ast, 'content'):
+        if isinstance(ast.content, str):
+            ast.content = [ast.content]
+        processed_ast = ast.content
     elif isinstance(ast, str):
-        ast = [ast]
+        processed_ast = [ast]
     else:
-        ast = []
+        processed_ast = ast
 
-    # Create a new ast. This will be populated with the processed ast and
-    # returned
-    new_ast = []
+    assert isinstance(processed_ast, list)
 
-    # Break the strings in this ast by paragraph newlines -- i.e. 2 or more
-    # consecutive newlines. The split_ast will be a list of strings (text
-    # strings and strings with newlines ('\n\n') as well as Tag objects
-    split_ast = []
-    for i in ast:
-        if isinstance(i, str):
-            split_ast += re_para.split(i)
-        else:
-            split_ast.append(i)
+    # Group the paragraphs into sublists
+    group_paragraphs(processed_ast)
 
-    # Collect items in the current paragraph
-    cur_para = []
-    for i in split_ast:
+    # Clean the paragraph sublist groups
+    clean_paragraphs(processed_ast)
 
-        if isinstance(i, str):
-            # Process a string item. It can either be a string with text or a
-            # string with new lines.
+    # Convert the sublists into paragraphs
+    for count, item in enumerate(processed_ast):
+        if isinstance(item, list):
+            # Determine whether this is the first
 
-            if i.strip('\n') == '':
-                # If it's a string with just newlines, then this is the end of a
-                # paragraph. Process the collected items in cur_para, if there
-                # are items in it, and reset the cur_para. Otherwise, just skip
-                # this item.
-
-                if cur_para:
-                    # Wrap the cur_para in a paragraph tag if the following
-                    # applies:
-                    #    1. cur_para has many items
-                    #    2. cur_para has only one item and its a string.
-                    #
-                    # If cur_par has one item and it's not a string (i.e. it's a
-                    # tag), then don't wrap it in a paragraph. This is to avoid
-                    # wrapping tags like '@section' in a paragraph.
-
-                    if len(cur_para) > 1 or isinstance(cur_para[0], str):
-                        p = factory.tag(tag_name='p',
-                                        tag_content=cur_para,
-                                        tag_attributes=None,
-                                        context=context)
-                        new_ast.append(p)
-                    else:
-                        new_ast.append(cur_para[0])
-
-                    # reset the current paragraph
-                    cur_para = []
-
-            else:
-                # Otherwise it's just a string with text. Just add it to the
-                # current paragraph. Newlines aren't stripped to avoid removing
-                # natural newlines within the paragraph.
-
-                cur_para.append(i)
-
-        elif isinstance(i, Tag) and i.include_paragraphs:
-            # Process a Tag item.
-            # Only process the contents of a tag if the tag's
-            # include_paragraphs attribute is True
-
-            # The contents need to be converted to an ast to be processed
-            # by this function. This means that if the contents are a string,
-            # wrap it in a list, otherwise just pass this tag's contents
-            content = [i.content] if isinstance(i.content, str) else i.content
-            content = process_paragraphs(content, context, src_filepath,
-                                         level=1+level)
-
-            # The processed content is now set as this tag's content. At this
-            # point, it is a list. Now, add the tag to the cur_para.
-            i.content = content
-            cur_para.append(i)
-        else:
-            # If the item is a tag that should not be processed or something
-            # else, just add it to the paragraph.
-            cur_para.append(i)
-
-    # After going through the split_ast, there may still be items in the
-    # cur_para. Add these to the new_ast
-    if cur_para:
-        if len(cur_para) > 1 or isinstance(cur_para[0], str):
+            # sublists created by group_paragraphs are paragraphs
             p = factory.tag(tag_name='p',
-                            tag_content=cur_para,
-                            tag_attributes=None,
+                            tag_content=item,
+                            tag_attributes='',
                             context=context)
-            new_ast.append(p)
-        else:
-            new_ast.append(cur_para[0])
+            processed_ast[count] = p
 
-    # Now remove paragraphs for blocks that aren't paragraphs
-    # i.e. lists that are blocks of text with zero or more tags, or for blocks
-    # that contain tags that shouldn't be wrapped in paragraphs, like headings.
-    reprocessed_ast = []
-    for i in new_ast:
-        if getattr(i, 'name', None) == 'p':
-            # Process paragraph tags
-            if (isinstance(i.content, list) and
-               any(isinstance(j, Heading) for j in i.content)):
-                # See if it's a paragraph whose contents contains Heading
-                # elements. If so, remove the paragraph.
-                reprocessed_ast.append(i.content)
-
-            elif isinstance(i.content, Tag):
-                # Do not wrap tags themselves in tags
-                reprocessed_ast.append(i.content)
-
-            else:
-                # Otherwise keep the paragraph
-                reprocessed_ast.append(i)
-
-        else:
-            # For non-paragraphs, add them to the reprocessed_ast unmodified.
-            reprocessed_ast.append(i)
-    new_ast = reprocessed_ast
-
-    # If this is the root ast, then wrap the new_ast in a root tag.
-    if level == 1:  # root level
-        root = factory.tag(tag_name='root',
-                           tag_content=new_ast,
-                           tag_attributes=None,
-                           context=context)
-        return root
-    else:
-        return new_ast
+    return ast
 
 
 def process_context_paragraphs(context):
@@ -182,26 +202,32 @@ def process_context_paragraphs(context):
     This function parses paragraph tags from tags in the context. Consequently,
     it should be executed after tags are created in the context.
 
+    .. note:: This function only processes context entries listed in the
+              'process_paragraphs' context entry. If the 'process_paragraphs'
+              list is missing, then no paragraphs will be processed.
+
     Parameters
     ----------
     context : dict, optional
         The context with values for the document.
 
     """
-    # Setup the needed variables for process_ast
-    assert context.is_valid('src_filepath')
-    src_filefile = context['src_filepath']
+    # Determine which entries in the context should be processed for paragraphs
+    # based on the 'process_paragraphs' entry
+    process_entries = context.get('process_paragraphs', [])
+    assert isinstance(process_entries, list)
 
-    # Go through the entries in the context and determine which are tags
+    # Go through the entries in the context and process entries specified
+    # in the process_entries list
     for k, v in context.items():
-        # Skip macros and non-string entries
-        if k.startswith('@') or not isinstance(v, Tag):
+        if k not in process_entries:
             continue
 
         # Process the entry in the context
-        ast = process_paragraphs(ast=v, context=context,
-                                 src_filepath=src_filefile)
-        ast.name = k
+        ast = process_paragraphs(ast=v, context=context)
+
+        if hasattr(ast, 'name'):
+            ast.name = k
         context[k] = ast
 
     return None

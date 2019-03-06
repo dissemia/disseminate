@@ -81,7 +81,7 @@ def test_process_typography_verbatim(context_cls):
     ast = process_ast(test1, context=context)
     ast = process_typography(ast, context=context)
 
-    assert ast.content.content == "An emdash---this is a test of that"
+    assert ast.content == "An emdash---this is a test of that"
 
 
 def test_process_context_typography(context_cls):

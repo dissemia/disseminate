@@ -37,7 +37,7 @@ def test_repl_tags(context_cls):
     assert root.content[5].name == 'b'
     assert root.content[5].content[0] == 'tags with '
     assert root.content[5].content[1].name == 'sub'
-    assert root.content[5].content[1].content == ['REPLACED']
+    assert root.content[5].content[1].content == 'REPLACED'
     assert root.content[6] == ' tags.'
 
     # 2. Test with a replacement tag directly

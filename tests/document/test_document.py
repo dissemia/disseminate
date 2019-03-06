@@ -291,7 +291,7 @@ def test_document_label_mtime(tmpdir):
 
     labels = label_manager.get_labels()
     assert len(labels) == 4
-    print(labels)
+
     # Check that the labels were properly set
     assert label_manager.labels[0].title == 'test'
     assert label_manager.labels[1].title == 'Chapter 1'
@@ -479,7 +479,6 @@ def test_document_macros(tmpdir):
     doc.render()
     # See if the macro was properly replaced
     rendered_html = temp_file.read_text()
-
     assert '@macro' not in rendered_html
     assert '<i>example</i>' in rendered_html
 
@@ -515,3 +514,12 @@ def test_document_render(tmpdir, target):
     # An invalid file raises an error
     with pytest.raises(DocumentError):
         doc = Document("tests/document/missing.dm")
+
+
+def test_document_example8(tmpdir):
+    """Test the example8 document directory."""
+    tmpdir = pathlib.Path(tmpdir)
+
+    # Load the document and render it with no template
+    doc = Document("tests/document/example8//src/fundamental_solnNMR"
+                   "/inept/inept.dm", tmpdir)

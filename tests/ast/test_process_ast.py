@@ -6,9 +6,10 @@ import lxml.html
 
 from disseminate.ast import process_ast, process_context_asts
 from disseminate.ast.exceptions import ParseError
+from disseminate.header import load_header
 from disseminate.tags import Tag
+from disseminate.paths import SourcePath
 from disseminate.utils.string import Metastring
-from disseminate import settings
 
 
 test = """
@@ -108,19 +109,28 @@ def test_ast_basic_string(context_cls):
     # Now test a string with no tags
     ast = process_ast("test", context=context)
 
-    assert isinstance(ast, Tag) and ast.name == 'root'  # root tag
-    assert isinstance(ast.content, str)
-    assert ast.content == 'test'
+    assert isinstance(ast, str)
+    assert ast == 'test'
 
 
 def test_ast_basic_string_no_tags(context_cls):
     """Test the conversion of a string without tags."""
 
     context = context_cls()
-
     ast = process_ast("  empty  ", context=context)
-    assert type(ast.content) == str
-    assert ast.content == "  empty  "
+    assert isinstance(ast, str)
+    assert ast == "  empty  "
+
+
+def test_ast_empty_content(context_cls):
+    """Test the process_ast function for tags with empty contents."""
+
+    context = context_cls()
+    ast1 = process_ast("@bold{}", context=context)
+    ast2 = process_ast("@bold", context=context)
+
+    assert ast1.content == ''
+    assert ast2.content == ''
 
 
 def test_default_conversion(context_cls):
@@ -321,10 +331,45 @@ def test_basic_triple_conversion(context_cls):
 
 def test_process_context_asts(context_cls):
     """Test the process_context_asts function."""
-    body_attr = settings.body_attr
 
-    context_cls.validation_types = {'src_filepath': str}
-    context = context_cls(src_filepath='', **{body_attr: test})
+    header = """
+    ---
+    title: My @i{first} title
+    author: Justin L Lorieau
+    targets: html, tex
+    macro: @i{example}
+    ---
+    This is my @macro body.
+    """
 
+    # Load the header into a context
+    context = context_cls(body=header,
+                          src_filepath=SourcePath(''))
+    load_header(context)
+
+    # Now process the context entries
     process_context_asts(context)
-    assert context[body_attr].default == test_txt
+
+    # Check the entries
+    assert isinstance(context['title'], Tag)
+    assert context['title'].name == 'title'
+    assert context['title'].content[0] == 'My '
+    assert context['title'].content[1].name == 'i'
+    assert context['title'].content[1].content == 'first'
+    assert context['title'].content[2] == ' title'
+
+    assert isinstance(context['author'], str)
+    assert context['author'] == 'Justin L Lorieau'
+
+    assert isinstance(context['targets'], str)
+    assert context['targets'] == 'html, tex'
+
+    assert isinstance(context['macro'], Tag)
+    assert context['macro'].name == 'i'
+    assert context['macro'].content == 'example'
+
+    assert isinstance(context['body'], Tag)
+    assert context['body'].name == 'body'
+    assert context['body'].content[0] == '    This is my '
+    assert context['body'].content[1].name == 'macro'
+    assert context['body'].content[2] == ' body.\n    '

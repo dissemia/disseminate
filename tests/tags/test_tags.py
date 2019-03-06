@@ -12,6 +12,22 @@ from disseminate.tags.text import P
 from disseminate import settings, SourcePath, TargetPath
 
 
+def test_tag_attributes(context_cls):
+    """Test the get and set methods for attributes of tags"""
+
+    context = context_cls()
+
+    tag = Tag(name='tag', content='', attributes=(('class', 'one'),),
+              context=context)
+
+    assert tag.attributes == (('class', 'one'),)
+    assert tag.get_attribute('class') == 'one'
+
+    tag.set_attribute(('class', 'two'), 'r')
+
+    assert tag.get_attribute('class') == 'two'
+
+
 def test_flatten_tag(context_cls):
     """Test the flatten method."""
     context = context_cls()
@@ -156,7 +172,6 @@ def test_tag_mtime(tmpdir):
     assert src_filepath2.mtime() == root2.mtime
 
 
-# TODO: create test_doc fixture
 def test_label_tags(tmpdir):
     """Test the generation of label tags from the labels of a tag."""
     # Prepare test document

@@ -13,14 +13,14 @@ def test_marginfig_parsing(context_cls):
     context = context_cls()
 
     test1 = "@marginfig{fig1}"
-    root = process_ast(test1, context=context)
-    assert root.content.name == 'marginfig'
-    assert root.content.content == 'fig1'
+    marginfig = process_ast(test1, context=context)
+    assert marginfig.name == 'marginfig'
+    assert marginfig.content == 'fig1'
 
     test2 = "@marginfig{{fig1}}"
-    root = process_ast(test2, context=context)
-    assert root.content.name == 'marginfig'
-    assert root.content.content == '{fig1}'
+    marginfig = process_ast(test2, context=context)
+    assert marginfig.name == 'marginfig'
+    assert marginfig.content == '{fig1}'
 
 
 def test_figure_caption_no_id(tmpdir):
@@ -39,17 +39,16 @@ def test_figure_caption_no_id(tmpdir):
     src = "@marginfig{@caption{This is my caption.\nIt has multiple lines}}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=doc.context)
+    fig = process_ast(src, context=doc.context)
     label_man.register_labels()
 
-    fig = root.content
     assert fig.name == 'marginfig'
     assert fig.attributes == tuple()
 
     # 1. Get the caption, first with a basic figure label
     label_fmts['caption_figure'] = "Fig. $label.number."
-    assert isinstance(fig.content, list)
-    caption = [i for i in fig.content if isinstance(i, Caption)][0]
+
+    caption = fig.content
     assert caption.name == 'caption'
     assert caption.attributes == tuple()
     assert caption.default == ('Fig. 1. This is my caption.\n'
@@ -57,8 +56,8 @@ def test_figure_caption_no_id(tmpdir):
 
     # Get the caption, next with a caption title.
     label_fmts['caption_figure'] = "@b{Figure. $label.number}."
-    assert isinstance(fig.content, list)
-    caption = [i for i in fig.content if isinstance(i, Caption)][0]
+
+    caption = fig.content
     assert caption.name == 'caption'
     assert caption.attributes == tuple()
     assert caption.default == ('Figure. 1. This is my caption.\n'
@@ -94,15 +93,13 @@ def test_figure_caption_with_id(tmpdir):
                 "@marginfig{@caption[id=fig-1]{This is my caption}}"):
 
         # Generate a tag and compare the generated tex to the answer key
-        root = process_ast(src, doc.context)
+        fig = process_ast(src, doc.context)
         label_man.register_labels()
 
-        fig = root.content
         assert fig.name == 'marginfig'
 
         # Get the caption
-        assert isinstance(fig.content, list)
-        caption = [i for i in fig.content if isinstance(i, Caption)][0]
+        caption = fig.content
 
         assert caption.name == 'caption'
         assert caption.content == 'This is my caption'
@@ -137,27 +134,17 @@ def test_figure_caption_no_id_html(tmpdir):
     src = "@marginfig{@caption{This is my caption}}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=doc.context)
+    marginfig = process_ast(src, context=doc.context)
     label_man.register_labels()
 
-    # Test the caption's html
-    # The following root tags have to be stripped for the html strings
-    root_start = '<span class="root">\n  '
-    root_end = '\n</span>\n'
-
-    root_html = root.html
-
-    # Remove the root tag
-    root_html = root_html[len(root_start):]  # strip the start
-    root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
-
     key = """<span class="marginfig">
-        <span class="figure caption" id="caption-92042fbb8b">
-          <span class="label">Fig. 1.</span>
-          <span class="caption-text">This is my caption</span>
-        </span>
-      </span>"""
-    assert root_html == strip_leading_space(key)
+      <span class="figure caption" id="caption-92042fbb8b">
+        <span class="label">Fig. 1.</span>
+        <span class="caption-text">This is my caption</span>
+      </span>
+    </span>
+    """
+    assert marginfig.html == strip_leading_space(key)
 
 
 def test_figure_caption_with_id_html(tmpdir):
@@ -178,33 +165,22 @@ def test_figure_caption_with_id_html(tmpdir):
     srcs = ("@marginfig[id=fig-1]{@caption{This is my caption}}",
             "@marginfig{@caption[id=fig-1]{This is my caption}}")
 
-    key = """
-      <span class="marginfig">
-        <span class="figure caption" id="fig-1">
-          <span class="label">
-            <strong>Fig. 1.</strong>
-          </span>
-          <span class="caption-text">This is my caption</span>
+    key = """<span class="marginfig">
+      <span class="figure caption" id="fig-1">
+        <span class="label">
+          <strong>Fig. 1.</strong>
         </span>
+        <span class="caption-text">This is my caption</span>
       </span>
+    </span>
     """
 
     for count, src in enumerate(srcs):
         # Generate a tag and compare the generated tex to the answer key
-        root = process_ast(src, context=doc.context)
+        fig = process_ast(src, context=doc.context)
         label_man.register_labels()
 
-        # Test the caption's html is a root tag
-        # The following root tags have to be stripped for the html strings
-        root_start = '<span class="root">'
-        root_end = '</span>\n'
-
-        root_html = root.html
-
-        # Remove the root tag
-        root_html = root_html[len(root_start):]  # strip the start
-        root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
-        assert root_html == strip_leading_space(key)
+        assert fig.html == strip_leading_space(key)
 
 
 # tex tests
@@ -226,17 +202,15 @@ def test_figure_caption_no_id_tex(tmpdir):
     src = "@marginfig{@caption{This is my caption}}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=doc.context)
+    fig = process_ast(src, context=doc.context)
     label_man.register_labels()
-
-    root_tex = root.tex
 
     key = """
     \\begin{marginfigure}
       \\caption{Fig. 1. This is my caption} \\label{caption-92042fbb8b}
     \\end{marginfigure}
     """
-    assert root_tex == strip_leading_space(key)
+    assert fig.tex == strip_leading_space(key)
 
 
 def test_figure_caption_with_id_tex(tmpdir):

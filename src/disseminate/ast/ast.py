@@ -19,15 +19,16 @@ re_open_tag = regex.compile(  # The character to use in identifying a tag. By
 re_brace = regex.compile(r'[}{]')
 
 
-def process_ast(ast, context, src_filepath=None, line_counter=None, level=1):
+def process_ast(ast, context, src_filepath=None, line_counter=None,
+                root_name='root', level=1):
     """Process a string into an Abstract Syntax Tree (AST) of tags, strings and
      lists of both.
 
      ASTs are created by having a tag whose contents are either tags, string or
      lists of both.
 
-    .. note:: The AST processing should be able to reprocess the generated AST
-              without making changes.
+    .. note:: The AST processing is idempotent. It will reprocess the
+              generated AST without making changes.
 
     Parameters
     ----------
@@ -37,6 +38,12 @@ def process_ast(ast, context, src_filepath=None, line_counter=None, level=1):
         The context with values for the document.
     src_filepath : str, optional
         The path for the document (source markup) file being processed.
+    line_counter : :obj:`NewlineCounter
+        <disseminate.utils.string.NewlineCounter>`, optional
+        A string line counter object.
+    root_name : str, optional
+        If the parsed AST is a list of strings and tags, it will be wrapped
+        in a root tag with the specified name.
     level : int, optional
         The current level of the ast.
 
@@ -66,7 +73,7 @@ def process_ast(ast, context, src_filepath=None, line_counter=None, level=1):
 
     new_ast = []
     process = lambda x: process_ast(x, context, src_filepath, line_counter,
-                                    level+1)
+                                    root_name, level+1)
 
     # Look at the ast and process it depending on whether it's a string, tag
     # or list
@@ -97,8 +104,10 @@ def process_ast(ast, context, src_filepath=None, line_counter=None, level=1):
         # truncated text[position:] string, so the match start position has
         # to be offset when referencing the full 'text' string
         match_tag_start = position + match_tag.start()
-        new_ast.append(text[position:match_tag_start])
-        line_counter(text[position:match_tag_start])
+        sofar = text[position:match_tag_start]  # the string up to this point
+        if sofar: # only add the sofar string if it isn't an empty string
+            new_ast.append(sofar)
+            line_counter(sofar)
 
         # Push up the position to the end of the tag match
         position += match_tag.end()
@@ -146,7 +155,10 @@ def process_ast(ast, context, src_filepath=None, line_counter=None, level=1):
 
         else:
             # Otherwise process the text within the tag's braces
-            tag_content = process(text[start_position:position - 1])
+            inner_text = text[start_position:position - 1]
+
+            # Process the inner_text if it's more than the empty string
+            tag_content = process(inner_text) if inner_text else ''
 
         tag = factory.tag(tag_name=tag_name,
                           tag_content=tag_content,
@@ -159,27 +171,24 @@ def process_ast(ast, context, src_filepath=None, line_counter=None, level=1):
         match_tag = re_open_tag.search(text[position:])
 
     # Add the remainer
-    new_ast.append(text[position:])
-    line_counter(text[position:])
+    remainder = text[position:]
+    if remainder:  # only add the remainder if it isn't an empty string
+        new_ast.append(remainder)
+        line_counter(remainder)
 
-    # If the new_ast has only one item, then return the item itself. (i.e.
-    # don't wrap a single item in a list
-    if len(new_ast) == 1:
-        new_ast = new_ast[0]
+    # Remove empty strings
+    clean_strings(new_ast)
 
-    # Wrap in a root tag, if it's the first level and the new_ast isn't already
-    # a tag
-    if level == 1 and not isinstance(new_ast, Tag):  # root level
-        # remove empty strings
-        clean_strings(new_ast)
+    # Unwrap new_ast if it's a list with only one item
+    new_ast = new_ast[0] if len(new_ast) == 1 else new_ast
 
-        # Unwrap lists with single items
-        new_ast = (new_ast[0] if isinstance(new_ast, list) and
-                   len(new_ast) == 1 else new_ast)
-
+    # Wrap in a root tag, if it's the first level and the new_ast is a list of
+    # tags or strings
+    if level == 1 and isinstance(new_ast, list):  # root level
         # Create a new root tag
-        new_ast = factory.tag(tag_name='root', tag_content=new_ast,
-                              tag_attributes='', context=context)
+        new_ast = factory.tag(tag_name=root_name, tag_content=new_ast,
+                              tag_attributes='', context=context,
+                              allow_substitution=False)
 
     return new_ast
 
@@ -197,7 +206,7 @@ def process_context_asts(context):
     """
     # Setup the needed variables for process_ast
     assert context.is_valid('src_filepath')
-    src_filefile = context['src_filepath']
+    src_filepath = context['src_filepath']
 
     # Go through the entries in the context and determine which can be converted
     # to an AST
@@ -207,13 +216,8 @@ def process_context_asts(context):
             continue
 
         # Process the entry in the context
-        ast = process_ast(ast=v, context=context, src_filepath=src_filefile)
-
-        # Replace the context entry if it's a valid ast with tags. If 'v' was
-        # just a string without tags, then the returned ast is a root tag whose
-        # content is just a string.
-        if not isinstance(ast.content, str):
-            ast.name = k
-            context[k] = ast
+        ast = process_ast(ast=v, context=context, src_filepath=src_filepath,
+                          root_name=k)
+        context[k] = ast
 
     return None

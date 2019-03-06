@@ -96,6 +96,22 @@ Basic Variables
 
          template: book/tufte
 
+``process_paragraphs``
+   A list of context entries for which paragraphs should be processed
+
+   .. index::
+      single: header; process_paragraphs
+
+   :notes:
+
+      By default, automated paragraph processing is enabled for the body entry.
+
+   :examples:
+
+      ::
+
+         process_paragraphs: body
+
 .. _header-includes:
 
 Includes

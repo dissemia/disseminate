@@ -2,10 +2,13 @@
 Tags for headings.
 """
 from lxml.builder import E
+from lxml import etree
+from markupsafe import Markup
 
 from .core import Tag
 from ..attributes import set_attribute, kwargs_attributes
 from ..utils.string import slugify
+from .. import settings
 
 
 toc_levels = ('branch', 'section', 'subsection', 'subsubsection')
@@ -28,6 +31,23 @@ class Heading(Tag):
     _nolabel = None
     _id_mappings = None
 
+    def __init__(self, name, content, attributes, context):
+        super(Heading, self).__init__(name, content, attributes, context)
+
+        # Determine whether a label should be given. By default, each heading
+        # has a label
+        nolabel = self.get_attribute('nolabel', clear=True)
+        if nolabel:
+            self.label_heading = False
+
+        # TODO: get doc_id, and work with Substitution
+        if self.label_heading:
+            # Add a label for the heading, if needed
+            kind = ('heading', self.__class__.__name__.lower())
+            id = self.get_id()
+            self.attributes = set_attribute(self.attributes, ('id', id))
+            self.set_label(id=id, kind=kind)
+
     def get_id(self):
         # Get the id mappings, if not set yet
         if Heading._id_mappings is None:
@@ -43,25 +63,9 @@ class Heading(Tag):
         if id is None:
             classname = self.__class__.__name__.lower()
             id_type = self._id_mappings.get(classname, classname) + ":"
-            id = id_type + slugify(self.content)
+            id = id_type + slugify(self.txt)
             self.attributes = set_attribute(self.attributes, ('id', id))
         return id
-
-    def __init__(self, name, content, attributes, context):
-        super(Heading, self).__init__(name, content, attributes, context)
-
-        # Determine whether a label should be given. By default, each heading
-        # has a label
-        nolabel = self.get_attribute('nolabel', clear=True)
-        if nolabel:
-            self.label_heading = False
-
-        if self.label_heading:
-            # Add a label for the heading, if needed
-            kind = ('heading', self.__class__.__name__.lower())
-            id = self.get_id()
-            self.attributes = set_attribute(self.attributes, ('id', id))
-            self.set_label(id=id, kind=kind)
 
     def set_label(self, id, kind, title=None):
         assert id is not None
@@ -88,13 +92,13 @@ class Heading(Tag):
     def default_fmt(self, content=None):
         name = self.__class__.__name__.lower()
         label = self.label
+
         if label is not None:
             label_tag = self.get_label_tag()
 
             # Replace the label_tag name to this heading's name, ex: 'Chapter'
             label_tag.name = name
-            return ("\n" +
-                    label_tag.default_fmt(content) + "\n\n")
+            return "\n" + label_tag.default_fmt(content) + "\n\n"
         else:
             return super(Heading, self).default_fmt(content)
 
@@ -103,14 +107,25 @@ class Heading(Tag):
         label = self.label
 
         if label is not None:
-            label_tag = self.get_label_tag(target='.html')
+            label_tag = self.get_label_tag(target='.html', wrap=False)
 
             # Replace the label_tag name to this heading's name, ex: 'chapter'
             label_tag.name = name
             kwargs = kwargs_attributes(self.attributes)
-            return E(self.html_name, label_tag.html_fmt(level+1), **kwargs)
+
+            # Wrap the label tag in a h1/h2/h3/.. heading
+            e = E(self.html_name, label_tag.html_fmt(level+1), **kwargs)
+
+            # Return the html element as either text (level=1) or simply an
+            # element
+            if level == 1:
+                s = (etree.tostring(e, pretty_print=settings.html_pretty)
+                          .decode("utf-8"))
+                return Markup(s)  # Mark string as safe bc it's escaped by lxml
+            else:
+                return e
         else:
-            return super(Heading, self).html_fmt(level+1, content)
+            return super(Heading, self).html_fmt(level, content)
 
     def tex_fmt(self, level=1, mathmode=False, content=None):
         name = (self.tex_name if self.tex_name is not None else

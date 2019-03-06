@@ -119,68 +119,57 @@ def test_heading_labels_html(tmpdir):
 
     markups = {
         '@chapter{Chapter 1}': '<h1 id="br:chapter-1">\n'
-                               '    <span class="branch"><span class="number">1.</span> Chapter 1</span>\n'
-                               '  </h1>',
+                               '  <span class="branch"><span class="number">1.</span> Chapter 1</span>\n'
+                               '</h1>\n',
         '@section{Section 1}': '<h2 id="sec:section-1">\n'
-                               '    <span class="section"><span class="number">1.</span> Section 1</span>\n'
-                               '  </h2>',
+                               '  <span class="section"><span class="number">1.</span> Section 1</span>\n'
+                               '</h2>\n',
         '@subsection{Section 2}': '<h3 id="subsec:section-2">\n'
-                                  '    <span class="subsection"><span class="number">1.</span> Section 2</span>\n'
-                                  '  </h3>',
+                                  '  <span class="subsection"><span class="number">1.</span> Section 2</span>\n'
+                                  '</h3>\n',
         '@subsubsection{Section 3}': '<h4 id="subsubsec:section-3">\n'
-                                     '    <span class="subsubsection"><span class="number">1.</span> Section 3</span>\n'
-                                     '  </h4>',
+                                     '  <span class="subsubsection"><span class="number">1.</span> Section 3</span>\n'
+                                     '</h4>\n',
         '@h1{Chapter 1}': '<h1 id="br:chapter-1">\n'
-                               '    <span class="branch"><span class="number">1.</span> Chapter 1</span>\n'
-                               '  </h1>',
+                          '  <span class="branch"><span class="number">1.</span> Chapter 1</span>\n'
+                          '</h1>\n',
         '@h2{Section 2}': '<h2 id="sec:section-2">\n'
-                               '    <span class="section"><span class="number">1.</span> Section 2</span>\n'
-                               '  </h2>',
+                          '  <span class="section"><span class="number">1.</span> Section 2</span>\n'
+                          '</h2>\n',
         '@h3{Section 3}': '<h3 id="subsec:section-3">\n'
-                                  '    <span class="subsection"><span class="number">1.</span> Section 3</span>\n'
-                                  '  </h3>',
+                          '  <span class="subsection"><span class="number">1.</span> Section 3</span>\n'
+                          '</h3>\n',
         '@h4{Section 4}': '<h4 id="subsubsec:section-4">\n'
-                          '    <span class="subsubsection"><span class="number">1.</span> Section 4</span>\n'
-                          '  </h4>',
+                          '  <span class="subsubsection"><span class="number">1.</span> Section 4</span>\n'
+                          '</h4>\n',
                }
-
-    # The following root tags have to be stripped for the html strings
-    root_start = '<span class="root">\n  '
-    root_end = '\n</span>\n'
 
     # Generate a tag for each and compare the generated html to the answer key
     for src, html in markups.items():
         doc.reset_contexts()
-        root = process_ast(src, context=doc.context)
+        heading = process_ast(src, context=doc.context)
         label_man.register_labels()
-
-        # Remove the root tag
-        root_html = root.html[len(root_start):]  # strip the start
-        root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
-        assert root_html == html
+        assert heading.html == html
 
     # 2. Test with 'nolabel' specified
 
     markups = {
-        '@section[nolabel]{Section 1}': '<h2>Section 1</h2>',
-        '@subsection[nolabel]{Section 2}': '<h3>Section 2</h3>',
-        '@subsubsection[nolabel]{Section 3}': '<h4>Section 3</h4>',
-        '@h1[nolabel]{Section 1}': '<h1>Section 1</h1>',
-        '@h2[nolabel]{Section 2}': '<h2>Section 2</h2>',
-        '@h3[nolabel]{Section 3}': '<h3>Section 3</h3>',
-        '@h4[nolabel]{Section 4}': '<h4>Section 4</h4>',
+        '@section[nolabel]{Section 1}': '<h2>Section 1</h2>\n',
+        '@subsection[nolabel]{Section 2}': '<h3>Section 2</h3>\n',
+        '@subsubsection[nolabel]{Section 3}': '<h4>Section 3</h4>\n',
+        '@h1[nolabel]{Section 1}': '<h1>Section 1</h1>\n',
+        '@h2[nolabel]{Section 2}': '<h2>Section 2</h2>\n',
+        '@h3[nolabel]{Section 3}': '<h3>Section 3</h3>\n',
+        '@h4[nolabel]{Section 4}': '<h4>Section 4</h4>\n',
     }
 
     # Generate a tag for each and compare the generated html to the answer key
     for src, html in markups.items():
         doc.reset_contexts()
-        root = process_ast(src, context=doc.context)
+        heading = process_ast(src, context=doc.context)
         label_man.register_labels()
 
-        # Remove the root tag
-        root_html = root.html[len(root_start):]  # strip the start
-        root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
-        assert root_html == html
+        assert heading.html == html
 
 
 def test_heading_labels_tex(tmpdir):

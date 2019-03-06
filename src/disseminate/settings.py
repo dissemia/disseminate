@@ -55,10 +55,17 @@ verbatim_tags = ('verb', 'v', 'pre', 'verbatim')
 #: Context
 #: -------
 
+#: Attribute in the context in which the body of a file (the string and AST)
+#: is stored in.
+body_attr = 'body'
+
 default_context = {
     'targets': 'html',
     'paths': [],
     'base_url': '/{target}/{subpath}',
+
+    # Process paragraphs for the following entries
+    'process_paragraphs': [body_attr],
 
     # The following are strings to present labels. They are substituted with
     # values from their respective label and parsed in disseminate format.
@@ -148,10 +155,6 @@ default_context = {
     'Chi': '@symbol{Chi}', 'Psi': '@symbol{Psi}', 'Omega': '@symbol{Omega}',
 
 }
-
-#: Attribute in the context in which the body of a file (the string and AST)
-#: is stored in.
-body_attr = 'body'
 
 #: Template Defaults
 #: -----------------

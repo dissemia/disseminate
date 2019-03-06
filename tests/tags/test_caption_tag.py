@@ -26,9 +26,8 @@ def test_naked_caption(tmpdir, context_cls):
     src = "@caption{This is my caption}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=context)
+    caption = process_ast(src, context=context)
 
-    caption = root.content
     assert caption.name == 'caption'
     assert caption.attributes == tuple()
     assert caption.content == 'This is my caption'
@@ -71,6 +70,7 @@ def test_ref_figure_html(tmpdir):
     html = etree.tostring(ref.html).decode('utf-8')
 
     key = ('<span class="ref">'
-           '<a href="/html/main.html#fig:image1"><strong>Fig. .1</strong></a>'
+           '<a href="/html/main.html#fig:image1">'
+           '<strong>Fig. .1</strong></a>'
            '</span>')
     assert html == key

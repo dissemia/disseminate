@@ -3,6 +3,8 @@ Text formatting tags
 """
 from textwrap import wrap
 
+from markupsafe import Markup
+from lxml import etree
 from lxml.etree import Entity
 from lxml.builder import E
 
@@ -19,7 +21,7 @@ class P(Tag):
     active : bool, default: True
         This tag is active.
     include_paragraphs : bool, default: False
-        The contents of this tag can include paragraphs.
+        The contents of this tag can be included in paragraphs.
     """
     active = True
     include_paragraphs = False
@@ -50,14 +52,11 @@ class Bold(Tag):
         use name.
     active : bool, default: True
         This tag is active.
-    include_paragraphs : bool, default: False
-        The contents of this tag can include paragraphs.
     """
     aliases = ("b", "textbf", "strong")
     html_name = "strong"
     tex_name = "textbf"
     active = True
-    include_paragraphs = False
 
 
 class Italics(Tag):
@@ -75,14 +74,11 @@ class Italics(Tag):
         use name.
     active : bool, default: True
         This tag is active.
-    include_paragraphs : bool, default: False
-        The contents of this tag can include paragraphs.
     """
     aliases = ("i", "textit")
     html_name = "i"
     tex_name = "textit"
     active = True
-    include_paragraphs = False
 
 
 class Sup(Tag):
@@ -95,12 +91,9 @@ class Sup(Tag):
         use name.
     active : bool, default: True
         This tag is active.
-    include_paragraphs : bool, default: False
-        The contents of this tag can include paragraphs.
     """
     html_name = "sup"
     active = True
-    include_paragraphs = False
 
     def tex_fmt(self, level=1, mathmode=False, content=None):
         content = content if content is not None else self.content
@@ -128,12 +121,9 @@ class Sub(Tag):
         use name.
     active : bool, default: True
         This tag is active.
-    include_paragraphs : bool, default: False
-        The contents of this tag can include paragraphs.
     """
     html_name = "sub"
     active = True
-    include_paragraphs = False
 
     def tex_fmt(self, level=1, mathmode=False, content=None):
         content = content if content is not None else self.content
@@ -162,10 +152,7 @@ class Supsub(Tag):
     ----------
     active : bool, default: True
         This tag is active.
-    include_paragraphs : bool, default: False
-        The contents of this tag can include paragraphs.
     """
-    include_paragraphs = False
     active = True
 
     _sup = None
@@ -210,23 +197,26 @@ class Symbol(Tag):
         A list of strs for other names a tag goes by
     active : bool, default: True
         This tag is active.
-    include_paragraphs : bool, default: False
-        The contents of this tag can include paragraphs.
     """
 
     aliases = ("smb ",)
     active = True
-    include_paragraphs = False
 
     def assert_not_nested(self):
         """Raise a TagError if this tag is nested."""
         if not isinstance(self.content, str):
-            msg = "The @greek tag cannot have tags nested within it."
+            msg = "The @symbol tag cannot have tags nested within it."
             raise TagError(msg)
 
     def html_fmt(self, level=1, content=None):
         self.assert_not_nested()
-        return Entity(self.content.strip())
+        e = Entity(self.content.strip())
+        if level == 1:
+            s = (etree.tostring(e, pretty_print=settings.html_pretty)
+                      .decode("utf-8"))
+            return Markup(s)  # Mark string as safe, since it's escaped by lxml
+        else:
+            return e
 
     def tex_fmt(self, level=1, mathmode=False, content=None):
         content = content if content is not None else self.content
@@ -249,7 +239,7 @@ class Verb(Tag):
     active : bool, default: True
         This tag is active.
     include_paragraphs : bool, default: False
-        The contents of this tag can include paragraphs.
+        The contents of this tag cannot be included in paragraphs.
     """
 
     aliases = ("v", "pre", "verbatim")

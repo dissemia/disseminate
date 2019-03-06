@@ -41,7 +41,8 @@ class TagFactory(object):
             substitution_cls = TagFactory.tag_clses.get('substitution')
             TagFactory.substitution_cls = substitution_cls
 
-    def tag(self, tag_name, tag_content, tag_attributes, context):
+    def tag(self, tag_name, tag_content, tag_attributes, context,
+            allow_substitution=True):
         """Return the approriate tag, given a tag_name and tag_content.
 
         Parameters
@@ -54,6 +55,8 @@ class TagFactory(object):
             The attributes of a tag. ex: 'width=32pt'
         context : dict
             The document's context dict.
+        allow_substitution : bool, optional
+            If True, Substitution tags can be returned.
 
         Returns
         -------
@@ -65,7 +68,8 @@ class TagFactory(object):
             # First, see if the tag_name matches one of the tag subclasses (or
             # tag aliases) in disseminate
             cls = self.tag_clses[tag_name.lower()]
-        elif tag_name in context and self.substitution_cls:
+        elif (allow_substitution and
+              tag_name in context and self.substitution_cls):
             # If not, this might be a substitution, which uses a 'Substitution'
             # tag to insert the contents of an entry in the context.
             cls = self.substitution_cls

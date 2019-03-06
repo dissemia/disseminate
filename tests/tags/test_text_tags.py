@@ -23,8 +23,7 @@ def test_tag_text_verbatim(context_cls):
 
     # Test a verb tag that includes a tag
     test = "@v{@bold{bolded}}"
-    root = process_ast(test, context=context)
-    verb = root.content
+    verb = process_ast(test, context=context)
 
     # Match targets
     assert verb.default == "@bold{bolded}"
@@ -33,8 +32,7 @@ def test_tag_text_verbatim(context_cls):
 
     # Test a verbatim block
     test = "@verbatim{@bold{bolded}}"
-    root = process_ast(test, context=context)
-    verb = root.content
+    verb = process_ast(test, context=context)
 
     # Match targets
     assert verb.default == "@bold{bolded}"
@@ -52,38 +50,24 @@ def test_tag_text_html(context_cls):
 
     context = context_cls()
 
-    markups = {'@b{bold}': '<strong>bold</strong>',
-               '@i{italics}': '<i>italics</i>',
-               '@sup{superscript}': '<sup>superscript</sup>',
-               '@sub{subscript}': '<sub>subscript</sub>',
+    markups = {'@b{bold}': '<strong>bold</strong>\n',
+               '@i{italics}': '<i>italics</i>\n',
+               '@sup{superscript}': '<sup>superscript</sup>\n',
+               '@sub{subscript}': '<sub>subscript</sub>\n',
                }
-
-    # The following root tags have to be stripped for the html strings
-    root_start = '<span class="root">\n  '
-    root_end = '\n</span>\n'
 
     # Generate a tag for each and compare the generated html to the answer key
     for src, html in markups.items():
         root = process_ast(src, context=context)
-        # Remove the root tag
-        root_html = root.html[len(root_start):]  # strip the start
-        root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
-        assert root_html == html
+        assert root.html == html
 
-    markups = {'@symbol{alpha}': '&alpha;',
+    markups = {'@symbol{alpha}': '&alpha;\n',
                }
-
-    # The following root tags have to be stripped for the html strings
-    root_start = '<span class="root">'
-    root_end = '</span>\n'
 
     # Generate a tag for each and compare the generated html to the answer key
     for src, html in markups.items():
         root = process_ast(src, context=context)
-        # Remove the root tag
-        root_html = root.html[len(root_start):]  # strip the start
-        root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
-        assert root_html == html
+        assert root.html == html
 
 
 # tex targets
