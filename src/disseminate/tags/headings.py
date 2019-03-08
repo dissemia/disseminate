@@ -6,8 +6,9 @@ from lxml import etree
 from markupsafe import Markup
 
 from .core import Tag
+from ..labels import LabelNotFound
 from ..attributes import set_attribute, kwargs_attributes
-from ..utils.string import slugify
+from ..utils.string import slugify, titlelize
 from .. import settings
 
 
@@ -40,7 +41,6 @@ class Heading(Tag):
         if nolabel:
             self.label_heading = False
 
-        # TODO: get doc_id, and work with Substitution
         if self.label_heading:
             # Add a label for the heading, if needed
             kind = ('heading', self.__class__.__name__.lower())
@@ -61,11 +61,50 @@ class Heading(Tag):
 
         # Assign an id_type, if one was not given
         if id is None:
+            # Start the with the heading type. ex: 'br:' or 'sec:'
             classname = self.__class__.__name__.lower()
             id_type = self._id_mappings.get(classname, classname) + ":"
-            id = id_type + slugify(self.txt)
+
+            # Next use the doc_id to construct the heading. ex: 'Introduction'
+            doc_id = self.context.get('doc_id', '')
+
+            # Next use the content, if available and usable. To be usable, it
+            # should either be a Tag, which can be converted to a raw string, or
+            # a string itself or a list of tags and strings.
+            content = self.content or ''
+            content = [content] if not isinstance(content, list) else content
+            content = ''.join(i.txt if hasattr(i, 'txt') else i
+                              for i in content)
+            content = titlelize(content).strip()
+
+            # If there is no content, then just make one up based on a simple
+            # counter.
+            if not content:
+                # If the content is not available or it's an empty string, just
+                # give it a number
+                i = 'heading_count'
+                self.context[i] = self.context.get(i, 0) + 1
+                content = str(self.context[i])
+
+            slug_txt = doc_id + '_' + content if doc_id else content
+
+            # Create the id from the heading type (id_type), the doc_id and
+            # content
+            id = id_type + slugify(slug_txt)
             self.attributes = set_attribute(self.attributes, ('id', id))
         return id
+
+    @property
+    def label(self):
+        # The heading __init__ may try to set the contents based on a label,
+        # which may not have been created yet. For this reason, this method
+        # catches the exception and returns no label so that the default_fmt
+        # (and related methods) can simply format the string based on the
+        # contents
+        try:
+            return super().label
+        except LabelNotFound:
+            return None
 
     def set_label(self, id, kind, title=None):
         assert id is not None

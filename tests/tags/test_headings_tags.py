@@ -3,10 +3,106 @@ Tags for headings
 """
 from disseminate import Document
 from disseminate.ast import process_ast
+from disseminate.tags.headings import Branch
 from disseminate.utils.tests import strip_leading_space
 
 
-def test_labels_heading_formatting(tmpdir):
+def test_heading_labels(context_cls):
+    """Test the setting and of heading identifiers and labels."""
+
+    context = context_cls()
+
+    # 1. Create branch headings without a doc_id and and content
+    br1 = Branch(name='branch', content='', attributes=tuple(), context=context)
+    assert br1.get_id() == 'br:1'
+    assert br1.attributes == (('id', 'br:1'),)
+    assert br1.get_attribute('id') == 'br:1'
+
+    # 2. Create branch headings with a doc_id
+    context.reset()
+    context['doc_id'] = 'src/test.dm'
+    br2 = Branch(name='branch', content='', attributes=tuple(), context=context)
+    assert br2.get_id() == 'br:src-test-dm-1'
+    assert br2.attributes == (('id', 'br:src-test-dm-1'),)
+    assert br2.get_attribute('id') == 'br:src-test-dm-1'
+
+    # 3. Create branch headings with a doc_id and content
+    context.reset()
+    context['doc_id'] = 'src/test.dm'
+    br3 = Branch(name='branch', content='Introduction', attributes=tuple(),
+                 context=context)
+    assert br3.get_id() == 'br:src-test-dm-introduction'
+    assert br3.attributes == (('id', 'br:src-test-dm-introduction'),)
+    assert br3.get_attribute('id') == 'br:src-test-dm-introduction'
+
+    # 4. Create branch headings with an id specified
+    context.reset()
+    context['doc_id'] = 'src/test.dm'
+    br4 = Branch(name='branch', content='Introduction',
+                 attributes=(('id', 'myid'),), context=context)
+    assert br4.get_id() == 'myid'
+    assert br4.attributes == (('id', 'myid'),)
+    assert br4.get_attribute('id') == 'myid'
+
+
+def test_heading_with_substitution(context_cls):
+    """Test the heading tags that use the substitution tag."""
+
+    # 1. Test a basic string substitution
+    context = context_cls(test='This is my test')
+
+    text = """
+    @chapter{@test}
+    """
+    ast = process_ast(text, context=context)
+
+    assert ast[1].name == 'chapter'
+    assert ast[1].content.name == 'test'
+    assert ast[1].content.content == 'This is my test'
+    assert ast[1].get_id() == 'br:this-is-my-test'
+
+    # 2. Test a substitution with tags
+    context = context_cls(test='This is @b{my} test')
+
+    text = """
+        @chapter{@test}
+        """
+    context['test'] = process_ast(context['test'], context=context)
+    ast = process_ast(text, context=context)
+
+    assert ast[1].name == 'chapter'
+    assert ast[1].content.name == 'test'
+    assert ast[1].get_id() == 'br:this-is-my-test'
+
+    # 3. Test a substitution with tags (Reverse processing order)
+    context = context_cls(test='This is @b{my} test')
+
+    text = """
+            @chapter{@test}
+            """
+    ast = process_ast(text, context=context)
+    context['test'] = process_ast(context['test'], context=context)
+
+    assert ast[1].name == 'chapter'
+    assert ast[1].content.name == 'test'
+    assert ast[1].get_id() == 'br:this-is-b-my-test'
+
+    # 4. Test a substitution for a header entry that forms a tag.
+    context = context_cls(title='This is @b{my} test')
+
+    text = """
+    @chapter{@title}
+    """
+    context['title'] = process_ast(context['title'], context=context)
+    ast = process_ast(text, context=context)
+
+    assert ast[1].name == 'chapter'
+    assert ast[1].content.name == 'title'
+    assert ast[1].content.content == ''
+    assert ast[1].get_id() == 'br:this-is-b-my-test'
+
+
+def test_heading_labels_formatting(tmpdir):
     """Test the formatting of labels for headings."""
     # Create a test document
     src_filepath = tmpdir.join('src').join('main.dm')
@@ -118,30 +214,36 @@ def test_heading_labels_html(tmpdir):
     # 1. Test with default labels
 
     markups = {
-        '@chapter{Chapter 1}': '<h1 id="br:chapter-1">\n'
+        '@chapter{Chapter 1}': '<h1 id="br:text-dm-chapter-1">\n'
                                '  <span class="branch"><span class="number">1.</span> Chapter 1</span>\n'
                                '</h1>\n',
-        '@section{Section 1}': '<h2 id="sec:section-1">\n'
+        '@section{Section 1}': '<h2 id="sec:text-dm-section-1">\n'
                                '  <span class="section"><span class="number">1.</span> Section 1</span>\n'
                                '</h2>\n',
-        '@subsection{Section 2}': '<h3 id="subsec:section-2">\n'
+        '@subsection{Section 2}': '<h3 id="subsec:text-dm-section-2">\n'
                                   '  <span class="subsection"><span class="number">1.</span> Section 2</span>\n'
                                   '</h3>\n',
-        '@subsubsection{Section 3}': '<h4 id="subsubsec:section-3">\n'
+        '@subsubsection{Section 3}': '<h4 id="subsubsec:text-dm-section-3">\n'
                                      '  <span class="subsubsection"><span class="number">1.</span> Section 3</span>\n'
                                      '</h4>\n',
-        '@h1{Chapter 1}': '<h1 id="br:chapter-1">\n'
+        '@h1{Chapter 1}': '<h1 id="br:text-dm-chapter-1">\n'
                           '  <span class="branch"><span class="number">1.</span> Chapter 1</span>\n'
                           '</h1>\n',
-        '@h2{Section 2}': '<h2 id="sec:section-2">\n'
+        '@h2{Section 2}': '<h2 id="sec:text-dm-section-2">\n'
                           '  <span class="section"><span class="number">1.</span> Section 2</span>\n'
                           '</h2>\n',
-        '@h3{Section 3}': '<h3 id="subsec:section-3">\n'
+        '@h3{Section 3}': '<h3 id="subsec:text-dm-section-3">\n'
                           '  <span class="subsection"><span class="number">1.</span> Section 3</span>\n'
                           '</h3>\n',
-        '@h4{Section 4}': '<h4 id="subsubsec:section-4">\n'
+        '@h4{Section 4}': '<h4 id="subsubsec:text-dm-section-4">\n'
                           '  <span class="subsubsection"><span class="number">1.</span> Section 4</span>\n'
                           '</h4>\n',
+        '@chapter': '<h1 id="br:text-dm-1">\n'
+                    '  <span class="branch"><span class="number">1.</span> </span>\n'
+                    '</h1>\n',
+        '@chapter{}': '<h1 id="br:text-dm-1">\n'
+                      '  <span class="branch"><span class="number">1.</span> </span>\n'
+                      '</h1>\n',
                }
 
     # Generate a tag for each and compare the generated html to the answer key
@@ -192,14 +294,32 @@ def test_heading_labels_tex(tmpdir):
     # 1. Test with default labels
 
     markups = {
-        '@chapter{Chapter 1}': '\n\\setcounter{chapter}{1}\n\\chapter{Chapter 1} \\label{br:chapter-1}\n\n',
-        '@section{Section 1}': '\n\\setcounter{section}{1}\n\\section{Section 1} \\label{sec:section-1}\n\n',
-        '@subsection{Section 2}': '\n\\setcounter{subsection}{1}\n\\subsection{Section 2} \\label{subsec:section-2}\n\n',
-        '@subsubsection{Section 3}': '\n\\setcounter{subsubsection}{1}\n\\subsubsection{Section 3} \\label{subsubsec:section-3}\n\n',
-        '@h2{Section 2}': '\n\\setcounter{section}{1}\n\\section{Section 2} \\label{sec:section-2}\n\n',
-        '@h3{Section 3}': '\n\\setcounter{subsection}{1}\n\\subsection{Section 3} \\label{subsec:section-3}\n\n',
-        '@h4{Section 4}': '\n\\setcounter{subsubsection}{1}\n\\subsubsection{Section 4} \\label{subsubsec:section-4}\n\n',
+        '@chapter{Chapter 1}': ('\n\\setcounter{chapter}{1}\n'
+                                '\\chapter{Chapter 1} '
+                                '\\label{br:text-dm-chapter-1}\n\n'),
+        '@section{Section 1}': ('\n\\setcounter{section}{1}\n'
+                                '\\section{Section 1} '
+                                '\\label{sec:text-dm-section-1}\n\n'),
+        '@subsection{Section 2}': ('\n\\setcounter{subsection}{1}\n'
+                                   '\\subsection{Section 2} '
+                                   '\\label{subsec:text-dm-section-2}\n\n'),
+        '@subsubsection{Section 3}': ('\n\\setcounter{subsubsection}{1}\n'
+                                      '\\subsubsection{Section 3} '
+                                      '\\label{subsubsec:text-dm-section-3}\n\n'),
+        '@h2{Section 2}': ('\n\\setcounter{section}{1}\n'
+                           '\\section{Section 2} '
+                           '\\label{sec:text-dm-section-2}\n\n'),
+        '@h3{Section 3}': ('\n\\setcounter{subsection}{1}\n'
+                           '\\subsection{Section 3} '
+                           '\\label{subsec:text-dm-section-3}\n\n'),
+        '@h4{Section 4}': ('\n\\setcounter{subsubsection}{1}\n'
+                           '\\subsubsection{Section 4} '
+                           '\\label{subsubsec:text-dm-section-4}\n\n'),
         '@h5{Section 5}': '\\paragraph{Section 5}',
+        '@chapter': ('\n\\setcounter{chapter}{1}\n'
+                     '\\chapter{} \\label{br:text-dm-1}\n\n'),
+        '@chapter{}': ('\n\\setcounter{chapter}{1}\n'
+                       '\\chapter{} \\label{br:text-dm-1}\n\n'),
                }
 
     # Generate a tag for each and compare the generated html to the answer key
@@ -207,7 +327,6 @@ def test_heading_labels_tex(tmpdir):
         doc.reset_contexts()
         root = process_ast(src, context=doc.context)
         label_man.register_labels()
-
         assert root.tex == tex
 
     # 2. Test with 'nolabel' specified

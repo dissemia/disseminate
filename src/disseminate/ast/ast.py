@@ -209,9 +209,12 @@ def process_context_asts(context):
     src_filepath = context['src_filepath']
 
     # Go through the entries in the context and determine which can be converted
-    # to an AST
+    # to an AST. Convert the 'body' entry last, as it may depend on other
+    # entries in the context
     for k, v in context.items():
-        # Skip macros and non-string entries
+        if k == settings.body_attr:
+            continue
+        # Skip non-string entries
         if not isinstance(v, str):
             continue
 
@@ -219,5 +222,13 @@ def process_context_asts(context):
         ast = process_ast(ast=v, context=context, src_filepath=src_filepath,
                           root_name=k)
         context[k] = ast
+
+    # Process the body entry last
+    if (settings.body_attr in context and
+       isinstance(context[settings.body_attr], str)):
+        body = context[settings.body_attr]
+        context[settings.body_attr] = process_ast(ast=body,
+                                                  context=context,
+                                                  root_name=settings.body_attr)
 
     return None

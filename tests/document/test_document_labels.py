@@ -231,9 +231,9 @@ def test_document_tree_updates_with_section_labels(tmpdir):
     # Check the number of labels: 3 for documents, 3 for chapters
     assert len(labels) == 6
     assert len(title_labels) == 3  # one for each file
-    assert title_labels[0].id == 'br:file1'
-    assert title_labels[1].id == 'br:file2'
-    assert title_labels[2].id == 'br:file3'
+    assert title_labels[0].id == 'br:file1-dm-file1'
+    assert title_labels[1].id == 'br:file2-dm-file2'
+    assert title_labels[2].id == 'br:file3-dm-file3'
 
     # Render the files and check their mtimes
     doc.render()
@@ -266,9 +266,9 @@ def test_document_tree_updates_with_section_labels(tmpdir):
     # Check the number of labels: 3 for documents, 3 for chapters
     assert len(label_manager.labels) == 6
     assert len(title_labels) == 3  # one for each file
-    assert title_labels[0].id == 'br:file1'
-    assert title_labels[1].id == 'br:file3'
-    assert title_labels[2].id == 'br:file2'
+    assert title_labels[0].id == 'br:file1-dm-file1'
+    assert title_labels[1].id == 'br:file3-dm-file3'
+    assert title_labels[2].id == 'br:file2-dm-file2'
 
     # A render should be required for all 3 documents.
     #   - file1.dm changed because its header changed
@@ -300,7 +300,7 @@ def test_document_tree_updates_with_section_labels(tmpdir):
         targets: html
         ---
         @chapter{file1}
-        @ref{br:file2}
+        @ref{br:file2-dm-file2}
         """)
     src_filepath2.write_text("""
         @chapter{file2}

@@ -172,3 +172,18 @@ Headings are used to group and demarcate parts of the document's text.
 
           @paragraph{Group A}. The first group ...
           @h5{Group A}. The first group ...
+
+
+Identifiers and Labels
+----------------------
+
+By default, all headings have a *unique* identifier and label. Labels allow
+other portions of a project to reference the heading.
+
+If a heading without a label is desired, the ``nolabel`` attribute can be used.
+Headings without a label cannot be linked and referenced in the project, and
+the heading will not be included in Tables of Content.
+
+Otherwise, it is recommended to use an identifier. An identifier is specified
+with the ``id=x`` attribute, and it should be *unique* for the project. If an
+identifier is not specified, an automated identifier will be generated.

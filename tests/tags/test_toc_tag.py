@@ -116,53 +116,53 @@ def test_toc_heading_html(tmpdir):
     key = """<ul class="toc-level-1">
   <li>
     <span class="ref">
-      <a href="/html/file1.html#sec:heading-1"><span class="number">1.</span> Heading 1</a>
+      <a href="/html/file1.html#sec:file1-dm-heading-1"><span class="number">1.</span> Heading 1</a>
     </span>
   </li>
   <li>
     <span class="ref">
-      <a href="/html/file1.html#sec:heading-2"><span class="number">2.</span> Heading 2</a>
+      <a href="/html/file1.html#sec:file1-dm-heading-2"><span class="number">2.</span> Heading 2</a>
     </span>
   </li>
   <ul class="toc-level-2">
     <li>
       <span class="ref">
-        <a href="/html/file1.html#subsec:sub-heading-2-1"><span class="number">2.1.</span> sub-Heading 2.1</a>
+        <a href="/html/file1.html#subsec:file1-dm-sub-heading-2-1"><span class="number">2.1.</span> sub-Heading 2.1</a>
       </span>
     </li>
     <li>
       <span class="ref">
-        <a href="/html/file1.html#subsec:sub-heading-2-2"><span class="number">2.2.</span> sub-Heading 2.2</a>
+        <a href="/html/file1.html#subsec:file1-dm-sub-heading-2-2"><span class="number">2.2.</span> sub-Heading 2.2</a>
       </span>
     </li>
     <ul class="toc-level-3">
       <li>
         <span class="ref">
-          <a href="/html/file1.html#subsubsec:sub-sub-header-2-2-1"><span class="number">2.2.1.</span> sub-sub-Header 2.2.1</a>
+          <a href="/html/file1.html#subsubsec:file1-dm-sub-sub-header-2-2-1"><span class="number">2.2.1.</span> sub-sub-Header 2.2.1</a>
         </span>
       </li>
     </ul>
     <li>
       <span class="ref">
-        <a href="/html/file1.html#subsec:sub-heading-2-3"><span class="number">2.3.</span> sub-Heading 2.3</a>
+        <a href="/html/file1.html#subsec:file1-dm-sub-heading-2-3"><span class="number">2.3.</span> sub-Heading 2.3</a>
       </span>
     </li>
   </ul>
   <li>
     <span class="ref">
-      <a href="/html/file1.html#sec:heading-3"><span class="number">3.</span> Heading 3</a>
+      <a href="/html/file1.html#sec:file1-dm-heading-3"><span class="number">3.</span> Heading 3</a>
     </span>
   </li>
   <ul class="toc-level-2">
     <li>
       <span class="ref">
-        <a href="/html/file1.html#subsubsec:sub-sub-header-3-1-1"><span class="number">3.1.</span> sub-sub-header 3.1.1</a>
+        <a href="/html/file1.html#subsubsec:file1-dm-sub-sub-header-3-1-1"><span class="number">3.1.</span> sub-sub-header 3.1.1</a>
       </span>
     </li>
   </ul>
   <li>
     <span class="ref">
-      <a href="/html/file1.html#sec:heading-4"><span class="number">4.</span> Heading 4</a>
+      <a href="/html/file1.html#sec:file1-dm-heading-4"><span class="number">4.</span> Heading 4</a>
     </span>
   </li>
 </ul>
@@ -333,53 +333,53 @@ def test_toc_document_html(tmpdir):
   <ul class="toc-level-2">
     <li>
       <span class="ref">
-        <a href="/html/file1.html#sec:heading-1"><span class="number">1.</span> Heading 1</a>
+        <a href="/html/file1.html#sec:file1-dm-heading-1"><span class="number">1.</span> Heading 1</a>
       </span>
     </li>
     <li>
       <span class="ref">
-        <a href="/html/file1.html#sec:heading-2"><span class="number">2.</span> Heading 2</a>
+        <a href="/html/file1.html#sec:file1-dm-heading-2"><span class="number">2.</span> Heading 2</a>
       </span>
     </li>
     <ul class="toc-level-3">
       <li>
         <span class="ref">
-          <a href="/html/file1.html#subsec:sub-heading-2-1"><span class="number">2.1.</span> sub-Heading 2.1</a>
+          <a href="/html/file1.html#subsec:file1-dm-sub-heading-2-1"><span class="number">2.1.</span> sub-Heading 2.1</a>
         </span>
       </li>
       <li>
         <span class="ref">
-          <a href="/html/file1.html#subsec:sub-heading-2-2"><span class="number">2.2.</span> sub-Heading 2.2</a>
+          <a href="/html/file1.html#subsec:file1-dm-sub-heading-2-2"><span class="number">2.2.</span> sub-Heading 2.2</a>
         </span>
       </li>
       <ul class="toc-level-4">
         <li>
           <span class="ref">
-            <a href="/html/file1.html#subsubsec:sub-sub-header-2-2-1"><span class="number">2.2.1.</span> sub-sub-Header 2.2.1</a>
+            <a href="/html/file1.html#subsubsec:file1-dm-sub-sub-header-2-2-1"><span class="number">2.2.1.</span> sub-sub-Header 2.2.1</a>
           </span>
         </li>
       </ul>
       <li>
         <span class="ref">
-          <a href="/html/file1.html#subsec:sub-heading-2-3"><span class="number">2.3.</span> sub-Heading 2.3</a>
+          <a href="/html/file1.html#subsec:file1-dm-sub-heading-2-3"><span class="number">2.3.</span> sub-Heading 2.3</a>
         </span>
       </li>
     </ul>
     <li>
       <span class="ref">
-        <a href="/html/file1.html#sec:heading-3"><span class="number">3.</span> Heading 3</a>
+        <a href="/html/file1.html#sec:file1-dm-heading-3"><span class="number">3.</span> Heading 3</a>
       </span>
     </li>
     <ul class="toc-level-3">
       <li>
         <span class="ref">
-          <a href="/html/file1.html#subsubsec:sub-sub-header-3-1-1"><span class="number">3.1.</span> sub-sub-header 3.1.1</a>
+          <a href="/html/file1.html#subsubsec:file1-dm-sub-sub-header-3-1-1"><span class="number">3.1.</span> sub-sub-header 3.1.1</a>
         </span>
       </li>
     </ul>
     <li>
       <span class="ref">
-        <a href="/html/file1.html#sec:heading-4"><span class="number">4.</span> Heading 4</a>
+        <a href="/html/file1.html#sec:file1-dm-heading-4"><span class="number">4.</span> Heading 4</a>
       </span>
     </li>
   </ul>
@@ -410,53 +410,53 @@ def test_toc_document_html(tmpdir):
   <ul class="toc-level-2">
     <li>
       <span class="ref">
-        <a href="/html/file1.html#sec:heading-1"><span class="number">1.</span> Heading 1</a>
+        <a href="/html/file1.html#sec:file1-dm-heading-1"><span class="number">1.</span> Heading 1</a>
       </span>
     </li>
     <li>
       <span class="ref">
-        <a href="/html/file1.html#sec:heading-2"><span class="number">2.</span> Heading 2</a>
+        <a href="/html/file1.html#sec:file1-dm-heading-2"><span class="number">2.</span> Heading 2</a>
       </span>
     </li>
     <ul class="toc-level-3">
       <li>
         <span class="ref">
-          <a href="/html/file1.html#subsec:sub-heading-2-1"><span class="number">2.1.</span> sub-Heading 2.1</a>
+          <a href="/html/file1.html#subsec:file1-dm-sub-heading-2-1"><span class="number">2.1.</span> sub-Heading 2.1</a>
         </span>
       </li>
       <li>
         <span class="ref">
-          <a href="/html/file1.html#subsec:sub-heading-2-2"><span class="number">2.2.</span> sub-Heading 2.2</a>
+          <a href="/html/file1.html#subsec:file1-dm-sub-heading-2-2"><span class="number">2.2.</span> sub-Heading 2.2</a>
         </span>
       </li>
       <ul class="toc-level-4">
         <li>
           <span class="ref">
-            <a href="/html/file1.html#subsubsec:sub-sub-header-2-2-1"><span class="number">2.2.1.</span> sub-sub-Header 2.2.1</a>
+            <a href="/html/file1.html#subsubsec:file1-dm-sub-sub-header-2-2-1"><span class="number">2.2.1.</span> sub-sub-Header 2.2.1</a>
           </span>
         </li>
       </ul>
       <li>
         <span class="ref">
-          <a href="/html/file1.html#subsec:sub-heading-2-3"><span class="number">2.3.</span> sub-Heading 2.3</a>
+          <a href="/html/file1.html#subsec:file1-dm-sub-heading-2-3"><span class="number">2.3.</span> sub-Heading 2.3</a>
         </span>
       </li>
     </ul>
     <li>
       <span class="ref">
-        <a href="/html/file1.html#sec:heading-3"><span class="number">3.</span> Heading 3</a>
+        <a href="/html/file1.html#sec:file1-dm-heading-3"><span class="number">3.</span> Heading 3</a>
       </span>
     </li>
     <ul class="toc-level-3">
       <li>
         <span class="ref">
-          <a href="/html/file1.html#subsubsec:sub-sub-header-3-1-1"><span class="number">3.1.</span> sub-sub-header 3.1.1</a>
+          <a href="/html/file1.html#subsubsec:file1-dm-sub-sub-header-3-1-1"><span class="number">3.1.</span> sub-sub-header 3.1.1</a>
         </span>
       </li>
     </ul>
     <li>
       <span class="ref">
-        <a href="/html/file1.html#sec:heading-4"><span class="number">4.</span> Heading 4</a>
+        <a href="/html/file1.html#sec:file1-dm-heading-4"><span class="number">4.</span> Heading 4</a>
       </span>
     </li>
   </ul>
@@ -509,21 +509,21 @@ def test_toc_heading_tex(tmpdir):
               context=doc.context)
 
     key = """\\begin{toclist}
-  \\item \\hyperref[sec:heading-1]{1. Heading 1} \\hfill \\pageref{sec:heading-1}
-  \\item \\hyperref[sec:heading-2]{2. Heading 2} \\hfill \\pageref{sec:heading-2}
+  \\item \\hyperref[sec:file1-dm-heading-1]{1. Heading 1} \\hfill \\pageref{sec:file1-dm-heading-1}
+  \\item \\hyperref[sec:file1-dm-heading-2]{2. Heading 2} \\hfill \\pageref{sec:file1-dm-heading-2}
   \\begin{toclist}
-    \\item \\hyperref[subsec:sub-heading-2-1]{2.1. sub-Heading 2.1} \\hfill \\pageref{subsec:sub-heading-2-1}
-    \\item \\hyperref[subsec:sub-heading-2-2]{2.2. sub-Heading 2.2} \\hfill \\pageref{subsec:sub-heading-2-2}
+    \\item \\hyperref[subsec:file1-dm-sub-heading-2-1]{2.1. sub-Heading 2.1} \\hfill \\pageref{subsec:file1-dm-sub-heading-2-1}
+    \\item \\hyperref[subsec:file1-dm-sub-heading-2-2]{2.2. sub-Heading 2.2} \\hfill \\pageref{subsec:file1-dm-sub-heading-2-2}
     \\begin{toclist}
-      \\item \\hyperref[subsubsec:sub-sub-header-2-2-1]{2.2.1. sub-sub-Header 2.2.1} \\hfill \\pageref{subsubsec:sub-sub-header-2-2-1}
+      \\item \\hyperref[subsubsec:file1-dm-sub-sub-header-2-2-1]{2.2.1. sub-sub-Header 2.2.1} \\hfill \\pageref{subsubsec:file1-dm-sub-sub-header-2-2-1}
     \\end{toclist}
-    \\item \\hyperref[subsec:sub-heading-2-3]{2.3. sub-Heading 2.3} \\hfill \\pageref{subsec:sub-heading-2-3}
+    \\item \\hyperref[subsec:file1-dm-sub-heading-2-3]{2.3. sub-Heading 2.3} \\hfill \\pageref{subsec:file1-dm-sub-heading-2-3}
   \\end{toclist}
-  \\item \\hyperref[sec:heading-3]{3. Heading 3} \\hfill \\pageref{sec:heading-3}
+  \\item \\hyperref[sec:file1-dm-heading-3]{3. Heading 3} \\hfill \\pageref{sec:file1-dm-heading-3}
   \\begin{toclist}
-    \\item \\hyperref[subsubsec:sub-sub-header-3-1-1]{3.1. sub-sub-header 3.1.1} \\hfill \\pageref{subsubsec:sub-sub-header-3-1-1}
+    \\item \\hyperref[subsubsec:file1-dm-sub-sub-header-3-1-1]{3.1. sub-sub-header 3.1.1} \\hfill \\pageref{subsubsec:file1-dm-sub-sub-header-3-1-1}
   \\end{toclist}
-  \\item \\hyperref[sec:heading-4]{4. Heading 4} \\hfill \\pageref{sec:heading-4}
+  \\item \\hyperref[sec:file1-dm-heading-4]{4. Heading 4} \\hfill \\pageref{sec:file1-dm-heading-4}
 \\end{toclist}
 """
     assert key == toc.tex

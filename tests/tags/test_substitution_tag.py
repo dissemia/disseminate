@@ -20,7 +20,7 @@ def test_substitution_basic(context_cls):
     context['test'] = 'my test'
 
     # The content should now be replaced
-    assert sub.content == ''
+    assert sub.content == 'my test'
     assert sub.txt == 'my test'
 
 

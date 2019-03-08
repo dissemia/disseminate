@@ -447,7 +447,7 @@ def test_render_required(tmpdir):
     #    In this case, place a reference in the 2nd document for the 3rd.
     src_filepath2.write_text("""
     @chapter{file2}
-    @ref{br:file3}
+    @ref{br:file3-dm-file3}
     """)
 
     # Now the 2nd document needs to be rendered

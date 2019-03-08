@@ -20,7 +20,7 @@ class Substitution(Tag):
 
     @property
     def content(self):
-        return ''
+        return self.get_content()
 
     @content.setter
     def content(self, value):
