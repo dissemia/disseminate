@@ -10,6 +10,7 @@ from markupsafe import Markup
 from .headings import toc_levels as heading_toc_levels
 from .ref import Ref
 from .core import Tag
+from . import exceptions
 from ..tags.headings import Heading
 from .. import settings
 
@@ -66,7 +67,19 @@ class Toc(Tag):
         super(Toc, self).__init__(name, content, attributes, context)
 
         # Get the TOC's kind from the tag's content
-        self.toc_kind = self.content.split()
+        content = self.content
+        if isinstance(content, list) and len(content) > 0:
+            content = content[0]
+        if isinstance(content, str):
+            self.toc_kind = content.split()
+        elif isinstance(content, Tag):
+            self.toc_kind = content.txt
+
+        # If the TOC kind hasn't been assigned, the content could be parsed.
+        # Raise and exception
+        if self.toc_kind is None:
+            msg = "The {} tag could not parse the tag contents: {}"
+            raise exceptions.TagError(msg.format(self.name, content))
 
         # Setup the TOC header, if specified
         header = self.get_attribute(name='header', clear=True)

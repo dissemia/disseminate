@@ -227,48 +227,6 @@ def test_ast_edge_cases(context_cls):
     assert ast.content[2] == '.'
 
 
-def test_ast_substitutions(context_cls):
-    """Tests the application and recursion of substitution tags from the
-    context."""
-
-    # 1. Test with a basic substitution
-    test1 = "This is my @test string."
-    context = context_cls(test='substituted')
-    ast1 = process_ast(test1, context=context)
-    assert ast1.txt == 'This is my substituted string.'
-
-    # 2. Test with a recursive substitution
-    test21 = "This is my @test string."
-    context = context_cls(test='substituted @test')
-    ast21 = process_ast(test21, context=context)
-    assert ast21.txt == 'This is my substituted @test string.'
-
-    context = context_cls(test='substituted @test')
-    ast22 = process_ast(context['test'], context=context)
-    assert context['test'] == 'substituted @test'
-    assert ast22.txt == 'substituted substituted @test'
-
-    context = context_cls(test='substituted @test')
-    context['test'] = process_ast(context['test'], context=context)
-    assert context['test'].txt == 'substituted substituted '
-
-    context['test'] = process_ast(context['test'], context=context)
-    assert context['test'].txt == 'substituted '
-
-    # 3. Test with a cross-recursive substitution
-    context = context_cls(**{'a': '@b', 'b': '@a'})
-    context['a'] = process_ast(context['b'], context=context)
-    assert context['a'].txt == ''
-    context['b'] = process_ast(context['a'], context=context)
-    assert context['b'].txt == ''
-
-    context = context_cls(**{'a': '@b', 'b': '@a'})
-    context['a'] = process_ast(context['a'], context=context)
-    context['b'] = process_ast(context['b'], context=context)
-    assert context['a'].txt == ''
-    assert context['b'].txt == ''
-
-
 # html targets
 
 def test_basic_triple_conversion(context_cls):

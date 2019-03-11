@@ -12,6 +12,7 @@ from ..ast import (process_context_asts, process_context_paragraphs,
                    process_context_typography)
 from ..renderers import process_context_template
 from ..header import load_header
+from ..macros import process_context_macros
 from ..convert import convert
 from ..context.utils import context_targets, context_includes
 from ..utils import mkdir_p
@@ -100,6 +101,10 @@ class Document(object):
         # be run after the header is loaded because the header may contain
         # the title for the document,
         set_document_label,
+
+        # Optional. Process macros. This will convert macros in the context
+        # that have just been loaded from the header
+        process_context_macros,
 
         # Required. Populate the template renderers. This needs to be done
         # after the header is loaded.

@@ -2,7 +2,7 @@
 The Tag factory to select the correct tag classes and create tag objects.
 """
 from .core import Tag
-from ..utils.classes import all_subclasses
+from .. import settings
 
 
 class TagFactory(object):
@@ -12,37 +12,7 @@ class TagFactory(object):
     parameters.
     """
 
-    tag_clses = None
-    substitution_cls = None
-
-    def __init__(self):
-        # Lazy initialization of the class. The tags can be cached because
-        # the source code is assumed static once the program has started.
-        if TagFactory.tag_clses is None:
-            # Initialize the tag types dict.
-            TagFactory.tag_clses = dict()
-
-            for scls in all_subclasses(Tag):
-                # Tag must be active
-                if not scls.active:
-                    continue
-
-                # Collect the name and aliases (alternative names) for the tag
-                aliases = (list(scls.aliases) if scls.aliases is not None else
-                           list())
-                names = [scls.__name__.lower(),] + aliases
-
-                for name in names:
-                    # duplicate or overwritten tag names are not allowed
-                    assert name not in self.tag_clses
-                    TagFactory.tag_clses[name] = scls
-
-        if TagFactory.substitution_cls is None:
-            substitution_cls = TagFactory.tag_clses.get('substitution')
-            TagFactory.substitution_cls = substitution_cls
-
-    def tag(self, tag_name, tag_content, tag_attributes, context,
-            allow_substitution=True):
+    def tag(self, tag_name, tag_content, tag_attributes, context):
         """Return the approriate tag, given a tag_name and tag_content.
 
         Parameters
@@ -55,24 +25,16 @@ class TagFactory(object):
             The attributes of a tag. ex: 'width=32pt'
         context : dict
             The document's context dict.
-        allow_substitution : bool, optional
-            If True, Substitution tags can be returned.
 
         Returns
         -------
         :obj:`Tag subclass <disseminate.tags.core.Tag>`
             An tag.
         """
-        # Try to find the appropriate subclass
-        if tag_name.lower() in self.tag_clses:
+        if tag_name.lower() in settings.tag_classes:
             # First, see if the tag_name matches one of the tag subclasses (or
             # tag aliases) in disseminate
-            cls = self.tag_clses[tag_name.lower()]
-        elif (allow_substitution and
-              tag_name in context and self.substitution_cls):
-            # If not, this might be a substitution, which uses a 'Substitution'
-            # tag to insert the contents of an entry in the context.
-            cls = self.substitution_cls
+            cls = settings.tag_classes[tag_name.lower()]
         else:
             # If all else fails, just make a generic Tag.
             cls = Tag

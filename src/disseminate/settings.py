@@ -38,6 +38,9 @@ tag_prefix = r'@'
 #: Maximum depth of tag trees
 tag_max_depth = 30
 
+#: A dict with tag class names (keys) and tag classes (values) available.
+tag_classes = dict()
+
 # If True, converted files will be updated only when they're changed. Otherwise
 # converted files will always be updated
 convert_cache = True

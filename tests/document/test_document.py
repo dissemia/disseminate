@@ -519,11 +519,14 @@ def test_document_render(tmpdir, target):
 def test_document_example8(tmpdir):
     """Test the example8 document directory."""
     tmpdir = pathlib.Path(tmpdir)
-    print(tmpdir)
+
     # Load the document and render it with no template
     doc = Document("tests/document/example8/src/fundamental_solnNMR"
                    "/inept/inept.dm", tmpdir)
 
     target = {'.html': doc.target_filepath(target='.html')}
-    # doc.render(targets=target)
-    assert False
+    doc.render(targets=target)
+
+    # Check the rendered html
+    key = pathlib.Path('tests/document/example8/html/inept.html').read_text()
+    assert target['.html'].read_text() == key

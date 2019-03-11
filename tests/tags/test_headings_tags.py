@@ -3,6 +3,7 @@ Tags for headings
 """
 from disseminate import Document
 from disseminate.ast import process_ast
+from disseminate.macros import replace_macros
 from disseminate.tags.headings import Branch
 from disseminate.utils.tests import strip_leading_space
 
@@ -45,61 +46,56 @@ def test_heading_labels(context_cls):
     assert br4.get_attribute('id') == 'myid'
 
 
-def test_heading_with_substitution(context_cls):
-    """Test the heading tags that use the substitution tag."""
+def test_heading_with_macros(context_cls):
+    """Test the heading tags that use macros."""
 
-    # 1. Test a basic string substitution
+    # 1. Test a basic macro
     context = context_cls(test='This is my test')
 
     text = """
     @chapter{@test}
     """
-    ast = process_ast(text, context=context)
+    s = replace_macros(text, context=context)
+    ast = process_ast(s, context=context)
 
     assert ast[1].name == 'chapter'
-    assert ast[1].content.name == 'test'
-    assert ast[1].content.content == 'This is my test'
+    assert ast[1].content == 'This is my test'
     assert ast[1].get_id() == 'br:this-is-my-test'
 
-    # 2. Test a substitution with tags
+    # 2. Test a macro with tags
     context = context_cls(test='This is @b{my} test')
 
     text = """
         @chapter{@test}
         """
-    context['test'] = process_ast(context['test'], context=context)
-    ast = process_ast(text, context=context)
+    s = replace_macros(text, context=context)
+    ast = process_ast(s, context=context)
 
     assert ast[1].name == 'chapter'
-    assert ast[1].content.name == 'test'
+    assert ast[1].content[0] == 'This is '
+    assert ast[1].content[1].name == 'b'
+    assert ast[1].content[1].content == 'my'
+    assert ast[1].content[2] == ' test'
     assert ast[1].get_id() == 'br:this-is-my-test'
 
-    # 3. Test a substitution with tags (Reverse processing order)
-    context = context_cls(test='This is @b{my} test')
-
-    text = """
-            @chapter{@test}
-            """
-    ast = process_ast(text, context=context)
-    context['test'] = process_ast(context['test'], context=context)
-
-    assert ast[1].name == 'chapter'
-    assert ast[1].content.name == 'test'
-    assert ast[1].get_id() == 'br:this-is-b-my-test'
-
-    # 4. Test a substitution for a header entry that forms a tag.
+    # 3. Test a macro for a header entry that forms a tag.
     context = context_cls(title='This is @b{my} test')
 
     text = """
     @chapter{@title}
     """
-    context['title'] = process_ast(context['title'], context=context)
-    ast = process_ast(text, context=context)
+    s = replace_macros(text, context=context)
+    ast = process_ast(s, context=context)
 
+    assert isinstance(ast[1], Branch)
     assert ast[1].name == 'chapter'
-    assert ast[1].content.name == 'title'
-    assert ast[1].content.content == ''
-    assert ast[1].get_id() == 'br:this-is-b-my-test'
+
+    assert ast[1].content[0] == 'This is '
+    assert ast[1].content[1].name == 'b'
+    assert ast[1].content[1].content == 'my'
+    assert ast[1].content[2] == ' test'
+    assert ast[1].get_id() == 'br:this-is-my-test'
+    assert ast.txt == '\n    This is my test\n    '
 
 
 def test_heading_labels_formatting(tmpdir):

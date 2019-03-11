@@ -4,6 +4,7 @@ Test the proces_paragraphs function.
 from disseminate.ast import (process_ast, process_paragraphs,
                              process_context_asts, process_context_paragraphs)
 from disseminate.ast.paragraph import group_paragraphs, clean_paragraphs
+from disseminate.macros import process_context_macros
 from disseminate.tags import Tag
 from disseminate.tags.text import P
 from disseminate.header import load_header
@@ -241,9 +242,11 @@ def test_process_paragraphs_newlines(context_cls):
                              'src_filepath': '.',
                              'body': text})
 
+    process_context_macros(context=context)
     process_context_asts(context=context)
     result = process_paragraphs(context['body'], context=context)
-    assert 'or\n    <span class="19f"><sup>19</sup>F</span>' in result.html
+    assert '<sup>13</sup>C' in result.html
+    assert 'or\n    <sup>19</sup>F' in result.html
 
 
 def test_process_context_paragraphs(context_cls):

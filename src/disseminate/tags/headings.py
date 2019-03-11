@@ -94,18 +94,6 @@ class Heading(Tag):
             self.attributes = set_attribute(self.attributes, ('id', id))
         return id
 
-    @property
-    def label(self):
-        # The heading __init__ may try to set the contents based on a label,
-        # which may not have been created yet. For this reason, this method
-        # catches the exception and returns no label so that the default_fmt
-        # (and related methods) can simply format the string based on the
-        # contents
-        try:
-            return super().label
-        except LabelNotFound:
-            return None
-
     def set_label(self, id, kind, title=None):
         assert id is not None
 

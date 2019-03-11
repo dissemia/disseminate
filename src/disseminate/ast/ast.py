@@ -187,8 +187,7 @@ def process_ast(ast, context, src_filepath=None, line_counter=None,
     if level == 1 and isinstance(new_ast, list):  # root level
         # Create a new root tag
         new_ast = factory.tag(tag_name=root_name, tag_content=new_ast,
-                              tag_attributes='', context=context,
-                              allow_substitution=False)
+                              tag_attributes='', context=context)
 
     return new_ast
 

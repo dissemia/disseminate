@@ -49,6 +49,7 @@ def test_document_toc(tmpdir):
 
     # Make sure the 'toc' context entry is correct
     toc_tag = doc.context['toc']
+
     assert toc_tag.name == 'toc'
     key = """<ul class="toc-level-1">
   <li>

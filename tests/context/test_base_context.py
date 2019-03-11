@@ -6,7 +6,7 @@ import pytest
 from disseminate.context import BaseContext
 
 
-def test_base_context_dict():
+def test_base_context_dict(context_cls):
     """Test the basic dict functionality of the base context class."""
 
     # initialize from kwargs
@@ -35,28 +35,34 @@ def test_base_context_dict():
     assert context['d'] == 4
 
 
-def test_base_context_default():
+def test_base_context_default(context_cls):
     """Test the utilization of the default_context."""
-    default_context = BaseContext.default_context
-    BaseContext.default_context = {'a': 2, 'b': 3, 'c': 4}
 
-    context = BaseContext()
+    # We use the context_cls fixture, which is a BaseContext class instance,
+    # because we are modifying the BaseContext class
+    default_context = context_cls.default_context
+    context_cls.default_context = {'a': 2, 'b': 3, 'c': 4}
+
+    context = context_cls()
     assert len(context) >= 3
     assert context['a'] == 2
     assert context['b'] == 3
     assert context['c'] == 4
 
-    BaseContext.default_context = default_context
+    context_cls.default_context = default_context
 
 
-def test_base_context_reset():
+def test_base_context_reset(context_cls):
     """Test the reset functionality in the base context. """
-    default_context = BaseContext.default_context
-    BaseContext.default_context = {'a': 2, 'b': 3, 'c': 4}
+
+    # We use the context_cls fixture, which is a BaseContext class instance,
+    # because we are modifying the BaseContext class
+    default_context = context_cls.default_context
+    context_cls.default_context = {'a': 2, 'b': 3, 'c': 4}
 
     # Reset preserve the default_context, parent_context and initial values
     parent_context = {'d': 5, 'e': 6, 'h': []}
-    context = BaseContext(parent_context=parent_context, f=7, g=8)
+    context = context_cls(parent_context=parent_context, f=7, g=8)
     context['i'] = 9
 
     assert context['a'] == 2
@@ -86,6 +92,8 @@ def test_base_context_reset():
     assert context['h'] == []
     assert 'i' not in context
 
+    context_cls.default_context = default_context
+
 
 def test_base_context_copy():
     """Tests shallow and deep copies of the parent context and default
@@ -93,6 +101,7 @@ def test_base_context_copy():
     # Create a default dict and make sure that the mutables are copies and
     # not the objects themselves.
     l1, l2 = [], []
+
     class SubContext(BaseContext):
         default_context = {'a': l1}
 
@@ -130,27 +139,31 @@ def test_base_context_copy():
     assert context['l2'] == ['l2 addition']
 
 
-def test_base_context_is_valid():
+def test_base_context_is_valid(context_cls):
     """Tests the 'is_valid' method in the BaseContext."""
-    default_validation_types = BaseContext.validation_types
-    BaseContext.validation_types = {'int': int,
+
+    # We use the context_cls fixture, which is a BaseContext class instance,
+    # because we are modifying the BaseContext class
+
+    default_validation_types = context_cls.validation_types
+    context_cls.validation_types = {'int': int,
                                     'float': float,
                                     'str': str}
 
     # 1. test a context with missing entries
-    context = BaseContext(b=2, c=3)
+    context = context_cls(b=2, c=3)
     assert not context.is_valid()
 
     # 2. test a context with the wrong types
-    context = BaseContext(int=3.2, float=4, str=None)
+    context = context_cls(int=3.2, float=4, str=None)
     assert not context.is_valid()
 
     # 3. test a context with the right types, but one missing.
-    context = BaseContext(int=4, float=3.2)
+    context = context_cls(int=4, float=3.2)
     assert not context.is_valid()
     assert context.is_valid(must_exist=False)
 
-    BaseContext.validation_types = default_validation_types
+    context_cls.validation_types = default_validation_types
 
     # 4. Alternatively, we could only check specific keys
     assert context.is_valid('int', 'float')
