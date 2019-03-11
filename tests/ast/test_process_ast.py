@@ -60,6 +60,22 @@ author: Justin L Lorieau
 """
 
 
+def test_ast_basic_tag_strings(context_cls):
+    """Test the parseing of basic tag strings into an ast."""
+
+    context = context_cls()
+
+    ast = process_ast('@test', context=context)
+    assert ast.name == 'test'
+    assert ast.content == ''
+    assert ast.txt == ''
+
+    ast = process_ast('@test{}', context=context)
+    assert ast.name == 'test'
+    assert ast.content == ''
+    assert ast.txt == ''
+
+
 def test_ast_basic_string(context_cls):
     """Test the parsing of a basic string into an AST."""
 
