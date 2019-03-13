@@ -5,8 +5,8 @@ from disseminate.tags import Tag
 from disseminate.tags.eqs import Eq
 from disseminate.dependency_manager import DependencyManager
 from disseminate.renderers import process_context_template
-from disseminate.ast import process_ast
-from disseminate import settings, SourcePath, TargetPath
+from disseminate.ast import process_ast, process_paragraphs
+from disseminate import SourcePath, TargetPath
 
 
 def test_inline_equation(tmpdir, context_cls):
@@ -111,6 +111,8 @@ def test_block_equation(tmpdir, context_cls):
     assert eq3.tex == '\\begin{alignat*}{3} %\ny=x\n\\end{alignat*}'
 
 
+# html targets
+
 def test_simple_inline_equation_html(tmpdir, context_cls):
     """Test the rendering of simple inline equations for html."""
 
@@ -165,6 +167,8 @@ def test_simple_inline_equation_html(tmpdir, context_cls):
     assert (root_html ==
             '<img class="eq" src="/html/media/test_86f37f32e2.svg"/>')
 
+
+# tex targets
 
 def test_simple_inline_equation_tex(tmpdir, context_cls):
     """Test the rendering of simple inline equations for tex."""
@@ -237,3 +241,10 @@ def test_block_equation_tex(tmpdir, context_cls):
                         'y &= x + b \\\n'
                         '    &= x + a\n'
                         '\\end{align*}\n    ')
+
+    root = process_paragraphs(root, context=context)
+
+    assert root.tex == ('\n\n    \\begin{align*} %\n'
+                        'y &= x + b \\\n'
+                        '    &= x + a\n'
+                        '\\end{align*}\n    \n')

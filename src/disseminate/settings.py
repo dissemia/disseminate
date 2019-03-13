@@ -125,37 +125,39 @@ default_context = {
 
     },
 
+    # Macros are string entries that aren't processed into tags and asts.
+    # These start with the 'tag_prefix' (e.g. '@')
     # Macros - Isotopes
-    '1H': '@sup{1}H', '2H': '@sup{2}H', '13C': '@sup{13}C', '15N': '@sup{15}N',
-    '19F': '@sup{19}F', '31P': '@sup{31}P',
+    '@1H': '@sup{1}H', '@2H': '@sup{2}H', '@13C': '@sup{13}C', '@15N': '@sup{15}N',
+    '@19F': '@sup{19}F', '@31P': '@sup{31}P',
 
     # Macros - Molecules
-    'H2O': 'H@sub{2}O',
+    '@H2O': 'H@sub{2}O',
 
     # Macros - Symbols
-    'deg': '@sup{○}',
+    '@deg': '@sup{○}',
 
     # Macros - Greek
-    'alpha': '@symbol{alpha}', 'beta': '@symbol{beta}',
-    'gamma': '@symbol{gamma}', 'delta': '@symbol{delta}',
-    'epsilon': '@symbol{epsilon}', 'zeta': '@symbol{zeta}',
-    'eta': '@symbol{eta}', 'theta': '@symbol{theta}', 'iota': '@symbol{iota}',
-    'kappa': '@symbol{kappa}', 'lambda': '@symbol{lambda}',
-    'mu': '@symbol{mu}', 'nu': '@symbol{nu}', 'xi': '@symbol{xi}',
-    'omicron': '@symbol{omicron}', 'pi': '@symbol{pi}', 'rho': '@symbol{rho}',
-    'sigma': '@symbol{sigma}', 'tau': '@symbol{tau}',
-    'upsilon': '@symbol{upsilon}', 'phi': '@symbol{phi}',
-    'chi': '@symbol{chi}', 'psi': '@symbol{psi}', 'omega': '@symbol{omega}',
-    'Alpha': '@symbol{Alpha}', 'Beta': '@symbol{Beta}',
-    'Gamma': '@symbol{Gamma}', 'Delta': '@symbol{Delta}',
-    'Epsilon': '@symbol{Epsilon}', 'Zeta': '@symbol{Zeta}',
-    'Eta': '@symbol{Eta}', 'Theta': '@symbol{Theta}', 'Iota': '@symbol{Iota}',
-    'Kappa': '@symbol{Kappa}', 'Lambda': '@symbol{Lambda}',
-    'Mu': '@symbol{Mu}', 'Nu': '@symbol{Nu}', 'Xi': '@symbol{Xi}',
-    'Omicron': '@symbol{Omicron}', 'Pi': '@symbol{Pi}', 'Rho': '@symbol{Rho}',
-    'Sigma': '@symbol{Sigma}', 'Tau': '@symbol{Tau}',
-    'Upsilon': '@symbol{Upsilon}', 'Phi': '@symbol{Phi}',
-    'Chi': '@symbol{Chi}', 'Psi': '@symbol{Psi}', 'Omega': '@symbol{Omega}',
+    '@alpha': '@symbol{alpha}', '@beta': '@symbol{beta}',
+    '@gamma': '@symbol{gamma}', '@delta': '@symbol{delta}',
+    '@epsilon': '@symbol{epsilon}', '@zeta': '@symbol{zeta}',
+    '@eta': '@symbol{eta}', '@theta': '@symbol{theta}',
+    '@iota': '@symbol{iota}', '@kappa': '@symbol{kappa}',
+    '@lambda': '@symbol{lambda}', '@mu': '@symbol{mu}', '@nu': '@symbol{nu}',
+    '@xi': '@symbol{xi}', '@omicron': '@symbol{omicron}', '@pi': '@symbol{pi}',
+    '@rho': '@symbol{rho}', '@sigma': '@symbol{sigma}', '@tau': '@symbol{tau}',
+    '@upsilon': '@symbol{upsilon}', '@phi': '@symbol{phi}',
+    '@chi': '@symbol{chi}', '@psi': '@symbol{psi}', '@omega': '@symbol{omega}',
+    '@Alpha': '@symbol{Alpha}', '@Beta': '@symbol{Beta}',
+    '@Gamma': '@symbol{Gamma}', '@Delta': '@symbol{Delta}',
+    '@Epsilon': '@symbol{Epsilon}', '@Zeta': '@symbol{Zeta}',
+    '@Eta': '@symbol{Eta}', '@Theta': '@symbol{Theta}',
+    '@Iota': '@symbol{Iota}', '@Kappa': '@symbol{Kappa}',
+    '@Lambda': '@symbol{Lambda}', '@Mu': '@symbol{Mu}', '@Nu': '@symbol{Nu}',
+    '@Xi': '@symbol{Xi}', '@Omicron': '@symbol{Omicron}', '@Pi': '@symbol{Pi}',
+    '@Rho': '@symbol{Rho}', '@Sigma': '@symbol{Sigma}', '@Tau': '@symbol{Tau}',
+    '@Upsilon': '@symbol{Upsilon}', '@Phi': '@symbol{Phi}',
+    '@Chi': '@symbol{Chi}', '@Psi': '@symbol{Psi}', '@Omega': '@symbol{Omega}',
 
 }
 
@@ -257,7 +259,7 @@ tex_valid_attributes = {'img': {'width', 'height',},
                         }
 
 #: Default text width to rewrap paragraphs. Set to 0 to disable.
-tex_paragraph_width = 80
+# tex_paragraph_width = 80
 
 #: Equation Tags
 #: ~~~~~~~~~~~~~

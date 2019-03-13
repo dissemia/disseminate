@@ -442,7 +442,7 @@ def test_document_context_update(tmpdir):
     assert doc.context['targets'] != settings.default_context['targets']
     assert doc.context['targets'] == 'html, tex'
 
-    assert 'macro' in doc.context
+    assert '@macro' in doc.context
 
     # Get the local_context id to make sure it stays the same
     context_id = id(doc.context)
@@ -524,9 +524,10 @@ def test_document_example8(tmpdir):
     doc = Document("tests/document/example8/src/fundamental_solnNMR"
                    "/inept/inept.dm", tmpdir)
 
-    target = {'.html': doc.target_filepath(target='.html')}
-    doc.render(targets=target)
-
+    targets = {'.html': doc.target_filepath(target='.html'),
+               '.tex': doc.target_filepath(target='.tex')}
+    doc.render(targets=targets)
+    print(targets)
     # Check the rendered html
     key = pathlib.Path('tests/document/example8/html/inept.html').read_text()
-    assert target['.html'].read_text() == key
+    assert targets['.html'].read_text() == key

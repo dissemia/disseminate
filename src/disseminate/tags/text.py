@@ -30,8 +30,8 @@ class P(Tag):
         tex = super(P, self).tex_fmt(level, mathmode, content)
 
         # Rewrap the text
-        if settings.tex_paragraph_width > 0:
-            tex = "\n".join(wrap(tex, settings.tex_paragraph_width))
+        # if settings.tex_paragraph_width > 0:
+        #     tex = "\n".join(wrap(tex, settings.tex_paragraph_width))
 
         # Add newlines around headings
         return "\n" + tex + "\n"

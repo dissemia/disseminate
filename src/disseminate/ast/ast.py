@@ -198,6 +198,12 @@ def process_context_asts(context):
     This function converts strings with tag substrings (ex: '@b{bold}') into
     tags.
 
+    .. note:: This function is designed to work with string macro entries. These
+              are identified by context entries with keys that start with the
+              settings.tag_prefix (e.g. '@test'). These *should not* be
+              converted into asts, as they are required for simple string
+              replacement.
+
     Parameters
     ----------
     context : dict, optional
@@ -213,8 +219,10 @@ def process_context_asts(context):
     for k, v in context.items():
         if k == settings.body_attr:
             continue
-        # Skip non-string entries
-        if not isinstance(v, str):
+
+        # Skip non-string entries or macro entries that start with the
+        # settings.tag_prefix (@)
+        if not isinstance(v, str) or k.startswith(settings.tag_prefix):
             continue
 
         # Process the entry in the context

@@ -7,8 +7,11 @@ from ..utils.string import Metastring
 from .. import settings
 
 
-re_macro = regex.compile(settings.tag_prefix +
-                         r"(?P<macro>\w+)")
+re_macro = regex.compile(r"(?P<macro>" +
+                         settings.tag_prefix +  # tag prefix. e.g. '@'
+                         r"\w+)"
+                         r"({\s*})?"  # match empty curly brackets
+                         )
 
 #: The following are macros defined by this submodule
 _submodule_macros = None
@@ -17,12 +20,10 @@ _submodule_macros = None
 def replace_macros(s, context):
     """Replace the macros and return a processed string.
 
-    .. note:: Macros are loaded from the following sources:
-
-        1. submodule macros (like science macros)
-        2. custom macros in the settings
-        3. macro entries in the context.
-
+    Macros are simple string replacements from context entries whose keys
+    start with the tag_prefix character (e.g. '@test'). The process_context_asts
+    will ignore macro context entries that have keys which start with this
+    prefix. This is to preserve macros as strings.
 
     Parameters
     ----------
@@ -46,13 +47,13 @@ def replace_macros(s, context):
     # Replace the macros
     def _substitute(m):
         d = m.groupdict()
-        macro_name = d['macro']
+        macro = d['macro']
 
         # Replace a macro if if it's the context
-        if macro_name in context:
-            return str(context[macro_name])
+        if macro in context:
+            return str(context[macro])
         else:
-            return settings.tag_prefix + macro_name
+            return m.group()
 
     # Return a metastring with the macros substituted. Keep substituting until
     # all macros are replaced or the string is no longer changing
@@ -76,10 +77,11 @@ def process_context_macros(context):
     context : dict, optional
         The context with values for the document.
     """
+
     # Go through the entries in the context and determine which are tags
     for k, v in context.items():
-        # Skip macros and non-string entries
-        if k.startswith('@') or not isinstance(v, str):
+        # Skip non-string entries
+        if not isinstance(v, str):
             continue
 
         # Process the entry in the context

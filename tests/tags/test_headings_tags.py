@@ -50,7 +50,7 @@ def test_heading_with_macros(context_cls):
     """Test the heading tags that use macros."""
 
     # 1. Test a basic macro
-    context = context_cls(test='This is my test')
+    context = context_cls(**{'@test':'This is my test'})
 
     text = """
     @chapter{@test}
@@ -63,7 +63,7 @@ def test_heading_with_macros(context_cls):
     assert ast[1].get_id() == 'br:this-is-my-test'
 
     # 2. Test a macro with tags
-    context = context_cls(test='This is @b{my} test')
+    context = context_cls(**{'@test': 'This is @b{my} test'})
 
     text = """
         @chapter{@test}
@@ -79,7 +79,7 @@ def test_heading_with_macros(context_cls):
     assert ast[1].get_id() == 'br:this-is-my-test'
 
     # 3. Test a macro for a header entry that forms a tag.
-    context = context_cls(title='This is @b{my} test')
+    context = context_cls(**{'@title': 'This is @b{my} test'})
 
     text = """
     @chapter{@title}

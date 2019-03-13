@@ -236,17 +236,20 @@ def test_process_paragraphs_newlines(context_cls):
     transfer the large magnetization from high-@gamma nuclei, like @1H or
     @19F, to low-@gamma nuclei (labeled 'X'), like @13C and @15N."""
 
-    context = context_cls(**{'1H': '@sup{1}H',
-                             '13C': '@sup{13}C', '15N': '@sup{15}N',
-                             '19F': '@sup{19}F', 'gamma': '@symbol{gamma}',
+    context = context_cls(**{'@1H': '@sup{1}H',
+                             '@13C': '@sup{13}C', '@15N': '@sup{15}N',
+                             '@19F': '@sup{19}F', '@gamma': '@symbol{gamma}',
                              'src_filepath': '.',
                              'body': text})
 
     process_context_macros(context=context)
     process_context_asts(context=context)
     result = process_paragraphs(context['body'], context=context)
-    assert '<sup>13</sup>C' in result.html
-    assert 'or\n    <sup>19</sup>F' in result.html
+
+    result_html = result.html
+    assert 'is to \n    transfer' in result_html
+    assert '<sup>1</sup>H or\n' in result_html
+    assert 'or\n    <sup>19</sup>F' in result_html
 
 
 def test_process_context_paragraphs(context_cls):

@@ -65,6 +65,7 @@ class Eq(RenderedImg):
 
     def __init__(self, name, content, attributes, context,
                  block_equation=False):
+
         assert context.is_valid('equation_renderer')
         self.block_equation = block_equation
 

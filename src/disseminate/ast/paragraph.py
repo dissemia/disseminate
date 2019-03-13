@@ -191,6 +191,7 @@ def process_paragraphs(ast, context):
                             tag_content=item,
                             tag_attributes='',
                             context=context)
+
             processed_ast[count] = p
 
     return ast
