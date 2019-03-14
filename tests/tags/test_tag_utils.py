@@ -1,9 +1,32 @@
 """
 Tests for the tag utilities.
 """
+import pytest
+
 from disseminate.tags.text import Italics
-from disseminate.tags.utils import repl_tags
+from disseminate.tags.utils import repl_tags, content_to_str
 from disseminate.ast import process_ast
+
+
+def test_content_to_str(context_cls):
+    """Test the content_to_str function."""
+
+    # 1. Test basic string conversion
+    assert content_to_str('my string') == 'my string'
+
+    # 2. Test tag conversion
+    context = context_cls()
+    text = 'This is @i{my} string'
+    ast = process_ast(text, context=context)
+    assert content_to_str(ast) == 'This is my string'
+
+    # 3. Test a list of strings and tags
+    assert (content_to_str([ast, ' and ', 'my string']) ==
+            'This is my string and my string')
+
+    # 4. Invalid types raise an error
+    with pytest.raises(Exception):
+        content_to_str(4)
 
 
 def test_repl_tags(context_cls):

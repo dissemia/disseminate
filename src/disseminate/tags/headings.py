@@ -6,7 +6,7 @@ from lxml import etree
 from markupsafe import Markup
 
 from .core import Tag
-from ..labels import LabelNotFound
+from .utils import content_to_str
 from ..attributes import set_attribute, kwargs_attributes
 from ..utils.string import slugify, titlelize
 from .. import settings
@@ -17,6 +17,11 @@ toc_levels = ('branch', 'section', 'subsection', 'subsubsection')
 
 class Heading(Tag):
     """A heading tag.
+
+    .. note::
+        If the content isn't specified and an entry exists in the context with
+        the tag's name, then this tag's content will be replaced with the
+        contents from the context.
 
     Tag Attributes
     --------------
@@ -33,6 +38,13 @@ class Heading(Tag):
     _id_mappings = None
 
     def __init__(self, name, content, attributes, context):
+
+        # If no content is specified, see if it's specified in the context
+        if (isinstance(content, str) and content.strip() == '' and
+           name in context):
+            content = content_to_str(context[name])
+
+        # Call the parent class's constructor
         super(Heading, self).__init__(name, content, attributes, context)
 
         # Determine whether a label should be given. By default, each heading
@@ -71,10 +83,7 @@ class Heading(Tag):
             # Next use the content, if available and usable. To be usable, it
             # should either be a Tag, which can be converted to a raw string, or
             # a string itself or a list of tags and strings.
-            content = self.content or ''
-            content = [content] if not isinstance(content, list) else content
-            content = ''.join(i.txt if hasattr(i, 'txt') else i
-                              for i in content)
+            content = content_to_str(self.content)
             content = titlelize(content).strip()
 
             # If there is no content, then just make one up based on a simple

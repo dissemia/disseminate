@@ -7,7 +7,7 @@ import pytest
 
 from disseminate.document import Document
 from disseminate.ast import process_ast
-from disseminate.tags import Tag, TagError
+from disseminate.tags.core import Tag, TagError
 from disseminate.tags.text import P
 from disseminate import settings, SourcePath, TargetPath
 

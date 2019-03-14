@@ -98,6 +98,34 @@ def test_heading_with_macros(context_cls):
     assert ast.txt == '\n    This is my test\n    '
 
 
+def test_heading_with_substituted_content(context_cls):
+    """Test heading tags with substituted content."""
+
+    # 1. Test a basic example without substitution
+    context = context_cls()
+    title = Branch(name='title', content='', attributes=tuple(),
+                   context=context)
+
+    assert title.txt == ''
+
+    # 2. Test with a substituted content from the context with a simple string
+    #    substitution.
+    context['title'] = 'My title'
+    title = Branch(name='title', content='', attributes=tuple(),
+                   context=context)
+
+    assert title.txt == 'My title'
+    assert title.html == '<h1 id="br:my-title">My title</h1>\n'
+
+    # 3. Test with a substituted content from the context with formatting
+    context['title'] = 'My @b{title}'
+    title = Branch(name='title', content='', attributes=tuple(),
+                   context=context)
+
+    assert title.txt == 'My @b{title}'
+    assert title.html == '<h1 id="br:my-b-title">My @b{title}</h1>\n'
+
+
 def test_heading_labels_formatting(tmpdir):
     """Test the formatting of labels for headings."""
     # Create a test document

@@ -1,6 +1,45 @@
 """
 Utilities for tags.
 """
+from .exceptions import TagError
+
+
+def content_to_str(content, target='.txt'):
+    """Convert a tag or string to a string for the specified target.
+
+    This function is used to convert an element, which is either a string, tag
+    or list of strings and tags, to a string.
+
+    Parameters
+    ----------
+    content : str, :obj:`Tag <disseminate.tags.core.Tag>` or list of both
+        The element to convert into a string.
+    target : str, optional
+        The target format of the string to return.
+
+    Returns
+    -------
+    formatted_str : str
+        A string in the specified target format
+    """
+    target = target.strip('.')  # remove leading period
+
+    if isinstance(content, str):
+        # if it's a string, we're good to go. Just return that, as it's just
+        # what we need
+        return content
+    if hasattr(content, target):
+        # if it's a tag with the target property (ex: tag.txt), then get that
+        return getattr(content, target)
+    if hasattr(content, 'txt'):
+        # if it's a tag with the target a txt property then get that
+        return getattr(content, 'txt')
+    if isinstance(content, list):
+        # if it's a list, process each item as a string or tag
+        return ''.join(map(lambda x: content_to_str(x, target), content))
+
+    msg = "Could not convert tag content '{}' to a string."
+    raise TagError(msg.format(content))
 
 
 def set_html_tag_attributes(html_tag, attrs_dict):

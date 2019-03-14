@@ -271,28 +271,23 @@ def test_document_tree_updates_with_section_labels(tmpdir):
     assert title_labels[1].id == 'br:file3-dm-file3'
     assert title_labels[2].id == 'br:file2-dm-file2'
 
-    # A render should be required for all 3 documents.
-    #   - file1.dm changed because its header changed
-    #   - file2.dm needs to be re-rendered because its chapter number changed
-    #     from 2 to 3
-    #   - file3.dm needs to be re-rendered because its chapter number changed
-    #     from 3 to 2
+    # A render should be required for file1.dm
     doc1, doc2, doc3 = doc.documents_list(only_subdocuments=False,
                                           recursive=True)
 
     assert doc1.render_required(target_filepath1)
-    assert doc2.render_required(target_filepath2)
-    assert doc3.render_required(target_filepath3)
+    assert not doc2.render_required(target_filepath2)
+    assert not doc3.render_required(target_filepath3)
 
     # The files have therefore been updated
     doc.render()
     assert mtime1 != target_filepath1.stat().st_mtime
-    assert mtime2 != target_filepath2.stat().st_mtime
-    assert mtime3 != target_filepath3.stat().st_mtime
+    assert mtime2 == target_filepath2.stat().st_mtime
+    assert mtime3 == target_filepath3.stat().st_mtime
 
     # 2. Test coupled documents
 
-    # 1. First, test decoupled documents
+    # First, test decoupled documents
 
     src_filepath1.write_text("""
         ---

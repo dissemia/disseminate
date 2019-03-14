@@ -1,6 +1,5 @@
 ---
-title: INEPT and Signal Enhancement
-title_label: Chapter
+chapter: INEPT and Signal Enhancement
 author: Justin Lorieau
 targets: html, tex, pdf
 @T1: T@sub{1}
@@ -20,7 +19,7 @@ targets: html, tex, pdf
 @eqbreak: \displaybreak[2] \\[0.5em]
 ---
 
-@chapter{@title}
+@chapter
 @author{}
 
 The purpose of the @abrv{INEPT} sequence@cite{Morris1979} is to
