@@ -99,6 +99,10 @@ class Eq(RenderedImg):
         self._raw_content = content
         content = self.tex
 
+        # Crop equation images created by the dependency manager. This removes
+        # white space around the image so that the equation images.
+        attributes = set_attribute(attributes, ('crop', 'true'))
+
         super(Eq, self).__init__(name=name, content=content,
                                  attributes=attributes,
                                  context=context,

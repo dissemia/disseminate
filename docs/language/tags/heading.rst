@@ -187,3 +187,11 @@ the heading will not be included in Tables of Content.
 Otherwise, it is recommended to use an identifier. An identifier is specified
 with the ``id=x`` attribute, and it should be *unique* for the project. If an
 identifier is not specified, an automated identifier will be generated.
+
+Empty Contents
+--------------
+If the contents are empty, the tag will search the header entries to
+see if an entry with the same name is present. For example, if
+the header has an entry ``chapter: My First Chapter``, then inserting
+the ``@chapter`` tag in the body will use the 'My First Chapter' text
+as its contents.

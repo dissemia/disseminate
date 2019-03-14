@@ -114,6 +114,10 @@ class DependencyManager(object):
             .tex
         context : :obj:`disseminate.document.DocumentContext`
             The context for a document to render.
+        attributes : tuple of tuples or strings
+            The attributes of the tag. See :obj:`Tag
+            <disseminate.tags.core.Tag>`. The attributes are used by the
+            converters, if a conversion is needed.
 
         Returns
         -------
@@ -250,6 +254,10 @@ class DependencyManager(object):
             The path of the dependency file.
         target : str
             The type of document target for which this dependency is created.
+        attributes : tuple of tuples or strings
+            The attributes of the tag. See :obj:`Tag
+            <disseminate.tags.core.Tag>`. The attributes are used by the
+            converters, if a conversion is needed.
 
         Returns
         -------

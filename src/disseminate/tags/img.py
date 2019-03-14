@@ -105,8 +105,6 @@ class RenderedImg(Img):
 
     active = False
 
-    # renderer = None
-
     def __init__(self, name, content, attributes, context, render_target):
         if isinstance(content, list):
             content = ''.join(content).strip()
