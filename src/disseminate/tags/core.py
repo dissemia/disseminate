@@ -56,6 +56,14 @@ class Tag(object):
     include_paragraphs : bool
         If True, then the contents of this tag can be included in paragraphs.
         See :func:`disseminate.ast.process_paragraphs`.
+    paragraph_role : None or str
+        If this tag is directly within a paragraph, the type of paragraph may
+        be specified with a string. The following options are possible:
+
+        - None : The paragraph type has not been assigned
+        - 'inline' : The tag is within a paragraph that includes a mix
+                     of strings and tags
+        - 'block' : The tag is within its own paragraph.
     line_number : int or None
         The corresponding starting line number in the source file for the
         tag. This is useful for error messages and it is set when the AST is
@@ -75,7 +83,10 @@ class Tag(object):
     tex_name = None
 
     active = False
+
     include_paragraphs = True
+    paragraph_role = None
+
     line_number = None
 
     label_id = None

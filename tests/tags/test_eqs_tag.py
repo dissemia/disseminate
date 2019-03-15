@@ -111,6 +111,54 @@ def test_block_equation(tmpdir, context_cls):
     assert eq3.tex == '\\begin{alignat*}{3} %\ny=x\n\\end{alignat*}'
 
 
+def test_block_equation_paragraph(tmpdir, context_cls):
+    """Test the tex rendering of a simple block equations that are identified
+    from paragraphs."""
+
+    # Setup the test paths
+    project_root = SourcePath(project_root=tmpdir.join('src'))
+    src_filepath = SourcePath(project_root=project_root,
+                              subpath='test.dm')
+    target_root = TargetPath(target_root=tmpdir)
+    project_root.mkdir()
+
+    # Setup the dependency manager in the global context. This is needed
+    # to find and convert images by the img tag.
+    dep_manager = DependencyManager(project_root=project_root,
+                                    target_root=target_root)
+    context_cls.validation_types = {'dependency_manager': DependencyManager,
+                                    'project_root': SourcePath,
+                                    'target_root': TargetPath,
+                                    'src_filepath': SourcePath,
+                                    'paths': list}
+    context = context_cls(dependency_manager=dep_manager,
+                          src_filepath=src_filepath,
+                          project_root=project_root,
+                          target_root=target_root,
+                          paths=[])
+    process_context_template(context)  # add the 'equation_renderer' entry
+
+    # Example 1 - simple block equation
+    test1 = "\n\n@eq{y=x}\n\n"
+    ast = process_ast(ast=test1, context=context)
+    ast = process_paragraphs(ast=ast, context=context)
+
+    assert ast[0].name == 'p'
+    assert ast[0].content.name == 'eq'
+    assert ast.tex == ('\n'
+                       '\\begin{align*} %\n'
+                       'y=x\n'
+                       '\\end{align*}\n')
+
+    # Example 2 - a simple inline equation
+    test2 = "@eq{y=x}"
+    ast = process_ast(ast=test2, context=context)
+    ast = process_paragraphs(ast=ast, context=context)
+
+    assert ast.name == 'eq'
+    assert ast.tex == '\\ensuremath{y=x}'
+
+
 # html targets
 
 def test_simple_inline_equation_html(tmpdir, context_cls):
@@ -203,7 +251,8 @@ def test_simple_inline_equation_tex(tmpdir, context_cls):
 
 
 def test_block_equation_tex(tmpdir, context_cls):
-    """Test the rendering of block equations for tex."""
+    """Test the rendering of block equations for tex with process_ast and
+    process_paragraphs to ensure that the tex text is well-formed."""
 
     # Setup the test paths
     project_root = SourcePath(project_root=tmpdir.join('src'))

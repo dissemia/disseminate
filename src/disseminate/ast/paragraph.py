@@ -123,6 +123,8 @@ def clean_paragraphs(ast):
     >>> clean_paragraphs(group)
     [[1, 2, 'three'], [6, 'seven'], ['eight']]
     """
+    assert isinstance(ast, list)
+
     new_ast = []
 
     for item in ast:
@@ -138,6 +140,51 @@ def clean_paragraphs(ast):
     # Copy over the new_ast to the given ast
     ast.clear()
     ast += new_ast
+
+    return ast
+
+
+def assign_paragraph_roles(ast):
+    """Assign the 'paragraph_role' attribute for tags within sublists created
+     by the group_paragraphs function.
+
+    The 'paragraph_role' attribute can either be 'block', for tags that are
+    alone in a paragraph, or 'inline' for tags that are in a paragraph with
+    other text elements.
+
+    Parameters
+    ----------
+    ast : list
+        The list of paragraph tags (:obj:`P <disseminate.tags.text.P>` and
+        strings.
+
+    Returns
+    -------
+    processed_ast : list
+        The list with tags in the sublists marked with their paragraph_role.
+    """
+    assert isinstance(ast, list)
+
+    # Go over the paragraph sublists and determine whether the tags within
+    # are inline or block
+    for sublist in filter(lambda x: isinstance(x, list), ast):
+        # Find all the tags in the sublist
+        sublist_tags = list(filter(lambda x: isinstance(x, Tag), sublist))
+
+        # Determine the number of tags and the number of total elements in
+        # the sublist
+        num_tags = len(sublist_tags)
+        num_elems = len(sublist)
+
+        if num_tags == 1 and num_elems == 1:
+            # If the number of tags and elements is 1, then tag is in its own
+            # block
+            sublist_tags[0].paragraph_role = 'block'
+        elif num_elems > 1:
+            # Otherwise the tags are inline with other elements in the
+            # paragraph.
+            for tag in sublist_tags:
+                tag.paragraph_role = 'inline'
 
     return ast
 
@@ -180,6 +227,9 @@ def process_paragraphs(ast, context):
 
     # Clean the paragraph sublist groups
     clean_paragraphs(processed_ast)
+
+    # Assign the paragraph_role for tags within paragraph sublist groups
+    assign_paragraph_roles(processed_ast)
 
     # Convert the sublists into paragraphs
     for count, item in enumerate(processed_ast):

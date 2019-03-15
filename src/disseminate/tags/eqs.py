@@ -147,7 +147,7 @@ class Eq(RenderedImg):
         if mathmode:
             return content
         else:
-            if self.block_equation:
+            if self.block_equation or self.paragraph_role == 'block':
                 attrs = format_tex_attributes(self._raw_attributes,
                                               left_bracket="{",
                                               right_bracket="}")
