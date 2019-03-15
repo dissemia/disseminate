@@ -260,9 +260,3 @@ tex_valid_attributes = {'img': {'width', 'height',},
 
 #: Default text width to rewrap paragraphs. Set to 0 to disable.
 # tex_paragraph_width = 80
-
-#: Equation Tags
-#: ~~~~~~~~~~~~~
-
-eq_svg_scale = 1.15
-eq_svg_crop = True
