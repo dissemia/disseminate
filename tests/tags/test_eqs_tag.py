@@ -165,7 +165,7 @@ def test_simple_inline_equation_html(tmpdir, context_cls):
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert (root_html ==
-            '<img class="eq" src="/html/media/test_963ee5ea93_crop.svg"/>')
+            '<img class="eq" src="/html/media/test_963ee5ea93.svg"/>')
 
 
 # tex targets

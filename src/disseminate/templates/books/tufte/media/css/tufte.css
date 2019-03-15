@@ -10,6 +10,14 @@ body {
     max-width: 1400px;
 }
 
+@media (max-width: 768px) {
+  body {
+    font-size: 12pt;
+    line-height: 18pt;
+    padding-left: 0;
+  }
+}
+
 a:link, a:visited, a:hover, a:active {
     text-decoration: none;
     font-weight: 600;
@@ -21,6 +29,12 @@ article {
     position: relative;
     width: 60%;
     max-width: 36rem;
+}
+
+@media (max-width: 768px) {
+  article {
+    width: 100%;
+  }
 }
 
 h1,h2,h3,h4,h5,h6 {
@@ -119,19 +133,26 @@ span.paragraph {
 }
 
 .sidenote, .marginfig {
-    display: block;
-    float: right;
-    clear: right;
-    width: 50%;
-    margin-right: -60%;
-    margin-top: 0.5rem;
-    font-size: 1.0rem;
-    line-height: 1.4;
-    padding: 0.2rem;
-    border-top: 1px solid #eee;
-    border-bottom: 1px solid #eee;
-    background-color: #fcfcfc;
+  display: block;
+  clear: right;
+  float: right;
+  width: 50%;
+  margin-right: -60%;
+  margin-top: 0.5rem;
+  font-size: 1.0rem;
+  line-height: 1.4;
+  padding: 0.2rem;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  background-color: #fcfcfc;
 }
+
+@media (max-width: 768px) {
+  .sidenote, .marginfig {
+    float: none;
+  }
+}
+
 
 /*
 .sidenote sub, sup {
@@ -190,3 +211,7 @@ span.paragraph {
     padding: 0;
 }
 
+/* block eqs from latex have a space above that needs to be account for */
+p > .blockeq {
+    margin-top: -10pt;
+}
