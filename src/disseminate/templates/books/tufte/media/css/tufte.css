@@ -25,10 +25,11 @@ a:link, a:visited, a:hover, a:active {
 }
 
 article {
-    padding-top: 3rem;
-    position: relative;
-    width: 60%;
-    max-width: 36rem;
+  padding-top: 3rem;
+  padding-bottom: 5rem;
+  position: relative;
+  width: 60%;
+  max-width: 40rem;
 }
 
 @media (max-width: 768px) {
@@ -126,6 +127,75 @@ span.paragraph {
     font-family: sans-serif;
     text-align: right;
 }
+
+/* Table of Contents */
+.toc {
+  display: none;
+  position: fixed;
+  background: #ffffff;
+  z-index: 2;
+  border: 1px solid #555;
+  border-radius: 5px;
+  padding: 1rem;
+  min-width: 40rem;
+}
+
+label.toc-menu {
+  margin-left: -30px;
+  margin-top: 1rem;
+  position: fixed;
+  display: block;
+}
+
+input.toc-menu[type=checkbox] {
+  visibility: hidden;
+  position: absolute;
+}
+
+input.toc-menu[type=checkbox]:checked ~ .toc {
+  display: block;
+}
+
+.toc-menu #toc-menu-inactive {
+  position: absolute;
+}
+
+.toc-menu #toc-menu-active {
+  visibility: hidden;
+}
+
+input.toc-menu[type=checkbox]:checked + .toc-menu #toc-menu-inactive {
+  visibility: hidden;
+}
+
+input.toc-menu[type=checkbox]:checked + .toc-menu #toc-menu-active {
+  visibility: visible;
+}
+
+ul.toc-level-1, ul.toc-level-2, ul.toc-level-3, ul.toc-level-4 {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+ul.toc-level-2 {
+  padding-left: 1rem;
+}
+
+ul.toc-level-3 {
+  padding-left: 2rem;
+}
+
+ul.toc-level-4 {
+  padding-left: 3rem;
+}
+
+.toc-level-2 a {
+  font-weight: 400;
+}
+
+
+/* Formatting for the document contents */
 
 .root {
     margin-top: 3.0rem;
