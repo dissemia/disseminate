@@ -2,6 +2,7 @@
 The document context
 """
 import weakref
+from copy import deepcopy
 
 from ..context import BaseContext
 from ..labels import LabelManager
@@ -30,8 +31,6 @@ class DocumentContext(BaseContext):
         'mtime': float,
         'doc_id': str}
 
-    default_context = settings.default_context
-
     #: The following are context entries that should not be copied (inherited)
     #: from the parent context. They should be unique to each context.
     do_not_inherit = {
@@ -39,21 +38,24 @@ class DocumentContext(BaseContext):
         # owns the context. Consequently, a new context should have a new
         # document and the parent's document should not be inherited.
         'document',
+
         # A subdocument shouldn't have the same subdocument 'include' entries
         # as the parent. Otherwise, documents could be included multiple times
         # or they may not be found.
         'include', 'includes',
-        # Each document should have a unique title
-        'title',
+
         # Each document should have its own short title
         'short',
+
         #: The doc_id is unique for each document
         'doc_id',
+
         # The modification time is the last time a document was changed. This
         # should be different for each document and subdocument. Note that the
         # mtime entry is set by the document object itself so that it can tell
         # when the full context has been read in.
         'mtime',
+
         # Paths are not inherited since we do not want to use paths for template
         # directories from the parent if the parent's template is different.
         # Also, the paths may be relative to the parent document and may be
@@ -61,6 +63,7 @@ class DocumentContext(BaseContext):
         # Not that if the subdocument and parent document share the same
         # template, the renderer will correctly populate the paths for each.
         'paths',
+
         #: The contents of the body (specified by body_attr) doesn't carry over
         #: because each body has its own body.
         settings.body_attr,
@@ -73,10 +76,12 @@ class DocumentContext(BaseContext):
         # The document that owns the context should not be reset, since we do
         # not want to have this document inherited from the parent.
         'document',
+
         # The following manager objects should remain the same every time the
         # context is reset. They should persist for a project.
         'label_manager',
         'dependency_manager',
+
         # Keep the same list for paths when resetting. Note that will place
         # the entry here to prevent the lists path from being reset by the
         # parent 'reset' method. However, this reset method properly resets the
@@ -84,34 +89,26 @@ class DocumentContext(BaseContext):
         'paths'
         }
 
-    #: The following are objects that should be shared between documents in a
-    #: single project. Consequently, copies of these objects should not be used;
-    #: the objects themselves should be copied over from the parent_context
-    #: or initial_values.
-    shallow_copy = {
-        # The label_manager and dependency_manager are shared between documents
-        # and document contexts for a project.
-        'label_manager', 'dependency_manager',
-        # The template_rendere and equation_renderer cannot be deep copied and
-        # can be reused for different documents and document contexts
-        'template_renderer', 'equation_renderer'}
-
     def __init__(self, document, *args, **kwargs):
         # Create a weakref of the document. A weakref is used because the
         # context does not own the document, and document references
         # could be in multiple '_parent_context' entries for subdocuments.
         kwargs['document'] = weakref.ref(document)
 
+        if kwargs.get('parent_context') is None:
+            kwargs['parent_context'] = deepcopy(settings.default_context)
+
         # Conduct the rest of the initializations, including the reset.
         super(DocumentContext, self).__init__(*args, **kwargs)
 
     def reset(self):
         super(DocumentContext, self).reset()
+
         document = self['document']()
         self['src_filepath'] = document.src_filepath
 
         # set the document id
-        if 'doc_id' not in self:
+        if self.get('doc_id', None) is None:
             self['doc_id'] = str(document.doc_id)
         else:
             self['doc_id'] = str(self['doc_id'])
@@ -122,24 +119,24 @@ class DocumentContext(BaseContext):
 
         # Set the root document variables; these should only be set if this
         # is the context for the root document.
-        if 'project_root' not in self:
+        if self.get('project_root', None) is None:
             self['project_root'] = document.project_root
-        if 'target_root' not in self:
+        if self.get('target_root', None) is None:
             self['target_root'] = document.target_root
-        if 'root_document' not in self:
+        if self.get('root_document', None) is None:
             self['root_document'] = weakref.ref(document)
 
         # Initialize the managers, if this is the root (document) context
-        if 'label_manager' not in self:
+        if self.get('label_manager', None) is None:
             self['label_manager'] = LabelManager(root_context=self)
-        if 'dependency_manager' not in self:
+        if self.get('dependency_manager', None) is None:
             dep = DependencyManager(project_root=document.project_root,
                                     target_root=document.target_root)
             self['dependency_manager'] = dep
 
         # Set the document's level. This is based off of the parent context's
         # level
-        self['level'] = self['_parent_context'].get('level', 0) + 1
+        self['level'] = self.get('level', 0) + 1
 
         # Prepare the paths entry
         paths = self.setdefault('paths', [])

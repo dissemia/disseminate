@@ -39,7 +39,7 @@ def load_header(context):
         header = str_to_dict(header_str)
 
         # update the context
-        context.recursive_update(header)
+        context.matched_update(header)
 
         # Determine the start and end position of the header
         start, end = m.span()

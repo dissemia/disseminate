@@ -520,3 +520,13 @@ def test_render_required(tmpdir):
     for d, answer in zip(doc_list, [False, False, True]):
         target_filepath = d.targets['.html']
         assert d.render_required(target_filepath) is answer
+
+
+def test_extended_document_tree(tmpdir):
+    """Test a document tree with multiple levels."""
+
+    # 1. Test example8, which has 3 layers of documents, starting from the
+    #    main.dm document.
+    doc = Document('tests/document/example8/src/main.dm', tmpdir)
+
+    # Test the contexts

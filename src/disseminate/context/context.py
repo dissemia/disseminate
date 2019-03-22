@@ -2,10 +2,9 @@
 The base class for Context objects that include functions to validate a context.
 """
 import logging
-from copy import deepcopy
 from pprint import pprint
+from weakref import ref
 
-from .utils import set_context_attribute
 from ..utils.classes import all_attributes_values
 from ..utils.string import str_to_dict, str_to_list
 
@@ -13,38 +12,34 @@ from ..utils.string import str_to_dict, str_to_list
 class BaseContext(dict):
     """A context dict with entries used for rendering target documents.
 
-    Contexts are suppose to be data containers--i.e. there are no sophisticated
-    processing or rendering functions. The available functions only manage the
-    data and set of the context.
+    Contexts are suppose to be data container dicts--i.e. there are no
+    sophisticated processing or rendering functions. The available functions
+    only manage the data and set of the context.
 
     The BaseContext is basically a heritable dict. It keeps track of dict
-    lineage and initial values so that it can be reset to its state when it
-    was initialized.
+    lineage and initial values so that it can be reset to its initialized state.
 
-    Entries, Copies and Reset
-    -------------------------
+    Contexts, by default, access the entries from a parent_context. New entries
+    that match parent_context entry will shadow that value. However, accessing
+    parent_context entries of mutables and changing those will change the
+    parent_context's mutable values.
 
-    Contexts are optionally populated by:
-        1. a default_context (default_context class attribute)
-           Values are deep copied, unless specified by the 'shallow_copy'
-           attribute set.
-        2. a parent_context
-           Values are deep copied, unless specified by the 'shallow_copy'
-           attribute set.
-        3. initial values
-           Values are preserved (i.e. shallow copied)
-
-    The latter entries take precedence over the earlier entries.
-
-    By default, objects are (deep) copied from the default_context and
-    parent_context so that changes to their values from this context dict will
-    not impact the original. However, keys listed in the 'shallow_copy'
-    attribute set will be shallow copied.
-
-    Why is this done? The default and parent contexts may contain mutables,
-    like lists, which should not be changed from their original values by
-    contexts that inherit values from these. These mutables may include dicts,
-    or sets, which have no immutable alternative.
+    >>> parent = BaseContext(a=1, b=[])
+    >>> child = BaseContext(parent_context=parent)
+    >>> child['a']
+    1
+    >>> child['a'] = 2
+    >>> child['a']
+    2
+    >>> parent['a']
+    1
+    >>> child['b'].append(1)
+    >>> parent['b']
+    [1]
+    >>> child['b'] = []
+    >>> child['b'].append(2)
+    >>> parent['b']
+    [1]
 
     Parameters
     ----------
@@ -52,36 +47,54 @@ class BaseContext(dict):
         A parent or template context to (deep)copy values from.
     *args, **kwargs : tuple and dict
         The entries to populate in the context dict.
+
+    Attributes
+    ----------
+    validation_types : dict
+        A listing of entry keys and the types they should be.
+    parent : :obj:'BaseContext <disseminate.context.BaseContext>'
+        A weakref to a BaseContext of a parent document.
+    do_not_inherit : set
+        The context entries that should not be accessed (inherited)
+        from the parent context.
+    exclude_from_reset : set
+        The context entries that should not be removed when the
+        context is reset.
+
+    Entries
+    -------
+    _initial_values : dict
+        A dict containing the initial values. Since this starts with an
+        underscore, it is hidden when listing keys with the keys() function.
+    _parent_context : dict
+        A dict containing the parent context from which values may be inherited.
+        Since this starts with an underscore, it is hidden when listing keys
+        with the keys() function.
     """
 
     __slots__ = ('__weakref__',)  # A __dict__ attribute would be redundant
 
-    #: A listing of entry keys and the types they should be
     validation_types = dict()
 
-    default_context = None
-
-    #: The following are context entries that should not be copied (inherited)
-    #: from the parent context.
-    do_not_inherit = {'_parent_context', '_initial_values'}
-
-    #: The following are context entries that should not be removed when the
-    #: context is reset.
+    do_not_inherit = {'_initial_values', '_parent_context'}
     exclude_from_reset = {'_parent_context', '_initial_values'}
 
-    #: The following are keys for entries that are shallow copied, instead of
-    #: deep copied (default) from the parent_context or initial_values. This
-    #: is typically used for objects that are shared between many contexts in
-    #: a project.
-    shallow_copy = set()
-
-    def __init__(self, parent_context=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__()
 
+        kwargs.update(*args)
+
+        # Remove protected keys
+        for k in {'_parent_context', '_initial_values'}:
+            if k in kwargs:
+                del kwargs[k]
+
         # Store the parent context
-        parent_context = (dict() if parent_context is None else
-                          dict(parent_context))
-        self['_parent_context'] = parent_context
+        if 'parent_context' in kwargs:
+            parent = kwargs.get('parent_context', None)
+            del kwargs['parent_context']
+
+            self.parent_context = parent
 
         # Store the initial values
         initial_values = dict(*args, **kwargs)
@@ -90,48 +103,184 @@ class BaseContext(dict):
         # Reset the dict with the default_context and parent_context values
         self.reset()
 
-    def update(self, other=None, only_shallow=False, **kwargs):
-        """Update this context dict with other.
+    def __getitem__(self, key):
+        val = self.get(key)
+        if val is None:
+            raise KeyError
+        else:
+            return val
 
-        This method behaves differently than the standard dict update method as
-        it creates deep copies of values, by default, or shallow copies for
-        items listed in self.shallow_copy
+    def __contains__(self, key):
+        return key in self.keys()
+
+    def __len__(self):
+        return self.len()
+
+    def __iter__(self):
+        return iter(self.keys())
+
+    def __repr__(self):
+        return ('{' +
+                ', '.join('{}: {}'.format(k, self[k]) for k in self.keys()) +
+                '}')
+
+    def __copy__(self):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        # Copy over the entries for this context dict
+        for key in self.keys(only_self=True):
+            result[key] = self[key]
+
+        # Copy over the parent_context and initial_values
+        for key in ['_initial_values', '_parent_context']:
+            try:
+                result[key] = self[key]
+            except KeyError:
+                continue
+        return result
+
+    def get(self, key, default=None):
+        try:
+            val = super().__getitem__(key)
+            return val
+        except KeyError as e:
+            parent = self.parent_context
+
+            # Get all do_not_inherit values for this class and child classes
+            do_not_inherit = all_attributes_values(cls=self.__class__,
+                                                   attribute='do_not_inherit')
+
+            if (key not in do_not_inherit and parent is not None and
+               key in parent):
+                val = parent[key]
+                return val
+        return default
+
+    def keys(self, only_self=False, hidden_prefix='_'):
+        """The keys for this context dict.
 
         Parameters
         ----------
-        other : tuple of 2-ples
-            The itemized list of entries to add.
-        kwargs : dict
-            The dictionary with values to add.
-        only_shallow : bool, optional
-            If True, all items will be shallow copied. Otherwise, shallow and
-            deep copies will be created according to self.shallow_copy.
+        only_self : bool, optional
+            If True, only keys for entries in this context dict will be
+            returned. Otherwise, keys for this context dict and all parent
+            context dicts will be returned.
+        hidden_prefix : str, optional
+            If specified, keys that start with this character or these
+            characters will be considered hidden and not returned.
+
+        Returns
+        -------
+        keys : set
+            A set of keys for the context dict.
         """
-        # Get a list of keys for items that should be shallow copied
-        shallow_copy = all_attributes_values(cls=self.__class__,
-                                             attribute='shallow_copy')
-
-        # Convert other, if needed
-        if other is not None:
-            kwargs.update(other)
-
-        shallow_copies = {k: v for k, v in kwargs.items()
-                          if k in shallow_copy}
-
-        if not only_shallow:
-            deep_copies = {k: deepcopy(v) for k, v in kwargs.items()
-                           if k not in shallow_copy}
-
-            # Reassign the 'context' attributes for deep copied objects
-            set_context_attribute(element=deep_copies.values,
-                                  new_context=self)
+        # Get the keys for this context dict without hidden keys--i.e. those
+        # that start with an underscore '_'.
+        if isinstance(hidden_prefix, str):
+            keys = {k for k in super().keys()
+                    if not k.startswith(hidden_prefix)}
         else:
-            deep_copies = {k: v for k, v in kwargs.items()
-                           if k not in shallow_copy}
+            keys = super().keys()
 
-        for d in (shallow_copies, deep_copies):
-            for k, v in d.items():
-                self[k] = v
+        if not only_self:
+            # Try to get the keys from the parent context
+            parent = self.parent_context
+
+            # Get all do_not_inherit values for this class and child classes
+            do_not_inherit = all_attributes_values(cls=self.__class__,
+                                                   attribute='do_not_inherit')
+
+            # dereference the parent, if needed, and add its keys (excluding those
+            # that shouldn't be inherited
+            if parent is not None:
+                keys |= (parent.all_keys() - do_not_inherit
+                         if hasattr(parent, 'all_keys') else
+                         parent.keys() - do_not_inherit)
+
+        return keys
+
+    def values(self, only_self=False, hidden_prefix='_'):
+        """The values for this context dict.
+
+        Parameters
+        ----------
+        only_self : bool, optional
+            If True, only values for entries in this context dict will be
+            returned. Otherwise, values for this context dict and all parent
+            context dicts will be returned.
+        hidden_prefix : str, optional
+            If specified, keys that start with this character or these
+            characters will be considered hidden and not returned.
+
+        Returns
+        -------
+        values : generator
+            A generator of values for the context dict.
+        """
+        # Get the keys for this context dict and for its parent
+        keys = self.keys(only_self=only_self, hidden_prefix=hidden_prefix)
+        return (self[k] for k in keys)
+
+    def items(self, only_self=False, hidden_prefix='_'):
+        """The items for this context dict.
+
+        Parameters
+        ----------
+        only_self : bool, optional
+            If True, only items for entries in this context dict will be
+            returned. Otherwise, items for this context dict and all parent
+            context dicts will be returned.
+        hidden_prefix : str, optional
+            If specified, keys that start with this character or these
+            characters will be considered hidden and not returned.
+
+        Returns
+        -------
+        items : generator
+            A generator of items for the context dict.
+        """
+        keys = self.keys(only_self=only_self, hidden_prefix=hidden_prefix)
+        return ((k, self[k]) for k in keys)
+
+    def len(self, only_self=False, hidden_prefix='_'):
+        """The length (number of entries) in this context dict.
+
+        Parameters
+        ----------
+        only_self : bool, optional
+            If True, the number of entries only in this context dict will be
+            returned. Otherwise, the number of entries this context dict
+            and all parent context dicts will be returned.
+        hidden_prefix : str, optional
+            If specified, keys that start with this character or these
+            characters will be considered hidden and not included in the count.
+
+        Returns
+        -------
+        length : int
+            The number of entries in the context dict.
+        """
+        return len(self.keys(only_self=only_self, hidden_prefix=hidden_prefix))
+
+    @property
+    def parent_context(self):
+        """The parent context."""
+        # Try to get the keys from the parent context
+        parent = super().get('_parent_context', None)
+
+        # dereference the parent, if needed
+        if parent is not None:
+            parent = parent() if isinstance(parent, ref) else parent
+
+        return parent
+
+    @parent_context.setter
+    def parent_context(self, parent):
+        # Set the parent_context in self's dict. Create a weakref, if able
+        # to do so, because this context does not own the parent_context
+        self['_parent_context'] = (ref(parent)
+                                   if hasattr(parent, '__weakref__') else
+                                   parent)
 
     def reset(self):
         """(Selectively) resets the context to its initial state.
@@ -165,35 +314,17 @@ class BaseContext(dict):
 
         # Get a set of keys to exclude from reset from this class and
         # subclasses, and exclude these from the keys to remove
-        parent_attrs = all_attributes_values(cls=self.__class__,
-                                             attribute='exclude_from_reset')
-        keys_to_remove = self.keys() - self.exclude_from_reset
-        keys_to_remove -= set(parent_attrs)
+        attrs = all_attributes_values(cls=self.__class__,
+                                      attribute='exclude_from_reset')
+        keys_to_remove = self.keys(only_self=True) - self.exclude_from_reset
+        keys_to_remove -= set(attrs)
 
         # Now remove the entries that are remaining
         for k in keys_to_remove:
             del self[k]
 
-        # Copy over the default context. This update method produces deep and
-        # shallow copies. See :meth:`BaseContext.update`.
-        if self.default_context:
-            self.update(self.default_context)
-
-        # Copy from the parent_context. Use all entries in the parent_context,
-        # except for those listed in the 'do_not_inherit' attribute sets of
-        # this class and subclasses.
-        parent_attrs = all_attributes_values(cls=self.__class__,
-                                             attribute='do_not_inherit')
-        keys_to_inherit = self['_parent_context'].keys() - self.do_not_inherit
-        keys_to_inherit -= set(parent_attrs)
-
-        # This update method produces deep and shallow copies. See
-        # :meth:`BaseContext.update`.
-        self.update({key: self['_parent_context'][key]
-                     for key in keys_to_inherit})
-
         # Copy in the initial value arguments.
-        self.update(self['_initial_values'], only_shallow=True)
+        self.update(self['_initial_values'])
 
     def is_valid(self, *keys, must_exist=True):
         """Validate the entries in the context dict.
@@ -246,11 +377,12 @@ class BaseContext(dict):
 
         return True
 
-    def recursive_update(self, changes):
-        """Update this base context dict with the entries listed in the given
-        changes dict.
+    def matched_update(self, changes):
+        """Update with the values in the changes dict that are either missing
+        in this base context dict or to match the types of existing entries in
+        this base context dict.
 
-        The recursive update only updates entries for matching types and appends
+        The matched update only updates entries for matching types and appends
         to nested mutables, like lists and dicts.
 
         1. 'Hidden' entries with keys that start with an underscore ('_') are
@@ -271,10 +403,10 @@ class BaseContext(dict):
         """
         changes = str_to_dict(changes) if isinstance(changes, str) else changes
 
-        self._recursive_update(original=self, changes=changes)
+        self._match_update(original=self, changes=changes)
 
     @staticmethod
-    def _recursive_update(original, changes,):
+    def _match_update(original, changes, ):
         assert isinstance(original, dict) and isinstance(changes, dict)
 
         for key, change_value in changes.items():
@@ -296,7 +428,7 @@ class BaseContext(dict):
                 change_value = (str_to_list(change_value)
                                 if isinstance(change_value, str) else
                                 list(change_value))
-                new_list = change_value +original_value
+                new_list = change_value + original_value
                 # original_value += change_value
                 original_value.clear()
                 original_value += new_list
@@ -307,8 +439,8 @@ class BaseContext(dict):
                 change_value = (str_to_dict(change_value)
                                 if isinstance(change_value, str) else
                                 dict(change_value))
-                BaseContext._recursive_update(original=original_value,
-                                              changes=change_value)
+                BaseContext._match_update(original=original_value,
+                                          changes=change_value)
 
             # For immutable types, like ints, covert strings into their
             # proper format and replace the original's value

@@ -2,15 +2,16 @@
 Tests for the BaseContext class.
 """
 import pytest
+import copy
 
 from disseminate.context import BaseContext
 
 
-def test_base_context_dict(context_cls):
+def test_base_context_dict():
     """Test the basic dict functionality of the base context class."""
 
     # initialize from kwargs
-    context = BaseContext(a=1, b=2, c=3)
+    context = dict(a=1, b=2, c=3)
     assert context['a'] == 1
     assert context['b'] == 2
     assert context['c'] == 3
@@ -34,34 +35,159 @@ def test_base_context_dict(context_cls):
     assert 'd' in context
     assert context['d'] == 4
 
+    context['g'] = context.get('g', 2)
+    assert context['g'] == 2
 
-def test_base_context_default(context_cls):
-    """Test the utilization of the default_context."""
 
-    # We use the context_cls fixture, which is a BaseContext class instance,
-    # because we are modifying the BaseContext class
-    default_context = context_cls.default_context
-    context_cls.default_context = {'a': 2, 'b': 3, 'c': 4}
+def test_base_context_inheritance(context_cls):
+    """Test the BaseContext inheritance with the parent dict."""
 
-    context = context_cls()
-    assert len(context) >= 3
-    assert context['a'] == 2
-    assert context['b'] == 3
-    assert context['c'] == 4
+    grand_parent = dict(a=2, b=3, c=4)
+    parent = context_cls(d=5, e=6, f=7, parent_context=grand_parent)
+    child = context_cls(g=8, parent_context=parent)
 
-    context_cls.default_context = default_context
+    # 1. Test basic accessors for the grand_parent
+    assert grand_parent['a'] == 2
+    assert grand_parent.get('a') == 2
+    assert grand_parent['b'] == 3
+    assert grand_parent.get('b') == 3
+    assert grand_parent['c'] == 4
+    assert grand_parent.get('c') == 4
+    assert grand_parent.get('d') is None
+
+    # test keys and len
+    assert grand_parent.keys() == {'a', 'b', 'c'}
+    assert set(grand_parent.values()) == {2, 3, 4}
+    assert grand_parent.items() == {('a', 2), ('b', 3), ('c', 4)}
+
+    assert all(k in grand_parent for k in {'a', 'b', 'c'})
+
+    assert len(grand_parent) == 3
+
+    # 2. Test basic accessors for the parent
+    assert parent['a'] == 2
+    assert parent.get('a') == 2
+    assert parent['b'] == 3
+    assert parent.get('b') == 3
+    assert parent['c'] == 4
+    assert parent.get('c') == 4
+    assert parent['d'] == 5
+    assert parent.get('d') == 5
+    assert parent['e'] == 6
+    assert parent.get('e') == 6
+    assert parent['f'] == 7
+    assert parent.get('f') == 7
+    assert parent.get('g') is None
+
+    # test keys and len
+    assert parent.keys(only_self=True) == {'d', 'e', 'f'}
+    assert parent.keys() == {'a', 'b', 'c', 'd', 'e', 'f'}
+    assert set(parent.values(only_self=True)) == {5, 6, 7}
+    assert set(parent.values()) == {2, 3, 4, 5, 6, 7}
+    assert set(parent.items(only_self=True)) == {('d', 5), ('e', 6), ('f', 7)}
+    assert set(parent.items()) == {('a', 2), ('b', 3), ('c', 4),
+                                   ('d', 5), ('e', 6), ('f', 7)}
+
+    assert all(k in parent for k in {'a', 'b', 'c', 'd', 'e', 'f'})
+
+    assert len(parent) == 6
+    assert parent.len(only_self=True) == 3
+    assert parent.len() == 6
+
+    # iter should return all elements
+    assert dict(**parent).items() == {('a', 2), ('b', 3), ('c', 4),
+                                      ('d', 5), ('e', 6), ('f', 7)}
+
+    # 2. Test basic accessors for the child
+    assert child['a'] == 2
+    assert child.get('a') == 2
+    assert child['b'] == 3
+    assert child.get('b') == 3
+    assert child['c'] == 4
+    assert child.get('c') == 4
+    assert child['d'] == 5
+    assert child.get('d') == 5
+    assert child['e'] == 6
+    assert child.get('e') == 6
+    assert child['f'] == 7
+    assert child.get('f') == 7
+    assert child['g'] == 8
+    assert child.get('g') == 8
+
+    # test keys and len
+    assert child.keys(only_self=True) == {'g'}
+    assert child.keys() == {'a', 'b', 'c', 'd', 'e', 'f', 'g'}
+    assert set(child.values(only_self=True)) == {8}
+    assert set(child.values()) == {2, 3, 4, 5, 6, 7, 8}
+    assert set(child.items(only_self=True)) == {('g', 8)}
+    assert set(child.items()) == {('a', 2), ('b', 3), ('c', 4),
+                                  ('d', 5), ('e', 6), ('f', 7),
+                                  ('g', 8)}
+
+    assert all(k in child for k in {'a', 'b', 'c', 'd', 'e', 'f', 'g'})
+
+    assert len(child) == 7
+    assert child.len(only_self=True) == 1
+    assert child.len() == 7
+
+    # iter should return all elements
+    assert dict(**child).items() == {('a', 2), ('b', 3), ('c', 4),
+                                     ('d', 5), ('e', 6), ('f', 7),
+                                     ('g', 8)}
+
+
+def test_base_context_do_not_inherit(context_cls):
+    """Test the behavior of the 'do_not_inherit' attribute with parent classes
+    and sub-classes."""
+
+    class SubContext(context_cls):
+
+        do_not_inherit = {'a'}
+
+    sub_parent = SubContext(a=1, b=2)
+    sub_child = SubContext(parent_context=sub_parent)
+
+    # Test access to the keys. The sub_child should have access to 'b' but not
+    # 'a'
+    assert 'a' not in sub_child
+    assert 'a' not in sub_child.keys(only_self=True)
+    assert 'a' not in sub_child.keys()
+
+    assert 'b' in sub_child
+    assert 'b' not in sub_child.keys(only_self=True)
+    assert 'b' in sub_child.keys()
+
+    with pytest.raises(KeyError):
+        sub_child['a']
+    assert sub_child['b'] == 2
+
+    # Now populate 'a' and 'b' for the sub_child, and these should be accessible
+    # as normal
+    sub_child['a'] = 3
+    sub_child['b'] = 4
+
+    assert 'a' in sub_child
+    assert 'a' in sub_child.keys(only_self=True)
+    assert 'a' in sub_child.keys()
+
+    assert 'b' in sub_child
+    assert 'b' in sub_child.keys(only_self=True)
+    assert 'b' in sub_child.keys()
+
+    assert sub_child['a'] == 3
+    assert sub_child['b'] == 4
+
+    # Make sure the parent's values haven't changed
+    assert sub_parent['a'] == 1
+    assert sub_parent['b'] == 2
 
 
 def test_base_context_reset(context_cls):
     """Test the reset functionality in the base context. """
 
-    # We use the context_cls fixture, which is a BaseContext class instance,
-    # because we are modifying the BaseContext class
-    default_context = context_cls.default_context
-    context_cls.default_context = {'a': 2, 'b': 3, 'c': 4}
-
-    # Reset preserve the default_context, parent_context and initial values
-    parent_context = {'d': 5, 'e': 6, 'h': []}
+    # Setup the context and parent_context
+    parent_context = context_cls(**{'a': 2, 'b': 3, 'c': 4, 'd': 5, 'e': 6,
+                                    'h': []})
     context = context_cls(parent_context=parent_context, f=7, g=8)
     context['i'] = 9
 
@@ -75,7 +201,7 @@ def test_base_context_reset(context_cls):
     assert context['h'] == []
     assert context['i'] == 9
 
-    # Try changing default_context, parent_context entries
+    # Try changing values in the context
     context['a'] = -2
     context['d'] = 5
 
@@ -91,52 +217,6 @@ def test_base_context_reset(context_cls):
     assert context['g'] == 8
     assert context['h'] == []
     assert 'i' not in context
-
-    context_cls.default_context = default_context
-
-
-def test_base_context_copy():
-    """Tests shallow and deep copies of the parent context and default
-    context."""
-    # Create a default dict and make sure that the mutables are copies and
-    # not the objects themselves.
-    l1, l2 = [], []
-
-    class SubContext(BaseContext):
-        default_context = {'a': l1}
-
-    # Default context mutables aren't copied
-    context = SubContext(b=2, c=3, l2=l2)
-    assert 'a' in context
-    assert context['a'] == []
-    assert id(context['a']) != id(l1)
-
-    # Mutable initial values are copied as-is (i.e. they're shallow copies)
-    assert id(context['l2']) == id(l2)
-
-    # Parent contexts aren't copied.
-    parent_context = {'l3': [1, 2, 3]}
-    context = SubContext(parent_context=parent_context, l2=l2)
-    assert context['l3'] == [1, 2, 3]
-    assert id(context['l3']) != id(parent_context['l3'])
-
-    # Updating the parent context mutables should update the context,
-    # but updates to the context mutable should not impact the parent_context
-    parent_context['l3'].append('new')
-    assert context['l3'] == [1, 2, 3]  # not yet updated
-    context.reset()
-    assert context['l3'] == [1, 2, 3, 'new']  # updated with new parent_context
-    context['l3'].append('context addition')
-    assert context['l3'] == [1, 2, 3, 'new', 'context addition']
-    context.reset()
-    assert context['l3'] == [1, 2, 3, 'new']
-
-    # Updates to mutables in the initial values should change the initial
-    # value mutable
-    context['l2'].append('l2 addition')
-    assert context['l2'] == ['l2 addition']
-    context.reset()
-    assert context['l2'] == ['l2 addition']
 
 
 def test_base_context_is_valid(context_cls):
@@ -173,153 +253,101 @@ def test_base_context_is_valid(context_cls):
         assert context.is_valid('missing')
 
 
-def test_base_context_update_recursive(a_in_b):
+def test_base_context_mutables(context_cls):
+    """Test changes to mutables from parents and children context class
+    objects."""
+
+    # Setup a parent and child contexts with a mutables
+    parent = context_cls(paths=[])
+    child = context_cls(parent_context=parent)
+
+    parent['paths'].append(1)
+    child['paths'].append(2)
+
+    assert parent['paths'] == [1, 2]
+    assert child['paths'] == [1, 2]
+
+    # Now replace the paths in the child
+    child['paths'] = []
+
+    parent['paths'].append(3)
+    child['paths'].append(4)
+
+    assert parent['paths'] == [1, 2, 3]
+    assert child['paths'] == [4]
+
+
+def test_base_context_match_update(a_in_b):
     """Tests the recursive update method for the BaseContext."""
 
     # Converts a string to a dict
     context = BaseContext()
-    context.recursive_update('test: one')
+    context.matched_update('test: one')
     assert a_in_b({'test': 'one'}, context)
 
     # Existing values are overwritten
     context = BaseContext(test='one')
-    context.recursive_update('test: two')
+    context.matched_update('test: two')
     assert a_in_b({'test': 'two'}, context)
 
     # Types are not changed
     context = BaseContext(test=1)
-    context.recursive_update('test: two')
+    context.matched_update('test: two')
     assert a_in_b({'test': 1}, context)
 
     # Unless they can be converted
     context = BaseContext(test=1)
-    context.recursive_update('test: 2')
+    context.matched_update('test: 2')
     assert a_in_b({'test': 2}, context)
 
     # Try a dict entry with a mismatched type
     context = BaseContext(test={'a': 1})
-    context.recursive_update('test: 2')
+    context.matched_update('test: 2')
     assert a_in_b({'test': {'a': 1}}, context)
 
     # Try a dict entry with a dict change
     context = BaseContext(test={'a': 1})
-    context.recursive_update('test:\n  a: 2')
+    context.matched_update('test:\n  a: 2')
     assert a_in_b({'test': {'a': 2}}, context)
 
     context = BaseContext(test={'a': 1})
-    context.recursive_update('test:\n  b: 2')
+    context.matched_update('test:\n  b: 2')
     assert a_in_b({'test': {'a': 1, 'b': '2'}}, context)
 
     # Try a list entry
     context = BaseContext(paths=['one', 'two'])
-    context.recursive_update('paths: three')
+    context.matched_update('paths: three')
     assert a_in_b({'paths': ['three', 'one', 'two']}, context)
 
     # The initial value mutables have also changed
-    assert a_in_b({'_initial_values': {'paths': ['three', 'one', 'two']}},
-                  context)
+    assert context['_initial_values'] == {'paths': ['three', 'one', 'two']}
 
     # Hidden entries are not touched
     context = BaseContext(a=1)
-    context.recursive_update('_initial_values:\n  b: 2')
-    assert a_in_b({'_initial_values': {'a': 1}}, context)
+    context.matched_update('_initial_values:\n  b: 2')
+    assert context['_initial_values'] == {'a': 1}
 
 
-def test_base_context_shallow_copy():
-    """Test the shallow and deep copy of entries for subclasses."""
+def test_context_copy(context_cls):
+    """Test the (shallow) copying of context classes."""
 
-    # 1. Try subclasses with the 'shallow_copy' attributes set. This will make
-    #    default_context and parent_context entries copied over as shallow
-    #    copies.
-    class SubContext(BaseContext):
-        shallow_copy = {'l2', }
+    # Setup a grand_parent, parent and child context
+    grand_parent = dict(a=2, b=3, c=[])
+    parent = context_cls(d=5, e=6, f=[], parent_context=grand_parent)
+    child = context_cls(g=8, h=[], parent_context=parent)
 
-    class SubSubContext(SubContext):
-        shallow_copy = {'l3', }
+    # Create a copy and check the values
+    child_cp = copy.copy(child)
 
-    l1, l2, l3 = [], [], []
-    subsub_context = SubSubContext(l1=l1, l2=l2, l3=l3)
+    # Check the parent_context and initial_valuues
+    assert id(child.parent_context) == id(parent)
+    assert child['_parent_context'] == child_cp['_parent_context']
+    assert id(child_cp.parent_context) == id(parent)
 
-    # l1 should be a shallow copy because it is an initial value
-    # l2 and l3 should be shallow copies because they were specified in the
-    # 'shallow_copy' attribute
-    assert id(subsub_context['l1']) == id(l1)
-    assert id(subsub_context['l2']) == id(l2)
-    assert id(subsub_context['l3']) == id(l3)
+    assert child['_initial_values'] == child_cp['_initial_values']
 
-    # Modify the original objects
-    l1.append(1)
-    l2.append(2)
-    l3.append(3)
-
-    # The 'l1' entry is a shallow copy and 'l2' and 'l3' are shallow copies,
-    # 'l1', 'l2' and 'l3' entries will have changed
-    assert subsub_context['l1'] == [1]
-    assert subsub_context['l2'] == [2]
-    assert subsub_context['l3'] == [3]
-
-    # When resetting the context, the entry for 'l1' will be a shallow
-    # copy to the updated l1. The 'l2' and 'l3' entries are still shallow
-    # copies of the same l2 and l3 lists.
-    subsub_context.reset()
-    assert subsub_context['l1'] == [1]
-    assert subsub_context['l2'] == [2]
-    assert subsub_context['l3'] == [3]
-
-    # Modifying the lists will still change the originals
-    subsub_context['l1'].append('a')
-    subsub_context['l2'].append('b')
-    subsub_context['l3'].append('c')
-
-    assert l1 == [1, 'a']
-    assert l2 == [2, 'b']
-    assert l3 == [3, 'c']
-
-    # 2. Try subclasses without the 'shallow_copy' attributes set. This will
-    #    make default_context and parent_context entries copied over as deep
-    #    copies.
-    class SubContext(BaseContext):
-        pass
-
-    class SubSubContext(SubContext):
-        pass
-
-    # Create a new SubSubContext object, but now place l2 and l3 in the parent
-    # context. These will now be deep copies.
-    l1, l2, l3 = [], [], []
-    subsub_context = SubSubContext(l1=l1, parent_context={'l2': l2, 'l3': l3})
-
-    # l1 should be a shallow copy because it is an initial value
-    # l2 and l3 should be deep copies because they were not specified in the
-    # 'shallow_copy' attribute
-    assert id(subsub_context['l1']) == id(l1)
-    assert id(subsub_context['l2']) != id(l2)
-    assert id(subsub_context['l3']) != id(l3)
-
-    # Modify the original objects
-    l1.append(1)
-    l2.append(2)
-    l3.append(3)
-
-    # Since the 'l1' entry is a shallow copy and 'l2' and 'l3' are deep copies,
-    # only 'l1' will have changed
-    assert subsub_context['l1'] == [1]
-    assert subsub_context['l2'] == []
-    assert subsub_context['l3'] == []
-
-    # When resetting the context, the entry for 'l1' will be a shallow
-    # copy to the updated l1. The 'l2' and 'l3' entries become deep copies of
-    # the modified l2 and l3.
-    subsub_context.reset()
-    assert subsub_context['l1'] == [1]
-    assert subsub_context['l2'] == [2]
-    assert subsub_context['l3'] == [3]
-
-    # Modifying the lists will only change l1
-    subsub_context['l1'].append('a')
-    subsub_context['l2'].append('b')
-    subsub_context['l3'].append('c')
-
-    assert l1 == [1, 'a']
-    assert l2 == [2]
-    assert l3 == [3]
+    assert child.keys(only_self=True) == child_cp.keys(only_self=True)
+    assert child.keys() == child_cp.keys()
+    assert (list(sorted(child.items(only_self=True))) ==
+            list(sorted(child_cp.items(only_self=True))))
+    assert list(sorted(child.items())) == list(sorted(child_cp.items()))

@@ -12,7 +12,7 @@ class DummyDocument(object):
     target_root = TargetPath()
 
 
-def test_document_context_basic_inheritence(tmpdir):
+def test_document_context_basic_inheritence(context_cls, tmpdir):
     """Test the proper inheritence of the document context."""
     # Create a DocumentContext with one entry in the class's 'do_not_inherit'
     # class attribute and one not in 'do_not_inherit'
@@ -20,10 +20,11 @@ def test_document_context_basic_inheritence(tmpdir):
                       'src_filepath': SourcePath('tests/document/example1',
                                                  'dummy.dm'),
                       'project_root': SourcePath('tests/document/example1'),
-                      'target_root': TargetPath('tmpdir'),
+                      'target_root': TargetPath(tmpdir),
                       'label_manager': dict(),
                       'dependency_manager': dict(),
                       }
+    parent_context = context_cls(**parent_context)
 
     doc = DummyDocument()
     context = DocumentContext(document=doc, parent_context=parent_context,
@@ -186,39 +187,3 @@ def test_document_context_is_valid(tmpdir):
     # Now remove the mtime key and this should invalidate the context
     del context['mtime']
     assert not context.is_valid()
-
-
-def test_document_context_shallow_copy():
-    """Test the behavior of shallow copied entries in document contexts."""
-    # Make an object that tracks deletion
-    class Obj(object):
-
-        def __del__(self):
-            raise NotImplementedError
-
-        def __delete__(self, instance):
-            raise NotImplementedError
-
-    class SubDocumentContext(DocumentContext):
-        shallow_copy = {'obj'}
-
-    # Create the document context objects
-    doc = DummyDocument()
-    doc.doc_id = 'doc_id'
-    parent_context = SubDocumentContext(document=doc, obj=Obj())
-    context = SubDocumentContext(document=doc, parent_context=parent_context)
-
-    assert parent_context['obj'] == context['obj']
-    assert id(parent_context['obj']) == id(context['obj'])
-
-    # If the shallow_copy attribute is not set, then deep copies are made.
-    parent_context = DocumentContext(document=doc, obj=Obj())
-    context = DocumentContext(document=doc, parent_context=parent_context)
-
-    assert parent_context['obj'] != context['obj']
-    assert id(parent_context['obj']) != id(context['obj'])
-
-    # Reset the delete functions of Obj so that the objects can now be safely
-    # deleted
-    del Obj.__del__
-    del Obj.__delete__
