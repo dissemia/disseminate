@@ -129,7 +129,7 @@ span.paragraph {
 }
 
 /* Table of Contents */
-.toc {
+.menu {
   display: none;
   position: fixed;
   background: #ffffff;
@@ -140,35 +140,40 @@ span.paragraph {
   min-width: 40rem;
 }
 
-label.toc-menu {
+.menu h1 {
+    font-size: 16pt;
+    margin-top: 0;
+}
+
+label.menu-toggle {
   margin-left: -30px;
   margin-top: 1rem;
   position: fixed;
   display: block;
 }
 
-input.toc-menu[type=checkbox] {
+input.menu-toggle[type=checkbox] {
   visibility: hidden;
   position: absolute;
 }
 
-input.toc-menu[type=checkbox]:checked ~ .toc {
+input.menu-toggle[type=checkbox]:checked ~ .menu {
   display: block;
 }
 
-.toc-menu #toc-menu-inactive {
+.menu-toggle #menu-toggle-inactive {
   position: absolute;
 }
 
-.toc-menu #toc-menu-active {
+.menu-toggle #menu-toggle-active {
   visibility: hidden;
 }
 
-input.toc-menu[type=checkbox]:checked + .toc-menu #toc-menu-inactive {
+input.menu-toggle[type=checkbox]:checked + .menu-toggle #menu-toggle-inactive {
   visibility: hidden;
 }
 
-input.toc-menu[type=checkbox]:checked + .toc-menu #toc-menu-active {
+input.menu-toggle[type=checkbox]:checked + .menu-toggle #menu-toggle-active {
   visibility: visible;
 }
 
