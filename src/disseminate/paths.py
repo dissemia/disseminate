@@ -103,18 +103,53 @@ class TargetPath(object):
                           subpath=self.subpath)
 
     def get_url(self, context=None):
-        url_str = (context['base_url'] if isinstance(context, dict) and
-                   'base_url' in context else '/{target}/{subpath}')
-        target_root = str(self.target_root).strip('.')
-        target = str(self.target).strip('.')
-        subpath = str(self.subpath).strip('.')
+        """Construct the url for the path."""
+        url = None
 
-        url = url_str.format(target_root=target_root,
-                             target=target,
-                             subpath=subpath)
+        # See if a relative url is requested and get that if it is
+        if context is not None and context.get('relative_links', False):
+            url = self._get_relative_url(context)
+
+        # If a relative url could not be produced or one was not wanted, get
+        # an absolute url.
+        if url is None:
+            url = self._get_absolute_url(context)
 
         # Cleanup the url by  and double slashes
         url = url.rstrip('/')  # stripping leading slashes
         url = re_dbl_slash.sub('/', url)  # strip dble leading slash
 
         return url
+
+    def _get_relative_url(self, context):
+        """Construct the relative url for the path."""
+        document = context.document if hasattr(context, 'document') else None
+        if document is None:
+            return None
+
+        # Get the target_filepath. Prepend a '.' if needed. ex: '.html'
+        target = str(self.target)
+        target = '.' + target if not target.startswith('.') else target
+
+        # Get the target_filepath and target_path
+        target_filepath = document.target_filepath(target)
+        target_path = target_filepath.parent
+
+        # Get the relative path
+        relpath = os.path.relpath(self, target_path)
+
+        # Construct a relative url relative to the target_path
+        return str(relpath)
+
+    def _get_absolute_url(self, context):
+        """Construct the absolute url for the path."""
+        # Get the parts of paths that will be used
+        target_root = str(self.target_root).strip('.')
+        target = str(self.target).strip('.')
+        subpath = str(self.subpath).strip('.')
+
+        url_str = (context['base_url'] if isinstance(context, dict) and
+                   'base_url' in context else '/{target}/{subpath}')
+
+        return url_str.format(target_root=target_root, target=target,
+                              subpath=subpath)

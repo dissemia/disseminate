@@ -41,8 +41,9 @@ def test_document_toc(tmpdir):
     # for documents.
     doc = Document(src_filepath, target_root)
 
-    # Setup the base_url
+    # Setup the base_url, and disable relative links
     doc.context['base_url'] = '/{target}/{subpath}'
+    doc.context['relative_links'] = False
 
     # Render the doc
     doc.render()

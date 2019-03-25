@@ -90,10 +90,7 @@ class DocumentContext(BaseContext):
         }
 
     def __init__(self, document, *args, **kwargs):
-        # Create a weakref of the document. A weakref is used because the
-        # context does not own the document, and document references
-        # could be in multiple '_parent_context' entries for subdocuments.
-        kwargs['document'] = weakref.ref(document)
+        self.document = document
 
         if kwargs.get('parent_context') is None:
             kwargs['parent_context'] = deepcopy(settings.default_context)
@@ -143,6 +140,17 @@ class DocumentContext(BaseContext):
         paths.clear()
         if self['project_root'] not in paths:
             paths.append(self['project_root'])
+
+    @property
+    def document(self):
+        # Retrieve and de-reference the document
+        doc_ref = self.get('document', None)
+        return doc_ref() if isinstance(doc_ref, weakref.ref) else None
+
+    @document.setter
+    def document(self, value):
+        # Create a weakref to the document
+        self['document'] = weakref.ref(value)
 
     def label_fmt(self, major, intermediate=None, target=None):
         """Retrieve the label format string for the keys specified by the

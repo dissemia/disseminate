@@ -143,5 +143,37 @@ statement lists the sub-documents directly subordinate to a document.
            part1/cakes.dm
            part1/tarts.dm
 
+
+Variables and Render Options
+----------------------------
+
+``relative_links``
+   If True (default), html links are referenced relative to the document's
+   path. If False, links are absolute.
+
+   .. index::
+      single: header; relative_links
+
+   :examples:
+
+      ::
+
+         relative_links: True
+
+
+``base_url``
+    If absolute links are used and ``relative_links`` is False, then the
+    base_url string will be prepended to links.
+
+   .. index::
+      single: header; base_url
+
+   :examples:
+
+      ::
+
+         base_url: /{target}/{subpath}
+
+
 Inheritance
 -----------

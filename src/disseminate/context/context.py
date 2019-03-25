@@ -444,6 +444,13 @@ class BaseContext(dict):
 
             # For immutable types, like ints, covert strings into their
             # proper format and replace the original's value
+            elif isinstance(original_value, bool):
+                change_value_lower = change_value.lower().strip()
+                if change_value_lower == 'false':
+                    original[key] = False
+                elif change_value_lower == 'true':
+                    original[key] = True
+
             elif isinstance(original_value, int):
                 try:
                     original[key] = int(change_value)

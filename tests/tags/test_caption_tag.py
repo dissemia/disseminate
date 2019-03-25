@@ -70,7 +70,7 @@ def test_ref_figure_html(tmpdir):
     html = etree.tostring(ref.html).decode('utf-8')
 
     key = ('<span class="ref">'
-           '<a href="/html/main.html#fig:image1">'
+           '<a href="main.html#fig:image1">'
            '<strong>Fig. .1</strong></a>'
            '</span>')
     assert html == key

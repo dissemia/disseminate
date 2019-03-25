@@ -65,6 +65,9 @@ body_attr = 'body'
 default_context = {
     'targets': 'html',
     'paths': [],
+
+    # Options related to links
+    'relative_links': True,
     'base_url': '/{target}/{subpath}',
 
     # Process paragraphs for the following entries
@@ -128,8 +131,8 @@ default_context = {
     # Macros are string entries that aren't processed into tags and asts.
     # These start with the 'tag_prefix' (e.g. '@')
     # Macros - Isotopes
-    '@1H': '@sup{1}H', '@2H': '@sup{2}H', '@13C': '@sup{13}C', '@15N': '@sup{15}N',
-    '@19F': '@sup{19}F', '@31P': '@sup{31}P',
+    '@1H': '@sup{1}H', '@2H': '@sup{2}H', '@13C': '@sup{13}C',
+    '@15N': '@sup{15}N', '@19F': '@sup{19}F', '@31P': '@sup{31}P',
 
     # Macros - Molecules
     '@H2O': 'H@sub{2}O',

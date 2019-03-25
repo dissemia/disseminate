@@ -180,9 +180,10 @@ def test_render_tree_html():
     html = render_tree_html(docs[0:0])
     assert html == ''
 
-    # Set a default base_url
+    # Set a default base_url, and disable relative links
     for doc in docs:
         doc.context['base_url'] = '/{target}/{subpath}'
+        doc.context['relative_links'] = False
 
     # Get the modification times for the source documents
     mtime1 = docs[0].src_filepath.stat().st_mtime

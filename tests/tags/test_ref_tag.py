@@ -77,7 +77,7 @@ def test_ref_html(tmpdir):
     root_html = root_html[len(root_start):]  # strip the start
     root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
 
-    key = '<a href="/html/main.html#test">Fig. 1</a>'
+    key = '<a href="main.html#test">Fig. 1</a>'
 
     assert key in root_html
 

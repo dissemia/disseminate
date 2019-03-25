@@ -314,6 +314,15 @@ def test_base_context_match_update(a_in_b):
     context.matched_update('test:\n  b: 2')
     assert a_in_b({'test': {'a': 1, 'b': '2'}}, context)
 
+    # Try bool entries
+    context = BaseContext(test=True)
+    context.matched_update('test: false')
+    assert a_in_b({'test': False}, context)
+
+    context = BaseContext(test=1)
+    context.matched_update('test: false')
+    assert a_in_b({'test': 1}, context)
+
     # Try a list entry
     context = BaseContext(paths=['one', 'two'])
     context.matched_update('paths: three')

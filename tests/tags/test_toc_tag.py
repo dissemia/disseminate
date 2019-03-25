@@ -1,8 +1,6 @@
 """
 Test the TOC tag.
 """
-from lxml.builder import E
-
 from disseminate import Document, SourcePath, TargetPath
 from disseminate.tags.toc import Toc
 from disseminate.utils.tests import strip_leading_space
@@ -19,6 +17,7 @@ def test_toc_changes(tmpdir):
     markup = """
     ---
     title: my first file
+    relative_links: False
     ---
     @section[id=heading1]{My first heading}
     """
@@ -56,6 +55,7 @@ def test_toc_changes(tmpdir):
     markup = """
     ---
     title: my first file
+    relative_links: False
     ---
     @section[id=heading1]{My first heading}
     @subsection[id=subheading1]{My first sub-heading}
@@ -108,6 +108,7 @@ def test_toc_heading_html(tmpdir):
 
     # Make sure the 'base_url' entry matches a basic format.
     doc.context['base_url'] = '/{target}/{subpath}'
+    doc.context['relative_links'] = False
 
     # Create a toc for all headings
     toc = Toc(name='toc', content='all headings', attributes=tuple(),
@@ -179,6 +180,7 @@ def test_toc_heading_html(tmpdir):
 
     # Make sure the 'base_url' entry matches a basic format.
     doc.context['base_url'] = '/{target}/{subpath}'
+    doc.context['relative_links'] = False
 
     # Create a toc for all headings
     toc = Toc(name='toc', content='all headings', attributes=tuple(),
@@ -241,6 +243,7 @@ def test_toc_header_html(tmpdir):
 
     # Make sure the 'base_url' entry matches a basic format.
     doc.context['base_url'] = '/{target}/{subpath}'
+    doc.context['relative_links'] = False
 
     # Create a toc for the root document, file1.dm, only.
     toc = Toc(name='toc', content='headings', attributes=tuple(),
@@ -288,6 +291,7 @@ def test_toc_document_html(tmpdir):
 
     # Make sure the 'base_url' entry matches a basic format.
     doc.context['base_url'] = '/{target}/{subpath}'
+    doc.context['relative_links'] = False
 
     # Create the tag for document2
     toc = Toc(name='toc', content='all documents', attributes=tuple(),
@@ -488,6 +492,49 @@ def test_toc_document_html(tmpdir):
 </ul>
 """
     assert toc.html == key
+
+
+def test_toc_relative_links_html(tmpdir):
+    """Test the generation of tocs with relative links for html"""
+    # The 'tests/tags/toc_example1' directory contains three markup files:
+    # file1.dm, in the root folder, and file21.dm and file2.dm in the 'sub'
+    # folder. The 'file1.dm' includes 'file21.dm' and 'file22.dm'.
+    # Setup the paths
+    src_filepath = SourcePath(project_root='tests/tags/toc_example1',
+                              subpath='file1.dm')
+    target_root = TargetPath(tmpdir)
+    doc = Document(src_filepath, target_root)
+
+    # Make sure the 'base_url' entry matches a basic format.
+    doc.context['base_url'] = '/{target}/{subpath}'
+    doc.context['relative_links'] = True
+
+    # Create the tag for document2
+    toc = Toc(name='toc', content='all documents', attributes=tuple(),
+              context=doc.context)
+
+    # Match the default toc (format: 'collapsed')
+    key = """<ul class="toc-level-1">
+      <li>
+        <span class="ref">
+          <a href="file1.html">file1</a>
+        </span>
+      </li>
+      <ul class="toc-level-2">
+        <li>
+          <span class="ref">
+            <a href="sub/file21.html">sub/file21</a>
+          </span>
+        </li>
+        <li>
+          <span class="ref">
+            <a href="sub/file22.html">sub/file22</a>
+          </span>
+        </li>
+      </ul>
+    </ul>
+    """
+    assert toc.html == strip_leading_space(key)
 
 
 # tex tests
