@@ -1,12 +1,8 @@
 """
 Test string utilities.
 """
-from collections import namedtuple
-
-import pytest
-
 from disseminate.utils.string import (hashtxt, titlelize, str_to_dict,
-                                      str_to_list, StringTemplate)
+                                      str_to_list)
 
 
 def test_hashtxt():
@@ -119,76 +115,3 @@ def test_str_to_dict():
     assert (d == {'targets': 'pdf, tex'})
     l = str_to_list(d['targets'])
     assert l == ['pdf', 'tex']
-
-
-def test_string_template():
-    """Test the string Template class."""
-
-    # Basic empty substitutions
-    assert StringTemplate("My test $ string.").substitute() == "My test $ string."
-
-    with pytest.raises(KeyError):
-        assert StringTemplate("My test $string .").substitute() == "My test $string ."
-    assert StringTemplate("My test $string .").safe_substitute() == "My test $string ."
-
-    with pytest.raises(KeyError):
-        assert StringTemplate("My test $string.").substitute() == "My test $string."
-    assert StringTemplate("My test $string.").safe_substitute() == "My test $string."
-
-    with pytest.raises(KeyError):
-        assert (StringTemplate('My friend $friend is here.').substitute() ==
-                'My friend $friend is here.')
-    assert (StringTemplate('My friend $friend is here.').safe_substitute() ==
-            'My friend $friend is here.')
-
-    assert (StringTemplate("My test $ string.").substitute(string='pickle') ==
-            "My test $ string.")
-    assert (StringTemplate('My friend $friend is here.').substitute(friend='Ted') ==
-            'My friend Ted is here.')
-    assert (StringTemplate('My friend $friend is here.').substitute(friend=1) ==
-            'My friend 1 is here.')
-    assert (StringTemplate('My friend $friend.').substitute(friend='Ted') ==
-            'My friend Ted.')
-    assert (StringTemplate('My friend $friend.name.').substitute(friend='Ted') ==
-            'My friend Ted.name.')
-    assert (StringTemplate('My friend $$friend.name.').substitute(friend='Ted') ==
-            'My friend $$friend.name.')
-
-    # Basic string substitutions (case-sensitive)
-    with pytest.raises(KeyError):
-        assert (StringTemplate('My friend $FRIEND.name.').substitute(friend='Ted') ==
-                'My friend $FRIEND.name.')
-    with pytest.raises(KeyError):
-        assert (StringTemplate('My friend $friend.name.').substitute(FRIEND='Ted') ==
-                'My friend $friend.name.')
-
-    # Substitutions with objects.
-    class Friend(object):
-        def __repr__(self):
-            return "<friend>"
-
-    friend = Friend()
-    friend.name = 'Darryl'
-    friend.last = 'Smith'
-    assert (StringTemplate('My friend $friend.notname.').substitute(friend=friend) ==
-            'My friend <friend>.notname.')
-    assert (StringTemplate('My friend $friend.name.').substitute(friend=friend) ==
-            'My friend Darryl.')
-    assert (StringTemplate('$friend.name is my friend.').substitute(friend=friend) ==
-            'Darryl is my friend.')
-    assert (StringTemplate('My friend $friend.name.end.').substitute(friend=friend) ==
-            'My friend Darryl.end.')
-    assert (StringTemplate('$friend.name $friend.last').substitute(friend=friend) ==
-            'Darryl Smith')
-    assert (StringTemplate('$friend.name.$friend.last').substitute(friend=friend) ==
-            'Darryl.Smith')
-
-    # Substitutions with named tuples.
-    Vector = namedtuple('Vector', 'x y z')
-    vec = Vector(x='x', y='y', z='z')
-    assert (StringTemplate('My $vec.x component.').substitute(vec=vec) ==
-            'My x component.')
-    assert (StringTemplate('My {$vec.y} component.').substitute(vec=vec) ==
-            'My {y} component.')
-    assert (StringTemplate('My $vec component.').substitute(vec=vec) ==
-            "My Vector(x='x', y='y', z='z') component.")

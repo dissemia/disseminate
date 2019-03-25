@@ -79,38 +79,38 @@ default_context = {
     # the label, then the kind(s) of the label, and finally, and optionally,
     # the target for the rendered document.
     'label_fmts': {
-        'document': '$label.title',
+        'document': '@label.title',
 
         # caption tags
-        'caption_figure': '@b{Fig. $label.branch_number.$label.number}.',
+        'caption_figure': '@b{Fig. @label.branch_number.@label.number}.',
 
-        'ref_figure': '@b{Fig. $label.branch_number.$label.number}',
-        'ref_figure_html': '@a[href="$link"]{'
-                           '@b{Fig. $label.branch_number.$label.number}}',
-        'ref_figure_tex': '\\hyperref[$label.id]{'
-                           '@b{Fig. $label.branch_number.$label.number}}',
+        'ref_figure': '@b{Fig. @label.branch_number.@label.number}',
+        'ref_figure_html': '@a[href="@link"]{'
+                           '@b{Fig. @label.branch_number.@label.number}}',
+        'ref_figure_tex': '\\hyperref[@label.id]{'
+                           '@b{Fig. @label.branch_number.@label.number}}',
 
         # Headings tags
-        'heading': '$label.title',
+        'heading': '@label.title',
 
         # html specific formatting
-        'heading_html': '@number{$label.tree_number.} '
-                        '$label.title',
+        'heading_html': '@number{@label.tree_number.} '
+                        '@label.title',
 
         # Ref tags
-        'ref_heading_html': '@a[href="$link"]{$label.title}',
+        'ref_heading_html': '@a[href="@link"]{@label.title}',
 
         # TOCRef Tags
-        'tocref_document_html': '@a[href="$link"]{$label.title}',
-        'tocref_document_tex': '\\hyperref[$label.id]'
-                               '{$label.title} '
-                               '\\hfill \\pageref{$label.id}',
-        'tocref_heading_html': '@a[href="$link"]{'
-                               '@number{$label.tree_number.} '
-                               '$label.title}',
-        'tocref_heading_tex': '\\hyperref[$label.id]'
-                              '{$label.tree_number. $label.title} '
-                              '\\hfill \\pageref{$label.id}',
+        'tocref_document_html': '@a[href="@link"]{@label.title}',
+        'tocref_document_tex': '\\hyperref[@label.id]'
+                               '{@label.title} '
+                               '\\hfill \\pageref{@label.id}',
+        'tocref_heading_html': '@a[href="@link"]{'
+                               '@number{@label.tree_number.} '
+                               '@label.title}',
+        'tocref_heading_tex': '\\hyperref[@label.id]'
+                              '{@label.tree_number. @label.title} '
+                              '\\hfill \\pageref{@label.id}',
 
         # Citation formats
         # 'citation': '@sup{label.number}',

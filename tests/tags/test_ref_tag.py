@@ -53,8 +53,8 @@ def test_ref_html(tmpdir):
     target_root = TargetPath(tmpdir)
 
     doc = Document(src_filepath=src_filepath, target_root=target_root)
-    doc.context['label_fmts']['ref_figure_html'] = ('@a[href="$link"]{'
-                                                    'Fig. $label.number}')
+    doc.context['label_fmts']['ref_figure_html'] = ('@a[href="@link"]{'
+                                                    'Fig. @label.number}')
     doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
 
@@ -96,8 +96,8 @@ def test_ref_tex(tmpdir):
     doc = Document(src_filepath=src_filepath, target_root=target_root)
     label_man = doc.context['label_manager']
 
-    doc.context['label_fmts']['ref_figure_tex'] = ("\\hyperref[$label.id]{"
-                                                   "Fig. $label.number}")
+    doc.context['label_fmts']['ref_figure_tex'] = ("\\hyperref[@label.id]{"
+                                                   "Fig. @label.number}")
     doc.context['targets'] = '.tex'
 
     # Generate the markup without an id. A reference cannot be made, and a

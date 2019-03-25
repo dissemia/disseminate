@@ -158,7 +158,7 @@ class DocumentContext(BaseContext):
         document rendered.
 
         Label format strings are intended to be replaced with the
-        StringTemplate (:class:`disseminate.utils.string.StringTemplate`).
+        replace_macros (:func:`disseminate.macros.replace_macros`).
 
         Parameters
         ----------

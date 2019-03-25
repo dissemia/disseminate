@@ -3,7 +3,7 @@ The Ref tag to reference captions and other labels.
 """
 from .core import Tag
 from .. import ast
-from ..utils.string import StringTemplate
+from ..macros import replace_macros
 
 
 class RefError(Exception):
@@ -73,11 +73,9 @@ class Ref(Tag):
         if label.kind[0] != 'document':
             link += '#' + label.id
 
-        # Convert the label_fmt string to a string template
-        label_tmplt = StringTemplate(label_fmt)
-
-        # A label format string has been found. Now format it.
-        label_string = label_tmplt.substitute(label=label, link=link)
+        # Substitute the variables (macros) in the label_fmt string
+        label_string = replace_macros(label_fmt, {'@label': label,
+                                                  '@link': link})
 
         # Format any tags
         content = ast.process_ast(label_string, context=self.context)

@@ -184,10 +184,10 @@ def test_heading_labels_formatting(tmpdir):
     ---
     targets: html, txt
     label_fmts: 
-        heading_branch: $label.tree_number. $label.title
-        heading_section: $label.tree_number. $label.title
-        heading_subsection: $label.tree_number. $label.title
-        heading_subsubsection: $label.tree_number. $label.title
+        heading_branch: @label.tree_number. @label.title
+        heading_section: @label.tree_number. @label.title
+        heading_subsection: @label.tree_number. @label.title
+        heading_subsubsection: @label.tree_number. @label.title
     ---
     @chapter{First Chapter}
     @section{Section One-One}

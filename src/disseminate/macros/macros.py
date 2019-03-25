@@ -9,7 +9,7 @@ from .. import settings
 
 re_macro = regex.compile(r"(?P<macro>" +
                          settings.tag_prefix +  # tag prefix. e.g. '@'
-                         r"\w+)"
+                         r"[\w\.]+)"
                          r"({\s*})?"  # match empty curly brackets
                          )
 
@@ -46,14 +46,36 @@ def replace_macros(s, context):
 
     # Replace the macros
     def _substitute(m):
+        # Get the string for the match
+        # ex: macro = '@friend.name'
         d = m.groupdict()
         macro = d['macro']
 
-        # Replace a macro if if it's the context
-        if macro in context:
-            return str(context[macro])
-        else:
+        # Split at periods
+        # ex: pieces = ['@friend', 'name']
+        pieces = macro.split('.')
+
+        # See if the first piece corresponds to an entry in kwargs
+        obj = None
+        while pieces:
+            piece = pieces.pop(0)
+
+            if obj is None and piece in context:
+                obj = context[piece]
+            elif hasattr(obj, piece):
+                obj = getattr(obj, piece)
+            else:
+                # Match not found. Re-add piece to the pieces list
+                pieces.insert(0, piece)
+                break
+
+        # Convert obj and the remaining pieces to a string
+        if obj is None:
+            # no match found. Return the match
             return m.group()
+        else:
+            # match(es) found, replace with the string
+            return str(obj) + ''.join('.' + piece for piece in pieces)
 
     # Return a metastring with the macros substituted. Keep substituting until
     # all macros are replaced or the string is no longer changing

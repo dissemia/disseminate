@@ -6,12 +6,13 @@ from lxml import etree
 from markupsafe import Markup
 
 from .exceptions import TagError
+from ..macros import replace_macros
 from ..attributes import (parse_attributes, set_attribute,
                           kwargs_attributes, format_tex_attributes,
                           filter_attributes, get_attribute_value,
                           remove_attribute)
 from .utils import set_html_tag_attributes
-from ..utils.string import titlelize, StringTemplate
+from ..utils.string import titlelize
 from ..utils.classes import weakattr
 from .. import ast
 from .. import settings
@@ -281,11 +282,8 @@ class Tag(object):
         # attributes, this tag's context or the default context.
         label_fmt = self._get_label_fmt_str(target=target)
 
-        # Convert the label_fmt string to a string template
-        label_tmplt = StringTemplate(label_fmt)
-
-        # A label format string has been found. Now format it.
-        label_string = label_tmplt.substitute(label=label)
+        # Substitute the variables (macros) in the label_fmt string
+        label_string = replace_macros(label_fmt, {'@label': label})
 
         # Format any tags into an ast
         label_tag = ast.process_ast(label_string, context=self.context,

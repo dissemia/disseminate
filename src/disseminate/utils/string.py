@@ -2,7 +2,6 @@
 String manipulation operations.
 """
 import hashlib
-import string
 
 import regex
 from slugify import slugify
@@ -262,68 +261,3 @@ class Metastring(str):
         new_str = super(Metastring, cls).__new__(cls, content)
         new_str.__dict__.update(kwargs)
         return new_str
-
-
-class StringTemplate(string.Template):
-    """A template string used to preprocess strings in disseminate format.
-
-    This class allows for a simple substitution of '$' variables and disallows
-    more complicated Python operations.
-
-    Examples
-    --------
-    >>> StringTemplate("test $friend").substitute(friend='Bill')
-    'test Bill'
-    """
-    delimiter = '$'
-    idpattern = r'[a-z][_a-z0-9\.]*'
-
-    def substitute(*args, **kwargs):
-        self, *args = args  # allow the "self" keyword be passed
-        raise_expcetion = kwargs.pop('raise_exception', True)
-
-        def convert(match):
-            # Get the string for the match
-            # ex: match_str = '$friend.name'
-            match_str = match.group()
-
-            # Split at periods
-            # ex: pieces = ['$friend', 'name']
-            pieces = match_str.split('.')
-
-            # Reconstruct the pieces into a list of results
-            results = pieces[0:1] + ['.' + piece for piece in pieces[1:]]
-
-            # See if the first piece corresponds to an entry in kwargs
-            result = results.pop(0)  # ex: piece = '$friend'
-            obj = kwargs.get(result[1:], None)
-            last_obj = obj
-
-            # Raise an exception, if the key was not found and the key is valid
-            if (raise_expcetion and
-                obj is None and  # if key not found (i.e. obj is None) and
-                result[1:] and   # the key is not empty and
-               result[0:2] != self.delimiter*2):  # the delimiter isn't escaped
-                raise KeyError(result[1:])
-
-            while results and not isinstance(obj, str) and obj is not None:
-                result = results.pop(0)
-                obj = getattr(obj, result[1:], None)
-                last_obj = obj if obj is not None else last_obj
-
-            if last_obj is not None and obj is None:
-                results.insert(0, result)
-                results.insert(0, str(last_obj))
-            elif last_obj is not None:
-                results.insert(0, str(last_obj))
-            else:
-                results.insert(0, result)
-
-            return ''.join(results)
-
-        return self.pattern.sub(convert, self.template)
-
-    def safe_substitute(*args, **kwargs):
-        self, *args = args  # allow the "self" keyword be passed
-        kwargs['raise_exception'] = False
-        return self.substitute(*args, **kwargs)

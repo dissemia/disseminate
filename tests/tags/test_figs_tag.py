@@ -46,7 +46,7 @@ def test_figure_caption_no_id(tmpdir):
     assert fig.attributes == tuple()
 
     # 1. Get the caption, first with a basic figure label
-    label_fmts['caption_figure'] = "Fig. $label.number."
+    label_fmts['caption_figure'] = "Fig. @label.number."
 
     caption = fig.content
     assert caption.name == 'caption'
@@ -55,7 +55,7 @@ def test_figure_caption_no_id(tmpdir):
                                'It has multiple lines')
 
     # Get the caption, next with a caption title.
-    label_fmts['caption_figure'] = "@b{Figure. $label.number}."
+    label_fmts['caption_figure'] = "@b{Figure. @label.number}."
 
     caption = fig.content
     assert caption.name == 'caption'
@@ -83,7 +83,7 @@ def test_figure_caption_with_id(tmpdir):
     src_filepath.ensure(file=True)
 
     doc = Document(src_filepath=src_filepath)
-    doc.context['label_fmts']['caption_figure'] = "Fig. $number."
+    doc.context['label_fmts']['caption_figure'] = "Fig. @number."
     doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
 
@@ -126,7 +126,7 @@ def test_figure_caption_no_id_html(tmpdir):
     src_filepath.ensure(file=True)
 
     doc = Document(src_filepath=src_filepath)
-    doc.context['label_fmts']['caption_figure'] = "Fig. $label.number."
+    doc.context['label_fmts']['caption_figure'] = "Fig. @label.number."
     doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
 
@@ -156,7 +156,7 @@ def test_figure_caption_with_id_html(tmpdir):
     src_filepath.ensure(file=True)
 
     doc = Document(src_filepath=src_filepath)
-    doc.context['label_fmts']['caption_figure'] = "@b{Fig. $label.number.}"
+    doc.context['label_fmts']['caption_figure'] = "@b{Fig. @label.number.}"
     doc.context['targets'] = '.html'
     label_man = doc.context['label_manager']
 
@@ -194,7 +194,7 @@ def test_figure_caption_no_id_tex(tmpdir):
     src_filepath.ensure(file=True)
 
     doc = Document(src_filepath=src_filepath)
-    doc.context['label_fmts']['caption_figure'] = "Fig. $label.number."
+    doc.context['label_fmts']['caption_figure'] = "Fig. @label.number."
     doc.context['targets'] = '.tex'
     label_man = doc.context['label_manager']
 
@@ -222,7 +222,7 @@ def test_figure_caption_with_id_tex(tmpdir):
     src_filepath.ensure(file=True)
 
     doc = Document(src_filepath=src_filepath)
-    doc.context['label_fmts']['caption_figure'] = "Fig. $label.number."
+    doc.context['label_fmts']['caption_figure'] = "Fig. @label.number."
     doc.context['targets'] = '.tex'
     label_man = doc.context['label_manager']
 
