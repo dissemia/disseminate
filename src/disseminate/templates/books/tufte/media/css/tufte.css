@@ -220,6 +220,7 @@ ul.toc-level-4 {
   border-top: 1px solid #eee;
   border-bottom: 1px solid #eee;
   background-color: #fcfcfc;
+  overflow-x: hidden;
 }
 
 @media (max-width: 768px) {
