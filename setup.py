@@ -15,8 +15,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
 # Get the version number and package information.  The __version__.py
 # file is executed so that the disseminate package is not loaded.  At
 # this point, the C/C++ extensions may not be built, and loading the
-# mollib package will lead to an ImportError. This approach
-# circumvents this problem.
+# package will lead to an ImportError. This approach circumvents this problem.
 __version__ = None  # This is a version string
 VERSION = None  # This is a 5-item version tuple
 exec(open("./src/disseminate/__version__.py").read())
@@ -41,7 +40,6 @@ classifiers += [
           'Operating System :: POSIX :: Linux',
           'Programming Language :: Python',
           'Programming Language :: Python :: 3',
-          'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
           'Topic :: Text Processing :: General',
           'Topic :: Text Processing :: Markup',

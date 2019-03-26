@@ -29,8 +29,14 @@ class SourcePath(object):
     subpath = None
     __mixclass__ = None
 
-    def __new__(cls, project_root=None, subpath=None):
-        subpath = pathlib.Path(subpath or '')
+    def __new__(cls, project_root='', subpath=''):
+        # A variety of objects, including strings, pathlib.Path object or other
+        # objects can be passed to this method. It's simplest just to convert
+        # them to a string before using them.
+        project_root = str(project_root)
+        subpath = str(subpath)
+
+        subpath = pathlib.Path(subpath)
         assert not subpath.is_absolute(), ("The subpath argument cannot be an "
                                            "absolute path")
 
@@ -44,11 +50,9 @@ class SourcePath(object):
             MixClass.__name__ = cls.__name__
             cls.__mixclass__ = MixClass
 
-        obj = pathlib.Path.__new__(cls.__mixclass__,
-                                   project_root or '',
-                                   subpath or '')
-        obj.project_root = cls.__mixclass__(project_root or '', '')
-        obj.subpath = cls.__mixclass__('', subpath or '')
+        obj = pathlib.Path.__new__(cls.__mixclass__, project_root, subpath)
+        obj.project_root = cls.__mixclass__(project_root, '')
+        obj.subpath = cls.__mixclass__('', subpath)
         return obj
 
     def __copy__(self):
@@ -67,8 +71,15 @@ class TargetPath(object):
     subpath = None
     __mixclass__ = None
 
-    def __new__(cls, target_root=None, target=None, subpath=None):
-        subpath = pathlib.Path(subpath or '')
+    def __new__(cls, target_root='', target='', subpath=''):
+        # A variety of objects, including strings, pathlib.Path object or other
+        # objects can be passed to this method. It's simplest just to convert
+        # them to a string before using them.
+        target_root = str(target_root)
+        target = str(target)
+        subpath = str(subpath)
+
+        subpath = pathlib.Path(subpath)
         assert not subpath.is_absolute(), ("The subpath argument cannot be an "
                                            "absolute path")
 
@@ -85,13 +96,11 @@ class TargetPath(object):
         if isinstance(target, str):
             target = target.strip('.')  # '.html' -> 'html'
 
-        obj = pathlib.Path.__new__(cls.__mixclass__,
-                                   target_root or '',
-                                   target or '',
-                                   subpath or '')
-        obj.target_root = cls.__mixclass__(target_root or '', '', '')
-        obj.target = cls.__mixclass__('', target or '', '')
-        obj.subpath = cls.__mixclass__('', '', subpath or '')
+        obj = pathlib.Path.__new__(cls.__mixclass__, target_root, target,
+                                   subpath)
+        obj.target_root = cls.__mixclass__(target_root, '', '')
+        obj.target = cls.__mixclass__('', target, '')
+        obj.subpath = cls.__mixclass__('', '', subpath)
         return obj
 
     def __copy__(self):

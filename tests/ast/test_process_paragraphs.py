@@ -65,6 +65,10 @@ def test_group_paragraphs():
     group = group_paragraphs(group)
     assert group == [['One, two\nthree'], ['Four, five\nSix'], ['Seven']]
 
+    group = group_paragraphs([1, 2, 'three', 'four\n\n\n\nfive', 6, '\n\n',
+                      'seven\n\neight'])
+    assert group == [[1, 2, 'three', 'four'], ['five', 6], ['seven'], ['eight']]
+
     # 3. Test string objects with 'include_paragraphs' attributes
     class AltInt(int):
         include_paragraphs = True
@@ -134,7 +138,7 @@ def test_assign_paragraph_roles(context_cls):
 
     group = group_paragraphs([tag1, tag2, 'three', 'four\n\n', tag3,
                               '\n\neight'])
-
+    print('group:', group)
     assert group[0][0].paragraph_role is None
     assert group[0][1].paragraph_role is None
     assert group[1][0].paragraph_role is None

@@ -2,6 +2,7 @@
 Tests for Document classes and functions.
 """
 import pathlib
+from shutil import copy
 
 import pytest
 
@@ -520,14 +521,22 @@ def test_document_example8(tmpdir):
     """Test the example8 document directory."""
     tmpdir = pathlib.Path(tmpdir)
 
+    # Setup the paths
+    src_path = tmpdir / 'src'
+    src_path.mkdir()
+    src_filepath = src_path / 'inept.dm'
+
+    # Copy the source tree
+    copy("tests/document/example8/src/fundamental_solnNMR/inept/inept.dm",
+         src_filepath)
+
     # Load the document and render it with no template
-    doc = Document("tests/document/example8/src/fundamental_solnNMR"
-                   "/inept/inept.dm", tmpdir)
+    doc = Document(src_filepath, tmpdir)
 
     targets = {'.html': doc.target_filepath(target='.html'),
                '.tex': doc.target_filepath(target='.tex')}
     doc.render(targets=targets)
-    print(targets)
+
     # Check the rendered html
     key = pathlib.Path('tests/document/example8/html/inept.html').read_text()
     assert targets['.html'].read_text() == key

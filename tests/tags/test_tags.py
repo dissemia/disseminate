@@ -92,8 +92,8 @@ def test_tag_mtime(tmpdir):
     """Test the calculation of mtimes for labels."""
     # Prepare two files
     tmpdir.mkdir('src')
-    src_filepath1 = tmpdir.join('src').join('main.dm')
-    src_filepath2 = tmpdir.join('src').join('sub.dm')
+    src_filepath1 = tmpdir / 'src' / 'main.dm'
+    src_filepath2 = tmpdir / 'src' / 'sub.dm'
 
     # Write to the files
     src_filepath1.write("""
@@ -175,7 +175,8 @@ def test_tag_mtime(tmpdir):
 def test_label_tags(tmpdir):
     """Test the generation of label tags from the labels of a tag."""
     # Prepare test document
-    tmpdir = pathlib.Path(tmpdir)
+    tmpdir = pathlib.Path(str(tmpdir))
+
     src_path = tmpdir / 'src'
     src_path.mkdir()
     src_filepath = SourcePath(project_root=src_path, subpath='test.dm')

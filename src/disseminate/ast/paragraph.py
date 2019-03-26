@@ -8,7 +8,7 @@ import regex
 from ..tags import TagFactory, Tag
 
 
-re_para = regex.compile(r'(?:\n{2,}|^)')
+re_para = regex.compile(r'(?:\n{2,})')
 
 
 def group_paragraphs(ast):

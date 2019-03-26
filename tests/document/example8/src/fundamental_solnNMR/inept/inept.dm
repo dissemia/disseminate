@@ -36,16 +36,8 @@ delay and the collection of a greater number of spectra.
 
 @marginfig[id=fig:inept-inept1]{
   @asy[scale=1.0]{
-    import pulseseq;
-    PulseSeq ps = PulseSeq('1H', 'X');
-
-    ps.add(1, Hard90());
-    ps.add(1, Delay(0.75, "$\Delta$"));
-    ps.add(1, Hard180(), 2, Hard180());
-    ps.add(1, Delay(0.75, "$\Delta$"));
-    ps.add(1, Hard90(Label("y")), 2, Hard90());
-    ps.add(2, Fid(2, sinmod=true));
-    ps.draw();
+  size(200);
+  draw(unitcircle);  
   }
   @caption{The basic @abrv{INEPT} sequence between nuclei @1H
     and X.}

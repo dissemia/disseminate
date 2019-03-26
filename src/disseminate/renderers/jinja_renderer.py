@@ -41,7 +41,7 @@ class JinjaRenderer(BaseRenderer):
 
             parent_dir = src_path
             while str(parent_dir) != "." and str(parent_dir) != "/":
-                dir_tree.append(parent_dir)
+                dir_tree.append(str(parent_dir))
                 parent_dir = parent_dir.parent
             fsl = jinja2.FileSystemLoader(dir_tree)
 

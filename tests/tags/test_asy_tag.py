@@ -10,9 +10,10 @@ from disseminate import SourcePath, TargetPath
 
 def test_asy_html(tmpdir, context_cls):
     """Test the handling of html with the asy tag."""
+
     # Since this tag requires creating a cache directory, we will create the
     # target_root to a temporary directory
-    project_root = SourcePath(project_root=tmpdir.join('src'))
+    project_root = SourcePath(project_root=tmpdir / 'src')
     src_filepath = SourcePath(project_root=project_root,
                               subpath='test.dm')
     target_root = TargetPath(target_root=tmpdir)
@@ -81,7 +82,7 @@ def test_asy_html_attribute(tmpdir, context_cls):
 
     # Since this tag requires creating a cache directory, we will create the
     # target_root to a temporary directory
-    project_root = SourcePath(project_root=tmpdir.join('src'))
+    project_root = SourcePath(project_root=tmpdir / 'src')
     src_filepath = SourcePath(project_root=project_root,
                               subpath='test.dm')
     target_root = TargetPath(target_root=tmpdir)
@@ -124,7 +125,7 @@ def test_asy_tex(tmpdir, context_cls):
 
     # Since this tag requires creating a cache directory, we will create the
     # target_root to a temporary directory
-    project_root = SourcePath(project_root=tmpdir.join('src'))
+    project_root = SourcePath(project_root=tmpdir / 'src')
     src_filepath = SourcePath(project_root=project_root,
                               subpath='test.dm')
     target_root = TargetPath(target_root=tmpdir)
