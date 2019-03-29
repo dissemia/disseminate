@@ -11,8 +11,7 @@ import regex
 
 from ..tags import Tag
 from ..convert import convert
-from ..attributes import (parse_attributes, get_attribute_value, set_attribute,
-                          kwargs_attributes)
+from ..attributes import Attributes
 from ..paths import SourcePath, TargetPath
 from .. import settings
 
@@ -114,9 +113,8 @@ class DependencyManager(object):
             .tex
         context : :obj:`disseminate.document.DocumentContext`
             The context for a document to render.
-        attributes : tuple of tuples or strings
-            The attributes of the tag. See :obj:`Tag
-            <disseminate.tags.core.Tag>`. The attributes are used by the
+        attributes : :obj:`Attributes <disseminate.attributes.Attributes>`
+            The attributes of the tag. The attributes are used by the
             converters, if a conversion is needed.
 
         Returns
@@ -191,11 +189,6 @@ class DependencyManager(object):
             # See if the added file corresponds to an extension that can be
             # scraped. This may add additional dependencies
 
-            # dep_ext = path.suffix.strip('.')
-            # scrape_method = getattr(self, 'scrape_' + dep_ext, None)
-            # if scrape_method is not None:
-            #     deps.add(scrape_method(path, target=target, context=context))
-
             # Add the dependendencies to the manager's dependencies dict
             s = self.dependencies.setdefault(src_filepath, set())
             s |= deps
@@ -254,9 +247,8 @@ class DependencyManager(object):
             The path of the dependency file.
         target : str
             The type of document target for which this dependency is created.
-        attributes : tuple of tuples or strings
-            The attributes of the tag. See :obj:`Tag
-            <disseminate.tags.core.Tag>`. The attributes are used by the
+        attributes : :obj:`Attributes <disseminate.attributes.Attributes>`
+            The attributes of the tag. The attributes are used by the
             converters, if a conversion is needed.
 
         Returns
@@ -340,10 +332,10 @@ class DependencyManager(object):
 
         # Format the attributes to a kwargs dict for this target,
         # suitable for the convert function
-        if attributes:
-            kwargs = kwargs_attributes(attrs=attributes, target=target)
+        if attributes is not None:
+            attrs = attributes.filter(target=target)
         else:
-            kwargs = dict()
+            attrs = dict()
 
         # Convert the file
         base_subpath = dep_filepath.subpath.with_suffix('')  # strip ext
@@ -352,7 +344,7 @@ class DependencyManager(object):
                                        subpath=base_subpath)
         new_path = convert(src_filepath=dep_filepath,
                            target_basefilepath=dest_basefilepath,
-                           targets=convert_targets, **kwargs)
+                           targets=convert_targets, **attrs)
         return new_path
 
     #: regex for processing <link> tags in html headers
@@ -392,10 +384,10 @@ class DependencyManager(object):
             contents = m.groupdict()['contents']
 
             # Convert the attributes to an attrs tuple
-            attrs = parse_attributes(contents)
+            attrs = Attributes(contents)
 
             # Get the value of the 'href' attribute
-            href = get_attribute_value(attrs=attrs, attribute_name='href')
+            href = attrs.get('href')
 
             # Check to see if a 'href' attribute is present and that it doesn't
             # point to a url--urls aren't file dependencies. If so, skip this
@@ -415,7 +407,7 @@ class DependencyManager(object):
 
             # Recreate the <link ...> tag
             url = dep.dest_filepath.get_url(context)
-            attrs = set_attribute(attrs=attrs, attribute=('href', url))
+            attrs['href'] = url
             tag = Tag(name='link', content='', context=context,
                       attributes=attrs)
             return tag.html

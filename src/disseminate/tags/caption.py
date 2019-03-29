@@ -56,7 +56,7 @@ class Caption(Tag):
         """
         # If an id was specified, use it. Otherwise, get the id from this tag,
         # if it has one
-        id = id if id is not None else self.get_attribute(name='id', clear=True)
+        id = id if id is not None else self.attributes.pop('id', None)
 
         # If an id still hasn't been specified, generate one from the caption's
         # contents

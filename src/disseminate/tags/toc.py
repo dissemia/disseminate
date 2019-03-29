@@ -82,11 +82,11 @@ class Toc(Tag):
             raise exceptions.TagError(msg.format(self.name, content))
 
         # Setup the TOC header, if specified
-        header = self.get_attribute(name='header', clear=True)
+        header = self.attributes.pop('header', None)
 
         if header is not None:
             self.header_tag = Heading(name='TOC', content='Table of Contents',
-                                      attributes=('nolabel',), context=context)
+                                      attributes='nolabel', context=context)
 
     def get_labels(self):
         """Get the labels, ordering function and labeling type."""

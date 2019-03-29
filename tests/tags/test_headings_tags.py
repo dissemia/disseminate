@@ -14,36 +14,36 @@ def test_heading_labels(context_cls):
     context = context_cls()
 
     # 1. Create branch headings without a doc_id and and content
-    br1 = Branch(name='branch', content='', attributes=tuple(), context=context)
+    br1 = Branch(name='branch', content='', attributes='', context=context)
     assert br1.get_id() == 'br:1'
-    assert br1.attributes == (('id', 'br:1'),)
-    assert br1.get_attribute('id') == 'br:1'
+    assert br1.attributes == {'id': 'br:1'}
+    assert br1.attributes['id'] == 'br:1'
 
     # 2. Create branch headings with a doc_id
     context.reset()
     context['doc_id'] = 'src/test.dm'
-    br2 = Branch(name='branch', content='', attributes=tuple(), context=context)
+    br2 = Branch(name='branch', content='', attributes='', context=context)
     assert br2.get_id() == 'br:src-test-dm-1'
-    assert br2.attributes == (('id', 'br:src-test-dm-1'),)
-    assert br2.get_attribute('id') == 'br:src-test-dm-1'
+    assert br2.attributes == {'id': 'br:src-test-dm-1'}
+    assert br2.attributes['id'] == 'br:src-test-dm-1'
 
     # 3. Create branch headings with a doc_id and content
     context.reset()
     context['doc_id'] = 'src/test.dm'
-    br3 = Branch(name='branch', content='Introduction', attributes=tuple(),
+    br3 = Branch(name='branch', content='Introduction', attributes='',
                  context=context)
     assert br3.get_id() == 'br:src-test-dm-introduction'
-    assert br3.attributes == (('id', 'br:src-test-dm-introduction'),)
-    assert br3.get_attribute('id') == 'br:src-test-dm-introduction'
+    assert br3.attributes == {'id': 'br:src-test-dm-introduction'}
+    assert br3.attributes['id'] == 'br:src-test-dm-introduction'
 
     # 4. Create branch headings with an id specified
     context.reset()
     context['doc_id'] = 'src/test.dm'
     br4 = Branch(name='branch', content='Introduction',
-                 attributes=(('id', 'myid'),), context=context)
+                 attributes='id=myid', context=context)
     assert br4.get_id() == 'myid'
-    assert br4.attributes == (('id', 'myid'),)
-    assert br4.get_attribute('id') == 'myid'
+    assert br4.attributes == {'id': 'myid'}
+    assert br4.attributes['id'] == 'myid'
 
 
 def test_heading_with_macros(context_cls):

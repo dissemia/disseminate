@@ -3,155 +3,155 @@ Test the attributes functions
 """
 import pytest
 
-from disseminate.attributes import (TagAttributeError, parse_attributes,
-                                    get_attribute_value, set_attribute,
-                                    filter_attributes, kwargs_attributes,
-                                    format_html_attributes,
-                                    format_tex_attributes)
+from disseminate.attributes import Attributes, PositionalAttribute
 
 
-def test_parse_attributes():
-    """Test the parse_attributes function."""
+def test_attributes_init():
+    """Test the creation of Attributes classes."""
 
-    # Test the order of attributes
-    assert (parse_attributes(" class='base bttnred' style= media red") ==
-            (('class', 'base bttnred'), ('style', 'media'), 'red'))
-    assert (parse_attributes("style= media class='base bttnred' red") ==
-            (('style', 'media'), ('class', 'base bttnred'), 'red'))
+    # 1. Test the parsing for basic strings.
+    attrs = Attributes('class=base')
+    assert 'class' in attrs
+    assert attrs['class'] == 'base'
 
+    attrs = Attributes('class="base btnred" red, style=map',)
+    assert attrs.keys() == {'class', 'red', 'style'}
+    assert attrs['class'] == 'base btnred'
+    assert attrs['red'] == PositionalAttribute
+    assert attrs['style'] == 'map'
 
-def test_get_attribute_value():
-    """Test the get_attribute_value function."""
+    # 2. Test with non-conventional arguments
+    attrs = Attributes()
+    assert len(attrs) == 0
 
-    attrs1 = (('class', 'base bttnred'), ('style', 'media'), 'red')
-    assert get_attribute_value(attrs1, 'style') == 'media'
-    assert get_attribute_value(attrs1, 'red') == 'red'
-    assert get_attribute_value(attrs1, 'missing') is None
+    attrs = Attributes(None)
+    assert len(attrs) == 0
 
+    # 3. Test with dicts
+    attrs = Attributes({'test': 'class'})
+    assert attrs == {'test': 'class'}
 
-def test_set_attribute():
-    """Test the set_attribute function."""
+    attrs = Attributes(test='class')
+    assert attrs == {'test': 'class'}
 
-    attrs1 = (('class', 'base bttnred'), ('style', 'media'), 'red')
-    assert (set_attribute(attrs1, ('class', 'standard'), method='r') ==
-            (('class', 'standard'), ('style', 'media'), 'red'))
-    assert (set_attribute(attrs1,  ('class', 'standard'), method='a') ==
-            (('class', 'base bttnred'), ('style', 'media'), 'red',
-             ('class', 'standard')))
-    assert (set_attribute(attrs1, 'red', method='r') ==
-            (('class', 'base bttnred'), ('style', 'media'), 'red'))
-    assert (set_attribute(attrs1, 'red', method='a') ==
-            (('class', 'base bttnred'), ('style', 'media'), 'red', 'red'))
+    attrs = Attributes((('test', 'class'),))
+    assert attrs == {'test': 'class'}
 
 
-def test_filter_attributes():
-    """Test the filter_attributes function."""
+def test_attributes_get_by_type():
+    """Test the get_by_type method of Attributes classes."""
 
-    attrs1 = (('class', 'base'), ('style', 'media'), 'red')
+    # 1. Test the basic conversion of values
+    attrs = Attributes('int=1 float=3.2 string=test bool=false tuple="1 2 3"')
+    assert attrs.get_by_type('int', int) == 1
+    assert attrs.get_by_type('float', float) == 3.2
+    assert attrs.get_by_type('string', str) == 'test'
+    assert attrs.get_by_type('bool', bool) is False
+    assert attrs.get_by_type('tuple', tuple) == ('1', '2', '3')
+    assert attrs.get_by_type('tuple', list) == ['1', '2', '3']
 
-    # Setting attribute_names and target to None doesn't filter items
-    assert (filter_attributes(attrs=attrs1) == attrs1)
-    assert (filter_attributes(attrs=attrs1, attribute_names=None,
-                              target=None) == attrs1)
+    # 2. Try missing entries
+    assert 'notint' not in attrs
+    assert attrs.get_by_type('notint', int) is None
 
-    # Setting the target doesn't filter non-specific target items
-    assert (filter_attributes(attrs=attrs1, target='.tex') == attrs1)
+    with pytest.raises(KeyError):
+        attrs.get_by_type('notint', int, raise_error=True)
 
-    # Setting the attributes to include a specific target item includes that
-    # item
-    attrs2 = (('tex.class', 'base'), ('style', 'media'), 'red')
-    assert (filter_attributes(attrs=attrs2, target='.tex') ==
-            (('class', 'base'), ('style', 'media'), 'red'))
-    assert (filter_attributes(attrs=attrs2, target='.html') ==
-            (('style', 'media'), 'red'))
-    assert (filter_attributes(attrs=attrs2) ==
-            (('style', 'media'), 'red'))
+    # 3. Try type conversions that don't work
+    #   3.1 Without raising an error; just return the default
+    assert attrs.get_by_type('float', int) is None
 
-    # Select my attribute names
-    assert (filter_attributes(attrs=attrs2, target='.tex') ==
-            (('class', 'base'), ('style', 'media'), 'red'))
-    assert (filter_attributes(attrs=attrs2, attribute_names=['class'],
-                              target='.tex') ==
-            (('class', 'base'),))
-    assert (filter_attributes(attrs=attrs2, attribute_names=['style'],
-                              target='.tex') ==
-            (('style', 'media'),))
-    assert (filter_attributes(attrs=attrs2, attribute_names=['red'],
-                              target='.tex') ==
-            ('red',))
-    assert (filter_attributes(attrs=attrs2, attribute_names=[],
-                              target='.tex') ==
-            ())
+    #   3.2 With raising an error.
+    with pytest.raises(ValueError):
+        attrs.get_by_type('float', int, raise_error=True)
 
-    # Test exceptions
-    filter_attributes(attrs=attrs2, attribute_names=['missing'],
-                      target='.tex', raise_error=False)
-    with pytest.raises(TagAttributeError):
-        filter_attributes(attrs=attrs2, attribute_names=['missing'],
-                          target='.tex', raise_error=True)
+    # 4. Try with target-specific keys
+    attrs = Attributes('class=test class.html=htmltest')
+    assert attrs.get_by_type('class', target='.html') == 'htmltest'
+    assert attrs.get_by_type('class', target='.tex') == 'test'
+    assert attrs.get_by_type('class') == 'test'
 
 
-def test_kwargs_attributes():
-    """Test the kwargs_attributes function."""
+def test_attributes_append():
+    """Test the append method of Attributes classes."""
 
-    # Test a basic conversion
-    attrs1 = (('class', 'base'), ('style', 'media'), 'red')
-    assert (kwargs_attributes(attrs1) ==
-            {'class': 'base', 'style': 'media'})
-    assert (kwargs_attributes(attrs1, attribute_names=['class']) ==
-            {'class': 'base'})
-    assert (kwargs_attributes(attrs1, target='.tex') ==
-            {'class': 'base', 'style': 'media'})
+    # 1. Test the basic conversion of values
+    attrs = Attributes()
+    attrs.append('test1', '1')
+    attrs.append('test1', '2')
+    attrs.append('test1', '3')
+    assert attrs['test1'] == '1 2 3'
 
-    # Test conversion with target-specific attributes
-    attrs2 = (('tex.class', 'base'), ('style', 'media'), 'red')
-    assert (kwargs_attributes(attrs2) ==
-            {'style': 'media'})
-    assert (kwargs_attributes(attrs2, attribute_names=['class']) ==
-            {})
-    assert (kwargs_attributes(attrs2, target='.tex') ==
-            {'class': 'base', 'style': 'media'})
-
-    # Test exceptions
-    kwargs_attributes(attrs=attrs2, attribute_names=['missing'],
-                      target='.tex', raise_error=False)
-    with pytest.raises(TagAttributeError):
-        kwargs_attributes(attrs=attrs2, attribute_names=['missing'],
-                          target='.tex', raise_error=True)
+    attrs.append('test2', (1, 2))
+    attrs.append('test2', 'test')
+    assert attrs['test2'] == '(1, 2) test'
 
 
-def test_format_html_attributes():
-    """Test the format_html_attributes function."""
+def test_attributes_filter():
+    """Test the filter method of Attributes classes."""
 
-    # Test a basic conversion
-    attrs1 = (('class', 'base'), ('style', 'media'), 'red')
-    assert (format_html_attributes(attrs1) ==
-            "class='base' style='media' red")
+    # 1. Test target-specific and non-target-specific targets
+    attrs = Attributes('class=basic class.html=specific')
+    assert attrs.filter(target='html') == {'class': 'specific'}
+    assert attrs.filter(target='tex') == {'class': 'basic'}
 
-    # Test filtering of attribute_names and specific targets
-    assert (format_html_attributes(attrs1, attribute_names=['style']) ==
-            "style='media'")
-
-    attrs2 = (('tex.class', 'base'), ('style', 'media'))
-    assert (format_html_attributes(attrs2) == "style='media'")
-
-    attrs3 = (('html.class', 'base'), ('style', 'media'))
-    assert (format_html_attributes(attrs3) == "class='base' style='media'")
+    # 2. Test key filtering
+    attrs = Attributes('class=basic width=200 width.tex=300')
+    assert attrs.filter(keys='class') == Attributes('class=basic')
+    assert attrs.filter(keys='width') == Attributes('width=200')
+    assert (attrs.filter(keys='width', target='tex') ==
+            Attributes('width=300'))
 
 
-def test_format_tex_attributes():
-    """Test the format_tex_attributes function."""
-    # Test a basic conversion
-    attrs1 = (('class', 'base'), ('style', 'media'), 'red')
-    assert (format_tex_attributes(attrs1) ==
-            "[class=base, style=media, red]")
+def test_attributes_exclude():
+    """Test the exclude method of Attributes classes."""
 
-    # Test filtering of attribute_names and specific targets
-    assert (format_tex_attributes(attrs1, attribute_names=['style']) ==
-            "[style=media]")
+    # 1. Test target-specific and non-target-specific targets
+    attrs = Attributes('class=basic class.html=specific')
+    assert attrs.exclude('test') == {'class': 'basic', 'class.html': 'specific'}
+    assert attrs.exclude('class') == {}
+    assert attrs.exclude('test', target='html') == {'class': 'basic',
+                                                    'class.html': 'specific'}
+    assert attrs.exclude('class', target='tex') == {'class.html': 'specific'}
+    assert attrs.exclude(('class', 'test')) == {}
 
-    attrs2 = (('tex.class', 'base'), ('style', 'media'))
-    assert (format_tex_attributes(attrs2) == "[class=base, style=media]")
 
-    attrs3 = (('html.class', 'base'), ('style', 'media'))
-    assert (format_tex_attributes(attrs3) == "[style=media]")
+# html targets
+
+def test_attributes_html():
+    """Test the formatting of attributes in html."""
+
+    # 1. Test the basic conversion of values
+    attrs = Attributes('int=1 float=3.2 string=test bool=false '
+                       'tuple="1 2 3" red')
+    assert attrs.html == ("int='1' float='3.2' string='test' bool='false' "
+                          "tuple='1 2 3' red")
+
+    # 2. Test target-specific attributes
+    attrs = Attributes('class=basic class.html=specific')
+    assert attrs.html == "class='specific'"
+
+    attrs = Attributes('width.tex=200')
+    assert attrs.html == ""
+
+
+# tex targets
+
+def test_attributes_tex():
+    """Test the formatting of attributes in html."""
+
+    # 1. Test the basic conversion of values
+    attrs = Attributes('int=1 float=3.2 string=test bool=false '
+                       'tuple="1 2 3" red')
+    assert attrs.tex == ("int=1 float=3.2 string=test bool=false "
+                         "tuple=1 2 3 red")
+
+    # 2. Test target-specific attributes
+    attrs = Attributes('class=basic class.html=specific')
+    assert attrs.tex == "class=basic"
+
+    attrs = Attributes('width.tex=200')
+    assert attrs.tex == "width=200"
+
+    attrs = Attributes('')
+    assert attrs.tex == ""

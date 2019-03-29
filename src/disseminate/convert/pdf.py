@@ -5,7 +5,8 @@ pdfcrop and rsvg-convert.
 import os
 
 from .converter import Converter
-from .arguments import PositiveIntArgument, PositiveFloatArgument
+from .arguments import (Argument, PositiveIntArgument, PositiveFloatArgument,
+                        TupleArgument)
 from ..paths import TargetPath
 
 
@@ -18,7 +19,7 @@ class Pdf2svg(Converter):
     to_formats = ('.svg',)
 
     required_execs = ['pdf2svg', ]
-    optional_execs = ['pdfcrop', 'rsvg-convert']
+    optional_execs = ['pdf-crop-margins', 'rsvg-convert']
 
     page_no = None
     scale = None
@@ -26,13 +27,21 @@ class Pdf2svg(Converter):
     def __init__(self, page_no=None, scale=None, crop=False, **kwargs):
         super(Pdf2svg, self).__init__(**kwargs)
 
-        self.crop = crop
+        if isinstance(crop, tuple):
+            self.crop = TupleArgument('crop', crop, length=4, required=False)
+        elif crop is True:
+            self.crop = TupleArgument('crop', (0, 0, 0, 0), length=4,
+                                      required=False)
+        else:
+            self.crop = crop
+
         if isinstance(page_no, PositiveIntArgument):
             self.page_no = page_no
         else:
             self.page_no = (PositiveIntArgument('page_no', page_no,
                                                 required=False)
                             if page_no is not None else None)
+
         if isinstance(scale, PositiveFloatArgument):
             self.scale = scale
         else:
@@ -62,7 +71,7 @@ class Pdf2svg(Converter):
 
     def convert(self):
         """Convert a pdf to an svg file."""
-        pdfcrop_exec = self.find_executable('pdfcrop')
+        pdfcrop_exec = self.find_executable('pdf-crop-margins')
         pdf2svg_exec = self.find_executable('pdf2svg')
         rsvg_exec = self.find_executable('rsvg-convert')
 
@@ -78,8 +87,15 @@ class Pdf2svg(Converter):
 
         # Crop the pdf, if specified
         if self.crop and pdfcrop_exec:
-            # pdfcrop infile.pdf outfile.pdf
-            args = [pdfcrop_exec, str(current_pdf), str(temp_filepath_pdf)]
+            # Determine whether the -p (percent retain) option should be added
+            if isinstance(self.crop, TupleArgument) and self.crop.is_valid():
+                percent_retain = "-p4 {} {} {} {}".format(*self.crop.value)
+            else:
+                percent_retain = ""
+
+            # pdfcrop infile.pdf -o outfile.pdf
+            args = [pdfcrop_exec, str(current_pdf), percent_retain, "-o",
+                    str(temp_filepath_pdf)]
             self.run(args, raise_error=False)
 
             # Move the current pdf

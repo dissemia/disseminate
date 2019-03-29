@@ -5,8 +5,7 @@ from copy import copy
 
 from .core import Tag
 from .img import RenderedImg
-from ..attributes import (set_attribute, remove_attribute, get_attribute_value,
-                          format_tex_attributes)
+from ..attributes import Attributes
 
 
 def raw_content_string(content):
@@ -55,7 +54,6 @@ class Eq(RenderedImg):
     color = None
 
     _raw_content = None
-    _raw_attributes = None
 
     tex_format = "{content}"
     tex_inline_format = "\\ensuremath{{{content}}}"
@@ -69,34 +67,28 @@ class Eq(RenderedImg):
         assert context.is_valid('equation_renderer')
         self.block_equation = block_equation
 
-        # Get the environment type
-        env = get_attribute_value(attributes, attribute_name='env',
-                                  target='.tex')
-        attributes = remove_attribute(attributes, 'env')
+        # Ensure the attributes argument is an Attributes type
+        attributes = Attributes(attributes)
 
-        # If the env attribute is specified, then it must be a block environment
-        if env:
-            self.block_equation = True
+        # Get various properties from the attributes
+        env = attributes.get('env', target='.tex')
+        self.block_equation = (True if env is not None or
+                               block_equation else False)
         self.env = env if env is not None else self.default_block_env
 
-        # Determine if bold
-        bold = get_attribute_value(attributes, attribute_name='bold',
-                                   target='.tex')
-        attributes = remove_attribute(attributes, 'bold')
-        if bold or name == 'termb':
-            self.bold = True
-        else:
-            self.bold = False
+        bold = attributes.get('bold', target='.tex')
+        self.bold = True if bold is not None or name == 'termb' else False
 
-        # Determine if a color was specified
-        color = get_attribute_value(attributes, attribute_name='color',
-                                    target='.tex')
-        attributes = remove_attribute(attributes, 'color')
-        self.color = color
+        color = attributes.get('color', target='.tex')
+        self.color = True if color is not None else False
+
+        # Remove these properties from the attributes, as they're no longer
+        # needed and should be included when formatting tags
+        attributes = attributes.exclude(('env', 'bold', 'color'))
 
         # Save the raw content and raw attributes and format the content in tex
-        self._raw_attributes = attributes
         self._raw_content = content
+        self.attributes = attributes
         content = self.tex
 
         # Note: This crop command cuts off baselines such that equation images
@@ -127,11 +119,9 @@ class Eq(RenderedImg):
 
     def html_fmt(self, level=1, content=None):
         if self.block_equation:
-            self.attributes = set_attribute(self.attributes,
-                                            ('class', 'eq blockeq'))
+            self.attributes['class'] = 'eq blockeq'
         else:
-            self.attributes = set_attribute(self.attributes,
-                                            ('class', 'eq'))
+            self.attributes['class'] = 'eq'
         return super(Eq, self).html_fmt(level, content)
 
     def tex_fmt(self, level=1, mathmode=False, content=None):
@@ -148,10 +138,10 @@ class Eq(RenderedImg):
             return content
         else:
             if self.block_equation or self.paragraph_role == 'block':
-                attrs = format_tex_attributes(self._raw_attributes,
-                                              left_bracket="{",
-                                              right_bracket="}")
-                return self.tex_block_format.format(env=self.env, attrs=attrs,
+                attrs_str = self.attributes.tex
+                attrs_str = '{' + attrs_str + '}' if attrs_str else attrs_str
+                return self.tex_block_format.format(env=self.env,
+                                                    attrs=attrs_str,
                                                     content=content)
             else:
                 return self.tex_inline_format.format(content=content)

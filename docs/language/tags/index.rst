@@ -28,12 +28,12 @@ Tag contents dictate *what* to present, and tag attributes dictate *how*
 the contents are presented.
 
 *Target-specific Attributes*. Attributes for specific targets can be
-passed to the processor by pre-prepending the target's name to the
+passed to the processor by appending the target's name to the
 attribute:
 
 ::
    
-  @img[tex.width=300 html.width=150 id=figure-1]{...}
+  @img[width.tex=300 width.html=150 id=figure-1]{...}
 
 The customization of specific targets is typically reserved for the final
 stages of publication so that the targets have the final desired appearance.

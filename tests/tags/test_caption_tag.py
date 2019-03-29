@@ -29,7 +29,7 @@ def test_naked_caption(tmpdir, context_cls):
     caption = process_ast(src, context=context)
 
     assert caption.name == 'caption'
-    assert caption.attributes == tuple()
+    assert caption.attributes == {}
     assert caption.content == 'This is my caption'
 
     # Naked captions do not register labels

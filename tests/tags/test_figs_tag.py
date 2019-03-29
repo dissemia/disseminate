@@ -43,14 +43,14 @@ def test_figure_caption_no_id(tmpdir):
     label_man.register_labels()
 
     assert fig.name == 'marginfig'
-    assert fig.attributes == tuple()
+    assert fig.attributes == dict()
 
     # 1. Get the caption, first with a basic figure label
     label_fmts['caption_figure'] = "Fig. @label.number."
 
     caption = fig.content
     assert caption.name == 'caption'
-    assert caption.attributes == tuple()
+    assert caption.attributes == dict()
     assert caption.default == ('Fig. 1. This is my caption.\n'
                                'It has multiple lines')
 
@@ -59,7 +59,7 @@ def test_figure_caption_no_id(tmpdir):
 
     caption = fig.content
     assert caption.name == 'caption'
-    assert caption.attributes == tuple()
+    assert caption.attributes == dict()
     assert caption.default == ('Figure. 1. This is my caption.\n'
                                'It has multiple lines')
 

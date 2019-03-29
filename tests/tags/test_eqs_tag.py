@@ -37,33 +37,33 @@ def test_inline_equation(tmpdir, context_cls):
     process_context_template(context)  # add the 'equation_renderer' entry
 
     # Example 1 - simple inline equation
-    eq1 = Eq(name='eq', content='y=x', attributes=tuple(), context=context)
+    eq1 = Eq(name='eq', content='y=x', attributes='', context=context)
     assert eq1.tex == "\\ensuremath{y=x}"
 
     # Example 2 - nested inline equation with subtag as content
-    eq2 = Eq(name='eq', content=eq1, attributes=tuple(), context=context)
+    eq2 = Eq(name='eq', content=eq1, attributes='', context=context)
     assert eq2.tex == "\\ensuremath{y=x}"
 
     # Example 3 - nested inline equation with subtag as list
-    eq3 = Eq(name='eq', content=['test is my ', eq2], attributes=tuple(),
+    eq3 = Eq(name='eq', content=['test is my ', eq2], attributes='',
              context=context)
     assert eq3.tex == "\\ensuremath{test is my y=x}"
 
     # Example 4 - a bold equation
-    eq4 = Eq(name='eq', content="y=x", attributes=('bold',), context=context)
+    eq4 = Eq(name='eq', content="y=x", attributes='bold', context=context)
     assert eq4.tex == "\\ensuremath{\\boldsymbol{y=x}}"
 
     # Example 5 - an equation with a bold equation subtag
-    eq5 = Eq(name='eq', content=eq4, attributes=tuple(), context=context)
+    eq5 = Eq(name='eq', content=eq4, attributes='', context=context)
     assert eq5.tex == "\\ensuremath{\\boldsymbol{y=x}}"
 
     # Example 6 - an equation with a  bold equation subtag in a list
-    eq6 = Eq(name='eq', content=['this is my ', eq4], attributes=tuple(),
+    eq6 = Eq(name='eq', content=['this is my ', eq4], attributes='',
              context=context)
     assert eq6.tex == "\\ensuremath{this is my \\boldsymbol{y=x}}"
 
     # Example 7 - a bold equation with an equation subtag in a list
-    eq7 = Eq(name='eq', content=['this is my ', eq1], attributes=('bold',),
+    eq7 = Eq(name='eq', content=['this is my ', eq1], attributes='bold',
              context=context)
     assert eq7.tex == "\\ensuremath{\\boldsymbol{this is my y=x}}"
 
@@ -95,18 +95,18 @@ def test_block_equation(tmpdir, context_cls):
     process_context_template(context)  # add the 'equation_renderer' entry
 
     # Example 1 - simple block equation
-    eq1 = Eq(name='eq', content='y=x', attributes=tuple(), context=context,
+    eq1 = Eq(name='eq', content='y=x', attributes='', context=context,
              block_equation=True)
     assert eq1.tex == '\\begin{align*} %\ny=x\n\\end{align*}'
 
     # Example 2 - simple block equation with alternative environment
-    eq2 = Eq(name='eq', content='y=x', attributes=(('env', 'alignat*'),),
+    eq2 = Eq(name='eq', content='y=x', attributes='env=alignat*',
              context=context, block_equation=True)
     assert eq2.tex == '\\begin{alignat*} %\ny=x\n\\end{alignat*}'
 
     # Example 3 - simple block equation with alternative environment and
     # positional arguments
-    eq3 = Eq(name='eq', content='y=x', attributes=(('env', 'alignat*'), '3'),
+    eq3 = Eq(name='eq', content='y=x', attributes='env=alignat* 3',
              context=context, block_equation=True)
     assert eq3.tex == '\\begin{alignat*}{3} %\ny=x\n\\end{alignat*}'
 

@@ -7,7 +7,6 @@ from markupsafe import Markup
 
 from .core import Tag
 from .utils import content_to_str
-from ..attributes import set_attribute, kwargs_attributes
 from ..utils.string import slugify, titlelize
 from .. import settings
 
@@ -49,7 +48,12 @@ class Heading(Tag):
 
         # Determine whether a label should be given. By default, each heading
         # has a label
-        nolabel = self.get_attribute('nolabel', clear=True)
+        if 'nolabel' in self.attributes:
+            nolabel = True
+            del self.attributes['nolabel']
+        else:
+            nolabel = False
+
         if nolabel:
             self.label_heading = False
 
@@ -57,7 +61,7 @@ class Heading(Tag):
             # Add a label for the heading, if needed
             kind = ('heading', self.__class__.__name__.lower())
             id = self.get_id()
-            self.attributes = set_attribute(self.attributes, ('id', id))
+            self.attributes['id'] = id
             self.set_label(id=id, kind=kind)
 
     def get_id(self):
@@ -69,7 +73,7 @@ class Heading(Tag):
                                     'subsubsection': 'subsubsec',
                                     }
 
-        id = self.get_attribute(name='id')
+        id = self.attributes.get('id', None)
 
         # Assign an id_type, if one was not given
         if id is None:
@@ -100,7 +104,7 @@ class Heading(Tag):
             # Create the id from the heading type (id_type), the doc_id and
             # content
             id = id_type + slugify(slug_txt)
-            self.attributes = set_attribute(self.attributes, ('id', id))
+            self.attributes['id'] = id
         return id
 
     def set_label(self, id, kind, title=None):
@@ -147,10 +151,10 @@ class Heading(Tag):
 
             # Replace the label_tag name to this heading's name, ex: 'chapter'
             label_tag.name = name
-            kwargs = kwargs_attributes(self.attributes)
 
             # Wrap the label tag in a h1/h2/h3/.. heading
-            e = E(self.html_name, label_tag.html_fmt(level+1), **kwargs)
+            e = E(self.html_name, label_tag.html_fmt(level+1),
+                  **self.attributes)
 
             # Return the html element as either text (level=1) or simply an
             # element

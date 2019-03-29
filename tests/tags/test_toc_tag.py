@@ -32,8 +32,8 @@ def test_toc_changes(tmpdir):
 
     # Match the abbreviated toc
     toc = Toc(name='toc', content='all documents abbreviated',
-              attributes=tuple(),
-              context=doc.context)
+              attributes='', context=doc.context)
+
     key = """<ul class="toc-level-1">
   <li>
     <span class="ref">
@@ -65,8 +65,7 @@ def test_toc_changes(tmpdir):
 
     # Match the abbreviated toc
     toc = Toc(name='toc', content='all documents abbreviated',
-              attributes=tuple(),
-              context=doc.context)
+              attributes='', context=doc.context)
     key = """<ul class="toc-level-1">
   <li>
     <span class="ref">
@@ -111,7 +110,7 @@ def test_toc_heading_html(tmpdir):
     doc.context['relative_links'] = False
 
     # Create a toc for all headings
-    toc = Toc(name='toc', content='all headings', attributes=tuple(),
+    toc = Toc(name='toc', content='all headings', attributes='',
               context=doc.context)
 
     key = """<ul class="toc-level-1">
@@ -183,7 +182,7 @@ def test_toc_heading_html(tmpdir):
     doc.context['relative_links'] = False
 
     # Create a toc for all headings
-    toc = Toc(name='toc', content='all headings', attributes=tuple(),
+    toc = Toc(name='toc', content='all headings', attributes='',
               context=doc.context)
 
     key = """<ul class="toc-level-1">
@@ -214,7 +213,7 @@ def test_toc_heading_html(tmpdir):
     assert toc.html == key
 
     # Create a toc for the root document, file1.dm, only.
-    toc = Toc(name='toc', content='headings', attributes=tuple(),
+    toc = Toc(name='toc', content='headings', attributes='',
               context=doc.context)
 
     key = """<ul class="toc-level-1">
@@ -246,7 +245,7 @@ def test_toc_header_html(tmpdir):
     doc.context['relative_links'] = False
 
     # Create a toc for the root document, file1.dm, only.
-    toc = Toc(name='toc', content='headings', attributes=tuple(),
+    toc = Toc(name='toc', content='headings', attributes='',
               context=doc.context)
 
     key = """<ul class="toc-level-1">
@@ -260,7 +259,7 @@ def test_toc_header_html(tmpdir):
     assert toc.html == key
 
     # Now try adding the header
-    toc = Toc(name='toc', content='headings', attributes=('header',),
+    toc = Toc(name='toc', content='headings', attributes='header',
               context=doc.context)
 
     key = """<ul class="toc-level-1">
@@ -294,7 +293,7 @@ def test_toc_document_html(tmpdir):
     doc.context['relative_links'] = False
 
     # Create the tag for document2
-    toc = Toc(name='toc', content='all documents', attributes=tuple(),
+    toc = Toc(name='toc', content='all documents', attributes='',
               context=doc.context)
 
     # Match the default toc (format: 'collapsed')
@@ -321,12 +320,12 @@ def test_toc_document_html(tmpdir):
     assert toc.html == key
 
     # Match the collapsed toc
-    toc = Toc(name='toc', content='all documents collapsed', attributes=tuple(),
+    toc = Toc(name='toc', content='all documents collapsed', attributes='',
               context=doc.context)
     assert key == toc.html
 
     # Match the expanded toc
-    toc = Toc(name='toc', content='all documents expanded', attributes=tuple(),
+    toc = Toc(name='toc', content='all documents expanded', attributes='',
               context=doc.context)
     key = """<ul class="toc-level-1">
   <li>
@@ -403,8 +402,8 @@ def test_toc_document_html(tmpdir):
 
     # Match the abbreviated toc
     toc = Toc(name='toc', content='all documents abbreviated',
-              attributes=tuple(),
-              context=doc.context)
+              attributes='', context=doc.context)
+
     key = """<ul class="toc-level-1">
   <li>
     <span class="ref">
@@ -479,7 +478,7 @@ def test_toc_document_html(tmpdir):
     assert toc.html == key
 
     # Test the collapsed toc for only the root document
-    toc = Toc(name='toc', content='documents', attributes=tuple(),
+    toc = Toc(name='toc', content='documents', attributes='',
               context=doc.context)
 
     # Match the default toc (collapsed)
@@ -510,7 +509,7 @@ def test_toc_relative_links_html(tmpdir):
     doc.context['relative_links'] = True
 
     # Create the tag for document2
-    toc = Toc(name='toc', content='all documents', attributes=tuple(),
+    toc = Toc(name='toc', content='all documents', attributes='',
               context=doc.context)
 
     # Match the default toc (format: 'collapsed')
@@ -552,7 +551,7 @@ def test_toc_heading_tex(tmpdir):
     doc = Document(src_filepaths, target_root)
 
     # Create a toc for all headings
-    toc = Toc(name='toc', content='all headings', attributes=tuple(),
+    toc = Toc(name='toc', content='all headings', attributes='',
               context=doc.context)
 
     key = """\\begin{toclist}
@@ -585,7 +584,7 @@ def test_toc_heading_tex(tmpdir):
     doc = Document(src_filepaths, target_root)
 
     # Create a toc for all headings
-    toc = Toc(name='toc', content='all headings', attributes=tuple(),
+    toc = Toc(name='toc', content='all headings', attributes='',
               context=doc.context)
 
     key = """\\begin{toclist}
@@ -600,7 +599,7 @@ def test_toc_heading_tex(tmpdir):
     assert key == toc.tex
 
     # Create a toc for the headings of file1.dm only.
-    toc = Toc(name='toc', content='headings', attributes=tuple(),
+    toc = Toc(name='toc', content='headings', attributes='',
               context=doc.context)
 
     key = """\\begin{toclist}
@@ -623,7 +622,7 @@ def test_toc_header_tex(tmpdir):
     doc = Document(src_filepath, target_root)
 
     # Create a toc for the root document, file1.dm, only.
-    toc = Toc(name='toc', content='headings', attributes=tuple(),
+    toc = Toc(name='toc', content='headings', attributes='',
               context=doc.context)
 
     key = """\\begin{toclist}
@@ -634,7 +633,7 @@ def test_toc_header_tex(tmpdir):
     assert key == tex
 
     # Now try adding the header
-    toc = Toc(name='toc', content='headings', attributes=('header'),
+    toc = Toc(name='toc', content='headings', attributes='header',
               context=doc.context)
 
     key = """\\begin{toclist}
@@ -661,7 +660,7 @@ def test_toc_document_tex(tmpdir):
     doc = Document(src_filepath, target_root)
 
     # Create the tag for document2
-    toc = Toc(name='toc', content='all documents', attributes=tuple(),
+    toc = Toc(name='toc', content='all documents', attributes='',
               context=doc.context)
 
     key = """\\begin{toclist}

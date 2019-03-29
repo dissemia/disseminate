@@ -55,6 +55,13 @@ media_path = 'media'
 # process_ast
 verbatim_tags = ('verb', 'v', 'pre', 'verbatim')
 
+#: Attributes
+#: ----------
+
+#: For attribute entries that are target-specific, use the following character
+#: or string to separate the key and target. ex: class.html
+attribute_target_sep = '.'
+
 #: Context
 #: -------
 

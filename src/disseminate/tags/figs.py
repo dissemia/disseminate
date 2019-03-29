@@ -3,7 +3,6 @@ Tags for figure environments.
 """
 from .core import Tag
 from .caption import Caption, CaptionError
-from ..attributes import get_attribute_value, remove_attribute
 
 
 class BaseFigure(Tag):
@@ -17,7 +16,7 @@ class BaseFigure(Tag):
         super(BaseFigure, self).__init__(name, content, attributes, context)
 
         # Register the caption as a label, if there's a caption in the contents
-        id = self.get_attribute('id', clear=True)
+        id = self.attributes.pop('id', None)
 
         # Get the caption tag from the content. If the caption is in a list
         # in the content, then place it last

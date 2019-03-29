@@ -64,6 +64,20 @@ class PositiveFloatArgument(Argument):
         return value > 0.0
 
 
+class TupleArgument(Argument):
+    """A tuple argument"""
+
+    def __init__(self, name, value, length=None, required=True):
+        self.length = length
+        super().__init__(name=name, value=value, required=required)
+
+    def is_valid(self):
+        valid = isinstance(self.value, tuple)
+        if isinstance(self.length, int):
+            valid &= (len(self.value) == self.length)
+        return valid
+
+
 class SourcePathArgument(Argument):
     """A path argument.
 

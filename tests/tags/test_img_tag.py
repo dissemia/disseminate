@@ -24,7 +24,7 @@ def test_img_attribute(tmpdir, context_cls):
     root = process_ast(src, context)
 
     assert root.name == 'img'
-    assert root.attributes == (('width', '100'),)
+    assert root.attributes == {'width': '100'}
 
 
 # html target
@@ -52,10 +52,6 @@ def test_img_html(tmpdir, context_cls):
     # Generate the markup
     src = "@img{sample.pdf}"
 
-    # The following root tags have to be stripped for the html strings
-    root_start = '<span class="root">\n  '
-    root_end = '\n</span>\n'
-
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context)
 
@@ -63,7 +59,7 @@ def test_img_html(tmpdir, context_cls):
 
     # Now test an html-specific attribute
     # Generate the markup
-    src = "@img[html.width=100 tex.height=20]{sample.pdf}"
+    src = "@img[width.html=100 height.tex=20]{sample.pdf}"
 
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context)
@@ -105,12 +101,11 @@ def test_img_tex(tmpdir, context_cls):
 
     # Now test an tex-specific attribute
     # Generate the markup
-    src = "@img[html.width=100 tex.height=20]{sample.pdf}"
+    src = "@img[width.html=100 height.tex=20]{sample.pdf}"
     tex = "\\includegraphics[height=20]{sample.pdf}"
 
     # Generate a tag and compare the generated tex to the answer key
     root = process_ast(src, context=context)
 
-    # Remove the root tag
-    root_tex = root.tex
-    assert root_tex == tex
+    print(root.tex)
+    assert root.tex == tex

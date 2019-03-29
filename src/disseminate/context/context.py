@@ -120,8 +120,9 @@ class BaseContext(dict):
         return iter(self.keys())
 
     def __repr__(self):
-        return ('{' +
-                ', '.join('{}: {}'.format(k, self[k]) for k in self.keys()) +
+        return (self.__class__.__name__ + '{' +
+                ', '.join('{}: {}'.format(k, self[k])
+                          for k in self.keys(only_self=True)) +
                 '}')
 
     def __copy__(self):

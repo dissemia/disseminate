@@ -4,9 +4,8 @@ Image tags
 import pathlib
 
 from .core import Tag, TagError
-from ..attributes import set_attribute, format_tex_attributes
 from ..utils.string import hashtxt
-from ..paths import SourcePath, TargetPath
+from ..paths import SourcePath
 from .. import settings
 
 
@@ -63,8 +62,11 @@ class Img(Tag):
 
         # get the attributes for tex
         valid_attrs = settings.tex_valid_attributes.get('img', None)
-        attrs_str = format_tex_attributes(self.attributes,
-                                          attribute_names=valid_attrs)
+        attrs = self.attributes.filter(keys=valid_attrs, target='.tex')
+
+        attrs_str = attrs.tex
+        attrs_str = '[' + attrs_str + ']' if attrs_str else attrs_str
+
         return "\\includegraphics" + attrs_str + "{{{}}}".format(dest_subpath)
 
     def html_fmt(self, level=1, content=None):
@@ -83,8 +85,7 @@ class Img(Tag):
         # Use the parent method to render the tag. However, the 'src' attribute
         # should be fixed first.
 
-        self.attributes = set_attribute(self.attributes, ('src', url),
-                                        method='r')
+        self.attributes['src'] = url
         return super(Img, self).html_fmt(level)
 
 

@@ -17,15 +17,13 @@ def test_tag_attributes(context_cls):
 
     context = context_cls()
 
-    tag = Tag(name='tag', content='', attributes=(('class', 'one'),),
-              context=context)
+    tag = Tag(name='tag', content='', attributes='class=one', context=context)
 
-    assert tag.attributes == (('class', 'one'),)
-    assert tag.get_attribute('class') == 'one'
+    assert tag.attributes == {'class': 'one'}
+    assert tag.attributes['class'] == 'one'
 
-    tag.set_attribute(('class', 'two'), 'r')
-
-    assert tag.get_attribute('class') == 'two'
+    tag.attributes['class'] = 'two'
+    assert tag.attributes.get('class') == 'two'
 
 
 def test_flatten_tag(context_cls):

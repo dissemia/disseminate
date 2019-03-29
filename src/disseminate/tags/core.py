@@ -7,10 +7,7 @@ from markupsafe import Markup
 
 from .exceptions import TagError
 from ..macros import replace_macros
-from ..attributes import (parse_attributes, set_attribute,
-                          kwargs_attributes, format_tex_attributes,
-                          filter_attributes, get_attribute_value,
-                          remove_attribute)
+from ..attributes import Attributes
 from .utils import set_html_tag_attributes
 from ..utils.string import titlelize
 from ..utils.classes import weakattr
@@ -34,10 +31,13 @@ class Tag(object):
     content : None or str or list
         The contents of the tag. It can either be None, a string, or a list
         of tags and strings. (i.e. a sub-ast)
-    attributes : tuple of tuples or strings
+    attributes : :obj:`Attributes <diseeminate.attributes.Attributes>`
         The attributes of the tag. These are distinct from the Tag class
         attributes; they're the customization attributes specified by the user
-        to change the appearance of a rendered tag.
+        to change the appearance of a rendered tag. However, some or all
+        attributes may be used as tag attributes, depending on the
+        settings.html_valid_attributes, settings.tex_valid_attributes and so
+        on.
     context : :obj:`BaseContext <disseminate.context.base_context.BaseContext>`
         The context with values for the document. The tag holds a weak reference
         to the context, as it doesn't own the context.
@@ -95,14 +95,10 @@ class Tag(object):
     def __init__(self, name, content, attributes, context):
         self.name = name
 
-        # Parse the attributes
-        if isinstance(attributes, str):
-            self.attributes = parse_attributes(attributes)
-        elif isinstance(attributes, list) or isinstance(attributes, tuple):
-            self.attributes = attributes
-        else:
-            self.attributes = tuple()
+        # Set the attributes
+        self.attributes = Attributes(attributes)
 
+        # Set the content
         if isinstance(content, list) and len(content) == 1:
             self.content = content[0]
         else:
@@ -134,7 +130,7 @@ class Tag(object):
     @property
     def short(self):
         """The short title for the tag"""
-        short_attr = self.get_attribute('short')
+        short_attr = self.attributes.get('short', None)
         return short_attr if short_attr is not None else self.title
 
     @property
@@ -164,56 +160,6 @@ class Tag(object):
 
         # The mtime is the latest mtime of all the tags and labels
         return max(mtimes)
-
-    def set_attribute(self, attribute, method='r'):
-        """Set the tag attribute.
-
-        Parameters
-        ----------
-        attribute: 2-ple or str
-            An attribute to set. It's either a 2 item tuple (attribute id,
-            attribute value) or a positional attribute string.
-        method: char, optional
-            'r': replace
-            'a': append
-
-        Returns
-        -------
-        update_attributes, tuple
-            A tuple of updatedattributes comprising either 2-ple strings
-            (key, value) or strings (positional arguments)
-        """
-        self.attributes = set_attribute(attrs=self.attributes,
-                                        attribute=attribute, method=method)
-        return self.attributes
-
-    def get_attribute(self, name, target=None, clear=False):
-        """Retrieve an attribute from the tag and optionally clear it from
-        the list of attributes.
-
-        Parameters
-        ----------
-        name : str
-            The attribute's name.
-        target : str, optional
-            The (optional) target for target-specific attributes.
-        clear : bool, optional
-            If True, the attribute will be removed from the attribute listing
-            for the tag. By default, the attribute is not cleared.
-
-        Returns
-        -------
-        attribute_value : str or None
-            The value of the attribute, if the attribute was found, or None,
-            if the attribute was not found.
-        """
-        value = get_attribute_value(attrs=self.attributes, attribute_name=name,
-                                    target=target)
-
-        if clear:
-            self.attributes = remove_attribute(attrs=self.attributes,
-                                               attribute_name=name)
-        return value
 
     @property
     def label(self):
@@ -292,7 +238,7 @@ class Tag(object):
         # Wrap the label_tag in a Tag, if it's not already in onw
         if wrap and not getattr(label_tag, 'name', '') == 'label':
             label_tag = Tag(name='label', content=label_tag,
-                            attributes=tuple(), context=self.context)
+                            attributes=None, context=self.context)
         return label_tag
 
     def _get_label_fmt_str(self, tag_name=None, target=None):
@@ -315,8 +261,7 @@ class Tag(object):
             function.
         """
         # First, see if a label format was specified in the tag directly
-        label_fmt = (self.get_attribute('fmt', target=target) or
-                     self.get_attribute('fmt', target=None))
+        label_fmt = self.attributes.get_by_type('fmt', target=target)
 
         if label_fmt is not None:
             return label_fmt
@@ -466,16 +411,15 @@ class Tag(object):
                 self.name.lower())
 
         # Filter and prepare the attributes
-        attrs = self.attributes if self.attributes else []
         if self.name in settings.tex_valid_attributes:
             valid_attrs = settings.tex_valid_attributes[self.name]
-            attrs = filter_attributes(attrs=attrs,
-                                      attribute_names=valid_attrs,
-                                      target='.tex')
+            attrs = self.attributes.filter(keys=valid_attrs,
+                                           target='.tex')
         else:
-            attrs = filter_attributes(attrs=attrs,
-                                      target='.tex')
-        attrs_str = format_tex_attributes(attrs)
+            attrs = self.attributes.filter(target='.tex')
+
+        attrs_str = attrs.tex
+        attrs_str = '[' + attrs_str + ']' if attrs_str else attrs_str
 
         # Format the tag. It's either a macro or environment
         if name in settings.tex_macros:
@@ -530,35 +474,29 @@ class Tag(object):
                 self.name.lower())
 
         # Filter and prepare the attributes
-        attrs = self.attributes if self.attributes else []
-
         if name in settings.html_valid_attributes:
             valid_attrs = settings.html_valid_attributes[name]
-            attrs = filter_attributes(attrs=attrs,
-                                      attribute_names=valid_attrs,
-                                      target='.html')
+            attrs = self.attributes.filter(keys=valid_attrs,
+                                           target='.html')
         else:
-            attrs = filter_attributes(attrs=attrs,
-                                      target='.html')
+            attrs = self.attributes.filter(target='.html')
 
         if name in settings.html_valid_tags:
             # Create the html tag
             e = E(name, *elements) if elements else E(name)
 
             # Set the attributes for the tag, in order.
-            kwargs = kwargs_attributes(attrs)
-            set_html_tag_attributes(html_tag=e, attrs_dict=kwargs)
+            set_html_tag_attributes(html_tag=e, attrs_dict=attrs)
         else:
             # Create a span element if it not an allowed element
             # Add the tag type to the class attribute
-            attrs = set_attribute(attrs, ('class', name), 'a')
+            attrs.append('class', name)
 
             # Create the html tag
             e = E('span', *elements) if len(elements) else E('span')
 
             # Set the attributes for the tag, in order.
-            kwargs = kwargs_attributes(attrs)
-            set_html_tag_attributes(html_tag=e, attrs_dict=kwargs)
+            set_html_tag_attributes(html_tag=e, attrs_dict=attrs)
 
         # Render the root tag if this is the first level
         if level == 1:
