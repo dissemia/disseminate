@@ -5,7 +5,7 @@ pdfcrop and rsvg-convert.
 import os
 
 from .converter import Converter
-from .arguments import (Argument, PositiveIntArgument, PositiveFloatArgument,
+from .arguments import (PositiveIntArgument, PositiveFloatArgument,
                         TupleArgument)
 from ..paths import TargetPath
 
@@ -82,6 +82,9 @@ class Pdf2svg(Converter):
                               .with_name(temp_filepath_svg.stem + '2')
                               .with_suffix('.svg'))
         temp_filepath_pdf = temp_filepath_svg.with_suffix('.pdf')
+        temp_filepath_pdf2 = (temp_filepath_svg
+                              .with_name(temp_filepath_pdf.stem + '2')
+                              .with_suffix('.pdf'))
         current_pdf = self.src_filepath.value
         current_svg = temp_filepath_svg
 
@@ -89,17 +92,20 @@ class Pdf2svg(Converter):
         if self.crop and pdfcrop_exec:
             # Determine whether the -p (percent retain) option should be added
             if isinstance(self.crop, TupleArgument) and self.crop.is_valid():
-                percent_retain = "-p4 {} {} {} {}".format(*self.crop.value)
+                percent_retain = ("-p4", *(str(i) for i in self.crop.value))
             else:
-                percent_retain = ""
+                percent_retain = ("",)
 
-            # pdfcrop infile.pdf -o outfile.pdf
-            args = [pdfcrop_exec, str(current_pdf), percent_retain, "-o",
-                    str(temp_filepath_pdf)]
+            # pdf-crop-margins -p4 0 0 0 0 -o outfile.pdf infile.pdf
+            args = [pdfcrop_exec,
+                    *percent_retain,
+                    "-o", str(temp_filepath_pdf2),
+                    str(current_pdf)]
+
             self.run(args, raise_error=False)
 
             # Move the current pdf
-            current_pdf = temp_filepath_pdf
+            current_pdf = temp_filepath_pdf2
 
         # Convert the file to svg
         # pdf2svg infile.pdf outfile.svg [page_no]

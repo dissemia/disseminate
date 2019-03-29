@@ -79,8 +79,7 @@ class Eq(RenderedImg):
         bold = attributes.get('bold', target='.tex')
         self.bold = True if bold is not None or name == 'termb' else False
 
-        color = attributes.get('color', target='.tex')
-        self.color = True if color is not None else False
+        self.color = attributes.get('color', target='.tex')
 
         # Remove these properties from the attributes, as they're no longer
         # needed and should be included when formatting tags
@@ -91,12 +90,13 @@ class Eq(RenderedImg):
         self.attributes = attributes
         content = self.tex
 
-        # Note: This crop command cuts off baselines such that equation images
-        # won't line up properly with the surrounding text. ex: H vs Hy
+        # Note: This crop command should not cut off baselines such that
+        # equation images won't line up properly with the surrounding text.
+        # ex: H vs Hy
         #
         # Crop equation images created by the dependency manager. This removes
         # white space around the image so that the equation images.
-        #attributes = set_attribute(attributes, ('crop', 'true'))
+        attributes['crop'] = (100, 100, 0, 0)
 
         super(Eq, self).__init__(name=name, content=content,
                                  attributes=attributes,
@@ -138,7 +138,11 @@ class Eq(RenderedImg):
             return content
         else:
             if self.block_equation or self.paragraph_role == 'block':
-                attrs_str = self.attributes.tex
+                # Remove attributes that are not used for in the latex
+                # formatting
+                attrs = self.attributes.exclude('crop')
+
+                attrs_str = attrs.tex
                 attrs_str = '{' + attrs_str + '}' if attrs_str else attrs_str
                 return self.tex_block_format.format(env=self.env,
                                                     attrs=attrs_str,

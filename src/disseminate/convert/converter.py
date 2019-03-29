@@ -260,7 +260,8 @@ class Converter(object):
         if returncode != 0:
             if error_msg is None:
                 error_msg = ("The conversion command '{}' was "
-                             "unsuccessful".format(' '.join(args)))
+                             "unsuccessful. Exited with code "
+                             "{}.".format(' '.join(args), returncode))
             if raise_error:
                 e = ConverterError(error_msg)
                 e.cmd = " ".join(args)
@@ -270,6 +271,7 @@ class Converter(object):
                 raise e
             else:
                 logging.warning(error_msg)
+                logging.debug(err.decode('utf-8'))
 
     @classmethod
     def get_converter(cls, src_filepath, target_basefilepath, targets,

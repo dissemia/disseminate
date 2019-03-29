@@ -66,8 +66,8 @@ def test_pdf2svg_optional(tmpdir):
     assert target_filepath == correct_filepath
     assert correct_filepath.is_file()
     contents = correct_filepath.read_text()
-    assert 'width="24pt"' in contents
-    assert 'height="24pt"' in contents
+    assert 'width="21.99794pt"' in contents
+    assert 'height="22.4455pt"' in contents
 
     # Try cropping and scaling by a factor of 2
     target_filepath = convert(src_filepath=pdf_file,
@@ -80,8 +80,8 @@ def test_pdf2svg_optional(tmpdir):
     assert target_filepath == correct_filepath
     assert correct_filepath.is_file()
     contents = correct_filepath.read_text()
-    assert 'width="60pt"' in contents or 'width="60px"' in contents
-    assert 'height="60pt"' in contents or 'height="60px"' in contents
+    assert 'width="54pt"' in contents or 'width="54px"' in contents
+    assert 'height="56pt"' in contents or 'height="56px"' in contents
 
     # Try cropping and scaling by a factor of 2, but this time with a
     # spurious kwarg
@@ -96,8 +96,8 @@ def test_pdf2svg_optional(tmpdir):
     assert target_filepath == correct_filepath
     assert correct_filepath.is_file()
     contents = correct_filepath.read_text()
-    assert 'width="60pt"' in contents or 'width="60px"' in contents
-    assert 'height="60pt"' in contents or 'height="60px"' in contents
+    assert 'width="54pt"' in contents or 'width="54px"' in contents
+    assert 'height="56pt"' in contents or 'height="56px"' in contents
 
 
 def test_pdf2svg_caching(tmpdir):

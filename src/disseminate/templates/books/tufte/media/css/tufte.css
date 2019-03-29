@@ -286,8 +286,3 @@ ul.toc-level-4 {
     margin: 0;
     padding: 0;
 }
-
-/* block eqs from latex have a space above that needs to be account for */
-p > .blockeq {
-    margin-top: -10pt;
-}
