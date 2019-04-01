@@ -10,8 +10,8 @@ import pathlib
 from .document_context import DocumentContext
 from ..ast import (process_context_asts, process_context_paragraphs,
                    process_context_typography)
+from ..processors import process_headers
 from ..renderers import process_context_template
-from ..header import load_header
 from ..macros import process_context_macros
 from ..convert import convert
 from ..context.utils import context_targets, context_includes
@@ -95,7 +95,7 @@ class Document(object):
         # Required. Processes the document's header. This should be loaded
         # first or near the very start since it loads in the values in the
         # context (other than body)
-        load_header,
+        process_headers,
 
         # Optional. Set the document label in the label manager. This should
         # be run after the header is loaded because the header may contain

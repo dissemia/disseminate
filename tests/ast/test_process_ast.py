@@ -6,7 +6,6 @@ import lxml.html
 
 from disseminate.ast import process_ast, process_context_asts
 from disseminate.ast.exceptions import ParseError
-from disseminate.header import load_header
 from disseminate.tags import Tag
 from disseminate.paths import SourcePath
 from disseminate.utils.string import Metastring
@@ -317,9 +316,9 @@ def test_process_context_asts(context_cls):
     """
 
     # Load the header into a context
-    context = context_cls(body=header,
-                          src_filepath=SourcePath(''))
-    load_header(context)
+    context = context_cls(src_filepath=SourcePath(''))
+    body = context.load(header)
+    context['body'] = body
 
     # Now process the context entries
     process_context_asts(context)

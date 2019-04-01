@@ -8,7 +8,6 @@ from disseminate.ast.paragraph import (group_paragraphs, clean_paragraphs,
 from disseminate.macros import process_context_macros
 from disseminate.tags import Tag
 from disseminate.tags.text import P
-from disseminate.header import load_header
 from disseminate.paths import SourcePath
 
 
@@ -369,8 +368,9 @@ def test_process_context_paragraphs(context_cls):
 
     # Load the header into a context
 
-    context = context_cls(body=header, src_filepath=SourcePath(''))
-    load_header(context)
+    context = context_cls(src_filepath=SourcePath(''))
+    body = context.load(header)
+    context['body'] = body
 
     # Now process the context entries
     process_context_asts(context)

@@ -290,7 +290,7 @@ class BaseContext(dict):
                                    if hasattr(parent, '__weakref__') else
                                    parent)
 
-    def load(self, string):
+    def load(self, string, strip_header=True):
         """Load context entries from a string.
 
         The load function interprets a string containing a dict in the format
@@ -303,10 +303,15 @@ class BaseContext(dict):
         ----------
         string : str
             The string to load into this context.
+        strip_header : bool, optional
+            If True (default), the returned string will have the header
+            removed.
 
         Returns
         -------
-        None
+        string : str
+            The processed string with the header removed (if available) or just
+            the string passed as an argument.
 
         Examples
         --------
@@ -317,7 +322,15 @@ class BaseContext(dict):
         """
         # Pull out the header string, if available
         m = re_header_block.match(string)
+        rest = None
         if m is not None:
+            # Determine the start and end position of the header
+            start, end = m.span()
+
+            # Collect the rest of the string
+            rest = string[end:]
+
+            # Get the header part of the string
             string = m.groupdict()['header']
 
         # Parse the string
@@ -325,6 +338,8 @@ class BaseContext(dict):
 
         # update self
         self.matched_update(d)
+
+        return rest if rest is not None else string
 
     def reset(self):
         """(Selectively) resets the context to its initial state.
