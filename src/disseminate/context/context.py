@@ -5,8 +5,15 @@ import logging
 from pprint import pprint
 from weakref import ref
 
+import regex
+
 from ..utils.classes import all_attributes_values
 from ..utils.string import str_to_dict, str_to_list
+
+
+re_header_block = regex.compile(r'^[\s\n]*(-{3,})\s*\n'
+                                r'(?P<header>.+?)'
+                                r'(\n\s*\g<1>)\n?', regex.DOTALL)
 
 
 class BaseContext(dict):
@@ -282,6 +289,42 @@ class BaseContext(dict):
         self['_parent_context'] = (ref(parent)
                                    if hasattr(parent, '__weakref__') else
                                    parent)
+
+    def load(self, string):
+        """Load context entries from a string.
+
+        The load function interprets a string containing a dict in the format
+        processed by :func:`str_to_dict <disseminate.utils.string.str_to_dict>`.
+        Additionally, this function parses header portions of strings
+        delineated by 3 or more '-' characters, and only new entries entries
+        that match the types of existing entries are inserted.
+
+        Parameters
+        ----------
+        string : str
+            The string to load into this context.
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        >>> context = BaseContext()
+        >>> context.load('test: 1')
+        >>> print(context)
+        BaseContext{test: 1}
+        """
+        # Pull out the header string, if available
+        m = re_header_block.match(string)
+        if m is not None:
+            string = m.groupdict()['header']
+
+        # Parse the string
+        d = str_to_dict(string)
+
+        # update self
+        self.matched_update(d)
 
     def reset(self):
         """(Selectively) resets the context to its initial state.

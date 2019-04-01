@@ -40,8 +40,7 @@ class Attributes(dict):
 
     def __init__(self, *args, **kwargs):
         for string in filter(lambda x: isinstance(x, str), args):
-            attrs = Attributes.parse_attributes(string)
-            self.update(attrs)
+            self.load(string)
 
         # Remove strings (and None) from args
         args = tuple(filter(lambda x: not isinstance(x, str) and x is not None,
@@ -52,8 +51,7 @@ class Attributes(dict):
     def __repr__(self):
         return self.__class__.__name__ + super().__repr__()
 
-    @classmethod
-    def parse_attributes(cls, s):
+    def load(self, s):
         """Parses an attribute string into a tuple of attributes.
 
         Parameters
@@ -80,7 +78,7 @@ class Attributes(dict):
                 attrs.append((d['position'].strip("'").strip('"'),
                               PositionalAttribute))
 
-        return tuple(attrs)
+        self.update(tuple(attrs))
 
     def get(self, key, target=None, default=None, sep=attribute_target_sep):
         """Retrieve an entry by target-specific key, if available and

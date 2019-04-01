@@ -108,20 +108,3 @@ def context_includes(context):
                            subpath=subpath / path)
                 for path in includes]
     return includes
-
-
-def set_context_attribute(element, new_context):
-    """Set the 'context' attribute to the new context for objects in the given 
-    element.
-
-    This function is used for objects that are deep copied into a new context
-    and that need to have their context attribute pointing to the new context.
-    """
-    if not hasattr(element, '__iter__'):
-        element = [element]
-
-    for i in element:
-        if hasattr(i, '__iter__') and not isinstance(i, str):
-            set_context_attribute(element=i, new_context=new_context)
-        if hasattr(i, 'context'):
-            i.context = new_context

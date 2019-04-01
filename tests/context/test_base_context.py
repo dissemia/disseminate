@@ -182,8 +182,36 @@ def test_base_context_do_not_inherit(context_cls):
     assert sub_parent['b'] == 2
 
 
+def test_base_context_load(context_cls):
+    """The the load method of the base context."""
+
+    test = """
+    ---
+    contact:
+      address: 1,2,3 lane
+      phone: 333-333-4123.
+    name: Justin L Lorieau
+    ---
+    body
+    """
+    context = context_cls()
+    context.load(test)
+
+    assert 'contact' in context
+    assert context['contact'] == '  address: 1,2,3 lane\n  phone: 333-333-4123.'
+
+    assert 'name' in context
+    assert context['name'] == 'Justin L Lorieau'
+
+    assert 'address' not in context
+    assert 'phone' not in context
+
+    # Make sure the header portion was the only part loaded
+    assert not any('body' in k or 'body' in v for k, v in context.items())
+
+
 def test_base_context_reset(context_cls):
-    """Test the reset functionality in the base context. """
+    """Test the reset functionality in the base context."""
 
     # Setup the context and parent_context
     parent_context = context_cls(**{'a': 2, 'b': 3, 'c': 4, 'd': 5, 'e': 6,
