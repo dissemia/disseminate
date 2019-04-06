@@ -3,7 +3,7 @@ Tags to render equations
 """
 from copy import copy
 
-from .core import Tag
+from .tag import Tag
 from .img import RenderedImg
 from ..attributes import Attributes
 
@@ -49,6 +49,8 @@ class Eq(RenderedImg):
     aliases = ('term', 'termb')
     active = True
 
+    process_content = False
+
     block_equation = None
     bold = None
     color = None
@@ -85,10 +87,16 @@ class Eq(RenderedImg):
         # needed and should be included when formatting tags
         attributes = attributes.exclude(('env', 'bold', 'color'))
 
+        self.attributes = attributes
+        self.context = context
+
         # Save the raw content and raw attributes and format the content in tex
         self._raw_content = content
         self.attributes = attributes
-        content = self.tex
+        self.content = self.tex
+
+        # Process the content to workup disseminate tags
+        self.process()
 
         # Note: This crop command should not cut off baselines such that
         # equation images won't line up properly with the surrounding text.
@@ -98,10 +106,8 @@ class Eq(RenderedImg):
         # white space around the image so that the equation images.
         attributes['crop'] = (100, 100, 0, 0)
 
-        super(Eq, self).__init__(name=name, content=content,
-                                 attributes=attributes,
-                                 context=context,
-                                 render_target='.tex')
+        super().__init__(name=name, content=content, attributes=attributes,
+                         context=context, render_target='.tex')
 
     def render_content(self, content, context):
         """Render the content in LaTeX into a valid .tex file."""

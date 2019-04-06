@@ -4,9 +4,8 @@ Functions for processing Abstract Syntax Trees (ASTs).
 import regex
 
 from .exceptions import ParseError, AstException
-from .cleaners import clean_strings
-from ..tags import TagFactory, Tag
-from ..utils.string import NewlineCounter
+from ..tags import Tag
+from ..utils.string import NewlineCounter, group_strings
 from .. import settings
 
 
@@ -177,7 +176,7 @@ def process_ast(ast, context, src_filepath=None, line_counter=None,
         line_counter(remainder)
 
     # Remove empty strings
-    clean_strings(new_ast)
+    group_strings(new_ast)
 
     # Unwrap new_ast if it's a list with only one item
     new_ast = new_ast[0] if len(new_ast) == 1 else new_ast
@@ -190,52 +189,3 @@ def process_ast(ast, context, src_filepath=None, line_counter=None,
                               tag_attributes='', context=context)
 
     return new_ast
-
-
-def process_context_asts(context):
-    """Process the ASTs of tags in the context.
-
-    This function converts strings with tag substrings (ex: '@b{bold}') into
-    tags.
-
-    .. note:: This function is designed to work with string macro entries. These
-              are identified by context entries with keys that start with the
-              settings.tag_prefix (e.g. '@test'). These *should not* be
-              converted into asts, as they are required for simple string
-              replacement.
-
-    Parameters
-    ----------
-    context : dict, optional
-        The context with values for the document.
-    """
-    # Setup the needed variables for process_ast
-    assert context.is_valid('src_filepath')
-    src_filepath = context['src_filepath']
-
-    # Go through the entries in the context and determine which can be converted
-    # to an AST. Convert the 'body' entry last, as it may depend on other
-    # entries in the context
-    for k, v in context.items():
-        if k == settings.body_attr:
-            continue
-
-        # Skip non-string entries or macro entries that start with the
-        # settings.tag_prefix (@)
-        if not isinstance(v, str) or k.startswith(settings.tag_prefix):
-            continue
-
-        # Process the entry in the context
-        ast = process_ast(ast=v, context=context, src_filepath=src_filepath,
-                          root_name=k)
-        context[k] = ast
-
-    # Process the body entry last
-    if (settings.body_attr in context and
-       isinstance(context[settings.body_attr], str)):
-        body = context[settings.body_attr]
-        context[settings.body_attr] = process_ast(ast=body,
-                                                  context=context,
-                                                  root_name=settings.body_attr)
-
-    return None

@@ -1,7 +1,7 @@
 """
 Tags for figure environments.
 """
-from .core import Tag
+from .tag import Tag
 from .caption import Caption, CaptionError
 
 
@@ -13,7 +13,8 @@ class BaseFigure(Tag):
     """
 
     def __init__(self, name, content, attributes, context):
-        super(BaseFigure, self).__init__(name, content, attributes, context)
+        super().__init__(name=name, content=content, attributes=attributes,
+                         context=context)
 
         # Register the caption as a label, if there's a caption in the contents
         id = self.attributes.pop('id', None)

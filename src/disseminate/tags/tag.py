@@ -6,12 +6,10 @@ from lxml import etree
 from markupsafe import Markup
 
 from .exceptions import TagError
-from ..macros import replace_macros
 from ..attributes import Attributes
 from .utils import set_html_tag_attributes
-from ..utils.string import titlelize
+from ..utils.string import titlelize, replace_macros
 from ..utils.classes import weakattr
-from .. import ast
 from .. import settings
 
 
@@ -54,6 +52,9 @@ class Tag(object):
         use name.
     active : bool
         If True, the Tag can be used by the TagFactory.
+    TagProcessor : class
+        If specified, use this class to get tag processors for tags.
+        (See the processors sub-directory)
     include_paragraphs : bool
         If True, then the contents of this tag can be included in paragraphs.
         See :func:`disseminate.ast.process_paragraphs`.
@@ -65,10 +66,6 @@ class Tag(object):
         - 'inline' : The tag is within a paragraph that includes a mix
                      of strings and tags
         - 'block' : The tag is within its own paragraph.
-    line_number : int or None
-        The corresponding starting line number in the source file for the
-        tag. This is useful for error messages and it is set when the AST is
-        processed.
     label_id : str or None
         If specified, this is the id for a label that is used by this tag.
         (See :meth:`set_label` for creating a label at the same time)
@@ -85,10 +82,11 @@ class Tag(object):
 
     active = False
 
+    ProcessTag = None
+
+    process_content = True
     include_paragraphs = True
     paragraph_role = None
-
-    line_number = None
 
     label_id = None
 
@@ -98,13 +96,17 @@ class Tag(object):
         # Set the attributes
         self.attributes = Attributes(attributes)
 
-        # Set the content
-        if isinstance(content, list) and len(content) == 1:
-            self.content = content[0]
-        else:
-            self.content = content
+        # Process paragraphs, if this tag's name is in the 'process_paragraphs'
+        # entry of the context
+        # if name in context.get('process_paragraphs'):
+        #     content = paragraphs.process_paragraph_tags(content, context)
 
+        # Set the content and context
+        self.content = content
         self.context = context
+
+        # Process the content
+        self.process()
 
     def __repr__(self):
         return "{type}{{{content}}}".format(type=self.name,
@@ -117,6 +119,12 @@ class Tag(object):
                    "tag contents are not a list")
             raise TagError(msg.format(self.__repr__()))
         return self.content[item]
+
+    def __len__(self):
+        if isinstance(self.content, list) or isinstance(self.content, tuple):
+            return len(self.content)
+        else:
+            return 1
 
     @property
     def title(self):
@@ -160,6 +168,12 @@ class Tag(object):
 
         # The mtime is the latest mtime of all the tags and labels
         return max(mtimes)
+
+    def process(self):
+        """Process the tag's contents."""
+        if self.ProcessTag is not None:
+            for processor in self.ProcessTag.processors():
+                processor(self)
 
     @property
     def label(self):
@@ -231,14 +245,10 @@ class Tag(object):
         # Substitute the variables (macros) in the label_fmt string
         label_string = replace_macros(label_fmt, {'@label': label})
 
-        # Format any tags into an ast
-        label_tag = ast.process_ast(label_string, context=self.context,
-                                    root_name='label')
+        # Format the label into a tag
+        label_tag = Tag(name='label', content=label_string, attributes='',
+                        context=self.context)
 
-        # Wrap the label_tag in a Tag, if it's not already in onw
-        if wrap and not getattr(label_tag, 'name', '') == 'label':
-            label_tag = Tag(name='label', content=label_tag,
-                            attributes=None, context=self.context)
         return label_tag
 
     def _get_label_fmt_str(self, tag_name=None, target=None):

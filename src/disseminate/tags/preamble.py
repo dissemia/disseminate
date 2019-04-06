@@ -3,7 +3,7 @@ Tags for document preambles.
 """
 from lxml.builder import E
 
-from .core import Tag
+from .tag import Tag
 from ..utils.string import str_to_list
 
 

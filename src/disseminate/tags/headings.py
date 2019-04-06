@@ -5,7 +5,7 @@ from lxml.builder import E
 from lxml import etree
 from markupsafe import Markup
 
-from .core import Tag
+from .tag import Tag
 from .utils import content_to_str
 from ..utils.string import slugify, titlelize
 from .. import settings

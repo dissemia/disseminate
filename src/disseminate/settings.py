@@ -51,9 +51,6 @@ cache_path = '.cache'
 #: The default location for media (image, css, js) files.
 media_path = 'media'
 
-# The contents of the following tags will not be directly parsed by the
-# process_ast
-verbatim_tags = ('verb', 'v', 'pre', 'verbatim')
 
 #: Attributes
 #: ----------
@@ -77,7 +74,12 @@ default_context = {
     'relative_links': True,
     'base_url': '/{target}/{subpath}',
 
-    # Process paragraphs for the following entries
+    # Process tags for the following entries in a context
+    # (see processors/process_context_tags.py)
+    'process_context_tags': [body_attr],
+
+    # Process paragraphs for tags with the following names
+    # (see tags/paragraphs.py)
     'process_paragraphs': [body_attr],
 
     # The following are strings to present labels. They are substituted with

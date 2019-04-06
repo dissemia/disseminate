@@ -2,8 +2,7 @@
 Tags for headings
 """
 from disseminate import Document
-from disseminate.ast import process_ast
-from disseminate.macros import replace_macros
+from disseminate.tags import Tag
 from disseminate.tags.headings import Branch
 from disseminate.utils.tests import strip_leading_space
 
@@ -50,17 +49,17 @@ def test_heading_with_macros(context_cls):
     """Test the heading tags that use macros."""
 
     # 1. Test a basic macro
-    context = context_cls(**{'@test':'This is my test'})
+    context = context_cls(**{'@test': 'This is my test'})
 
     text = """
     @chapter{@test}
     """
-    s = replace_macros(text, context=context)
-    ast = process_ast(s, context=context)
+    root = Tag(name='root', content=text, attributes='', context=context)
+    chap = root.content[1]
 
-    assert ast[1].name == 'chapter'
-    assert ast[1].content == 'This is my test'
-    assert ast[1].get_id() == 'br:this-is-my-test'
+    assert chap.name == 'chapter'
+    assert chap.content == 'This is my test'
+    assert chap.get_id() == 'br:this-is-my-test'
 
     # 2. Test a macro with tags
     context = context_cls(**{'@test': 'This is @b{my} test'})
@@ -68,15 +67,15 @@ def test_heading_with_macros(context_cls):
     text = """
         @chapter{@test}
         """
-    s = replace_macros(text, context=context)
-    ast = process_ast(s, context=context)
+    root = Tag(name='root', content=text, attributes='', context=context)
+    chap = root.content[1]
 
-    assert ast[1].name == 'chapter'
-    assert ast[1].content[0] == 'This is '
-    assert ast[1].content[1].name == 'b'
-    assert ast[1].content[1].content == 'my'
-    assert ast[1].content[2] == ' test'
-    assert ast[1].get_id() == 'br:this-is-my-test'
+    assert chap.name == 'chapter'
+    assert chap.content[0] == 'This is '
+    assert chap.content[1].name == 'b'
+    assert chap.content[1].content == 'my'
+    assert chap.content[2] == ' test'
+    assert chap.get_id() == 'br:this-is-my-test'
 
     # 3. Test a macro for a header entry that forms a tag.
     context = context_cls(**{'@title': 'This is @b{my} test'})
@@ -84,18 +83,19 @@ def test_heading_with_macros(context_cls):
     text = """
     @chapter{@title}
     """
-    s = replace_macros(text, context=context)
-    ast = process_ast(s, context=context)
+    root = Tag(name='root', content=text, attributes='', context=context)
+    chap = root.content[1]
 
-    assert isinstance(ast[1], Branch)
-    assert ast[1].name == 'chapter'
+    assert isinstance(chap, Branch)
+    assert chap.name == 'chapter'
 
-    assert ast[1].content[0] == 'This is '
-    assert ast[1].content[1].name == 'b'
-    assert ast[1].content[1].content == 'my'
-    assert ast[1].content[2] == ' test'
-    assert ast[1].get_id() == 'br:this-is-my-test'
-    assert ast.txt == '\n    This is my test\n    '
+    assert chap.content[0] == 'This is '
+    assert chap.content[1].name == 'b'
+    assert chap.content[1].content == 'my'
+    assert chap.content[2] == ' test'
+    assert chap.get_id() == 'br:this-is-my-test'
+    assert root.txt == '\n    This is my test\n    '
+    assert chap.txt == 'This is my test'
 
 
 def test_heading_with_substituted_content(context_cls):
@@ -122,8 +122,8 @@ def test_heading_with_substituted_content(context_cls):
     title = Branch(name='title', content='', attributes=tuple(),
                    context=context)
 
-    assert title.txt == 'My @b{title}'
-    assert title.html == '<h1 id="br:my-b-title">My @b{title}</h1>\n'
+    assert title.txt == 'My title'
+    assert title.html == '<h1 id="br:my-title">My <strong>title</strong></h1>\n'
 
 
 def test_heading_labels_formatting(tmpdir):
@@ -273,7 +273,8 @@ def test_heading_labels_html(tmpdir):
     # Generate a tag for each and compare the generated html to the answer key
     for src, html in markups.items():
         doc.reset_contexts()
-        heading = process_ast(src, context=doc.context)
+        root = Tag(name='root', content=src, attributes='', context=doc.context)
+        heading = root.content
         label_man.register_labels()
         assert heading.html == html
 
@@ -292,7 +293,8 @@ def test_heading_labels_html(tmpdir):
     # Generate a tag for each and compare the generated html to the answer key
     for src, html in markups.items():
         doc.reset_contexts()
-        heading = process_ast(src, context=doc.context)
+        root = Tag(name='root', content=src, attributes='', context=doc.context)
+        heading = root.content
         label_man.register_labels()
 
         assert heading.html == html
@@ -349,9 +351,10 @@ def test_heading_labels_tex(tmpdir):
     # Generate a tag for each and compare the generated html to the answer key
     for src, tex in markups.items():
         doc.reset_contexts()
-        root = process_ast(src, context=doc.context)
+        root = Tag(name='root', content=src, attributes='', context=doc.context)
+        heading = root.content
         label_man.register_labels()
-        assert root.tex == tex
+        assert heading.tex == tex
 
     # 2. Test with 'nolabel' specified
 
@@ -368,7 +371,8 @@ def test_heading_labels_tex(tmpdir):
     # Generate a tag for each and compare the generated html to the answer key
     for src, tex in markups.items():
         doc.reset_contexts()
-        root = process_ast(src, context=doc.context)
+        root = Tag(name='root', content=src, attributes='', context=doc.context)
+        heading = root.content
         label_man.register_labels()
 
-        assert root.tex == tex
+        assert heading.tex == tex

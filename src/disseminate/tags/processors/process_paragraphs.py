@@ -2,16 +2,27 @@
 Functions for processing paragraphs in Abstract Syntax Trees (ASTs).
 """
 
-
 import regex
 
-from ..tags import TagFactory, Tag
+from .process_tag import ProcessTag
+from ..tag import Tag
+from ..text import P
+
+
+class ProcessParagraphs(ProcessTag):
+
+    def __call__(self, tag):
+        if tag.name in tag.context.get('process_paragraphs', []):
+            process_paragraph_tags(tag, context=tag.context)
+
+
+ProcessParagraphs(order=300)
 
 
 re_para = regex.compile(r'(?:\n{2,})')
 
 
-def group_paragraphs(ast):
+def group_paragraphs(elements):
     """Given a list, group the items into sublists based on strings with
     newlines.
 
@@ -24,8 +35,8 @@ def group_paragraphs(ast):
 
     Parameters
     ----------
-    ast : list
-        The list of items and strings to group paragraphs.
+    elements : list or str
+        A string or a list of items and strings to group paragraphs.
 
     Returns
     -------
@@ -37,14 +48,16 @@ def group_paragraphs(ast):
     >>> group_paragraphs([1, 2, 'three', 'four\\n\\nfive', 6,
     ...                   'seven\\n\\neight'])
     [[1, 2, 'three', 'four'], ['five', 6, 'seven'], ['eight']]
+    >>> group_paragraphs('This is my\\n\\ntest paragraph.')
+    [['This is my'], ['test paragraph.']]
     """
-    if isinstance(ast, str):
-        ast = [ast]
+    # Wrap strings in a list
+    elements = [elements] if isinstance(elements, str) else elements
 
     overall_list = []
     sublist = []
 
-    for item in ast:
+    for item in elements:
 
         # Add non-string elements to the sublist
         if not isinstance(item, str):
@@ -88,13 +101,13 @@ def group_paragraphs(ast):
     if sublist:
         overall_list.append(sublist)
 
-    ast.clear()
-    ast += overall_list
+    elements.clear()
+    elements += overall_list
 
-    return ast
+    return elements
 
 
-def clean_paragraphs(ast):
+def clean_paragraphs(elements):
     """Remove invalid paragraphs from the sublists in an ast created by
     group_paragraphs.
 
@@ -104,8 +117,8 @@ def clean_paragraphs(ast):
 
     Parameters
     ----------
-    ast : list
-        The list of items and strings of grouped paragraphs.
+    elements : list or str
+        A string or a list of items and strings to group paragraphs.
 
     Returns
     -------
@@ -123,11 +136,11 @@ def clean_paragraphs(ast):
     >>> clean_paragraphs(group)
     [[1, 2, 'three'], [6, 'seven'], ['eight']]
     """
-    assert isinstance(ast, list)
+    assert isinstance(elements, list)
 
-    new_ast = []
+    new_elements = []
 
-    for item in ast:
+    for item in elements:
         # Determine if item is a sublist with only empty strings or strings
         # with space and newline characters. If so, don't make a paragraph
         # with it, and skip it.
@@ -135,16 +148,16 @@ def clean_paragraphs(ast):
            all(isinstance(i, str) and not i.strip() for i in item)):
             continue
 
-        new_ast.append(item)
+        new_elements.append(item)
 
     # Copy over the new_ast to the given ast
-    ast.clear()
-    ast += new_ast
+    elements.clear()
+    elements += new_elements
 
-    return ast
+    return elements
 
 
-def assign_paragraph_roles(ast):
+def assign_paragraph_roles(elements):
     """Assign the 'paragraph_role' attribute for tags within sublists created
      by the group_paragraphs function.
 
@@ -154,7 +167,7 @@ def assign_paragraph_roles(ast):
 
     Parameters
     ----------
-    ast : list
+    elements : list
         The list of paragraph tags (:obj:`P <disseminate.tags.text.P>` and
         strings.
 
@@ -163,11 +176,11 @@ def assign_paragraph_roles(ast):
     processed_ast : list
         The list with tags in the sublists marked with their paragraph_role.
     """
-    assert isinstance(ast, list)
+    assert isinstance(elements, list)
 
     # Go over the paragraph sublists and determine whether the tags within
     # are inline or block
-    for sublist in filter(lambda x: isinstance(x, list), ast):
+    for sublist in filter(lambda x: isinstance(x, list), elements):
         # Find all the tags in the sublist
         sublist_tags = list(filter(lambda x: isinstance(x, Tag), sublist))
 
@@ -186,99 +199,65 @@ def assign_paragraph_roles(ast):
             for tag in sublist_tags:
                 tag.paragraph_role = 'inline'
 
-    return ast
+    return elements
 
 
-def process_paragraphs(ast, context):
-    """Process the paragraphs for an AST. Paragraphs are blocks of text with
-    zero or more tags.
+def process_paragraph_tags(element, context):
+    """Process the paragraphs for the contents of a tag.
 
     Parameters
     ----------
-    ast : str or list
-        A string to parse into an AST, a list of strings or an existing AST.
+    element : str, list or tag (:obj:`disseminate.tags.Tag`)
+        A string, tag or list of both to process for paragraphs
     context : dict
         The context with values for the document.
 
     Returns
     -------
-    ast : :obj:`disseminate.Tag`
-        The AST is a root tag with a content comprising a list of tags or
-        strings.
+    processed_contents : str, :obj:`disseminate.tags.Tag` or list of both
+        The contents with
     """
-    # Setup the the tag factor
-    factory = TagFactory()
-
-    # Format ast to be used by the group_paragraphs function. The ast should
-    # be a list
-    if hasattr(ast, 'content'):
-        if isinstance(ast.content, str):
-            ast.content = [ast.content]
-        processed_ast = ast.content
-    elif isinstance(ast, str):
-        processed_ast = [ast]
+    if isinstance(element, Tag):
+        # If it's a tag, pull out its content
+        content = element.content
     else:
-        processed_ast = ast
+        # Otherwise use the element directly as the content to process
+        content = element
 
-    assert isinstance(processed_ast, list)
+    # Check the format of the content. This function can only process strings
+    # or lists
+    if not any(isinstance(content, x) for x in (str, list)):
+        return content
 
     # Group the paragraphs into sublists
-    group_paragraphs(processed_ast)
+    group = group_paragraphs(content)
 
     # Clean the paragraph sublist groups
-    clean_paragraphs(processed_ast)
+    clean_paragraphs(group)
 
     # Assign the paragraph_role for tags within paragraph sublist groups
-    assign_paragraph_roles(processed_ast)
+    assign_paragraph_roles(group)
 
     # Convert the sublists into paragraphs
-    for count, item in enumerate(processed_ast):
+    for count, item in enumerate(group):
         if isinstance(item, list):
-            # Determine whether this is the first
+            # If the item is a list with only 1 item, then isolate that one
+            # item. The paragraph will then only contain that one item, rather
+            # than have a list with one item.
+            item = item[0] if len(item) == 1 else item
 
             # sublists created by group_paragraphs are paragraphs
-            p = factory.tag(tag_name='p',
-                            tag_content=item,
-                            tag_attributes='',
-                            context=context)
+            p = P(name='p', content=item, attributes='', context=context)
 
-            processed_ast[count] = p
+            group[count] = p
 
-    return ast
+    # wrap the group, if it's only 1 item
+    if len(group) == 1:
+        group = group[0]
 
-
-def process_context_paragraphs(context):
-    """Process paragraphs in the tags of the given context.
-
-    This function parses paragraph tags from tags in the context. Consequently,
-    it should be executed after tags are created in the context.
-
-    .. note:: This function only processes context entries listed in the
-              'process_paragraphs' context entry. If the 'process_paragraphs'
-              list is missing, then no paragraphs will be processed.
-
-    Parameters
-    ----------
-    context : dict, optional
-        The context with values for the document.
-
-    """
-    # Determine which entries in the context should be processed for paragraphs
-    # based on the 'process_paragraphs' entry
-    process_entries = context.get('process_paragraphs', [])
-    assert isinstance(process_entries, list)
-
-    # Go through the entries in the context and process entries specified
-    # in the process_entries list
-    for k, v in context.items():
-        if k not in process_entries:
-            continue
-
-        # Process the entry in the context
-        ast = process_paragraphs(ast=v, context=context)
-
-        if hasattr(ast, 'name'):
-            ast.name = k
-        context[k] = ast
-
-    return None
+    # If the original element was a tag, replace its content
+    if isinstance(element, Tag):
+        element.content = group
+        return element
+    else:
+        return group

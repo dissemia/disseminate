@@ -66,3 +66,33 @@ def dupes(l, key=None):
     else:
         return [item for item in l if counts[key(item)] > 1]
 
+
+def unwrap(l):
+    """Unwrap lists with only a single item.
+
+    Parameters
+    ----------
+    l : list
+        The list to unwrap
+
+    Returns
+    -------
+    unwrapped_list : list
+        The unwrapped list
+
+    Examples
+    --------
+    >>> unwrap([1, 2, 3])
+    [1, 2, 3]
+    >>> unwrap([1])
+    1
+    >>> unwrap([[1]])
+    1
+    >>> unwrap([[[3]]])
+    3
+    """
+    new_l = l[0] if isinstance(l, list) and len(l) == 1 else l
+    if isinstance(new_l, list) and len(new_l) == 1:
+        new_l = unwrap(new_l)
+    return new_l
+

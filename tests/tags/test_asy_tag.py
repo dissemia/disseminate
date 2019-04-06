@@ -1,9 +1,9 @@
 """
 Test the asy tag.
 """
-from disseminate.ast import process_ast
+from disseminate.tags import Tag
 from disseminate.dependency_manager import DependencyManager
-from disseminate import SourcePath, TargetPath
+from disseminate.paths import SourcePath, TargetPath
 
 
 # html target
@@ -45,11 +45,12 @@ def test_asy_html(tmpdir, context_cls):
         draw(unitcircle);  }"""
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=context)
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert root.html == '<img src="/html/media/test_69a34c39e1.svg"/>\n'
+    assert img.html == '<img src="/html/media/test_69a34c39e1.svg"/>\n'
 
     # Second, we'll test the case when asy code is used directly in the tag.
     # We will now use a src_filepath of the markup document in the
@@ -69,11 +70,12 @@ def test_asy_html(tmpdir, context_cls):
                           paths=[])
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=context)
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert root.html == ('<img src="/html/media/chapter/test_69a34c39e1.svg"/>'
+    assert img.html == ('<img src="/html/media/chapter/test_69a34c39e1.svg"/>'
                          '\n')
 
 
@@ -110,11 +112,12 @@ def test_asy_html_attribute(tmpdir, context_cls):
         draw(unitcircle);  }"""
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=context)
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert root.html == ('<img src="/html/media/test_cd0ec1067e_scale2.0.svg"/>'
+    assert img.html == ('<img src="/html/media/test_cd0ec1067e_scale2.0.svg"/>'
                          '\n')
 
 
@@ -153,11 +156,9 @@ def test_asy_tex(tmpdir, context_cls):
             draw(unitcircle);  }"""
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=context)
-
-    # Get the tex rendering of the root tag
-    root_tex = root.tex
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert root_tex == '\\includegraphics{media/test_48a82ce699.pdf}'
+    assert img.tex == '\\includegraphics{media/test_48a82ce699.pdf}'

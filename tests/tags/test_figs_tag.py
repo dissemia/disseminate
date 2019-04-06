@@ -2,8 +2,7 @@
 Tests for the figure tags.
 """
 from disseminate import Document
-from disseminate.ast import process_ast
-from disseminate.tags.caption import Caption
+from disseminate.tags import Tag
 from disseminate.utils.tests import strip_leading_space
 
 
@@ -13,12 +12,14 @@ def test_marginfig_parsing(context_cls):
     context = context_cls()
 
     test1 = "@marginfig{fig1}"
-    marginfig = process_ast(test1, context=context)
+    root = Tag(name='root', content=test1, attributes='', context=context)
+    marginfig = root.content
     assert marginfig.name == 'marginfig'
     assert marginfig.content == 'fig1'
 
     test2 = "@marginfig{{fig1}}"
-    marginfig = process_ast(test2, context=context)
+    root = Tag(name='root', content=test2, attributes='', context=context)
+    marginfig = root.content
     assert marginfig.name == 'marginfig'
     assert marginfig.content == '{fig1}'
 
@@ -39,7 +40,8 @@ def test_figure_caption_no_id(tmpdir):
     src = "@marginfig{@caption{This is my caption.\nIt has multiple lines}}"
 
     # Generate a tag and compare the generated tex to the answer key
-    fig = process_ast(src, context=doc.context)
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    fig = root.content
     label_man.register_labels()
 
     assert fig.name == 'marginfig'
@@ -93,7 +95,8 @@ def test_figure_caption_with_id(tmpdir):
                 "@marginfig{@caption[id=fig-1]{This is my caption}}"):
 
         # Generate a tag and compare the generated tex to the answer key
-        fig = process_ast(src, doc.context)
+        root = Tag(name='root', content=src, attributes='', context=doc.context)
+        fig = root.content
         label_man.register_labels()
 
         assert fig.name == 'marginfig'
@@ -134,7 +137,8 @@ def test_figure_caption_no_id_html(tmpdir):
     src = "@marginfig{@caption{This is my caption}}"
 
     # Generate a tag and compare the generated tex to the answer key
-    marginfig = process_ast(src, context=doc.context)
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    marginfig = root.content
     label_man.register_labels()
 
     key = """<span class="marginfig">
@@ -177,7 +181,8 @@ def test_figure_caption_with_id_html(tmpdir):
 
     for count, src in enumerate(srcs):
         # Generate a tag and compare the generated tex to the answer key
-        fig = process_ast(src, context=doc.context)
+        root = Tag(name='root', content=src, attributes='', context=doc.context)
+        fig = root.content
         label_man.register_labels()
 
         assert fig.html == strip_leading_space(key)
@@ -202,7 +207,8 @@ def test_figure_caption_no_id_tex(tmpdir):
     src = "@marginfig{@caption{This is my caption}}"
 
     # Generate a tag and compare the generated tex to the answer key
-    fig = process_ast(src, context=doc.context)
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    fig = root.content
     label_man.register_labels()
 
     key = """
@@ -232,10 +238,11 @@ def test_figure_caption_with_id_tex(tmpdir):
             "@marginfig{@caption[id=fig-1]{This is my caption}}")
     for count, src in enumerate(srcs):
         # Generate a tag and compare the generated tex to the answer key
-        root = process_ast(src, context=doc.context)
+        root = Tag(name='root', content=src, attributes='', context=doc.context)
+        fig = root.content
         label_man.register_labels()
 
-        root_tex = root.tex
-        assert root_tex == ('\n\\begin{marginfigure}\n'
-                            '  \\caption{Fig. 1. This is my caption} \\label{fig-1}\n'
-                            '\\end{marginfigure}\n')
+        assert fig.tex == ('\n\\begin{marginfigure}\n'
+                           '  \\caption{Fig. 1. This is my caption} '
+                           '\\label{fig-1}\n'
+                           '\\end{marginfigure}\n')

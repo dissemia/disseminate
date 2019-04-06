@@ -1,7 +1,7 @@
 """
 Tags for note environments.
 """
-from .core import Tag
+from .tag import Tag
 
 
 class Sidenote(Tag):

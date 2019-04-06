@@ -6,7 +6,7 @@ import pathlib
 from lxml.html import etree
 
 from disseminate import Document, SourcePath, TargetPath
-from disseminate.ast import process_ast
+from disseminate.tags import Tag
 from disseminate.tags.ref import Ref
 from disseminate.labels import LabelManager
 
@@ -26,7 +26,8 @@ def test_naked_caption(tmpdir, context_cls):
     src = "@caption{This is my caption}"
 
     # Generate a tag and compare the generated tex to the answer key
-    caption = process_ast(src, context=context)
+    root = Tag(name='root', content=src, attributes='', context=context)
+    caption = root.content
 
     assert caption.name == 'caption'
     assert caption.attributes == {}

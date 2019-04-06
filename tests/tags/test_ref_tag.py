@@ -6,7 +6,7 @@ import pathlib
 import pytest
 
 from disseminate import Document, SourcePath, TargetPath
-from disseminate.ast import process_ast
+from disseminate.tags import Tag
 from disseminate.labels import LabelNotFound
 
 
@@ -28,7 +28,7 @@ def test_ref_missing(tmpdir):
     src = "@ref{test} @caption{This is my caption}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=doc.context)
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
     label_man.register_labels()
 
     # Trying to convert the root ast to a target type, like html, will raise
@@ -63,7 +63,7 @@ def test_ref_html(tmpdir):
     src = "@ref{test} @marginfig{@caption[id=test]{This is my caption}}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=doc.context)
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
     label_man.register_labels()
 
     #  Test the ref's html
@@ -105,7 +105,7 @@ def test_ref_tex(tmpdir):
     src = "@ref{test} @marginfig{@caption{This is my caption}}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=doc.context)
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
     label_man.register_labels()
 
     # Rendering the tex raises the LabelNotFound exception since the label
@@ -118,7 +118,7 @@ def test_ref_tex(tmpdir):
     src = "@ref{test} @marginfig{@caption[id=test]{This is my caption}}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=doc.context)
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
     label_man.register_labels()
 
     #  Test the ref's html

@@ -3,9 +3,9 @@ Tests for the tag utilities.
 """
 import pytest
 
+from disseminate.tags import Tag
 from disseminate.tags.text import Italics
 from disseminate.tags.utils import repl_tags, content_to_str
-from disseminate.ast import process_ast
 
 
 def test_content_to_str(context_cls):
@@ -17,11 +17,11 @@ def test_content_to_str(context_cls):
     # 2. Test tag conversion
     context = context_cls()
     text = 'This is @i{my} string'
-    ast = process_ast(text, context=context)
-    assert content_to_str(ast) == 'This is my string'
+    root = Tag(name='root', content=text, attributes='', context=context)
+    assert content_to_str(root) == 'This is my string'
 
     # 3. Test a list of strings and tags
-    assert (content_to_str([ast, ' and ', 'my string']) ==
+    assert (content_to_str([root, ' and ', 'my string']) ==
             'This is my string and my string')
 
     # 4. Invalid types raise an error
@@ -40,7 +40,7 @@ def test_repl_tags(context_cls):
     @i{root-level} tags and @b{tags with @sub{@i{@i{sub}}}} tags."""
 
     # Parse it
-    root = process_ast(test, context=context)
+    root = Tag(name='root', content=test, attributes='', context=context)
 
     # Try replacing the @i (Italics) tags
     repl_tags(element=root, tag_class=Italics, replacement='REPLACED')

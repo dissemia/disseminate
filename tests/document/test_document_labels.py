@@ -3,6 +3,7 @@ Tests the management of labels with documents.
 """
 from disseminate.document import Document
 from disseminate import SourcePath, TargetPath
+from disseminate import settings
 
 
 def test_document_labels(tmpdir):
@@ -61,6 +62,90 @@ def test_document_toc(tmpdir):
 </ul>
 """
     assert toc_tag.html == key
+
+
+def test_document_tag_mtime(tmpdir):
+    """Test the calculation of mtimes for labels from tags."""
+    # Prepare two files
+    tmpdir.mkdir('src')
+    src_filepath1 = tmpdir / 'src' / 'main.dm'
+    src_filepath2 = tmpdir / 'src' / 'sub.dm'
+
+    # Write to the files
+    src_filepath1.write("""
+    ---
+    target: html
+    include:
+        sub.dm
+    ---
+    @chapter[id=chapter-one]{Chapter One}
+    """)
+
+    src_filepath2.write("""
+    ---
+    target: html
+    ---
+    @chapter[id=chapter-two]{Chapter Two}
+    """)
+
+    doc = Document(str(src_filepath1), tmpdir)  # main.dm
+    label_manager = doc.context['label_manager']
+
+    # Get the two documents
+    docs = doc.documents_list(only_subdocuments=False, recursive=False)
+    assert len(docs) == 2
+    doc1, doc2 = docs  # doc1 == doc; doc2 is sub.dm
+
+    # Get the body root tag and the mtimes
+    body_attr = settings.body_attr
+    root1 = doc1.context[body_attr]
+    root2 = doc2.context[body_attr]
+
+    # Check that the mtimes match the file modification times
+    assert src_filepath1.mtime() == root1.mtime
+    assert src_filepath2.mtime() == root2.mtime
+
+    # Now change the two src files. Add a reference to the 2nd file in the
+    # first.
+    src_filepath1.write("""
+    ---
+    target: html
+    include:
+        sub.dm
+    ---
+    @ref{chapter-two}
+    @chapter[id=chapter-one]{Chapter One}
+    """)
+
+    src_filepath2.write("""
+    ---
+    target: html
+    ---
+    @chapter[id=chapter-two]{Chapter Two}
+    """)
+
+    # Reload the documents
+    doc1.load()
+    doc2.load()
+
+    # Get the root tag and the mtimes
+    root1 = doc1.context[body_attr]
+    root2 = doc2.context[body_attr]
+
+    # Check that the first file was written before the second.
+    assert src_filepath1.mtime() < src_filepath2.mtime()
+
+    # The labels haven't been registered yet, so the root tags should have the
+    # same modification time as the files
+    assert src_filepath1.mtime() == root1.mtime
+    assert src_filepath2.mtime() == root2.mtime
+
+    # Registering the labels with the 'get_labels' method will update the tag
+    # mtimes so that root1, which references the 2nd document, gets its mtime,
+    # while root2 stays the same
+    labels = label_manager.get_labels()
+    assert src_filepath2.mtime() == root1.mtime
+    assert src_filepath2.mtime() == root2.mtime
 
 
 def test_document_tree_updates_document_labels(tmpdir):

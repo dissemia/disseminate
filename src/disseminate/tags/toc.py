@@ -9,7 +9,7 @@ from markupsafe import Markup
 
 from .headings import toc_levels as heading_toc_levels
 from .ref import Ref
-from .core import Tag
+from .tag import Tag
 from . import exceptions
 from ..tags.headings import Heading
 from .. import settings

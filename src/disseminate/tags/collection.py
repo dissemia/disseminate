@@ -1,7 +1,7 @@
 """Tags to render collections of documents
 """
 
-from .core import Tag
+from .tag import Tag
 from .. import settings
 
 

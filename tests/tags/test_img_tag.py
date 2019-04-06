@@ -1,9 +1,9 @@
 """
 Test the img tag.
 """
-from disseminate.ast import process_ast
+from disseminate.tags import Tag
 from disseminate.dependency_manager import DependencyManager
-from disseminate import SourcePath, TargetPath
+from disseminate.paths import SourcePath, TargetPath
 
 
 def test_img_attribute(tmpdir, context_cls):
@@ -21,10 +21,11 @@ def test_img_attribute(tmpdir, context_cls):
     src = "@img[width=100]{sample.pdf}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context)
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
 
-    assert root.name == 'img'
-    assert root.attributes == {'width': '100'}
+    assert img.name == 'img'
+    assert img.attributes == {'width': '100'}
 
 
 # html target
@@ -53,18 +54,20 @@ def test_img_html(tmpdir, context_cls):
     src = "@img{sample.pdf}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context)
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
 
-    assert root.html == '<img src="/html/sample.svg"/>\n'
+    assert img.html == '<img src="/html/sample.svg"/>\n'
 
     # Now test an html-specific attribute
     # Generate the markup
     src = "@img[width.html=100 height.tex=20]{sample.pdf}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context)
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
 
-    assert root.html == '<img width="100" src="/html/sample.svg"/>\n'
+    assert img.html == '<img width="100" src="/html/sample.svg"/>\n'
 
 
 # tex targets
@@ -90,22 +93,19 @@ def test_img_tex(tmpdir, context_cls):
 
     # Generate the markup
     src = "@img{sample.pdf}"
-    tex = "\\includegraphics{sample.pdf}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=context)
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
 
-    # Remove the root tag
-    root_tex = root.tex
-    assert root_tex == tex
+    assert img.tex == "\\includegraphics{sample.pdf}"
 
     # Now test an tex-specific attribute
     # Generate the markup
     src = "@img[width.html=100 height.tex=20]{sample.pdf}"
-    tex = "\\includegraphics[height=20]{sample.pdf}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=context)
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
 
-    print(root.tex)
-    assert root.tex == tex
+    assert img.tex == "\\includegraphics[height=20]{sample.pdf}"

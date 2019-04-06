@@ -1,8 +1,11 @@
 """
 Test string utilities.
 """
+from collections import namedtuple
+
 from disseminate.utils.string import (hashtxt, titlelize, str_to_dict,
-                                      str_to_list)
+                                      str_to_list, group_strings,
+                                      replace_macros)
 
 
 def test_hashtxt():
@@ -95,7 +98,7 @@ def test_str_to_dict():
     assert (str_to_dict("toc: name: Justin Lorieau") ==
             {'toc': 'name: Justin Lorieau'})
     assert (str_to_dict("""toc: name: Justin Lorieau
-    Phone\: xxx-yyy-zzz""") ==
+    Phone: xxx-yyy-zzz""") ==
             {'toc': 'name: Justin Lorieau\n    Phone: xxx-yyy-zzz'})
 
     # Include entries
@@ -115,3 +118,121 @@ def test_str_to_dict():
     assert (d == {'targets': 'pdf, tex'})
     l = str_to_list(d['targets'])
     assert l == ['pdf', 'tex']
+
+
+def test_group_strings():
+    """Test the group_strings function."""
+
+    # Try simple flat lists
+    assert group_strings(['a', 'b', 5, 'c', 'd']) == ['ab', 5, 'cd']
+    assert group_strings([1, 2, 3, 4]) == [1, 2, 3, 4]
+
+    # Try nested lists
+    assert (group_strings(['a', 'b', [1, 2, 3], 'c', 'd']) ==
+            ['ab', [1, 2, 3], 'cd'])
+    assert (group_strings(['a', 'b', [1, 'c', 'd'], 'e', 'f']) ==
+            ['ab', [1, 'cd'], 'ef'])
+
+
+def test_replace_macros_basic():
+    """Basic tests of the replace_macros function."""
+
+    # Conduct some basic string tests
+    assert (replace_macros("This is my @test.", {'@test': 'TEST'}) ==
+            'This is my TEST.')
+    assert (replace_macros("This is my @missing.", {'@test': 'TEST'}) ==
+            'This is my @missing.')
+
+    # Try missing attributes
+    assert (replace_macros("This is my @missing.", {'@test': 'TEST'}) ==
+            'This is my @missing.')
+    assert (replace_macros("This is my @missing.",
+                           {'@test': 'TEST'}, {'@missing': 'MISSING'}) ==
+            'This is my MISSING.')
+    assert (replace_macros("This is my @missing.",
+                           {'@missing': 'TEST'}, {'@missing': 'MISSING'}) ==
+            'This is my TEST.')
+
+
+def test_replace_macros_specific(context_cls):
+    """Test replace_macros for specific macros."""
+
+    context = context_cls({'@deg': '@sup{○}'})
+
+    result = replace_macros("90@deg", context)
+    assert result == '90@sup{○}'
+
+    # Try a 2nd time to ensure that the macro isn't replaced again
+    result = replace_macros(result, context)
+    assert result == '90@sup{○}'
+
+
+def test_replace_macros_multiple_substitutions(context_cls):
+    """Test replace_macros with multiple substitutions."""
+
+    context = context_cls({'@p90x': '90@deg@sub{x}',
+                           '@deg': '@sup{○}'})
+
+    result = replace_macros("My @p90x pulse.", context)
+    assert result == "My 90@sup{○}@sub{x} pulse."
+
+
+def test_replace_macros_recursive(context_cls):
+    """Test replace_macros with recursive references."""
+
+    context = context_cls({'@test': '@test'})
+
+    result = replace_macros("My @@test pulse.", context)
+    assert result == "My @@test pulse."
+
+
+def test_replace_macros_attributes(context_cls):
+    """Test replace_macros with attributes."""
+
+    context = context_cls({"@feature": "@div[class=col-md-4]"})
+
+    result = replace_macros("My @feature{is good}.", context)
+    assert result == "My @div[class=col-md-4]{is good}."
+
+
+def test_replace_macros_submatches(context_cls):
+    """Test replace_macros with submatches marked by periods."""
+
+    # Create a test object
+    class Test(object):
+        def __repr__(self):
+            return 'TEST'
+    test = Test()
+
+    # First try the object itself
+    context = context_cls({'@test': test})
+
+    assert (replace_macros("This is my @test.", context) ==
+            "This is my TEST.")
+    assert (replace_macros("This is my @ test.", context) ==
+            "This is my @ test.")
+
+    # Now try with a subattribute
+    test.a = 1
+    assert (replace_macros("This is my @test.", context) ==
+            "This is my TEST.")
+    assert (replace_macros("This is my @test.a.", context) ==
+            "This is my 1.")
+    assert (replace_macros("This is my @test.b.", context) ==
+            "This is my TEST.b.")
+    assert (replace_macros("This is my @test.@test.", context) ==
+            "This is my TEST.TEST.")
+    assert (replace_macros("This is my @test@test.", context) ==
+            "This is my TESTTEST.")
+    assert (replace_macros("This is my @test @test.", context) ==
+            "This is my TEST TEST.")
+
+    # Substitutions with named tuples.
+    Vector = namedtuple('Vector', 'x y z')
+    vec = Vector(x='x', y='y', z='z')
+    assert (replace_macros('My @vec.x component.', {'@vec': vec}) ==
+            'My x component.')
+    assert (replace_macros('My {@vec.y} component.', {'@vec': vec}) ==
+            'My {y} component.')
+    assert (replace_macros('My @vec component.', {'@vec': vec}) ==
+            "My Vector(x='x', y='y', z='z') component.")

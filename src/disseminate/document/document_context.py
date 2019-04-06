@@ -29,7 +29,8 @@ class DocumentContext(BaseContext):
         'label_manager': LabelManager,
         'dependency_manager': DependencyManager,
         'mtime': float,
-        'doc_id': str}
+        'doc_id': str,
+        'process_context_tags': list}
 
     #: The following are context entries that should not be copied (inherited)
     #: from the parent context. They should be unique to each context.

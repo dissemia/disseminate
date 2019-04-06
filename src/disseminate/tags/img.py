@@ -3,7 +3,7 @@ Image tags
 """
 import pathlib
 
-from .core import Tag, TagError
+from .tag import Tag, TagError
 from ..utils.string import hashtxt
 from ..paths import SourcePath
 from .. import settings
@@ -24,11 +24,14 @@ class Img(Tag):
     """
 
     active = True
+    process_content = False
+
     html_name = 'img'
     img_filepath = None
 
     def __init__(self, name, content, attributes, context):
-        super(Img, self).__init__(name, content, attributes, context)
+        super().__init__(name=name, content=content, attributes=attributes,
+                         context=context)
 
         # Move the contents to the src_filpath attribute
         if isinstance(content, list):
@@ -89,7 +92,6 @@ class Img(Tag):
         return super(Img, self).html_fmt(level)
 
 
-# TODO: Cleanup and refactor class
 class RenderedImg(Img):
     """An img base class for saving and caching an image that needs to be
     rendered by an external program.
@@ -141,7 +143,8 @@ class RenderedImg(Img):
             # should be relative to the .cache directory
             content = cache_filepath
 
-        super(RenderedImg, self).__init__(name, content, attributes, context)
+        super().__init__(name=name, content=content, attributes=attributes,
+                         context=context)
 
     def render_content(self, content, context):
         """Render the content.

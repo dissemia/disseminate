@@ -5,7 +5,6 @@ from disseminate.tags import Tag
 from disseminate.tags.eqs import Eq
 from disseminate.dependency_manager import DependencyManager
 from disseminate.renderers import process_context_template
-from disseminate.ast import process_ast, process_paragraphs
 from disseminate import SourcePath, TargetPath
 
 
@@ -138,25 +137,32 @@ def test_block_equation_paragraph(tmpdir, context_cls):
                           paths=[])
     process_context_template(context)  # add the 'equation_renderer' entry
 
-    # Example 1 - simple block equation
-    test1 = "\n\n@eq{y=x}\n\n"
-    ast = process_ast(ast=test1, context=context)
-    ast = process_paragraphs(ast=ast, context=context)
+    # Example 1 - simple block equation.
+    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
 
-    assert ast[0].name == 'p'
-    assert ast[0].content.name == 'eq'
-    assert ast.tex == ('\n'
+    test1 = "\n\n@eq{y=x}\n\n"
+    root = Tag(name='root', content=test1, attributes='', context=context)
+
+    # The tag should be a 'root' wrapping a 'p', wrapping an 'eq'
+    print(root.content)
+    p = root.content
+    eq = p.content
+
+    assert p.name == 'p'
+    assert eq.name == 'eq'
+    assert p.tex == ('\n'
                        '\\begin{align*} %\n'
                        'y=x\n'
                        '\\end{align*}\n')
 
     # Example 2 - a simple inline equation
+    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
     test2 = "@eq{y=x}"
-    ast = process_ast(ast=test2, context=context)
-    ast = process_paragraphs(ast=ast, context=context)
+    root = Tag(name='root', content=test2, attributes='', context=context)
+    eq = root.content
 
-    assert ast.name == 'eq'
-    assert ast.tex == '\\ensuremath{y=x}'
+    assert eq.name == 'eq'
+    assert eq.tex == '\\ensuremath{y=x}'
 
 
 # html targets
@@ -187,33 +193,35 @@ def test_simple_inline_equation_html(tmpdir, context_cls):
                           paths=[])
     process_context_template(context)  # add the 'equation_renderer' entry
 
-    # Setup the equation tag
-    eq = Eq(name='eq', content='y = x', attributes=tuple(), context=context)
+    # 1. Setup a basic equation tag
+    eq = Eq(name='eq', content='y = x', attributes='', context=context)
 
     # Check the paths. These are stored by the parent Img tag in the
     # 'src_filepath' attribute
     assert eq.img_filepath == SourcePath(project_root=dep_manager.cache_path,
-                                         subpath='media/test_963ee5ea93.tex')
-
-    # Create a root tag and render the html
-    root = Tag(name='root', content=["This is my test", eq, "equation"],
-               attributes=tuple(), context=context)
-
-    # get the root tag
-    root_html = root.html
-
-    # The following root tags have to be stripped for the html strings
-    root_start = '<span class="root">This is my test'
-    root_end = 'equation</span>\n'
-
-    # Remove the root tag
-    root_html = root_html[len(root_start):]  # strip the start
-    root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
+                                         subpath='media/test_dc1243237f.tex')
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert (root_html ==
-            '<img class="eq" src="/html/media/test_963ee5ea93_crop.svg"/>')
+    assert (eq.html ==
+            '<img class="eq" src="/html/media/test_dc1243237f_crop.svg"/>\n')
+
+    # 2. Test tag with disseminate formatting
+    eq = Eq(name='eq', content='y = @termb{x}', attributes='',
+            context=context)
+
+    # Check the paths. These are stored by the parent Img tag in the
+    # 'src_filepath' attribute
+    assert eq.img_filepath == SourcePath(project_root=dep_manager.cache_path,
+                                         subpath='media/test_bd67e8f7b6.tex')
+
+    # Make sure the @termb has been converted
+    assert '@termb' not in eq.img_filepath.read_text()
+
+    # Check the rendered tag and that the asy and svg files were properly
+    # created
+    assert (eq.html ==
+            '<img class="eq" src="/html/media/test_bd67e8f7b6_crop.svg"/>\n')
 
 
 # tex targets
@@ -284,16 +292,12 @@ def test_block_equation_tex(tmpdir, context_cls):
     &= x + a
     }
     """
+    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
+    root = Tag(name='root', content=test, attributes='', context=context)
+    p = root.content
 
-    root = process_ast(test, context=context)
-    assert root.tex == ('\n    \\begin{align*} %\n'
-                        'y &= x + b \\\n'
-                        '    &= x + a\n'
-                        '\\end{align*}\n    ')
-
-    root = process_paragraphs(root, context=context)
-
-    assert root.tex == ('\n\n    \\begin{align*} %\n'
-                        'y &= x + b \\\n'
-                        '    &= x + a\n'
-                        '\\end{align*}\n    \n')
+    assert p.name == 'p'
+    assert p.tex == ('\n\n    \\begin{align*} %\n'
+                     'y &= x + b \\\n'
+                     '    &= x + a\n'
+                     '\\end{align*}\n    \n')

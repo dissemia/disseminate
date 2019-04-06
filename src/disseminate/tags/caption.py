@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 from lxml.builder import E
 
-from .core import Tag
+from .tag import Tag
 from .utils import set_html_tag_attributes
 from ..utils.string import hashtxt
 

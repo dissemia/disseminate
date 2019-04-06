@@ -8,7 +8,7 @@ from lxml import etree
 from lxml.etree import Entity
 from lxml.builder import E
 
-from .core import Tag, TagError
+from .tag import Tag, TagError
 from .. import settings
 
 
@@ -237,15 +237,23 @@ class Verb(Tag):
         use name.
     active : bool, default: True
         This tag is active.
+    process_content : bool, optional
+        Do not process the contents of the tag--just take the contents
+        literally.
     include_paragraphs : bool, default: False
         The contents of this tag cannot be included in paragraphs.
     """
 
     aliases = ("v", "pre", "verbatim")
     active = True
+
+    process_content = False
     include_paragraphs = False
 
     html_name = 'code'
+
+    def __init__(self, name, content, attributes, context):
+        super().__init__(name, content, attributes, context)
 
     def html_fmt(self, level=1, content=None):
         if self.name == "verbatim":

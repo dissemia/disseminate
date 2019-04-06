@@ -6,10 +6,110 @@ import pathlib
 import pytest
 
 from disseminate.document import Document
-from disseminate.ast import process_ast
-from disseminate.tags.core import Tag, TagError
+from disseminate.tags import Tag, TagError
 from disseminate.tags.text import P
-from disseminate import settings, SourcePath, TargetPath
+from disseminate import SourcePath, TargetPath
+
+
+def test_tag_basic_strings(context_cls):
+    """Test the parsing of basic tag strings."""
+
+    context = context_cls()
+
+    # 1. Test tags with empty contents
+    root = Tag(name='root', content='@test', attributes='', context=context)
+    test = root.content
+    assert test.name == 'test'
+    assert test.content == ''
+    assert test.txt == ''
+    assert root.txt == ''
+    assert len(root) == 1
+
+    root = Tag(name='root', content='@test{}', attributes='', context=context)
+    test = root.content
+    assert test.name == 'test'
+    assert test.content == ''
+    assert test.txt == ''
+    assert root.txt == ''
+    assert len(root) == 1
+
+    root = Tag(name='root', content=' empty ', attributes='', context=context)
+    assert isinstance(root.content, str)
+    assert root.content == ' empty '
+
+    # 2. Test tags with nested curly braces
+    test1 = "This is my @marginfig{{Margin figure}}."
+    root = Tag(name='root', content=test1, attributes='', context=context)
+    assert root.content[0] == 'This is my '
+    assert root.content[1].name == 'marginfig'
+    assert root.content[1].content == '{Margin figure}'
+    assert root.content[2] == '.'
+
+
+def test_tag_strings(context_cls):
+    """Test the creation of tags with standard and nested strings."""
+
+    context = context_cls()
+
+    # 1. Use an example string with nested tags
+    test = """
+    This is my test document. It has multiple paragraphs.
+
+    Here is a new one with @b{bolded} text as an example.
+    @marginfigtag[offset=-1.0em]{
+      @imgtag{media/files}
+      @captiontag{This is my @i{first} figure.}
+    }
+
+    This is a @13C variable.
+
+    Here is a new paragraph."""
+
+    root = Tag(name='root', content=test, attributes='', context=context)
+
+    assert isinstance(root, Tag) and root.name == 'root'  # root tag
+
+    assert isinstance(root[0], str)
+    assert root[0] == ('\n    '
+                       'This is my test document. It has multiple paragraphs.'
+                       '\n\n    '
+                       'Here is a new one with ')
+
+    assert isinstance(root[1], Tag) and root[1].name == 'b'
+
+    assert isinstance(root[2], str)  # string
+
+    assert isinstance(root[3], Tag) and root[3].name == 'marginfigtag'
+    assert isinstance(root[3].content, list)  # margin tag has subtags
+
+    assert isinstance(root[3][0], str)  # string
+
+    assert isinstance(root[3][1], Tag) and root[3][1].name == 'imgtag'
+    assert root[3][1].content == 'media/files'
+
+    assert isinstance(root[3][2], str)  # string
+
+    assert isinstance(root[3][3], Tag) and root[3][3].name == 'captiontag'
+    assert isinstance(root[3][3].content, list)  # contents includes
+    # strings and tags
+
+    assert isinstance(root[3][3][0], str)  # string
+
+    assert isinstance(root[3][3][1], Tag) and root[3][3][1].name == 'i'
+    assert root[3][3][1].content == "first"  # i contents
+
+    assert isinstance(root[3][3][2], str)  # string
+
+    assert isinstance(root[4], str)  # string
+    assert root[4] == '\n\n    This is a '
+
+    assert isinstance(root[5], Tag) and root[5].name == '13C'
+    assert root[5].content == ''
+
+    assert isinstance(root[6], str)  # string
+    assert root[6] == ' variable.\n\n    Here is a new paragraph.'
+
+    assert len(root) == 7
 
 
 def test_tag_attributes(context_cls):
@@ -24,6 +124,58 @@ def test_tag_attributes(context_cls):
 
     tag.attributes['class'] = 'two'
     assert tag.attributes.get('class') == 'two'
+
+
+def test_tag_double_convert(context_cls):
+    """Tests the default conversion run twice of a tag to make sure the
+    Tag stays the same."""
+
+    context = context_cls()
+
+    # 1. Use an example string with nested tags
+    test = """
+        This is my test document. It has multiple paragraphs.
+
+        Here is a new one with @b{bolded} text as an example.
+        @marginfigtag[offset=-1.0em]{
+          @imgtag{media/files}
+          @captiontag{This is my @i{first} figure.}
+        }
+
+        This is a @13C variable.
+
+        Here is a new paragraph."""
+
+    # Generate the txt string
+    root = Tag(name='root', content=test, attributes='', context=context)
+    txt = root.default
+
+    # Generate the txt string
+    root2 = Tag(name='root', content=root, attributes='', context=context)
+    txt2 = root2.default
+    assert txt == txt2
+
+
+def test_tag_invalid_inputs(context_cls):
+    """Test the identification of invalid inputs in creating tags."""
+
+    context = context_cls()
+
+    # 1. Test open braces
+    test_invalid = """
+        This is my test document. It has multiple paragraphs.
+
+        Here is a new one with @b{bolded} text as an example.
+        @marginfigtag[offset=-1.0em]{
+          @imgtag{media/files}
+          @caption{This is my @i{first} figure.}
+    """
+    with pytest.raises(TagError):
+        Tag(name='root', content=test_invalid, attributes='', context=context)
+
+    # 2. Test invalid content types
+    with pytest.raises(TagError):
+        root = Tag(name='root', content=set(), attributes=None, context=context)
 
 
 def test_flatten_tag(context_cls):
@@ -45,7 +197,7 @@ def test_flatten_tag(context_cls):
             Here is a @i{new} paragraph."""
 
     # Parse it
-    root = process_ast(test, context=context)
+    root = Tag(name='root', content=test, attributes='', context=context)
 
     # Convert the root tag to a flattened list and check the items
     flattened_tag = root.flatten(filter_tags=False)
@@ -84,90 +236,6 @@ def test_flatten_tag(context_cls):
     assert flattened_tag[5].name == 'i'
     assert flattened_tag[6].name == '13C'
     assert flattened_tag[7].name == 'i'
-
-
-def test_tag_mtime(tmpdir):
-    """Test the calculation of mtimes for labels."""
-    # Prepare two files
-    tmpdir.mkdir('src')
-    src_filepath1 = tmpdir / 'src' / 'main.dm'
-    src_filepath2 = tmpdir / 'src' / 'sub.dm'
-
-    # Write to the files
-    src_filepath1.write("""
-    ---
-    target: html
-    include:
-        sub.dm
-    ---
-    @chapter[id=chapter-one]{Chapter One}
-    """)
-
-    src_filepath2.write("""
-    ---
-    target: html
-    ---
-    @chapter[id=chapter-two]{Chapter Two}
-    """)
-
-    doc = Document(str(src_filepath1), tmpdir)  # main.dm
-    label_manager = doc.context['label_manager']
-
-    # Get the two documents
-    docs = doc.documents_list(only_subdocuments=False, recursive=False)
-    assert len(docs) == 2
-    doc1, doc2 = docs  # doc1 == doc; doc2 is sub.dm
-
-    # Get the body root tag and the mtimes
-    body_attr = settings.body_attr
-    root1 = doc1.context[body_attr]
-    root2 = doc2.context[body_attr]
-
-    # Check that the mtimes match the file modification times
-    assert src_filepath1.mtime() == root1.mtime
-    assert src_filepath2.mtime() == root2.mtime
-
-    # Now change the two src files. Add a reference to the 2nd file in the
-    # first.
-    src_filepath1.write("""
-    ---
-    target: html
-    include:
-        sub.dm
-    ---
-    @ref{chapter-two}
-    @chapter[id=chapter-one]{Chapter One}
-    """)
-
-    src_filepath2.write("""
-    ---
-    target: html
-    ---
-    @chapter[id=chapter-two]{Chapter Two}
-    """)
-
-    # Reload the documents
-    doc1.load()
-    doc2.load()
-
-    # Get the root tag and the mtimes
-    root1 = doc1.context[body_attr]
-    root2 = doc2.context[body_attr]
-
-    # Check that the first file was written before the second.
-    assert src_filepath1.mtime() < src_filepath2.mtime()
-
-    # The labels haven't been registered yet, so the root tags should have the
-    # same modification time as the files
-    assert src_filepath1.mtime() == root1.mtime
-    assert src_filepath2.mtime() == root2.mtime
-
-    # Registering the labels with the 'get_labels' method will update the tag
-    # mtimes so that root1, which references the 2nd document, gets its mtime,
-    # while root2 stays the same
-    labels = label_manager.get_labels()
-    assert src_filepath2.mtime() == root1.mtime
-    assert src_filepath2.mtime() == root2.mtime
 
 
 def test_label_tags(tmpdir):
@@ -222,6 +290,45 @@ def test_label_tags(tmpdir):
     assert label_tag_tex.tex == 'tex'
 
 
+# Test for the default target
+
+def test_tag_default(context_cls):
+    """Test the conversion of tags to a default string."""
+
+    context = context_cls()
+
+    # 1. Use an example string with nested tags
+    test = """
+    This is my test document. It has multiple paragraphs.
+
+    Here is a new one with @b{bolded} text as an example.
+    @marginfigtag[offset=-1.0em]{
+      @imgtag{media/files}
+      @captiontag{This is my @i{first} figure.}
+    }
+
+    This is a @13C variable.
+
+    Here is a new paragraph."""
+
+    root = Tag(name='root', content=test, attributes='', context=context)
+
+    key = """
+    This is my test document. It has multiple paragraphs.
+
+    Here is a new one with bolded text as an example.
+    
+      media/files
+      This is my first figure.
+    
+
+    This is a  variable.
+
+    Here is a new paragraph."""
+
+    assert root.txt == key
+
+
 # Tests for html targets
 
 def test_tag_html(context_cls):
@@ -229,7 +336,7 @@ def test_tag_html(context_cls):
 
     context = context_cls()
 
-    # Generate a simple root tag with a string as content
+    # 1. Generate a simple root tag with a string as content
     root = Tag(name='root', content='base string', attributes=None,
                context=context)
     assert root.html == '<span class="root">base string</span>\n'
@@ -241,12 +348,6 @@ def test_tag_html(context_cls):
     assert root.html == ('<span class="root">'
                          'my first<b>bolded</b>string'
                          '</span>\n')
-
-    # Test the rendering of a tag with content for an invalid type.
-    # This should raise an exception
-    root = Tag(name='root', content=set(), attributes=None, context=context)
-    with pytest.raises(TagError):
-        root.html
 
 
 def test_tag_html_invalid_tag(context_cls):
@@ -327,13 +428,6 @@ def test_tag_tex(context_cls):
     root = Tag(name='root', content=elements, attributes=None,
                context=context)
     assert root.tex == "my first\\textbf{bolded}string"
-
-    # Test the rendering of a tag with content for an invalid type.
-    # This should raise an exception
-    root = Tag(name='root', content=set(), attributes=None,
-               context=context)
-    with pytest.raises(TagError):
-        root.tex
 
 
 def test_tag_tex_nested(context_cls):

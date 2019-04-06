@@ -1,9 +1,8 @@
 """
 The Ref tag to reference captions and other labels.
 """
-from .core import Tag
-from .. import ast
-from ..macros import replace_macros
+from .tag import Tag
+from ..utils.string import replace_macros
 
 
 class RefError(Exception):
@@ -77,11 +76,8 @@ class Ref(Tag):
         label_string = replace_macros(label_fmt, {'@label': label,
                                                   '@link': link})
 
-        # Format any tags
-        content = ast.process_ast(label_string, context=self.context)
-
         # Wrap the ast into ref tag in its own label tag
-        ref_tag = Tag(name='ref', content=content, attributes=tuple(),
+        ref_tag = Tag(name='ref', content=label_string, attributes='',
                       context=self.context)
         return ref_tag
 

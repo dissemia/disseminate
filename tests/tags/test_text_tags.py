@@ -1,7 +1,7 @@
 """Test the text formatting tags."""
 from lxml.html import tostring
 
-from disseminate.ast import process_ast
+from disseminate.tags import Tag
 from disseminate.tags.text import P
 
 
@@ -10,7 +10,7 @@ def test_tag_text_paragraph(context_cls):
 
     context = context_cls()
 
-    p = P(name='p', content='content', attributes=(), context=context)
+    p = P(name='p', content='content', attributes='', context=context)
     assert str(p.html) == '<p>content</p>\n'
     assert p.tex == '\ncontent\n'
     assert p.default == 'content'
@@ -22,8 +22,9 @@ def test_tag_text_verbatim(context_cls):
     context = context_cls()
 
     # Test a verb tag that includes a tag
-    test = "@v{@bold{bolded}}"
-    verb = process_ast(test, context=context)
+    root = Tag(name='root', content="@v{@bold{bolded}}", attributes='',
+               context=context)
+    verb = root.content
 
     # Match targets
     assert verb.default == "@bold{bolded}"
@@ -31,8 +32,9 @@ def test_tag_text_verbatim(context_cls):
     assert verb.tex == "\\verb|@bold{bolded}|"
 
     # Test a verbatim block
-    test = "@verbatim{@bold{bolded}}"
-    verb = process_ast(test, context=context)
+    root = Tag(name='root', content="@verbatim{@bold{bolded}}", attributes='',
+               context=context)
+    verb = root.content
 
     # Match targets
     assert verb.default == "@bold{bolded}"
@@ -58,16 +60,16 @@ def test_tag_text_html(context_cls):
 
     # Generate a tag for each and compare the generated html to the answer key
     for src, html in markups.items():
-        root = process_ast(src, context=context)
-        assert root.html == html
+        root = Tag(name='root', content=src, attributes='', context=context)
+        assert root.content.html == html
 
     markups = {'@symbol{alpha}': '&alpha;\n',
                }
 
     # Generate a tag for each and compare the generated html to the answer key
     for src, html in markups.items():
-        root = process_ast(src, context=context)
-        assert root.html == html
+        root = Tag(name='root', content=src, attributes='', context=context)
+        assert root.content.html == html
 
 
 # tex targets
@@ -86,8 +88,7 @@ def test_tag_text_tex(context_cls):
 
     # Generate a tag for each and compare the generated tex to the answer key
     for src, tex in markups.items():
-        root = process_ast(src, context=context)
+        root = Tag(name='root', content=src, attributes='', context=context)
 
         # Remove the root tag
-        root_tex = root.tex
-        assert root_tex == tex
+        assert root.content.tex == tex

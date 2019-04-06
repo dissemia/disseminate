@@ -8,11 +8,9 @@ import logging
 import pathlib
 
 from .document_context import DocumentContext
-from ..ast import (process_context_asts, process_context_paragraphs,
-                   process_context_typography)
-from ..processors import process_headers
+#from ..ast import process_context_paragraphs, process_context_typography
+from ..processors import process_context_headers, process_context_tags #, process_macros
 from ..renderers import process_context_template
-from ..macros import process_context_macros
 from ..convert import convert
 from ..context.utils import context_targets, context_includes
 from ..utils import mkdir_p
@@ -95,7 +93,7 @@ class Document(object):
         # Required. Processes the document's header. This should be loaded
         # first or near the very start since it loads in the values in the
         # context (other than body)
-        process_headers,
+        process_context_headers,
 
         # Optional. Set the document label in the label manager. This should
         # be run after the header is loaded because the header may contain
@@ -104,7 +102,7 @@ class Document(object):
 
         # Optional. Process macros. This will convert macros in the context
         # that have just been loaded from the header
-        process_context_macros,
+        #process_macros,
 
         # Required. Populate the template renderers. This needs to be done
         # after the header is loaded.
@@ -114,17 +112,17 @@ class Document(object):
         # trees of Tag objects. After the header and context are loaded and
         # prepared, this function converts the entry values in the context to
         # ASTs, if it can.
-        process_context_asts,
+        process_context_tags,
 
         # Optional. Process AST paragraphs. After the appropriate context
         # values have been converted to ASTs, go through these ASTs and
         # identify and tag paragraphs.
-        process_context_paragraphs,
+        #process_context_paragraphs,
 
         # Optional. Process the AST typography. After the appropriate context
         # values have been converted to ASTs, identify the appropriate
         # typography elements like quotes, endashes and emdashes.
-        process_context_typography,
+        #process_context_typography,
                   ]
 
     #: The directory for the root document of a project (a document and its

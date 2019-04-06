@@ -4,7 +4,7 @@ Processors for working up the headers of strings in a context.
 from ..context.context import re_header_block
 
 
-def process_headers(context):
+def process_context_headers(context):
     """Process header strings for entries in a context by loading them into
     the context.
 
