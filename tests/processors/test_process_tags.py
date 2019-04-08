@@ -19,7 +19,7 @@ def test_process_tags(context_cls):
     """
 
     # Load the header into a context
-    context = context_cls(process_tags=['title', 'body'])
+    context = context_cls(process_context_tags=['title', 'body'])
     body = context.load(header)
     context['body'] = body
 

@@ -1,5 +1,5 @@
 """
-Function(s) to replace macros.
+Tag processors for replacing macros in the strings of tag contents.
 """
 
 from .process_tag import ProcessTag
@@ -7,7 +7,9 @@ from ...utils.string import replace_macros
 
 
 class ProcessMacros(ProcessTag):
-    """A processor for macros in tags"""
+    """A tag processor for replacing macros in tag strings"""
+
+    order = 100
 
     def __call__(self, tag):
         # Skip non-string entries and macro entries. Macros themselves don't
@@ -18,6 +20,3 @@ class ProcessMacros(ProcessTag):
 
         # Process the entry in the context
         tag.content = replace_macros(tag.content, tag.context)
-
-
-ProcessMacros(order=100)

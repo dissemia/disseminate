@@ -8,8 +8,7 @@ import logging
 import pathlib
 
 from .document_context import DocumentContext
-#from ..ast import process_context_paragraphs, process_context_typography
-from ..processors import process_context_headers, process_context_tags #, process_macros
+from ..processors import process_context_headers, process_context_tags
 from ..renderers import process_context_template
 from ..convert import convert
 from ..context.utils import context_targets, context_includes
@@ -100,10 +99,6 @@ class Document(object):
         # the title for the document,
         set_document_label,
 
-        # Optional. Process macros. This will convert macros in the context
-        # that have just been loaded from the header
-        #process_macros,
-
         # Required. Populate the template renderers. This needs to be done
         # after the header is loaded.
         process_context_template,
@@ -113,17 +108,7 @@ class Document(object):
         # prepared, this function converts the entry values in the context to
         # ASTs, if it can.
         process_context_tags,
-
-        # Optional. Process AST paragraphs. After the appropriate context
-        # values have been converted to ASTs, go through these ASTs and
-        # identify and tag paragraphs.
-        #process_context_paragraphs,
-
-        # Optional. Process the AST typography. After the appropriate context
-        # values have been converted to ASTs, identify the appropriate
-        # typography elements like quotes, endashes and emdashes.
-        #process_context_typography,
-                  ]
+        ]
 
     #: The directory for the root document of a project (a document and its
     #: subdocuments.

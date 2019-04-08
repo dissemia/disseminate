@@ -199,12 +199,12 @@ def test_simple_inline_equation_html(tmpdir, context_cls):
     # Check the paths. These are stored by the parent Img tag in the
     # 'src_filepath' attribute
     assert eq.img_filepath == SourcePath(project_root=dep_manager.cache_path,
-                                         subpath='media/test_dc1243237f.tex')
+                                         subpath='media/test_963ee5ea93.tex')
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert (eq.html ==
-            '<img class="eq" src="/html/media/test_dc1243237f_crop.svg"/>\n')
+            '<img class="eq" src="/html/media/test_963ee5ea93_crop.svg"/>\n')
 
     # 2. Test tag with disseminate formatting
     eq = Eq(name='eq', content='y = @termb{x}', attributes='',
@@ -213,15 +213,17 @@ def test_simple_inline_equation_html(tmpdir, context_cls):
     # Check the paths. These are stored by the parent Img tag in the
     # 'src_filepath' attribute
     assert eq.img_filepath == SourcePath(project_root=dep_manager.cache_path,
-                                         subpath='media/test_bd67e8f7b6.tex')
+                                         subpath='media/test_44f6509475.tex')
 
     # Make sure the @termb has been converted
-    assert '@termb' not in eq.img_filepath.read_text()
+    tex_file = eq.img_filepath.read_text()
+    assert '@termb' not in tex_file
+    assert '\\ensuremath{y = \\boldsymbol{x}}' in tex_file
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert (eq.html ==
-            '<img class="eq" src="/html/media/test_bd67e8f7b6_crop.svg"/>\n')
+            '<img class="eq" src="/html/media/test_44f6509475_crop.svg"/>\n')
 
 
 # tex targets

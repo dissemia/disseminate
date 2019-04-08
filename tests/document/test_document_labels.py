@@ -31,35 +31,39 @@ def test_document_labels(tmpdir):
     assert label.kind == ('document', 'document-level-1')
 
 
-def test_document_toc(tmpdir):
+def test_document_toc(context_cls, tmpdir):
     """Test the generation of a toc from the header of a document."""
     # Setup the paths
     src_filepath = SourcePath(project_root='tests/document/example4/src',
                               subpath='file.dm')
     target_root = TargetPath(target_root=tmpdir)
 
+    # Setup the settings in the context
+    #   - Setup the base_url, and disable relative links
+    #   - Make sure the 'toc' context entry is processed as a tag
+    parent_context = context_cls(base_url='/{target}/{subpath}',
+                                 process_context_tags=['toc'],
+                                 relative_links=False)
+
     # Load example4, which has a file.dm with a 'toc' entry in the heading
     # for documents.
-    doc = Document(src_filepath, target_root)
-
-    # Setup the base_url, and disable relative links
-    doc.context['base_url'] = '/{target}/{subpath}'
-    doc.context['relative_links'] = False
+    doc = Document(src_filepath, target_root, parent_context=parent_context)
 
     # Render the doc
     doc.render()
 
     # Make sure the 'toc' context entry is correct
     toc_tag = doc.context['toc']
-
     assert toc_tag.name == 'toc'
-    key = """<ul class="toc-level-1">
-  <li>
-    <span class="ref">
-      <a href="/html/file.html">My first title</a>
-    </span>
-  </li>
-</ul>
+    key = """<span class="toc">
+  <ul class="toc-level-2">
+    <li>
+      <span class="ref">
+        <a href="/html/file.html">My first title</a>
+      </span>
+    </li>
+  </ul>
+</span>
 """
     assert toc_tag.html == key
 

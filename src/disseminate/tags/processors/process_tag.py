@@ -1,11 +1,15 @@
 """
-A base class for processing tags.
+A base class for tag processors.
 """
 from ..tag import Tag
+from ...utils.classes import all_subclasses
 
 
 class ProcessTag(object):
-    """A processor function object for tags.
+    """A base class for tag processor function.
+
+    New processors are created by subclassing the ProcessTag class, setting
+    and order and overriding the ``__call__`` method.
 
     Parameters
     ----------
@@ -14,17 +18,8 @@ class ProcessTag(object):
         for tags.
     """
 
-    _instances = []
-    order = 1
-
-    def __init__(self, order):
-        self.order = order
-
-        # Add the instance to the class's list of instances, sorted by order
-        instances = sorted(ProcessTag._instances + [self],
-                           key=lambda x: getattr(x, 'order'))
-        ProcessTag._instances.clear()
-        ProcessTag._instances += instances
+    _instances = None
+    order = 1000
 
     def __call__(self, tag):
         """The tag processing function to override."""
@@ -34,6 +29,11 @@ class ProcessTag(object):
     def processors(cls):
         """A sorted list (by order, in ascending order) of processor
         instances."""
+        if cls._instances is None:
+            # Instantiate subclasses, if it hasn't been done so already
+            subclasses = all_subclasses(ProcessTag)
+            cls._instances = sorted([subcls() for subcls in subclasses],
+                                    key=lambda x: getattr(x, 'order'))
         return cls._instances
 
 

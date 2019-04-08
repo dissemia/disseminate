@@ -248,6 +248,8 @@ class Verb(Tag):
     active = True
 
     process_content = False
+    process_typography = False
+
     include_paragraphs = False
 
     html_name = 'code'

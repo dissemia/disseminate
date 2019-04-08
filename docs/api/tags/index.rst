@@ -18,3 +18,9 @@ Tags
    caption
    refs
    collection
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Tag Processors
+
+   processors/index

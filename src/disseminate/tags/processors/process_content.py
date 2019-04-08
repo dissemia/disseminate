@@ -1,5 +1,6 @@
 """
-Function(s) to parse tags from strings.
+Tag processors for parsing the string contents of tags into a tree of tags.
+(an Abstract Syntax Tree)
 """
 import regex
 
@@ -20,6 +21,13 @@ re_brace = regex.compile(r'[}{]')
 
 
 class ProcessContent(ProcessTag):
+    """The the tag processor for the contents of tags.
+
+    The contents of tags will be processed if the tag's :attr:`process_content
+    <disseminate.Tags.Tag.process_content>` attribute is True.
+    """
+
+    order = 200
 
     def __call__(self, tag):
         if tag.process_content:
@@ -27,14 +35,11 @@ class ProcessContent(ProcessTag):
             tag.content = content
 
 
-ProcessContent(order=200)
-
-
 def parse_tags(content, context, level=1):
     """Process a string into a tree of tags, strings and lists of both.
 
-    .. note:: The AST processing is idempotent. It will reprocess the
-              generated AST without making changes.
+    .. note:: The parsing of tags is idempotent. It will reprocess the
+              generated tag without making changes.
 
     Parameters
     ----------

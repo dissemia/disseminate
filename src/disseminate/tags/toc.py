@@ -60,6 +60,8 @@ class Toc(Tag):
     toc_elements = None
     header_tag = None
 
+    process_typography = False
+
     _mtime = None
     ref_tags = None
 

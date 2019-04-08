@@ -1,6 +1,6 @@
 Base Tag
 --------
 
-.. automodule:: disseminate.tags.core
+.. automodule:: disseminate.tags.tag
     :members: Tag, TagError
     :imported-members:

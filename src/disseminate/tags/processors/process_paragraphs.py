@@ -1,5 +1,5 @@
 """
-Functions for processing paragraphs in Abstract Syntax Trees (ASTs).
+Tag processors for identifying paragraphs in tags.
 """
 
 import regex
@@ -10,13 +10,17 @@ from ..text import P
 
 
 class ProcessParagraphs(ProcessTag):
+    """A processor for identifying and tagging paragraphs in tags.
+
+    The contents of tags will be processed if the tag's name is listed
+    in the context's process_paragraphs entry.
+    """
+
+    order = 400
 
     def __call__(self, tag):
         if tag.name in tag.context.get('process_paragraphs', []):
             process_paragraph_tags(tag, context=tag.context)
-
-
-ProcessParagraphs(order=300)
 
 
 re_para = regex.compile(r'(?:\n{2,})')

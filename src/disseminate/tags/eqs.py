@@ -5,6 +5,7 @@ from copy import copy
 
 from .tag import Tag
 from .img import RenderedImg
+from .processors.process_content import parse_tags
 from ..attributes import Attributes
 
 
@@ -87,16 +88,13 @@ class Eq(RenderedImg):
         # needed and should be included when formatting tags
         attributes = attributes.exclude(('env', 'bold', 'color'))
 
-        self.attributes = attributes
-        self.context = context
-
         # Save the raw content and raw attributes and format the content in tex
+        # The content for this tag will be replaced by the path of the image
+        # by RenderImg
+        content = parse_tags(content=content, context=context)
         self._raw_content = content
         self.attributes = attributes
-        self.content = self.tex
-
-        # Process the content to workup disseminate tags
-        self.process()
+        content = self.tex
 
         # Note: This crop command should not cut off baselines such that
         # equation images won't line up properly with the surrounding text.

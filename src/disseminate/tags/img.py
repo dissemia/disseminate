@@ -24,7 +24,9 @@ class Img(Tag):
     """
 
     active = True
+
     process_content = False
+    process_typography = False
 
     html_name = 'img'
     img_filepath = None

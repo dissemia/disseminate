@@ -52,9 +52,15 @@ class Tag(object):
         use name.
     active : bool
         If True, the Tag can be used by the TagFactory.
-    TagProcessor : class
+    ProcessTag : class
         If specified, use this class to get tag processors for tags.
         (See the processors sub-directory)
+    process_content : bool
+        If True, the contents of the tag will be parsed and processed by the
+        ProcessContent processor on creation.
+    process_typography : bool
+        If True, the strings in contents of the tag will be parsed and
+        processed by the ProcessTypography processor on creation.
     include_paragraphs : bool
         If True, then the contents of this tag can be included in paragraphs.
         See :func:`disseminate.ast.process_paragraphs`.
@@ -85,6 +91,8 @@ class Tag(object):
     ProcessTag = None
 
     process_content = True
+    process_typography = True
+
     include_paragraphs = True
     paragraph_role = None
 
@@ -92,16 +100,7 @@ class Tag(object):
 
     def __init__(self, name, content, attributes, context):
         self.name = name
-
-        # Set the attributes
         self.attributes = Attributes(attributes)
-
-        # Process paragraphs, if this tag's name is in the 'process_paragraphs'
-        # entry of the context
-        # if name in context.get('process_paragraphs'):
-        #     content = paragraphs.process_paragraph_tags(content, context)
-
-        # Set the content and context
         self.content = content
         self.context = context
 
