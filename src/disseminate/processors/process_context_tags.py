@@ -22,10 +22,15 @@ def process_context_tags(context):
         The context with values for the document.
     """
     assert context.is_valid('process_context_tags')
-    process_tags = context['process_context_tags']
 
-    for k in process_tags:
+    # Find the tags to process, based on the context entries in the
+    # 'process_context_tags' entry of the context and the available context
+    # entries
+    process_tags = context['process_context_tags']
+    keys = set(context.keys())
+    keys = keys.intersection(process_tags)
+
+    for k in keys:
         context[k] = Tag(name=k, content=context[k], attributes='',
                          context=context)
-
     return context

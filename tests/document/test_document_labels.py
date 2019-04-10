@@ -42,7 +42,7 @@ def test_document_toc(context_cls, tmpdir):
     #   - Setup the base_url, and disable relative links
     #   - Make sure the 'toc' context entry is processed as a tag
     parent_context = context_cls(base_url='/{target}/{subpath}',
-                                 process_context_tags=['toc'],
+                                 process_context_tags={'toc'},
                                  relative_links=False)
 
     # Load example4, which has a file.dm with a 'toc' entry in the heading

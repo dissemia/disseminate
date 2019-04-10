@@ -492,6 +492,17 @@ class BaseContext(dict):
                 original_value.clear()
                 original_value += new_list
 
+            # For list entries, convert strings to a list and append the
+            # items to the original's list.
+            elif isinstance(original_value, set):
+                change_value = (str_to_list(change_value)
+                                if isinstance(change_value, str) else
+                                list(change_value))
+                new_set = original_value.union(change_value)
+                # original_value += change_value
+                original_value.clear()
+                original_value += new_set
+
             # For dict entries, convert strings to a dict and append the
             # items to the original's dict.
             elif isinstance(original_value, dict):

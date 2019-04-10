@@ -256,7 +256,9 @@ def test_base_context_is_valid(context_cls):
     default_validation_types = context_cls.validation_types
     context_cls.validation_types = {'int': int,
                                     'float': float,
-                                    'str': str}
+                                    'str': str,
+                                    'set': set,
+                                    }
 
     # 1. test a context with missing entries
     context = context_cls(b=2, c=3)
@@ -267,14 +269,14 @@ def test_base_context_is_valid(context_cls):
     assert not context.is_valid()
 
     # 3. test a context with the right types, but one missing.
-    context = context_cls(int=4, float=3.2)
+    context = context_cls(int=4, float=3.2, set={1,2,3})
     assert not context.is_valid()
     assert context.is_valid(must_exist=False)
 
     context_cls.validation_types = default_validation_types
 
     # 4. Alternatively, we could only check specific keys
-    assert context.is_valid('int', 'float')
+    assert context.is_valid('int', 'float', 'set')
 
     # 5. and missing keys
     with pytest.raises(AssertionError):

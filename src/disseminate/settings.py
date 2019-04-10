@@ -38,9 +38,6 @@ tag_prefix = r'@'
 #: Maximum depth of tag trees
 tag_max_depth = 30
 
-#: A dict with tag class names (keys) and tag classes (values) available.
-tag_classes = dict()
-
 # If True, converted files will be updated only when they're changed. Otherwise
 # converted files will always be updated
 convert_cache = True
@@ -76,11 +73,11 @@ default_context = {
 
     # Process tags for the following entries in a context
     # (see processors/process_context_tags.py)
-    'process_context_tags': [body_attr],
+    'process_context_tags': {body_attr, 'toc'},
 
     # Process paragraphs for tags with the following names
     # (see tags/paragraphs.py)
-    'process_paragraphs': [body_attr],
+    'process_paragraphs': {body_attr},
 
     # The following are strings to present labels. They are substituted with
     # values from their respective label and parsed in disseminate format.
@@ -198,17 +195,11 @@ template_comment_end = '#)'
 tracked_deps = {
     # html targets ca use .css style files, .svg and .png images
     '.html': ['.css', '.svg', '.png'],
-    # tex (and pdf) target can use .pdf and .pdf images
+    # tex (and pdf) target can use .pdf and .png images
     '.tex': ['.pdf', '.png'],
     # css files can include .css files
     '.css': ['.css', ]
     }
-
-#: Macros
-#: ------
-
-#: A list of entries in the context that are created into macros
-custom_macros = ('title',)
 
 #: Tags
 #: ----
