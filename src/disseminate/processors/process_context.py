@@ -1,14 +1,14 @@
 """
-A base class for tag processors.
+A base class for context processors.
 """
-from ..tag import Tag
-from ...utils.classes import all_subclasses
+
+from ..utils.classes import all_subclasses
 
 
-class ProcessTag(object):
-    """A base class for tag processor functions.
+class ProcessContext(object):
+    """A base class for context processor functions.
 
-    New processors are created by subclassing the ProcessTag class, setting
+    New processors are created by subclassing the ProcessContext class, setting
     and order and overriding the ``__call__`` method.
 
     Parameters
@@ -21,8 +21,8 @@ class ProcessTag(object):
     _instances = None
     order = 1000
 
-    def __call__(self, tag):
-        """The tag processing function to override."""
+    def __call__(self, context):
+        """The context processing function to override."""
         pass
 
     @classmethod
@@ -31,10 +31,7 @@ class ProcessTag(object):
         instances."""
         if cls._instances is None:
             # Instantiate subclasses, if it hasn't been done so already
-            subclasses = all_subclasses(ProcessTag)
+            subclasses = all_subclasses(ProcessContext)
             cls._instances = sorted([subcls() for subcls in subclasses],
                                     key=lambda x: getattr(x, 'order'))
         return cls._instances
-
-
-Tag.ProcessTag = ProcessTag

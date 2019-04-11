@@ -6,6 +6,7 @@ a string for a particular target, like '.html' or '.tex'.
 """
 import pathlib
 
+from ..processors import ProcessContext
 from ..context.utils import context_targets
 from ..paths import SourcePath
 
@@ -13,26 +14,30 @@ from ..paths import SourcePath
 module_templates_relpath = '../templates'
 
 
-def process_context_template(context):
+class ProcessContextTemplate(ProcessContext):
     """Process the template entries in a given context"""
-    # Get the subclasses of the BaseRenderer
-    renderer_clses = BaseRenderer.renderer_subclasses()
-    renderer_cls = renderer_clses[0]
 
-    # Create the template renderer.
-    template = context.get('template', 'default/template')
-    targets = context_targets(context)
-    context['template_renderer'] = renderer_cls(context=context,
-                                                template=template,
-                                                targets=targets,
-                                                module_only=False)
+    order = 300
 
-    # Create the equation renderer.
-    equation_template = context.get('equation_template', 'default/eq')
-    context['equation_renderer'] = renderer_cls(context=context,
-                                                template=equation_template,
-                                                targets=['.tex'],
-                                                module_only=False)
+    def __call__(self, context):
+        # Get the subclasses of the BaseRenderer
+        renderer_clses = BaseRenderer.renderer_subclasses()
+        renderer_cls = renderer_clses[0]
+
+        # Create the template renderer.
+        template = context.get('template', 'default/template')
+        targets = context_targets(context)
+        context['template_renderer'] = renderer_cls(context=context,
+                                                    template=template,
+                                                    targets=targets,
+                                                    module_only=False)
+
+        # Create the equation renderer.
+        equation_template = context.get('equation_template', 'default/eq')
+        context['equation_renderer'] = renderer_cls(context=context,
+                                                    template=equation_template,
+                                                    targets=['.tex'],
+                                                    module_only=False)
 
 
 class BaseRenderer(object):

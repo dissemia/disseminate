@@ -8,8 +8,7 @@ import logging
 import pathlib
 
 from .document_context import DocumentContext
-from ..processors import process_context_headers, process_context_tags
-from ..renderers import process_context_template
+from ..processors import ProcessContext
 from ..convert import convert
 from ..context.utils import context_targets, context_includes
 from ..utils import mkdir_p
@@ -22,24 +21,28 @@ class DocumentError(Exception):
     pass
 
 
-def set_document_label(context):
+class SetDocumentLabel(ProcessContext):
     """A context processor to set the document label in the label manager."""
-    assert context.is_valid('label_manager', 'document', 'src_filepath')
 
-    label_manager = context['label_manager']
-    src_filepath = context['src_filepath']
-    doc = context['document']()  # de-reference weakref
+    order = 200
 
-    subpath_str = str(src_filepath.subpath)
+    def __call__(self, context):
+        assert context.is_valid('label_manager', 'document', 'src_filepath')
 
-    # Get the level of the document
-    level = context.get('level', 1)
+        label_manager = context['label_manager']
+        src_filepath = context['src_filepath']
+        doc = context['document']()  # de-reference weakref
 
-    # Set the label for this document
-    kind = ('document', 'document-level-' + str(level))
-    label_manager.add_heading_label(id='doc:' + subpath_str,
-                                    kind=kind, title=doc.short,
-                                    context=context)
+        subpath_str = str(src_filepath.subpath)
+
+        # Get the level of the document
+        level = context.get('level', 1)
+
+        # Set the label for this document
+        kind = ('document', 'document-level-' + str(level))
+        label_manager.add_heading_label(id='doc:' + subpath_str,
+                                        kind=kind, title=doc.short,
+                                        context=context)
 
 
 class Document(object):
@@ -77,9 +80,8 @@ class Document(object):
         This document owns the subdocuments and only weak references to these
         documents should be made. (i.e. when the subdocuments dict is cleared,
         the memory for the document objects should be released)
-    processors : list of functions, **class attribute**
-        A list of functions to process the context. These functions are
-        executed in sequence and simply accept a context dict.
+    processors : :class:`disseminate.processors.ProcessContext`
+        The ProcessContext base class.
     """
 
     src_filepath = None
@@ -87,28 +89,7 @@ class Document(object):
     subdocuments = None
 
     #: Context processors
-    #: def processor(context)
-    processors = [
-        # Required. Processes the document's header. This should be loaded
-        # first or near the very start since it loads in the values in the
-        # context (other than body)
-        process_context_headers,
-
-        # Optional. Set the document label in the label manager. This should
-        # be run after the header is loaded because the header may contain
-        # the title for the document,
-        set_document_label,
-
-        # Required. Populate the template renderers. This needs to be done
-        # after the header is loaded.
-        process_context_template,
-
-        # Required. Process the ASTs in the context. ASTs are simply nested
-        # trees of Tag objects. After the header and context are loaded and
-        # prepared, this function converts the entry values in the context to
-        # ASTs, if it can.
-        process_context_tags,
-        ]
+    process_context = ProcessContext
 
     #: The directory for the root document of a project (a document and its
     #: subdocuments.
@@ -531,7 +512,7 @@ class Document(object):
             self.context[body_attr] = string
 
             # Process the context
-            for processor in self.processors:
+            for processor in self.process_context.processors():
                 processor(self.context)
 
             # Load the sub-documents. This is done after processing the string

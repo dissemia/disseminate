@@ -6,7 +6,7 @@ import pathlib
 import pytest
 import jinja2.exceptions
 
-from disseminate.renderers import JinjaRenderer, process_context_template
+from disseminate.renderers import JinjaRenderer, ProcessContextTemplate
 from disseminate.dependency_manager import DependencyManager
 from disseminate.paths import SourcePath, TargetPath
 
@@ -35,7 +35,11 @@ def test_jinja_template_search(tmpdir, context_cls):
                                     'dependency_manager': DependencyManager}
 
     # Default template
-    process_context_template(context)
+
+    # Setup the context processor
+    processor = ProcessContextTemplate()
+    processor(context)
+
     renderer = JinjaRenderer(context=context, targets=['.html'],
                              template='default',
                              module_only=True)
@@ -107,6 +111,7 @@ def test_jinja_mtime(tmpdir, context_cls):
 
     # Try a custom template
     custom_template = pathlib.Path(tmpdir, 'template.html').touch()
+
     src_filepath = SourcePath(tmpdir, 'main.dm')
     context = context_cls(dependency_manager=dep_manager,
                           src_filepath=src_filepath,

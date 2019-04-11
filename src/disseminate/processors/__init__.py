@@ -1,4 +1,4 @@
 """Processors for context objects."""
 
-from .process_context_headers import process_context_headers
-from .process_context_tags import process_context_tags
+from .process_context import ProcessContext
+from . import process_context_headers, process_context_tags

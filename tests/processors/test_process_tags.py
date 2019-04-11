@@ -2,7 +2,7 @@
 Test the process_context_tags processor.
 """
 from disseminate.tags import Tag
-from disseminate.processors import process_context_tags
+import disseminate.processors as pr
 
 
 def test_process_tags(context_cls):
@@ -24,7 +24,8 @@ def test_process_tags(context_cls):
     context['body'] = body
 
     # Now process the context entries
-    process_context_tags(context)
+    processor = pr.process_context_tags.ProcessContextTags()
+    processor(context)
 
     # Check the entries
     assert isinstance(context['title'], Tag)

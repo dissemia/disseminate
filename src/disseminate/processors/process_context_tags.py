@@ -1,10 +1,11 @@
 """
 Processor for tags in contexts.
 """
+from .process_context import ProcessContext
 from ..tags import Tag
 
 
-def process_context_tags(context):
+class ProcessContextTags(ProcessContext):
     """Process the tags in the context.
 
     This function converts tags for context entries identified by keys listed
@@ -15,22 +16,21 @@ def process_context_tags(context):
               settings.tag_prefix (e.g. '@test'). These *should not* be
               converted into asts, as they are required for simple string
               replacement.
-
-    Parameters
-    ----------
-    context : dict, optional
-        The context with values for the document.
     """
-    assert context.is_valid('process_context_tags')
 
-    # Find the tags to process, based on the context entries in the
-    # 'process_context_tags' entry of the context and the available context
-    # entries
-    process_tags = context['process_context_tags']
-    keys = set(context.keys())
-    keys = keys.intersection(process_tags)
+    order = 500
 
-    for k in keys:
-        context[k] = Tag(name=k, content=context[k], attributes='',
-                         context=context)
-    return context
+    def __call__(self, context):
+        assert context.is_valid('process_context_tags')
+
+        # Find the tags to process, based on the context entries in the
+        # 'process_context_tags' entry of the context and the available context
+        # entries
+        process_tags = context['process_context_tags']
+        keys = set(context.keys())
+        keys = keys.intersection(process_tags)
+
+        for k in keys:
+            context[k] = Tag(name=k, content=context[k], attributes='',
+                             context=context)
+        return context

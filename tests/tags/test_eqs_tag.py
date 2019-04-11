@@ -4,7 +4,7 @@ Test the equation tags.
 from disseminate.tags import Tag
 from disseminate.tags.eqs import Eq
 from disseminate.dependency_manager import DependencyManager
-from disseminate.renderers import process_context_template
+from disseminate.renderers import ProcessContextTemplate
 from disseminate import SourcePath, TargetPath
 
 
@@ -33,7 +33,10 @@ def test_inline_equation(tmpdir, context_cls):
                           project_root=project_root,
                           target_root=target_root,
                           paths=[])
-    process_context_template(context)  # add the 'equation_renderer' entry
+
+    # Setup the context processor
+    processor = ProcessContextTemplate()
+    processor(context)  # add the 'equation_renderer' entry
 
     # Example 1 - simple inline equation
     eq1 = Eq(name='eq', content='y=x', attributes='', context=context)
@@ -91,7 +94,10 @@ def test_block_equation(tmpdir, context_cls):
                           project_root=project_root,
                           target_root=target_root,
                           paths=[])
-    process_context_template(context)  # add the 'equation_renderer' entry
+
+    # Setup the context processor
+    processor = ProcessContextTemplate()
+    processor(context)  # add the 'equation_renderer' entry
 
     # Example 1 - simple block equation
     eq1 = Eq(name='eq', content='y=x', attributes='', context=context,
@@ -135,7 +141,10 @@ def test_block_equation_paragraph(tmpdir, context_cls):
                           project_root=project_root,
                           target_root=target_root,
                           paths=[])
-    process_context_template(context)  # add the 'equation_renderer' entry
+
+    # Setup the context processor
+    processor = ProcessContextTemplate()
+    processor(context)  # add the 'equation_renderer' entry
 
     # Example 1 - simple block equation.
     context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
@@ -191,7 +200,10 @@ def test_simple_inline_equation_html(tmpdir, context_cls):
                           project_root=project_root,
                           target_root=target_root,
                           paths=[])
-    process_context_template(context)  # add the 'equation_renderer' entry
+
+    # Setup the context processor
+    processor = ProcessContextTemplate()
+    processor(context)  # add the 'equation_renderer' entry
 
     # 1. Setup a basic equation tag
     eq = Eq(name='eq', content='y = x', attributes='', context=context)
@@ -252,7 +264,10 @@ def test_simple_inline_equation_tex(tmpdir, context_cls):
                           project_root=project_root,
                           target_root=target_root,
                           paths=[])
-    process_context_template(context)  # add the 'equation_renderer' entry
+
+    # Setup the context processor
+    processor = ProcessContextTemplate()
+    processor(context)  # add the 'equation_renderer' entry
 
     # Setup the equation tag
     eq = Eq(name='eq', content='y = x', attributes=tuple(), context=context)
@@ -285,7 +300,10 @@ def test_block_equation_tex(tmpdir, context_cls):
                           project_root=project_root,
                           target_root=target_root,
                           paths=[])
-    process_context_template(context)  # add the 'equation_renderer' entry
+
+    # Setup the context processor
+    processor = ProcessContextTemplate()
+    processor(context)  # add the 'equation_renderer' entry
 
     # Test markup
     test = """

@@ -1,7 +1,7 @@
 """
 Test the process_header processors.
 """
-from disseminate.processors import process_context_headers
+import disseminate.processors as pr
 
 
 def test_process_header(context_cls):
@@ -21,7 +21,8 @@ def test_process_header(context_cls):
     context = context_cls(test=header)
 
     # Now process the context entries
-    process_context_headers(context)
+    processor = pr.process_context_headers.ProcessContextHeaders()
+    processor(context)
 
     # Ensure that the 'test' entry's header was parsed
     assert context['test'] == '    This is my @macro body.\n    '
@@ -45,7 +46,8 @@ def test_process_header_with_type_match(context_cls):
     context = context_cls(test=header, targets=[])
 
     # Now process the context entries
-    process_context_headers(context)
+    processor = pr.process_context_headers.ProcessContextHeaders()
+    processor(context)
 
     # Ensure that the 'test' entry's header was parsed
     assert context['test'] == '    My body\n    '
