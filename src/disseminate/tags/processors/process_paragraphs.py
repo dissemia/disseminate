@@ -17,6 +17,8 @@ class ProcessParagraphs(ProcessTag):
     """
 
     order = 400
+    short_desc = ("Identify and create paragraph tags for tag names listed in "
+                  "the 'process_paragraphs' context entry")
 
     def __call__(self, tag):
         if tag.name in tag.context.get('process_paragraphs', []):

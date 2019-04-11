@@ -19,6 +19,8 @@ class ProcessContextTags(ProcessContext):
     """
 
     order = 500
+    short_desc = ("Convert context entries into tags for entries listed the "
+                  "'process_context_tags' context entry")
 
     def __call__(self, context):
         assert context.is_valid('process_context_tags')

@@ -18,6 +18,7 @@ class ProcessContextTemplate(ProcessContext):
     """Process the template entries in a given context"""
 
     order = 300
+    short_desc = "Load the template and equation renderers in the context"
 
     def __call__(self, context):
         # Get the subclasses of the BaseRenderer

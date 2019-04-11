@@ -7,6 +7,8 @@ import argparse
 import os.path
 
 from .server import run
+from .tags.processors import ProcessTag
+from .processors import ProcessContext
 from . import settings
 
 
@@ -24,6 +26,18 @@ def is_directory(value):
 def format_ext(value):
     """Format the target extensions list."""
     return '.' + value if not value.startswith('.') else value
+
+
+def list_tag_processors():
+    for count, processor in enumerate(ProcessTag.processors(), 1):
+        msg = processor.print_msg()
+        print("{count}. {msg}".format(count=count, msg=msg))
+
+
+def list_context_processors():
+    for count, processor in enumerate(ProcessContext.processors(), 1):
+        msg = processor.print_msg()
+        print("{count}. {msg}".format(count=count, msg=msg))
 
 
 # TODO: add clean or clear option to remove targets and .cache
@@ -48,6 +62,10 @@ def main():
     # Arguments to main parser
     parser.add_argument('--debug', action='store_true',
                         help='print debug messages to stderr')
+    parser.add_argument('--list-tag-processors', action='store_true',
+                        help='list the available tag processors')
+    parser.add_argument('--list-context-processors', action='store_true',
+                        help='list the available context processors')
 
     # Arguments common to sub-parsers
     for p in (render, serve):
@@ -76,9 +94,19 @@ def main():
 
     # Parse the commands
     args = parser.parse_args()
+
+    # List the tag and context processors
+    if args.list_tag_processors:
+        list_tag_processors()
+        exit()
+    if args.list_context_processors:
+        list_context_processors()
+        exit()
+
     if args.command not in ('init', 'serve', 'render'):
         parser.print_help()
         exit()
+
 
     # Set the default logging level to info
     if args.debug:

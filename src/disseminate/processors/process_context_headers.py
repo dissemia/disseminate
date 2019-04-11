@@ -11,6 +11,7 @@ class ProcessContextHeaders(ProcessContext):
     """
 
     order = 100
+    short_desc = "Process header blocks in all string entries of the context"
 
     def __call__(self, context):
 

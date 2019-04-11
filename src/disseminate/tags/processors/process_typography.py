@@ -16,6 +16,7 @@ class ProcessTypopgraphy(ProcessTag):
     """
 
     order = 300
+    short_desc = "Identify and replace typographic characters, like endashes"
 
     def __call__(self, tag):
             if getattr(tag, 'process_typography', False):

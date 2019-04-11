@@ -10,6 +10,7 @@ class ProcessMacros(ProcessTag):
     """A tag processor for replacing macros in tag strings"""
 
     order = 100
+    short_desc = "Replace text macros in tag strings"
 
     def __call__(self, tag):
         # Skip non-string entries and macro entries. Macros themselves don't

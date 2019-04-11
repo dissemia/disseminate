@@ -28,6 +28,7 @@ class ProcessContent(ProcessTag):
     """
 
     order = 200
+    short_desc = "Parse tags in the contents of tags and strings"
 
     def __call__(self, tag):
         if tag.process_content:

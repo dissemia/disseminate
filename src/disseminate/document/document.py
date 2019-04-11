@@ -25,6 +25,7 @@ class SetDocumentLabel(ProcessContext):
     """A context processor to set the document label in the label manager."""
 
     order = 200
+    short_desc = "Create the document label in the label manager"
 
     def __call__(self, context):
         assert context.is_valid('label_manager', 'document', 'src_filepath')
