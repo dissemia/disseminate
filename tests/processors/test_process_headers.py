@@ -125,3 +125,30 @@ def test_process_context_additional_header_files(tmpdir, context_cls):
     # still be 'a'
     assert context['value'] == {'nested': 'b'}
     assert parent_context['value'] == {'nested': 'a'}
+
+    # 3. Try mutables, like lists
+    parent_context = context_cls(value=['a'],
+                                 additional_header_filename='context.txt',
+                                 paths=paths)
+    context = context_cls(parent_context=parent_context)
+
+    # Value is accessed from the parent context
+    assert context['value'] == ['a']
+
+    # Create additional headers and see how they're read in
+    header1 = tmpdir / 'sub1' / 'context.txt'
+    header1.write_text("value: b")
+
+    header2 = tmpdir / 'sub2' / 'context.txt'
+    header2.write_text("value: c")
+
+    # Try the processor
+    processor = pr.process_context_headers.ProcessContextAdditionalHeaderFiles()
+    processor(context)
+
+    # Since header1 is the first in the path, its value gets loaded locally
+    # into the context, but the value from header2 is not overwritten.
+    # Consequently, 'value' should equal 'b'. The parent_context's value should
+    # still be 'a'
+    assert context['value'] == ['b', 'a']
+    assert parent_context['value'] == ['a']
