@@ -2,7 +2,9 @@
 Processors for working up the headers of strings in a context.
 """
 from .process_context import ProcessContext
+from .exceptions import ProcessContextException
 from ..context.context import re_header_block
+from .. import settings
 
 
 class ProcessContextHeaders(ProcessContext):
@@ -54,6 +56,12 @@ class ProcessContextAdditionalHeaderFiles(ProcessContext):
 
             # See if it's a valid path
             if header_path.is_file():
+                # Check the file size
+                if header_path.stat().st_size > settings.context_max_size:
+                    msg = ("Context file '{}' is larger than the maximum "
+                           "allowed file size {}.")
+                    raise(msg.format(header_path, settings.context_max_size))
+
                 # Load the file and read it into the context
                 txt = header_path.read_text()
 

@@ -7,6 +7,7 @@ from weakref import ref
 
 import regex
 
+from .. import settings
 from ..utils.classes import all_attributes_values
 from ..utils.string import str_to_dict, str_to_list
 
@@ -14,6 +15,10 @@ from ..utils.string import str_to_dict, str_to_list
 re_header_block = regex.compile(r'^[\s\n]*(-{3,})\s*\n'
                                 r'(?P<header>.+?)'
                                 r'(\n\s*\g<1>)\n?', regex.DOTALL)
+
+
+class ContextException(Exception):
+    pass
 
 
 class BaseContext(dict):
@@ -472,8 +477,13 @@ class BaseContext(dict):
         self._match_update(original=self, changes=changes, overwrite=overwrite)
 
     @staticmethod
-    def _match_update(original, changes, overwrite):
+    def _match_update(original, changes, overwrite, level=1):
         assert isinstance(original, dict) and isinstance(changes, dict)
+
+        # Make sure the context isn't too deeply nested
+        if level >= settings.context_max_depth:
+            msg = "Context cannot exceed a depth of {}."
+            raise ContextException(msg.format(settings.context_max_depth))
 
         # Get a list of keys that are only in the original (not including keys
         # from the parent_context)
@@ -531,7 +541,8 @@ class BaseContext(dict):
                 # we can overwrite entries
                 BaseContext._match_update(original=original_copy,
                                           changes=change_value,
-                                          overwrite=True)
+                                          overwrite=True,
+                                          level=level+1)
                 original[key] = original_copy
 
             # For immutable types, like ints, covert strings into their

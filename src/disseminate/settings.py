@@ -63,6 +63,12 @@ attribute_target_sep = '.'
 #: is stored in.
 body_attr = 'body'
 
+#: Maximum depth of loaded context dicts
+context_max_depth = 6
+
+#: Maximum file size for context header files
+context_max_size = 8192  # 8kB
+
 default_context = {
     'targets': 'html',
     'paths': [],
