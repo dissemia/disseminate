@@ -18,7 +18,7 @@ class ProcessContextTags(ProcessContext):
               replacement.
     """
 
-    order = 500
+    order = 1000
     short_desc = ("Convert context entries into tags for entries listed the "
                   "'process_context_tags' context entry")
 

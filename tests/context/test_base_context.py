@@ -358,13 +358,50 @@ def test_base_context_match_update(a_in_b):
     context.matched_update('paths: three')
     assert a_in_b({'paths': ['three', 'one', 'two']}, context)
 
-    # The initial value mutables have also changed
-    assert context['_initial_values'] == {'paths': ['three', 'one', 'two']}
+    # The initial value mutables have not changed
+    assert context['_initial_values'] == {'paths': ['one', 'two']}
 
     # Hidden entries are not touched
     context = BaseContext(a=1)
     context.matched_update('_initial_values:\n  b: 2')
     assert context['_initial_values'] == {'a': 1}
+
+
+def test_base_context_match_update_with_inheritance(context_cls):
+    """Tests the recursive update method for the BaseContext with
+    inheritance."""
+
+    # Setup the contexts
+    parent_context = context_cls(a_list=[1, 2, 3])
+    context = context_cls(parent_context=parent_context)
+
+    context.matched_update({'a_list': [4, 5, 6]})
+
+    # The context entry is set
+    assert context['a_list'] == [4, 5, 6, 1, 2, 3]
+
+    # The parent_context entry is not modified
+    assert parent_context['a_list'] == [1, 2, 3]
+
+
+def test_base_context_match_update_overwrite(context_cls):
+    """Tests the recursive update method for the BaseContext with the
+    overwrite option."""
+
+    # Setup the contexts
+    parent_context = context_cls(a_list=[1, 2, 3])
+    context = context_cls(parent_context=parent_context)
+
+    # Do the match update. 'a_list' isn't already in the context (though it's
+    # in the parent_context), so it should write it in the context
+    context.matched_update({'a_list': [4, 5, 6]}, overwrite=False)
+
+    assert context['a_list'] == [4, 5, 6, 1, 2, 3]
+
+    # Now, trying to overwrite the entry will not do so with overwrite=False
+    context.matched_update({'a_list': [7, 8, 9]}, overwrite=False)
+
+    assert context['a_list'] == [4, 5, 6, 1, 2, 3]
 
 
 def test_context_copy(context_cls):

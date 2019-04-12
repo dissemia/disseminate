@@ -10,6 +10,9 @@ class ProcessContextHeaders(ProcessContext):
     the context.
     """
 
+    # This processor should be loaded before the tags are processed
+    # (ProcessContextTags) so that the tags can use the updated values from
+    # headers in the context.
     order = 100
     short_desc = "Process header blocks in all string entries of the context"
 
@@ -21,3 +24,39 @@ class ProcessContextHeaders(ProcessContext):
                 # The context entry has a header. Process the header entry and
                 # strip the header from the string.
                 context[k] = context.load(v, strip_header=True)
+
+
+class ProcessContextAdditionalHeaderFiles(ProcessContext):
+    """Process additional header files in the paths listed in the context.
+
+    This processor will load additional context values from the template, for
+    example.
+    """
+
+    # This processor should be loaded after the initial headers are loaded from
+    # the context (ProcessContextHeaders), but before the tags are processed
+    # (ProcessContextTags)
+    order = 400
+
+    short_desc = ("Process additional header files in the paths listed in the "
+                  "context")
+
+    def __call__(self, context):
+
+        # Get the paths from the context
+        paths = context.get('paths', [])
+        header_filename = context.get('additional_header_filename',
+                                      'context.txt')
+
+        # Find the context.txt files
+        for path in paths:
+            header_path = path / header_filename
+
+            # See if it's a valid path
+            if header_path.is_file():
+                # Load the file and read it into the context
+                txt = header_path.read_text()
+
+                # Load the values (without overwriting existing values) in the
+                # context
+                context.matched_update(txt, overwrite=False)

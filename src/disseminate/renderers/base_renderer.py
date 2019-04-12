@@ -28,17 +28,19 @@ class ProcessContextTemplate(ProcessContext):
         # Create the template renderer.
         template = context.get('template', 'default/template')
         targets = context_targets(context)
-        context['template_renderer'] = renderer_cls(context=context,
-                                                    template=template,
-                                                    targets=targets,
-                                                    module_only=False)
+        template_renderer = renderer_cls(context=context,
+                                         template=template,
+                                         targets=targets,
+                                         module_only=False)
+        context['template_renderer'] = template_renderer
 
         # Create the equation renderer.
         equation_template = context.get('equation_template', 'default/eq')
-        context['equation_renderer'] = renderer_cls(context=context,
-                                                    template=equation_template,
-                                                    targets=['.tex'],
-                                                    module_only=False)
+        equation_renderer = renderer_cls(context=context,
+                                         template=equation_template,
+                                         targets=['.tex'],
+                                         module_only=False)
+        context['equation_renderer'] = equation_renderer
 
 
 class BaseRenderer(object):

@@ -339,7 +339,7 @@ class BaseContext(dict):
         # update self
         self.matched_update(d)
 
-        return rest if rest is not None else string
+        return rest if rest is not None and strip_header else string
 
     def reset(self):
         """(Selectively) resets the context to its initial state.
@@ -436,7 +436,7 @@ class BaseContext(dict):
 
         return True
 
-    def matched_update(self, changes):
+    def matched_update(self, changes, overwrite=True):
         """Update with the values in the changes dict that are either missing
         in this base context dict or to match the types of existing entries in
         this base context dict.
@@ -459,23 +459,43 @@ class BaseContext(dict):
            an int or float. Otherwise, they're skipped.
         6. String entries are copied from changes to this dict if the dict's
            entry is also a string.
+
+        Parameters
+        ----------
+        changes : str or dict
+            The changes to include in updating this context dict.
+        overwrite : bool, optional
+            If True, overwrite existing entries, if they already exist.
+            If False, do not overwrite existing entries.
         """
         changes = str_to_dict(changes) if isinstance(changes, str) else changes
-
-        self._match_update(original=self, changes=changes)
+        self._match_update(original=self, changes=changes, overwrite=overwrite)
 
     @staticmethod
-    def _match_update(original, changes, ):
+    def _match_update(original, changes, overwrite):
         assert isinstance(original, dict) and isinstance(changes, dict)
+
+        # Get a list of keys that are only in the original (not including keys
+        # from the parent_context)
+        original_self_keys = (original.keys(only_self=True)
+                              if isinstance(original, BaseContext) else
+                              original.keys())
 
         for key, change_value in changes.items():
             # Skip hidden keys
             if key.startswith('_'):
                 continue
 
-            # Copy values that are not in the original
-            if key not in original:
+            # Copy values that are not in the original--whether the key is
+            # actually in the original or in the parent_context
+            if key not in original.keys():
                 original[key] = change_value
+                continue
+
+            # If the entry already exists, but not in the local (self) keys
+            # and it shouldn't be overwritten, just skip the rest of the
+            # processing
+            if key in original_self_keys and not overwrite:
                 continue
 
             # Now copy over values based on the type of the original's value
@@ -488,9 +508,7 @@ class BaseContext(dict):
                                 if isinstance(change_value, str) else
                                 list(change_value))
                 new_list = change_value + original_value
-                # original_value += change_value
-                original_value.clear()
-                original_value += new_list
+                original[key] = new_list
 
             # For list entries, convert strings to a list and append the
             # items to the original's list.
@@ -499,9 +517,7 @@ class BaseContext(dict):
                                 if isinstance(change_value, str) else
                                 list(change_value))
                 new_set = original_value.union(change_value)
-                # original_value += change_value
-                original_value.clear()
-                original_value += new_set
+                original[key] = new_set
 
             # For dict entries, convert strings to a dict and append the
             # items to the original's dict.
@@ -509,8 +525,14 @@ class BaseContext(dict):
                 change_value = (str_to_dict(change_value)
                                 if isinstance(change_value, str) else
                                 dict(change_value))
-                BaseContext._match_update(original=original_value,
-                                          changes=change_value)
+                original_copy = original_value.copy()
+
+                # match update the dict. Since original_copy is a copy,
+                # we can overwrite entries
+                BaseContext._match_update(original=original_copy,
+                                          changes=change_value,
+                                          overwrite=True)
+                original[key] = original_copy
 
             # For immutable types, like ints, covert strings into their
             # proper format and replace the original's value
