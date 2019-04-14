@@ -5,7 +5,7 @@ from disseminate.tags import Tag
 import disseminate.processors as pr
 
 
-def test_process_tags(context_cls):
+def test_process_context_tags(context_cls):
     """Test the process_context_tags function."""
 
     header = """
@@ -51,3 +51,8 @@ def test_process_tags(context_cls):
     assert context['body'].content[0] == '    This is my '
     assert context['body'].content[1].name == 'macro'
     assert context['body'].content[2] == ' body.\n    '
+
+
+def test_process_context_tags_multiple(context_cls):
+    # Test the repeated processing of tags, like toc
+    assert False

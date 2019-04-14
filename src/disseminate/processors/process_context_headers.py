@@ -60,7 +60,8 @@ class ProcessContextAdditionalHeaderFiles(ProcessContext):
                 if header_path.stat().st_size > settings.context_max_size:
                     msg = ("Context file '{}' is larger than the maximum "
                            "allowed file size {}.")
-                    raise(msg.format(header_path, settings.context_max_size))
+                    msg = msg.format(header_path, settings.context_max_size)
+                    raise ProcessContextException(msg)
 
                 # Load the file and read it into the context
                 txt = header_path.read_text()

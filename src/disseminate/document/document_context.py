@@ -53,6 +53,10 @@ class DocumentContext(BaseContext):
         #: The doc_id is unique for each document
         'doc_id',
 
+        #: The toc entry is constructed for each document, and it should be
+        #: unique to the document
+        'toc',
+
         # The modification time is the last time a document was changed. This
         # should be different for each document and subdocument. Note that the
         # mtime entry is set by the document object itself so that it can tell

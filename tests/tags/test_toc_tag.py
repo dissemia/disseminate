@@ -95,9 +95,10 @@ def test_toc_changes(tmpdir):
 
 def test_toc_heading_html(tmpdir):
     """Test the generation of tocs from headings for html"""
-    # The 'tests/tags/toc_example1' directory contains one markup in the root
-    # directory, file1.dm, and two files, file21.dm and file22.dm, in the
-    # 'sub' sub-directory. file1.dm includes file21.dm and file22.dm
+
+    # 1. The 'tests/tags/toc_example1' directory contains one markup in the
+    #    root directory, file1.dm, and two files, file21.dm and file22.dm, in
+    #    the 'sub' sub-directory. file1.dm includes file21.dm and file22.dm
     # Setup paths
     src_filepath = SourcePath(project_root='tests/tags/toc_example1',
                               subpath='file1.dm')
@@ -169,10 +170,10 @@ def test_toc_heading_html(tmpdir):
 """
     assert toc.html == key
 
-    # The 'tests/tags/toc_example2' directory contains three markup files:
-    # file1.dm, file2.dm and file3.dm. The 'file1.dm' includes 'file2.dm' and
-    # 'file3.dm' The 'file2.dm' has a header and a sub-header.
-    # This test has headers with id anchors specified.
+    # 2. The 'tests/tags/toc_example2' directory contains three markup files:
+    #     file1.dm, file2.dm and file3.dm. The 'file1.dm' includes 'file2.dm'
+    #     and 'file3.dm' The 'file2.dm' has a header and a sub-header.
+    #     This test has headers with id anchors specified.
     src_filepath = SourcePath(project_root='tests/tags/toc_example2',
                               subpath='file1.dm')
     doc = Document(src_filepath, target_root)
@@ -220,6 +221,38 @@ def test_toc_heading_html(tmpdir):
   <li>
     <span class="ref">
       <a href="/html/file1.html#heading-1"><span class="number">1.</span> Heading 1</a>
+    </span>
+  </li>
+</ul>
+"""
+    assert toc.html == key
+
+    # 3. Test with relative links
+    doc.context['relative_links'] = True
+    toc = Toc(name='toc', content='all headings', attributes='',
+              context=doc.context)
+
+    key = """<ul class="toc-level-1">
+  <li>
+    <span class="ref">
+      <a href="file1.html#heading-1"><span class="number">1.</span> Heading 1</a>
+    </span>
+  </li>
+  <li>
+    <span class="ref">
+      <a href="file2.html#heading-2"><span class="number">2.</span> Heading 2</a>
+    </span>
+  </li>
+  <ul class="toc-level-2">
+    <li>
+      <span class="ref">
+        <a href="file2.html#subheading-2"><span class="number">2.1.</span> sub-Heading 2</a>
+      </span>
+    </li>
+  </ul>
+  <li>
+    <span class="ref">
+      <a href="file3.html#heading-3"><span class="number">3.</span> Heading 3</a>
     </span>
   </li>
 </ul>

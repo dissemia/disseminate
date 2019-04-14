@@ -55,16 +55,15 @@ def test_document_toc(context_cls, tmpdir):
     # Make sure the 'toc' context entry is correct
     toc_tag = doc.context['toc']
     assert toc_tag.name == 'toc'
-    key = """<span class="toc">
-  <ul class="toc-level-2">
-    <li>
-      <span class="ref">
-        <a href="/html/file.html">My first title</a>
-      </span>
-    </li>
-  </ul>
-</span>
+    key = """<ul class="toc-level-1">
+  <li>
+    <span class="ref">
+      <a href="/html/file.html">My first title</a>
+    </span>
+  </li>
+</ul>
 """
+    print(toc_tag.html)
     assert toc_tag.html == key
 
 
