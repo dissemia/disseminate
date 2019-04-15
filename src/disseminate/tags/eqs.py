@@ -144,7 +144,7 @@ class Eq(RenderedImg):
             if self.block_equation or self.paragraph_role == 'block':
                 # Remove attributes that are not used for in the latex
                 # formatting
-                attrs = self.attributes.exclude('crop')
+                attrs = self.attributes.exclude(('crop', 'class', 'src'))
 
                 attrs_str = attrs.tex
                 attrs_str = '{' + attrs_str + '}' if attrs_str else attrs_str
