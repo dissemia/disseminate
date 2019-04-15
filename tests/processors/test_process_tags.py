@@ -53,6 +53,18 @@ def test_process_context_tags(context_cls):
     assert context['body'].content[2] == ' body.\n    '
 
 
-def test_process_context_tags_multiple(context_cls):
-    # Test the repeated processing of tags, like toc
-    assert False
+def test_process_context_tags_multiple_runs(context_cls):
+    """Test process_context_tags with multiple runs."""
+
+    context = context_cls(process_context_tags=['test'],
+                          test='My test')
+
+    # Now process the context entries, try with multiple processings
+    processor = pr.process_context_tags.ProcessContextTags()
+
+    for i in range(3):
+        processor(context)
+
+    # Check that the 'test' entry was only processed once
+    assert context['test'].name == 'test'
+    assert context['test'].content == 'My test'
