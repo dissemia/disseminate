@@ -77,15 +77,6 @@ class Eq(RenderedImg):
                                block_equation else False)
         self.tex_env = env if env is not None else self.default_block_env
 
-        bold = attributes.get('bold', target='.tex')
-        self.bold = True if bold is not None or name == 'termb' else False
-
-        self.color = attributes.get('color', target='.tex')
-
-        # Remove these properties from the attributes, as they're no longer
-        # needed and should be included when formatting tags
-        attributes = attributes.exclude(('env', 'bold', 'color'))
-
         # Save the raw content and raw attributes and format the content in tex
         # The content for this tag will be replaced by the path of the image
         # by RenderImg
@@ -131,10 +122,11 @@ class Eq(RenderedImg):
         content = raw_content
 
         # Add bold and color if specified
-        if self.color:
-            content = tex_cmd(cmd='textcolor', attributes=self.attributes,
+        if 'color' in self.attributes:
+            content = tex_cmd(cmd='textcolor',
+                              attributes=self.attributes['color'],
                               tex_str=content)
-        if self.bold:
+        if 'bold' in self.attributes or self.name == 'termb':
             content = tex_cmd(cmd='boldsymbol', tex_str=content)
 
         # Remove extra space around the content

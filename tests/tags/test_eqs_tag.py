@@ -366,10 +366,17 @@ def test_block_equation_multiple_targets(context_eq):
     eq = p.content[1]
     assert eq.img_filepath.suffix == '.tex'
     assert key in eq.img_filepath.read_text()
-    assert p.html == ('<p>\n'
+
+    # TODO: Fix order
+    assert (p.html == ('<p>\n'
                       '    <img class="eq blockeq" '
                       'src="/html/media/test_ab83daace9_crop.svg"/>\n'
-                      '    </p>\n')
+                      '    </p>\n') or
+            p.html == ('<p>\n'
+                       '    <img '
+                       'src="/html/media/test_ab83daace9_crop.svg" '
+                       'class="eq blockeq"/>\n'
+                       '    </p>\n'))
 
     # Check the tex target
     assert p.tex == ('\n\n    ' + key + '\n    \n')

@@ -322,7 +322,7 @@ tex_cmd_arguments = {'textbf': (),
                      'setcounter': (StringPositionalValue, IntPositionalValue),
                      'label': (),
                      'includegraphics': (),
-                     'textcolor': ('color',),
+                     'textcolor': (StringPositionalValue,),
                      'boldsymbol': (),
                      }
 
