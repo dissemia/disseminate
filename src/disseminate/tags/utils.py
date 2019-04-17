@@ -1,5 +1,5 @@
 """
-Utilities for tags.
+Misc utilities for tags.
 """
 from .exceptions import TagError
 
@@ -42,17 +42,6 @@ def content_to_str(content, target='.txt'):
     raise TagError(msg.format(content))
 
 
-def set_html_tag_attributes(html_tag, attrs_dict):
-    """Set the attributes for an html tag with the values in the given ordered
-    dict.
-
-    This function is needed to preserve the order of attributes set for an
-    html tag. It is designed to be used with the lxml tag API.
-    """
-    for k, v in attrs_dict.items():
-        html_tag.set(k, v)
-
-
 def repl_tags(element, tag_class, replacement):
     """Replace all instances of a tag class with a replacement string.
 
@@ -78,3 +67,17 @@ def repl_tags(element, tag_class, replacement):
                                    replacement=replacement)
 
     return element
+
+
+# html targets
+
+def set_html_tag_attributes(html_tag, attrs_dict):
+    """Set the attributes for an html tag with the values in the given ordered
+    dict.
+
+    This function is needed to preserve the order of attributes set for an
+    html tag. It is designed to be used with the lxml tag API.
+    """
+    for k, v in attrs_dict.items():
+        html_tag.set(k, v)
+

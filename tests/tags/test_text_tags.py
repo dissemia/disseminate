@@ -41,8 +41,10 @@ def test_tag_text_verbatim(context_cls):
     assert tostring(verb.html_fmt(level=2)) == (b'<code class="block">'
                                                 b'@bold{bolded}'
                                                 b'</code>')
-    assert verb.tex == ("\n\\begin{verbatim}\n"
-                        "@bold{bolded}\\end{verbatim}\n")
+    assert verb.tex == ("\n"
+                        "\\begin{verbatim}\n"
+                        "@bold{bolded}\n"
+                        "\\end{verbatim}\n")
 
 
 # html targets

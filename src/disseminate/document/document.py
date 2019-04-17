@@ -11,7 +11,7 @@ from .document_context import DocumentContext
 from ..processors import ProcessContext
 from ..convert import convert
 from ..context.utils import context_targets, context_includes
-from ..utils import mkdir_p
+from ..utils.file import mkdir_p
 from ..paths import SourcePath, TargetPath
 from .. import settings
 

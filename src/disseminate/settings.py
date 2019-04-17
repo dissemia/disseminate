@@ -1,3 +1,6 @@
+from .utils.types import IntPositionalValue, StringPositionalValue
+
+
 #: Document Defaults
 #: -----------------
 
@@ -252,23 +255,86 @@ html_valid_attributes = {'a': {'href', 'class', 'role'},
 #: TEX Tags
 #: ~~~~~~~~
 
-tex_macros = {"caption", "chapter",
-              "ensuremath",
-              "marginnote", "marginpar",
-              "paragraph",
-              "setcounter", "section", "subsection", "subsubsection",
-              "textbf", "textit"}
+# tex_macros = {"caption", "chapter",
+#               "ensuremath",
+#               "marginnote", "marginpar",
+#               "paragraph",
+#               "setcounter", "section", "subsection", "subsubsection",
+#               "textbf", "textit"}
 
-tex_commands = {"item"}
+# tex_commands = {"item"}
 
-tex_environments = {"enumerate",
-                    "itemize",
-                    "marginfigure"}
+# tex_macro_arguments =
 
-tex_valid_attributes = {'img': {'width', 'height',},
-                        'marginfig': {'offset'},
-                        'caption': {},
-                        }
+#: Allowed latex environments and required arguments. If an environment is not
+#: listed here, it cannot be used.
+tex_env_arguments = {'enumerate': (),  # no required arguments
+                     'itemize': (),
+                     'marginfigure': (),
+
+                     'align': (),
+                     'align*': (),
+
+                     # ex: \begin{alignat}{3}
+                     'alignat': (IntPositionalValue,),
+                     # ex: \begin{alignat*}{3}
+                     'alignat*': (IntPositionalValue,),
+
+                     'center': (),
+                     'verbatim': ()
+                     }
+
+tex_env_optionals = {# ex: \begin{enumerate}[I]
+                     'enumerate': (StringPositionalValue, 'label'),
+
+                     # ex: \begin{figure}[h]
+                     'figure': (StringPositionalValue,),
+                     }
+
+tex_cmd_arguments = {'textbf': (),
+                     'textit': (),
+
+                     'part': (),
+                     'chapter': (),
+                     'section': (),
+                     'subsection': (),
+                     'subsubsection': (),
+                     'paragraph': (),
+                     'subparagraph': (),
+
+                     'part*': (),
+                     'chapter*': (),
+                     'section*': (),
+                     'subsection*': (),
+                     'subsubsection*': (),
+
+                     'maketitle': (),
+                     'title': (),
+                     'author': (),
+                     'today': (),
+
+                     'caption': (),
+                     'ensuremath': (),
+                     'marginnote': (),
+                     'marginpar': (),
+
+                     'item': (),
+                     'setcounter': (StringPositionalValue, IntPositionalValue),
+                     'label': (),
+                     'includegraphics': (),
+                     'textcolor': ('color',),
+                     'boldsymbol': (),
+                     }
+
+tex_cmd_optionals = {'includegraphics': ('width', 'height')}
+
+#
+# tex_valid_attributes = {'img': ('width', 'height'),
+#                         'marginfig': ('offset',),
+#                         'caption': (),
+#                         }
+
+
 
 #: Default text width to rewrap paragraphs. Set to 0 to disable.
 # tex_paragraph_width = 80

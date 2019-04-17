@@ -3,6 +3,7 @@ import pytest
 import io
 
 from disseminate.context import BaseContext
+from disseminate.attributes import Attributes
 
 
 @pytest.fixture(scope='function')
@@ -10,6 +11,13 @@ def context_cls():
     """Returns a copy of the context class."""
     CopyContext = copy.deepcopy(BaseContext)
     return CopyContext
+
+
+@pytest.fixture(scope='function')
+def attributes_cls():
+    """Returns a copy of the attributes class."""
+    CopyAttributes = copy.deepcopy(Attributes)
+    return CopyAttributes
 
 
 @pytest.fixture

@@ -49,5 +49,5 @@ class BaseFigure(Tag):
 class Marginfig(BaseFigure):
 
     html_name = 'marginfig'
-    tex_name = 'marginfigure'
+    tex_env = 'marginfigure'
     active = True

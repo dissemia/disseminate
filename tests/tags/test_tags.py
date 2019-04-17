@@ -422,12 +422,10 @@ def test_tag_tex(context_cls):
     assert root.tex == "base string"
 
     # Generate a nested root tag with sub-tags
-    b = Tag(name='textbf', content='bolded', attributes=None,
-            context=context)
-    elements = ["my first", b, "string"]
-    root = Tag(name='root', content=elements, attributes=None,
+    content = "my first @b{bolded} string"
+    root = Tag(name='root', content=content, attributes=None,
                context=context)
-    assert root.tex == "my first\\textbf{bolded}string"
+    assert root.tex == "my first \\textbf{bolded} string"
 
 
 def test_tag_tex_nested(context_cls):
@@ -436,19 +434,18 @@ def test_tag_tex_nested(context_cls):
     context = context_cls()
 
     # Generate a nested root tag with sub-tags
-    item1 = Tag(name='item', content='item 1', attributes=None,
+    item1 = Tag(name='bold', content='item 1', attributes=None,
                 context=context)
-    item2 = Tag(name='item', content='item 2', attributes=None,
-                context=context)
-    enum = Tag(name='enumerate', content=[item1, item2], attributes=None,
+    item1.tex_cmd = 'textbf'
+    enum = Tag(name='enumerate', content=[item1], attributes=None,
                context=context)
+    enum.tex_env = 'enumerate'
     elements = ["my first", enum, "string"]
     root = Tag(name='root', content=elements, attributes=None,
                context=context)
     assert root.tex == ('my first\n'
                         '\\begin{enumerate}\n'
-                        '\\item item 1\n'
-                        '\\item item 2\n'
+                        '\\textbf{item 1}\n'
                         '\\end{enumerate}\n'
                         'string')
 

@@ -6,6 +6,7 @@ from lxml import etree
 from markupsafe import Markup
 
 from .exceptions import TagError
+from .fmts import tex_env, tex_cmd
 from ..attributes import Attributes
 from .utils import set_html_tag_attributes
 from ..utils.string import titlelize, replace_macros
@@ -47,9 +48,10 @@ class Tag(object):
     html_name : str
         If specified, use this name when rendering the tag to html. Otherwise,
         use name.
-    tex_name : str
-        If specified, use this name when rendering the tag to tex. Otherwise,
-        use name.
+    tex_cmd : str
+        If specified, use this name to render the tex command.
+    tex_env : str
+        If specified, use this name to render the tex environment.
     active : bool
         If True, the Tag can be used by the TagFactory.
     ProcessTag : class
@@ -83,8 +85,10 @@ class Tag(object):
     context = weakattr()
 
     aliases = None
+
     html_name = None
-    tex_name = None
+    tex_env = None
+    tex_cmd = None
 
     active = False
 
@@ -415,33 +419,12 @@ class Tag(object):
             msg = "Tag element '{}' of type '{}' cannot be rendered."
             raise(TagError(msg.format(content, type(content))))
 
-        # Construct the tag name
-        name = (self.tex_name if self.tex_name is not None else
-                self.name.lower())
-
-        # Filter and prepare the attributes
-        if self.name in settings.tex_valid_attributes:
-            valid_attrs = settings.tex_valid_attributes[self.name]
-            attrs = self.attributes.filter(keys=valid_attrs,
-                                           target='.tex')
-        else:
-            attrs = self.attributes.filter(target='.tex')
-
-        attrs_str = attrs.tex
-        attrs_str = '[' + attrs_str + ']' if attrs_str else attrs_str
-
-        # Format the tag. It's either a macro or environment
-        if name in settings.tex_macros:
-            # ex: \section{First}
-            return "\\" + name + attrs_str + '{' + elements + '}'
-        elif name in settings.tex_commands:
-            # ex: \item
-            return "\\" + name + ' ' + elements + "\n"
-        elif name in settings.tex_environments:
-            # ex: \begin{align}
-            return ("\n\\begin" + attrs_str + "{" + name + "}\n" +
-                    elements +
-                    "\\end{" + name + "}\n")
+        if self.tex_cmd:
+            return tex_cmd(cmd=self.tex_cmd, attributes=self.attributes,
+                           tex_str=elements)
+        elif self.tex_env:
+            return tex_env(env=self.tex_env, attributes=self.attributes,
+                           tex_str=elements)
         else:
             return elements
 
@@ -485,7 +468,7 @@ class Tag(object):
         # Filter and prepare the attributes
         if name in settings.html_valid_attributes:
             valid_attrs = settings.html_valid_attributes[name]
-            attrs = self.attributes.filter(keys=valid_attrs,
+            attrs = self.attributes.filter(attrs=valid_attrs,
                                            target='.html')
         else:
             attrs = self.attributes.filter(target='.html')

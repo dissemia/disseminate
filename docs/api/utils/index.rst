@@ -10,3 +10,4 @@ Utilities
    classes
    file
    string
+   types

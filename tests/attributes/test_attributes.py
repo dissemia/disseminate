@@ -3,7 +3,9 @@ Test the attributes functions
 """
 import pytest
 
-from disseminate.attributes import Attributes, PositionalAttribute
+from disseminate.attributes import Attributes
+from disseminate.utils.types import (PositionalValue, FloatPositionalValue,
+                                     IntPositionalValue, StringPositionalValue)
 
 
 def test_attributes_init():
@@ -17,8 +19,12 @@ def test_attributes_init():
     attrs = Attributes('class="base btnred" red, style=map',)
     assert attrs.keys() == {'class', 'red', 'style'}
     assert attrs['class'] == 'base btnred'
-    assert attrs['red'] == PositionalAttribute
+    assert attrs['red'] == StringPositionalValue
     assert attrs['style'] == 'map'
+
+    attrs = Attributes('(a)')
+    assert attrs.keys() == {'(a)'}
+    assert attrs['(a)'] == StringPositionalValue
 
     # 2. Test with non-conventional arguments
     attrs = Attributes()
@@ -36,6 +42,41 @@ def test_attributes_init():
 
     attrs = Attributes((('test', 'class'),))
     assert attrs == {'test': 'class'}
+
+
+def test_attributes_get_positional():
+    """Test the get method of Attributes classes."""
+
+    # 1. Test the parsing for basic strings.
+    attrs = Attributes('class=base 1.tex 2')
+
+    # Positional arguments
+    assert attrs.get_positional(PositionalValue, target='tex') == '1'
+    assert attrs.get_positional(PositionalValue) == '2'
+    assert attrs.get_positional('class') is None
+
+    # 2. Test positional arguments that re-use the attribute separator ('.')
+    attrs = Attributes('3.1416 2.718.tex')
+    assert attrs.get_positional(PositionalValue, target='tex') == '2.718'
+    assert attrs.get_positional(PositionalValue) == '3.1416'
+    assert attrs.get_positional(FloatPositionalValue, target='tex') == '2.718'
+    assert attrs.get_positional(FloatPositionalValue) == '3.1416'
+    assert attrs.get_positional(IntPositionalValue, target='tex') is None
+    assert attrs.get_positional(IntPositionalValue) is None
+
+
+def test_attributes_get():
+    """Test the get method of Attributes classes."""
+
+    # 1. Test the parsing for basic strings.
+    attrs = Attributes('class=base 1.tex 2')
+    assert attrs.get('class') == 'base'
+
+    # Positional arguments
+    assert attrs.get_positional(PositionalValue, target='tex') == '1'
+    assert attrs.get_positional(PositionalValue) == '2'
+    assert attrs.get(PositionalValue, target='tex') == '1'
+    assert attrs.get(PositionalValue) == '2'
 
 
 def test_attributes_get_by_type():
@@ -86,6 +127,12 @@ def test_attributes_append():
     attrs.append('test2', 'test')
     assert attrs['test2'] == '(1, 2) test'
 
+    # 2. Test with positional arguments
+    attrs.append('1')
+    attrs.append('2.tex')
+    assert attrs['1'] == PositionalValue
+    assert attrs['2.tex'] == PositionalValue
+
 
 def test_attributes_filter():
     """Test the filter method of Attributes classes."""
@@ -97,10 +144,27 @@ def test_attributes_filter():
 
     # 2. Test key filtering
     attrs = Attributes('class=basic width=200 width.tex=300')
-    assert attrs.filter(keys='class') == Attributes('class=basic')
-    assert attrs.filter(keys='width') == Attributes('width=200')
-    assert (attrs.filter(keys='width', target='tex') ==
+    assert attrs.filter(attrs='class') == Attributes('class=basic')
+    assert attrs.filter(attrs='width') == Attributes('width=200')
+    assert (attrs.filter(attrs='width', target='tex') ==
             Attributes('width=300'))
+
+    # 3. Test positional arguments
+    attrs = Attributes('class=basic class.html=specific 3.1416 2.718.tex')
+    assert attrs.filter(target='tex') == Attributes('class=basic '
+                                                    '3.1416 2.718')
+    assert attrs.filter(target='html') == Attributes('class=specific '
+                                                    '3.1416')
+
+    # 4. Test an example for allowed attributes with equations
+    attrs = Attributes('class=basic src=img.txt env=alignat* 3')
+    filtered_attrs = attrs.filter(attrs=(IntPositionalValue, 'env'),
+                                  target='tex')
+    assert filtered_attrs == Attributes('env=alignat* 3')
+
+    filtered_attrs = attrs.filter(attrs=(IntPositionalValue,),
+                                  target='tex')
+    assert filtered_attrs == Attributes('3')
 
 
 def test_attributes_exclude():
@@ -110,8 +174,7 @@ def test_attributes_exclude():
     attrs = Attributes('class=basic class.html=specific')
     assert attrs.exclude('test') == {'class': 'basic', 'class.html': 'specific'}
     assert attrs.exclude('class') == {}
-    assert attrs.exclude('test', target='html') == {'class': 'basic',
-                                                    'class.html': 'specific'}
+    assert attrs.exclude('test', target='html') == {'class': 'basic'}
     assert attrs.exclude('class', target='tex') == {'class.html': 'specific'}
     assert attrs.exclude(('class', 'test')) == {}
 
@@ -140,18 +203,17 @@ def test_attributes_html():
 def test_attributes_tex():
     """Test the formatting of attributes in html."""
 
-    # 1. Test the basic conversion of values
-    attrs = Attributes('int=1 float=3.2 string=test bool=false '
-                       'tuple="1 2 3" red')
-    assert attrs.tex == ("int=1 float=3.2 string=test bool=false "
-                         "tuple=1 2 3 red")
+    # 1. Test arguments
+    attrs = Attributes('class=basic src=img.txt env=alignat* 3')
+    filtered_attrs = attrs.filter(attrs=(IntPositionalValue,),
+                                  target='tex')
+    assert filtered_attrs.tex_arguments == '{3}'
 
-    # 2. Test target-specific attributes
-    attrs = Attributes('class=basic class.html=specific')
-    assert attrs.tex == "class=basic"
+    attrs = Attributes('class=basic src=img.txt env=alignat* 3')
+    filtered_attrs = attrs.filter(attrs=[], target='tex')
+    assert filtered_attrs.tex_arguments == ''
 
-    attrs = Attributes('width.tex=200')
-    assert attrs.tex == "width=200"
-
-    attrs = Attributes('')
-    assert attrs.tex == ""
+    # 2. Test optionals
+    attrs = Attributes('width=1cm')
+    filtered_attrs = attrs.filter(attrs=('width', 'height'), target='tex')
+    assert filtered_attrs.tex_optionals == '[width=1cm]'

@@ -3,7 +3,7 @@ Test the equation tags.
 """
 import pytest
 
-from disseminate.tags import Tag
+from disseminate.tags import Tag, TagError
 from disseminate.tags.eqs import Eq
 from disseminate.dependency_manager import DependencyManager
 from disseminate.renderers import ProcessContextTemplate
@@ -84,12 +84,15 @@ def test_block_equation(context_eq):
     # 1. simple block equation
     eq1 = Eq(name='eq', content='y=x', attributes='', context=context_eq,
              block_equation=True)
+
     assert eq1.tex == '\\begin{align*} %\ny=x\n\\end{align*}'
 
-    # 2. simple block equation with alternative environment
-    eq2 = Eq(name='eq', content='y=x', attributes='env=alignat*',
-             context=context_eq, block_equation=True)
-    assert eq2.tex == '\\begin{alignat*} %\ny=x\n\\end{alignat*}'
+    # 2. simple block equation with alternative environment. The alignat*
+    #    requires an integer parameter for the number of columns, so this
+    #    show raise a TagError
+    with pytest.raises(TagError):
+        eq2 = Eq(name='eq', content='y=x', attributes='env=alignat*',
+                 context=context_eq, block_equation=True)
 
     # 3. simple block equation with alternative environment and
     #    positional arguments
@@ -145,8 +148,11 @@ def test_simple_inline_equation_html(context_eq):
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
+    # TODO: fix order
     assert (eq.html ==
-            '<img class="eq" src="/html/media/test_963ee5ea93_crop.svg"/>\n')
+            '<img class="eq" src="/html/media/test_963ee5ea93_crop.svg"/>\n' or
+            eq.html ==
+            '<img src="/html/media/test_963ee5ea93_crop.svg" class="eq"/>\n')
 
     # 2. Test tag with disseminate formatting
     eq = Eq(name='eq', content='y = @termb{x}', attributes='',
@@ -164,8 +170,11 @@ def test_simple_inline_equation_html(context_eq):
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
+    # TODO: fix order
     assert (eq.html ==
-            '<img class="eq" src="/html/media/test_44f6509475_crop.svg"/>\n')
+            '<img class="eq" src="/html/media/test_44f6509475_crop.svg"/>\n' or
+            eq.html ==
+            '<img src="/html/media/test_44f6509475_crop.svg" class="eq"/>\n')
 
     # 3. Test tag with extra attributes
     eq = Eq(name='eq', content='y = @eq[env=alignat* 1]{x}', attributes='',
@@ -183,8 +192,12 @@ def test_simple_inline_equation_html(context_eq):
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
+    # TODO: Fix order
     assert (eq.html ==
-            '<img class="eq" src="/html/media/test_963ee5ea93_crop.svg"/>\n')
+            '<img class="eq" src="/html/media/test_963ee5ea93_crop.svg"/>\n' or
+            eq.html ==
+            '<img src="/html/media/test_963ee5ea93_crop.svg" class="eq"/>\n'
+            )
 
 
 def test_block_equation_html(context_eq):

@@ -6,6 +6,7 @@ from collections import OrderedDict
 from lxml.builder import E
 
 from .tag import Tag
+from .fmts.tex import tex_cmd
 from .utils import set_html_tag_attributes
 from ..utils.string import hashtxt
 
@@ -34,7 +35,7 @@ class Caption(Tag):
     """
 
     html_name = 'caption-text'
-    tex_name = 'caption'
+    tex_cmd = 'caption'
     kind = None
     active = True
 
@@ -115,10 +116,12 @@ class Caption(Tag):
             elif isinstance(content, str):
                 content = string + content
 
+            label_str = tex_cmd(cmd='label', tex_str=label.id)
+
             # Format the caption
             return ("  " +
                     super(Caption, self).tex_fmt(level + 1, mathmode, content) +
-                    " \\label{{{id}}}".format(id=label.id) + "\n")
+                    " " + label_str + "\n")
         else:
             return super(Caption, self).tex_fmt(level + 1, mathmode, content)
 

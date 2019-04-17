@@ -9,6 +9,7 @@ from lxml.etree import Entity
 from lxml.builder import E
 
 from .tag import Tag, TagError
+from .fmts import tex_cmd, tex_env
 from .. import settings
 
 
@@ -46,15 +47,14 @@ class Bold(Tag):
     html_name : str, default: "strong"
         If specified, use this name when rendering the tag to html. Otherwise,
         use name.
-    tex_name : str, default: "textbf"
-        If specified, use this name when rendering the tag to tex. Otherwise,
-        use name.
+    tex_cmd : str
+        Use this name to render the tex command.
     active : bool, default: True
         This tag is active.
     """
     aliases = ("b", "textbf", "strong")
     html_name = "strong"
-    tex_name = "textbf"
+    tex_cmd = "textbf"
     active = True
 
 
@@ -68,15 +68,14 @@ class Italics(Tag):
     html_name : str, default: "i"
         If specified, use this name when rendering the tag to html. Otherwise,
         use name.
-    tex_name : str, default: "textit"
-        If specified, use this name when rendering the tag to tex. Otherwise,
-        use name.
+    tex_cmd : str
+        Use this name to render the tex command.
     active : bool, default: True
         This tag is active.
     """
     aliases = ("i", "textit")
     html_name = "i"
-    tex_name = "textit"
+    tex_cmd = "textit"
     active = True
 
 
@@ -106,8 +105,10 @@ class Sup(Tag):
         else:
             elements = None
 
-        return ("\\ensuremath{^{" + elements + "}}" if not mathmode else
-                "^{" + elements + "}")
+        elements = '^{' + elements + '}'
+        return (tex_cmd(cmd='ensuremath', attributes='', tex_str=elements)
+                if not mathmode else
+                elements)
 
 
 class Sub(Tag):
@@ -136,8 +137,10 @@ class Sub(Tag):
         else:
             elements = None
 
-        return ("\\ensuremath{_{" + elements + "}}" if not mathmode else
-                "_{" + elements + "}")
+        elements = '_{' + elements + '}'
+        return (tex_cmd(cmd='ensuremath', attributes='', tex_str=elements)
+                if not mathmode else
+                elements)
 
 
 class Supsub(Tag):
@@ -183,8 +186,9 @@ class Supsub(Tag):
 
     def tex_fmt(self, level=1, mathmode=False, content=None):
         formatted = "^{" + self._sup + "}_{" + self._sub + "}"
-        return ("\\ensuremath{" + formatted + "}"
-                if not mathmode else formatted)
+        return (tex_cmd(cmd='ensuremath', attributes='', tex_str=formatted)
+                if not mathmode else
+                formatted)
 
 
 class Symbol(Tag):
@@ -221,7 +225,8 @@ class Symbol(Tag):
         content = content if content is not None else self.content
         self.assert_not_nested()
         content = "\\" + content
-        return ("\\ensuremath{" + content + "}" if not mathmode else
+        return (tex_cmd(cmd='ensuremath', attributes='', tex_str=content)
+                if not mathmode else
                 content)
 
 
@@ -264,7 +269,7 @@ class Verb(Tag):
 
     def tex_fmt(self, *args, **kwargs):
         if self.name == "verbatim":
-            return ("\n\\begin{verbatim}\n" + self.default_fmt() +
-                    "\\end{verbatim}\n")
+            return tex_env(env='verbatim', attributes='',
+                           tex_str=self.default_fmt())
         else:
             return "\\verb|" + self.default_fmt() + "|"

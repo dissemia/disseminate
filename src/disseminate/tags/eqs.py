@@ -4,8 +4,10 @@ Tags to render equations
 from copy import copy
 
 from .tag import Tag
+from .fmts import tex_cmd, tex_env
 from .img import RenderedImg
 from .processors.process_content import parse_tags
+from .. import settings
 from ..attributes import Attributes
 
 
@@ -58,10 +60,6 @@ class Eq(RenderedImg):
 
     _raw_content = None
 
-    tex_format = "{content}"
-    tex_inline_format = "\\ensuremath{{{content}}}"
-    tex_block_format = ("\\begin{{{env}}}{attrs} %\n"
-                        "{content}\n\\end{{{env}}}")
     default_block_env = "align*"
 
     def __init__(self, name, content, attributes, context,
@@ -77,7 +75,7 @@ class Eq(RenderedImg):
         env = attributes.get('env', target='.tex')
         self.block_equation = (True if env is not None or
                                block_equation else False)
-        self.env = env if env is not None else self.default_block_env
+        self.tex_env = env if env is not None else self.default_block_env
 
         bold = attributes.get('bold', target='.tex')
         self.bold = True if bold is not None or name == 'termb' else False
@@ -134,22 +132,20 @@ class Eq(RenderedImg):
 
         # Add bold and color if specified
         if self.color:
-            content = "\\textcolor{" + self.color + "}{" + content + "}"
+            content = tex_cmd(cmd='textcolor', attributes=self.attributes,
+                              tex_str=content)
         if self.bold:
-            content = "\\boldsymbol{" + content + "}"
+            content = tex_cmd(cmd='boldsymbol', tex_str=content)
+
+        # Remove extra space around the content
+        content = content.strip()
 
         if mathmode:
             return content
         else:
             if self.block_equation or self.paragraph_role == 'block':
-                # Remove attributes that are not used for in the latex
-                # formatting
-                attrs = self.attributes.exclude(('crop', 'class', 'src'))
-
-                attrs_str = attrs.tex
-                attrs_str = '{' + attrs_str + '}' if attrs_str else attrs_str
-                return self.tex_block_format.format(env=self.env,
-                                                    attrs=attrs_str,
-                                                    content=content)
+                return tex_env(env=self.tex_env, attributes=self.attributes,
+                               tex_str=content, min_newlines=True)
             else:
-                return self.tex_inline_format.format(content=content)
+                return tex_cmd(cmd='ensuremath', attributes=self.attributes,
+                               tex_str=content)

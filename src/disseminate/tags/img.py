@@ -4,6 +4,7 @@ Image tags
 import pathlib
 
 from .tag import Tag, TagError
+from .fmts.tex import tex_cmd
 from ..utils.string import hashtxt
 from ..paths import SourcePath
 from .. import settings
@@ -65,14 +66,16 @@ class Img(Tag):
         dest_filepath = dep.dest_filepath
         dest_subpath = dest_filepath.subpath
 
+        return tex_cmd(cmd='includegraphics', attributes=self.attributes,
+                       tex_str=str(dest_subpath))
         # get the attributes for tex
-        valid_attrs = settings.tex_valid_attributes.get('img', None)
-        attrs = self.attributes.filter(keys=valid_attrs, target='.tex')
+        # valid_attrs = settings.tex_valid_attributes.get('img', None)
+        # attrs = self.attributes.filter(attrs=valid_attrs, target='.tex')
+        #
+        # attrs_str = attrs.tex
+        # attrs_str = '[' + attrs_str + ']' if attrs_str else attrs_str
 
-        attrs_str = attrs.tex
-        attrs_str = '[' + attrs_str + ']' if attrs_str else attrs_str
-
-        return "\\includegraphics" + attrs_str + "{{{}}}".format(dest_subpath)
+        # return "\\includegraphics" + attrs_str + "{{{}}}".format(dest_subpath)
 
     def html_fmt(self, level=1, content=None):
         # Add the file dependency

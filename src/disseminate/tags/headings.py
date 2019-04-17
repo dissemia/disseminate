@@ -6,6 +6,7 @@ from lxml import etree
 from markupsafe import Markup
 
 from .tag import Tag
+from .fmts.tex import tex_cmd
 from .utils import content_to_str
 from ..utils.string import slugify, titlelize
 from .. import settings
@@ -27,7 +28,8 @@ class Heading(Tag):
     - nolabel: If specified, a label entry will not be created for this heading.
     """
     html_name = None
-    tex_name = None
+    tex_cmd = None
+
     active = True
     include_paragraphs = False
 
@@ -168,33 +170,35 @@ class Heading(Tag):
             return super(Heading, self).html_fmt(level, content)
 
     def tex_fmt(self, level=1, mathmode=False, content=None):
-        name = (self.tex_name if self.tex_name is not None else
+        name = (self.tex_cmd if self.tex_cmd is not None else
                 self.__class__.__name__.lower())
 
         label = self.label
         if label is not None:
             # set counter. ex: \setcounter{chapter}{3}
-            string = "\n\\setcounter{{{name}}}{{{number}}}"
             number = (label.global_order[-1] if name == 'chapter' else
                       label.local_order[-1])
-            string = string.format(name=name, number=number)
+            count_str = tex_cmd(cmd='setcounter',
+                                attributes='{} {}'.format(name, number))
+
+            # Create the label. ex: \label{label-id}
+            label_str = tex_cmd('label', '', label.id)
 
             # Add the section heading and label id.
             # ex: \chapter{Chapter One} \label{ch:chapter-one}
-            string += ("\n" + "\\{name}".format(name=name) + "{" +
-                       label.title + "} " +
-                       "\\label{{{id}}}".format(id=label.id) + "\n\n")
-            return string
+            return ('\n' + count_str + '\n' +
+                    super().tex_fmt(level+1, mathmode, label.title) + ' ' +
+                    label_str + '\n\n')
         else:
-            return ("\n" + super(Heading, self).tex_fmt(level+1, mathmode,
-                                                        content)
-                    + "\n\n")
+            return ('\n' +
+                    super().tex_fmt(level+1, mathmode, content) +
+                    '\n\n')
 
 
 class Branch(Heading):
     aliases = ("h1", "chapter", "title")
     html_name = "h1"
-    tex_name = "chapter"
+    tex_cmd = "chapter"
     active = True
     include_paragraphs = False
 
@@ -203,7 +207,7 @@ class Section(Heading):
     """A section heading tag."""
     aliases = ("h2", )
     html_name = "h2"
-    tex_name = "section"
+    tex_cmd = "section"
     active = True
     include_paragraphs = False
 
@@ -212,7 +216,7 @@ class SubSection(Heading):
     """A subsection heading tag."""
     aliases = ("h3",)
     html_name = "h3"
-    tex_name = "subsection"
+    tex_cmd = "subsection"
     active = True
     include_paragraphs = False
 
@@ -221,7 +225,7 @@ class SubSubSection(Heading):
     """A subsubsection heading tag."""
     aliases = ("h4",)
     html_name = "h4"
-    tex_name = "subsubsection"
+    tex_cmd = "subsubsection"
     active = True
     include_paragraphs = False
 
@@ -231,7 +235,7 @@ class Para(Tag):
     aliases = ("h5",)
 
     html_name = "paragraph-heading"
-    tex_name = "paragraph"
+    tex_cmd = "paragraph"
     active = True
     include_paragraphs = False
 
