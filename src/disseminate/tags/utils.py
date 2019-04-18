@@ -22,24 +22,34 @@ def content_to_str(content, target='.txt'):
     formatted_str : str
         A string in the specified target format
     """
-    target = target.strip('.')  # remove leading period
+    target = target[1:] if target.startswith('.') else target  # rm leading '.'
+    format_func = ('default_fmt' if target == 'txt' else
+                   '_'.join((target, 'fmt')))  # ex: tex_fmt
 
-    if isinstance(content, str):
-        # if it's a string, we're good to go. Just return that, as it's just
-        # what we need
-        return content
-    if hasattr(content, target):
-        # if it's a tag with the target property (ex: tag.txt), then get that
-        return getattr(content, target)
-    if hasattr(content, 'txt'):
-        # if it's a tag with the target a txt property then get that
-        return getattr(content, 'txt')
-    if isinstance(content, list):
-        # if it's a list, process each item as a string or tag
-        return ''.join(map(lambda x: content_to_str(x, target), content))
+    return ''.join(format_content(content=content, format_func=format_func))
 
-    msg = "Could not convert tag content '{}' to a string."
-    raise TagError(msg.format(content))
+
+def format_content(content, format_func, **kwargs):
+    """Format the content using the format_func.
+
+    Parameters
+    ----------
+    content : str, :obj:`disseminate.tags.Tag` or list of both
+        The content to format
+    format_func : str
+        The name of the format_func to use. ex: 'tex_fmt'
+
+    Returns
+    -------
+    content : str or list
+        The content formatted using the specified format_func.
+    """
+    # Wrap content in a list and increment level
+    content = [content] if not isinstance(content, list) else content
+
+    content = [getattr(i, format_func)(**kwargs)
+               if hasattr(i, format_func) else i for i in content]
+    return content[0] if len(content) == 1 else content
 
 
 def repl_tags(element, tag_class, replacement):

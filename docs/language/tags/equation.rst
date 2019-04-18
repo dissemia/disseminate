@@ -22,7 +22,12 @@ Tags to insert and format equations
       ``env=x``
 
          The LaTeX environment to use in rendering the equation.  By
-         default, equations are rendered inline.
+         default, equations are rendered inline. Note that additional
+         parameters may be needed, depending on the environment.
+
+      ``color=x``
+
+         The color of the equation.
 
       ``bold``
 

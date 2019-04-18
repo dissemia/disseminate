@@ -148,6 +148,7 @@ def test_figure_caption_no_id_html(tmpdir):
       </span>
     </span>
     """
+    print(marginfig.html)
     assert marginfig.html == strip_leading_space(key)
 
 

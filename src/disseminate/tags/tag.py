@@ -8,7 +8,7 @@ from markupsafe import Markup
 from .exceptions import TagError
 from .fmts import tex_env, tex_cmd
 from ..attributes import Attributes
-from .utils import set_html_tag_attributes
+from .utils import set_html_tag_attributes, format_content
 from ..utils.string import titlelize, replace_macros
 from ..utils.classes import weakattr
 from .. import settings
@@ -370,16 +370,8 @@ class Tag(object):
             A text string with the tags stripped.
         """
         content = content if content is not None else self.content
-        if isinstance(content, list):
-            items = [i.default_fmt() if hasattr(i, 'default_fmt') else i
-                            for i in content]
-            items = filter(bool, items)
-            return "".join(items)
-        elif isinstance(content, Tag):
-            return content.default_fmt()
-        else:
-            # strings and other types of content
-            return content
+        content = format_content(content=content, format_func='default_fmt')
+        return ''.join(content) if isinstance(content, list) else content
 
     @property
     def tex(self):
@@ -407,26 +399,18 @@ class Tag(object):
         content = content if content is not None else self.content
 
         # Collect the content elements
-        if isinstance(content, list):
-            elements = ''.join([i.tex_fmt(level + 1, mathmode)
-                                if hasattr(i, 'tex_fmt') else i
-                                for i in content])
-        elif isinstance(content, str):
-            elements = content
-        elif isinstance(content, Tag):
-            elements = content.tex_fmt(level+1)
-        else:
-            msg = "Tag element '{}' of type '{}' cannot be rendered."
-            raise(TagError(msg.format(content, type(content))))
+        content = format_content(content=content, format_func='tex_fmt',
+                                 level=level + 1, mathmode=mathmode)
+        content = ''.join(content) if isinstance(content, list) else content
 
         if self.tex_cmd:
             return tex_cmd(cmd=self.tex_cmd, attributes=self.attributes,
-                           tex_str=elements)
+                           tex_str=content)
         elif self.tex_env:
             return tex_env(env=self.tex_env, attributes=self.attributes,
-                           tex_str=elements)
+                           tex_str=content)
         else:
-            return elements
+            return content
 
     @property
     def html(self):
@@ -460,6 +444,8 @@ class Tag(object):
         else:
             msg = "Tag element '{}' of type '{}' cannot be rendered."
             raise (TagError(msg.format(content, type(content))))
+        # elements = format_content(content=content, format_func='html_fmt',
+        #                           level=level + 1)
 
         # Construct the tag name
         name = (self.html_name if self.html_name is not None else
