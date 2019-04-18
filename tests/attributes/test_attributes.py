@@ -151,6 +151,7 @@ def test_attributes_filter():
 
     # 3. Test positional arguments
     attrs = Attributes('class=basic class.html=specific 3.1416 2.718.tex')
+    print(attrs.filter(target='tex'))
     assert attrs.filter(target='tex') == Attributes('class=basic '
                                                     '3.1416 2.718')
     assert attrs.filter(target='html') == Attributes('class=specific '
@@ -165,6 +166,17 @@ def test_attributes_filter():
     filtered_attrs = attrs.filter(attrs=(IntPositionalValue,),
                                   target='tex')
     assert filtered_attrs == Attributes('3')
+
+
+def test_attributes_filter_order():
+    """Test the ordering of attributes for the filter method."""
+
+    # 1. Test target-specific and non-target-specific targets
+    attrs = Attributes('one=1 two=2')
+
+    assert attrs.html == "one='1' two='2'"
+    assert attrs.filter(('one', 'two')).html == "one='1' two='2'"
+    assert attrs.filter(('two', 'one')).html == "one='1' two='2'"
 
 
 def test_attributes_exclude():

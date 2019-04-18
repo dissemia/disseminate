@@ -465,7 +465,10 @@ class Attributes(dict):
         >>> attrs.filter(attrs='tgt')
         Attributes{'tgt': 'default'}
         """
-        # Setup the returned dict and attributes to include
+        # Strip the leading period from the target, if present
+        target = target[1:] if target.startswith('.') else target
+
+        # Setup the returned attributes dict
         d = Attributes()
 
         # Setup the attrs without target-specific values
@@ -475,6 +478,11 @@ class Attributes(dict):
         attrs = (list(self.keys())
                  if attrs is None else attrs)  # populate empty attrs
         attrs = uniq([gen_attr(k, sep) for k in attrs])  # general attrs
+
+        # Sort the attrs so that they follow the same order as keys in this dict
+        # This ensures the results of filter are deterministic and not random
+        order = {k: num for num, k in enumerate(self.keys())}
+        attrs = sorted(attrs, key=lambda x: order.get(x, len(order)))
 
         for attr in attrs:
             # Try the positional value
@@ -514,15 +522,15 @@ class Attributes(dict):
 
         return d
 
-    def exclude(self, keys=None, target=None,
+    def exclude(self, attrs=None, target=None,
                 sep=settings.attribute_target_sep):
-        """Create an Attributes dict with the specified keys excluded.
+        """Create an Attributes dict with the specified attrs excluded.
 
         Parameters
         ----------
-        keys : iterable of str or None
-            Exclude keys. If specified, entries that match one of these
-            keys will not be returned.
+        attrs : iterable of str or None
+            Exclude attrs. If specified, entries that match one of these
+            attrs will not be returned.
         target : str or None, optional
             If specified, target-specific entries will be excluded for the
             given target.
@@ -549,7 +557,7 @@ class Attributes(dict):
         """
         d = Attributes()
 
-        exclude_keys = () if keys is None else keys
+        exclude_keys = () if attrs is None else attrs
         exclude_keys = ((exclude_keys,)
                         if isinstance(exclude_keys, str) else
                         exclude_keys)  # wrap strs

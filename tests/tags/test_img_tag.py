@@ -67,9 +67,8 @@ def test_img_html(tmpdir, context_cls):
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
 
-    # TODO: Fix non-deterministic match
-    assert (img.html == '<img width="100" src="/html/sample.svg"/>\n' or
-            img.html == '<img src="/html/sample.svg" width="100"/>\n')
+    assert img.html == '<img src="/html/sample.svg" width="100"/>\n'
+
 
 # tex targets
 

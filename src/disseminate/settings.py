@@ -255,17 +255,6 @@ html_valid_attributes = {'a': {'href', 'class', 'role'},
 #: TEX Tags
 #: ~~~~~~~~
 
-# tex_macros = {"caption", "chapter",
-#               "ensuremath",
-#               "marginnote", "marginpar",
-#               "paragraph",
-#               "setcounter", "section", "subsection", "subsubsection",
-#               "textbf", "textit"}
-
-# tex_commands = {"item"}
-
-# tex_macro_arguments =
-
 #: Allowed latex environments and required arguments. If an environment is not
 #: listed here, it cannot be used.
 tex_env_arguments = {'enumerate': (),  # no required arguments
@@ -327,13 +316,6 @@ tex_cmd_arguments = {'textbf': (),
                      }
 
 tex_cmd_optionals = {'includegraphics': ('width', 'height')}
-
-#
-# tex_valid_attributes = {'img': ('width', 'height'),
-#                         'marginfig': ('offset',),
-#                         'caption': (),
-#                         }
-
 
 
 #: Default text width to rewrap paragraphs. Set to 0 to disable.
