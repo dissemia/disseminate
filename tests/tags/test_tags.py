@@ -343,10 +343,11 @@ def test_tag_html(context_cls):
 
     # Generate a nested root tag with sub-tags
     b = Tag(name='b', content='bolded', attributes=None, context=context)
+    b.html_name = 'strong'
     elements = ["my first", b, "string"]
     root = Tag(name='root', content=elements, attributes=None, context=context)
     assert root.html == ('<span class="root">'
-                         'my first<b>bolded</b>string'
+                         'my first<strong>bolded</strong>string'
                          '</span>\n')
 
 

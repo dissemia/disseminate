@@ -209,6 +209,11 @@ def test_attributes_html():
     attrs = Attributes('width.tex=200')
     assert attrs.html == ""
 
+    # 3. Test with filter
+    attrs = Attributes('src="test" width.html=100 height.tex=20')
+    attrs.filter(attrs=('src', 'width', 'height'), target='html')
+    assert attrs.html == "src='test' width='100'"
+
 
 # tex targets
 

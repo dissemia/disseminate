@@ -81,6 +81,7 @@ def repl_tags(element, tag_class, replacement):
 
 # html targets
 
+# TODO: Refactor this function out
 def set_html_tag_attributes(html_tag, attrs_dict):
     """Set the attributes for an html tag with the values in the given ordered
     dict.

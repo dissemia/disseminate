@@ -1,17 +1,12 @@
 """
 Core classes and functions for tags.
 """
-from lxml.builder import E
-from lxml import etree
-from markupsafe import Markup
-
 from .exceptions import TagError
-from .fmts import tex_env, tex_cmd
+from .fmts import tex_env, tex_cmd, html_tag
 from ..attributes import Attributes
-from .utils import set_html_tag_attributes, format_content
+from .utils import format_content
 from ..utils.string import titlelize, replace_macros
 from ..utils.classes import weakattr
-from .. import settings
 
 
 class Tag(object):
@@ -432,54 +427,15 @@ class Tag(object):
         html : str or html element
             A string in HTML format or an HTML element (:obj:`lxml.builder.E`).
         """
-        content = content if content is not None else self.content
-        # Collect the content elements
-        if isinstance(content, list):
-            elements = [i.html_fmt(level + 1) if hasattr(i, 'html_fmt') else i
-                        for i in content]
-        elif isinstance(content, str):
-            elements = content
-        elif isinstance(content, Tag):
-            elements = [content.html_fmt(level+1)]
-        else:
-            msg = "Tag element '{}' of type '{}' cannot be rendered."
-            raise (TagError(msg.format(content, type(content))))
-        # elements = format_content(content=content, format_func='html_fmt',
-        #                           level=level + 1)
-
-        # Construct the tag name
         name = (self.html_name if self.html_name is not None else
                 self.name.lower())
 
-        # Filter and prepare the attributes
-        if name in settings.html_valid_attributes:
-            valid_attrs = settings.html_valid_attributes[name]
-            attrs = self.attributes.filter(attrs=valid_attrs,
-                                           target='.html')
-        else:
-            attrs = self.attributes.filter(target='.html')
+        content = content if content is not None else self.content
 
-        if name in settings.html_valid_tags:
-            # Create the html tag
-            e = E(name, *elements) if elements else E(name)
+        # Collect the content elements
+        content = format_content(content=content, format_func='html_fmt',
+                                 level=level + 1)
 
-            # Set the attributes for the tag, in order.
-            set_html_tag_attributes(html_tag=e, attrs_dict=attrs)
-        else:
-            # Create a span element if it not an allowed element
-            # Add the tag type to the class attribute
-            attrs.append('class', name)
-
-            # Create the html tag
-            e = E('span', *elements) if len(elements) else E('span')
-
-            # Set the attributes for the tag, in order.
-            set_html_tag_attributes(html_tag=e, attrs_dict=attrs)
-
-        # Render the root tag if this is the first level
-        if level == 1:
-            s = (etree.tostring(e, pretty_print=settings.html_pretty)
-                      .decode("utf-8"))
-            return Markup(s)  # Mark string as safe, since it's escaped by lxml
-        else:
-            return e
+        # Format the html tag
+        return html_tag(name=name, level=level, attributes=self.attributes,
+                        elements=content)

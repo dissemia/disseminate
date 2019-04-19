@@ -224,53 +224,74 @@ toc_pageref_width = '5ex'
 toc_bolded_kinds = ('part', 'chapter')
 toc_dotted_kinds = ('section', 'subsection', 'subsubsection')
 
+empty = tuple()
+
 #: HTML Tags
 #: ~~~~~~~~~
 
 #: Render HTML pages with newlines and indentation
 html_pretty = True
 
-#: Allowed HTML tags. Tags that don't match these values will be rendered as
-#: span tags in html
-html_valid_tags = {"a",
-                   "b", "blockquote",
-                   "code",
-                   "dd", "div", "dl", "dt",
-                   "em",
-                   "h1", "h2", "h3", "h4", "h5", "hr",
-                   "li", "link",
-                   "i", "img",
-                   "ol",
-                   "p", "pre",
-                   "span", "strong", "sub", "sup",
-                   "table", "tbody", "td", "th", "thead", "tr",
-                   "ul"}
+#: Allowed html tags with required arguments/attributes
+html_tag_arguments = {'a': ('href',),
+                      'img': ('src',),
+                      'link': ('rel',)
+                      }
 
-html_valid_attributes = {'a': {'href', 'class', 'role'},
-                         'img': {'src', 'width', 'height', 'alt', 'class'},
-                         'ol': {'class'},
-                         'ul': {'class'},
-                         }
+#: Allowed optional arguments/attributes for html tags
+html_tag_optionals = {'a': ('class', 'role'),
+                      'blockquote': empty,
+                      'code': empty,
+                      'dd': empty,
+                      'div': ('class', 'id'),
+                      'dl': empty,
+                      'dt': empty,
+                      'em': empty,
+                      'h1': ('id',),
+                      'h2': ('id',),
+                      'h3': ('id',),
+                      'h4': ('id',),
+                      'h5': ('id',),
+                      'hr': empty,
+                      'li': ('class',),
+                      'link': ('href', 'media'),
+                      'i': empty,
+                      'img': ('alt', 'class', 'width', 'height'),
+                      'ol': ('class',),
+                      'p': ('class',),
+                      'pre': ('class',),
+                      'span': ('class', 'id'),
+                      'strong': empty,
+                      'sub': empty,
+                      'sup': empty,
+                      'table': ('class',),
+                      'tbody': ('class',),
+                      'td': ('class',),
+                      'th': ('class',),
+                      'thead': ('class',),
+                      'tr': ('class',),
+                      'ul': ('class',),
+                      }
 
 #: TEX Tags
 #: ~~~~~~~~
 
 #: Allowed latex environments and required arguments. If an environment is not
 #: listed here, it cannot be used.
-tex_env_arguments = {'enumerate': (),  # no required arguments
-                     'itemize': (),
-                     'marginfigure': (),
+tex_env_arguments = {'enumerate': empty,  # no required arguments
+                     'itemize': empty,
+                     'marginfigure': empty,
 
-                     'align': (),
-                     'align*': (),
+                     'align': empty,
+                     'align*': empty,
 
                      # ex: \begin{alignat}{3}
                      'alignat': (IntPositionalValue,),
                      # ex: \begin{alignat*}{3}
                      'alignat*': (IntPositionalValue,),
 
-                     'center': (),
-                     'verbatim': ()
+                     'center': empty,
+                     'verbatim': empty
                      }
 
 tex_env_optionals = {# ex: \begin{enumerate}[I]
@@ -280,39 +301,39 @@ tex_env_optionals = {# ex: \begin{enumerate}[I]
                      'figure': (StringPositionalValue,),
                      }
 
-tex_cmd_arguments = {'textbf': (),
-                     'textit': (),
+tex_cmd_arguments = {'textbf': empty,
+                     'textit': empty,
 
-                     'part': (),
-                     'chapter': (),
-                     'section': (),
-                     'subsection': (),
-                     'subsubsection': (),
-                     'paragraph': (),
-                     'subparagraph': (),
+                     'part': empty,
+                     'chapter': empty,
+                     'section': empty,
+                     'subsection': empty,
+                     'subsubsection': empty,
+                     'paragraph': empty,
+                     'subparagraph': empty,
 
-                     'part*': (),
-                     'chapter*': (),
-                     'section*': (),
-                     'subsection*': (),
-                     'subsubsection*': (),
+                     'part*': empty,
+                     'chapter*': empty,
+                     'section*': empty,
+                     'subsection*': empty,
+                     'subsubsection*': empty,
 
-                     'maketitle': (),
-                     'title': (),
-                     'author': (),
-                     'today': (),
+                     'maketitle': empty,
+                     'title': empty,
+                     'author': empty,
+                     'today': empty,
 
-                     'caption': (),
-                     'ensuremath': (),
-                     'marginnote': (),
-                     'marginpar': (),
+                     'caption': empty,
+                     'ensuremath': empty,
+                     'marginnote': empty,
+                     'marginpar': empty,
 
-                     'item': (),
+                     'item': empty,
                      'setcounter': (StringPositionalValue, IntPositionalValue),
-                     'label': (),
-                     'includegraphics': (),
+                     'label': empty,
+                     'includegraphics': empty,
                      'textcolor': (StringPositionalValue,),
-                     'boldsymbol': (),
+                     'boldsymbol': empty,
                      }
 
 tex_cmd_optionals = {'includegraphics': ('width', 'height')}

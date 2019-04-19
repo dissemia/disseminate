@@ -149,7 +149,7 @@ def test_simple_inline_equation_html(context_eq):
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert (eq.html ==
-            '<img class="eq" src="/html/media/test_963ee5ea93_crop.svg"/>\n')
+            '<img src="/html/media/test_963ee5ea93_crop.svg" class="eq"/>\n')
 
     # 2. Test tag with disseminate formatting
     eq = Eq(name='eq', content='y = @termb{x}', attributes='',
@@ -168,7 +168,7 @@ def test_simple_inline_equation_html(context_eq):
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert (eq.html ==
-            '<img class="eq" src="/html/media/test_44f6509475_crop.svg"/>\n')
+            '<img src="/html/media/test_44f6509475_crop.svg" class="eq"/>\n')
 
     # 3. Test tag with extra attributes
     eq = Eq(name='eq', content='y = @eq[env=alignat* 1]{x}', attributes='',
@@ -187,7 +187,7 @@ def test_simple_inline_equation_html(context_eq):
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert (eq.html ==
-            '<img class="eq" src="/html/media/test_963ee5ea93_crop.svg"/>\n')
+            '<img src="/html/media/test_963ee5ea93_crop.svg" class="eq"/>\n')
 
 
 def test_block_equation_html(context_eq):
@@ -358,8 +358,8 @@ def test_block_equation_multiple_targets(context_eq):
     assert key in eq.img_filepath.read_text()
 
     assert p.html == ('<p>\n'
-                      '    <img class="eq blockeq" '
-                      'src="/html/media/test_ab83daace9_crop.svg"/>\n'
+                      '    <img src="/html/media/test_ab83daace9_crop.svg" '
+                      'class="eq blockeq"/>\n'
                       '    </p>\n')
 
     # Check the tex target

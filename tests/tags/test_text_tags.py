@@ -1,6 +1,4 @@
 """Test the text formatting tags."""
-from lxml.html import tostring
-
 from disseminate.tags import Tag
 from disseminate.tags.text import P
 
@@ -28,7 +26,6 @@ def test_tag_text_verbatim(context_cls):
 
     # Match targets
     assert verb.default == "@bold{bolded}"
-    assert tostring(verb.html_fmt(level=2)) == b'<code>@bold{bolded}</code>'
     assert verb.tex == "\\verb|@bold{bolded}|"
 
     # Test a verbatim block
@@ -38,9 +35,6 @@ def test_tag_text_verbatim(context_cls):
 
     # Match targets
     assert verb.default == "@bold{bolded}"
-    assert tostring(verb.html_fmt(level=2)) == (b'<code class="block">'
-                                                b'@bold{bolded}'
-                                                b'</code>')
     assert verb.tex == ("\n"
                         "\\begin{verbatim}\n"
                         "@bold{bolded}\n"
