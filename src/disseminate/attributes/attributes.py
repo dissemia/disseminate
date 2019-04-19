@@ -429,7 +429,8 @@ class Attributes(dict):
                 # Append it as a string
                 self[attr] = ' '.join((str(current_value), str(value)))
 
-    def filter(self, attrs=None, target='', sep=settings.attribute_target_sep):
+    def filter(self, attrs=None, target='', sep=settings.attribute_target_sep,
+               sort_by_attrs=False):
         """Create an Attributes dict with target-specific entries.
 
         Parameters
@@ -447,6 +448,11 @@ class Attributes(dict):
         sep : str, optional
             The separator character (or string) to use to separate the key
             and target.
+        sort_by_attrs: bool, optional
+            If True, the returned attributes dict will have keys sorted in the
+            same order as the attrs passed. Otherwise, the returned attributes
+            dict will be sorted with keys in the same order as this attributes
+            dict (default).
 
         Returns
         -------
@@ -479,10 +485,12 @@ class Attributes(dict):
                  if attrs is None else attrs)  # populate empty attrs
         attrs = uniq([gen_attr(k, sep) for k in attrs])  # general attrs
 
-        # Sort the attrs so that they follow the same order as keys in this dict
-        # This ensures the results of filter are deterministic and not random
-        order = {k: num for num, k in enumerate(self.keys())}
-        attrs = sorted(attrs, key=lambda x: order.get(x, len(order)))
+        if not sort_by_attrs:
+            # Sort the attrs so that they follow the same order as keys in
+            # this dict. This ensures the results of filter are deterministic
+            # and not random, if the attrs are an unordered iterable, like a set
+            order = {k: num for num, k in enumerate(self.keys())}
+            attrs = sorted(attrs, key=lambda x: order.get(x, len(order)))
 
         for attr in attrs:
             # Try the positional value
@@ -606,12 +614,12 @@ class Attributes(dict):
         Examples
         --------
         >>> Attributes('width=302 3').tex_arguments
-        '{width=302}{3}'
+        '{302}{3}'
         """
         d = self.filter(target='tex')
 
         # Create an attribute in tex format
-        entries = ["{{{}={}}}".format(k, v)
+        entries = ["{{{}}}".format(v)
                    if not ispositional(v) else
                    "{{{}}}".format(k)
                    for k, v in d.items()]

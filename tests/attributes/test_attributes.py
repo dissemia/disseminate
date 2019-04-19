@@ -229,3 +229,29 @@ def test_attributes_tex():
     attrs = Attributes('width=1cm')
     filtered_attrs = attrs.filter(attrs=('width', 'height'), target='tex')
     assert filtered_attrs.tex_optionals == '[width=1cm]'
+
+    # 3. Test ordering
+    attrs = Attributes('env=alignat* 3')
+    assert attrs.tex_arguments == '{alignat*}{3}'
+
+    attrs = Attributes('3 env=alignat*')
+    assert attrs.tex_arguments == '{3}{alignat*}'
+
+    # 4. Test ordering with the filter method. By default, items are sorted
+    #    by the instantiation order of the original attrs dict
+    attrs = Attributes('env=alignat* 3')
+    attrs_filtered = attrs.filter(attrs=('env', IntPositionalValue))
+    assert attrs_filtered.tex_arguments == '{alignat*}{3}'
+
+    attrs_filtered = attrs.filter(attrs=(IntPositionalValue, 'env'))
+    assert attrs_filtered.tex_arguments == '{alignat*}{3}'
+
+    # 5. Test ordering with the filter method, using the sort_by_attrs
+    attrs_filtered = attrs.filter(attrs=('env', IntPositionalValue),
+                                  sort_by_attrs=True)
+    assert attrs_filtered.tex_arguments == '{alignat*}{3}'
+
+    attrs_filtered = attrs.filter(attrs=(IntPositionalValue, 'env'),
+                                  sort_by_attrs=True)
+    assert attrs_filtered.tex_arguments == '{3}{alignat*}'
+

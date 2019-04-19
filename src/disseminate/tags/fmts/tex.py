@@ -106,7 +106,8 @@ def tex_env(env, attributes, tex_str, min_newlines=False):
 
     # Get the required arguments
     reqs = attributes.filter(attrs=settings.tex_env_arguments[env],
-                             target='tex')
+                             target='tex',
+                             sort_by_attrs=True)
 
     # Make sure the correct number of required arguments were found
     if len(reqs) != len(settings.tex_env_arguments[env]):
@@ -117,7 +118,8 @@ def tex_env(env, attributes, tex_str, min_newlines=False):
     # Get optional arguments
     if env in settings.tex_env_optionals:
         opts = attributes.filter(attrs=settings.tex_env_optionals[env],
-                                 target='tex')
+                                 target='tex',
+                                 sort_by_attrs=True)
         opts_str = opts.tex_optionals
     else:
         opts_str = ''
