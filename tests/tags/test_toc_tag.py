@@ -587,7 +587,8 @@ def test_toc_heading_tex(tmpdir):
     toc = Toc(name='toc', content='all headings', attributes='',
               context=doc.context)
 
-    key = """\\begin{toclist}
+    key = """
+\\begin{toclist}
   \\item \\hyperref[sec:file1-dm-heading-1]{1. Heading 1} \\hfill \\pageref{sec:file1-dm-heading-1}
   \\item \\hyperref[sec:file1-dm-heading-2]{2. Heading 2} \\hfill \\pageref{sec:file1-dm-heading-2}
   \\begin{toclist}
@@ -620,7 +621,8 @@ def test_toc_heading_tex(tmpdir):
     toc = Toc(name='toc', content='all headings', attributes='',
               context=doc.context)
 
-    key = """\\begin{toclist}
+    key = """
+\\begin{toclist}
   \\item \\hyperref[heading-1]{1. Heading 1} \\hfill \\pageref{heading-1}
   \\item \\hyperref[heading-2]{2. Heading 2} \\hfill \\pageref{heading-2}
   \\begin{toclist}
@@ -635,7 +637,8 @@ def test_toc_heading_tex(tmpdir):
     toc = Toc(name='toc', content='headings', attributes='',
               context=doc.context)
 
-    key = """\\begin{toclist}
+    key = """
+\\begin{toclist}
   \\item \\hyperref[heading-1]{1. Heading 1} \\hfill \\pageref{heading-1}
 \\end{toclist}
 """
@@ -658,23 +661,23 @@ def test_toc_header_tex(tmpdir):
     toc = Toc(name='toc', content='headings', attributes='',
               context=doc.context)
 
-    key = """\\begin{toclist}
+    key = """
+\\begin{toclist}
   \\item \\hyperref[heading-1]{1. Heading 1} \\hfill \\pageref{heading-1}
 \\end{toclist}
 """
-    tex = toc.tex
-    assert key == tex
+    assert toc.tex == key
 
     # Now try adding the header
     toc = Toc(name='toc', content='headings', attributes='header',
               context=doc.context)
 
-    key = """\\begin{toclist}
+    key = """
+\\begin{toclist}
   \\item \\hyperref[heading-1]{1. Heading 1} \\hfill \\pageref{heading-1}
 \\end{toclist}
 """
-    tex = toc.tex
-    assert key == tex
+    assert toc.tex == key
 
     # Make sure a label was not created for the heading
     label_manager = doc.context['label_manager']
@@ -696,7 +699,8 @@ def test_toc_document_tex(tmpdir):
     toc = Toc(name='toc', content='all documents', attributes='',
               context=doc.context)
 
-    key = """\\begin{toclist}
+    key = """
+\\begin{toclist}
   \\item \\hyperref[doc:file1.dm]{file1} \\hfill \\pageref{doc:file1.dm}
   \\begin{toclist}
     \\item \\hyperref[doc:sub/file21.dm]{sub/file21} \\hfill \\pageref{doc:sub/file21.dm}
@@ -704,4 +708,4 @@ def test_toc_document_tex(tmpdir):
   \\end{toclist}
 \\end{toclist}
 """
-    assert key == toc.tex
+    assert toc.tex == key

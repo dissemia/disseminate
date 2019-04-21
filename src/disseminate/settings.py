@@ -294,7 +294,8 @@ tex_env_arguments = {'enumerate': empty,  # no required arguments
                      'alignat*': (IntPositionalValue,),
 
                      'center': empty,
-                     'verbatim': empty
+                     'verbatim': empty,
+                     'toclist': empty,
                      }
 
 tex_env_optionals = {# ex: \begin{enumerate}[I]

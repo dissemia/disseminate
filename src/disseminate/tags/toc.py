@@ -3,16 +3,12 @@ Formatting of Table of Contents for documents
 """
 from itertools import groupby
 
-from lxml.builder import E
-from lxml import etree
-from markupsafe import Markup
-
-from .headings import toc_levels as heading_toc_levels
+from .headings import toc_levels as heading_toc_levels, Heading
 from .ref import Ref
 from .tag import Tag
+from .fmts import html_tag, tex_env, tex_cmd
 from . import exceptions
-from ..tags.headings import Heading
-from .. import settings
+from ..utils.string import strip_multi_newlines
 
 
 class TocError(Exception):
@@ -320,18 +316,17 @@ class Toc(Tag):
             else:
                 # Otherwise it's a ref tag, get its html and wrap it in a list
                 # item
-                returned_elements.append(E('li', e.html_fmt(level=level + 1)))
+                li = html_tag('li',
+                              formatted_content=e.html_fmt(level=level + 1),
+                              level=level + 1)
+                returned_elements.append(li)
 
-        kwargs = {'class': 'toc-level-' + str(level)}
-        e = E(listtype, *returned_elements, **kwargs)
-
-        # Render the root tag if this is the first level
-        if level == 1:
-            s = (etree.tostring(e, pretty_print=settings.html_pretty)
-                      .decode("utf-8"))
-            return Markup(s)  # Mark string as safe, since it's escaped by lxml
-        else:
-            return e
+        # Create list tag
+        list_tag = html_tag(listtype,
+                            attributes='class=toc-level-{}'.format(level),
+                            formatted_content=returned_elements,
+                            level=level)
+        return list_tag
 
     def tex_fmt(self, content=None, elements=None, listtype='toclist',
                 mathmode=False, level=1):
@@ -377,14 +372,14 @@ class Toc(Tag):
             else:
                 # Otherwise it's a ref tag, get its tex and wrap it in a list
                 # item
-                entry = ("  " * level +
-                         "\\item " + e.tex_fmt(level=level + 1) + "\n")
-
+                entry = (tex_cmd('item', indent=2) + " " +
+                         e.tex_fmt(level=level + 1)) + "\n"
                 returned_elements.append(entry)
 
-        if returned_elements:
-            return ("  " * (level - 1) + "\\begin{{{}}}\n".format(listtype) +
-                    ''.join(returned_elements) +
-                    "  " * (level - 1) + "\\end{{{}}}\n".format(listtype))
+        if len(returned_elements) > 0:
+            returned_elements = strip_multi_newlines(''.join(returned_elements))
+            return (tex_env(listtype, attributes='',
+                    formatted_content=returned_elements,
+                    indent=2 if level > 1 else 0))
         else:
             return ''

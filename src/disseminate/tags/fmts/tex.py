@@ -3,10 +3,11 @@ Utilities for formatting tex strings and text.
 """
 from ..exceptions import TagError
 from ...attributes import Attributes
+from ...utils.string import space_indent
 from ... import settings
 
 
-def tex_cmd(cmd, attributes='', formatted_content=None):
+def tex_cmd(cmd, attributes='', formatted_content=None, indent=None):
     """Format a tex command.
 
     Parameters
@@ -18,6 +19,8 @@ def tex_cmd(cmd, attributes='', formatted_content=None):
     formatted_content : str, optional
         The contents of the tex environment formatted as a string in LaTeX.
         If not specified, the tex_str will not be used as a LaTeX parameter
+    indent : int, optional
+        If specified, indent lines by the given number of spaces.
 
     Returns
     -------
@@ -60,15 +63,23 @@ def tex_cmd(cmd, attributes='', formatted_content=None):
 
     # Wrap the formatted_content in curly braces, if a formatted_content was specified
     if isinstance(formatted_content, str):
-        formatted_content = "{" + formatted_content + "}" if formatted_content else "{}"
+        formatted_content = ("{" + formatted_content + "}"
+                             if formatted_content else "{}")
     else:
         formatted_content = ''
 
     # format the tex command
-    return "\\" + cmd + reqs.tex_arguments + opts_str + formatted_content
+    tex_text = "\\" + cmd + reqs.tex_arguments + opts_str + formatted_content
+
+    # Indent the text block, if specified
+    if indent is not None:
+        tex_text = space_indent(tex_text, number=indent)
+
+    return tex_text
 
 
-def tex_env(env, attributes, formatted_content, min_newlines=False):
+def tex_env(env, attributes, formatted_content, min_newlines=False,
+            indent=None):
     """Format a tex environment.
 
     Parameters
@@ -82,6 +93,8 @@ def tex_env(env, attributes, formatted_content, min_newlines=False):
     min_newlines : bool, optional
         If True, extra new lines before, after and in the environment will not
         be included.
+    indent : int, optional
+        If specified, indent lines by the given number of spaces.
 
     Returns
     -------
@@ -124,16 +137,29 @@ def tex_env(env, attributes, formatted_content, min_newlines=False):
     else:
         opts_str = ''
 
-        # format the tex environment
-    if min_newlines:
-        return ("\\begin" + '{' + env + '}' +
+    # Add a leading and trailing new line to the formatted_content,
+    # if there isn't one
+    formatted_content = ('\n' + formatted_content
+                         if not formatted_content.startswith('\n') else
+                         formatted_content)
+    formatted_content = (formatted_content + '\n'
+                         if not formatted_content.endswith('\n') else
+                         formatted_content)
+
+    # format the tex environment
+    tex_text = ("\\begin" + '{' + env + '}' +
                 reqs.tex_arguments +
-                opts_str + ' %\n' +
+                opts_str +
+                (' %' if min_newlines else '') +
                 formatted_content +
-                "\n\\end{" + env + "}")
-    else:
-        return ("\n\\begin" + '{' + env + '}' +
-                reqs.tex_arguments +
-                opts_str + '\n' +
-                formatted_content +
-                "\n\\end{" + env + "}\n")
+                "\\end{" + env + "}")
+
+    # Indent the text block, if specified
+    if indent is not None:
+        tex_text = space_indent(tex_text, number=indent)
+
+    # Add new_lines on the two ends of the block, if not min_newlines
+    if not min_newlines:
+        tex_text = "\n" + tex_text + "\n"
+
+    return tex_text

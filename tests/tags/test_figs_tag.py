@@ -215,7 +215,6 @@ def test_figure_caption_no_id_tex(tmpdir):
     key = """
     \\begin{marginfigure}
       \\caption{Fig. 1. This is my caption} \\label{caption-92042fbb8b}
-    
     \\end{marginfigure}
     """
     assert fig.tex == strip_leading_space(key)
@@ -246,5 +245,5 @@ def test_figure_caption_with_id_tex(tmpdir):
 
         assert fig.tex == ('\n\\begin{marginfigure}\n'
                            '  \\caption{Fig. 1. This is my caption} '
-                           '\\label{fig-1}\n\n'
+                           '\\label{fig-1}\n'
                            '\\end{marginfigure}\n')

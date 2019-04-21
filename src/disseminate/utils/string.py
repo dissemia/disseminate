@@ -51,6 +51,61 @@ def titlelize(string, truncate=True, capitalize=False):
     return string.strip('.')
 
 
+def space_indent(s, number=4):
+    """Indent a text block by the specified number of spaces.
+
+    Parameters
+    ----------
+    s : str
+        The string the indent
+    number : int, optional
+        The number of spaces to indent by.
+
+    Returns
+    -------
+    indented_string : str
+        The indented string.
+
+    Examples
+    --------
+    >>> space_indent('my test')
+    '    my test'
+    >>> t=space_indent("my block\\n of text\\nwith indents.")
+    >>> print(t)
+        my block
+         of text
+        with indents.
+    """
+    return '\n'.join(" " * number + t for t in s.splitlines())
+
+
+_re_multilines = regex.compile(r'(?:\n{2,})')
+
+
+def strip_multi_newlines(s):
+    """String multiple consecutive newlines in a string.
+
+    Parameters
+    ----------
+    s : str
+        String to strip multiple consecutive newlines from.
+
+    Returns
+    -------
+    stripped_string : str
+        The same string with multiple consecutive newlines replaced to single
+        newlines.
+
+    Examples
+    --------
+    >>> strip_multi_newlines("This is my\\nfirst string.")
+    'This is my\\nfirst string.'
+    >>> strip_multi_newlines("This is my\\n\\nsecond string.")
+    'This is my\\nsecond string.'
+    """
+    return _re_multilines.sub("\n", s)
+
+
 def find_basestring(strings):
     """Evaluate the common base string amongst a list of strings.
 
