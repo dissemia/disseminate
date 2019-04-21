@@ -52,12 +52,15 @@ def test_tag_text_html(context_cls):
                '@i{italics}': '<i>italics</i>\n',
                '@sup{superscript}': '<sup>superscript</sup>\n',
                '@sub{subscript}': '<sub>subscript</sub>\n',
+               '@supsub{sup && sub}': ('<span class="supsub">sup<br/>'
+                                       'sub</span>\n'),
                }
 
     # Generate a tag for each and compare the generated html to the answer key
     for src, html in markups.items():
         root = Tag(name='root', content=src, attributes='', context=context)
-        assert root.content.html == html
+        tag = root.content
+        assert tag.html == html
 
     markups = {'@symbol{alpha}': '&alpha;\n',
                }

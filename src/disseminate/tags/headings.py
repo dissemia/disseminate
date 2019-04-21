@@ -144,7 +144,7 @@ class Heading(Tag):
         else:
             return super(Heading, self).default_fmt(content)
 
-    def html_fmt(self, level=1, content=None):
+    def html_fmt(self, content=None, level=1):
         name = self.__class__.__name__.lower()
         label = self.label
 
@@ -155,7 +155,7 @@ class Heading(Tag):
             label_tag.name = name
 
             # Wrap the label tag in a h1/h2/h3/.. heading
-            e = E(self.html_name, label_tag.html_fmt(level+1),
+            e = E(self.html_name, label_tag.html_fmt(level=level + 1),
                   **self.attributes)
 
             # Return the html element as either text (level=1) or simply an
@@ -167,9 +167,9 @@ class Heading(Tag):
             else:
                 return e
         else:
-            return super(Heading, self).html_fmt(level, content)
+            return super(Heading, self).html_fmt(content=content, level=level)
 
-    def tex_fmt(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, content=None, mathmode=False, level=1):
         name = (self.tex_cmd if self.tex_cmd is not None else
                 self.__class__.__name__.lower())
 
@@ -187,11 +187,13 @@ class Heading(Tag):
             # Add the section heading and label id.
             # ex: \chapter{Chapter One} \label{ch:chapter-one}
             return ('\n' + count_str + '\n' +
-                    super().tex_fmt(level+1, mathmode, label.title) + ' ' +
+                    super().tex_fmt(content=label.title, mathmode=mathmode,
+                                    level=level + 1) + ' ' +
                     label_str + '\n\n')
         else:
             return ('\n' +
-                    super().tex_fmt(level+1, mathmode, content) +
+                    super().tex_fmt(content=content, mathmode=mathmode,
+                                    level=level + 1) +
                     '\n\n')
 
 

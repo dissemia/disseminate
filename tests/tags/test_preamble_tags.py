@@ -1,8 +1,6 @@
 """
 Test the preamble tags.
 """
-from lxml import etree
-
 from disseminate.tags.preamble import Authors, Titlepage
 
 
@@ -17,13 +15,9 @@ def test_authors_tag_html(context_cls):
                           '<div class="authors">A, B and C</div>'),
                          ]:
         context = context_cls(**context)
-
         tag = Authors(name='authors', content='', attributes=tuple(),
                       context=context)
-
-        html = etree.tostring(tag.html).decode('utf-8')
-
-        assert key == html
+        tag.html == key
 
 
 def test_authors_tag_tex(context_cls):
@@ -54,14 +48,11 @@ def test_titlepage_tag_html(context_cls):
 
     tag = Titlepage(name='titlepage', content='', attributes=tuple(),
                     context=context)
-
-    html = etree.tostring(tag.html).decode('utf-8')
-
-    key = ('<div class="title-page">'
-           '<h1 class="title">My Title</h1>'
-           '<div class="authors">Fred Kay and D Smith</div>'
-           '</div>')
-    assert key == html
+    key = ('<div class="title-page">\n'
+           '  <h1 class="title">My Title</h1>\n'
+           '  <div class="authors">Fred Kay and D Smith</div>\n'
+           '</div>\n')
+    assert tag.html == key
 
 
 def test_titlepage_tag_tex(context_cls):

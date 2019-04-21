@@ -90,6 +90,9 @@ class Attributes(dict):
     def __repr__(self):
         return self.__class__.__name__ + super().__repr__()
 
+    def copy(self):
+        return Attributes(**self)
+
     def load(self, s):
         """Parses an attribute string into a tuple of attributes.
 

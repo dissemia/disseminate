@@ -44,6 +44,13 @@ def test_attributes_init():
     assert attrs == {'test': 'class'}
 
 
+def test_attributes_copy():
+    """Test the copy method of Attributes classes."""
+
+    assert (Attributes('class="base btnred" red style=map').copy() ==
+            Attributes('class="base btnred" red style=map'))
+
+
 def test_attributes_get_positional():
     """Test the get method of Attributes classes."""
 

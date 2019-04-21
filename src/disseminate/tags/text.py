@@ -3,14 +3,9 @@ Text formatting tags
 """
 from textwrap import wrap
 
-from markupsafe import Markup
-from lxml import etree
-from lxml.etree import Entity
-from lxml.builder import E
-
 from .tag import Tag, TagError
-from .fmts import tex_cmd, tex_env
-from .. import settings
+from .fmts import tex_cmd, tex_env, html_entity, html_tag
+from .utils import format_content
 
 
 class P(Tag):
@@ -26,8 +21,9 @@ class P(Tag):
     active = True
     include_paragraphs = False
 
-    def tex_fmt(self, level=1, mathmode=False, content=None):
-        tex = super(P, self).tex_fmt(level, mathmode, content)
+    def tex_fmt(self, content=None, mathmode=False, level=1):
+        tex = super(P, self).tex_fmt(content=content, mathmode=mathmode,
+                                     level=level)
 
         # Rewrap the text
         # if settings.tex_paragraph_width > 0:
@@ -93,22 +89,18 @@ class Sup(Tag):
     html_name = "sup"
     active = True
 
-    def tex_fmt(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, content=None, mathmode=False, level=1):
         content = content if content is not None else self.content
-        # Collect the content elements
-        if isinstance(content, list):
-            elements = ''.join([i.tex_fmt(level + 1, mathmode)
-                                if hasattr(i, 'tex') else i
-                                for i in self.content])
-        elif isinstance(content, str):
-            elements = content
-        else:
-            elements = None
 
-        elements = '^{' + elements + '}'
-        return (tex_cmd(cmd='ensuremath', attributes='', tex_str=elements)
+        # Collect the content elements
+        content = format_content(content=content, format_func='tex_fmt',
+                                 level=level + 1, mathmode=mathmode)
+        content = ''.join(content) if isinstance(content, list) else content
+
+        content = '^{' + content + '}'
+        return (tex_cmd(cmd='ensuremath', attributes='', formatted_content=content)
                 if not mathmode else
-                elements)
+                content)
 
 
 class Sub(Tag):
@@ -125,22 +117,19 @@ class Sub(Tag):
     html_name = "sub"
     active = True
 
-    def tex_fmt(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, content=None, mathmode=False, level=1):
         content = content if content is not None else self.content
-        # Collect the content elements
-        if isinstance(content, list):
-            elements = ''.join([i.tex_fmt(level + 1, mathmode)
-                                if hasattr(i, 'tex') else i
-                                for i in content])
-        elif isinstance(content, str):
-            elements = content
-        else:
-            elements = None
 
-        elements = '_{' + elements + '}'
-        return (tex_cmd(cmd='ensuremath', attributes='', tex_str=elements)
+        # Collect the content elements
+        content = format_content(content=content, format_func='tex_fmt',
+                                 level=level + 1, mathmode=mathmode)
+        content = ''.join(content) if isinstance(content, list) else content
+
+        content = '_{' + content + '}'
+        return (tex_cmd(cmd='ensuremath', attributes='',
+                        formatted_content=content)
                 if not mathmode else
-                elements)
+                content)
 
 
 class Supsub(Tag):
@@ -180,13 +169,18 @@ class Supsub(Tag):
         self._sup = sup.strip()
         self._sub = sub.strip()
 
-    def html_fmt(self, level=1, content=None):
-        kwargs = {'class': 'supsub'}
-        return E('span', self._sup, E('br'), self._sub, **kwargs)
+    def html_fmt(self, content=None, level=1):
+        attrs = self.attributes.copy()
+        attrs['class'] = 'supsub'
+        br_tag = html_tag(name='br', level=level + 1)
+        return html_tag(name='span', attributes=attrs,
+                        formatted_content=[self._sup, br_tag, self._sub],
+                        level=level,)
 
-    def tex_fmt(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, content=None, mathmode=False, level=1):
         formatted = "^{" + self._sup + "}_{" + self._sub + "}"
-        return (tex_cmd(cmd='ensuremath', attributes='', tex_str=formatted)
+        return (tex_cmd(cmd='ensuremath', attributes='',
+                        formatted_content=formatted)
                 if not mathmode else
                 formatted)
 
@@ -211,21 +205,16 @@ class Symbol(Tag):
             msg = "The @symbol tag cannot have tags nested within it."
             raise TagError(msg)
 
-    def html_fmt(self, level=1, content=None):
+    def html_fmt(self, content=None, level=1):
         self.assert_not_nested()
-        e = Entity(self.content.strip())
-        if level == 1:
-            s = (etree.tostring(e, pretty_print=settings.html_pretty)
-                      .decode("utf-8"))
-            return Markup(s)  # Mark string as safe, since it's escaped by lxml
-        else:
-            return e
+        return html_entity(entity=self.content, level=level)
 
-    def tex_fmt(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, content=None, mathmode=False, level=1):
         content = content if content is not None else self.content
         self.assert_not_nested()
         content = "\\" + content
-        return (tex_cmd(cmd='ensuremath', attributes='', tex_str=content)
+        return (tex_cmd(cmd='ensuremath', attributes='',
+                        formatted_content=content)
                 if not mathmode else
                 content)
 
@@ -262,14 +251,14 @@ class Verb(Tag):
     def __init__(self, name, content, attributes, context):
         super().__init__(name, content, attributes, context)
 
-    def html_fmt(self, level=1, content=None):
+    def html_fmt(self, content=None, level=1):
         if self.name == "verbatim":
             self.attributes['class'] = 'block'
-        return super(Verb, self).html_fmt(level=level+1, content=content)
+        return super(Verb, self).html_fmt(content=content, level=level + 1)
 
     def tex_fmt(self, *args, **kwargs):
         if self.name == "verbatim":
             return tex_env(env='verbatim', attributes='',
-                           tex_str=self.default_fmt())
+                           formatted_content=self.default_fmt())
         else:
             return "\\verb|" + self.default_fmt() + "|"

@@ -49,11 +49,11 @@ class Collection(Tag):
         tags = self.fetch_tags(content=None, target=None)
         return super(Collection, self).default_fmt(content=tags)
 
-    def html_fmt(self, level=1, content=None):
+    def html_fmt(self, content=None, level=1):
         tags = self.fetch_tags(content=None, target='.html')
-        return super(Collection, self).html_fmt(level=level, content=tags)
+        return super(Collection, self).html_fmt(content=tags, level=level)
 
-    def tex_fmt(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, content=None, mathmode=False, level=1):
         tags = self.fetch_tags(content=None, target='.tex')
-        return super(Collection, self).tex_fmt(level=level, mathmode=mathmode,
-                                               content=tags)
+        return super(Collection, self).tex_fmt(content=tags, mathmode=mathmode,
+                                               level=level)

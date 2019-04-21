@@ -1,9 +1,8 @@
 """
 Tags for document preambles.
 """
-from lxml.builder import E
-
 from .tag import Tag
+from .fmts import html_tag
 from ..utils.string import str_to_list
 
 
@@ -54,7 +53,8 @@ class Authors(Tag):
                 return ', '.join(others) + ', ' + ' and '.join(last_two)
 
     def html_fmt(self, level=1, content=None):
-        return E('div', self.author_string(), **{'class': 'authors'})
+        return html_tag('div', attributes='class=authors',
+                        formatted_content=self.author_string(), level=level)
 
     def tex_fmt(self, level=1, mathmode=False, content=None):
         return self.author_string()
@@ -97,11 +97,12 @@ class Titlepage(Tag):
         if 'author' in self.context:
             return self.context['author']
 
-    def html_fmt(self, level=1, content=None):
-        return E('div',
-                 E('h1', self.title, **{'class': 'title'}),
-                 self.authors_tag.html_fmt(level+1, content),
-                 **{'class': 'title-page'})
+    def html_fmt(self, content=None, level=1):
+        title_tag = html_tag('h1', attributes='class=title',
+                             formatted_content=self.title, level=level + 1)
+        author_tag = self.authors_tag.html_fmt(content=content, level=level + 1)
+        return html_tag('div', attributes='class=title-page',
+                        formatted_content=[title_tag, author_tag], level=level)
 
-    def tex_fmt(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, content=None, mathmode=False, level=1):
         return "\n\\maketitle\n\n"

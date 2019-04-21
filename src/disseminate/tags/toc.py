@@ -277,7 +277,7 @@ class Toc(Tag):
         self.ref_tags = tags
         self._mtime = latest_mtime
 
-    def html_fmt(self, level=1, content=None, elements=None, listtype='ul'):
+    def html_fmt(self, content=None, listtype='ul', elements=None, level=1):
         """Convert the tag to an html listing.
 
         .. note:: The 'document' toc is special since it uses the documents
@@ -314,12 +314,13 @@ class Toc(Tag):
 
             if isinstance(e, list):
                 # The element is a list of tags. Process this list as a group.
-                returned_elements.append(self.html_fmt(level+1, content=None,
-                                                       elements=e))
+                returned_elements.append(self.html_fmt(content=None,
+                                                       elements=e,
+                                                       level=level + 1))
             else:
                 # Otherwise it's a ref tag, get its html and wrap it in a list
                 # item
-                returned_elements.append(E('li', e.html_fmt(level+1)))
+                returned_elements.append(E('li', e.html_fmt(level=level + 1)))
 
         kwargs = {'class': 'toc-level-' + str(level)}
         e = E(listtype, *returned_elements, **kwargs)
@@ -332,8 +333,8 @@ class Toc(Tag):
         else:
             return e
 
-    def tex_fmt(self, level=1, mathmode=False, content=None, elements=None,
-                listtype='toclist'):
+    def tex_fmt(self, content=None, elements=None, listtype='toclist',
+                mathmode=False, level=1):
         """Convert the tag to a tex listing.
 
         .. note:: The 'document' toc is special since it uses the documents
@@ -370,12 +371,14 @@ class Toc(Tag):
 
             if isinstance(e, list):
                 # The element is a list of tags. Process this list as a group.
-                returned_elements.append(self.tex_fmt(level + 1, content=None,
-                                                      elements=e))
+                returned_elements.append(self.tex_fmt(content=None,
+                                                      elements=e,
+                                                      level=level + 1))
             else:
                 # Otherwise it's a ref tag, get its tex and wrap it in a list
                 # item
-                entry = "  " * level + "\\item " + e.tex_fmt(level + 1) + "\n"
+                entry = ("  " * level +
+                         "\\item " + e.tex_fmt(level=level + 1) + "\n")
 
                 returned_elements.append(entry)
 

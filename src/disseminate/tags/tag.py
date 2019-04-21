@@ -372,19 +372,19 @@ class Tag(object):
     def tex(self):
         return self.tex_fmt()
 
-    def tex_fmt(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, content=None, mathmode=False, level=1):
         """Format the tag in latex format.
 
         Parameters
         ----------
-        level : int, optional
-            The level of the tag.
-        mathmode : bool, optional
-            If True, the tag will be rendered in math mode. Otherwise (default)
-            latex text mode is assumed.
         content : list or str or Tag, optional
             If specified, render the given content. Otherwise, use this tag's
             content.
+        mathmode : bool, optional
+            If True, the tag will be rendered in math mode. Otherwise (default)
+            latex text mode is assumed.
+        level : int, optional
+            The level of the tag.
 
         Returns
         -------
@@ -400,10 +400,10 @@ class Tag(object):
 
         if self.tex_cmd:
             return tex_cmd(cmd=self.tex_cmd, attributes=self.attributes,
-                           tex_str=content)
+                           formatted_content=content)
         elif self.tex_env:
             return tex_env(env=self.tex_env, attributes=self.attributes,
-                           tex_str=content)
+                           formatted_content=content)
         else:
             return content
 
@@ -411,16 +411,16 @@ class Tag(object):
     def html(self):
         return self.html_fmt()
 
-    def html_fmt(self, level=1, content=None):
+    def html_fmt(self, content=None, level=1):
         """Convert the tag to an html string or html element.
 
         Parameters
         ----------
-        level : int, optional
-            The level of the tag.
         content : list or str or Tag, optional
             If specified, render the given content. Otherwise, use this tag's
             content.
+        level : int, optional
+            The level of the tag.
 
         Returns
         -------
@@ -438,4 +438,4 @@ class Tag(object):
 
         # Format the html tag
         return html_tag(name=name, level=level, attributes=self.attributes,
-                        elements=content)
+                        formatted_content=content)

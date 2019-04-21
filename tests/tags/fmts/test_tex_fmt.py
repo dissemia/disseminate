@@ -12,16 +12,16 @@ def test_tag_tex_environment(attributes_cls):
 
     # 1. Test a basic equation with a required argument
 
-    # A parameter is missing; raise an error
+    # A required argument is missing; raise an error
     with pytest.raises(TagError):
-        tex_env('alignat*', '', tex_str='y=x')
+        tex_env('alignat*', '', formatted_content='y=x')
 
     # Place the parameter
     key = ('\n'
            '\\begin{alignat*}{3}\n'
            'y=x\n'
            '\\end{alignat*}\n')
-    assert (tex_env('alignat*', attributes_cls('3'), tex_str='y=x') ==
+    assert (tex_env('alignat*', attributes_cls('3'), formatted_content='y=x') ==
             key)
 
     # 2. Test an environment with optional arguments
@@ -30,7 +30,7 @@ def test_tag_tex_environment(attributes_cls):
            '\\item 1\n'
            '\\end{enumerate}\n')
     return_str = tex_env('enumerate', attributes_cls(),
-                         tex_str='\\item 1')
+                         formatted_content='\\item 1')
     assert return_str == key
 
     key = ('\n'
@@ -38,7 +38,7 @@ def test_tag_tex_environment(attributes_cls):
            '\\item 1\n'
            '\\end{enumerate}\n')
     return_str = tex_env('enumerate', attributes_cls('(a)'),
-                         tex_str='\\item 1')
+                         formatted_content='\\item 1')
     assert return_str == key
 
     key = ('\n'
@@ -47,7 +47,7 @@ def test_tag_tex_environment(attributes_cls):
            '\\end{enumerate}\n')
     return_str = tex_env('enumerate',
                          attributes_cls('label=(\\roman*)'),
-                         tex_str='\\item 1')
+                         formatted_content='\\item 1')
     assert return_str == key
 
 

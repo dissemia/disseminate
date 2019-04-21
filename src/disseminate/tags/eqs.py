@@ -110,14 +110,14 @@ class Eq(RenderedImg):
 
         return renderer.render(context=context_cp, target='.tex', **kwargs)
 
-    def html_fmt(self, level=1, content=None):
+    def html_fmt(self, content=None, level=1):
         if self.block_equation:
             self.attributes['class'] = 'eq blockeq'
         else:
             self.attributes['class'] = 'eq'
-        return super(Eq, self).html_fmt(level, content)
+        return super(Eq, self).html_fmt(content=content, level=level)
 
-    def tex_fmt(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, content=None, mathmode=False, level=1):
         raw_content = raw_content_string(self._raw_content).strip(' \t\n')
         content = raw_content
 
@@ -125,9 +125,9 @@ class Eq(RenderedImg):
         if 'color' in self.attributes:
             content = tex_cmd(cmd='textcolor',
                               attributes=self.attributes['color'],
-                              tex_str=content)
+                              formatted_content=content)
         if 'bold' in self.attributes or self.name == 'termb':
-            content = tex_cmd(cmd='boldsymbol', tex_str=content)
+            content = tex_cmd(cmd='boldsymbol', formatted_content=content)
 
         # Remove extra space around the content
         content = content.strip()
@@ -137,7 +137,7 @@ class Eq(RenderedImg):
         else:
             if self.block_equation or self.paragraph_role == 'block':
                 return tex_env(env=self.tex_env, attributes=self.attributes,
-                               tex_str=content, min_newlines=True)
+                               formatted_content=content, min_newlines=True)
             else:
                 return tex_cmd(cmd='ensuremath', attributes=self.attributes,
-                               tex_str=content)
+                               formatted_content=content)

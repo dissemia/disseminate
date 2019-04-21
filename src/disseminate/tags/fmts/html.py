@@ -3,6 +3,7 @@ Utilities for formatting html strings and text.
 """
 from lxml.builder import E
 from lxml import etree
+from lxml.etree import Entity
 from markupsafe import Markup
 
 from ..exceptions import TagError
@@ -10,21 +11,19 @@ from ...attributes import Attributes
 from ... import settings
 
 
-def html_tag(name, level=1, attributes='', elements=None):
+def html_tag(name, attributes='', formatted_content=None, level=1):
     """Format an html tag string.
 
     Parameters
     ----------
     name : str, optional
         The name of the html tag.
-    level : int, optional
-            The level of the tag.
     attributes : :obj:`Attributes <diseeminate.attributes.Attributes>` or str
         The attributes of the tag.
-    elements : None, str, :obj:`lxml.builder.E` or list of both,  optional
+    formatted_content : None, str, :obj:`lxml.builder.E` or list of both,  optional
         The contents of the html tag.
-
-        The level of the tag.
+    level : int, optional
+            The level of the tag.
 
     Returns
     -------
@@ -70,9 +69,9 @@ def html_tag(name, level=1, attributes='', elements=None):
     # Prepare other attributes
     other = Attributes()
 
-    # Wrap the elements in a list and remove empty strings
-    elements = [elements] if not isinstance(elements, list) else elements
-    elements = [i for i in elements if i != '' and i is not None]
+    # Wrap the formatted_content in a list and remove empty strings
+    formatted_content = [formatted_content] if not isinstance(formatted_content, list) else formatted_content
+    formatted_content = [i for i in formatted_content if i != '' and i is not None]
 
     # Create the tag
     if not allowed_tag:
@@ -81,9 +80,9 @@ def html_tag(name, level=1, attributes='', elements=None):
 
         # If the tag isn't listed in the 'allowed' tags, just create a span
         # element.
-        e = E('span', *elements) if elements else E('span')
+        e = E('span', *formatted_content) if formatted_content else E('span')
     else:
-        e = E(name, *elements) if elements else E(name)
+        e = E(name, *formatted_content) if formatted_content else E(name)
 
     # Add the reqs and opts attributes
     for attrs in (i for i in (reqs, opts, other) if i is not None):
@@ -99,27 +98,42 @@ def html_tag(name, level=1, attributes='', elements=None):
         return e
 
 
-    # if name in settings.html_valid_tags:
-    #     # Create the html tag
-    #     e = E(name, *elements) if elements else E(name)
-    #
-    #     # Set the attributes for the tag, in order.
-    #     set_html_tag_attributes(html_tag=e, attrs_dict=attrs)
-    # else:
-    #     # Create a span element if it not an allowed element
-    #     # Add the tag type to the class attribute
-    #     attrs.append('class', name)
-    #
-    #     # Create the html tag
-    #     e = E('span', *elements) if len(elements) else E('span')
-    #
-    #     # Set the attributes for the tag, in order.
-    #     set_html_tag_attributes(html_tag=e, attrs_dict=attrs)
-    #
-    # # Render the root tag if this is the first level
-    # if level == 1:
-    #     s = (etree.tostring(e, pretty_print=settings.html_pretty)
-    #          .decode("utf-8"))
-    #     return Markup(s)  # Mark string as safe, since it's escaped by lxml
-    # else:
-    #     return e
+def html_entity(entity, level=1):
+    """Format an html entity string.
+
+    Parameters
+    ----------
+    entity : str
+        an html entity string
+    level : int, optional
+        The level of the tag.
+
+    Returns
+    -------
+    html : str
+        The entity formatted in html.
+
+    Examples
+    --------
+    >>> html_entity('alpha')
+    Markup('&alpha;\\n')
+
+    Raises
+    ------
+    ValueError
+        Raised for an invalid entity reference
+    TagError
+        Raised if the contents of the tag aren't a simple string. i.e. nested
+        tags are not allowed.
+    """
+    if not isinstance(entity, str):
+        msg = "The tag content '{}' cannot be translated into an html entity"
+        raise TagError(msg.format(str(entity)))
+
+    e = Entity(entity.strip())
+    if level == 1:
+        s = (etree.tostring(e, pretty_print=settings.html_pretty)
+             .decode("utf-8"))
+        return Markup(s)  # Mark string as safe, since it's escaped by lxml
+    else:
+        return e

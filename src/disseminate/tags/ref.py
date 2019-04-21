@@ -87,14 +87,14 @@ class Ref(Tag):
         label_tag = self.get_label_tag()
         return label_tag.default_fmt(content)
 
-    def html_fmt(self, level=1, content=None):
+    def html_fmt(self, content=None, level=1):
         # Return the html result for the label tag created for the label
         # linked to by this ref.
         label_tag = self.get_label_tag(target='.html')
-        return label_tag.html_fmt(level+1, content)
+        return label_tag.html_fmt(content=content, level=level + 1)
 
-    def tex_fmt(self, level=1, mathmode=False, content=None, page=False):
+    def tex_fmt(self, content=None, page=False, mathmode=False, level=1):
         # Return the tex result for the label tag created for the label
         # linked to by this ref.
         label_tag = self.get_label_tag(target='.tex')
-        return label_tag.tex_fmt(level+1, mathmode)
+        return label_tag.tex_fmt(mathmode=mathmode, level=level + 1)

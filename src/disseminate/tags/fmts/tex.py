@@ -6,7 +6,7 @@ from ...attributes import Attributes
 from ... import settings
 
 
-def tex_cmd(cmd, attributes='', tex_str=None):
+def tex_cmd(cmd, attributes='', formatted_content=None):
     """Format a tex command.
 
     Parameters
@@ -15,7 +15,7 @@ def tex_cmd(cmd, attributes='', tex_str=None):
         The name of the LaTeX command to format.
     attributes : :obj:`Attributes <diseeminate.attributes.Attributes>` or str
         The attributes of the tag.
-    tex_str : str, optional
+    formatted_content : str, optional
         The contents of the tex environment formatted as a string in LaTeX.
         If not specified, the tex_str will not be used as a LaTeX parameter
 
@@ -58,17 +58,17 @@ def tex_cmd(cmd, attributes='', tex_str=None):
     else:
         opts_str = ''
 
-    # Wrap the tex_str in curly braces, if a tex_str was specified
-    if isinstance(tex_str, str):
-        tex_str = "{" + tex_str + "}" if tex_str else "{}"
+    # Wrap the formatted_content in curly braces, if a formatted_content was specified
+    if isinstance(formatted_content, str):
+        formatted_content = "{" + formatted_content + "}" if formatted_content else "{}"
     else:
-        tex_str = ''
+        formatted_content = ''
 
     # format the tex command
-    return "\\" + cmd + reqs.tex_arguments + opts_str + tex_str
+    return "\\" + cmd + reqs.tex_arguments + opts_str + formatted_content
 
 
-def tex_env(env, attributes, tex_str, min_newlines=False):
+def tex_env(env, attributes, formatted_content, min_newlines=False):
     """Format a tex environment.
 
     Parameters
@@ -77,7 +77,7 @@ def tex_env(env, attributes, tex_str, min_newlines=False):
         The name of the LaTeX environment to format.
     attributes : :obj:`Attributes <diseeminate.attributes.Attributes>` or str
         The attributes of the tag.
-    tex_str : str
+    formatted_content : str
         The contents of the tex environment formatted as a string in LaTeX.
     min_newlines : bool, optional
         If True, extra new lines before, after and in the environment will not
@@ -129,11 +129,11 @@ def tex_env(env, attributes, tex_str, min_newlines=False):
         return ("\\begin" + '{' + env + '}' +
                 reqs.tex_arguments +
                 opts_str + ' %\n' +
-                tex_str +
+                formatted_content +
                 "\n\\end{" + env + "}")
     else:
         return ("\n\\begin" + '{' + env + '}' +
                 reqs.tex_arguments +
                 opts_str + '\n' +
-                tex_str +
+                formatted_content +
                 "\n\\end{" + env + "}\n")

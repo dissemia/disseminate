@@ -82,14 +82,14 @@ class Caption(Tag):
         else:
             return super(Caption, self).default_fmt()
 
-    def html_fmt(self, level=1, content=None):
+    def html_fmt(self, content=None, level=1,):
         label = self.label
         if self.label is not None:
             label_tag = self.get_label_tag(target='.html')
 
             tag = E('span',
-                    label_tag.html_fmt(level+1),
-                    super(Caption, self).html_fmt(level+1))
+                    label_tag.html_fmt(level=level + 1),
+                    super(Caption, self).html_fmt(level=level+1))
 
             # Set the html tag attributes, in order
             kwargs = OrderedDict()
@@ -99,9 +99,9 @@ class Caption(Tag):
 
             return tag
         else:
-            return super(Caption, self).html_fmt(level+1)
+            return super(Caption, self).html_fmt(level=level+1)
 
-    def tex_fmt(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, content=None, mathmode=False, level=1):
         content = content if content is not None else self.content
         label = self.label
 
@@ -109,19 +109,23 @@ class Caption(Tag):
             label_tag = self.get_label_tag(target='.tex')
 
             # Format the label and add it to the caption
-            string = label_tag.tex_fmt(level+1, mathmode) + " "
+            string = label_tag.tex_fmt(mathmode=mathmode, level=level + 1) + " "
 
             if isinstance(content, list):
                 content = [string] + content
             elif isinstance(content, str):
                 content = string + content
 
-            label_str = tex_cmd(cmd='label', tex_str=label.id)
+            label_str = tex_cmd(cmd='label', formatted_content=label.id)
 
             # Format the caption
             return ("  " +
-                    super(Caption, self).tex_fmt(level + 1, mathmode, content) +
+                    super(Caption, self).tex_fmt(content=content,
+                                                 mathmode=mathmode,
+                                                 level=level + 1) +
                     " " + label_str + "\n")
         else:
-            return super(Caption, self).tex_fmt(level + 1, mathmode, content)
+            return super(Caption, self).tex_fmt(content=content,
+                                                 mathmode=mathmode,
+                                                 level=level + 1)
 

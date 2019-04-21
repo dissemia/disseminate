@@ -232,26 +232,29 @@ empty = tuple()
 #: Render HTML pages with newlines and indentation
 html_pretty = True
 
-#: Allowed html tags with required arguments/attributes
+#: Allowed html tags with required arguments/attributes.
+#: This dict will be checked to see if an html tag is allowed.
 html_tag_arguments = {'a': ('href',),
                       'img': ('src',),
                       'link': ('rel',)
                       }
 
 #: Allowed optional arguments/attributes for html tags
+#: This dict will be checked to see if an html tag is allowed.
 html_tag_optionals = {'a': ('class', 'role'),
                       'blockquote': empty,
+                      'br': empty,
                       'code': empty,
                       'dd': empty,
                       'div': ('class', 'id'),
                       'dl': empty,
                       'dt': empty,
                       'em': empty,
-                      'h1': ('id',),
-                      'h2': ('id',),
-                      'h3': ('id',),
-                      'h4': ('id',),
-                      'h5': ('id',),
+                      'h1': ('id', 'class'),
+                      'h2': ('id', 'class'),
+                      'h3': ('id', 'class'),
+                      'h4': ('id', 'class'),
+                      'h5': ('id', 'class'),
                       'hr': empty,
                       'li': ('class',),
                       'link': ('href', 'media'),
