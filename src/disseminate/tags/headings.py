@@ -1,15 +1,10 @@
 """
 Tags for headings.
 """
-from lxml.builder import E
-from lxml import etree
-from markupsafe import Markup
-
 from .tag import Tag
 from .utils import content_to_str
-from ..formats import tex_cmd
+from ..formats import tex_cmd, html_tag
 from ..utils.string import slugify, titlelize
-from .. import settings
 
 
 toc_levels = ('branch', 'section', 'subsection', 'subsubsection')
@@ -154,20 +149,12 @@ class Heading(Tag):
             # Replace the label_tag name to this heading's name, ex: 'chapter'
             label_tag.name = name
 
-            # Wrap the label tag in a h1/h2/h3/.. heading
-            e = E(self.html_name, label_tag.html_fmt(level=level + 1),
-                  **self.attributes)
-
-            # Return the html element as either text (level=1) or simply an
-            # element
-            if level == 1:
-                s = (etree.tostring(e, pretty_print=settings.html_pretty)
-                          .decode("utf-8"))
-                return Markup(s)  # Mark string as safe bc it's escaped by lxml
-            else:
-                return e
+            # Wrap the label tag in a heading
+            return html_tag(self.html_name, attributes=self.attributes,
+                            formatted_content=label_tag.html_fmt(level=level+1),
+                            level=level)
         else:
-            return super(Heading, self).html_fmt(content=content, level=level)
+            return super().html_fmt(content=content, level=level)
 
     def tex_fmt(self, content=None, mathmode=False, level=1):
         name = (self.tex_cmd if self.tex_cmd is not None else
