@@ -1,13 +1,8 @@
 import pathlib
 from datetime import datetime
-from collections import OrderedDict
-
-from lxml.builder import E
-from lxml import etree
-from markupsafe import Markup
 
 from .document import Document
-from ..tags.utils import set_html_tag_attributes
+from ..formats import html_tag
 from .. import settings
 
 
@@ -157,76 +152,80 @@ def render_tree_html(documents, level=1):
         context = document.context
 
         # Column 1: the document number
-        kwargs = OrderedDict((('class', 'num'),))
-
-        num = E('td', str(number))
-        set_html_tag_attributes(html_tag=num, attrs_dict=kwargs)
+        num = html_tag('td', attributes="class=num",
+                       formatted_content=str(number), level=level + 1)
 
         # Column 2: the source file
         src_filepath = document.src_filepath
-        kwargs = OrderedDict((('class', 'src'),))
-        src = E('td',
-                E('a', str(src_filepath.subpath), href='/' + str(src_filepath)))
-        set_html_tag_attributes(html_tag=src, attrs_dict=kwargs)
+        a_tag = html_tag('a', attributes='href=' + '/' + str(src_filepath),
+                         formatted_content=str(src_filepath.subpath),
+                         level=level + 1)
+        src = html_tag('td', attributes='class=src', formatted_content=a_tag,
+                       level=level + 1)
 
         # Column 3: target files
-        kwargs = OrderedDict((('class', 'tgt'),))
-        tgt_links = [E('a', target.strip('.'),
-                       href=document.target_filepath(target).get_url(context))
-                     for target in document.targets.keys()]
+        targets = list(document.targets.keys())
+        tgt_links = [document.target_filepath(target).get_url(context)
+                     for target in targets]
+        a_tags = [html_tag('a', attributes='href=' + link,
+                           formatted_content=target.strip('.'), level=level + 1)
+                  for link, target in zip(tgt_links, targets)]
 
-        # Add commas to targets
-        if len(tgt_links) > 1:
-            new_tgt_links = [tgt_links[0]]
-            for tgt_link in tgt_links[1:]:
-                new_tgt_links.append(", ")
-                new_tgt_links.append(tgt_link)
-            tgt_links = new_tgt_links
-        tgt = E('td', "(", *tgt_links, ")") if len(tgt_links) > 0 else E('td')
-        set_html_tag_attributes(html_tag=tgt, attrs_dict=kwargs)
+        # Add commas and parentheses to the a_tags
+        if len(a_tags) > 1:
+            new_a_tags = []
+            for a_tag in a_tags[:-1]:
+                new_a_tags.append(a_tag)
+                new_a_tags.append(', ')
+            new_a_tags.append(a_tags[-1])
+            a_tags = new_a_tags
+        a_tags = ['('] + a_tags + [')']
+
+        tgt = html_tag('td', attributes='class=tgt', formatted_content=a_tags,
+                       level=level + 1)
 
         # Column 4: src mtime
-        kwargs = OrderedDict((('class', 'date'),))
         mtime = document.src_filepath.stat().st_mtime
         d = datetime.fromtimestamp(mtime)
         date_str = d.strftime("%b %d, %Y at %I:%M%p").replace(" 0", " ")
-        date = E('td', date_str)
-        set_html_tag_attributes(html_tag=date, attrs_dict=kwargs)
+        date = html_tag('td', attributes='class=date',
+                        formatted_content=date_str, level=level + 1)
 
-        # Add the document row to the document_elements
-        kwargs = OrderedDict((('class', 'level-' + str(level)),))
-        row = E('tr', num, src, tgt, date)
-        set_html_tag_attributes(html_tag=row, attrs_dict=kwargs)
+        # Row
+        row = html_tag('tr', attributes='class=level-' + str(level),
+                       formatted_content=[num, src, tgt, date], level=level + 1)
         document_elements.append(row)
 
         # Add sub-documents
         if document.subdocuments is not None:
             sub_docs = document.subdocuments.values()
-            document_elements += render_tree_html(sub_docs, level+1)
+            document_elements += render_tree_html(sub_docs, level=level + 1)
 
         if level == 1 and document_elements:
 
-            title = E('div', E('strong', 'Project Title: '),
-                      document.title,
-                      **{'class': 'caption-title'})
-            head = E('thead',
-                     E('tr',
-                       E('th', 'num'),
-                       E('th', 'source'),
-                       E('th', 'targets'),
-                       E('th', 'last saved')))
-            kwargs = OrderedDict((('class', 'tablesorter'), ('id', 'index')))
-            table = E('table', title, head, *document_elements)
-            set_html_tag_attributes(html_tag=table, attrs_dict=kwargs)
+            heading = html_tag('strong', formatted_content='Project Title:',
+                               level=level + 1)
+            title = html_tag('div', attributes='class=caption-title',
+                             formatted_content=[heading, ' ', document.title],
+                             level=level + 1)
+
+            row = [html_tag('th', formatted_content=t, level=level + 1)
+                   for t in ('num', 'source', 'targets', 'last saved')]
+            head_row = html_tag('tr', formatted_content=row, level=level + 1)
+            head = html_tag('thead', formatted_content=head_row,
+                            level=level + 1)
+
+            table = html_tag('table',
+                             attributes='class="tablesorter" id=index',
+                             formatted_content=[title]+[head]+document_elements,
+                             level=level + 1)
             tables.append(table)
 
     if level == 1:
         if tables:
-            kwargs = OrderedDict((('class', 'tableset'),))
-            div = E('div', *tables)
-            set_html_tag_attributes(html_tag=div, attrs_dict=kwargs)
-            s = etree.tostring(div, pretty_print=True).decode('utf-8')
-            return Markup(s)  # Mark string as safe, since it's escaped by lxml
+            div = html_tag('div', attributes='class=tableset',
+                           formatted_content=tables)
+            return div.html if hasattr(div, 'html') else div
         else:
             return ''
     else:

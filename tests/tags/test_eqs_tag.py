@@ -3,7 +3,8 @@ Test the equation tags.
 """
 import pytest
 
-from disseminate.tags import Tag, TagError
+from disseminate.tags import Tag
+from disseminate.formats import TexFormatError
 from disseminate.tags.eqs import Eq
 from disseminate.dependency_manager import DependencyManager
 from disseminate.renderers import ProcessContextTemplate
@@ -90,7 +91,7 @@ def test_block_equation(context_eq):
     # 2. simple block equation with alternative environment. The alignat*
     #    requires an integer parameter for the number of columns, so this
     #    show raise a TagError
-    with pytest.raises(TagError):
+    with pytest.raises(TexFormatError):
         eq2 = Eq(name='eq', content='y=x', attributes='env=alignat*',
                  context=context_eq, block_equation=True)
 

@@ -4,10 +4,9 @@ Tags to render equations
 from copy import copy
 
 from .tag import Tag
-from .fmts import tex_cmd, tex_env
 from .img import RenderedImg
 from .processors.process_content import parse_tags
-from .. import settings
+from ..formats import tex_cmd, tex_env
 from ..attributes import Attributes
 
 

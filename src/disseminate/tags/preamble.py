@@ -2,7 +2,7 @@
 Tags for document preambles.
 """
 from .tag import Tag
-from .fmts import html_tag
+from ..formats import html_tag
 from ..utils.string import str_to_list
 
 

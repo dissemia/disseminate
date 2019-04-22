@@ -196,9 +196,10 @@ def test_render_tree_html():
 
     # Render the html for file1.dm
     html = render_tree_html(docs[0:1])
+    print(html)
     key = """<div class="tableset">
       <table class="tablesorter" id="index">
-        <div class="caption-title"><strong>Project Title: </strong>file1</div>
+        <div class="caption-title"><strong>Project Title:</strong> file1</div>
         <thead>
           <tr>
             <th>num</th>

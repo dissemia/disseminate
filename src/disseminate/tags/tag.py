@@ -2,7 +2,7 @@
 Core classes and functions for tags.
 """
 from .exceptions import TagError
-from .fmts import tex_env, tex_cmd, html_tag
+from ..formats import tex_env, tex_cmd, html_tag
 from ..attributes import Attributes
 from .utils import format_content
 from ..utils.string import titlelize, replace_macros

@@ -3,8 +3,7 @@ Tests for tex formatting functions for tags.
 """
 import pytest
 
-from disseminate.tags import TagError
-from disseminate.tags.fmts import tex_env, tex_cmd
+from disseminate.formats import tex_env, tex_cmd, TexFormatError
 
 
 def test_tag_tex_environment(attributes_cls):
@@ -13,7 +12,7 @@ def test_tag_tex_environment(attributes_cls):
     # 1. Test a basic equation with a required argument
 
     # A required argument is missing; raise an error
-    with pytest.raises(TagError):
+    with pytest.raises(TexFormatError):
         tex_env('alignat*', '', formatted_content='y=x')
 
     # Place the parameter
@@ -55,7 +54,7 @@ def test_tag_tex_command(attributes_cls):
     """Tests the formatting of tex environments."""
 
     # 1. Try a non-allowed command
-    with pytest.raises(TagError):
+    with pytest.raises(TexFormatError):
         tex_cmd('notchapter', '', 'My Chapter')
 
     # 2. Try textbf, textit

@@ -1,13 +1,8 @@
 """
 Tags for figure captions and references.
 """
-from collections import OrderedDict
-
-from lxml.builder import E
-
 from .tag import Tag
-from .fmts.tex import tex_cmd
-from .utils import set_html_tag_attributes
+from ..formats import tex_cmd, html_tag
 from ..utils.string import hashtxt
 
 
@@ -87,19 +82,17 @@ class Caption(Tag):
         if self.label is not None:
             label_tag = self.get_label_tag(target='.html')
 
-            tag = E('span',
-                    label_tag.html_fmt(level=level + 1),
-                    super(Caption, self).html_fmt(level=level+1))
-
-            # Set the html tag attributes, in order
-            kwargs = OrderedDict()
-            kwargs['class'] = ' '.join(self.kind)
-            kwargs['id'] = label.id
-            set_html_tag_attributes(html_tag=tag, attrs_dict=kwargs)
-
-            return tag
+            # Create a span element for the caption
+            class_str = ' '.join(self.kind)
+            attrs_str = 'class="{}", id={}'.format(class_str, label.id)
+            html_content = [label_tag.html_fmt(level=level + 1),
+                            super().html_fmt(level=level + 1)]
+            span = html_tag('span', attributes=attrs_str,
+                            formatted_content=html_content,
+                            level=level + 1)
+            return span
         else:
-            return super(Caption, self).html_fmt(level=level+1)
+            return super().html_fmt(level=level+1)
 
     def tex_fmt(self, content=None, mathmode=False, level=1):
         content = content if content is not None else self.content
@@ -126,6 +119,6 @@ class Caption(Tag):
                     " " + label_str + "\n")
         else:
             return super(Caption, self).tex_fmt(content=content,
-                                                 mathmode=mathmode,
-                                                 level=level + 1)
+                                                mathmode=mathmode,
+                                                level=level + 1)
 

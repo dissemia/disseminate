@@ -6,8 +6,8 @@ from lxml import etree
 from markupsafe import Markup
 
 from .tag import Tag
-from .fmts.tex import tex_cmd
 from .utils import content_to_str
+from ..formats import tex_cmd
 from ..utils.string import slugify, titlelize
 from .. import settings
 

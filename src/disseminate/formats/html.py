@@ -6,9 +6,14 @@ from lxml import etree
 from lxml.etree import Entity
 from markupsafe import Markup
 
-from ..exceptions import TagError
-from ...attributes import Attributes
-from ... import settings
+from .exceptions import FormattingError
+from ..attributes import Attributes
+from .. import settings
+
+
+class HtmlFormatError(FormattingError):
+    """Error in html formatting."""
+    pass
 
 
 def html_tag(name, attributes='', formatted_content=None, level=1):
@@ -20,7 +25,7 @@ def html_tag(name, attributes='', formatted_content=None, level=1):
         The name of the html tag.
     attributes : :obj:`Attributes <diseeminate.attributes.Attributes>` or str
         The attributes of the tag.
-    formatted_content : None, str, :obj:`lxml.builder.E` or list of both,  optional
+    formatted_content : Union[None, str, list, :obj:`lxml.builder.E`],  optional
         The contents of the html tag.
     level : int, optional
             The level of the tag.
@@ -57,7 +62,7 @@ def html_tag(name, attributes='', formatted_content=None, level=1):
     if reqs is not None and len(reqs) != len(settings.html_tag_arguments[name]):
         msg = ("The html tag '{}' did not receive the correct "
                "required arguments. Required arguments received: {}")
-        raise TagError(msg.format(name, reqs))
+        raise HtmlFormatError(msg.format(name, reqs))
 
     # Get optional arguments
     if name in settings.html_tag_optionals:
@@ -70,8 +75,11 @@ def html_tag(name, attributes='', formatted_content=None, level=1):
     other = Attributes()
 
     # Wrap the formatted_content in a list and remove empty strings
-    formatted_content = [formatted_content] if not isinstance(formatted_content, list) else formatted_content
-    formatted_content = [i for i in formatted_content if i != '' and i is not None]
+    formatted_content = ([formatted_content]
+                         if not isinstance(formatted_content, list) else
+                         formatted_content)
+    formatted_content = [i for i in formatted_content
+                         if i != '' and i is not None]
 
     # Create the tag
     if not allowed_tag:
@@ -128,7 +136,7 @@ def html_entity(entity, level=1):
     """
     if not isinstance(entity, str):
         msg = "The tag content '{}' cannot be translated into an html entity"
-        raise TagError(msg.format(str(entity)))
+        raise HtmlFormatError(msg.format(str(entity)))
 
     e = Entity(entity.strip())
     if level == 1:

@@ -6,8 +6,8 @@ from itertools import groupby
 from .headings import toc_levels as heading_toc_levels, Heading
 from .ref import Ref
 from .tag import Tag
-from .fmts import html_tag, tex_env, tex_cmd
 from . import exceptions
+from ..formats import html_tag, tex_env, tex_cmd
 from ..utils.string import strip_multi_newlines
 
 

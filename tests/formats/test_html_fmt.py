@@ -3,8 +3,9 @@ Tests for tex formatting functions for tags.
 """
 import pytest
 
-from disseminate.tags import TagError
-from disseminate.tags.fmts import html_tag, html_entity
+from markupsafe import Markup
+
+from disseminate.formats import html_tag, html_entity, HtmlFormatError
 
 
 def test_html_tag():
@@ -13,7 +14,7 @@ def test_html_tag():
     # 1. Test a basic equation with a required argument
 
     # A required argument is missing; raise an error
-    with pytest.raises(TagError):
+    with pytest.raises(HtmlFormatError):
         html_tag('img', attributes='')
 
     # 2. Test the formatting of basic tags with required and optional arguments
@@ -45,12 +46,6 @@ def test_html_tag():
     assert (html_tag('script', attributes='test') ==
             key)
 
-    # 5. Test html escaping
-    key = '<span class="script">&lt;script&gt;unsafe&lt;/script&gt;</span>\n'
-    assert (html_tag('script', attributes='test',
-                     formatted_content='<script>unsafe</script>') ==
-            key)
-
 
 def test_html_entity():
     """Tests the formatting of html_entity."""
@@ -66,3 +61,26 @@ def test_html_entity():
     # 3. Test html escaping
     with pytest.raises(ValueError):
         assert html_entity('<script></script>') == ''
+
+
+def test_html_escaping():
+    """Test the html_tag function with escaping."""
+
+    # 1. Test basic html escaping
+    key = '<span class="script">&lt;script&gt;unsafe&lt;/script&gt;</span>\n'
+    assert (html_tag('script', attributes='test',
+                     formatted_content='<script>unsafe</script>') ==
+            key)
+
+    # 2. Test basic html escaping with a list
+    key = '<span class="script">&lt;script&gt;unsafe&lt;/script&gt;</span>\n'
+    assert (html_tag('script', attributes='test',
+                     formatted_content=['<script>unsafe</script>']) ==
+            key)
+
+    # 3. Test with a safe string (Not supported currently)
+    key = '<span class="script">&lt;script&gt;unsafe&lt;/script&gt;</span>\n'
+    assert (html_tag('script', attributes='test',
+                     formatted_content=Markup('<script>unsafe</script>')) ==
+            key)
+

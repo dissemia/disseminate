@@ -4,7 +4,7 @@ Text formatting tags
 from textwrap import wrap
 
 from .tag import Tag, TagError
-from .fmts import tex_cmd, tex_env, html_entity, html_tag
+from ..formats import tex_cmd, tex_env, html_entity, html_tag
 from .utils import format_content
 
 

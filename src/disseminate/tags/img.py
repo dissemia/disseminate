@@ -4,7 +4,7 @@ Image tags
 import pathlib
 
 from .tag import Tag, TagError
-from .fmts.tex import tex_cmd
+from ..formats import tex_cmd
 from ..utils.string import hashtxt
 from ..paths import SourcePath
 from .. import settings
