@@ -23,7 +23,7 @@ class TagFactory(object):
         ----------
         tag_name : str
             The name of the tag. ex: 'bold', 'b'
-        tag_content : str or list
+        tag_content : Union[str, list]
             The content of the tag. ex: 'this is bold'
         tag_attributes : str
             The attributes of a tag. ex: 'width=32pt'
@@ -32,8 +32,8 @@ class TagFactory(object):
 
         Returns
         -------
-        :obj:`Tag subclass <disseminate.tags.core.Tag>`
-            An tag.
+        tag : :obj:`Tag <disseminate.tags.Tag>`
+            An instance of a Tag subclass.
         """
         tag_classes = self.tag_classes
         if tag_name.lower() in tag_classes:

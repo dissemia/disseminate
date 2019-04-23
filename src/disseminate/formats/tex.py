@@ -17,9 +17,10 @@ def tex_cmd(cmd, attributes='', formatted_content=None, indent=None):
 
     Parameters
     ----------
-    com : str, optional
+    cmd : str, optional
         The name of the LaTeX command to format.
-    attributes : :obj:`Attributes <diseeminate.attributes.Attributes>` or str
+    attributes : Union[:obj:`Attributes <disseminate.attributes.Attributes>`, \
+        str], optional
         The attributes of the tag.
     formatted_content : str, optional
         The contents of the tex environment formatted as a string in LaTeX.
@@ -92,7 +93,8 @@ def tex_env(env, attributes, formatted_content, min_newlines=False,
     ----------
     env : str
         The name of the LaTeX environment to format.
-    attributes : :obj:`Attributes <diseeminate.attributes.Attributes>` or str
+    attributes : Union[:obj:`Attributes <disseminate.attributes.Attributes>`, \
+        str]
         The attributes of the tag.
     formatted_content : str
         The contents of the tex environment formatted as a string in LaTeX.

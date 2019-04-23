@@ -12,56 +12,53 @@ from ..utils.classes import weakattr
 class Tag(object):
     """A tag to format text in the markup document.
 
-    .. note:: Tags are created asynchroneously, so the creation of a tag
-              should not depend on the `context`. These will only be partially
-              populated at creation time. The target specific methods
-              (html, tex, ...), by contrast, may depend on the context
-              attributes populated by other tags.
-
     Parameters
     ----------
     name : str
         The name of the tag as used in the disseminate source. (ex: 'body')
-    content : None or str or list
-        The contents of the tag. It can either be None, a string, or a list
-        of tags and strings. (i.e. a sub-ast)
-    attributes : :obj:`Attributes <diseeminate.attributes.Attributes>`
+    content : Union[str, List[Union[str, list, :obj:`Tag \
+        <disseminate.tags.tag.Tag>`], :obj:`Tag <disseminate.tags.tag.Tag>`]
+        The contents of the tag. It can either be a string, a tag or a list
+        of strings, tags and lists.
+    attributes : Union[str, :obj:`Attributes \
+        <disseminate.attributes.Attributes>`]
         The attributes of the tag. These are distinct from the Tag class
         attributes; they're the customization attributes specified by the user
         to change the appearance of a rendered tag. However, some or all
         attributes may be used as tag attributes, depending on the
         settings.html_valid_attributes, settings.tex_valid_attributes and so
         on.
-    context : :obj:`BaseContext <disseminate.context.base_context.BaseContext>`
+    context : :obj:`BaseContext <disseminate.context.BaseContext>`
         The context with values for the document. The tag holds a weak reference
         to the context, as it doesn't own the context.
 
     Attributes
     ----------
-    aliases : list of str
+    aliases : List[str]
         A list of strs for other names a tag goes by
     html_name : str
-        If specified, use this name when rendering the tag to html. Otherwise,
-        use name.
+        If specified, use this name for the html tag. Otherwise, use name.
     tex_cmd : str
         If specified, use this name to render the tex command.
     tex_env : str
         If specified, use this name to render the tex environment.
     active : bool
         If True, the Tag can be used by the TagFactory.
-    ProcessTag : class
+    processtag_cls : :class:`ProcessTag \
+        <disseminate.tags.processors.ProcessTag>`
         If specified, use this class to get tag processors for tags.
         (See the processors sub-directory)
     process_content : bool
-        If True, the contents of the tag will be parsed and processed by the
-        ProcessContent processor on creation.
+        If True, the contents of the tag will be parsed and processed into a
+        tag tree (AST) by the ProcessContent processor on creation.
     process_typography : bool
         If True, the strings in contents of the tag will be parsed and
-        processed by the ProcessTypography processor on creation.
+        processed for typography characters by the ProcessTypography processor
+        on creation.
     include_paragraphs : bool
         If True, then the contents of this tag can be included in paragraphs.
-        See :func:`disseminate.ast.process_paragraphs`.
-    paragraph_role : None or str
+        See :func:`disseminate.tags.processors.process_paragraphs`.
+    paragraph_role : str, optional
         If this tag is directly within a paragraph, the type of paragraph may
         be specified with a string. The following options are possible:
 
@@ -69,7 +66,7 @@ class Tag(object):
         - 'inline' : The tag is within a paragraph that includes a mix
                      of strings and tags
         - 'block' : The tag is within its own paragraph.
-    label_id : str or None
+    label_id : str, optional
         If specified, this is the id for a label that is used by this tag.
         (See :meth:`set_label` for creating a label at the same time)
     """
@@ -87,7 +84,7 @@ class Tag(object):
 
     active = False
 
-    ProcessTag = None
+    processtag_cls = None
 
     process_content = True
     process_typography = True
@@ -142,7 +139,7 @@ class Tag(object):
     @property
     def mtime(self):
         """The last modification time of this tag's (and subtag) document and
-        for the documents of all labels reference by this tag."""
+        for the documents of all labels referenced by this tag."""
         # All tags and sub-tags have the same mtime, which is stored in the
         # context
         mtimes = [self.context.get('mtime', None)]
@@ -169,8 +166,8 @@ class Tag(object):
 
     def process(self):
         """Process the tag's contents."""
-        if self.ProcessTag is not None:
-            for processor in self.ProcessTag.processors():
+        if self.processtag_cls is not None:
+            for processor in self.processtag_cls.processors():
                 processor(self)
 
     @property
@@ -355,9 +352,10 @@ class Tag(object):
 
         Parameters
         ----------
-        content : list or str or Tag, optional
-            If specified, render the given content. Otherwise, use this tag's
-            content.
+        content : Union[str, List[Union[str, list, :obj:`Tag \
+            <disseminate.tags.Tag>`]], optional
+            Specify an alternative content from the tag's content. It can
+            either be a string, a tag or a list of strings, tags and lists.
 
         Returns
         -------
@@ -373,13 +371,14 @@ class Tag(object):
         return self.tex_fmt()
 
     def tex_fmt(self, content=None, mathmode=False, level=1):
-        """Format the tag in latex format.
+        """Format the tag in LaTeX format.
 
         Parameters
         ----------
-        content : list or str or Tag, optional
-            If specified, render the given content. Otherwise, use this tag's
-            content.
+        content : Union[str, List[Union[str, list, :obj:`Tag \
+            <disseminate.tags.Tag>`]], optional
+            Specify an alternative content from the tag's content. It can
+            either be a string, a tag or a list of strings, tags and lists.
         mathmode : bool, optional
             If True, the tag will be rendered in math mode. Otherwise (default)
             latex text mode is assumed.
@@ -416,9 +415,10 @@ class Tag(object):
 
         Parameters
         ----------
-        content : list or str or Tag, optional
-            If specified, render the given content. Otherwise, use this tag's
-            content.
+        content : Union[str, List[Union[str, list, :obj:`Tag \
+            <disseminate.tags.Tag>`]], optional
+            Specify an alternative content from the tag's content. It can
+            either be a string, a tag or a list of strings, tags and lists.
         level : int, optional
             The level of the tag.
 

@@ -33,8 +33,9 @@ def format_content(content, format_func, **kwargs):
 
     Parameters
     ----------
-    content : str, :obj:`disseminate.tags.Tag` or list of both
-        The content to format
+    content : Union[str, List[Union[str, list, :obj:`Tag \
+            <disseminate.tags.Tag>`]], optional
+            The content to format
     format_func : str
         The name of the format_func to use. ex: 'tex_fmt'
 

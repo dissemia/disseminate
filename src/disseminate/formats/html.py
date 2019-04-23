@@ -23,7 +23,8 @@ def html_tag(name, attributes='', formatted_content=None, level=1):
     ----------
     name : str, optional
         The name of the html tag.
-    attributes : :obj:`Attributes <diseeminate.attributes.Attributes>` or str
+    attributes : Union[:obj:`Attributes <disseminate.attributes.Attributes>`, \
+        str], optional
         The attributes of the tag.
     formatted_content : Union[None, str, list, :obj:`lxml.builder.E`],  optional
         The contents of the html tag.

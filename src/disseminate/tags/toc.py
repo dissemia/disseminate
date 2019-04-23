@@ -203,15 +203,6 @@ class Toc(Tag):
 
     def update_tags(self):
         """Populate this tag's content by adding TocRef items.
-
-        Parameters
-        ----------
-        labels : list of :obj:`disseminate.labels.Label`
-           The labels to construct a tree from.
-        order_function : :function:
-            A function which returns the order of a given label item. The
-            function takes a label and returns an integer. The base TOC levels
-            start at 0, and the sub-levels return higher numbers.
         """
         # Get labels and determine their latest modification time (mtime).
         # We poll the fresh list of labels instead of the cached ref_tags
@@ -279,6 +270,19 @@ class Toc(Tag):
         .. note:: The 'document' toc is special since it uses the documents
                   directly to construct the tree. All other toc types will
                   get the labels from the label_manager
+
+        Parameters
+        ----------
+        content : Union[str, List[Union[str, list, :obj:`Tag \
+            <disseminate.tags.Tag>`]], optional
+            Specify an alternative content from the tag's content. It can
+            either be a string, a tag or a list of strings, tags and lists.
+        listtype : str, optional
+            The type of list to render (ol, ul).
+        elements : str, optional
+            The the reference tags.
+        level : int, optional
+            The level of the tag.
 
         Returns
         -------

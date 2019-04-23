@@ -10,7 +10,7 @@ from ...utils.classes import all_subclasses
 class ProcessTag(object):
     """A base class for tag processor functions.
 
-    New processors are created by subclassing the ProcessTag class, setting
+    New processors are created by subclassing the processtag_cls class, setting
     and order and overriding the ``__call__`` method.
 
     Parameters
@@ -62,4 +62,4 @@ class ProcessTag(object):
         return msg
 
 
-Tag.ProcessTag = ProcessTag
+Tag.processtag_cls = ProcessTag
