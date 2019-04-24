@@ -19,6 +19,12 @@ class TagFactory(object):
     def tag(self, tag_name, tag_content, tag_attributes, context):
         """Return the approriate tag, given a tag_name and tag_content.
 
+        A tag subclass, rather than the Tag base class, will be returned if
+
+        - A tag subclass with the tag_name (or with an alias) is available.
+        - The tag subclass has an 'active' attribute that is True
+        - The tag's name isn't listed in the 'inactive_tags' set in the context.
+
         Parameters
         ----------
         tag_name : str
@@ -36,10 +42,15 @@ class TagFactory(object):
             An instance of a Tag subclass.
         """
         tag_classes = self.tag_classes
-        if tag_name.lower() in tag_classes:
+        tag_name_lower = tag_name.lower()
+        tag_cls = tag_classes.get(tag_name_lower, None)
+
+        if (tag_cls is not None and
+           getattr(tag_cls, 'active', False) and
+           tag_cls.__name__.lower() not in context.get('inactive_tags', ())):
             # First, see if the tag_name matches one of the tag subclasses (or
             # tag aliases) in disseminate
-            cls = tag_classes[tag_name.lower()]
+            cls = tag_cls
         else:
             # If all else fails, just make a generic Tag.
             cls = self.base_tag_class
@@ -56,11 +67,7 @@ class TagFactory(object):
             tag_classes = dict()
 
             for scls in all_subclasses(self.base_tag_class):
-                # Tag must be active
-                if not scls.active:
-                    continue
-
-                # Collect the name and aliases (alternative names) for the tag
+               # Collect the name and aliases (alternative names) for the tag
                 aliases = (list(scls.aliases) if scls.aliases is not None else
                            list())
                 names = [scls.__name__.lower(), ] + aliases

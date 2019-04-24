@@ -146,6 +146,10 @@ default_context = {
 
     },
 
+    # The following tags are unavailable. See
+    # disseminate.tags.factory.TagFactory
+    'inactive_tags': set(),
+
     # Macros are string entries that aren't processed into tags and asts.
     # These start with the 'tag_prefix' (e.g. '@')
     # Macros - Isotopes
