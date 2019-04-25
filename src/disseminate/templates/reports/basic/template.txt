@@ -1,1 +1,1 @@
-../../default/template.txt
+(% extends "default/template.tex" %)
