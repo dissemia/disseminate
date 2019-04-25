@@ -42,7 +42,7 @@ h1,h2,h3,h4,h5,h6 {
   font-family: sans-serif;
 }
 
-h1 {
+h1,h2 {
     display: block;
     font-size: 20pt;
     margin-top: 20pt;
@@ -50,7 +50,7 @@ h1 {
     font-weight: 400;
 }
 
-h2 {
+h3 {
     display: block;
     font-size: 14pt;
     margin-top: 20pt;
@@ -59,7 +59,7 @@ h2 {
     text-transform: uppercase;
 }
 
-h3 {
+h4 {
     display: block;
     font-size: 14pt;
     margin-top: 20pt;
@@ -72,12 +72,12 @@ p {
   margin: 20pt 0;
 }
 
-.branch .number::before {
+.chapter .number::before {
   content: "Chapter ";
   color: #b50202;
 }
 
-.branch .number {
+.chapter .number {
   color: #b50202;
   font-variant: small-caps;
   font-size: 20pt;

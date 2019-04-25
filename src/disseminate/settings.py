@@ -100,13 +100,13 @@ default_context = {
         'document': '@label.title',
 
         # caption tags
-        'caption_figure': '@b{Fig. @label.branch_number.@label.number}.',
+        'caption_figure': '@b{Fig. @label.chapter_number.@label.number}.',
 
-        'ref_figure': '@b{Fig. @label.branch_number.@label.number}',
+        'ref_figure': '@b{Fig. @label.chapter_number.@label.number}',
         'ref_figure_html': '@a[href="@link"]{'
-                           '@b{Fig. @label.branch_number.@label.number}}',
+                           '@b{Fig. @label.chapter_number.@label.number}}',
         'ref_figure_tex': '\\hyperref[@label.id]{'
-                           '@b{Fig. @label.branch_number.@label.number}}',
+                           '@b{Fig. @label.chapter_number.@label.number}}',
 
         # Headings tags
         'heading': '@label.title',
@@ -114,6 +114,7 @@ default_context = {
         # html specific formatting
         'heading_html': '@number{@label.tree_number.} '
                         '@label.title',
+        'heading_title_html': '@label.title',
 
         # Ref tags
         'ref_heading_html': '@a[href="@link"]{@label.title}',
@@ -220,7 +221,7 @@ tracked_deps = {
 #: Tags
 #: ----
 
-default_attrs = {'Toc': "bolded='branch' "
+default_attrs = {'Toc': "bolded='chapter' "
                         "dotted='section subsection subsubsection'"}
 
 toc_listing = 'toclist'

@@ -7,7 +7,8 @@ from ..formats import tex_cmd, html_tag
 from ..utils.string import slugify, titlelize
 
 
-toc_levels = ('branch', 'section', 'subsection', 'subsubsection')
+toc_levels = ('title', 'part', 'chapter', 'section', 'subsection',
+              'subsubsection')
 
 
 class Heading(Tag):
@@ -64,7 +65,9 @@ class Heading(Tag):
     def get_id(self):
         # Get the id mappings, if not set yet
         if Heading._id_mappings is None:
-            Heading._id_mappings = {'branch': 'br',
+            Heading._id_mappings = {'title': 'title',
+                                    'part': 'part',
+                                    'chapter': 'ch',
                                     'section': 'sec',
                                     'subsection': 'subsec',
                                     'subsubsection': 'subsubsec',
@@ -121,7 +124,7 @@ class Heading(Tag):
 
     def _get_label_fmt_str(self, tag_name=None, target=None):
         # Specify a _get_label_fmt_str that has 'heading' as the tag name,
-        # instead of the name of the tag for Heading subclasses, like 'branch'
+        # instead of the name of the tag for Heading subclasses, like 'chapter'
         # or 'section'.
         return super(Heading, self)._get_label_fmt_str(tag_name='heading',
                                                        target=target)
@@ -184,9 +187,24 @@ class Heading(Tag):
                     '\n\n')
 
 
-class Branch(Heading):
-    aliases = ("h1", "chapter", "title")
+class Title(Heading):
+    aliases = ("h1",)
     html_name = "h1"
+    tex_cmd = "title"
+    active = True
+    include_paragraphs = False
+
+
+class Part(Heading):
+    html_name = "h1"
+    tex_cmd = "part"
+    active = True
+    include_paragraphs = False
+
+
+class Chapter(Heading):
+    aliases = ("h2",)
+    html_name = "h2"
     tex_cmd = "chapter"
     active = True
     include_paragraphs = False
@@ -194,8 +212,8 @@ class Branch(Heading):
 
 class Section(Heading):
     """A section heading tag."""
-    aliases = ("h2", )
-    html_name = "h2"
+    aliases = ("h3", )
+    html_name = "h3"
     tex_cmd = "section"
     active = True
     include_paragraphs = False
@@ -203,8 +221,8 @@ class Section(Heading):
 
 class SubSection(Heading):
     """A subsection heading tag."""
-    aliases = ("h3",)
-    html_name = "h3"
+    aliases = ("h4",)
+    html_name = "h4"
     tex_cmd = "subsection"
     active = True
     include_paragraphs = False
@@ -212,8 +230,8 @@ class SubSection(Heading):
 
 class SubSubSection(Heading):
     """A subsubsection heading tag."""
-    aliases = ("h4",)
-    html_name = "h4"
+    aliases = ("h5",)
+    html_name = "h5"
     tex_cmd = "subsubsection"
     active = True
     include_paragraphs = False
@@ -221,7 +239,7 @@ class SubSubSection(Heading):
 
 class Para(Tag):
     """A paragraph heading tag."""
-    aliases = ("h5",)
+    aliases = ("h6",)
 
     html_name = "paragraph-heading"
     tex_cmd = "paragraph"

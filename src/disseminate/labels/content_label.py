@@ -3,16 +3,16 @@ from ..utils.classes import weakattr
 
 
 class ContentLabel(Label):
-    """A label for a labeling a grouping of content, like a heading (branch or
-    chapter, section, subsection) or an item that should show up in a table of
+    """A label for a labeling a grouping of content, like a heading
+    (chapter, section, subsection) or an item that should show up in a table of
     contents, like a figure caption.
 
     Attributes
     ----------
     document_label : :obj:`disseminate.labels.Label`
         The label object for the document that owns this label.
-    branch_label : :obj:`disseminate.labels.Label` or None
-        The label for the branch under which this label is under.
+    chapter_label : :obj:`disseminate.labels.Label` or None
+        The label for the chapter under which this label is under.
     section_label : :obj:`disseminate.labels.Label` or None
         The label for the section under which this label is under.
     subsection_label : :obj:`disseminate.labels.Label` or None
@@ -24,7 +24,9 @@ class ContentLabel(Label):
     title = None
 
     document_label = weakattr()
-    branch_label = weakattr()
+    title_label = weakattr()
+    part_label = weakattr()
+    chapter_label = weakattr()
     section_label = weakattr()
     subsection_label = weakattr()
     subsubsection_label = weakattr()
@@ -45,15 +47,26 @@ class ContentLabel(Label):
         return None
 
     @property
-    def branch_number(self):
-        branch_label = self.branch_label
-        return (branch_label.global_order[-1] if branch_label is not None
+    def part_number(self):
+        part_label = self.part_label
+        return (part_label.global_order[-1] if part_label is not None
                 else '')
 
     @property
-    def branch_title(self):
-        branch_label = self.branch_label
-        return branch_label.title if branch_label is not None else ''
+    def part_title(self):
+        part_label = self.part_label
+        return part_label.title if part_label is not None else ''
+
+    @property
+    def chapter_number(self):
+        chapter_label = self.chapter_label
+        return (chapter_label.global_order[-1] if chapter_label is not None
+                else '')
+
+    @property
+    def chapter_title(self):
+        chapter_label = self.chapter_label
+        return chapter_label.title if chapter_label is not None else ''
 
     @property
     def section_number(self):
@@ -91,10 +104,11 @@ class ContentLabel(Label):
 
     @property
     def tree_number(self):
-        """The string for the number for the branch, section, subsection and
+        """The string for the number for the chapter, section, subsection and
         so on. i.e. Section 3.2.1."""
         # Get a tuple of the numbers, remove empty string items and None
-        numbers = filter(bool, (self.branch_number,
+        numbers = filter(bool, (self.part_number,
+                                self.chapter_number,
                                 self.section_number,
                                 self.subsection_number,
                                 self.subsubsection_number))
@@ -125,7 +139,8 @@ def curate_content_labels(registered_labels, *args, **kwargs):
     local_counter = dict()  # Keep track of local count
 
     # Keep track of the current heading registered_labels
-    branch_label = None
+    part_label = None
+    chapter_label = None
     section_label = None
     subsection_label = None
     subsubsection_label = None
@@ -144,11 +159,27 @@ def curate_content_labels(registered_labels, *args, **kwargs):
             local_counter = dict()
             doc_id = label.doc_id
 
-        if label.kind[-1] == 'branch':
-            # If it's a new branch (i.e. a chapter or document title)
+        if label.kind[-1] == 'part':
+            # If it's a new chapter (i.e. a chapter or document title)
             # Get its label and reset the counters for the heading
             # registered_labels below
-            branch_label = label
+            part_label = label
+            chapter_label = None
+            section_label = None
+            subsection_label = None
+            subsubsection_label = None
+
+            # Reset the local_counter for sections, subsections
+            local_counter['chapter'] = 0
+            local_counter['section'] = 0
+            local_counter['subsection'] = 0
+            local_counter['subsubsection'] = 0
+
+        if label.kind[-1] == 'chapter':
+            # If it's a new chapter (i.e. a chapter or document title)
+            # Get its label and reset the counters for the heading
+            # registered_labels below
+            chapter_label = label
             section_label = None
             subsection_label = None
             subsubsection_label = None
@@ -194,7 +225,8 @@ def curate_content_labels(registered_labels, *args, **kwargs):
         label.global_order = tuple(global_order)
 
         # Set the heading label for all registered_labels
-        label.branch_label = branch_label
+        label.part_label = part_label
+        label.chapter_label = chapter_label
         label.section_label = section_label
         label.subsection_label = subsection_label
         label.subsubsection_label = subsubsection_label

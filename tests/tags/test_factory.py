@@ -29,7 +29,6 @@ def test_tag_factory_available(context_cls):
     assert not isinstance(unavailable, Unavailable)
 
 
-
 def test_tag_factory_inactive_tags(context_cls):
     """Tests the 'inactive_tags' entry of the context."""
 

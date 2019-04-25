@@ -82,9 +82,9 @@ def test_collection_selective_target(doc):
     body_attr = settings.body_attr
     root1 = doc.context[body_attr]
     assert root1.tex == ('\n\\setcounter{chapter}{1}\n'
-                         '\\chapter{one} \\label{br:main-dm-one}\n\n\n'
+                         '\\chapter{one} \\label{ch:main-dm-one}\n\n\n'
                          '\\setcounter{chapter}{2}\n'
-                         '\\chapter{two} \\label{br:sub1-dm-two}\n\n')
+                         '\\chapter{two} \\label{ch:sub1-dm-two}\n\n')
 
 
 # default target
@@ -111,11 +111,11 @@ def test_collection_tex(doc):
     body_attr = settings.body_attr
     root1 = doc.context[body_attr]
     assert root1.tex == ('\n\\setcounter{chapter}{1}\n'
-                         '\\chapter{one} \\label{br:main-dm-one}\n\n\n'
+                         '\\chapter{one} \\label{ch:main-dm-one}\n\n\n'
                          '\\setcounter{chapter}{2}\n'
-                         '\\chapter{two} \\label{br:sub1-dm-two}\n\n\n'
+                         '\\chapter{two} \\label{ch:sub1-dm-two}\n\n\n'
                          '\\setcounter{chapter}{3}\n'
-                         '\\chapter{three} \\label{br:sub2-dm-three}\n\n')
+                         '\\chapter{three} \\label{ch:sub2-dm-three}\n\n')
 
 
 # html target
@@ -129,19 +129,19 @@ def test_collection_html(doc):
     root1 = doc.context[body_attr]
 
     key = """<span class="body">
-  <h1 id="br:main-dm-one">
-    <span class="branch"><span class="number">1.</span> one</span>
-  </h1>
+  <h2 id="ch:main-dm-one">
+    <span class="chapter"><span class="number">1.</span> one</span>
+  </h2>
   <span class="collection">
     <span class="body">
-      <h1 id="br:sub1-dm-two">
-        <span class="branch"><span class="number">2.</span> two</span>
-      </h1>
+      <h2 id="ch:sub1-dm-two">
+        <span class="chapter"><span class="number">2.</span> two</span>
+      </h2>
     </span>
     <span class="body">
-      <h1 id="br:sub2-dm-three">
-        <span class="branch"><span class="number">3.</span> three</span>
-      </h1>
+      <h2 id="ch:sub2-dm-three">
+        <span class="chapter"><span class="number">3.</span> three</span>
+      </h2>
     </span>
   </span>
 </span>
@@ -155,14 +155,14 @@ def test_collection_html(doc):
 
     key = """<span class="collection">
   <span class="body">
-    <h1 id="br:sub1-dm-two">
-      <span class="branch"><span class="number">2.</span> two</span>
-    </h1>
+    <h2 id="ch:sub1-dm-two">
+      <span class="chapter"><span class="number">2.</span> two</span>
+    </h2>
   </span>
   <span class="body">
-    <h1 id="br:sub2-dm-three">
-      <span class="branch"><span class="number">3.</span> three</span>
-    </h1>
+    <h2 id="ch:sub2-dm-three">
+      <span class="chapter"><span class="number">3.</span> three</span>
+    </h2>
   </span>
 </span>
 """
@@ -186,9 +186,9 @@ def test_collection_html(doc):
     root1 = doc.context[body_attr]
 
     key = """<span class="body">
-  <h1 id="br:main-dm-one">
-    <span class="branch"><span class="number">1.</span> one</span>
-  </h1>
+  <h2 id="ch:main-dm-one">
+    <span class="chapter"><span class="number">1.</span> one</span>
+  </h2>
 </span>
 """
 

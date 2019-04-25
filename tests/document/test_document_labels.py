@@ -316,14 +316,14 @@ def test_document_tree_updates_with_section_labels(tmpdir):
     # Check the ordering of labels
     label_manager = doc.context['label_manager']
     labels = label_manager.get_labels()
-    title_labels = label_manager.get_labels(kinds='branch')
+    title_labels = label_manager.get_labels(kinds='chapter')
 
     # Check the number of labels: 3 for documents, 3 for chapters
     assert len(labels) == 6
     assert len(title_labels) == 3  # one for each file
-    assert title_labels[0].id == 'br:file1-dm-file1'
-    assert title_labels[1].id == 'br:file2-dm-file2'
-    assert title_labels[2].id == 'br:file3-dm-file3'
+    assert title_labels[0].id == 'ch:file1-dm-file1'
+    assert title_labels[1].id == 'ch:file2-dm-file2'
+    assert title_labels[2].id == 'ch:file3-dm-file3'
 
     # Render the files and check their mtimes
     doc.render()
@@ -351,14 +351,14 @@ def test_document_tree_updates_with_section_labels(tmpdir):
     assert doc_list[1].src_filepath == src_filepath3
     assert doc_list[2].src_filepath == src_filepath2
 
-    title_labels = label_manager.get_labels(kinds='branch')  # register labels
+    title_labels = label_manager.get_labels(kinds='chapter')  # register labels
 
     # Check the number of labels: 3 for documents, 3 for chapters
     assert len(label_manager.labels) == 6
     assert len(title_labels) == 3  # one for each file
-    assert title_labels[0].id == 'br:file1-dm-file1'
-    assert title_labels[1].id == 'br:file3-dm-file3'
-    assert title_labels[2].id == 'br:file2-dm-file2'
+    assert title_labels[0].id == 'ch:file1-dm-file1'
+    assert title_labels[1].id == 'ch:file3-dm-file3'
+    assert title_labels[2].id == 'ch:file2-dm-file2'
 
     # A render should be required for file1.dm
     doc1, doc2, doc3 = doc.documents_list(only_subdocuments=False,
@@ -385,7 +385,7 @@ def test_document_tree_updates_with_section_labels(tmpdir):
         targets: html
         ---
         @chapter{file1}
-        @ref{br:file2-dm-file2}
+        @ref{ch:file2-dm-file2}
         """)
     src_filepath2.write_text("""
         @chapter{file2}

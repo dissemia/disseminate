@@ -28,7 +28,7 @@ def order_labels_partial(registered_labels, *args, **kwargs):
 class LabelManager(object):
     """Manage labels and references.
 
-    Manages labels for a project. Labels have a kind (ex: 'figure', 'branch')
+    Manages labels for a project. Labels have a kind (ex: 'figure', 'chapter')
     and a id (ex: inept_introduction').
 
     Labels are added with the :meth:`add_label` method. These labels are
@@ -103,7 +103,7 @@ class LabelManager(object):
             The unique identifier (within a project of documents) for the label.
             ex: 'ch:nmr-introduction'
         kind : tuple or str
-            The kind of the label. ex: 'figure', ('heading', 'branch'),
+            The kind of the label. ex: 'figure', ('heading', 'chapter'),
             'equation'
         context : :obj:`disseminate.BaseContext`
             The context for the document adding the label.
