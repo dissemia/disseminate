@@ -2,9 +2,9 @@
 Tags for headings.
 """
 from .tag import Tag
+from .label import LabelTag, LabelAnchor, generate_label_id, create_label
 from .utils import content_to_str
-from ..formats import tex_cmd, html_tag
-from ..utils.string import slugify, titlelize
+from ..formats import tex_cmd
 
 
 toc_levels = ('title', 'part', 'chapter', 'section', 'subsection',
@@ -29,10 +29,17 @@ class Heading(Tag):
     active = True
     include_paragraphs = False
 
-    label_heading = True
+    label_id = None
+    label_tag = None
+    label_anchor = None
 
-    _nolabel = None
-    _id_mappings = None
+    id_mappings = {'title': 'title',
+                   'part': 'part',
+                   'chapter': 'ch',
+                   'section': 'sec',
+                   'subsection': 'subsec',
+                   'subsubsection': 'subsubsec',
+                    }
 
     def __init__(self, name, content, attributes, context):
 
@@ -42,149 +49,97 @@ class Heading(Tag):
             content = content_to_str(context[name])
 
         # Call the parent class's constructor
-        super(Heading, self).__init__(name, content, attributes, context)
+        super().__init__(name, content, attributes, context)
 
         # Determine whether a label should be given. By default, each heading
         # has a label
-        if 'nolabel' in self.attributes:
-            nolabel = True
-            del self.attributes['nolabel']
-        else:
-            nolabel = False
+        if 'nolabel' not in self.attributes:
+            cls_name = self.__class__.__name__.lower()
+            kind = ('heading', cls_name)
 
-        if nolabel:
-            self.label_heading = False
+            # Prepare the attributes for the Label tag.
+            attrs = self.attributes.filter('id', 'short')
+            attrs['class'] = 'heading'
 
-        if self.label_heading:
-            # Add a label for the heading, if needed
-            kind = ('heading', self.__class__.__name__.lower())
-            id = self.get_id()
-            self.attributes['id'] = id
-            self.set_label(id=id, kind=kind)
+            # Create the label. First,
+            if 'id' in self.attributes:
+                # Get the label_id from the attributes, if specified.
+                label_id = self.attributes['id']
+            else:
+                # No label id specified. Generate a label_id and prepend the
+                # label type, if an id is not explicitly specified.
+                # ex: 'title' -> 'ch:title'
+                label_id = generate_label_id(tag=self)
+                label_id = ":".join((Heading.id_mappings[cls_name], label_id))
 
-    def get_id(self):
-        # Get the id mappings, if not set yet
-        if Heading._id_mappings is None:
-            Heading._id_mappings = {'title': 'title',
-                                    'part': 'part',
-                                    'chapter': 'ch',
-                                    'section': 'sec',
-                                    'subsection': 'subsec',
-                                    'subsubsection': 'subsubsec',
-                                    }
+            label_id = create_label(tag=self, kind=kind, label_id=label_id)
 
-        id = self.attributes.get('id', None)
+            # Add the label identifier to this tag's attributes. This will be
+            # this tag's anchor for targets like html
+            self.label_id = label_id
+            self.attributes['id'] = label_id
 
-        # Assign an id_type, if one was not given
-        if id is None:
-            # Start the with the heading type. ex: 'br:' or 'sec:'
-            classname = self.__class__.__name__.lower()
-            id_type = self._id_mappings.get(classname, classname) + ":"
-
-            # Next use the doc_id to construct the heading. ex: 'Introduction'
-            doc_id = self.context.get('doc_id', '')
-
-            # Next use the content, if available and usable. To be usable, it
-            # should either be a Tag, which can be converted to a raw string, or
-            # a string itself or a list of tags and strings.
-            content = content_to_str(self.content)
-            content = titlelize(content).strip()
-
-            # If there is no content, then just make one up based on a simple
-            # counter.
-            if not content:
-                # If the content is not available or it's an empty string, just
-                # give it a number
-                i = 'heading_count'
-                self.context[i] = self.context.get(i, 0) + 1
-                content = str(self.context[i])
-
-            slug_txt = doc_id + '_' + content if doc_id else content
-
-            # Create the id from the heading type (id_type), the doc_id and
-            # content
-            id = id_type + slugify(slug_txt)
-            self.attributes['id'] = id
-        return id
-
-    def set_label(self, id, kind, title=None):
-        assert id is not None
-
-        document = (self.context['document']() if 'document' in self.context
-                    else None)
-        title = self.title if title is None else title
-
-        if 'label_manager' in self.context and document is not None:
-            label_manager = self.context['label_manager']
-
-            # Create the label
-            label_manager.add_heading_label(id=id, kind=kind, title=title,
-                                            context=self.context)
-            self.label_id = id
-
-    def _get_label_fmt_str(self, tag_name=None, target=None):
-        # Specify a _get_label_fmt_str that has 'heading' as the tag name,
-        # instead of the name of the tag for Heading subclasses, like 'chapter'
-        # or 'section'.
-        return super(Heading, self)._get_label_fmt_str(tag_name='heading',
-                                                       target=target)
+            self.label_tag = LabelTag(name='label', attributes=attrs,
+                                      content=label_id, context=context)
+            self.label_anchor = LabelAnchor(name='label_anchor',
+                                            attributes=attrs, content=label_id,
+                                            context=context)
 
     def default_fmt(self, content=None):
-        name = self.__class__.__name__.lower()
-        label = self.label
+        # Prepare the content with the label. References for the default format
+        # are not supported
+        content = ''
+        if self.label_tag is not None:
+            content += self.label_tag.default_fmt()
+        content += content_to_str(self.content)
 
-        if label is not None:
-            label_tag = self.get_label_tag()
-
-            # Replace the label_tag name to this heading's name, ex: 'Chapter'
-            label_tag.name = name
-            return "\n" + label_tag.default_fmt(content) + "\n\n"
-        else:
-            return super(Heading, self).default_fmt(content)
-
-    def html_fmt(self, content=None, level=1):
-        name = self.__class__.__name__.lower()
-        label = self.label
-
-        if label is not None:
-            label_tag = self.get_label_tag(target='.html', wrap=False)
-
-            # Replace the label_tag name to this heading's name, ex: 'chapter'
-            label_tag.name = name
-
-            # Wrap the label tag in a heading
-            return html_tag(self.html_name, attributes=self.attributes,
-                            formatted_content=label_tag.html_fmt(level=level+1),
-                            level=level)
-        else:
-            return super().html_fmt(content=content, level=level)
+        return super().default_fmt(content=content)
 
     def tex_fmt(self, content=None, mathmode=False, level=1):
-        name = (self.tex_cmd if self.tex_cmd is not None else
-                self.__class__.__name__.lower())
+        cls_name = self.__class__.__name__.lower()
+        content = ''
 
-        label = self.label
-        if label is not None:
-            # set counter. ex: \setcounter{chapter}{3}
-            number = (label.global_order[-1] if name == 'chapter' else
-                      label.local_order[-1])
-            count_str = tex_cmd(cmd='setcounter',
-                                attributes='{} {}'.format(name, number))
+        # Prepare the tag contents to include the label tag.
+        # ex: 'My Title' becomes 'Chap 1. My Title'
+        if self.label_tag is not None:
+            content += self.label_tag.tex_fmt(mathmode=mathmode,
+                                              level=level + 1)
+        content += self.content
 
-            # Create the label. ex: \label{label-id}
-            label_str = tex_cmd('label', '', label.id)
+        # Format the heading tag. ex: \chapter{Chapter 1. My First Chapter}
+        content = tex_cmd(cls_name, attributes=self.attributes,
+                          formatted_content=content)
 
-            # Add the section heading and label id.
-            # ex: \chapter{Chapter One} \label{ch:chapter-one}
-            return ('\n' + count_str + '\n' +
-                    super().tex_fmt(content=label.title, mathmode=mathmode,
-                                    level=level + 1) + ' ' +
-                    label_str + '\n\n')
+        # Get the label for this heading to get its number, if available
+        if self.label_id is not None and self.label_anchor is not None:
+            assert self.context.is_valid('label_manager')
+
+            label_manager = self.context['label_manager']
+            label = label_manager.get_label(id=self.label_id)
+
+            number = label.global_order[-1] if label.global_order else None
+            attrs = ' '.join((cls_name, str(number)))
+
+            content = (tex_cmd('setcounter', attributes=attrs) + '\n' +
+                       content + ' ' +
+                       self.label_anchor.tex_fmt(mathmode=mathmode,
+                                                 level=level + 1))
+
+        return content
+
+    def html_fmt(self, content=None, level=1):
+        # Prepare the tag contents to include the label tag.
+        # ex: 'My Title' becomes 'Chap 1. My Title'
+        content = []
+        if self.label_tag is not None:
+            content.append(self.label_tag)
+
+        if isinstance(self.content, list):
+            content += self.content
         else:
-            return ('\n' +
-                    super().tex_fmt(content=content, mathmode=mathmode,
-                                    level=level + 1) +
-                    '\n\n')
+            content.append(self.content)
+
+        return super().html_fmt(content=content, level=level)
 
 
 class Title(Heading):

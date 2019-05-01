@@ -2,7 +2,11 @@
 The Ref tag to reference captions and other labels.
 """
 from .tag import Tag
-from ..utils.string import replace_macros
+from .exceptions import assert_content_str
+from .processors.process_content import parse_tags
+from .utils import content_to_str, format_content
+from ..formats import html_tag, tex_cmd
+from ..utils.classes import weakattr
 
 
 class RefError(Exception):
@@ -11,90 +15,184 @@ class RefError(Exception):
 
 
 class Ref(Tag):
-    """A tag to reference a label."""
+    """A tag to reference a label.
+
+    Attributes
+    ----------
+    doc_id : Optional[str]
+        The doc_id for the document that owns the label referenced. This
+        might be different to the doc_id listed in the context if a reference
+        is made to a label in another document.
+    """
 
     active = True
+
     doc_id = None
+    label_id = None
+    label_manager = weakattr()
 
-    def __init__(self, name, content, attributes, context, doc_id=None):
+    def __init__(self, name, content, attributes, context):
+        assert_content_str(content)
+
         super(Ref, self).__init__(name, content, attributes, context)
-        self.doc_id = doc_id
 
-        # Set the label_id
-        # Get the identifier; it has to be a text string
-        if not isinstance(self.content, str):
-            msg = "The reference '{}' should be a simple text identifier."
-            raise RefError(msg.format(str(self.content)))
+        # Set the label_id and doc_id
         self.label_id = self.content.strip()
 
-    def get_label_tag(self, target=None):
-        """Create a new formatted tag for the label associated with this ref
-        tag.
+        if 'label_manager' in context:
+            self.label_manager = context['label_manager']
 
-        Parameters
-        ----------
-        target : str, optional
-            The optional target for the label's format string.
+    @property
+    def label(self):
+        """Retrieve the label for this ref tag."""
+        assert self.context.is_valid('label_manager')
+        label_manager = self.context['label_manager']
+        return label_manager.get_label(id=self.label_id)
+
+    @property
+    def document(self):
+        """The document that owns the label referenced by this tag.
 
         Returns
         -------
-        label_tag : :obj:`disseminate.tags.Tag`
-            The formatted tag for this tag's label.
+        document : Union[:obj:`Document \
+            <disseminate.document.document.Document>`, None]
+            The document that owns the label referenced by this tag, if
+            available.
+            None, if a document could not be found.
         """
-        assert self.context.is_valid('document', 'root_document')
+        assert self.context.is_valid('root_document')
 
-        # Get the tag's label
         label = self.label
 
-        # Get the format string for the label, either from this tag's
-        # attributes, this tag's context or the default context.
-        label_fmt = self._get_label_fmt_str(target=target)
+        # Get the doc_ids for the document that owns this tag (doc_id) and
+        # the document that owns the label (other_doc_id)
+        doc_id = self.context.get('doc_id', None)
+        other_doc_id = label.doc_id
 
-        # Get the link for the label. The link is
-        # generated from the specified document's target_filepath.
-        if self.doc_id is None:
-            current_document = self.context['document']()
-            target_filepath = current_document.target_filepath(target)
+        if doc_id is not None and doc_id == other_doc_id:
+            # Return this document, if the label is owned by the same document
+            # as the owner of this tag.
+            return (self.context['document']() if 'document' in self.context
+                    else None)  # document needs to be de-reference
+
+        # The other_doc_id and doc_id are different, so this Ref tag references
+        # a label owned by another document.
+        #
+        # Fetch the root document to figure out which document corresponds to
+        # the doc_id of this ref tag's label.
+        root_document = (self.context['root_document']()
+                         if 'root_document' in self.context else
+                         None)  # de-reference root document, if available
+        docs_by_doc_ids = (root_document.documents_by_id(recursive=True)
+                           if root_document is not None else None)
+
+        if other_doc_id in docs_by_doc_ids:
+            return docs_by_doc_ids[other_doc_id]
         else:
-            # Search for the ref document by doc_id
-            root_document = self.context['root_document']()  # de-reference
-            docs_by_doc_id = root_document.documents_by_id(recursive=True)
+            return None
 
-            if self.doc_id not in docs_by_doc_id:
-                raise RefError
-            other_document = docs_by_doc_id[self.doc_id]
-            target_filepath = other_document.target_filepath('.html')
+    @property
+    def url(self):
+        """The html url for the label referenced by this tag."""
+        # Get the doc_ids for the document that owns this tag (doc_id) and
+        # the document that owns the label (other_doc_id). See if they're the
+        # same document, in which case an internal link is returned.
+        label = self.label
+        doc_id = self.context.get('doc_id', None)
+        other_doc_id = label.doc_id if label is not None else None
 
-        # Generate the link for the document.
+        if doc_id is None or other_doc_id is None:
+            msg = ("Could not find the tag or label document for the ref tag "
+                   "'{}'")
+            raise RefError(msg.format(self))
+        elif doc_id is not None and doc_id == other_doc_id:
+            return '#' + label.id
+
+        # In this case, the label and tag documents are different. Return a
+        # link to the label's document.
+        document = self.document
+        target_filepath = document.target_filepath('.html')
         link = target_filepath.get_url(context=self.context)
 
-        # Add the id to the link, if it's not a link to the whole document
-        if label.kind[0] != 'document':
-            link += '#' + label.id
+        return link + '#' + label.id
 
-        # Substitute the variables (macros) in the label_fmt string
-        label_string = replace_macros(label_fmt, {'@label': label,
-                                                  '@link': link})
-
-        # Wrap the ast into ref tag in its own label tag
-        ref_tag = Tag(name='ref', content=label_string, attributes='',
-                      context=self.context)
-        return ref_tag
+    @property
+    def mtime(self):
+        """The last modification time of the document that owns the label
+        referenced by this tag."""
+        # Get the mtime for the label
+        label = self.label
+        return label.mtime if label is not None else None
 
     def default_fmt(self, content=None):
-        # Return the default result for the label tag created for the label
-        # linked to by this ref.
-        label_tag = self.get_label_tag()
-        return label_tag.default_fmt(content)
+        # Get the label tag format
+        label_manager = self.label_manager
+        context = self.context
+        label = self.label
+
+        if all(i is not None for i in (label_manager, label, context)):
+            # Format the format string keys for a ref
+            keys = ('ref', *label.kinds)
+            format_str = label_manager.format_string(id=self.label.id, *keys)
+
+            processed_content = parse_tags(format_str, context=context, level=1)
+            return content_to_str(processed_content)
+        else:
+            return ''
+
+    def tex_fmt(self, content=None, mathmode=False, level=1):
+        label_manager = self.label_manager
+        label = self.label
+        context = self.context
+
+        if all(i is not None for i in (label_manager, label, context)):
+
+            # Retrieve the format string for the reference
+            keys = ('ref', *label.kind)
+            format_str = label_manager.format_string(label.id, *keys,
+                                                     target='.tex')
+
+            # substitute the link, process the tags and format the contents
+            # for html
+            processed_tags = parse_tags(format_str, context=context,
+                                        level=level + 1)
+            content = format_content(content=processed_tags,
+                                     format_func='tex_fmt', level=level + 1)
+
+            # wrap content in 'hyperref' tag
+            return tex_cmd('hyperref', attributes=label.id,
+                           formatted_content=content)
+        else:
+            return ''
 
     def html_fmt(self, content=None, level=1):
-        # Return the html result for the label tag created for the label
-        # linked to by this ref.
-        label_tag = self.get_label_tag(target='.html')
-        return label_tag.html_fmt(content=content, level=level + 1)
+        label_manager = self.label_manager
+        label = self.label
+        context = self.context
 
-    def tex_fmt(self, content=None, page=False, mathmode=False, level=1):
-        # Return the tex result for the label tag created for the label
-        # linked to by this ref.
-        label_tag = self.get_label_tag(target='.tex')
-        return label_tag.tex_fmt(mathmode=mathmode, level=level + 1)
+        if all(i is not None for i in (label_manager, label, context)):
+
+            # Retrieve the format string for the reference
+            keys = ('ref', *label.kind)
+            format_str = label_manager.format_string(label.id, *keys,
+                                                     target='.html')
+
+            # substitute the link, process the tags and format the contents
+            # for html
+            processed_tags = parse_tags(format_str, context=context,
+                                        level=level + 1)
+            content = format_content(content=processed_tags,
+                                     format_func='html_fmt', level=level + 1)
+
+            attributes = self.attributes.copy()
+            attributes['class'] = 'ref'
+            attributes['href'] = self.url
+
+            # wrap content in 'a' tag
+            return html_tag('a', attributes=attributes,
+                            formatted_content=content,
+                            level=level,
+                            pretty_print=False)  # no line breaks
+        else:
+            return ''

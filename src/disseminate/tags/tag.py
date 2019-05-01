@@ -5,7 +5,7 @@ from .exceptions import TagError
 from ..formats import tex_env, tex_cmd, html_tag
 from ..attributes import Attributes
 from .utils import format_content
-from ..utils.string import titlelize, replace_macros
+from ..utils.string import titlelize
 from ..utils.classes import weakattr
 
 
@@ -66,9 +66,6 @@ class Tag(object):
         - 'inline' : The tag is within a paragraph that includes a mix
                      of strings and tags
         - 'block' : The tag is within its own paragraph.
-    label_id : str, optional
-        If specified, this is the id for a label that is used by this tag.
-        (See :meth:`set_label` for creating a label at the same time)
     """
 
     name = None
@@ -91,8 +88,6 @@ class Tag(object):
 
     include_paragraphs = True
     paragraph_role = None
-
-    label_id = None
 
     def __init__(self, name, content, attributes, context):
         self.name = name
@@ -140,23 +135,10 @@ class Tag(object):
     def mtime(self):
         """The last modification time of this tag's (and subtag) document and
         for the documents of all labels referenced by this tag."""
-        # All tags and sub-tags have the same mtime, which is stored in the
-        # context
-        mtimes = [self.context.get('mtime', None)]
-
-        # Get the labels and their mtimes. Some of the tags may reference other
-        # documents with later mtimes, so this will fetch those mtimes.
-        if 'label_manager' in self.context:
-            label_manager = self.context['label_manager']
-
-            # Get all the labels referenced by this tag (and sub-tags) and find
-            # their mtimes.
-            flattened_list = self.flatten(filter_tags=True)
-            label_ids = {t.label_id for t in flattened_list
-                         if hasattr(t, 'label_id') if t.label_id is not None}
-
-            labels = [l for l in label_manager.labels if l.id in label_ids]
-            mtimes += [l.mtime for l in labels]
+        # Get the latest mtime for this label and all sub-labels
+        flattened_list = self.flatten(filter_tags=True)
+        mtimes = [tag.mtime for tag in flattened_list if hasattr(tag, 'mtime')]
+        mtimes += [self.context.get('mtime', None)]
 
         # Remove None values from mtimes
         mtimes = list(filter(bool, mtimes))
@@ -169,131 +151,6 @@ class Tag(object):
         if self.processtag_cls is not None:
             for processor in self.processtag_cls.processors():
                 processor(self)
-
-    @property
-    def label(self):
-        if self.label_id is not None and 'label_manager' in self.context:
-            label_manager = self.context['label_manager']
-            return label_manager.get_label(id=self.label_id)
-        return None
-
-    def set_label(self, id, kind, title=None):
-        """Create and set a label for the tag.
-
-        If a reference to an existing label is desired, rather than creating
-        a label, set the 'label_id' attribute.
-
-        Parameters
-        ----------
-        id : str or None
-            The (unique) identifier of the label. ex: 'nmr_introduction'.
-            If None is given, the label cannot be referenced; it is used for
-            counting only.
-        kind : tuple or None
-            The kind of the label is a tuple that identified the kind of a label
-            from least specific to most specific. ex: ('figure',), ('chapter',),
-            ('equation',), ('heading', 'h1',)
-
-            This function is used to add a reference to a label by the tag.
-        title : str, optional
-            The (optional) title string for the content label.
-        """
-        assert id is not None
-
-        document = (self.context['document']() if 'document' in self.context
-                    else None)
-        title = self.title if title is None else title
-
-        if 'label_manager' in self.context and document is not None:
-            label_manager = self.context['label_manager']
-
-            # Create the label
-            label_manager.add_content_label(id=id, kind=kind, title=title,
-                                            context=self.context)
-            self.label_id = id
-
-    def get_label_tag(self, target=None, wrap=True):
-        """Create a new formatted tag for the label associated with this tag.
-
-        Parameters
-        ----------
-        target : str, optional
-            The optional target for the label's format string.
-        wrap : bool, optional
-            If True, ensure that the returned tag is wrapped in a tag named
-            'label'. Note that the tag may already get wrapped in a label
-            tag if the label consists of multiple tags. This flag simply
-            guarantees that it will be wrapped in a tag, if True.
-
-        Returns
-        -------
-        label_tag : :obj:`disseminate.tags.Tag`
-            The formatted tag for this tag's label.
-        """
-        # Get the tag's label
-        label = self.label
-
-        # Get the format string for the label, either from this tag's
-        # attributes, this tag's context or the default context.
-        label_fmt = self._get_label_fmt_str(target=target)
-
-        # Substitute the variables (macros) in the label_fmt string
-        label_string = replace_macros(label_fmt, {'@label': label})
-
-        # Format the label into a tag
-        label_tag = Tag(name='label', content=label_string, attributes='',
-                        context=self.context)
-
-        return label_tag
-
-    def _get_label_fmt_str(self, tag_name=None, target=None):
-        """Get the format string for this tag's label from the tag's attributes,
-        the tag's context, or the default context (in that order).
-
-        Parameters
-        ----------
-        tag_name : str, optional
-            The name of the tag to use in retrieving the label format string.
-            If not specified, then this tag's class name will be used.
-        target : str, optional
-            The optional target for the label's format string.
-
-        Returns
-        -------
-        format_string : str
-            The corresponding format string for the label. This is a string
-            with replaceable fields that are formatted with the 'format'
-            function.
-        """
-        # First, see if a label format was specified in the tag directly
-        label_fmt = self.attributes.get_by_type('fmt', target=target)
-
-        if label_fmt is not None:
-            return label_fmt
-
-        # If not, get the label format string from the context. This is done
-        # by searching the 'label_fmts' dict in the context for a key that
-        # matches this tag's type (ex: 'caption') and the kinds of the label,
-        # (ex: ('figure') as well as possibly the target type (ex: .html). The
-        label = self.label
-
-        if label is not None:
-            # Search the label format string (label_fmt) in decreasing order
-            # of specificity for the key. ex:
-            # From major: 'caption', intermediate: 'figure', target: 'html'
-            #    1. caption_figure_html
-            #    2. caption_figure
-            #    3. caption_html
-            #    4. caption
-            major = (tag_name if tag_name is not None else
-                     self.__class__.__name__.lower())
-            intermediate = [kind for kind in label.kind if kind != major]
-
-            return self.context.label_fmt(major=major,
-                                          intermediate=intermediate,
-                                          target=target)
-
-        return ''
 
     def flatten(self, tag=None, filter_tags=True):
         """Generate a flat list with this tag and all sub-tags and elements.

@@ -3,29 +3,24 @@ Utility functions for dictionaries.
 """
 
 
-def find_entry(dicts, major, intermediate=None, minor=None, spacer='_'):
+def find_entry(dicts, *keys, suffix=None, sep='_'):
     """Search dictionaries for entries with string keys constructed from
-    combinations of the specified major, intermediate and minor classifications
-    and separated by spacer.
+    ordred combinations of the specified keys.
 
     Dictionaries are searched in order of preference.
-    String keys are constructed with parts constructed from the major,
-    intermediate, and minor classification, from the most specific to the more
-    general, by joining the parts with the spacer string.
+    String keys are constructed with parts constructed by joining the parts
+    with the sep string.
 
     Parameters
     ----------
-    *dicts : tuple of dicts
-        The dictionary with format strings as values
-    major : string or tuple of str
-        The major classification, starts the key string.
-    intermediate : string or tuple of str, optional
-        The intermediate classification, specified after the major
-        classification.
-    minor : str or tuple of str, optional
-        The minor classification, specified after the major and intermediate
-        classifications.
-    spacer : str, optional
+    dicts : Union[dict, Tuple[dict], List[dict]]
+        One or more dictionaries to find entries in.
+    keys : str
+        One or more items to construct keys.
+    suffix : Optional[str]
+        If specified, try appending the given suffix to generate the combined
+        key before trying the combined key itself.
+    sep : str, optional
         The separator for joining key parts into a key.
 
     Returns
@@ -46,51 +41,34 @@ def find_entry(dicts, major, intermediate=None, minor=None, spacer='_'):
     ...      'starter_middle2': 4,
     ...      'starter_term': 5,
     ...      'starter': 6}
-    >>> find_entry(d, 'starter', ('middle1', 'middle2'), 'term')
+    >>> find_entry(d, 'starter', 'middle1', suffix='term')
     1
-    >>> find_entry(d, 'starter', ('middle1', 'middle2'),)
+    >>> find_entry(d, 'starter', 'middle1')
     2
-    >>> find_entry(d, 'starter', ('middle2',), 'term')
+    >>> find_entry(d, 'starter', 'middle2', suffix='term')
     3
-    >>> find_entry(d, 'starter', ('middle2',), )
+    >>> find_entry(d, 'starter', 'middle2' )
     4
-    >>> find_entry(d, 'starter', None, 'term')
+    >>> find_entry(d, 'starter', 'term')
     5
     >>> find_entry(d, 'starter')
     6
     """
-    # Set missing parameters
-    intermediate = tuple() if intermediate is None else intermediate
-    minor = tuple() if minor is None else minor
+    # Wrap dict in a list
+    dicts = [dicts] if isinstance(dicts, dict) else dicts
 
-    # wrap the parameters in tuples
-    major = (major,) if isinstance(major, str) else major
-    intermediate = (intermediate,) if isinstance(intermediate, str) else intermediate
-    minor = ((minor,) if isinstance(minor, str) else
-                   minor)
-    dicts = (dicts,) if isinstance(dicts, dict) else dicts
+    for d in dicts:
+        num_keys = len(keys)
+        while num_keys > 0:
+            trial = sep.join(keys[0:num_keys])
+            trial_suffix = (sep.join((trial, suffix))
+                            if suffix is not None else trial)
 
-    for dictionary in dicts:
-        for starter in major:
-            for middle in intermediate:
-                for terminator in minor:
-                    key = spacer.join((starter, middle, terminator))
-                    if key in dictionary:
-                        return dictionary[key]
+            for t in (trial_suffix, trial):
+                if t in d:
+                    return d[t]
 
-                key = spacer.join((starter, middle))
-                if key in dictionary:
-                    return dictionary[key]
+            num_keys -= 1
 
-            for terminator in minor:
-                key = spacer.join((starter, terminator))
-                if key in dictionary:
-                    return dictionary[key]
-
-            if starter in dictionary:
-                return dictionary[starter]
-
-    msg = ("Could not find a key constructed from the parts '{major}', "
-           "'{intermediate}' and '{minor}'")
-    raise KeyError(msg.format(major=major, intermediate=intermediate,
-                              minor=minor))
+    msg = "Could not find a key constructed from '{keys}'"
+    raise KeyError(msg.format(keys=keys))
