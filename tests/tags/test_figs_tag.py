@@ -24,17 +24,12 @@ def test_marginfig_parsing(context_cls):
     assert marginfig.content == '{fig1}'
 
 
-def test_figure_caption_no_id(tmpdir):
+def test_figure_caption_no_id(doc, attributes_cls):
     """Tests the parsing of captions in figure tags when no id is specified."""
-    # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
 
-    doc = Document(src_filepath=src_filepath)
-    doc.context['targets'] = '.html'
-    label_man = doc.context['label_manager']
+    # Set the label format for the caption figure
     label_fmts = doc.context['label_fmts']
+    label_fmts['caption_figure'] = "My Fig. @label.number. "
 
     # Generate the markup without an id
     src = "@marginfig{@caption{This is my caption.\nIt has multiple lines}}"
@@ -42,52 +37,27 @@ def test_figure_caption_no_id(tmpdir):
     # Generate a tag and compare the generated tex to the answer key
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     fig = root.content
-    label_man.register_labels()
 
     assert fig.name == 'marginfig'
     assert fig.attributes == dict()
 
     # 1. Get the caption, first with a basic figure label
-    label_fmts['caption_figure'] = "Fig. @label.number."
-
     caption = fig.content
+
+    assert caption.label_id == 'caption-409240e72c'  # auto-generated
     assert caption.name == 'caption'
-    assert caption.attributes == dict()
-    assert caption.default == ('Fig. 1. This is my caption.\n'
+    assert caption.attributes == attributes_cls(**{'id': 'caption-409240e72c',
+                                                   'class': 'caption'})
+    assert caption.default == ('My Fig. 1. This is my caption.\n'
                                'It has multiple lines')
 
-    # Get the caption, next with a caption title.
-    label_fmts['caption_figure'] = "@b{Figure. @label.number}."
 
-    caption = fig.content
-    assert caption.name == 'caption'
-    assert caption.attributes == dict()
-    assert caption.default == ('Figure. 1. This is my caption.\n'
-                               'It has multiple lines')
-
-    # A label should have been registered. Altogether, there should be 1 label
-    # for the figure. The document's label was wiped out by the
-    # 'register_labels' function above.
-    labels = label_man.get_labels(kinds='figure')
-    assert len(labels) == 1
-    label = labels[0]
-    assert label.id is not None
-    assert label.kind == ('figure',)
-    assert label.local_order == (1,)
-    assert label.global_order == (1,)
-
-
-def test_figure_caption_with_id(tmpdir):
+def test_figure_caption_with_id(doc):
     """Tests the parsing of captions in figure tags when an id is specified."""
-    # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
 
-    doc = Document(src_filepath=src_filepath)
-    doc.context['label_fmts']['caption_figure'] = "Fig. @number."
-    doc.context['targets'] = '.html'
-    label_man = doc.context['label_manager']
+    # Set the label format for the caption figure
+    label_fmts = doc.context['label_fmts']
+    label_fmts['caption_figure'] = "My Fig. @label.number. "
 
     # Test two cases: one in which the id is in the figure tag, and one in which
     # the id is in the caption tag
@@ -97,41 +67,26 @@ def test_figure_caption_with_id(tmpdir):
         # Generate a tag and compare the generated tex to the answer key
         root = Tag(name='root', content=src, attributes='', context=doc.context)
         fig = root.content
-        label_man.register_labels()
-
-        assert fig.name == 'marginfig'
-
-        # Get the caption
         caption = fig.content
 
+        assert fig.name == 'marginfig'
         assert caption.name == 'caption'
-        assert caption.content == 'This is my caption'
+        assert caption.label_id == 'fig-1'
 
-        # 1 label should be registered for the figure
-        labels = label_man.get_labels(kinds='figure')
-        assert len(labels) == 1
-        label = labels[0]
-
-        assert label.id == 'fig-1'
-        assert label.kind == ('figure',)
-        assert label.local_order == (1,)
-        assert label.global_order == (1,)
+        # Check the formatted caption. In order to use the 'caption_figure'
+        # label format, a label must have been created in the label_manager
+        assert caption.default == 'My Fig. 1. This is my caption'
 
 
 # html tests
 
-def test_figure_caption_no_id_html(tmpdir):
+def test_figure_caption_no_id_html(doc):
     """Tests the html generation of captions in figure tags when no id is
     specified."""
-    # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
 
-    doc = Document(src_filepath=src_filepath)
-    doc.context['label_fmts']['caption_figure'] = "Fig. @label.number."
-    doc.context['targets'] = '.html'
-    label_man = doc.context['label_manager']
+    # Set the label format for the caption figure
+    label_fmts = doc.context['label_fmts']
+    label_fmts['caption_figure'] = "My Fig. @label.number. "
 
     # Generate the markup without an id
     src = "@marginfig{@caption{This is my caption}}"
@@ -139,70 +94,49 @@ def test_figure_caption_no_id_html(tmpdir):
     # Generate a tag and compare the generated tex to the answer key
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     marginfig = root.content
-    label_man.register_labels()
 
-    key = """<span class="marginfig">
-      <span class="figure caption" id="caption-92042fbb8b">
-        <span class="label">Fig. 1.</span>
-        <span class="caption-text">This is my caption</span>
-      </span>
-    </span>
-    """
-    print(marginfig.html)
-    assert marginfig.html == strip_leading_space(key)
+    key = ('<span class="marginfig">\n'
+           '  <span class="caption" id="caption-92042fbb8b">'
+           '<span class="label">My Fig. 1. </span>This is my caption</span>\n'
+           '</span>\n')
+    assert marginfig.html == key
 
 
-def test_figure_caption_with_id_html(tmpdir):
+def test_figure_caption_with_id_html(doc):
     """Tests the html generation of captions in figure tags when an id is
     specified."""
-    # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
 
-    doc = Document(src_filepath=src_filepath)
-    doc.context['label_fmts']['caption_figure'] = "@b{Fig. @label.number.}"
-    doc.context['targets'] = '.html'
-    label_man = doc.context['label_manager']
+    # Set the label format for the caption figure
+    label_fmts = doc.context['label_fmts']
+    label_fmts['caption_figure'] = "My Fig. @label.number. "
 
     # Test two cases: one in which the id is in the figure tag, and one in which
     # the id is in the caption tag
     srcs = ("@marginfig[id=fig-1]{@caption{This is my caption}}",
             "@marginfig{@caption[id=fig-1]{This is my caption}}")
 
-    key = """<span class="marginfig">
-      <span class="figure caption" id="fig-1">
-        <span class="label">
-          <strong>Fig. 1.</strong>
-        </span>
-        <span class="caption-text">This is my caption</span>
-      </span>
-    </span>
-    """
+    key = ('<span class="marginfig">\n'
+           '  <span class="caption" id="fig-1">'
+           '<span class="label">My Fig. 1. </span>This is my caption</span>\n'
+           '</span>\n')
 
     for count, src in enumerate(srcs):
         # Generate a tag and compare the generated tex to the answer key
         root = Tag(name='root', content=src, attributes='', context=doc.context)
         fig = root.content
-        label_man.register_labels()
 
-        assert fig.html == strip_leading_space(key)
+        assert fig.html == key
 
 
 # tex tests
 
-def test_figure_caption_no_id_tex(tmpdir):
+def test_figure_caption_no_id_tex(doc):
     """Tests the tex generation of captions in figure tags when no id is
     specified."""
-    # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
 
-    doc = Document(src_filepath=src_filepath)
-    doc.context['label_fmts']['caption_figure'] = "Fig. @label.number."
-    doc.context['targets'] = '.tex'
-    label_man = doc.context['label_manager']
+    # Set the label format for the caption figure
+    label_fmts = doc.context['label_fmts']
+    label_fmts['caption_figure'] = "My Fig. @label.number. "
 
     # Generate the markup without an id
     src = "@marginfig{@caption{This is my caption}}"
@@ -210,28 +144,22 @@ def test_figure_caption_no_id_tex(tmpdir):
     # Generate a tag and compare the generated tex to the answer key
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     fig = root.content
-    label_man.register_labels()
 
-    key = """
-    \\begin{marginfigure}
-      \\caption{Fig. 1. This is my caption} \\label{caption-92042fbb8b}
-    \\end{marginfigure}
-    """
-    assert fig.tex == strip_leading_space(key)
+    key = ('\n'
+           '\\begin{marginfigure}\n'
+           '\\caption{My Fig. 1. This is my caption} '
+           '\\label{caption-92042fbb8b}\n'
+           '\\end{marginfigure}\n')
+    assert fig.tex == key
 
 
-def test_figure_caption_with_id_tex(tmpdir):
+def test_figure_caption_with_id_tex(doc):
     """Tests the tex generation of captions in figure tags when an id is
     specified."""
-    # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
 
-    doc = Document(src_filepath=src_filepath)
-    doc.context['label_fmts']['caption_figure'] = "Fig. @label.number."
-    doc.context['targets'] = '.tex'
-    label_man = doc.context['label_manager']
+    # Set the label format for the caption figure
+    label_fmts = doc.context['label_fmts']
+    label_fmts['caption_figure'] = "My Fig. @label.number. "
 
     # Test two cases: one in which the id is in the figure tag, and one in which
     # the id is in the caption tag
@@ -241,9 +169,9 @@ def test_figure_caption_with_id_tex(tmpdir):
         # Generate a tag and compare the generated tex to the answer key
         root = Tag(name='root', content=src, attributes='', context=doc.context)
         fig = root.content
-        label_man.register_labels()
 
-        assert fig.tex == ('\n\\begin{marginfigure}\n'
-                           '  \\caption{Fig. 1. This is my caption} '
+        assert fig.tex == ('\n'
+                           '\\begin{marginfigure}\n'
+                           '\\caption{My Fig. 1. This is my caption} '
                            '\\label{fig-1}\n'
                            '\\end{marginfigure}\n')

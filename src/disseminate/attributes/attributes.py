@@ -64,7 +64,7 @@ re_attrs = regex.compile(r'((?P<key>[\w\.]+)'
                          r'(?P<value>("[^"]*"'
                          r'|\'[^\']*\''
                          r'|[^\s\]]+))'
-                         r'|(?P<position>[\w\.\(\)]+))')
+                         r'|(?P<position>[^\s,\[\]]+))')
 
 
 class Attributes(dict):

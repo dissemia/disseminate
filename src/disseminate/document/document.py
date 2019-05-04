@@ -12,6 +12,7 @@ from ..processors import ProcessContext
 from ..convert import convert
 from ..context.utils import context_targets, context_includes
 from ..utils.file import mkdir_p
+from ..utils.string import slugify
 from ..paths import SourcePath, TargetPath
 from .. import settings
 
@@ -39,11 +40,14 @@ class SetDocumentLabel(ProcessContext):
         # Get the level of the document
         level = context.get('level', 1)
 
+        # Generate the label_id. ex: 'sub/file1.dm' becomes 'doc:sub-file1-dm'
+        label_id = 'doc:' + slugify(subpath_str)
+
         # Set the label for this document
         kind = ('document', 'document-level-' + str(level))
-        label_manager.add_heading_label(id='doc:' + subpath_str,
-                                        kind=kind, title=doc.short,
-                                        context=context)
+        label_manager.add_document_label(id=label_id,
+                                         kind=kind, title=doc.short,
+                                         context=context)
 
 
 class Document(object):
@@ -428,6 +432,11 @@ class Document(object):
         src_filepaths = context_includes(context=self.context)
 
         for src_filepath in src_filepaths:
+            # If the src_filepath is the same as this document, do nothing, as
+            # a document shouldn't have itself as a subdocument
+            if src_filepath == self.src_filepath:
+                continue
+
             # If the document is already loaded, copy it to the subdocuments
             # ordered dict
             if src_filepath in root_dict:
@@ -623,6 +632,10 @@ class Document(object):
             False, if the document did not need to be rendered.
 
         """
+        # Make sure the latest source is loaded. This is needed in case the
+        # list of targets has changed.
+        self.load()
+
         if subdocuments:
             for doc in self.documents_list(only_subdocuments=True):
                 doc.render(targets=targets, create_dirs=create_dirs,

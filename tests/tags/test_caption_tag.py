@@ -1,23 +1,17 @@
 """
 Test the caption and reg tags.
 """
-import pathlib
-
-from disseminate import TargetPath
 from disseminate.tags import Tag
-from disseminate.labels import LabelManager
 
 
-def test_naked_caption(tmpdir, context_cls):
+def test_naked_caption(context_cls):
     """Tests the parsing of naked captions (i.e. those not nested in a figure
-    or table)."""
-    tmpdir = pathlib.Path(tmpdir)
+    or table).
 
-    # Create the context and a label manager
-    target_root = TargetPath(target_root=tmpdir)
-    context = context_cls(target_root=target_root)
-    label_man = LabelManager(root_context=context)
-    context['label_manager'] = label_man
+    Naked captions will not create a label.
+    """
+
+    context = context_cls()
 
     # Generate the markup without an id
     src = "@caption{This is my caption}"
@@ -27,9 +21,65 @@ def test_naked_caption(tmpdir, context_cls):
     caption = root.content
 
     assert caption.name == 'caption'
-    assert caption.attributes == {}
+    assert caption.attributes['class'] == 'caption'
     assert caption.content == 'This is my caption'
 
-    # Naked captions do not register labels
-    assert len(label_man.labels) == 0
+
+# Test tex targets
+
+def test_caption_tex(context_cls):
+    """Test the formatting of naked captions for tex targets.
+
+    Naked captions will not create a label.
+    """
+
+    context = context_cls()
+
+    # 1. Test a basic caption.
+    src = "@caption{This is my caption}"
+
+    # Generate a tag and compare the generated tex to the answer key
+    root = Tag(name='root', content=src, attributes='', context=context)
+    caption = root.content
+
+    assert caption.tex == '\\caption{This is my caption}'
+
+    # 2. Test a caption with nested tags
+    src = "@caption{This is @b{my} caption}"
+
+    root = Tag(name='root', content=src, attributes='', context=context)
+    caption = root.content
+
+    assert caption.tex == ('\\caption{This is \\textbf{my} caption}')
+
+
+# Test html targets
+
+def test_caption_html(context_cls):
+    """Test the formatting of nakedcaptions for html targets.
+
+    Naked captions will not create a label.
+    """
+
+    context = context_cls()
+
+    # 1. Test a basic caption.
+    src = "@caption{This is my caption}"
+
+    # Generate a tag and compare the generated tex to the answer key
+    root = Tag(name='root', content=src, attributes='', context=context)
+    caption = root.content
+
+    assert caption.html == '<span class="caption">This is my caption</span>\n'
+
+    # 2. Test a caption with nested tags
+    src = "@caption{This is @b{my} caption}"
+
+    root = Tag(name='root', content=src, attributes='', context=context)
+    caption = root.content
+
+    assert caption.html == ('<span class="caption">'
+                            'This is <strong>my</strong> caption</span>\n')
+
+
 

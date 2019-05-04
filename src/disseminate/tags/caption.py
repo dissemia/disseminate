@@ -2,7 +2,9 @@
 Tags for figure captions and references.
 """
 from .tag import Tag
-from ..formats import tex_cmd, html_tag
+from .label import LabelMixin
+from .utils import content_to_str, format_content
+from ..formats import tex_cmd
 from ..utils.string import hashtxt
 
 
@@ -11,14 +13,13 @@ class CaptionError(Exception):
     pass
 
 
-class Caption(Tag):
+class Caption(Tag, LabelMixin):
     """A tag for captions.
 
     .. note:: The use of a naked caption tag is allowed (i.e. a caption not
               nested within a figure or table), but this won't register a label
-              with the label manager. This is because the 'add_label' method
-              will not be called. The @caption tag is designed to work in
-              coordination with the @fig tag.
+              with the label manager. In order to create a label, the
+              create_label method in the LabelMixin must be invoked.
 
               :example:
 
@@ -29,96 +30,83 @@ class Caption(Tag):
                         }
     """
 
-    html_name = 'caption-text'
+    html_name = 'span'
     tex_cmd = 'caption'
+
     kind = None
     active = True
 
-    def set_label(self, id=None, kind=None, title=None):
-        """Add a label to the caption.
+    def __init__(self, name, content, attributes, context):
+        # Call the tag constructor, but not the LabelMixin construction.
+        # The create_label method of LabelMixin must be invoked separately.
+        Tag.__init__(self, name, content, attributes, context)
 
-        .. note:: This function is run by the parent tag so that the kind is
-                  properly set. If an 'id' is not specified, one is generated
-                  from the hash of the contents for this caption.
+        # Set the attributes to the class
+        if 'class' not in self.attributes:
+            self.attributes['class'] = 'caption'
 
-        Parameters
-        ----------
-        kind : str
-            The kind of label. ex: 'chapter', 'figure', 'equation'
-        id : str, optional
-            The label of the label ex: 'ch:nmr-introduction'
-            If a label id is not specified, a short one based on the
-            document and label count will be generated.
-        """
-        # If an id was specified, use it. Otherwise, get the id from this tag,
-        # if it has one
-        id = id if id is not None else self.attributes.pop('id', None)
-
-        # If an id still hasn't been specified, generate one from the caption's
-        # contents
-        if id is None:
+    def generate_label_id(self):
+        """Generate the label id and set the id in the attributes."""
+        if self.label_id is not None:
+            label_id = self.label_id
+        elif 'id' in self.attributes:
+            label_id = self.attributes['id']
+        else:
             text = self.default_fmt()
-            id = 'caption-' + hashtxt(text)
+            label_id = 'caption-' + hashtxt(text)
 
-        kind = ('caption',) if kind is None else kind
-        super(Caption, self).set_label(id=id, kind=kind, title=title)
+        # Set the 'id' attributes
+        self.attributes['id'] = label_id
+        return label_id
 
-        self.kind = ('caption',) if kind is None else (kind, 'caption')
+    def generate_label_kind(self):
+        return self.kind if self.kind is not None else ('caption',)
 
     def default_fmt(self, content=None):
-        """Add newline to the end of a caption"""
-        label = self.label
-        if label is not None:
-            label_tag = self.get_label_tag()
+        # Prepare the content with the label. References for the default format
+        # are not supported
+        content = ''
+        if self.label_tag is not None:
+            content += self.label_tag.default_fmt()
+        content += content_to_str(self.content)
 
-            # add the label to the caption
-            return (label_tag.default_fmt() + ' ' +
-                    super(Caption, self).default_fmt())
-        else:
-            return super(Caption, self).default_fmt()
-
-    def html_fmt(self, content=None, level=1,):
-        label = self.label
-        if self.label is not None:
-            label_tag = self.get_label_tag(target='.html')
-
-            # Create a span element for the caption
-            class_str = ' '.join(self.kind)
-            attrs_str = 'class="{}", id={}'.format(class_str, label.id)
-            html_content = [label_tag.html_fmt(level=level + 1),
-                            super().html_fmt(level=level + 1)]
-            span = html_tag('span', attributes=attrs_str,
-                            formatted_content=html_content,
-                            level=level + 1)
-            return span
-        else:
-            return super().html_fmt(level=level+1)
+        return super().default_fmt(content=content)
 
     def tex_fmt(self, content=None, mathmode=False, level=1):
-        content = content if content is not None else self.content
-        label = self.label
+        cls_name = self.__class__.__name__.lower()
+        content = ''
 
-        if self.label is not None:
-            label_tag = self.get_label_tag(target='.tex')
+        # Prepare the tag contents to include the label tag.
+        # ex: 'My Title' becomes 'Chap 1. My Title'
+        if self.label_tag is not None:
+            content += self.label_tag.tex_fmt(mathmode=mathmode,
+                                              level=level)
 
-            # Format the label and add it to the caption
-            string = label_tag.tex_fmt(mathmode=mathmode, level=level + 1) + " "
+        # Format the tag's contents into a string
+        content += content_to_str(self.content, target='.tex',
+                                  mathmode=mathmode, level=level)
 
-            if isinstance(content, list):
-                content = [string] + content
-            elif isinstance(content, str):
-                content = string + content
+        # Format the heading tag. ex: \chapter{Chapter 1. My First Chapter}
+        content = tex_cmd(cls_name, attributes=self.attributes,
+                          formatted_content=content)
 
-            label_str = tex_cmd(cmd='label', formatted_content=label.id)
+        if self.label_anchor is not None:
+            content += ' ' + self.label_anchor.tex_fmt(mathmode=mathmode,
+                                                       level=level)
 
-            # Format the caption
-            return ("  " +
-                    super(Caption, self).tex_fmt(content=content,
-                                                 mathmode=mathmode,
-                                                 level=level + 1) +
-                    " " + label_str + "\n")
+        return content
+
+    def html_fmt(self, content=None, level=1):
+        # Prepare the tag contents to include the label tag.
+        # ex: 'My Title' becomes 'Chap 1. My Title'
+        content = []
+        if self.label_tag is not None:
+            content.append(self.label_tag)
+
+        if isinstance(self.content, list):
+            content += self.content
         else:
-            return super(Caption, self).tex_fmt(content=content,
-                                                mathmode=mathmode,
-                                                level=level + 1)
+            content.append(self.content)
+
+        return super().html_fmt(content=content, level=level)
 

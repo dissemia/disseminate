@@ -1,9 +1,12 @@
 import copy
 import pytest
 import io
+from collections import namedtuple
 
 from disseminate.context import BaseContext
 from disseminate.attributes import Attributes
+from disseminate.paths import SourcePath, TargetPath
+from disseminate.document import Document
 
 
 @pytest.fixture(scope='function')
@@ -18,6 +21,33 @@ def attributes_cls():
     """Returns a copy of the attributes class."""
     CopyAttributes = copy.deepcopy(Attributes)
     return CopyAttributes
+
+
+@pytest.fixture(scope='function')
+def mocktag_cls():
+    """Returns a mock Tag class for creating tag objects from namedtuples."""
+    # Create a mock tag class
+    MockTag = namedtuple('MockTag', 'name attributes content context')
+    return MockTag
+
+
+@pytest.fixture(scope='function')
+def doc(tmpdir):
+    """Returns a test document"""
+    # Setup the paths
+    src_filepath = SourcePath(project_root=tmpdir, subpath='test.dm')
+    target_root = TargetPath(target_root=tmpdir)
+
+    # Create the source file
+    src_filepath.touch()
+
+    # Create and return the document
+    return Document(src_filepath=src_filepath, target_root=target_root)
+
+
+@pytest.fixture(scope='function')
+def doc_cls():
+    return Document
 
 
 @pytest.fixture

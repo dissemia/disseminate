@@ -137,7 +137,9 @@ class Tag(object):
         for the documents of all labels referenced by this tag."""
         # Get the latest mtime for this label and all sub-labels
         flattened_list = self.flatten(filter_tags=True)
-        mtimes = [tag.mtime for tag in flattened_list if hasattr(tag, 'mtime')]
+
+        mtimes = [tag.context.get('mtime', None)
+                  for tag in flattened_list if hasattr(tag, 'context')]
         mtimes += [self.context.get('mtime', None)]
 
         # Remove None values from mtimes

@@ -3,7 +3,7 @@ Misc utilities for tags.
 """
 
 
-def content_to_str(content, target='.txt'):
+def content_to_str(content, target='.txt', **kwargs):
     """Convert a tag or string to a string for the specified target.
 
     This function is used to convert an element, which is either a string, tag
@@ -11,7 +11,8 @@ def content_to_str(content, target='.txt'):
 
     Parameters
     ----------
-    content : str, :obj:`Tag <disseminate.tags.core.Tag>` or list of both
+    content : Union[str, List[Union[str, list, :obj:`Tag \
+        <disseminate.tags.tag.Tag>`], :obj:`Tag <disseminate.tags.tag.Tag>`]
         The element to convert into a string.
     target : str, optional
         The target format of the string to return.
@@ -25,7 +26,8 @@ def content_to_str(content, target='.txt'):
     format_func = ('default_fmt' if target == 'txt' else
                    '_'.join((target, 'fmt')))  # ex: tex_fmt
 
-    return ''.join(format_content(content=content, format_func=format_func))
+    return ''.join(format_content(content=content, format_func=format_func,
+                                  **kwargs))
 
 
 def format_content(content, format_func, **kwargs):

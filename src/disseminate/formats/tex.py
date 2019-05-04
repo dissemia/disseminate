@@ -41,7 +41,8 @@ def tex_cmd(cmd, attributes='', formatted_content=None, indent=None):
         - an non-allowed environment is used
     """
     # Make sure the environment is permitted
-    if cmd not in settings.tex_cmd_arguments:
+    if (cmd not in settings.tex_cmd_arguments and
+       cmd not in settings.tex_cmd_optionals):
         msg = "Cannot use the LaTeX command '{}'"
         raise TexFormatError(msg.format(cmd))
 
@@ -50,11 +51,18 @@ def tex_cmd(cmd, attributes='', formatted_content=None, indent=None):
                   attributes)
 
     # Get the required arguments
-    reqs = attributes.filter(attrs=settings.tex_cmd_arguments[cmd],
-                             target='tex')
+    if cmd in settings.tex_cmd_arguments:
+        reqs = attributes.filter(attrs=settings.tex_cmd_arguments[cmd],
+                                 target='tex',
+                                 sort_by_attrs=True)
+        reqs_str = reqs.tex_arguments
+    else:
+        reqs = None
+        reqs_str = ''
 
     # Make sure the correct number of required arguments were found
-    if len(reqs) != len(settings.tex_cmd_arguments[cmd]):
+    if (reqs is not None and
+       len(reqs) != len(settings.tex_cmd_arguments[cmd])):
         msg = ("The LaTeX environment '{}' did not receive the correct "
                "required arguments. Required arguments received: {}")
         raise TexFormatError(msg.format(cmd, reqs))
@@ -76,7 +84,7 @@ def tex_cmd(cmd, attributes='', formatted_content=None, indent=None):
         formatted_content = ''
 
     # format the tex command
-    tex_text = "\\" + cmd + reqs.tex_arguments + opts_str + formatted_content
+    tex_text = "\\" + cmd + reqs_str + opts_str + formatted_content
 
     # Indent the text block, if specified
     if indent is not None:
@@ -117,7 +125,8 @@ def tex_env(env, attributes, formatted_content, min_newlines=False,
         - an non-allowed environment is used
     """
     # Make sure the environment is permitted
-    if env not in settings.tex_env_arguments:
+    if (env not in settings.tex_env_arguments and
+       env not in settings.tex_env_optionals):
         msg = "Cannot use the LaTeX environment '{}'"
         raise TexFormatError(msg.format(env))
 
@@ -126,12 +135,19 @@ def tex_env(env, attributes, formatted_content, min_newlines=False,
                   attributes)
 
     # Get the required arguments
-    reqs = attributes.filter(attrs=settings.tex_env_arguments[env],
-                             target='tex',
-                             sort_by_attrs=True)
+    # Get the required arguments
+    if env in settings.tex_env_arguments:
+        reqs = attributes.filter(attrs=settings.tex_env_arguments[env],
+                                 target='tex',
+                                 sort_by_attrs=True)
+        reqs_str = reqs.tex_arguments
+    else:
+        reqs = None
+        reqs_str = ''
 
     # Make sure the correct number of required arguments were found
-    if len(reqs) != len(settings.tex_env_arguments[env]):
+    if (reqs is not None and
+       len(reqs) != len(settings.tex_env_arguments[env])):
         msg = ("The LaTeX environment '{}' did not receive the correct "
                "required arguments. Required arguments received: {}")
         raise TexFormatError(msg.format(env, reqs))
@@ -156,7 +172,7 @@ def tex_env(env, attributes, formatted_content, min_newlines=False,
 
     # format the tex environment
     tex_text = ("\\begin" + '{' + env + '}' +
-                reqs.tex_arguments +
+                reqs_str +
                 opts_str +
                 (' %' if min_newlines else '') +
                 formatted_content +

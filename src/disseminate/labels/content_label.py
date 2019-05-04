@@ -120,8 +120,8 @@ class ContentLabel(Label):
         return '.'.join(numbers)
 
 
-class HeadingLabel(ContentLabel):
-    """A content label for a document heading."""
+class DocumentLabel(ContentLabel):
+    """A content label for a document heading--not a regular heading."""
     pass
 
 
@@ -155,11 +155,11 @@ def curate_content_labels(registered_labels, *args, **kwargs):
     for label in content_labels:
         # Switch the local count whenever a new document is encountered.
         # However, the local_counter is not reset between documents
-        if not isinstance(label, HeadingLabel) and doc_id != label.doc_id:
+        if not isinstance(label, DocumentLabel) and doc_id != label.doc_id:
             local_counter = dict()
             doc_id = label.doc_id
 
-        if label.kind[-1] == 'part':
+        if label.kind and label.kind[-1] == 'part':
             # If it's a new chapter (i.e. a chapter or document title)
             # Get its label and reset the counters for the heading
             # registered_labels below
@@ -175,7 +175,7 @@ def curate_content_labels(registered_labels, *args, **kwargs):
             local_counter['subsection'] = 0
             local_counter['subsubsection'] = 0
 
-        if label.kind[-1] == 'chapter':
+        if label.kind and label.kind[-1] == 'chapter':
             # If it's a new chapter (i.e. a chapter or document title)
             # Get its label and reset the counters for the heading
             # registered_labels below
@@ -189,7 +189,7 @@ def curate_content_labels(registered_labels, *args, **kwargs):
             local_counter['subsection'] = 0
             local_counter['subsubsection'] = 0
 
-        elif label.kind[-1] == 'section':
+        elif label.kind and label.kind[-1] == 'section':
             section_label = label
             subsection_label = None
             subsubsection_label = None
@@ -198,14 +198,14 @@ def curate_content_labels(registered_labels, *args, **kwargs):
             local_counter['subsection'] = 0
             local_counter['subsubsection'] = 0
 
-        elif label.kind[-1] == 'subsection':
+        elif label.kind and label.kind[-1] == 'subsection':
             subsection_label = label
             subsubsection_label = None
 
             # Reset the local_counter for sections, subsections
             local_counter['subsubsection'] = 0
 
-        elif label.kind[-1] == 'subsubsection':
+        elif label.kind and label.kind[-1] == 'subsubsection':
             subsubsection_label = label
 
         # Set the counters for headings

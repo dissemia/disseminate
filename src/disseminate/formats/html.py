@@ -16,7 +16,8 @@ class HtmlFormatError(FormattingError):
     pass
 
 
-def html_tag(name, attributes='', formatted_content=None, level=1):
+def html_tag(name, attributes='', formatted_content=None, level=1,
+             pretty_print=settings.html_pretty):
     """Format an html tag string.
 
     Parameters
@@ -26,10 +27,13 @@ def html_tag(name, attributes='', formatted_content=None, level=1):
     attributes : Union[:obj:`Attributes <disseminate.attributes.Attributes>`, \
         str], optional
         The attributes of the tag.
-    formatted_content : Union[None, str, list, :obj:`lxml.builder.E`],  optional
+    formatted_content : Optional[Union[str, list, :obj:`lxml.builder.E`]]
         The contents of the html tag.
-    level : int, optional
-            The level of the tag.
+    level : Optional[int]
+        The level of the tag.
+    pretty_print : Optional[bool]
+        If True, make the formatted html pretty--i.e. with newlines and spacing
+        for nested tags.
 
     Returns
     -------
@@ -55,7 +59,8 @@ def html_tag(name, attributes='', formatted_content=None, level=1):
     # Get the required arguments
     if name in settings.html_tag_arguments:
         reqs = attributes.filter(attrs=settings.html_tag_arguments[name],
-                                 target='html')
+                                 target='html',
+                                 sort_by_attrs=True)
     else:
         reqs = None
 
@@ -68,7 +73,8 @@ def html_tag(name, attributes='', formatted_content=None, level=1):
     # Get optional arguments
     if name in settings.html_tag_optionals:
         opts = attributes.filter(attrs=settings.html_tag_optionals[name],
-                                 target='html')
+                                 target='html',
+                                 sort_by_attrs=True)
     else:
         opts = None
 
@@ -100,22 +106,25 @@ def html_tag(name, attributes='', formatted_content=None, level=1):
 
     # Format the tag into a string, if it's the root level
     if level == 1:
-        s = (etree.tostring(e, pretty_print=settings.html_pretty)
+        s = (etree.tostring(e, pretty_print=pretty_print)
                   .decode("utf-8"))
         return Markup(s)  # Mark string as safe, since it's escaped by lxml
     else:
         return e
 
 
-def html_entity(entity, level=1):
+def html_entity(entity, level=1, pretty_print=settings.html_pretty):
     """Format an html entity string.
 
     Parameters
     ----------
     entity : str
         an html entity string
-    level : int, optional
+    level : Optional[str]
         The level of the tag.
+    pretty_print : Optional[bool]
+        If True, make the formatted html pretty--i.e. with newlines and spacing
+        for nested tags.
 
     Returns
     -------
@@ -141,7 +150,7 @@ def html_entity(entity, level=1):
 
     e = Entity(entity.strip())
     if level == 1:
-        s = (etree.tostring(e, pretty_print=settings.html_pretty)
+        s = (etree.tostring(e, pretty_print=pretty_print)
              .decode("utf-8"))
         return Markup(s)  # Mark string as safe, since it's escaped by lxml
     else:

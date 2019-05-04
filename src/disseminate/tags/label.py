@@ -28,7 +28,6 @@ def generate_label_id(tag):
     assert tag.context.is_valid('doc_id')
     context = tag.context
     doc_id = context['doc_id']
-
     # Retrieve the tag attributes and content, and make sure they're in the
     # needed formats
     content = tag.content
@@ -49,7 +48,7 @@ def generate_label_id(tag):
 
     # Try to generate the label_id from the contents
     elif isinstance(content, str) and content.strip() == '':
-        # The contents of the tag is empty. Make an automatically generated
+        # The contents of the tag are empty. Make an automatically generated
         # label
         label_count = context.setdefault('label_count', 0) + 1
         context['label_count'] = label_count
@@ -114,6 +113,71 @@ def create_label(tag, kind, label_id=None):
     label_manager.add_content_label(id=label_id, kind=kind,
                                     title=content, context=context)
     return label_id
+
+
+class LabelMixin(object):
+    """A mixin class for working with LabelTags LabelAnchors.
+
+    This mixing works in coordination with the :class:`Tag
+    <disseminate.tags.tag.Tag>` base class. The constructor (__init__) of this
+    class should be run after the Tag base class's constructor.
+    """
+
+    label_id = None
+    label_tag = None
+    label_anchor = None
+
+    def __init__(self, name, content, attributes, context):
+        self.create_label()
+
+    def generate_label_id(self):
+        """Generate the label_id to use in creating the label.
+
+        Override this function to customize the generation of the label_id.
+
+        Returns
+        -------
+        label_id : str
+            The generated label_id.
+        """
+        if 'id' in self.attributes:
+            # Get the label_id from the attributes, if specified.
+            return self.attributes['id']
+        else:
+            # No label id specified. Generate a label_id
+            return generate_label_id(tag=self)
+
+    def generate_label_kind(self):
+        """Generate the kind tuple for the created label.
+
+        Override this function to customize the generation of the label kind.
+
+        Returns
+        -------
+        kind : Tuple[str]
+            A tuple of strings for the kind of label. ex: ('heading', 'chapter')
+        """
+        return tuple()
+
+    def create_label(self):
+        """Create the label in the label_manager for this tag."""
+        # Create the label. First,
+        label_id = self.generate_label_id()
+        kind = self.generate_label_kind()
+        label_id = create_label(tag=self, kind=kind, label_id=label_id)
+
+        # Add the label identifier to this tag's attributes. This will be
+        # this tag's anchor for targets like html
+        self.label_id = label_id
+        self.attributes['id'] = label_id
+
+        attrs = self.attributes.filter('id', 'class', 'short')
+        context = self.context
+
+        self.label_tag = LabelTag(name='label', attributes=attrs,
+                                  content=label_id, context=context)
+        self.label_anchor = LabelAnchor(name='label_anchor', attributes=attrs,
+                                        content=label_id, context=context)
 
 
 class LabelAnchor(Tag):
@@ -185,6 +249,12 @@ class LabelTag(Tag):
 
         super().__init__(name=name, attributes=attributes,
                          content=content, context=context)
+
+        # Clean up the attributes.
+        # 1. Remove the 'id' attribute, since it will be included by the
+        #    LabelAnchor
+        if 'id' in self.attributes:
+            del self.attributes['id']
 
     def default_fmt(self, content=None):
         # Get the label tag format

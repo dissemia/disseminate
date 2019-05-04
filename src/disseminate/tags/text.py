@@ -3,7 +3,8 @@ Text formatting tags
 """
 from textwrap import wrap
 
-from .tag import Tag, TagError
+from .tag import Tag
+from .exceptions import TagError, assert_content_str
 from ..formats import tex_cmd, tex_env, html_entity, html_tag
 from .utils import format_content
 
@@ -199,19 +200,16 @@ class Symbol(Tag):
     aliases = ("smb ",)
     active = True
 
-    def assert_not_nested(self):
-        """Raise a TagError if this tag is nested."""
-        if not isinstance(self.content, str):
-            msg = "The @symbol tag cannot have tags nested within it."
-            raise TagError(msg)
+    def __init__(self, name, content, attributes, context):
+        assert_content_str(content)
+        super().__init__(name=name, content=content, attributes=attributes,
+                         context=context)
 
     def html_fmt(self, content=None, level=1):
-        self.assert_not_nested()
         return html_entity(entity=self.content, level=level)
 
     def tex_fmt(self, content=None, mathmode=False, level=1):
         content = content if content is not None else self.content
-        self.assert_not_nested()
         content = "\\" + content
         return (tex_cmd(cmd='ensuremath', attributes='',
                         formatted_content=content)
@@ -247,9 +245,6 @@ class Verb(Tag):
     include_paragraphs = False
 
     html_name = 'code'
-
-    def __init__(self, name, content, attributes, context):
-        super().__init__(name, content, attributes, context)
 
     def html_fmt(self, content=None, level=1):
         if self.name == "verbatim":

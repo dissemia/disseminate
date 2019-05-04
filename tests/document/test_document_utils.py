@@ -196,35 +196,34 @@ def test_render_tree_html():
 
     # Render the html for file1.dm
     html = render_tree_html(docs[0:1])
-    print(html)
     key = """<div class="tableset">
-      <table class="tablesorter" id="index">
-        <div class="caption-title"><strong>Project Title:</strong> file1</div>
-        <thead>
-          <tr>
-            <th>num</th>
-            <th>source</th>
-            <th>targets</th>
-            <th>last saved</th>
-          </tr>
-        </thead>
-        <tr class="level-1">
-          <td class="num">1</td>
-          <td class="src">
-            <a href="/tests/document/example6/src/file1.dm">file1.dm</a>
-          </td>
-          <td class="tgt">(<a href="/html/file1.html">html</a>)</td>
-          <td class="date">{mtime1}</td>
-        </tr>
-        <tr class="level-2">
-          <td class="num">1</td>
-          <td class="src">
-            <a href="/tests/document/example6/src/file2.dm">file2.dm</a>
-          </td>
-          <td class="tgt">(<a href="/html/file2.html">html</a>)</td>
-          <td class="date">{mtime2}</td>
-        </tr>
-      </table>
-    </div>
-    """.format(mtime1=mtime_str1, mtime2=mtime_str2)
-    assert html == strip_leading_space(key)
+  <table id="index" class="tablesorter">
+    <div class="caption-title"><strong>Project Title:</strong> file1</div>
+    <thead>
+      <tr>
+        <th>num</th>
+        <th>source</th>
+        <th>targets</th>
+        <th>last saved</th>
+      </tr>
+    </thead>
+    <tr class="level-1">
+      <td class="num">1</td>
+      <td class="src">
+        <a href="/tests/document/example6/src/file1.dm">file1.dm</a>
+      </td>
+      <td class="tgt">(<a href="/html/file1.html">html</a>)</td>
+      <td class="date">Jan 19, 2019 at 10:14AM</td>
+    </tr>
+    <tr class="level-2">
+      <td class="num">1</td>
+      <td class="src">
+        <a href="/tests/document/example6/src/file2.dm">file2.dm</a>
+      </td>
+      <td class="tgt">(<a href="/html/file2.html">html</a>)</td>
+      <td class="date">Jan 19, 2019 at 10:14AM</td>
+    </tr>
+  </table>
+</div>
+""".format(mtime1=mtime_str1, mtime2=mtime_str2)
+    assert html == key

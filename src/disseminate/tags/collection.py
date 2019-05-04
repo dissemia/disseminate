@@ -33,9 +33,13 @@ class Collection(Tag):
             subdocs = [subdoc for subdoc in subdocs if target in subdoc.targets]
 
         # Retrieve the context tags that match the context_name
-        return [subdoc.context[context_name] for subdoc in subdocs
-                if context_name in subdoc.context and
-                isinstance(subdoc.context[context_name], Tag)]
+        tags = []
+        for subdoc in subdocs:
+            if (context_name in subdoc.context and
+               isinstance(subdoc.context[context_name], Tag)):
+                tags.append('\n')
+                tags.append(subdoc.context[context_name])
+        return tags
 
     @property
     def mtime(self):

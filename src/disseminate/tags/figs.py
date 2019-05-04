@@ -2,7 +2,7 @@
 Tags for figure environments.
 """
 from .tag import Tag
-from .caption import Caption, CaptionError
+from .caption import Caption
 
 
 class BaseFigure(Tag):
@@ -16,34 +16,20 @@ class BaseFigure(Tag):
         super().__init__(name=name, content=content, attributes=attributes,
                          context=context)
 
-        # Register the caption as a label, if there's a caption in the contents
-        id = self.attributes.pop('id', None)
+        # Transfer the label id ('id') to the caption, if available. First,
+        # find the caption tag, if available
+        captions = [tag for tag in self.flatten(filter_tags=True)
+                    if isinstance(tag, Caption)]
 
-        # Get the caption tag from the content. If the caption is in a list
-        # in the content, then place it last
-        if isinstance(self.content, list):
-            caption = [i for i in self.content if isinstance(i, Caption)]
-            if len(caption) > 1:
-                msg = "Only one caption can be used for a figure"
-                raise CaptionError(msg)
-            caption = caption[0] if len(caption) == 1 else None
-            new_content = [i for i in self.content
-                           if not isinstance(i, Caption)]
+        for caption in captions:
+            # Transfer the 'id' to the caption (but only the first)
+            caption.label_id = self.attributes.pop('id', None)
 
-            # Add the caption if it's present
-            if caption is not None:
-                new_content.append(caption)
+            # Set the label kind for the caption as a figure caption
+            caption.kind = ('caption', 'figure')
 
-            self.content = new_content
-
-        elif isinstance(self.content, Caption):
-            caption = self.content
-
-        else:
-            caption = None
-
-        if caption is not None:
-            caption.set_label(kind='figure', id=id)
+            # Create the label in the label_manager
+            caption.create_label()
 
 
 class Marginfig(BaseFigure):

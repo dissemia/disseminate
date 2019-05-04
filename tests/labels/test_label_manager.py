@@ -2,7 +2,7 @@
 Test the label manager.
 """
 from disseminate import Document
-from disseminate.labels import ContentLabel, HeadingLabel
+from disseminate.labels import ContentLabel, DocumentLabel
 
 
 def test_label_manager_basic_labels(tmpdir):
@@ -223,7 +223,7 @@ def test_label_manager_label_reordering(tmpdir):
         label1, label2, label3, label4, label5, label6 = labels
 
         # Check the numbers and kind
-        assert isinstance(label1, HeadingLabel)
+        assert isinstance(label1, DocumentLabel)
         assert label1.kind == ('document', 'document-level-1')
         assert label1.local_order == (1, 1)
         assert label1.global_order == (1, 1)
@@ -238,7 +238,7 @@ def test_label_manager_label_reordering(tmpdir):
         assert label3.local_order == (2,)
         assert label3.global_order == (2,)
 
-        assert isinstance(label4, HeadingLabel)
+        assert isinstance(label4, DocumentLabel)
         assert label4.kind == ('document', 'document-level-2')
         assert label4.local_order == (1, 1)
         assert label4.global_order == (2, 1)

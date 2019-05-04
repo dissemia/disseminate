@@ -22,18 +22,31 @@ def test_attributes_init():
     assert attrs['red'] == StringPositionalValue
     assert attrs['style'] == 'map'
 
+    # 2a. Test with other characters: '(', ')'
     attrs = Attributes('(a)')
     assert attrs.keys() == {'(a)'}
     assert attrs['(a)'] == StringPositionalValue
 
-    # 2. Test with non-conventional arguments
+    # 2b. Test with other characters: ':', ';', '/', '.'
+    attrs = Attributes('sec:file1.dm/test')
+    assert attrs.keys() == {'sec:file1.dm/test'}
+    assert attrs['sec:file1.dm/test'] == StringPositionalValue
+
+    # 2c. Test with '[' and ']'
+    attrs = Attributes('[class="base btnred" red, style=map]', )
+    assert attrs.keys() == {'class', 'red', 'style'}
+    assert attrs['class'] == 'base btnred'
+    assert attrs['red'] == StringPositionalValue
+    assert attrs['style'] == 'map'
+
+    # 3. Test with non-conventional arguments
     attrs = Attributes()
     assert len(attrs) == 0
 
     attrs = Attributes(None)
     assert len(attrs) == 0
 
-    # 3. Test with dicts
+    # 4. Test with dicts
     attrs = Attributes({'test': 'class'})
     assert attrs == {'test': 'class'}
 

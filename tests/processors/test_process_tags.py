@@ -5,7 +5,7 @@ from disseminate.tags import Tag
 import disseminate.processors as pr
 
 
-def test_process_context_tags(context_cls):
+def test_process_context_tags(doc):
     """Test the process_context_tags function."""
 
     header = """
@@ -18,8 +18,10 @@ def test_process_context_tags(context_cls):
     This is my @macro body.
     """
 
-    # Load the header into a context
-    context = context_cls(process_context_tags=['title', 'body'])
+    # Load the header into a context. A doc is needed with a label_manager
+    # because the title tag creates a label
+    context = doc.context
+    context['process_context_tags'] = {'title', 'body'}
     body = context.load(header)
     context['body'] = body
 
@@ -41,8 +43,8 @@ def test_process_context_tags(context_cls):
     assert isinstance(context['targets'], str)
     assert context['targets'] == 'html, tex'
 
-    # The 'macro isn't listed in the 'process_context_tags' entry of the context, so
-    # it isn't processed
+    # The 'macro isn't listed in the 'process_context_tags' entry of the
+    # context, so it isn't processed
     assert isinstance(context['macro'], str)
     assert context['macro'] == '@i{example}'
 

@@ -484,6 +484,44 @@ def test_document_macros(tmpdir):
     assert '<i>example</i>' in rendered_html
 
 
+def test_document_load_on_render(doc):
+    """Test the proper loading of an updated source file on render."""
+
+    # The initial document has the targets listed in the settings.py
+    assert list(doc.targets.keys()) == ['.html']
+
+    # Change the source file, and run the render function. The targets should
+    # be updated to the new values in the updated header.
+    src = """
+    ---
+    targets: html, txt
+    ---
+    """
+    doc.src_filepath.write_text(src)
+    doc.render()
+
+    assert list(doc.targets.keys()) == ['.html', '.txt']
+
+
+
+def test_document_recursion(tmpdir):
+    """Test the loading of a document with itself as the subdocument
+    (recursion)."""
+
+    # Create 2 test documents. First test absolute links
+    src_filepath1 = SourcePath(project_root=tmpdir, subpath='test1.dm')
+    target_root = TargetPath(target_root=tmpdir)
+
+    src_filepath1.write_text("""
+    ---
+    include: test1.dm
+    ---
+    @chapter{one}
+    """)
+
+    doc = Document(src_filepath1, target_root)
+
+
 # Test targets
 @pytest.fixture(params=['.html', '.tex'])
 def target(request):

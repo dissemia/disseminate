@@ -7,8 +7,8 @@ from disseminate import Document, settings
 from disseminate.tags.collection import Collection
 
 
-@pytest.fixture
-def doc(tmpdir):
+@pytest.fixture(scope='function')
+def doctree(tmpdir):
     """Setup a root document with two sub-documents"""
     # Create temp files
     src_path = tmpdir.join('src').mkdir()
@@ -25,21 +25,25 @@ def doc(tmpdir):
       sub2.dm
     ---
     @chapter{one}
-    @collection""")
+    @collection
+    """)
     src_filepath2.write("""
-    @chapter{two}""")
+    @chapter{two}
+    """)
     src_filepath3.write("""
-    @chapter{three}""")
+    @chapter{three}
+    """)
 
     # Load the root document
     doc = Document(src_filepath1, str(tmpdir))
     return doc
 
 
-def test_collection_mtime(doc):
+def test_collection_mtime(doctree):
     """Test the calculation of the modification time for the collection tag."""
+
     # Get the mtimes for the 3 documents.
-    docs = doc.documents_list()
+    docs = doctree.documents_list()
     assert len(docs) == 3
 
     src_filepath1 = docs[0].context['src_filepath']
@@ -54,16 +58,17 @@ def test_collection_mtime(doc):
     # Get the collection tag from the root document. Its mtime should correspond
     # to the latest one: mtime3.
     body_attr = settings.body_attr
-    root1 = doc.context[body_attr]
+    root1 = doctree.context[body_attr]
     tag = root1.content[1]  # collection time
     assert tag.mtime == mtime3
 
 
-def test_collection_selective_target(doc):
+def test_collection_selective_target(doctree):
     """Test the collection tag when one of the sub-documents is not listed as
     a target."""
+
     # Unpack the subdocuments
-    subdocs = doc.documents_list(only_subdocuments=True, recursive=True)
+    subdocs = doctree.documents_list(only_subdocuments=True, recursive=True)
     assert len(subdocs) == 2
     subdoc1, subdoc2 = subdocs
 
@@ -73,105 +78,85 @@ def test_collection_selective_target(doc):
     ---
     targets: html
     ---
-    @chapter{three}""")
+    @chapter{three}
+    """)
     subdoc2.load()  # reload the document
 
     # Now try rendering the collection for the root document in tex. Since tex
     # is not a listed target for the 2nd sub-document, it's contents (chapter
     # three) should not be listed.
     body_attr = settings.body_attr
-    root1 = doc.context[body_attr]
-    assert root1.tex == ('\n\\setcounter{chapter}{1}\n'
-                         '\\chapter{one} \\label{ch:main-dm-one}\n\n\n'
+    root1 = doctree.context[body_attr]
+    assert root1.tex == ('\\setcounter{chapter}{1}\n'
+                         '\\chapter{Chapter 1. one} \\label{ch:main-dm-one}\n'
                          '\\setcounter{chapter}{2}\n'
-                         '\\chapter{two} \\label{ch:sub1-dm-two}\n\n')
+                         '\\chapter{Chapter 2. two} \\label{ch:sub1-dm-two}')
 
 
 # default target
 
-def test_collection_default(doc):
+def test_collection_default(doctree):
     """Test the generation of default collections"""
 
     # The context body for the main document should only have the body of the
     # main document
     body_attr = settings.body_attr
-    root1 = doc.context[body_attr]
-    assert root1.default == ('\none\n\n\n'
-                             'two\n\n\n'
-                             'three\n\n')
+    root1 = doctree.context[body_attr]
+    assert root1.default == ('Chapter 1. one\n'
+                             'Chapter 2. two\n'
+                             'Chapter 3. three')
 
 
 # tex target
 
-def test_collection_tex(doc):
+def test_collection_tex(doctree):
     """Test the generation of default collections"""
 
     # The context body for the main document should only have the body of the
     # main document
     body_attr = settings.body_attr
-    root1 = doc.context[body_attr]
-    assert root1.tex == ('\n\\setcounter{chapter}{1}\n'
-                         '\\chapter{one} \\label{ch:main-dm-one}\n\n\n'
+    root1 = doctree.context[body_attr]
+    assert root1.tex == ('\\setcounter{chapter}{1}\n'
+                         '\\chapter{Chapter 1. one} \\label{ch:main-dm-one}\n'
                          '\\setcounter{chapter}{2}\n'
-                         '\\chapter{two} \\label{ch:sub1-dm-two}\n\n\n'
+                         '\\chapter{Chapter 2. two} \\label{ch:sub1-dm-two}\n'
                          '\\setcounter{chapter}{3}\n'
-                         '\\chapter{three} \\label{ch:sub2-dm-three}\n\n')
+                         '\\chapter{Chapter 3. three} '
+                         '\\label{ch:sub2-dm-three}')
 
 
 # html target
 
-def test_collection_html(doc):
+def test_collection_html(doctree):
     """Test the generation of html collections"""
 
     # The context body for the main document should only have the body of the
     # main document
     body_attr = settings.body_attr
-    root1 = doc.context[body_attr]
+    root1 = doctree.context[body_attr]
 
     key = """<span class="body">
-  <h2 id="ch:main-dm-one">
-    <span class="chapter"><span class="number">1.</span> one</span>
-  </h2>
+  <h2 id="ch:main-dm-one"><span class="label">Chapter 1. </span>one</h2>
   <span class="collection">
-    <span class="body">
-      <h2 id="ch:sub1-dm-two">
-        <span class="chapter"><span class="number">2.</span> two</span>
-      </h2>
-    </span>
-    <span class="body">
-      <h2 id="ch:sub2-dm-three">
-        <span class="chapter"><span class="number">3.</span> three</span>
-      </h2>
-    </span>
-  </span>
+<span class="body"><h2 id="ch:sub1-dm-two"><span class="label">Chapter 2. </span>two</h2></span>
+<span class="body"><h2 id="ch:sub2-dm-three"><span class="label">Chapter 3. </span>three</h2></span></span>
 </span>
 """
-
     assert root1.html == key
 
     # Create a collections tag and see if it includes the subdocuments
     tag = Collection(name='collection', content='', attributes=tuple(),
-                     context=doc.context)
+                     context=doctree.context)
 
     key = """<span class="collection">
-  <span class="body">
-    <h2 id="ch:sub1-dm-two">
-      <span class="chapter"><span class="number">2.</span> two</span>
-    </h2>
-  </span>
-  <span class="body">
-    <h2 id="ch:sub2-dm-three">
-      <span class="chapter"><span class="number">3.</span> three</span>
-    </h2>
-  </span>
-</span>
+<span class="body"><h2 id="ch:sub1-dm-two"><span class="label">Chapter 2. </span>two</h2></span>
+<span class="body"><h2 id="ch:sub2-dm-three"><span class="label">Chapter 3. </span>three</h2></span></span>
 """
-
     assert tag.html == key
 
     # Now remove the collection tag to the root document. The sub-documents
     # shouldn't be included
-    src_filepath1 = doc.context['src_filepath']
+    src_filepath1 = doctree.context['src_filepath']
     src_filepath1.write_text("""
     ---
     targets: html
@@ -181,15 +166,12 @@ def test_collection_html(doc):
     ---
     @chapter{one}
     """)
-    doc.load()
+    doctree.load()
 
-    root1 = doc.context[body_attr]
+    root1 = doctree.context[body_attr]
 
     key = """<span class="body">
-  <h2 id="ch:main-dm-one">
-    <span class="chapter"><span class="number">1.</span> one</span>
-  </h2>
+  <h2 id="ch:main-dm-one"><span class="label">Chapter 1. </span>one</h2>
 </span>
 """
-
     assert root1.html == key

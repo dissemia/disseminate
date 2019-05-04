@@ -10,5 +10,5 @@ The labels and label manager are responsible for:
    to these elements.
 """
 from .labels import Label, LabelNotFound
-from .content_label import ContentLabel, HeadingLabel
+from .content_label import ContentLabel, DocumentLabel
 from .label_manager import LabelManager

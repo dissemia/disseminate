@@ -9,7 +9,7 @@ test = """
     This is my test document. It has multiple paragraphs.
 
     Here is a new one with @b{bolded} text as an example.
-    @marginfig[offset=-1.0em]{
+    @myfig[offset=-1.0em]{
       @img{media/files}
       @caption{This is my @i{first} figure.}
     }
@@ -23,7 +23,7 @@ expected_result = """
     This is my test document. It has multiple paragraphs.
 
     Here is a new one with @b{bolded} text as an example.
-    @marginfig[offset=-1.0em]{
+    @myfig[offset=-1.0em]{
       @img{media/files}
       @caption{This is my @i{first} figure.}
     }
@@ -39,8 +39,8 @@ expected_result_txt = """
     Here is a new one with bolded text as an example.
     
       
-      
-    This is my first figure.
+      This is my first figure.
+    
 
     This is a 13C variable, an 15N, and a H2O macro. but this is an email 
     address: justin.com

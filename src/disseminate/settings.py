@@ -99,37 +99,22 @@ default_context = {
     'label_fmts': {
         'document': '@label.title',
 
-        # caption tags
-        'caption_figure': '@b{Fig. @label.chapter_number.@label.number}.',
+        'ref_document': '@label.title',
 
-        'ref_figure': '@b{Fig. @label.chapter_number.@label.number}',
-        'ref_figure_html': '@a[href="@link"]{'
-                           '@b{Fig. @label.chapter_number.@label.number}}',
-        'ref_figure_tex': '\\hyperref[@label.id]{'
-                           '@b{Fig. @label.chapter_number.@label.number}}',
+        # caption tags
+        'caption_figure': '@b{Fig. @label.number}.',
+
+        'ref_caption_figure': '@b{Fig. @label.number}',
+        'ref_caption_figure_html': '@b{Fig. @label.number}}',
+        'ref_caption_figure_tex': '@b{Fig. @label.number}}',
 
         # Headings tags
-        'heading': '@label.title',
+        'heading': '@label.tree_number. ',
+        'heading_title': '',
+        'heading_part': 'Part @label.part_number. ',
+        'heading_chapter': 'Chapter @label.chapter_number. ',
 
-        # html specific formatting
-        'heading_html': '@number{@label.tree_number.} '
-                        '@label.title',
-        'heading_title_html': '@label.title',
-
-        # Ref tags
-        'ref_heading_html': '@a[href="@link"]{@label.title}',
-
-        # TOCRef Tags
-        'tocref_document_html': '@a[href="@link"]{@label.title}',
-        'tocref_document_tex': '\\hyperref[@label.id]'
-                               '{@label.title} '
-                               '\\hfill \\pageref{@label.id}',
-        'tocref_heading_html': '@a[href="@link"]{'
-                               '@number{@label.tree_number.} '
-                               '@label.title}',
-        'tocref_heading_tex': '\\hyperref[@label.id]'
-                              '{@label.tree_number. @label.title} '
-                              '\\hfill \\pageref{@label.id}',
+        'ref_heading': '@label.title',
 
         # Citation formats
         # 'citation': '@sup{label.number}',
@@ -239,6 +224,7 @@ html_pretty = True
 
 #: Allowed html tags with required arguments/attributes.
 #: This dict will be checked to see if an html tag is allowed.
+#: The values are tuples that indicate the order of attributes for tags
 html_tag_arguments = {'a': ('href',),
                       'img': ('src',),
                       'link': ('rel',)
@@ -285,7 +271,9 @@ html_tag_optionals = {'a': ('class', 'role'),
 #: ~~~~~~~~
 
 #: Allowed latex environments and required arguments. If an environment is not
-#: listed here, it cannot be used.
+#: listed here or in the tex_env_optionals, it cannot be used.
+#: The values are tuples that indicate the order of attributes for environments
+#: and commands
 tex_env_arguments = {'enumerate': empty,  # no required arguments
                      'itemize': empty,
                      'marginfigure': empty,
@@ -343,9 +331,14 @@ tex_cmd_arguments = {'textbf': empty,
                      'includegraphics': empty,
                      'textcolor': (StringPositionalValue,),
                      'boldsymbol': empty,
+
+                     'hfill': empty,
+                     'pageref': (StringPositionalValue,),
                      }
 
-tex_cmd_optionals = {'includegraphics': ('width', 'height')}
+tex_cmd_optionals = {'includegraphics': ('width', 'height'),
+                     'hyperref': (StringPositionalValue,),
+                     }
 
 
 #: Default text width to rewrap paragraphs. Set to 0 to disable.

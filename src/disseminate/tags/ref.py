@@ -145,9 +145,7 @@ class Ref(Tag):
         label_manager = self.label_manager
         label = self.label
         context = self.context
-
         if all(i is not None for i in (label_manager, label, context)):
-
             # Retrieve the format string for the reference
             keys = ('ref', *label.kind)
             format_str = label_manager.format_string(label.id, *keys,

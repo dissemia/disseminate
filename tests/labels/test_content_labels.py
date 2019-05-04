@@ -4,8 +4,33 @@ Test the creation and manipulation of ContentLabel objects.
 from disseminate.labels.content_label import ContentLabel, curate_content_labels
 
 
+def test_labels_curate_content_empty_kind():
+    """Test the curate_content_labels function with no kind specified."""
+    # Create some heading labels
+    label1 = ContentLabel(doc_id='a', id='a', kind=(),
+                          mtime=None, title='a')
+    label2 = ContentLabel(doc_id='a', id='a.a', kind=(),
+                          mtime=None, title='a.a')
+    label3 = ContentLabel(doc_id='a', id='a.a.a',
+                          mtime=None, kind=(),
+                          title='a.a.a')
+
+    # Try curating the heading labels
+    curate_content_labels(registered_labels=[label1, label2, label3])
+
+    # Check the values of the labels. There is not kind, so the labels have no
+    # global_order or local_order
+    assert label1.global_order == ()
+    assert label2.global_order == ()
+    assert label3.global_order == ()
+
+    assert label1.local_order == ()
+    assert label2.local_order == ()
+    assert label3.local_order == ()
+
+
 def test_labels_curate_content_labels_chapter():
-    """Test the curate content labels function for chapter and lower
+    """Test the curate_content_labels function for chapter and lower
     headings."""
     # Create some heading labels
     label1 = ContentLabel(doc_id='a', id='a', kind=('heading', 'chapter'),
@@ -67,7 +92,7 @@ def test_labels_curate_content_labels_chapter():
 
 
 def test_labels_curate_content_labels_part():
-    """Test the curate content labels function for part and lower
+    """Test the curate_content_labels function for part and lower
     headings."""
     # Create some heading labels
     label1 = ContentLabel(doc_id='a', id='a', kind=('heading', 'part'),

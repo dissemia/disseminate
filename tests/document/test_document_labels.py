@@ -25,9 +25,9 @@ def test_document_labels(tmpdir):
 
     # The label should have been created on document creation
     man = doc.context['label_manager']
-    label = man.get_label(id="doc:test.dm")  # Registers labels
+    label = man.get_label(id="doc:test-dm")  # Registers labels
     assert len(man.labels) == 1
-    assert label.id == "doc:test.dm"
+    assert label.id == "doc:test-dm"
     assert label.kind == ('document', 'document-level-1')
 
 
@@ -38,16 +38,15 @@ def test_document_toc(context_cls, tmpdir):
                               subpath='file.dm')
     target_root = TargetPath(target_root=tmpdir)
 
-    # Setup the settings in the context
-    #   - Setup the base_url, and disable relative links
-    #   - Make sure the 'toc' context entry is processed as a tag
-    parent_context = context_cls(base_url='/{target}/{subpath}',
-                                 process_context_tags={'toc'},
-                                 relative_links=False)
-
     # Load example4, which has a file.dm with a 'toc' entry in the heading
     # for documents.
-    doc = Document(src_filepath, target_root, parent_context=parent_context)
+    doc = Document(src_filepath, target_root)
+
+    # Setup the settings in the context
+    context = doc.context
+    context['base_url'] = '/{target}/{subpath}'
+    context['process_context_tags'] = {'toc'}
+    context['relative_links'] = False
 
     # Render the doc
     doc.render()
@@ -57,13 +56,10 @@ def test_document_toc(context_cls, tmpdir):
     assert toc_tag.name == 'toc'
     key = """<ul class="toc-level-1">
   <li>
-    <span class="ref">
-      <a href="/html/file.html">My first title</a>
-    </span>
+    <a href="#doc:file-dm" class="ref">My first title</a>
   </li>
 </ul>
 """
-    print(toc_tag.html)
     assert toc_tag.html == key
 
 
@@ -143,11 +139,11 @@ def test_document_tag_mtime(tmpdir):
     assert src_filepath1.mtime() == root1.mtime
     assert src_filepath2.mtime() == root2.mtime
 
-    # Registering the labels with the 'get_labels' method will update the tag
-    # mtimes so that root1, which references the 2nd document, gets its mtime,
-    # while root2 stays the same
+    # Registering the labels with the 'get_labels' will register the labels
+    # doc1's mtime doesn't change because the @ref tag's label hasn't changed
+    # Neither has doc2.
     labels = label_manager.get_labels()
-    assert src_filepath2.mtime() == root1.mtime
+    assert src_filepath1.mtime() == root1.mtime
     assert src_filepath2.mtime() == root2.mtime
 
 
@@ -192,9 +188,9 @@ def test_document_tree_updates_document_labels(tmpdir):
     assert len(label_manager.collected_labels) == 0
     assert len(label_manager.labels) == 3
 
-    assert label_list[0].id == 'doc:file1.dm'
-    assert label_list[1].id == 'doc:file2.dm'
-    assert label_list[2].id == 'doc:file3.dm'
+    assert label_list[0].id == 'doc:file1-dm'
+    assert label_list[1].id == 'doc:file2-dm'
+    assert label_list[2].id == 'doc:file3-dm'
 
     # 2. Now change the order of the sub-documents and reload the document
     src_filepath1.write_text("""---
@@ -221,9 +217,9 @@ def test_document_tree_updates_document_labels(tmpdir):
     # Check the ordering of labels
     label_list = label_manager.get_labels()  # register labels
     assert len(label_manager.labels) == 3
-    assert label_list[0].id == 'doc:file1.dm'
-    assert label_list[1].id == 'doc:file3.dm'
-    assert label_list[2].id == 'doc:file2.dm'
+    assert label_list[0].id == 'doc:file1-dm'
+    assert label_list[1].id == 'doc:file3-dm'
+    assert label_list[2].id == 'doc:file2-dm'
 
     # 3. Now remove one document
     src_filepath1.write_text("""---
@@ -249,8 +245,8 @@ def test_document_tree_updates_document_labels(tmpdir):
 
     label_list = label_manager.get_labels()  # register labels
     assert len(label_manager.labels) == 2
-    assert label_list[0].id == 'doc:file1.dm'
-    assert label_list[1].id == 'doc:file2.dm'
+    assert label_list[0].id == 'doc:file1-dm'
+    assert label_list[1].id == 'doc:file2-dm'
 
     # 4. Now add the document back
     src_filepath1.write_text("""---
@@ -269,9 +265,9 @@ def test_document_tree_updates_document_labels(tmpdir):
 
     label_list = label_manager.get_labels()
     assert len(label_list) == 3
-    assert label_list[0].id == 'doc:file1.dm'
-    assert label_list[1].id == 'doc:file2.dm'
-    assert label_list[2].id == 'doc:file3.dm'
+    assert label_list[0].id == 'doc:file1-dm'
+    assert label_list[1].id == 'doc:file2-dm'
+    assert label_list[2].id == 'doc:file3-dm'
 
 
 def test_document_tree_updates_with_section_labels(tmpdir):
@@ -404,9 +400,8 @@ def test_document_tree_updates_with_section_labels(tmpdir):
     assert not doc_list[0].render_required(target_filepath1)
     assert not doc_list[1].render_required(target_filepath2)
 
-    # Now touch the second document. Since the first has a label dependency
-    # on this document, it should require a render too.
+    # Now touch the second document.
     src_filepath2.touch()
 
-    assert doc_list[0].render_required(target_filepath1)
+    assert not doc_list[0].render_required(target_filepath1)
     assert doc_list[1].render_required(target_filepath2)

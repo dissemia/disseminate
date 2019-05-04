@@ -22,7 +22,19 @@ class TocRef(Ref):
     This is a separate class so that the label_fmt may be different for TOC
     entries.
     """
-    pass
+
+    def tex_fmt(self, content=None, mathmode=False, level=1):
+        # Add the pageref
+        label = self.label
+        tex_str = super().tex_fmt(content=content, mathmode=mathmode,
+                                  level=level)
+
+        if label is not None:
+            return (tex_str + " " +
+                    tex_cmd('hfill') + " " +
+                    tex_cmd('pageref', attributes=label.id))
+        else:
+            return tex_str
 
 
 class Toc(Tag):
@@ -238,8 +250,7 @@ class Toc(Tag):
             # Create the tag and add it to the tags list
             tag_name = 'toc-' + label.kind[-1]
             tag = TocRef(name=tag_name, content=label.id,
-                         attributes=self.attributes, context=self.context,
-                         doc_id=label.doc_id)
+                         attributes=self.attributes, context=self.context)
 
             # Add the tag to a flat list
             tags.append((level, tag))

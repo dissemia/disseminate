@@ -461,12 +461,11 @@ def test_render_required(tmpdir):
         target_filepath = d.targets['.html']
         assert not d.render_required(target_filepath)
 
-    # Touch the 3rd document. Now the @ref tag in the second document will
-    # trigger a required rendering for the 2nd document, in addition to the 3rd
-    # document becoming stale.
+    # Touch the 3rd document. Now the @ref tag in the second document has not
+    # changed, so only the 3rd document needs to be updated.
     src_filepath3.touch()
 
-    for d, answer in zip(doc_list, [False, True, True]):
+    for d, answer in zip(doc_list, [False, False, True]):
         target_filepath = d.targets['.html']
         assert d.render_required(target_filepath) is answer
 
@@ -491,9 +490,8 @@ def test_render_required(tmpdir):
     @chapter{file3}
     """)
 
-    # Documents 2 and 3 require a render; document 3 because it was just written
-    # and document 2 because it has a tag that depends on document 3.
-    for d, answer in zip(doc_list, [False, True, True]):
+    # Documents 3 requires a render because it was just written
+    for d, answer in zip(doc_list, [False, False, True]):
         target_filepath = d.targets['.html']
         assert d.render_required(target_filepath) is answer
 

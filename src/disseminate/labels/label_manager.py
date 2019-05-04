@@ -3,8 +3,10 @@ The manager for labels.
 """
 from .labels import (LabelError, LabelNotFound, find_duplicates,
                      transfer_labels, order_labels)
-from .content_label import ContentLabel, HeadingLabel, curate_content_labels
+from .content_label import ContentLabel, DocumentLabel, curate_content_labels
 from ..utils.classes import weakattr
+from ..utils.dict import find_entry
+from ..utils.string import replace_macros
 
 
 # Wrap curation functions
@@ -22,7 +24,7 @@ def order_labels_partial(registered_labels, *args, **kwargs):
     # all labels, except for HeadingLabels, which are set by
     # curate_content_labels
     return order_labels(registered_labels=registered_labels,
-                        exclude_labels=(HeadingLabel,), *args, **kwargs)
+                        exclude_labels=(DocumentLabel,), *args, **kwargs)
 
 
 class LabelManager(object):
@@ -169,9 +171,9 @@ class LabelManager(object):
         label.title = title
         return label
 
-    def add_heading_label(self, id, kind, title, context):
+    def add_document_label(self, id, kind, title, context):
         label = self._add_label(id=id, kind=kind, context=context,
-                                label_cls=HeadingLabel, title=title)
+                                label_cls=DocumentLabel, title=title)
         label.title = title
         return label
 
@@ -284,14 +286,14 @@ class LabelManager(object):
         """
         assert self.root_context.is_valid('document')
 
-        # Get the doc_ids from the root document
-        root_document = self.root_context['document']()  # de-reference weakref
-        doc_ids = root_document.doc_ids
-
         # See if there are collected_labels. If there aren't then all labels
         # are registered, and there's nothing to do.
         if len(self.collected_labels.keys()) == 0:
             return None
+
+        # Get the doc_ids from the root document
+        root_document = self.root_context['document']()  # de-reference weakref
+        doc_ids = root_document.doc_ids
 
         for curator in self.curators:
             curator(registered_labels=self.labels,
@@ -299,3 +301,38 @@ class LabelManager(object):
                     doc_ids=doc_ids)
 
         return None
+
+    def format_string(self, id, *keys, target=None):
+        """Retrieve the formatted label string for a label.
+
+        Label format strings are intended to be replaced with the values of the
+        label by  replace_macros (:func:`replace_macros
+        <disseminate.macros.replace_macros>`).
+
+        Parameters
+        ----------
+        id : str
+            The label of the label ex: 'ch:nmr-introduction'
+        keys : Optional[str]
+            If specified, use the given keys to find entries in the format_str
+            dict. (see :func:`find_entry <disseminate.utils.dict.find_entry>`)
+        target : Optional[str]
+            If specified, try finding format strings for the given target.
+        """
+        label = self.get_label(id=id)
+
+        dicts = []
+        if 'label_fmts' in self.root_context:
+            dicts.append(self.root_context['label_fmts'])
+
+        # Construct the parameters for find_entry
+        target = (target[1:] if isinstance(target, str) and
+                  target.startswith('.') else target)
+
+        # Find the label format string
+        if len(keys) > 0:
+            fmt_string = find_entry(dicts, *keys, suffix=target)
+        else:
+            fmt_string = find_entry(dicts, *label.kind, suffix=target)
+
+        return replace_macros(fmt_string, {'@label': label})

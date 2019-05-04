@@ -40,11 +40,11 @@ class Label(object):
     id : str
         The unique identifier(s) of the label. ex: 'nmr_introduction'. This
         should be unique for the entire project.
-    kind : tuple of str
+    kind : Tuple[str]
         The kind of the label is a tuple that identified the kind of a label
         from least specific to most specific. ex: ('figure',), ('chapter',),
         ('equation',), ('heading', 'h1',)
-    mtime : float or None
+    mtime : Optional[float]
         The modification time of the source document that created this label,
         or the modification time for changes to the label.
     local_order : tuple of int or None
@@ -53,7 +53,7 @@ class Label(object):
         ex: for a kind ('heading', 'h2') could have a local_order of (3, 2)
         which would represent the 3rd 'heading' and 2nd 'h2' item for a
         document.
-    global_order : tuple of int or None
+    global_order : Optional[Tuple[int]]
         The number of the label in all labels for the label manager.
     """
 

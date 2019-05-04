@@ -2,7 +2,7 @@
 Tags for headings.
 """
 from .tag import Tag
-from .label import LabelTag, LabelAnchor, generate_label_id, create_label
+from .label import LabelMixin
 from .utils import content_to_str
 from ..formats import tex_cmd
 
@@ -11,27 +11,19 @@ toc_levels = ('title', 'part', 'chapter', 'section', 'subsection',
               'subsubsection')
 
 
-class Heading(Tag):
+class Heading(Tag, LabelMixin):
     """A heading tag.
 
     .. note::
         If the content isn't specified and an entry exists in the context with
         the tag's name, then this tag's content will be replaced with the
         contents from the context.
-
-    Tag Attributes
-    --------------
-    - nolabel: If specified, a label entry will not be created for this heading.
     """
     html_name = None
     tex_cmd = None
 
     active = True
     include_paragraphs = False
-
-    label_id = None
-    label_tag = None
-    label_anchor = None
 
     id_mappings = {'title': 'title',
                    'part': 'part',
@@ -49,41 +41,24 @@ class Heading(Tag):
             content = content_to_str(context[name])
 
         # Call the parent class's constructor
-        super().__init__(name, content, attributes, context)
+        Tag.__init__(self, name, content, attributes, context)
 
-        # Determine whether a label should be given. By default, each heading
-        # has a label
-        if 'nolabel' not in self.attributes:
+        if not 'nolabel' in self.attributes:
+            LabelMixin.__init__(self, name, content, attributes, context)
+
+    def generate_label_id(self):
+        if 'id' in self.attributes:
+            return self.attributes['id']
+        else:
+            # If an id wasn't specified, automatically generate one and
+            # prepend a heading id mapping. 'my-title' to 'ch:my-title'
             cls_name = self.__class__.__name__.lower()
-            kind = ('heading', cls_name)
+            label_id = LabelMixin.generate_label_id(self)
+            return ":".join((Heading.id_mappings[cls_name], label_id))
 
-            # Prepare the attributes for the Label tag.
-            attrs = self.attributes.filter('id', 'short')
-            attrs['class'] = 'heading'
-
-            # Create the label. First,
-            if 'id' in self.attributes:
-                # Get the label_id from the attributes, if specified.
-                label_id = self.attributes['id']
-            else:
-                # No label id specified. Generate a label_id and prepend the
-                # label type, if an id is not explicitly specified.
-                # ex: 'title' -> 'ch:title'
-                label_id = generate_label_id(tag=self)
-                label_id = ":".join((Heading.id_mappings[cls_name], label_id))
-
-            label_id = create_label(tag=self, kind=kind, label_id=label_id)
-
-            # Add the label identifier to this tag's attributes. This will be
-            # this tag's anchor for targets like html
-            self.label_id = label_id
-            self.attributes['id'] = label_id
-
-            self.label_tag = LabelTag(name='label', attributes=attrs,
-                                      content=label_id, context=context)
-            self.label_anchor = LabelAnchor(name='label_anchor',
-                                            attributes=attrs, content=label_id,
-                                            context=context)
+    def generate_label_kind(self):
+        cls_name = self.__class__.__name__.lower()
+        return 'heading', cls_name  # ex: ('heading', 'chapter')
 
     def default_fmt(self, content=None):
         # Prepare the content with the label. References for the default format

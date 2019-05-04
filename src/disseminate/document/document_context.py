@@ -158,35 +158,3 @@ class DocumentContext(BaseContext):
     def document(self, value):
         # Create a weakref to the document
         self['document'] = weakref.ref(value)
-
-    def label_fmt(self, major, intermediate=None, target=None):
-        """Retrieve the label format string for the keys specified by the
-        major as well as intermediate classification and the target for the
-        document rendered.
-
-        Label format strings are intended to be replaced with the
-        replace_macros (:func:`disseminate.macros.replace_macros`).
-
-        Parameters
-        ----------
-        major : string or tuple of str
-            The major classification for the label format string. This may be
-            the name of the tag using the label format string. ex: 'ref'
-        intermediate : string or tuple of str, optional
-            The intermediate classification for the label format string. This
-            may be the kind(s) of label. ex: ('caption', 'figure')
-        target : str or tuple of str, optional
-            The target for the rendered document. ex: '.html'
-        """
-        dicts = []
-        if 'label_fmts' in self:
-            dicts.append(self['label_fmts'])
-        if 'label_fmts' in settings.default_context:
-            dicts.append(settings.default_context['label_fmts'])
-
-        # Construct the parameters for find_entry
-        target = (target.strip('.') if isinstance(target, str) and
-                  target.startswith('.') else target)
-
-        return find_entry(dicts=dicts, major=major, intermediate=intermediate,
-                          minor=target)

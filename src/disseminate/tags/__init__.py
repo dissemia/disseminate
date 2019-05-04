@@ -9,4 +9,4 @@ from .factory import TagFactory
 from .exceptions import TagError
 from . import processors
 from . import (headings, text, img, asy, notes, figs, caption, eqs, toc,
-               preamble, collection, ref)
+               preamble, collection, label, ref)
