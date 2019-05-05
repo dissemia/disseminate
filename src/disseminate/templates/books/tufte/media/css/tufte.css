@@ -3,10 +3,10 @@ body {
     font-family: Palatino, serif;
     line-height: 20pt;
     color: #212529;
-    padding-left: 12.5%;
+    padding-left: 10%;
     margin-left: auto;
     margin-right: auto;
-    width: 87.5%;
+    width: 90%;
     max-width: 1400px;
 }
 
@@ -68,22 +68,18 @@ h4 {
     font-weight: 400;
 }
 
-p {
-  margin: 20pt 0;
-}
-
-.chapter .number::before {
-  content: "Chapter ";
-  color: #b50202;
-}
-
-.chapter .number {
+h2 .label {
   color: #b50202;
   font-variant: small-caps;
   font-size: 20pt;
   display: block;
   margin: 20pt;
   border-bottom: solid 1pt;
+}
+
+
+p {
+  margin: 20pt 0;
 }
     
 img {
@@ -95,26 +91,16 @@ sup, sub {
   font-size: 65%;
   vertical-align: baseline;
   position: relative;
-  top: -0.4em;
 }
 
 sub {
   top: 0.3em;
 }
 
-.title {
-    display: block;
-    font-size: 2.0rem;
-    padding: 0 0 1rem 0;
+sup {
+  top: -0.5em;
 }
 
-.title-label {
-    color: #9c0303;
-}
-
-.title-label::after {
-    content: " - ";
-}
 
 span.paragraph {
     margin-right: 0;
@@ -230,43 +216,6 @@ ul.toc-level-4 {
 }
 
 
-/*
-.sidenote sub, sup {
-  vertical-align: baseline;
-  position: relative;
-  top: -0.4em;
-}
-
-.marginfig sup {
-  vertical-align: baseline;
-  position: relative;
-  top: -0.3em;
-}
-
-.sidenote sub {
-  vertical-align: baseline;
-  position: relative;
-  top: 0.3em; 
-}
-
-.marginfig sub {
-  vertical-align: baseline;
-  position: relative;
-  top: 0.3em; 
-}
-*/
-.figure .number {
-  font-weight: 600;
-}
-
-.figure .number::before {
-  content: "Fig. ";
-}
-
-.figure .number::after {
-  content: ".";
-}
-
 .caption {
     display: block;
 }
@@ -274,7 +223,7 @@ ul.toc-level-4 {
 .supsub {
    display: inline-block;
    margin: -9em 0;
-   vertical-align: -0.3em;
+   vertical-align: -0.1em;
    line-height: 0.75em;
    font-size: 70%;
    text-align: left;

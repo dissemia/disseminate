@@ -105,8 +105,6 @@ default_context = {
         'caption_figure': '@b{Fig. @label.number}.',
 
         'ref_caption_figure': '@b{Fig. @label.number}',
-        'ref_caption_figure_html': '@b{Fig. @label.number}}',
-        'ref_caption_figure_tex': '@b{Fig. @label.number}}',
 
         # Headings tags
         'heading': '@label.tree_number. ',
