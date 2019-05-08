@@ -46,6 +46,30 @@ def doc(tmpdir):
 
 
 @pytest.fixture(scope='function')
+def doctree(tmpdir):
+    """Returns a document that is a document tree with 2 sub-documents."""
+    # Setup the paths
+    src_filepath1 = SourcePath(project_root=tmpdir, subpath='test1.dm')
+    src_filepath2 = SourcePath(project_root=tmpdir, subpath='test2.dm')
+    src_filepath3 = SourcePath(project_root=tmpdir, subpath='test3.dm')
+    target_root = TargetPath(target_root=tmpdir)
+
+    # Create the source file
+    src_filepath1.write_text("""
+    ---
+    include:
+       test2.dm
+       test3.dm
+    ---
+    """)
+    src_filepath2.touch()
+    src_filepath3.touch()
+
+    # Create and return the document
+    return Document(src_filepath=src_filepath1, target_root=target_root)
+
+
+@pytest.fixture(scope='function')
 def doc_cls():
     return Document
 

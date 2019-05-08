@@ -130,6 +130,16 @@ default_context = {
 
     },
 
+    'label_resets': {
+        # New chapters reset the numbers on sections, subsections,
+        # subsubsections
+        'part': {'chapter', 'section', 'subsection', 'subsubsection'},
+        'chapter': {'section', 'subsection', 'subsubsection'},
+        'section': {'subsection', 'subsubsection'},
+        'subsection': {'subsubsection'},
+    },
+
+
     # The following tags are unavailable. See
     # disseminate.tags.factory.TagFactory
     'inactive_tags': set(),

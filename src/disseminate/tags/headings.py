@@ -92,7 +92,7 @@ class Heading(Tag, LabelMixin):
             label_manager = self.context['label_manager']
             label = label_manager.get_label(id=self.label_id)
 
-            number = label.global_order[-1] if label.global_order else None
+            number = label.order[-1] if label.order else None
             attrs = ' '.join((cls_name, str(number)))
 
             content = (tex_cmd('setcounter', attributes=attrs) + '\n' +

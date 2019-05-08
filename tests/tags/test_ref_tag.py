@@ -6,7 +6,7 @@ import pytest
 from disseminate.paths import SourcePath, TargetPath
 from disseminate.tags import Tag
 from disseminate.tags.ref import Ref
-from disseminate.labels import LabelNotFound
+from disseminate.label_manager import LabelNotFound
 
 
 def test_ref_missing(doc):
@@ -79,7 +79,7 @@ def test_ref_html_crossreference_html(doc_cls, tmpdir):
                                     title='my test', context=doc2.context)
 
     # Prepare the format string for the ref tag
-    fmt = '@b{My Fig. @label.global_number}'
+    fmt = '@b{My Fig. @label.number}'
     doc1.context['label_fmts']['ref_caption_figure_html'] = fmt
 
     # Generate a root tag with a ref tag

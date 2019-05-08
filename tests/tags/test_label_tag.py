@@ -5,7 +5,7 @@ import pytest
 
 from disseminate.tags.label import (generate_label_id, create_label,
                                     LabelAnchor, LabelTag)
-from disseminate.labels import ContentLabel
+from disseminate.label_manager import ContentLabel
 
 
 def test_generate_label_id(mocktag_cls, context_cls):

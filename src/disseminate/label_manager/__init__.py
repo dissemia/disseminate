@@ -9,6 +9,7 @@ The labels and label manager are responsible for:
 2. *Internal links*. Work in conjunction with the ``@ref`` to correctly link
    to these elements.
 """
-from .labels import Label, LabelNotFound
-from .content_label import ContentLabel, DocumentLabel
+from . import processors
+from .types import ContentLabel, DocumentLabel
+from .exceptions import LabelNotFound
 from .label_manager import LabelManager

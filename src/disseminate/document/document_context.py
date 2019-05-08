@@ -5,10 +5,9 @@ import weakref
 from copy import deepcopy
 
 from ..context import BaseContext
-from ..labels import LabelManager
+from ..label_manager import LabelManager
 from ..dependency_manager import DependencyManager
 from ..paths import SourcePath, TargetPath
-from ..utils.dict import find_entry
 from .. import settings
 
 
@@ -32,6 +31,8 @@ class DocumentContext(BaseContext):
         'doc_id': str,
         'process_context_tags': set,
         'process_paragraphs': set,
+        'label_fmts': dict,
+        'label_resets': dict,
     }
 
     #: The following are context entries that should not be copied (inherited)
@@ -158,3 +159,14 @@ class DocumentContext(BaseContext):
     def document(self, value):
         # Create a weakref to the document
         self['document'] = weakref.ref(value)
+
+    @property
+    def root_document(self):
+        # Retrieve and de-reference the document
+        doc_ref = self.get('root_document', None)
+        return doc_ref() if isinstance(doc_ref, weakref.ref) else None
+
+    @root_document.setter
+    def root_document(self, value):
+        # Create a weakref to the document
+        self['root_document'] = weakref.ref(value)

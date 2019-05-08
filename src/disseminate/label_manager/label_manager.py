@@ -1,30 +1,12 @@
 """
 The manager for labels.
 """
-from .labels import (LabelError, LabelNotFound, find_duplicates,
-                     transfer_labels, order_labels)
-from .content_label import ContentLabel, DocumentLabel, curate_content_labels
+from .types import ContentLabel, DocumentLabel
+from .exceptions import LabelNotFound
+from .processors import ProcessLabels
 from ..utils.classes import weakattr
 from ..utils.dict import find_entry
 from ..utils.string import replace_macros
-
-
-# Wrap curation functions
-def find_duplicates_partial(registered_labels, *args, **kwargs):
-    # The find_duplicates function identifies multiple documents (with distinct
-    # doc_ids) that share the same ids for labels. A label's id should be
-    # unique for a project. However, multiple citation labels may be referenced
-    # between multiple documents.
-    return find_duplicates(registered_labels=registered_labels,
-                           *args, **kwargs)
-
-
-def order_labels_partial(registered_labels, *args, **kwargs):
-    # The order_labels function will set the local_order and global_order for
-    # all labels, except for HeadingLabels, which are set by
-    # curate_content_labels
-    return order_labels(registered_labels=registered_labels,
-                        exclude_labels=(DocumentLabel,), *args, **kwargs)
 
 
 class LabelManager(object):
@@ -51,45 +33,31 @@ class LabelManager(object):
 
     Attributes
     ----------
-    labels : list
-        A list of labels
-    collected_labels : dict
+    labels : List[:obj:`disseminate.label_manager.Label`]
+        A list of registered labels
+    collected_labels : Dict[str, List[:obj:`disseminate.labels.Label`]]
         A dictionary organized by document src_filepath (key, str) and a list
         of labels collected by the :meth:`add_label`. Collected labels aren't
         registered and available for tags to use yet. The
         :meth:`register_labels` method transfers them to the labels attribute
         and sets their order.
+    processors : List[:obj:`ProcessLabels
+        <disseminate.label_manager.processors.process_labels.ProcessLabels>`
+        An ordered list of label processors executed on the collected and
+        registered labels by the register_labels method.
     """
 
     root_context = weakattr()
     labels = None
     collected_labels = None
 
-    curators = [
-                # The find_duplicates curator function will find labels from
-                # different documents (with different doc_ids) that have the
-                # same id in the collected_labels. CitationLabels are excluded
-                # in this wrapped function as these may have the same id
-                # between documents.
-                find_duplicates_partial,
-
-                # Transfer collected (and unregistered) labels from the
-                # collected_labels dict to the list of registered labels.
-                transfer_labels,
-
-                # Set the local_order and global_order of labels. ContentLabels
-                # are excluded because heading labels are treated separately.
-                order_labels_partial,
-
-                # Set the local_order and global_order of ContentLabels and set
-                # the label references to the heading labels.
-                curate_content_labels
-    ]
+    processors = None
 
     def __init__(self, root_context):
         self.labels = []
         self.collected_labels = dict()
         self.root_context = root_context
+        self.processors = ProcessLabels.processors(context=root_context)
 
     def _add_label(self, id, kind, context, label_cls, *args, **kwargs):
         """Add a label.
@@ -108,7 +76,8 @@ class LabelManager(object):
             The kind of the label. ex: 'figure', ('heading', 'chapter'),
             'equation'
         context : :obj:`disseminate.BaseContext`
-            The context for the document adding the label.
+            The context for the document adding the label. (This may be
+            different from the context of the root document, self.root_context)
         label_cls : :class:`disseminate.labels.Label`
             The label class to use in creating the label.
 
@@ -157,8 +126,7 @@ class LabelManager(object):
         # If no matching label was found. Create a new one.
         if label is None:
             label = label_cls(doc_id=doc_id, id=id, kind=kind, mtime=mtime,
-                              local_order=None, global_order=None,
-                              *args, **kwargs)
+                              order=None, *args, **kwargs)
 
         collected_labels = self.collected_labels.setdefault(doc_id, [])
         collected_labels.append(label)
@@ -284,21 +252,9 @@ class LabelManager(object):
             3. Sets references to the heading labels and the counts for
                heading labels.
         """
-        assert self.root_context.is_valid('document')
-
-        # See if there are collected_labels. If there aren't then all labels
-        # are registered, and there's nothing to do.
-        if len(self.collected_labels.keys()) == 0:
-            return None
-
-        # Get the doc_ids from the root document
-        root_document = self.root_context['document']()  # de-reference weakref
-        doc_ids = root_document.doc_ids
-
-        for curator in self.curators:
-            curator(registered_labels=self.labels,
-                    collected_labels=self.collected_labels,
-                    doc_ids=doc_ids)
+        for processor in self.processors:
+            processor(registered_labels=self.labels,
+                      collected_labels=self.collected_labels)
 
         return None
 
