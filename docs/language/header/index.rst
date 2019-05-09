@@ -118,7 +118,7 @@ Render Options
 
    :examples:
 
-      ::
+      .. code-block:: none
 
          label_fmts:
             document: "@label.title"
@@ -126,6 +126,26 @@ Render Options
             heading: "@label.tree_number."
             heading_part: "Part @label.part_number. "
             heading_chapter': "Chapter @label.chapter_number. "
+
+
+``label_resets``
+   Specify which label kinds reset the counters of other label kind counter.
+
+   .. index:: single: header; label_resets
+
+
+   :examples:
+
+      A project may need to have the the chapter, section and subsection numbers
+      reset every time there is a new part. To achieve this sort of reset,
+      the following entry would be entered in the heading of the root document.
+
+
+      .. code-block:: none
+
+         label_resets:
+            part: chapter, section, subsection
+
 
 
 ``relative_links``
@@ -137,7 +157,7 @@ Render Options
 
    :examples:
 
-      ::
+      .. code-block:: none
 
          relative_links: True
 
@@ -151,7 +171,7 @@ Render Options
 
    :examples:
 
-      ::
+      .. code-block:: none
 
          base_url: /{target}/{subpath}
 
@@ -168,7 +188,7 @@ Render Options
 
    :examples:
 
-      ::
+      .. code-block:: none
 
          process_paragraphs: body
 
@@ -197,7 +217,7 @@ statement lists the sub-documents directly subordinate to a document.
 
    :examples:
 
-      ::
+      .. code-block:: none
 
          include:
            part1/introduction.dm
@@ -208,3 +228,30 @@ statement lists the sub-documents directly subordinate to a document.
 
 Inheritance
 -----------
+
+Additional Notes
+----------------
+
+How do I include quotations in header entries?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Quotations within a sentence or string will not be removed
+
+:example:
+
+   .. code-block:: none
+
+      title: This is my "test" title
+
+However, quotations on the end of a sentence or string will be removed. To
+include these quotations, simply add the quotation mark twice on each side
+of the entry.
+
+:example:
+
+   .. code-block:: none
+
+      title: ""This is my test title""
+
+In the above example, the title will be ``"This is my test title"`` with the
+double quotations.

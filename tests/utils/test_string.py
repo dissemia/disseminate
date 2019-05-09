@@ -3,8 +3,8 @@ Test string utilities.
 """
 from collections import namedtuple
 
-from disseminate.utils.string import (hashtxt, titlelize, str_to_dict,
-                                      str_to_list, group_strings,
+from disseminate.utils.string import (hashtxt, titlelize, strip_end_quotes,
+                                      str_to_dict, str_to_list, group_strings,
                                       replace_macros)
 
 
@@ -34,6 +34,40 @@ def test_titlelize():
     assert ("My First SubSection, and it "
             "has multiple lines") == titlelize("My First SubSection, and"
                                                "      it has multiple lines.")
+
+
+def test_strip_end_quotes():
+    """Test the strip_end_quotes function."""
+
+    # Basic tests
+    assert (strip_end_quotes("'This is my test string '") ==
+            'This is my test string ')
+    assert (strip_end_quotes('"This is my test string "') ==
+            'This is my test string ')
+    assert (strip_end_quotes("""'"This is my test string "'""") ==
+            '"This is my test string "')
+    assert (strip_end_quotes('''"'This is my test string '"''') ==
+            "'This is my test string '")
+    assert (strip_end_quotes('"This is my test string" ') ==
+            'This is my test string ')
+
+    # Try escaped strings
+    assert (strip_end_quotes("\'This is my test string \'") ==
+            "This is my test string ")
+    assert (strip_end_quotes(r"'This is my test string '") ==
+            r"This is my test string ")
+    assert (strip_end_quotes(r"\'This is my test string \'") ==
+            r"\'This is my test string \'")
+    assert (strip_end_quotes("''This is my test string ''") ==
+            "'This is my test string '")
+    assert (strip_end_quotes('""This is my test string ""') ==
+            '"This is my test string "')
+
+    # Multi-line
+    assert (strip_end_quotes("'This is my test string '\n'second line'") ==
+            'This is my test string \nsecond line')
+    assert (strip_end_quotes("  'one'\n  'two'\n  'three'") ==
+            "  one\n  two\n  three")
 
 
 def test_str_to_list():
@@ -118,6 +152,29 @@ def test_str_to_dict():
     assert (d == {'targets': 'pdf, tex'})
     l = str_to_list(d['targets'])
     assert l == ['pdf', 'tex']
+
+
+def test_str_to_dict_with_quotes():
+    """Tests the parsing of strings into dicts including quotes."""
+
+    # Basic entries
+    header = """
+    title: 'my title '
+    author: This is 'my' name
+    """
+    d = str_to_dict(header, strip_quotes=True)
+    assert (d == {'title': 'my title ', 'author': "This is 'my' name"})
+
+    # Include entries
+    header = """
+    include:
+      "src/file1.tex"
+      "src/file2.tex"
+      "src/file 3.tex"
+    """
+    d = str_to_dict(header, strip_quotes=True)
+    assert (d == {'include':
+                  '  src/file1.tex\n  src/file2.tex\n  src/file 3.tex'})
 
 
 def test_group_strings():

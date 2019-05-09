@@ -171,6 +171,22 @@ def test_document_context_simple_documents(tmpdir):
     test_context_entries(doc)
 
 
+def test_document_context_nested_load(doc):
+    """Test the DocumentContext with header entries with nested values."""
+
+    # Write a sample header and re-load the file
+    doc.src_filepath.write_text("""
+    ---
+    label_fmts:
+      heading: "My heading @label.title "
+    ---
+    """)
+    doc.load()
+
+    # Check updated label
+    assert doc.context['label_fmts']['heading'] == "My heading @label.title "
+
+
 def test_document_context_is_valid(tmpdir):
     """Test the is_valid method for document contexts."""
     src_filepath = SourcePath(project_root='tests/document/example4/src',

@@ -83,7 +83,7 @@ _re_multilines = regex.compile(r'(?:\n{2,})')
 
 
 def strip_multi_newlines(s):
-    """String multiple consecutive newlines in a string.
+    """Strip multiple consecutive newlines in a string.
 
     Parameters
     ----------
@@ -104,6 +104,41 @@ def strip_multi_newlines(s):
     'This is my\\nsecond string.'
     """
     return _re_multilines.sub("\n", s)
+
+
+def strip_end_quotes(s):
+    """Strip matched quotes from the ends a string.
+    
+    Parameters
+    ----------
+    s : str
+        String to strip matched quotes.
+
+    Returns
+    -------
+    stripped_string : str
+        The same string with matched quotes striped.
+
+    Examples
+    --------
+    >>> strip_end_quotes('This is my "test" string.')
+    'This is my "test" string.'
+    >>> strip_end_quotes('"This is my test string"')
+    'This is my test string'
+    >>> strip_end_quotes('"This is my test string "')
+    'This is my test string '
+    """
+    if '\n' in s:
+        # Newlines, process each individually
+        return '\n'.join(map(strip_end_quotes, s.splitlines()))
+
+    for char in "\'\"":
+        if s.count(char) % 2 == 0:  # even number of quotes
+            pieces = s.split(char)
+            if pieces[0].strip() == '' and pieces[-1].strip() == '':
+                return ''.join((pieces[0], char.join(pieces[1:-1]), pieces[-1]))
+
+    return s
 
 
 def find_basestring(strings):
@@ -187,19 +222,21 @@ def str_to_list(string):
 
 
 _re_entry = regex.compile(r'^(?P<space_level>\s*)'
-                         r'(?P<key>.+?)'
-                         r'(?<!\\)\:'  # match ':' but not '\:'
-                         r'\s*'
-                         r'(?P<value>.*)')
+                          r'(?P<key>.+?)'
+                          r'(?<!\\)\:'  # match ':' but not '\:'
+                          r'\s*'
+                          r'(?P<value>.*)')
 
 
-def str_to_dict(string):
+def str_to_dict(string, strip_quotes=True):
     """Parse a string into a dict.
 
     Parameters
     ----------
     string : str
         The string with dict-like entries separated by colons.
+    strip_quotes : Optional[bool]
+        If True, matched quotes ('") are stripped at the ends of value strings.
 
     Returns
     -------
@@ -261,11 +298,16 @@ def str_to_dict(string):
                 current_entry_list = d.setdefault(key, [])
                 current_entry_list.append(value)
         else:
-            # If there'string not a match, just add the line to the current entry
+            # If there'string not a match, just add the line to the current
+            # entry
             current_entry_list.append(line)
 
     # Convert the entries in the dict from a list of strings to strings
-    d = {k: "\n".join(v).strip('\n') for k, v in d.items()}
+    if strip_quotes:
+        d = {k: strip_end_quotes("\n".join(v).strip('\n'))
+             for k, v in d.items()}
+    else:
+        d = {k: "\n".join(v).strip('\n') for k, v in d.items()}
 
     return d
 
