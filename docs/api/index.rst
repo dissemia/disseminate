@@ -15,7 +15,7 @@ functions for disseminate.
    dependency_manager/index
    document/index
    formats/index
-   labels/index
+   label_manager/index
    paths/index
    processors/index
    renderers/index

@@ -1,4 +1,4 @@
-from .labels import Label
+from .label import Label
 from ...utils.classes import weakattr
 
 
@@ -12,21 +12,25 @@ def get_label_number(label, default=''):
 
 
 class ContentLabel(Label):
-    """A label for a labeling a grouping of content, like a heading
-    (chapter, section, subsection) or an item that should show up in a table of
-    contents, like a figure caption.
+    """A label for content, like a heading (chapter, section, subsection) or
+    an item that should show up in a table of contents, like a figure caption.
 
     Attributes
     ----------
-    document_label : :obj:`disseminate.labels.Label`
+    document_label : :obj:`DocumentLabel \
+        <disseminate.label_manager.types.DocumentLabel>`
         The label object for the document that owns this label.
-    chapter_label : :obj:`disseminate.labels.Label` or None
+    chapter_label : Optional[:obj:`ContentLabel \
+        <disseminate.label_manager.types.ContentLabel>`]
         The label for the chapter under which this label is under.
-    section_label : :obj:`disseminate.labels.Label` or None
+    section_label : Optional[:obj:`Content Label \
+        <disseminate.label_manager.types.ContentLabel>`]
         The label for the section under which this label is under.
-    subsection_label : :obj:`disseminate.labels.Label` or None
+    subsection_label : Optional[:obj:`Content Label \
+        <disseminate.label_manager.types.ContentLabel>`]
         The label for the subsection under which this label is under.
-    subsubsection_label : :obj:`disseminate.labels.Label` or None
+    subsubsection_label : Optional[:obj:`ContentLabel \
+        <disseminate.label_manager.types.ContentLabel>`]
         The label for the subsubsection under which this label is under.
     """
 
@@ -89,7 +93,8 @@ class ContentLabel(Label):
     @property
     def tree_number(self):
         """The string for the number for the chapter, section, subsection and
-        so on. i.e. Section 3.2.1."""
+        so on.
+        e.g. Section 3.2.1."""
         # Get a tuple of the numbers, remove empty string items and None
         numbers = filter(bool, (self.part_number,
                                 self.chapter_number,

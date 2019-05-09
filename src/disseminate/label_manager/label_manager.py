@@ -10,15 +10,12 @@ from ..utils.string import replace_macros
 
 
 class LabelManager(object):
-    """Manage labels and references.
+    """Manage labels for a project (a document tree).
 
-    Manages labels for a project. Labels have a kind (ex: 'figure', 'chapter')
-    and a id (ex: inept_introduction').
-
-    Labels are added with the :meth:`add_label` method. These labels are
-    collected and are only available after the :meth:`register_label` method
-    is executed. Labels are automatically registered when the :meth:`get_label`
-    and :meth:`get_labels` methods are used.
+    Labels are added with the ``add_label`` methods. These labels are collected
+    and are only available after the :meth:`register_labels` method is
+    executed. Labels are automatically registered when the :meth:`get_label` and
+    :meth:`get_labels` methods are used.
 
     The collection/register method is used because labels keep track of their
     modification times (mtimes) and update these if their parameters change. A
@@ -27,22 +24,24 @@ class LabelManager(object):
 
     Parameters
     ----------
-    root_context : :obj:`disseminate.document.DocumentContext`
+    root_context : :obj:`DocumentContext \
+        <disseminate.document.document_context.DocumentContext>`
         The context for the root document. The label manager does not own the
         context object, so only a weak reference to the context is stored.
 
     Attributes
     ----------
-    labels : List[:obj:`disseminate.label_manager.Label`]
+    labels : List[:obj:`Label <disseminate.label_manager.types.Label>`]
         A list of registered labels
-    collected_labels : Dict[str, List[:obj:`disseminate.labels.Label`]]
+    collected_labels : Dict[str, List[:obj:`Label \
+        <disseminate.label_manager.types.Label>`]]
         A dictionary organized by document src_filepath (key, str) and a list
-        of labels collected by the :meth:`add_label`. Collected labels aren't
-        registered and available for tags to use yet. The
+        of labels collected by the ``add_label`` methods. Collected labels
+        aren't registered and available for tags to use yet. The
         :meth:`register_labels` method transfers them to the labels attribute
         and sets their order.
-    processors : List[:obj:`ProcessLabels
-        <disseminate.label_manager.processors.process_labels.ProcessLabels>`
+    processors : List[:obj:`ProcessLabel \
+        <disseminate.label_manager.processors.ProcessLabels>`
         An ordered list of label processors executed on the collected and
         registered labels by the register_labels method.
     """
@@ -78,8 +77,8 @@ class LabelManager(object):
         context : :obj:`disseminate.BaseContext`
             The context for the document adding the label. (This may be
             different from the context of the root document, self.root_context)
-        label_cls : :class:`disseminate.labels.Label`
-            The label class to use in creating the label.
+        label_cls : :class:`disseminate.label_manager.types.Label`
+            The label class (or subclass) to use in creating the label.
 
         Raises
         ------
@@ -150,7 +149,8 @@ class LabelManager(object):
 
         Parameters
         ----------
-        context : :obj:`disseminate.BaseContext`
+        context : :obj:`DocumentContext \
+            <disseminate.document.document_context.DocumentContext>`
             The context for the document whose labels are being reset.
         """
         assert context.is_valid('doc_id')
@@ -170,7 +170,7 @@ class LabelManager(object):
 
         Returns
         -------
-        label : :obj:`Label <disseminate.labels.labels.Label>`
+        label : :obj:`Label <disseminate.label_manager.types.Label>`
             A named tuple with the label's information.
 
         Raises
@@ -199,12 +199,12 @@ class LabelManager(object):
 
         Parameters
         ----------
-        context : :obj:`BaseContext
-                  <disseminate.context.base_context.BaseContext>`, optional
+        context : Optional[:obj:`DocumentContext \
+            <disseminate.document.document_context.DocumentContext>`]
             The context for the document whose labels are being retrieved.
             If None is specified, then all labels from all documents in a
             project will be selected.
-        kinds : str or list of str or None
+        kinds : Union[str, List[str], None]
             If None, all label kinds are returned.
             If string, all labels matching the kind string will be returned.
             If a list of strings is returned, all labels matching all the kinds
@@ -212,7 +212,7 @@ class LabelManager(object):
 
         Returns
         -------
-        list of :obj:`disseminate.labels.Label`
+        labels : List[:obj:`Label <disseminate.label_manager.types.Label>`]
             A list of label objects.
         """
         # Make sure the labels are registered

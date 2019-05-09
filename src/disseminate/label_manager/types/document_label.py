@@ -1,8 +1,8 @@
-from .labels import Label
+from .label import Label
 
 
 class DocumentLabel(Label):
-    """A label for a labeling a document.
+    """A label for documents.
     """
     title = None
 

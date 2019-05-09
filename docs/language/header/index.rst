@@ -26,8 +26,11 @@ Since documents can include sub-documents, the context of a parent
 document is copied over to the sub-documents, which in turn, can
 overwrite these values.
 
-Basic Variables
----------------
+Entries
+-------
+
+Basic Entries
+~~~~~~~~~~~~~
 
 ``title``
    The document's title
@@ -96,6 +99,63 @@ Basic Variables
 
          template: book/tufte
 
+``include``
+   The sub-documents to include in a project
+
+   :notes:
+
+      See the section on :ref:`header-includes`.
+
+
+Render Options
+~~~~~~~~~~~~~~
+
+``label_fmts``
+   The formats for labels in rendering the document.
+
+   .. index::
+      single: header; label_fmts
+
+   :examples:
+
+      ::
+
+         label_fmts:
+            document: "@label.title"
+            ref_document: "@label.title"
+            heading: "@label.tree_number."
+            heading_part: "Part @label.part_number. "
+            heading_chapter': "Chapter @label.chapter_number. "
+
+
+``relative_links``
+   If True (default), html links are referenced relative to the document's
+   path. If False, links are absolute.
+
+   .. index::
+      single: header; relative_links
+
+   :examples:
+
+      ::
+
+         relative_links: True
+
+
+``base_url``
+    If absolute links are used and ``relative_links`` is False, then the
+    base_url string will be prepended to links.
+
+   .. index::
+      single: header; base_url
+
+   :examples:
+
+      ::
+
+         base_url: /{target}/{subpath}
+
+
 ``process_paragraphs``
    A list of context entries for which paragraphs should be processed
 
@@ -111,6 +171,7 @@ Basic Variables
       ::
 
          process_paragraphs: body
+
 
 .. _header-includes:
 
@@ -143,36 +204,6 @@ statement lists the sub-documents directly subordinate to a document.
            part1/cakes.dm
            part1/tarts.dm
 
-
-Variables and Render Options
-----------------------------
-
-``relative_links``
-   If True (default), html links are referenced relative to the document's
-   path. If False, links are absolute.
-
-   .. index::
-      single: header; relative_links
-
-   :examples:
-
-      ::
-
-         relative_links: True
-
-
-``base_url``
-    If absolute links are used and ``relative_links`` is False, then the
-    base_url string will be prepended to links.
-
-   .. index::
-      single: header; base_url
-
-   :examples:
-
-      ::
-
-         base_url: /{target}/{subpath}
 
 
 Inheritance

@@ -7,7 +7,8 @@ class Label(object):
     """A label used for referencing.
 
     Labels keep track of modification times (mtimes). The mtime may be updated
-    if it's later than the current mtime.
+    if it's later than the mtime of the document that owns the label_manager
+    that owns this label.
 
     The mtimes are tracked because updates to labels may require an
     update of a rendered document. For example, a project may have two
@@ -29,9 +30,9 @@ class Label(object):
         The unique identifier(s) of the label. ex: 'nmr_introduction'. This
         should be unique for the entire project.
     kind : Tuple[str]
-        The kind of the label is a tuple that identified the kind of a label
+        The kind of the label is a tuple that identifies the kind of a label
         from least specific to most specific. ex: ('figure',), ('chapter',),
-        ('equation',), ('heading', 'h1',)
+        ('equation',), ('heading', 'chapter',)
     mtime : Optional[float]
         The modification time of the source document that created this label,
         or the modification time for changes to the label.
@@ -64,12 +65,20 @@ class Label(object):
         self.kind = (kind,) if isinstance(kind, str) else kind
 
     def __repr__(self):
-        name = self.id if self.id else ''
-        return "({}: {} {})".format(self.kind, name, self.order)
+        cls_name = self.__class__.__name__
+        if all(isinstance(i, tuple) or isinstance(i, list)
+               for i in (self.kind, self.order)):
+            kind_str = ", kind: "
+            kind_str += ", ".join(['{}[{}]'.format(k, o)
+                                   for k, o in zip(self.kind, self.order)])
+        else:
+            kind_str = ''
+        return "{}(doc_id: '{}', id: '{}'{})".format(cls_name, self.doc_id,
+                                                     self.id, kind_str)
 
     @property
     def number(self):
-        """The (local) number for the label's kind."""
+        """The number for the label's most specific kind."""
         if isinstance(self.order, tuple) and len(self.order) > 0:
             return self.order[-1]
         else:
