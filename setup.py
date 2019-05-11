@@ -68,14 +68,21 @@ setup(
     packages=find_packages("src"),
     package_dir={"": "src"},
     include_package_data=True,  # include MANIFEST.in
-    install_requires=['regex', 'jinja2', 'lxml', 'python-slugify'],
+    install_requires=['regex',           # No license, replaced with re
+                      'jinja2',          # 3-clause BSD
+                      'lxml',            # BSD license
+                      'python-slugify',  # MIT license
+                      #'pdfCropMargins'  # GPL v3
+                      ],
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc', 'asv'],
         'test': ['pytest', 'tox', 'coverage'],
+        'termcolor': ['termcolor']  # MIT license
     },
     scripts=['scripts/dm', ],
     entry_points={
         'console_scripts': [
             'dm = disseminate.main:main'
-          ],}
+          ],
+    }
 )

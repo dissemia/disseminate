@@ -3,8 +3,8 @@ Processors for working up the headers of strings in a context.
 """
 from .process_context import ProcessContext
 from .exceptions import ProcessContextException
-from ..context.context import re_header_block
-from .. import settings
+from ..context import re_header_block
+from ... import settings
 
 
 class ProcessContextHeaders(ProcessContext):

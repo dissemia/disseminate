@@ -2,7 +2,7 @@
 Processor for tags in contexts.
 """
 from .process_context import ProcessContext
-from ..tags import Tag, TagFactory
+from ...tags import Tag, TagFactory
 
 
 class ProcessContextTags(ProcessContext):

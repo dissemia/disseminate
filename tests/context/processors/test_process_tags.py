@@ -2,7 +2,7 @@
 Test the process_context_tags processor.
 """
 from disseminate.tags import Tag
-import disseminate.processors as pr
+import disseminate.context.processors as pr
 
 
 def test_process_context_tags(doc):

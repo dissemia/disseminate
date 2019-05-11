@@ -6,15 +6,17 @@ from ..types import ContentLabel, DocumentLabel
 
 
 class ProcessContentLabels(ProcessLabels):
-    """A label processor for :obj:`content labels
-    <disseminate.label_manager.types.ContentLabel>`.
+    """A label processor for ContentLabels to which chapter/section/subsection
+    a particular label belongs to.
 
-    This function sets the chapter_label, section_label, etc. for ContentLabels
-    to identify which chapter/section/subsection/etc. a particular label belongs
-    to.
+    This processor only works on content labels (:obj:`content labels
+    <disseminate.label_manager.types.ContentLabel>`)
     """
 
+    includes = {ContentLabel}
+
     order = 1000
+    short_desc = "A label processor for content labels (ContentLabel objects)."
 
     def __call__(self, registered_labels, *args, **kwargs):
 
@@ -26,8 +28,7 @@ class ProcessContentLabels(ProcessLabels):
         subsubsection_label = None
 
         # Process each Contentlabel.
-        content_labels = [label for label in registered_labels
-                          if isinstance(label, ContentLabel)]
+        content_labels = self.filter(registered_labels)
 
         # Keep track of the current doc_id
         doc_id = None

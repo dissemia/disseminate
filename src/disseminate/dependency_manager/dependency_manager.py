@@ -3,6 +3,7 @@ A manager for dependencies.
 """
 import pathlib
 import os
+import shutil
 from collections import namedtuple
 import urllib.parse
 import logging
@@ -317,11 +318,14 @@ class DependencyManager(object):
         # The link or copy the file
         logging.debug("Linking file '{}'".format(str(dep_filepath)))
         try:
-            os.link(str(dep_filepath), str(dest_filepath))
+            os.link(dep_filepath, dest_filepath)
         except FileExistsError:
             # If the file exists, the link will fail. Remove it first.
-            os.remove(str(dest_filepath))
-            os.link(str(dep_filepath), str(dest_filepath))
+            os.remove(dest_filepath)
+            os.link(dep_filepath, dest_filepath)
+        except OSError:
+            # In Linux, you can't create a hard link to a temp directory
+            shutil.copyfile(dep_filepath, dest_filepath)
 
     def _convert_file(self, dep_filepath, target, attributes=None):
         target_root = self.target_root

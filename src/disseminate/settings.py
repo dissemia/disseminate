@@ -32,6 +32,12 @@ default_port = 8899
 #: A list of extensions that will be sent with the 'text/plain' MIME type
 text_extensions = ['.tex', ]
 
+#: CLI
+#: ---
+
+#: Use terminal colors for the CLI
+colored_term = True
+
 #: Convert and Tag Defaults
 #: ------------------------
 

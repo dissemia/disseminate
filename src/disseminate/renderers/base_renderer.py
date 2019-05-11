@@ -6,7 +6,7 @@ a string for a particular target, like '.html' or '.tex'.
 """
 import pathlib
 
-from ..processors import ProcessContext
+from ..context.processors import ProcessContext
 from ..context.utils import context_targets
 from ..paths import SourcePath
 

@@ -1,8 +1,6 @@
 """
 Test the ProcessContentLabels class
 """
-import pytest
-
 from disseminate.label_manager.processors import (ProcessContentLabels)
 from disseminate.label_manager.types import ContentLabel
 

@@ -3,7 +3,7 @@ A base class for context processors.
 """
 from textwrap import TextWrapper
 
-from ..utils.classes import all_subclasses
+from ...utils.classes import all_subclasses
 
 
 class ProcessContext(object):

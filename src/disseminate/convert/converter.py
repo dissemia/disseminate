@@ -236,7 +236,7 @@ class Converter(object):
             Raised if the command failed and raise_error is True.
         """
         if __debug__:
-            msg = "Running conversion: {}".format(" ".join(args))
+            msg = "Running conversion: {}".format(" ".join(map(str,args)))
             logging.debug(msg)
 
         # Setup the environment

@@ -6,10 +6,12 @@ import logging
 import argparse
 import os.path
 
-from .server import run
-from .tags.processors import ProcessTag
-from .processors import ProcessContext
-from . import settings
+from .utils import print_processors
+from ..server import run
+from ..tags.processors import ProcessTag
+from ..label_manager.processors import ProcessLabels
+from ..context.processors import ProcessContext
+from .. import settings
 
 
 def is_directory(value):
@@ -40,6 +42,11 @@ def list_context_processors():
         print("{count}. {msg}".format(count=count, msg=msg))
 
 
+def list_label_manager_processors():
+    mock_context = dict()
+    print_processors(ProcessLabels, context=mock_context)
+
+
 # TODO: add clean or clear option to remove targets and .cache
 def main():
     """The main command-line interface (CLI) for rendering disseminate
@@ -63,6 +70,8 @@ def main():
     parser.add_argument('--debug', action='store_true',
                         help='print debug messages to stderr')
     parser.add_argument('--list-tag-processors', action='store_true',
+                        help='list the available tag processors')
+    parser.add_argument('--list-label-manager-processors', action='store_true',
                         help='list the available tag processors')
     parser.add_argument('--list-context-processors', action='store_true',
                         help='list the available context processors')
@@ -102,11 +111,13 @@ def main():
     if args.list_context_processors:
         list_context_processors()
         exit()
+    if args.list_label_manager_processors:
+        list_label_manager_processors()
+        exit()
 
     if args.command not in ('init', 'serve', 'render'):
         parser.print_help()
         exit()
-
 
     # Set the default logging level to info
     if args.debug:

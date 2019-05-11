@@ -8,8 +8,8 @@ import logging
 import pathlib
 
 from .document_context import DocumentContext
-from ..processors import ProcessContext
 from ..convert import convert
+from ..context.processors import ProcessContext
 from ..context.utils import context_targets, context_includes
 from ..utils.file import mkdir_p
 from ..utils.string import slugify

@@ -3,6 +3,7 @@ Test the ProcessLabels class
 """
 from disseminate.label_manager.processors import ProcessLabels
 from disseminate.label_manager.types import ContentLabel, Label
+from disseminate.utils.tests import cleanup_subclass
 
 
 def test_process_label_processors(context_cls):
@@ -13,7 +14,9 @@ def test_process_label_processors(context_cls):
     # Create a mock sub-class of the ProcessLabels
     # 1. First, try filtering based on includes
     class SubProcessLabels(ProcessLabels):
-        pass
+
+        def __call__(self):
+            pass
 
     processors = ProcessLabels.processors(context=context)
 
@@ -26,6 +29,9 @@ def test_process_label_processors(context_cls):
     assert len(subprocess) == 1
     assert id(subprocess[0].context) == id(context)
 
+    # cleanup the class
+    cleanup_subclass(SubProcessLabels)
+
 
 def test_process_labels_filter(context_cls):
     """Test the filter method of the ProcessLabels class."""
@@ -35,6 +41,9 @@ def test_process_labels_filter(context_cls):
     # Create a mock sub-class of the ProcessLabels
     # 1. First, try filtering based on includes
     class SubProcessLabels(ProcessLabels):
+
+        def __call__(self):
+            pass
 
         includes = {ContentLabel}
 
@@ -64,3 +73,6 @@ def test_process_labels_filter(context_cls):
 
     assert len(filtered) == 1
     assert filtered[0] == labels[0]
+
+    # cleanup the class
+    cleanup_subclass(SubProcessLabels)
