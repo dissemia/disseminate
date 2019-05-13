@@ -3,7 +3,6 @@ The Ref tag to reference captions and other labels.
 """
 from .tag import Tag
 from .exceptions import assert_content_str
-from .processors.process_content import parse_tags
 from .utils import content_to_str, format_content
 from ..formats import html_tag, tex_cmd
 from ..utils.classes import weakattr
@@ -136,8 +135,9 @@ class Ref(Tag):
             keys = ('ref', *label.kinds)
             format_str = label_manager.format_string(id=self.label.id, *keys)
 
-            processed_content = parse_tags(format_str, context=context, level=1)
-            return content_to_str(processed_content)
+            processed_tag = Tag(name='ref', content=format_str, attributes='',
+                                context=context)
+            return content_to_str(processed_tag.content)
         else:
             return ''
 
@@ -153,9 +153,9 @@ class Ref(Tag):
 
             # substitute the link, process the tags and format the contents
             # for html
-            processed_tags = parse_tags(format_str, context=context,
-                                        level=level + 1)
-            content = format_content(content=processed_tags,
+            processed_tag = Tag(name='ref', content=format_str, attributes='',
+                                context=context)
+            content = format_content(content=processed_tag.content,
                                      format_func='tex_fmt', level=level + 1)
 
             # wrap content in 'hyperref' tag
@@ -178,9 +178,9 @@ class Ref(Tag):
 
             # substitute the link, process the tags and format the contents
             # for html
-            processed_tags = parse_tags(format_str, context=context,
-                                        level=level + 1)
-            content = format_content(content=processed_tags,
+            processed_tag = Tag(name='ref', content=format_str, attributes='',
+                                context=context)
+            content = format_content(content=processed_tag.content,
                                      format_func='html_fmt', level=level + 1)
 
             attributes = self.attributes.copy()

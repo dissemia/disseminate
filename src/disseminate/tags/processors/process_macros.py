@@ -7,7 +7,7 @@ from ...utils.string import replace_macros
 
 
 class ProcessMacros(ProcessTag):
-    """A tag processor for replacing macros in tag strings"""
+    """A tag processor for replacing macros in pre-parsed tag strings."""
 
     order = 100
     short_desc = "Replace text macros in tag strings"

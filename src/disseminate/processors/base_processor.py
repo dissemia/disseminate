@@ -41,13 +41,16 @@ class ProcessorABC(ABC, metaclass=MetaProcessorABC):
         pass
 
     @classmethod
+    def processor_clses(cls):
+        """A sorted list of the processor classes."""
+        return sorted(all_subclasses(cls), key=lambda x:getattr(x, 'order'))
+
+    @classmethod
     def processors(cls, *args, **kwargs):
         """A sorted list (by order, in ascending order) of processor
         instances."""
         # Instantiate subclasses, if it hasn't been done so already
-        subclasses = all_subclasses(cls)
-        return sorted([subcls(*args, **kwargs) for subcls in subclasses],
-                      key=lambda x: getattr(x, 'order'))
+        return [subcls(*args, **kwargs) for subcls in cls.processor_clses()]
 
 
 

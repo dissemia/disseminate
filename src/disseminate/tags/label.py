@@ -3,7 +3,6 @@ The Label tag to reference captions and other labels.
 """
 from .tag import Tag
 from .utils import content_to_str
-from .processors.process_content import parse_tags
 from .exceptions import assert_content_str
 from .utils import format_content
 from ..attributes import Attributes
@@ -264,9 +263,9 @@ class LabelTag(Tag):
 
         if all(i is not None for i in (label_manager, label_id, context)):
             format_str = label_manager.format_string(id=self.label_id)
-            processed_tags = parse_tags(format_str, context=context,
-                                        level=1)
-            return content_to_str(processed_tags)
+            processed_tag = Tag(name='label', content=format_str, attributes='',
+                                context=context)
+            return content_to_str(processed_tag.content)
         else:
             return ''
 
@@ -281,9 +280,9 @@ class LabelTag(Tag):
                                                      target='.tex')
 
             # Process the tags and format the contents for tex
-            processed_tags = parse_tags(format_str, context=context,
-                                           level=level + 1)
-            content = format_content(content=processed_tags,
+            processed_tag = Tag(name='label', content=format_str, attributes='',
+                                context=context)
+            content = format_content(content=processed_tag.content,
                                      format_func='tex_fmt', level=level + 1,
                                      mathmode=mathmode)
             return ''.join(content) if isinstance(content, list) else content
@@ -301,9 +300,9 @@ class LabelTag(Tag):
                                                      target='.html')
 
             # Process the tags and format the contents for html
-            processed_tags = parse_tags(format_str, context=context,
-                                        level=level + 1)
-            content = format_content(content=processed_tags,
+            processed_tag = Tag(name='label', content=format_str, attributes='',
+                                context=context)
+            content = format_content(content=processed_tag.content,
                                      format_func='html_fmt', level=level + 1)
 
             attributes = self.attributes.copy()

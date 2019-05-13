@@ -2,10 +2,11 @@
 Core classes and functions for tags.
 """
 from .exceptions import TagError
+from .utils import format_content
+from .processors import ProcessTag
 from ..formats import tex_env, tex_cmd, html_tag
 from ..attributes import Attributes
-from .utils import format_content
-from ..utils.string import titlelize
+from ..utils.string import titlelize, convert_camelcase
 from ..utils.classes import weakattr
 
 
@@ -81,8 +82,6 @@ class Tag(object):
 
     active = False
 
-    processtag_cls = None
-
     process_content = True
     process_typography = True
 
@@ -148,11 +147,42 @@ class Tag(object):
         # The mtime is the latest mtime of all the tags and labels
         return max(mtimes)
 
-    def process(self):
+    def process(self, names=None):
         """Process the tag's contents."""
-        if self.processtag_cls is not None:
-            for processor in self.processtag_cls.processors():
-                processor(self)
+        # Retrieve the ProcessTag subclasses and process the tag
+        processors = self.processors(names)
+        for processor in processors:
+            processor(tag=self)
+
+    def processors(self, names=None):
+        """Retrieve a (filtered list of tag processors.
+
+        Parameters
+        ----------
+        names : Union[str, List[str], None]
+            If specified, only return tag processors matching these name(s)
+        """
+        # wrap names into a list, if needed
+        names = [names] if isinstance(names, str) else None
+
+        # Get all of the tag processors, convert their class names to lower
+        # case with underscores (ex: ProcessContent bcomes 'process_content'
+        if names is not None:
+            # Filter based on the specified names
+            return [processor
+                    for processor in ProcessTag.processors(tag_base_cls=Tag)
+                    if convert_camelcase(processor.__class__.__name__) in names]
+        else:
+            # Filter based on the class's attributes. By default, return
+            # all processors unless an class attribute is set to False for the
+            # processor. ex: if the class or instance has a 'process_context'
+            # attribute set to False, then the ProcessContent processor will
+            # not be included.
+            return [processor
+                    for processor in ProcessTag.processors(tag_base_cls=Tag)
+                    if getattr(self,
+                               convert_camelcase(processor.__class__.__name__),
+                               True)]
 
     def flatten(self, tag=None, filter_tags=True):
         """Generate a flat list with this tag and all sub-tags and elements.

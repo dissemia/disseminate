@@ -17,7 +17,7 @@ def term_width():
     return shutil.get_terminal_size((80, 20))[0]  # 80-column default
 
 
-def print_processors(processor_base_cls, *args, **kwargs):
+def print_processors(processor_base_cls):
     """Given an processor base class (derived from
     :class:`disseminate.processors.ProcessorABC`), print the processors
     available.
@@ -42,10 +42,10 @@ def print_processors(processor_base_cls, *args, **kwargs):
                               subsequent_indent=' ' * 6,
                               width=term_width())
 
-    processors = processor_base_cls.processors(*args, **kwargs)
-    for count, processor in enumerate(processors, 1):
+    processor_clses = processor_base_cls.processor_clses()
+    for count, processor_cls in enumerate(processor_clses, 1):
         # Get the class name
-        cls_name = processor.__class__.__name__
+        cls_name = processor_cls.__name__
         msg = "{count}. ".format(count=count)
         msg += (colored(cls_name, attrs=['bold', 'underline'])
                 if settings.colored_term and colored is not None else
@@ -53,23 +53,23 @@ def print_processors(processor_base_cls, *args, **kwargs):
         msg += '\n'
 
         # Get the short description, if available
-        if getattr(processor, 'short_desc', None) is not None:
-            msg += wrap_desc.fill(processor.short_desc) + '\n'
+        if getattr(processor_cls, 'short_desc', None) is not None:
+            msg += wrap_desc.fill(processor_cls.short_desc) + '\n'
 
         # Get the module, if available
-        if getattr(processor, 'module', None) is not None:
+        if getattr(processor_cls, 'module', None) is not None:
             mod_str = (colored("module:", color='cyan', attrs=['bold'])
                        if settings.colored_term and colored is not None else
                        "module:")
-            mod_str += " {}".format(processor.module)
+            mod_str += " {}".format(processor_cls.module)
             msg += wrap_fields.fill(mod_str) + '\n'
 
         # Get the module, if available
-        if getattr(processor, 'order', None) is not None:
+        if getattr(processor_cls, 'order', None) is not None:
             order_str = (colored("order:", color='cyan', attrs=['bold'])
                          if settings.colored_term and colored is not None else
                          "order:")
-            order_str += " {}".format(processor.order)
+            order_str += " {}".format(processor_cls.order)
             msg += wrap_fields.fill(order_str) + '\n'
 
         print(msg)

@@ -4,11 +4,10 @@ Function(s) to make typographic substitutions.
 import regex
 
 from .process_tag import ProcessTag
-from ..tag import Tag
 
 
-class ProcessTypopgraphy(ProcessTag):
-    """A processor for typography in tags.
+class ProcessTypography(ProcessTag):
+    """A tag processor to identify and format typography in tags.
 
     The contents of tags will be processed if the tag's
     :attr:`process_typography <disseminate.Tags.Tag.process_content>`
@@ -19,8 +18,7 @@ class ProcessTypopgraphy(ProcessTag):
     short_desc = "Identify and replace typographic characters, like endashes"
 
     def __call__(self, tag):
-            if getattr(tag, 'process_typography', False):
-                process_typography(tag)
+        process_typography(tag, tag_base_cls=self.tag_base_cls)
 
 
 re_endash = regex.compile(r"[\s\u00a0]*(--|\u2013)[\s\u00a0]*")
@@ -32,16 +30,18 @@ re_double_start = regex.compile(r"(?<!\w)\"(?=\S)")
 re_double_end = regex.compile(r"(?<=\S)\"(?!\w)")
 
 
-def process_typography(tag, level=1):
+def process_typography(tag, tag_base_cls, level=1):
     """Process the typography for an AST.
 
     .. note:: This function should be run after process_ast.
 
     Parameters
     ----------
-    tag : str or list
+    tag : Union[str, list]
         A string to parse into an AST, a list of strings or an existing AST.
-    level : int, optional
+    tag_base_cls : :class:`Tag <disseminate.tags.tag.Tag>`
+        The base class for Tag objects.
+    level : Optional[int]
         The current level of the tag.
 
     Returns
@@ -61,14 +61,19 @@ def process_typography(tag, level=1):
         tag = re_double_end.sub('”', tag)
         return tag
 
-    elif isinstance(tag, Tag) and getattr(tag, 'process_typography', False):
+    elif (isinstance(tag, tag_base_cls) and
+          getattr(tag, 'process_typography', False)):
         # Process the tag contents
-        tag.content = process_typography(tag.content, level + 1)
+        tag.content = process_typography(tag=tag.content,
+                                         tag_base_cls=tag_base_cls,
+                                         level=level + 1)
         return tag
 
     elif isinstance(tag, list):
         # Process each element of lists
         for i, element in enumerate(tag):
-            tag[i] = process_typography(element, level + 1)
+            tag[i] = process_typography(tag=element,
+                                        tag_base_cls=tag_base_cls,
+                                        level=level + 1)
 
     return tag

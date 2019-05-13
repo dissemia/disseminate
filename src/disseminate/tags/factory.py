@@ -9,12 +9,17 @@ class TagFactory(object):
 
     The tag factory instantiates tags based on loaded modules and initialization
     parameters.
+
+    Parameters
+    ----------
+    tag_base_cls : :class:`Tag <disseminate.tags.tag.Tag>`
+        The base class for Tag objects.
     """
 
     _tag_classes = None
 
-    def __init__(self, base_tag_class):
-        self.base_tag_class = base_tag_class
+    def __init__(self, tag_base_cls):
+        self.tag_base_cls = tag_base_cls
 
     def tag(self, tag_name, tag_content, tag_attributes, context):
         """Return the approriate tag, given a tag_name and tag_content.
@@ -41,24 +46,29 @@ class TagFactory(object):
         tag : :obj:`Tag <disseminate.tags.Tag>`
             An instance of a Tag subclass.
         """
-        tag_classes = self.tag_classes
-        tag_name_lower = tag_name.lower()
-        tag_cls = tag_classes.get(tag_name_lower, None)
-
-        if (tag_cls is not None and
-           getattr(tag_cls, 'active', False) and
-           tag_cls.__name__.lower() not in context.get('inactive_tags', ())):
-            # First, see if the tag_name matches one of the tag subclasses (or
-            # tag aliases) in disseminate
-            cls = tag_cls
-        else:
-            # If all else fails, just make a generic Tag.
-            cls = self.base_tag_class
+        cls = self.tag_class(tag_name=tag_name, context=context)
 
         # Create the tag
         tag = cls(name=tag_name, content=tag_content, attributes=tag_attributes,
                   context=context)
         return tag
+
+    def tag_class(self, tag_name, context):
+        """The retrieve the tag class for the given tag_name"""
+        tag_classes = self.tag_classes
+        tag_name_lower = tag_name.lower()
+        tag_cls = tag_classes.get(tag_name_lower, None)
+
+        if (tag_cls is not None and
+                getattr(tag_cls, 'active', False) and
+                tag_cls.__name__.lower() not in context.get('inactive_tags',
+                                                            ())):
+            # First, see if the tag_name matches one of the tag subclasses (or
+            # tag aliases) in disseminate
+            return tag_cls
+        else:
+            # If all else fails, just make a generic Tag.
+            return self.tag_base_cls
 
     @property
     def tag_classes(self):
@@ -66,8 +76,8 @@ class TagFactory(object):
         if TagFactory._tag_classes is None:
             tag_classes = dict()
 
-            for scls in all_subclasses(self.base_tag_class):
-               # Collect the name and aliases (alternative names) for the tag
+            for scls in all_subclasses(self.tag_base_cls):
+                # Collect the name and aliases (alternative names) for the tag
                 aliases = (list(scls.aliases) if scls.aliases is not None else
                            list())
                 names = [scls.__name__.lower(), ] + aliases

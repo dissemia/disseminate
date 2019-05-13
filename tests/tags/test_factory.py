@@ -16,7 +16,7 @@ def test_tag_factory_available(context_cls):
     """Tests that unavailable tags are not returned by the TagFactory."""
 
     context = context_cls()
-    factory = TagFactory(base_tag_class=Tag)
+    factory = TagFactory(tag_base_cls=Tag)
 
     # 1. Try an instance of the available class
     available = factory.tag(tag_name='available', tag_attributes='',
@@ -33,7 +33,7 @@ def test_tag_factory_inactive_tags(context_cls):
     """Tests the 'inactive_tags' entry of the context."""
 
     context = context_cls()
-    factory = TagFactory(base_tag_class=Tag)
+    factory = TagFactory(tag_base_cls=Tag)
 
     # 1. Try an instance of the available class
     available = factory.tag(tag_name='available', tag_attributes='',

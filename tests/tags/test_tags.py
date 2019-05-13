@@ -1,14 +1,10 @@
 """
 Tests the core Tag and TagFactory classes.
 """
-import pathlib
-
 import pytest
 
-from disseminate.document import Document
 from disseminate.tags import Tag, TagError
 from disseminate.tags.text import P
-from disseminate import SourcePath, TargetPath
 
 
 def test_tag_basic_strings(context_cls):
@@ -176,6 +172,40 @@ def test_tag_invalid_inputs(context_cls):
     # 2. Test invalid content types
     with pytest.raises(TagError):
         root = Tag(name='root', content=set(), attributes=None, context=context)
+
+
+def test_tag_processors(context_cls):
+    """Test the tag processor functions."""
+
+    # Create a mock tag
+    context = context_cls()
+    root = Tag(name='root', content='test', attributes='', context=context)
+
+    # Retrieve the processors
+    processors = root.processors()
+    assert len(processors) > 0
+
+    # Retrieve specific processors
+    for name, cls_name in (('process_content', 'ProcessContent'),
+                           ('process_paragraphs', 'ProcessParagraphs'),
+                           ('process_macros', 'ProcessMacros'),
+                           ('process_typography', 'ProcessTypography'),
+                           ):
+        processors = root.processors(names=name)
+        assert len(processors) == 1
+
+        processor = processors[0]
+        assert processor.__class__.__name__ == cls_name
+
+        # Try the class/instance attributes in filtering
+        setattr(root, name, False)
+        root.process_context = False
+        assert (cls_name not in
+                [p.__class__.__name__ for p in root.processors()])
+
+        setattr(root, name, True)
+        assert (cls_name in
+                [p.__class__.__name__ for p in root.processors()])
 
 
 def test_flatten_tag(context_cls):

@@ -6,8 +6,6 @@ import regex
 
 from .process_tag import ProcessTag
 from ..exceptions import TagError
-from ..factory import TagFactory
-from ..tag import Tag
 from ...utils.string import group_strings
 from ... import settings
 
@@ -21,22 +19,23 @@ re_brace = regex.compile(r'[}{]')
 
 
 class ProcessContent(ProcessTag):
-    """The the tag processor for the contents of tags.
+    """A tag processor to parse the contents of tags into sub-tags.
 
     The contents of tags will be processed if the tag's :attr:`process_content
     <disseminate.Tags.Tag.process_content>` attribute is True.
     """
 
     order = 200
-    short_desc = "Parse tags in the contents of tags and strings"
 
     def __call__(self, tag):
-        if tag.process_content:
-            content = parse_tags(content=tag.content, context=tag.context)
-            tag.content = content
+        assert self.tag_factory is not None  # assigned on creation
+
+        content = parse_tags(content=tag.content, context=tag.context,
+                             tag_factory=self.tag_factory)
+        tag.content = content
 
 
-def parse_tags(content, context, level=1):
+def parse_tags(content, context, tag_factory, level=1):
     """Process a string into a tree of tags, strings and lists of both.
 
     .. note:: The parsing of tags is idempotent. It will reprocess the
@@ -69,7 +68,7 @@ def parse_tags(content, context, level=1):
         raise TagError(msg.format(settings.tag_max_depth))
 
     new_content = []
-    parse = lambda x: parse_tags(x, context, level + 1)
+    parse = lambda x: parse_tags(x, context, tag_factory, level + 1)
 
     # Look at the element and process it depending on whether it's a string, tag
     # or list
@@ -77,12 +76,11 @@ def parse_tags(content, context, level=1):
         pass
     elif isinstance(content, list):
         return list(map(parse, content))
-    elif isinstance(content, Tag):
-        if (isinstance(content.content, str) or
-           isinstance(content.content, Tag)):
-            content.content = parse(content.content)
-        elif isinstance(content.content, list):
+    elif hasattr(content, 'content'):
+        if isinstance(content.content, list):
             content.content = list(map(parse, content.content))
+        else:
+            content.content = parse(content.content)
         return content
     else:
         msg = "Tag content in an unknown format. The tag contents are: {}"
@@ -90,9 +88,6 @@ def parse_tags(content, context, level=1):
 
     # The following only processes text
     text = content
-
-    # Setup the tag factor to generate tags
-    factory = TagFactory(base_tag_class=Tag)
 
     # The parser starts at the start of the text string
     position = 0
@@ -152,10 +147,10 @@ def parse_tags(content, context, level=1):
             # Process the inner_text if it's more than the empty string
             tag_content = inner_text if inner_text else ''
 
-        tag = factory.tag(tag_name=tag_name,
-                          tag_content=tag_content,
-                          tag_attributes=tag_attributes,
-                          context=context, )
+        tag = tag_factory.tag(tag_name=tag_name,
+                              tag_content=tag_content,
+                              tag_attributes=tag_attributes,
+                              context=context, )
         new_content.append(tag)
 
         # Find the next tag

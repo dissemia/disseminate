@@ -141,6 +141,41 @@ def strip_end_quotes(s):
     return s
 
 
+_re_find_capitals = regex.compile(r'[A-Z][^A-Z]*')
+
+
+def convert_camelcase(string, sep='_'):
+    """Convert a camel-case string to a string to a lower-case string with
+    a seperator character.
+
+    Parameters
+    ----------
+    string : str
+        The camel-case string to convert
+    sep : Optional[str]
+        The separator character.
+
+    Returns
+    -------
+    processed_string : str
+        The converted string
+
+    Examples
+    --------
+    >>> convert_camelcase('ProcessContext')
+    'process_context'
+    >>> convert_camelcase('processcontext')
+    'processcontext'
+    >>> convert_camelcase('ProcessContext', '.')
+    'process.context'
+    """
+    pieces = _re_find_capitals.findall(string)
+    if pieces:
+        return sep.join(i.lower() for i in pieces)
+    else:
+        return string
+
+
 def find_basestring(strings):
     """Evaluate the common base string amongst a list of strings.
 

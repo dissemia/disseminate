@@ -5,24 +5,24 @@ Tag processors for identifying paragraphs in tags.
 import regex
 
 from .process_tag import ProcessTag
-from ..tag import Tag
-from ..text import P
 
 
 class ProcessParagraphs(ProcessTag):
-    """A processor for identifying and tagging paragraphs in tags.
+    """A tag processor to identify and tag paragraphs in tags.
 
     The contents of tags will be processed if the tag's name is listed
     in the context's process_paragraphs entry.
     """
 
     order = 400
-    short_desc = ("Identify and create paragraph tags for tag names listed in "
-                  "the 'process_paragraphs' context entry")
 
     def __call__(self, tag):
         if tag.name in tag.context.get('process_paragraphs', []):
-            process_paragraph_tags(tag, context=tag.context)
+            context = tag.context
+            p_cls = self.tag_factory.tag_class(tag_name='P', context=context)
+            process_paragraph_tags(tag, context=tag.context,
+                                   tag_base_cls=self.tag_base_cls,
+                                   p_cls=p_cls)
 
 
 re_para = regex.compile(r'(?:\n{2,})')
@@ -163,7 +163,7 @@ def clean_paragraphs(elements):
     return elements
 
 
-def assign_paragraph_roles(elements):
+def assign_paragraph_roles(elements, tag_base_cls):
     """Assign the 'paragraph_role' attribute for tags within sublists created
      by the group_paragraphs function.
 
@@ -173,9 +173,11 @@ def assign_paragraph_roles(elements):
 
     Parameters
     ----------
-    elements : list
+    elements : Union[str, list, :obj:`disseminate.tags.Tag`]
         The list of paragraph tags (:obj:`P <disseminate.tags.text.P>` and
         strings.
+    tag_base_cls : :class:`Tag <disseminate.tags.tag.Tag>`
+        The base class for Tag objects.
 
     Returns
     -------
@@ -188,7 +190,8 @@ def assign_paragraph_roles(elements):
     # are inline or block
     for sublist in filter(lambda x: isinstance(x, list), elements):
         # Find all the tags in the sublist
-        sublist_tags = list(filter(lambda x: isinstance(x, Tag), sublist))
+        sublist_tags = list(filter(lambda x: isinstance(x, tag_base_cls),
+                                   sublist))
 
         # Determine the number of tags and the number of total elements in
         # the sublist
@@ -208,22 +211,27 @@ def assign_paragraph_roles(elements):
     return elements
 
 
-def process_paragraph_tags(element, context):
+def process_paragraph_tags(element, context, tag_base_cls, p_cls):
     """Process the paragraphs for the contents of a tag.
 
     Parameters
     ----------
-    element : str, list or tag (:obj:`disseminate.tags.Tag`)
+    element : Union[str, list, :obj:`disseminate.tags.Tag`]
         A string, tag or list of both to process for paragraphs
-    context : dict
+    context : :obj:`DocumentContext \
+        <disseminate.document.context.DocumentContext>`
         The context with values for the document.
+    tag_base_cls : :class:`Tag <disseminate.tags.tag.Tag>`
+        The base class for Tag objects.
+    p_cls : :class:`P <disseminate.tags.text.P>`
+        The tag class for paragraphs.
 
     Returns
     -------
     processed_contents : str, :obj:`disseminate.tags.Tag` or list of both
         The contents with
     """
-    if isinstance(element, Tag):
+    if isinstance(element, tag_base_cls):
         # If it's a tag, pull out its content
         content = element.content
     else:
@@ -242,7 +250,7 @@ def process_paragraph_tags(element, context):
     clean_paragraphs(group)
 
     # Assign the paragraph_role for tags within paragraph sublist groups
-    assign_paragraph_roles(group)
+    assign_paragraph_roles(group, tag_base_cls=tag_base_cls)
 
     # Convert the sublists into paragraphs
     for count, item in enumerate(group):
@@ -253,7 +261,7 @@ def process_paragraph_tags(element, context):
             item = item[0] if len(item) == 1 else item
 
             # sublists created by group_paragraphs are paragraphs
-            p = P(name='p', content=item, attributes='', context=context)
+            p = p_cls(name='p', content=item, attributes='', context=context)
 
             group[count] = p
 
@@ -262,7 +270,7 @@ def process_paragraph_tags(element, context):
         group = group[0]
 
     # If the original element was a tag, replace its content
-    if isinstance(element, Tag):
+    if isinstance(element, tag_base_cls):
         element.content = group
         return element
     else:

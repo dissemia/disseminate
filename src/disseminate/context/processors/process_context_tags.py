@@ -33,7 +33,7 @@ class ProcessContextTags(ProcessContext):
         keys = keys.intersection(process_tags)
 
         # Create a tag factory to create new tags
-        factory = TagFactory(base_tag_class=Tag)
+        factory = TagFactory(tag_base_cls=Tag)
 
         for k in keys:
             value = context[k]

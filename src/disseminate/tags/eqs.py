@@ -5,7 +5,6 @@ from copy import copy
 
 from .tag import Tag
 from .img import RenderedImg
-from .processors.process_content import parse_tags
 from ..formats import tex_cmd, tex_env
 from ..attributes import Attributes
 
@@ -79,9 +78,12 @@ class Eq(RenderedImg):
         # Save the raw content and raw attributes and format the content in tex
         # The content for this tag will be replaced by the path of the image
         # by RenderImg
-        content = parse_tags(content=content, context=context)
-        self._raw_content = content
+        self.context = context
+        self.content = content
         self.attributes = attributes
+
+        self.process(names='process_content')
+        self._raw_content = self.content
         content = self.tex
 
         # Note: This crop command should not cut off baselines such that

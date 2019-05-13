@@ -30,21 +30,10 @@ def format_ext(value):
     return '.' + value if not value.startswith('.') else value
 
 
-def list_tag_processors():
-    for count, processor in enumerate(ProcessTag.processors(), 1):
-        msg = processor.print_msg()
-        print("{count}. {msg}".format(count=count, msg=msg))
-
-
 def list_context_processors():
     for count, processor in enumerate(ProcessContext.processors(), 1):
         msg = processor.print_msg()
         print("{count}. {msg}".format(count=count, msg=msg))
-
-
-def list_label_manager_processors():
-    mock_context = dict()
-    print_processors(ProcessLabels, context=mock_context)
 
 
 # TODO: add clean or clear option to remove targets and .cache
@@ -106,13 +95,13 @@ def main():
 
     # List the tag and context processors
     if args.list_tag_processors:
-        list_tag_processors()
+        print_processors(ProcessTag)
         exit()
     if args.list_context_processors:
         list_context_processors()
         exit()
     if args.list_label_manager_processors:
-        list_label_manager_processors()
+        print_processors(ProcessLabels)
         exit()
 
     if args.command not in ('init', 'serve', 'render'):

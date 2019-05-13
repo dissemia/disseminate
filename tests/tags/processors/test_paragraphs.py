@@ -168,7 +168,7 @@ def test_assign_paragraph_roles(context_cls):
     assert group[1][1].paragraph_role is None
 
     # Now assign the paragraph_roles
-    assign_paragraph_roles(group)
+    assign_paragraph_roles(elements=group, tag_base_cls=Tag)
     assert group[0][0].paragraph_role == 'inline'
     assert group[0][1].paragraph_role == 'inline'
     assert group[1][1].paragraph_role == 'inline'
@@ -186,7 +186,7 @@ def test_assign_paragraph_roles(context_cls):
     assert group[1][0].paragraph_role is None
 
     # Now assign the paragraph_roles
-    assign_paragraph_roles(group)
+    assign_paragraph_roles(elements=group, tag_base_cls=Tag)
     assert group[0][0].paragraph_role == 'inline'
     assert group[0][1].paragraph_role == 'inline'
     assert group[1][0].paragraph_role == 'block'
@@ -203,7 +203,7 @@ def test_assign_paragraph_with_tags(doc):
     root = Tag(name='role', content=test_paragraphs, attributes='',
                context=context)
     group = group_paragraphs(root.content)
-    assign_paragraph_roles(group)
+    assign_paragraph_roles(elements=group, tag_base_cls=Tag)
 
     assert group[0][1].paragraph_role == 'inline'
     assert group[1][1].paragraph_role == 'inline'
@@ -222,7 +222,8 @@ def test_process_paragraph_tags(doc):
 
     root = Tag(name='root', content=test_paragraphs, attributes='',
                context=context)
-    process_paragraph_tags(root, context=context)
+    process_paragraph_tags(element=root, context=context, tag_base_cls=Tag,
+                           p_cls=P)
 
     # Check the individual items of root.
     assert root.name == 'root'
@@ -269,7 +270,8 @@ def test_process_paragraph_tags_leading_spaces(doc):
 
     root = Tag(name='root', content=test_paragraphs2, attributes='',
                context=context)
-    process_paragraph_tags(root, context=context)
+    process_paragraph_tags(element=root, context=context, tag_base_cls=Tag,
+                           p_cls=P)
 
     assert root.name == 'root'
     assert root.content[0].name == 'section'
@@ -286,7 +288,8 @@ def test_process_paragraph_tags_subtags(context_cls):
 
     root = Tag(name='root', content="My @p90x pulse.", attributes='',
                context=context)
-    process_paragraph_tags(root, context=context)
+    process_paragraph_tags(element=root, context=context, tag_base_cls=Tag,
+                           p_cls=P)
 
     # Check the root tag
     assert root.name == 'root'
@@ -301,7 +304,8 @@ def test_process_paragraph_tags_subtags(context_cls):
     # Test paragraph processing with a macro and tag
     root = Tag(name='root', content="My @b{y = x} @1H pulse.", attributes='',
                context=context)
-    process_paragraph_tags(root, context=context)
+    process_paragraph_tags(element=root, context=context, tag_base_cls=Tag,
+                           p_cls=P)
 
     # Check the root tag
     assert root.name == 'root'
@@ -331,7 +335,8 @@ def test_process_paragraph_tags_newlines(context_cls):
 
     text = replace_macros(text, context)
     root = Tag(name='root', content=text, attributes='', context=context)
-    process_paragraph_tags(root, context=context)
+    process_paragraph_tags(element=root, context=context, tag_base_cls=Tag,
+                           p_cls=P)
 
     root_html = root.html
     assert 'is to \n    transfer' in root_html
