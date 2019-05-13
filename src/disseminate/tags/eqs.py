@@ -3,28 +3,10 @@ Tags to render equations
 """
 from copy import copy
 
-from .tag import Tag
 from .img import RenderedImg
+from .utils import content_to_str
 from ..formats import tex_cmd, tex_env
 from ..attributes import Attributes
-
-
-def raw_content_string(content):
-    """Generate a string from the content."""
-    if isinstance(content, str):
-        return content
-
-    elif isinstance(content, list) or hasattr(content, '__iter__'):
-        return ''.join(map(raw_content_string, content))
-
-    elif isinstance(content, Tag) and hasattr(content, 'tex'):
-        return content.tex_fmt(mathmode=True)
-
-    elif hasattr(content, 'content'):
-        return raw_content_string(content.content)
-
-    else:
-        return ""
 
 
 class Eq(RenderedImg):
@@ -56,7 +38,7 @@ class Eq(RenderedImg):
     bold = None
     color = None
 
-    _raw_content = None
+    tex_content = None
 
     default_block_env = "align*"
 
@@ -83,15 +65,16 @@ class Eq(RenderedImg):
         self.attributes = attributes
 
         self.process(names='process_content')
-        self._raw_content = self.content
+        tex_content = content_to_str(self.content, target='.tex', mathmode=True)
+        tex_content = tex_content.strip(' \t\n')
+        self.tex_content = tex_content
         content = self.tex
 
+        # Crop equation images created by the dependency manager. This removes
+        # white space around the image so that the equation images.
         # Note: This crop command should not cut off baselines such that
         # equation images won't line up properly with the surrounding text.
         # ex: H vs Hy
-        #
-        # Crop equation images created by the dependency manager. This removes
-        # white space around the image so that the equation images.
         attributes['crop'] = (100, 100, 0, 0)
 
         super().__init__(name=name, content=content, attributes=attributes,
@@ -119,8 +102,9 @@ class Eq(RenderedImg):
         return super(Eq, self).html_fmt(content=content, level=level)
 
     def tex_fmt(self, content=None, mathmode=False, level=1):
-        raw_content = raw_content_string(self._raw_content).strip(' \t\n')
-        content = raw_content
+        if content is None:
+            content = (self.tex_content if self.tex_content is not None
+                       else self.content)
 
         # Add bold and color if specified
         if 'color' in self.attributes:
