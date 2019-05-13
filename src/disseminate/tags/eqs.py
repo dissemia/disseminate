@@ -12,8 +12,8 @@ from ..attributes import Attributes
 class Eq(RenderedImg):
     """The inline equation tag
 
-    Render an equation in native LaTeX or into a rendered SVG image using
-    LaTeX.
+    Render an equation in native LaTeX (.tex targets) or into a rendered
+    SVG image using LaTeX (.html targets).
 
     Attributes
     ----------
@@ -57,14 +57,17 @@ class Eq(RenderedImg):
                                block_equation else False)
         self.tex_env = env if env is not None else self.default_block_env
 
-        # Save the raw content and raw attributes and format the content in tex
-        # The content for this tag will be replaced by the path of the image
-        # by RenderImg
+        # Prepare the tag to only have its contents processed
         self.context = context
         self.content = content
         self.attributes = attributes
 
+        # Replace macros and process content
         self.process(names='process_content')
+
+        # Take the content, and convert it to latex. Save the tex_content
+        # separately because the contents of this tag will be converted to
+        # an image path by the parent class.
         tex_content = content_to_str(self.content, target='.tex', mathmode=True)
         tex_content = tex_content.strip(' \t\n')
         self.tex_content = tex_content
