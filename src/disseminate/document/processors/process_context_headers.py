@@ -36,7 +36,8 @@ class ProcessContextAdditionalHeaderFiles(ProcessContext):
     """
 
     # This processor should be loaded after the initial headers are loaded from
-    # the context (ProcessContextHeaders), but before the tags are processed
+    # the context (ProcessContextHeaders) and the template
+    # (ProcessContextTemplate), but before the tags are processed
     # (ProcessContextTags)
     order = 400
 

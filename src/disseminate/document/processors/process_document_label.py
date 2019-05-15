@@ -8,6 +8,8 @@ from ...utils.string import slugify
 class SetDocumentLabel(ProcessContext):
     """A context processor to set the document label in the label manager."""
 
+    #: This processor should be run after the header is loaded
+    #: (ProcessContextHeaders)
     order = 200
 
     def __call__(self, context):

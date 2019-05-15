@@ -1,6 +1,8 @@
 """
 A base class for label processors.
 """
+from abc import abstractmethod
+
 from ...processors import ProcessorABC
 from ...utils.classes import weakattr
 
@@ -40,12 +42,13 @@ class ProcessLabels(ProcessorABC):
     includes = None
     excludes = None
 
+    #: Do not store process instances; create new processors every time the
+    #: processors method is executed. This is because the processors store
+    #: the context of documents, which are different for each document.
+    store_instances = False
+
     def __init__(self, context):
         self.context = context
-
-    @classmethod
-    def processors(cls, context):
-        return super().processors(context=context)
 
     def filter(self, labels):
         """Filter labels based on label types listed in the includes and
@@ -57,3 +60,7 @@ class ProcessLabels(ProcessorABC):
             labels = [label for label in labels if not
                       any(isinstance(label, t) for t in self.excludes)]
         return labels
+
+    @abstractmethod
+    def __call__(self, registered_labels, collected_labels):
+        pass

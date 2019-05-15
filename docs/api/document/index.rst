@@ -9,5 +9,6 @@ Document
              
    document
    document_context
+   processors/index
    utils
    
