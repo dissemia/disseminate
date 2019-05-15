@@ -10,7 +10,7 @@ from .utils import print_processors
 from ..server import run
 from ..tags.processors import ProcessTag
 from ..label_manager.processors import ProcessLabels
-from ..context.processors import ProcessContext
+from ..document.processors import ProcessContext
 from .. import settings
 
 
@@ -28,12 +28,6 @@ def is_directory(value):
 def format_ext(value):
     """Format the target extensions list."""
     return '.' + value if not value.startswith('.') else value
-
-
-def list_context_processors():
-    for count, processor in enumerate(ProcessContext.processors(), 1):
-        msg = processor.print_msg()
-        print("{count}. {msg}".format(count=count, msg=msg))
 
 
 # TODO: add clean or clear option to remove targets and .cache
@@ -98,7 +92,7 @@ def main():
         print_processors(ProcessTag)
         exit()
     if args.list_context_processors:
-        list_context_processors()
+        print_processors(ProcessContext)
         exit()
     if args.list_label_manager_processors:
         print_processors(ProcessLabels)

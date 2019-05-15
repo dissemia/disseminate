@@ -3,7 +3,7 @@ Test the process_header processors.
 """
 from pathlib import Path
 
-import disseminate.context.processors as pr
+import disseminate.document.processors as pr
 
 
 def test_process_header(context_cls):

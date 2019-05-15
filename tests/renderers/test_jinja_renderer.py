@@ -6,38 +6,22 @@ import pathlib
 import pytest
 import jinja2.exceptions
 
-from disseminate.renderers import JinjaRenderer, ProcessContextTemplate
+import disseminate.document.processors as pr
+from disseminate.renderers import JinjaRenderer
 from disseminate.dependency_manager import DependencyManager
 from disseminate.paths import SourcePath, TargetPath
 
 
-def test_jinja_template_search(tmpdir, context_cls):
+def test_jinja_template_search(doc):
     """Test the correct loading of paths by the Jinja2 template renderer."""
     # Setup the paths
-    project_root = SourcePath()
-    target_root = TargetPath(target_root=tmpdir)
-    src_filepath = SourcePath(project_root=project_root,
-                              subpath='test.dm')
-
-    # Setup the dependency manager in the global context. This is needed
-    # to find and convert images by the img tag.
-    dep_manager = DependencyManager(project_root=project_root,
-                                    target_root=target_root)
-
-    context_cls.validation_types = {'dependency_manager': DependencyManager,
-                                    'src_filepath': SourcePath,
-                                    'paths': list}
-    context = context_cls(dependency_manager=dep_manager,
-                          src_filepath=src_filepath,
-                          paths=[])
-
-    context_cls.validation_types = {'src_filepath': SourcePath,
-                                    'dependency_manager': DependencyManager}
+    context = doc.context
+    context['paths'] = []
 
     # Default template
 
     # Setup the context processor
-    processor = ProcessContextTemplate()
+    processor = pr.process_template.ProcessContextTemplate()
     processor(context)
 
     renderer = JinjaRenderer(context=context, targets=['.html'],
@@ -49,7 +33,6 @@ def test_jinja_template_search(tmpdir, context_cls):
     assert '<html lang="en">' in t.render(body='')
 
     # Another built-in template
-    context = context_cls(src_filepath=src_filepath, paths=[])
     renderer = JinjaRenderer(context=context, targets=['.html'],
                              template='books/tufte',
                              module_only=True)
@@ -60,7 +43,6 @@ def test_jinja_template_search(tmpdir, context_cls):
 
     # Try the same built-in template without specifying 'template' in the
     # template name.
-    context = context_cls(src_filepath=src_filepath, paths=[])
     renderer = JinjaRenderer(context=context, template='books/tufte',
                              targets=['.html'],
                              module_only=True)
@@ -70,10 +52,9 @@ def test_jinja_template_search(tmpdir, context_cls):
     assert '<html lang="en">' in t.render(body='')
 
     # Try a custom template
-    custom_template = tmpdir.join('template.html').ensure(file=True)
-    src_filepath = SourcePath(str(tmpdir), 'main.dm')
-    context = context_cls(src_filepath=src_filepath,
-                          paths=[])
+    custom_template =  doc.src_filepath.parent / 'template.html'
+    custom_template.touch()
+
     renderer = JinjaRenderer(context=context, template='template',
                              targets=['.html'])
     t = renderer.get_template(target='.html')

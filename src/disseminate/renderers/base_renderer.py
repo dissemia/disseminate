@@ -6,41 +6,10 @@ a string for a particular target, like '.html' or '.tex'.
 """
 import pathlib
 
-from ..context.processors import ProcessContext
-from ..context.utils import context_targets
 from ..paths import SourcePath
 
 #: The location of the templates directory relative to this directory
 module_templates_relpath = '../templates'
-
-
-class ProcessContextTemplate(ProcessContext):
-    """Process the template entries in a given context"""
-
-    order = 300
-    short_desc = "Load the template and equation renderers in the context"
-
-    def __call__(self, context):
-        # Get the subclasses of the BaseRenderer
-        renderer_clses = BaseRenderer.renderer_subclasses()
-        renderer_cls = renderer_clses[0]
-
-        # Create the template renderer.
-        template = context.get('template', 'default/template')
-        targets = context_targets(context)
-        template_renderer = renderer_cls(context=context,
-                                         template=template,
-                                         targets=targets,
-                                         module_only=False)
-        context['template_renderer'] = template_renderer
-
-        # Create the equation renderer.
-        equation_template = context.get('equation_template', 'default/eq')
-        equation_renderer = renderer_cls(context=context,
-                                         template=equation_template,
-                                         targets=['.tex'],
-                                         module_only=False)
-        context['equation_renderer'] = equation_renderer
 
 
 class BaseRenderer(object):

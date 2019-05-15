@@ -170,3 +170,96 @@ class DocumentContext(BaseContext):
     def root_document(self, value):
         # Create a weakref to the document
         self['root_document'] = weakref.ref(value)
+
+    @property
+    def targets(self):
+        """Retrieve a list of targets from the 'targets' or 'target'
+        entry of thedocument  context.
+
+        Returns
+        -------
+        target_list : list or str
+            A list of targets specified in the context.
+
+        Examples
+        --------
+        >>> DocumentContext(targets='html, pdf').targets
+        ['.html', '.pdf']
+        >>> DocumentContext(target='txt').targets
+        ['.txt']
+        >>> DocumentContext(target=' ').targets
+        []
+        >>> DocumentContext().targets
+        []
+        """
+        # Get the targets from the context.
+        # In the default context, this is set as the 'targets' entry, which
+        # may be over-written by the user. However, a 'target' entry
+        # could be
+        # used as well (for convenience), and it should be checked first,
+        # since
+        # it overrides the default 'targets' entry.
+        if 'target' in self:
+            targets = self['target']
+        elif 'targets' in self:
+            targets = self['targets']
+        else:
+            targets = ''
+
+        # Convert to a list, if needed
+        target_list = (targets.split(',') if isinstance(targets, str) else
+                       targets)
+
+        if len(target_list) == 1:
+            target_list = [t.strip() for t in target_list[0].split(" ")]
+        else:
+            target_list = [t.strip() for t in target_list]
+
+        if 'none' in target_list:
+            return []
+
+        # Remove empty entries
+        target_list = list(filter(bool, target_list))
+
+        # Add trailing period to extensions in target_list
+        return [t if t.startswith('.') else '.' + t for t in target_list]
+
+    @property
+    def includes(self):
+        """Retrieve a list of included subdocument source paths from the
+        'include' entry of the context.
+
+        Returns
+        -------
+        include_list : List[SourcePath]
+            (:obj:`disseminate.utils.paths.SourcePath`)
+            A list of the paths for the included subdocuments.
+        """
+        assert self.is_valid('src_filepath')
+
+        # Retrieve the include entry
+        if 'include' in self:
+            includes = self['include']
+        elif 'includes' in self:
+            includes = self['includes']
+        else:
+            includes = None
+
+        # Make sure it's properly formatted as a string for further processing
+        if not isinstance(includes, str):
+            return []
+
+        # Get the included subdocument paths. Strip extra space on the ends of
+        # entries on each line and remove empty entries.
+        includes = [path.strip() for path in includes.split('\n')
+                    if not path.isspace() and path != '']
+
+        # Reconstruct the paths relative to the context's src_filepath.
+        src_filepath = self['src_filepath']
+        subpath = src_filepath.subpath.parent
+        project_root = src_filepath.project_root
+
+        includes = [SourcePath(project_root=project_root,
+                               subpath=subpath / path)
+                    for path in includes]
+        return includes

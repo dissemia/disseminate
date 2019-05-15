@@ -1,20 +1,22 @@
 """
-Tests for the base TemplateRenderer object.
+Test the process_context_tempaltes processor.
 """
 import pathlib
 
 import disseminate
-from disseminate.renderers.base_renderer import ProcessContextTemplate
 from disseminate import SourcePath
+import disseminate.document.processors as pr
 
 
-def test_template_renderer_module_templates_path(context_cls):
+def test_template_renderer_module_templates_path(doc):
     """Test the module_templates_path method for BaseRenderer."""
     # Create a default template renderer
-    context = context_cls(paths=[], src_filepath=SourcePath())
+    context = doc.context
+    context['paths'] = []
+    context['src_filepath'] =SourcePath()
 
     # Setup the context processor
-    processor = ProcessContextTemplate()
+    processor = pr.process_template.ProcessContextTemplate()
     processor(context)
 
     renderer = context['template_renderer']

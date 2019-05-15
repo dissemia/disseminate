@@ -8,11 +8,9 @@ import logging
 import pathlib
 
 from .document_context import DocumentContext
+from .processors import ProcessContext
 from ..convert import convert
-from ..context.processors import ProcessContext
-from ..context.utils import context_targets, context_includes
 from ..utils.file import mkdir_p
-from ..utils.string import slugify
 from ..paths import SourcePath, TargetPath
 from .. import settings
 
@@ -20,34 +18,6 @@ from .. import settings
 class DocumentError(Exception):
     """An error generated while loading and processing a document."""
     pass
-
-
-class SetDocumentLabel(ProcessContext):
-    """A context processor to set the document label in the label manager."""
-
-    order = 200
-    short_desc = "Create the document label in the label manager"
-
-    def __call__(self, context):
-        assert context.is_valid('label_manager', 'document', 'src_filepath')
-
-        label_manager = context['label_manager']
-        src_filepath = context['src_filepath']
-        doc = context['document']()  # de-reference weakref
-
-        subpath_str = str(src_filepath.subpath)
-
-        # Get the level of the document
-        level = context.get('level', 1)
-
-        # Generate the label_id. ex: 'sub/file1.dm' becomes 'doc:sub-file1-dm'
-        label_id = 'doc:' + slugify(subpath_str)
-
-        # Set the label for this document
-        kind = ('document', 'document-level-' + str(level))
-        label_manager.add_document_label(id=label_id,
-                                         kind=kind, title=doc.short,
-                                         context=context)
 
 
 class Document(object):
@@ -232,7 +202,7 @@ class Document(object):
     @property
     def target_list(self):
         """The list of targets from the context."""
-        return context_targets(self.context)
+        return self.context.targets
 
     @property
     def targets(self):
@@ -429,7 +399,7 @@ class Document(object):
         self.subdocuments.clear()
 
         # Retrieve the file paths of included files in the context
-        src_filepaths = context_includes(context=self.context)
+        src_filepaths = self.context.includes
 
         for src_filepath in src_filepaths:
             # If the src_filepath is the same as this document, do nothing, as

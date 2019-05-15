@@ -203,3 +203,47 @@ def test_document_context_is_valid(tmpdir):
     # Now remove the mtime key and this should invalidate the context
     del context['mtime']
     assert not context.is_valid()
+
+
+def test_document_context_includes(doc):
+    """Test the DocumentContext includes property."""
+
+    src_filepath = SourcePath(project_root='.',)
+    context = doc.context
+    context['include'] = "  sub/file1.dm\n  sub/file2.dm"
+    context['src_filepath'] = src_filepath
+    paths = context.includes
+    assert paths == [SourcePath('sub/file1.dm'),
+                     SourcePath('sub/file2.dm')]
+
+    # With spaces in filename
+    context['include'] = "  sub/file 1.dm\n  sub/file 2.dm "
+    paths = context.includes
+    assert paths == [SourcePath('sub/file 1.dm'),
+                     SourcePath('sub/file 2.dm')]
+
+    # With spaces in filename and extra newlines
+    context['include'] = ("  sub/file 1.dm\n  "
+                          "\nsub/file 2.dm ")
+    paths = context.includes
+    assert paths == [SourcePath('sub/file 1.dm'),
+                     SourcePath('sub/file 2.dm')]
+
+    # Tests with a src_filepath that is not the current directory
+    src_filepath = SourcePath(project_root='src', subpath='main.dm')
+    context['src_filepath'] = src_filepath
+    context['include'] = "  sub/file1.dm\n  sub/file2.dm"
+    paths = context.includes
+    assert paths == [SourcePath('src/sub/file1.dm'),
+                     SourcePath('src/sub/file2.dm')]
+    assert ([p.project_root for p in paths] ==
+            [SourcePath('src'), SourcePath('src')])
+    assert ([p.subpath for p in paths] ==
+            [SourcePath('sub/file1.dm'), SourcePath('sub/file2.dm')])
+
+    # Test and empty include
+    context['include'] = ""
+    assert context.includes == []
+
+    del context['include']
+    assert context.includes == []

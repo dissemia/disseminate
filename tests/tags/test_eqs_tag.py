@@ -6,39 +6,19 @@ import pytest
 from disseminate.tags import Tag
 from disseminate.formats import TexFormatError
 from disseminate.tags.eqs import Eq
+import disseminate.document.processors as pr
 from disseminate.dependency_manager import DependencyManager
-from disseminate.renderers import ProcessContextTemplate
 from disseminate import SourcePath, TargetPath
 
 
 @pytest.fixture
-def context_eq(tmpdir, context_cls):
+def context_eq(doc):
     """A fixture to create a context dict suitable for rendering equations."""
-    # Setup the test paths
-    project_root = SourcePath(project_root=tmpdir.join('src'))
-    src_filepath = SourcePath(project_root=project_root,
-                              subpath='test.dm')
-    target_root = TargetPath(target_root=tmpdir)
-    project_root.mkdir()
-
-    # Setup the dependency manager in the global context. This is needed
-    # to find and convert images by the img tag.
-    dep_manager = DependencyManager(project_root=project_root,
-                                    target_root=target_root)
-
-    context_cls.validation_types = {'dependency_manager': DependencyManager,
-                                    'project_root': SourcePath,
-                                    'target_root': TargetPath,
-                                    'src_filepath': SourcePath,
-                                    'paths': list}
-    context = context_cls(dependency_manager=dep_manager,
-                          src_filepath=src_filepath,
-                          project_root=project_root,
-                          target_root=target_root,
-                          paths=[])
+    # Setup of the DocumentContext from a document
+    context = doc.context
 
     # Setup the context processor
-    processor = ProcessContextTemplate()
+    processor = pr.process_template.ProcessContextTemplate()
     processor(context)  # add the 'equation_renderer' entry
 
     return context
@@ -137,6 +117,9 @@ def test_block_equation_paragraph(context_eq):
 
 def test_simple_inline_equation_html(context_eq):
     """Test the rendering of simple inline equations for html."""
+
+    # setup the context
+    context_eq['relative_links'] = False  # report absolute links
 
     # 1. Setup a basic equation tag
     eq = Eq(name='eq', content='y = x', attributes='', context=context_eq)
@@ -308,6 +291,7 @@ def test_block_equation_multiple_targets(context_eq):
     """Test the rendering of block equations with multiple targets"""
 
     # Setup the context
+    context_eq['relative_links'] = False  # report absolute links
     context_eq['process_paragraphs'] = ['root']  # process paragraphs for 'root'
     context_eq['targets'] = ['html', 'tex']
 
