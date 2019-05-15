@@ -4,39 +4,31 @@ Release Notes
 0.13 beta
 ---------
 
-1. *Documentation*. Unify documentation using Sphinx in the project.
-2. *Sphinx*. Clean-up css and API documentation for new functions and classes
-3. *Sphinx*. Add release notes.
-4. *BaseContext*. Implement updating, shallow copies and deep copies
-5. *Document*. Refactor the setting of the document label in the
-   DocumentContext, cleanup loading of documents and fix partial loading
-   errors, rename the `load_document` method to `load`. Fix document numbering
-   in the `render_tree_html` utility function.
-6. *DocumentContext*. Refactor to implement shallow/deep copy functionality from
-   BaseContext and the Document id (doc_id).
-7. *Header*. Refactor the process_header function to use the new str_to_dict
-   string utility function.
-8. *Labels*. Major refactoring to include labels of differents types--
-   ContentLabel and HeadlingLabel--and include curation functions to clean-up
-   labels
-9. *Paths*. Implement __copy__ and __deepcopy__ methods
-10. *Settings*. Refactor the default_context to use the BaseContext and include
-    the label formats in the default_context.
-11. *Tags*. Refactor to use the updates to the label manager.
-12. *Templates*. CSS updates to the Tufte book template.
-13. *Utils*. Add general utilities for classes, dicts, lists and strings.
-14. *Tests*. Updates to tests to work with new APIs and refactorings.
-15. *TagFactory*. Refactor into a submodule and separate documentation
-16. *Substitution*. Create a new Substitution tag for placing the contents of a
-    macro in a tag.
-17. *AST*. Make the parsing of tags with content optional.
-18. *Context*. Make the context weakref-able so that tags only need to store a
-    weakref to contexts.
-19. *Context*. Added a utility function for setting the 'content' attribute of
-    asts and other objects.
-20. *LabelManager*. Converted the root_context attribute to a weakref
-21. *Tag*. Converted the context attribute to a weakref
-22. *Tag utils*. Added a repl_tags utility function for changing all tags of a
-    specified class in an AST element or tag to a replacement string. Included
-    tests.
-23. *Substitution*. Implement the substitution tag.
+Backend
+~~~~~~~
+
+1. *Documentation*. Update documentation to use sphinx.
+2. *Context*. Rewrote context to work like a ChainMapping with inherited entries
+   from a parent_context.
+3. *Paths*. Allow relative links and urls.
+4. *TemplateStrings*. Eliminated the TemplateString class with a replace_macro
+   function.
+5. *Equation Tags*. Implement a new pdf cropping converter to more cleanly crop
+   equation images in targets like ``.html``.
+6. *Attributes*. Refactored tag attributes to use an ordered dict instead of
+   tuples. The Attributes class now includes useful utility functions, like
+   filter and exclude.
+7. *Formats*. Refactor the formatting of targets for tags with a new formats
+   sub-module. This module now checks for allowed tags in the settings. The
+   formats submodule also isolates the dependency of external packages, like
+   lxml, to one place instead of multiple places.
+8. *Processors*. Created a ProcessorABC abstract base class as a chain of
+   command class for objects like tags and context. Included a simple listing
+   of processors in the CLI.
+9. *Tags*. Eliminate the ast submodule and replaced with a TagProcessor.
+10. *Document*. Moved context processors to the document submodule and refactor
+    to use the ProcessorABC.
+11. *Label Manager*. Refactored to simplify the assignment of labels, the
+    resetting of label counters and to minimize the dependency of labels for
+    tags. Also added a set of label processors based on the ProcessorABC.
+
