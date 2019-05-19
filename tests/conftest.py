@@ -9,6 +9,22 @@ from disseminate.paths import SourcePath, TargetPath
 from disseminate.document import Document
 
 
+def pytest_collection_modifyitems(config, items):
+    """Run environment tests first.
+
+    The environment tests check to see if everything needed for the tests is
+    properly installed and configured, like pdflatex.
+    """
+    # Reorder the items to list the tests marked with 'environment' first.
+    env_items = [item for item in items if
+                 item.get_closest_marker('environment') is not None]
+    nonenv_items = [item for item in items if
+                 item.get_closest_marker('environment') is None]
+
+    items.clear()
+    items += env_items + nonenv_items
+
+
 @pytest.fixture(scope='function')
 def context_cls():
     """Returns a copy of the context class."""

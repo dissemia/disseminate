@@ -6,7 +6,8 @@ import logging
 import argparse
 import os.path
 
-from .utils import print_processors
+from .processors import print_processors
+from .checkers import print_checkers
 from ..server import run
 from ..tags.processors import ProcessTag
 from ..label_manager.processors import ProcessLabels
@@ -52,6 +53,8 @@ def main():
     # Arguments to main parser
     parser.add_argument('--debug', action='store_true',
                         help='print debug messages to stderr')
+    parser.add_argument('--check', action='store_true',
+                        help='check required executables and packages')
     parser.add_argument('--list-tag-processors', action='store_true',
                         help='list the available tag processors')
     parser.add_argument('--list-label-manager-processors', action='store_true',
@@ -86,6 +89,11 @@ def main():
 
     # Parse the commands
     args = parser.parse_args()
+
+    # Run the checker
+    if args.check:
+        print_checkers()
+        exit()
 
     # List the tag and context processors
     if args.list_tag_processors:

@@ -1,20 +1,10 @@
 """
-Utilities for rendering the command-line interface.
+Utilities for processors to the CLI.
 """
 from textwrap import TextWrapper
-import shutil
 
-try:
-    from termcolor import colored
-except ModuleNotFoundError:
-    colored = None
-
+from .term import term_width, colored
 from .. import settings
-
-
-def term_width():
-    """Retrieve the current width of the terminal."""
-    return shutil.get_terminal_size((80, 20))[0]  # 80-column default
 
 
 def print_processors(processor_base_cls):
@@ -47,9 +37,7 @@ def print_processors(processor_base_cls):
         # Get the class name
         cls_name = processor_cls.__name__
         msg = "{count}. ".format(count=count)
-        msg += (colored(cls_name, attrs=['bold', 'underline'])
-                if settings.colored_term and colored is not None else
-                cls_name)
+        msg += colored(cls_name, attrs=['bold', 'underline'])
         msg += '\n'
 
         # Get the short description, if available
@@ -58,17 +46,13 @@ def print_processors(processor_base_cls):
 
         # Get the module, if available
         if getattr(processor_cls, 'module', None) is not None:
-            mod_str = (colored("module:", color='cyan', attrs=['bold'])
-                       if settings.colored_term and colored is not None else
-                       "module:")
+            mod_str = colored("module:", color='cyan', attrs=['bold'])
             mod_str += " {}".format(processor_cls.module)
             msg += wrap_fields.fill(mod_str) + '\n'
 
         # Get the module, if available
         if getattr(processor_cls, 'order', None) is not None:
-            order_str = (colored("order:", color='cyan', attrs=['bold'])
-                         if settings.colored_term and colored is not None else
-                         "order:")
+            order_str = colored("order:", color='cyan', attrs=['bold'])
             order_str += " {}".format(processor_cls.order)
             msg += wrap_fields.fill(order_str) + '\n'
 

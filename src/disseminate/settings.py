@@ -230,8 +230,8 @@ toc_dotted_kinds = ('section', 'subsection', 'subsubsection')
 
 empty = tuple()
 
-#: HTML Tags
-#: ~~~~~~~~~
+#: HTML targets
+#: ~~~~~~~~~~~~
 
 #: Render HTML pages with newlines and indentation
 html_pretty = True
@@ -281,8 +281,8 @@ html_tag_optionals = {'a': ('class', 'role'),
                       'ul': ('class',),
                       }
 
-#: TEX Tags
-#: ~~~~~~~~
+#: TEX targets
+#: ~~~~~~~~~~~
 
 #: Allowed latex environments and required arguments. If an environment is not
 #: listed here or in the tex_env_optionals, it cannot be used.

@@ -51,6 +51,45 @@ def titlelize(string, truncate=True, capitalize=False):
     return string.strip('.')
 
 
+def nicejoin(*items, sep=', ', term=' and '):
+    """Join a sequence of strings with a separator and an alternative terminal
+    separator.
+
+    Parameters
+    ----------
+    *items : Tuple[str]
+        A sequence of strings to join.
+    sep : Optional[str]
+        The separator to use for all items, other than the last item.
+    term : Optional[str]
+        The last separator to use in joining items.
+
+    Returns
+    -------
+    joined_string : str
+        The joined string.
+
+    Examples
+    --------
+    >>> nicejoin('Bill', 'Ted', 'Frances')
+    'Bill, Ted and Frances'
+    >>> nicejoin('Bill', 'Ted', 'Frances', term=' or ')
+    'Bill, Ted or Frances'
+    >>> nicejoin('Bill', 'Ted', 'Frances')
+    'Bill, Ted and Frances'
+    >>> nicejoin('Bill', 'Ted')
+    'Bill and Ted'
+    >>> nicejoin('Bill')
+    'Bill'
+    """
+    if len(items) > 1:
+        return sep.join(items[:-1]) + term + items[-1]
+    elif len(items) == 1:
+        return items[0]
+    else:
+        return ''
+
+
 def space_indent(s, number=4):
     """Indent a text block by the specified number of spaces.
 

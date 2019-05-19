@@ -96,3 +96,8 @@ def unwrap(l):
         new_l = unwrap(new_l)
     return new_l
 
+
+def chunks(l, N):
+    """Return a generator in chuncks of N."""
+    for i in range(0, len(l), N):
+        yield l[i:i + N]
