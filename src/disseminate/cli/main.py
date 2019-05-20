@@ -50,16 +50,21 @@ def main():
                                    help="serve documents with a local "
                                         "webserver")
 
+    setup = base_parser.add_parser('setup',
+                                   help="setup options")
+
     # Arguments to main parser
     parser.add_argument('--debug', action='store_true',
                         help='print debug messages to stderr')
-    parser.add_argument('--check', action='store_true',
+
+    # Arguments to the setup parser
+    setup.add_argument('--check', action='store_true',
                         help='check required executables and packages')
-    parser.add_argument('--list-tag-processors', action='store_true',
+    setup.add_argument('--list-tag-processors', action='store_true',
                         help='list the available tag processors')
-    parser.add_argument('--list-label-manager-processors', action='store_true',
+    setup.add_argument('--list-label-manager-processors', action='store_true',
                         help='list the available tag processors')
-    parser.add_argument('--list-context-processors', action='store_true',
+    setup.add_argument('--list-context-processors', action='store_true',
                         help='list the available context processors')
 
     # Arguments common to sub-parsers
@@ -90,23 +95,7 @@ def main():
     # Parse the commands
     args = parser.parse_args()
 
-    # Run the checker
-    if args.check:
-        print_checkers()
-        exit()
-
-    # List the tag and context processors
-    if args.list_tag_processors:
-        print_processors(ProcessTag)
-        exit()
-    if args.list_context_processors:
-        print_processors(ProcessContext)
-        exit()
-    if args.list_label_manager_processors:
-        print_processors(ProcessLabels)
-        exit()
-
-    if args.command not in ('init', 'serve', 'render'):
+    if args.command not in ('init', 'serve', 'render', 'setup'):
         parser.print_help()
         exit()
 
@@ -121,6 +110,24 @@ def main():
     # Handle the sub-commands
     # if args.command == 'init':
     #     quickstart(args.destination)
+
+    # Setup command
+    if args.command == 'setup':
+        # Run the checker
+        if args.check:
+            print_checkers()
+            exit()
+
+        # List the tag and context processors
+        if args.list_tag_processors:
+            print_processors(ProcessTag)
+            exit()
+        if args.list_context_processors:
+            print_processors(ProcessContext)
+            exit()
+        if args.list_label_manager_processors:
+            print_processors(ProcessLabels)
+            exit()
 
     if args.command == 'render':
         #tree1 = Tree(project_root=args.i, target_root=args.o,

@@ -1,6 +1,4 @@
 """Test for the Checker base class."""
-import pytest
-
 from disseminate.checkers import Checker, All, Any
 
 

@@ -82,6 +82,40 @@ class SoftwareDependencyList(object):
         items_str = ', '.join([i.__repr__() for i in self.dependencies])
         return cls_name + '[' + items_str + ']'
 
+    def flatten(self, items=None, level=1):
+        """A flattened list of SoftwareDependency and SoftwareDependencyList
+        objects.
+
+        Returns
+        -------
+        flattened_list : List[Tuple[int, \
+            Union[:obj:`disseminate.checkers.types.SoftwareDependency`,
+                  :obj:`disseminate.checkers.types.SoftwareDependencyList`]]]
+            A flattened list of tuples with the level (int) and software
+            dependencies or software dependency lists.
+        """
+        # Recursion check
+        if level > 16:
+            return None
+        flattened_list = []
+
+        # Use this list's dependencies list, if not items are specified
+        items = self if items is None else items
+        items = items.dependencies if hasattr(items, 'dependencies') else items
+
+        # Wrap in a list
+        items = [items] if not isinstance(items, list) else items
+
+        for item in items:
+            # Only return SoftwareDependency or SoftwareDependencyList objects
+            if isinstance(item, SoftwareDependency):
+                flattened_list.append((level, item))
+            elif isinstance(item, SoftwareDependencyList):
+                flattened_list.append((level, item))
+                flattened_list += self.flatten(items=item, level=level + 1)
+
+        return flattened_list
+
     def keys(self):
         return [i.category if hasattr(i, 'category')
                 else i.name

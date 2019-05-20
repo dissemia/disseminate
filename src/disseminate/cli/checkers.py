@@ -2,7 +2,10 @@
 Command-line interface tools for Checkers
 """
 from .term import fill_string, colored
-from ..checkers import Checker
+from ..checkers import Checker, All, Any, Optional
+
+spaces_per_level = 2
+width = 80
 
 
 def ok(check_passed):
@@ -16,22 +19,75 @@ def ok(check_passed):
     return s, 6
 
 
+def print_single_check(msg, status, color=None, attrs=None, spacer=' ',
+                       level=1):
+    """Print a single check line."""
+    msg = (' ' * spaces_per_level * level) + msg # indent
+    status_str = '[{:^8}]  '.format(status)
+    status_len = len(status_str)
+
+    if color is not None:
+        status_str = colored(status_str, color=color, attrs=attrs)
+    return fill_string(msg, end=status_str, end_len=status_len, spacer=spacer,
+                       width=width)
+
+
+def print_dependencies(item, required=True, level=1):
+    # Setup the status string
+    available = getattr(item, 'available', None)
+    if available is True:
+        status_str, color, attrs, spacer = 'PASS', 'green', ['bold'], ' '
+    elif available is False and required:
+        status_str, color, attrs, spacer = 'FAIL', 'red', ['bold'], '.'
+    elif available is False and not required:
+        status_str, color, attrs, spacer = 'MISSING', 'yellow', ['bold'], ' '
+    else:
+        status_str, color, attrs, spacer = 'UNKNOWN', 'white', None, ' '
+
+    if isinstance(item, All):
+        # All are required
+        msg = "Checking required dependencies for '{}'".format(item.category)
+        msg = print_single_check(msg=msg, status=status_str, color=color,
+                                 attrs=attrs, level=level, spacer=spacer)
+        print(msg)
+        for i in item:
+            print_dependencies(item=i, required=True, level=level + 1)
+    elif isinstance(item, Any):
+        # One is required are required
+        msg = "Checking alternative dependencies for '{}'".format(item.category)
+        msg = print_single_check(msg=msg, status=status_str, color=color,
+                                 attrs=attrs, level=level, spacer=spacer)
+        print(msg)
+        for i in item:
+            print_dependencies(item=i, required=False, level=level + 1)
+    elif isinstance(item, Optional):
+        # Optional
+        # One is required are required
+        msg = "Checking alternative dependencies for '{}'".format(item.category)
+        msg = print_single_check(msg=msg, status=status_str, color=color,
+                                 attrs=attrs, level=level, spacer=spacer)
+        print(msg)
+        for i in item:
+            print_dependencies(item=i, required=False, level=level + 1)
+    elif hasattr(item, 'name'):
+        msg = "Checking dependency '{}'".format(item.name)
+        msg = print_single_check(msg=msg, status=status_str, color=color,
+                                 attrs=attrs, level=level, spacer=spacer)
+        print(msg)
+
+
 def print_checkers():
     """Print the availabilitiy of executables and packages from the checkers.
     """
     # Get the checker subclasses
     checker_subclses = Checker.checker_subclasses()
 
-    # Got through each checker
+    # Iterate through the checkers
     for checker_subcls in checker_subclses:
         checker = checker_subcls()
 
         # Do an overall check
-        checker.check_required(raise_error=False)
+        checker.check()
 
-        pass_check = checker.check_required()
-        ok_str, ok_len = ok(pass_check)
-        target_str = fill_string("Test for {} targets".format(checker.target),
-                                 end=ok_str, end_len=ok_len)
-
-        print(target_str)
+        # Print the checker status
+        print_dependencies(checker)

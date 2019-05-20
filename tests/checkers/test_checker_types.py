@@ -4,6 +4,27 @@ import pytest
 from disseminate.checkers.types import Any, All
 
 
+def test_checker_type_flatten():
+    """Test the flatten iterator of checkers."""
+
+    # Create a SoftwareDependencyList tree.
+    required = All('tex',
+                   Any('executables',
+                       'pdflatex', 'xelatex'),
+                   All('packages',
+                       'package1', 'package2')
+                   )
+
+    flat = required.flatten()
+    assert flat[0] == (1, required[0])
+    assert flat[1] == (2, required[0][0])
+    assert flat[2] == (2, required[0][1])
+    assert flat[3] == (1, required[1])
+    assert flat[4] == (2, required[1][0])
+    assert flat[5] == (2, required[1][1])
+    assert len(flat) == 6
+
+
 def test_checker_type_available():
     """Test the available method of Checker types."""
 
