@@ -8,7 +8,7 @@ from disseminate.tags.collection import Collection
 
 
 @pytest.fixture(scope='function')
-def doctree(tmpdir):
+def doctree(tmpdir, wait):
     """Setup a root document with two sub-documents"""
     # Create temp files
     src_path = tmpdir.join('src').mkdir()
@@ -16,7 +16,9 @@ def doctree(tmpdir):
     src_filepath2 = src_path.join('sub1.dm')
     src_filepath3 = src_path.join('sub2.dm')
 
-    # Write the files
+    # Write the files. A 1us sleep is placed between writes to offset the
+    # mtimes of the 3 files for systems with at least 1 microsecond time
+    # resolution
     src_filepath1.write("""
     ---
     targets: html, tex
@@ -27,12 +29,17 @@ def doctree(tmpdir):
     @chapter{one}
     @collection
     """)
+    wait()  # sleep time offset needed for different mtimes
+
     src_filepath2.write("""
     @chapter{two}
     """)
+    wait()  # sleep time offset needed for different mtimes
+
     src_filepath3.write("""
     @chapter{three}
     """)
+    wait()  # sleep time offset needed for different mtimes
 
     # Load the root document
     doc = Document(src_filepath1, str(tmpdir))

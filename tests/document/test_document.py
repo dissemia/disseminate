@@ -354,7 +354,7 @@ def test_document_label_mtime(tmpdir):
     assert label_manager.labels[3].mtime == new_doc_mtime  # chapter 3 label
 
 
-def test_document_custom_template(tmpdir):
+def test_document_custom_template(tmpdir, wait):
     """Tests the loading of custom templates from the yaml header."""
     tmpdir = pathlib.Path(tmpdir)
 
@@ -380,14 +380,16 @@ def test_document_custom_template(tmpdir):
 
     # Write to the file again, but don't include the template. This time it
     # shouldn't contain the text "Disseminate Project Index"
+    wait()  # sleep time offset needed for different mtimes
     in_file.write_text("test")
+
     target_filepath = doc.targets['.html']
     assert doc.render_required(target_filepath=target_filepath)
     doc.render()
     assert "Disseminate Project Index" not in out_file.read_text()
 
 
-def test_document_template_updates(tmpdir):
+def test_document_template_updates(tmpdir, wait):
     """Tests the update of rendered targets when the template changes."""
     tmpdir = pathlib.Path(tmpdir)
 
@@ -414,6 +416,7 @@ def test_document_template_updates(tmpdir):
     assert out_file.read_text() == 'test1'
 
     # Change the template and see if the rendered output changes
+    wait()  # sleep time offset needed for different mtimes
     template.write_text("""test2""")
 
     assert doc.render_required(out_file)
@@ -501,7 +504,6 @@ def test_document_load_on_render(doc):
     doc.render()
 
     assert list(doc.targets.keys()) == ['.html', '.txt']
-
 
 
 def test_document_recursion(tmpdir):

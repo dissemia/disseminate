@@ -337,7 +337,7 @@ def test_document_tree_updates(tmpdir):
     assert not hasattr(doc_list[2], 'test_object')
 
 
-def test_render_required(tmpdir):
+def test_render_required(tmpdir, wait):
     """Tests the render_required method with multiple files."""
     # Create a document tree.
     project_root = SourcePath(project_root=tmpdir, subpath='src')
@@ -356,18 +356,22 @@ def test_render_required(tmpdir):
     ---
     @chapter{file1}
     """)
+    wait()  # sleep time offset needed for different mtimes
+
     src_filepath2.write_text("""
     @chapter{file2}
     """)
+    wait()  # sleep time offset needed for different mtimes
+
     src_filepath3.write_text("""
     @chapter{file3}
     """)
+    wait()  # sleep time offset needed for different mtimes
 
     # Load the root document. This will load the AST for all documents,
     # but not render (and therefore create) the target files, so a render is
     # required.
     doc = Document(src_filepath=src_filepath1, target_root=tmpdir)
-    label_manager = doc.context['label_manager']
 
     # 1. Test that a render is required when the target file hasn't been
     #    created
@@ -483,12 +487,15 @@ def test_render_required(tmpdir):
     template_filepath.write_text("""
     <html></html>
     """)
+    wait()  # sleep time offset needed for different mtimes
+
     src_filepath3.write_text("""
     ---
     template: test
     ---
     @chapter{file3}
     """)
+    wait()  # sleep time offset needed for different mtimes
 
     # Documents 3 requires a render because it was just written
     for d, answer in zip(doc_list, [False, False, True]):

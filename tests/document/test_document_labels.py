@@ -31,7 +31,7 @@ def test_document_labels(tmpdir):
     assert label.kind == ('document', 'document-level-1')
 
 
-def test_document_toc(context_cls, tmpdir):
+def test_document_toc(tmpdir):
     """Test the generation of a toc from the header of a document."""
     # Setup the paths
     src_filepath = SourcePath(project_root='tests/document/example4/src',
@@ -63,7 +63,7 @@ def test_document_toc(context_cls, tmpdir):
     assert toc_tag.html == key
 
 
-def test_document_tag_mtime(tmpdir):
+def test_document_tag_mtime(tmpdir, wait):
     """Test the calculation of mtimes for labels from tags."""
     # Prepare two files
     tmpdir.mkdir('src')
@@ -79,6 +79,7 @@ def test_document_tag_mtime(tmpdir):
     ---
     @chapter[id=chapter-one]{Chapter One}
     """)
+    wait()  # sleep time offset needed for different mtimes
 
     src_filepath2.write("""
     ---
@@ -86,6 +87,7 @@ def test_document_tag_mtime(tmpdir):
     ---
     @chapter[id=chapter-two]{Chapter Two}
     """)
+    wait()  # sleep time offset needed for different mtimes
 
     doc = Document(str(src_filepath1), tmpdir)  # main.dm
     label_manager = doc.context['label_manager']
@@ -115,6 +117,7 @@ def test_document_tag_mtime(tmpdir):
     @ref{chapter-two}
     @chapter[id=chapter-one]{Chapter One}
     """)
+    wait()  # sleep time offset needed for different mtimes
 
     src_filepath2.write("""
     ---
@@ -122,6 +125,7 @@ def test_document_tag_mtime(tmpdir):
     ---
     @chapter[id=chapter-two]{Chapter Two}
     """)
+    wait()  # sleep time offset needed for different mtimes
 
     # Reload the documents
     doc1.load()
@@ -147,7 +151,7 @@ def test_document_tag_mtime(tmpdir):
     assert src_filepath2.mtime() == root2.mtime
 
 
-def test_document_tree_updates_document_labels(tmpdir):
+def test_document_tree_updates_document_labels(tmpdir, wait):
     """Test the updates to the document tree and labels."""
     # Create a document tree.
     src_path = SourcePath(tmpdir, 'src')
@@ -163,7 +167,9 @@ def test_document_tree_updates_document_labels(tmpdir):
       file2.dm
       file3.dm
     ---""")
+    wait()  # sleep time offset needed for different mtimes
     src_filepath2.touch()
+    wait()  # sleep time offset needed for different mtimes
     src_filepath3.touch()
 
     # 1. Load the root document
@@ -270,7 +276,7 @@ def test_document_tree_updates_document_labels(tmpdir):
     assert label_list[2].id == 'doc:file3-dm'
 
 
-def test_document_tree_updates_with_section_labels(tmpdir):
+def test_document_tree_updates_with_section_labels(tmpdir, wait):
     """Test how updating the document tree impacts the numbering of labels."""
 
     # 1. First, test decoupled documents
@@ -293,12 +299,17 @@ def test_document_tree_updates_with_section_labels(tmpdir):
     ---
     @chapter{file1}
     """)
+    wait()  # sleep time offset needed for different mtimes
+
     src_filepath2.write_text("""
     @chapter{file2}
     """)
+    wait()  # sleep time offset needed for different mtimes
+
     src_filepath3.write_text("""
     @chapter{file3}
     """)
+    wait()  # sleep time offset needed for different mtimes
 
     # Load the root document
     doc = Document(src_filepath=src_filepath1, target_root=target_root)
@@ -331,6 +342,7 @@ def test_document_tree_updates_with_section_labels(tmpdir):
     mtime3 = target_filepath3.stat().st_mtime
 
     # Now try reordering the files and see if the labels are reordered
+    wait()  # sleep time offset needed for different mtimes
     src_filepath1.write_text("""
     ---
     include:
@@ -373,7 +385,7 @@ def test_document_tree_updates_with_section_labels(tmpdir):
     # 2. Test coupled documents
 
     # First, test decoupled documents
-
+    wait()  # sleep time offset needed for different mtimes
     src_filepath1.write_text("""
         ---
         include:
@@ -383,6 +395,8 @@ def test_document_tree_updates_with_section_labels(tmpdir):
         @chapter{file1}
         @ref{ch:file2-dm-file2}
         """)
+
+    wait()  # sleep time offset needed for different mtimes
     src_filepath2.write_text("""
         @chapter{file2}
         """)

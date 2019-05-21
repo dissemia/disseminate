@@ -9,7 +9,7 @@ from disseminate.utils.tests import strip_leading_space
 from disseminate import SourcePath, TargetPath
 
 
-def test_dependencies_img(tmpdir):
+def test_dependencies_img(tmpdir, wait):
     """Tests that the image dependencies are correctly reset when the AST is
     reprocessed."""
     # Setup the project_root in a temp directory
@@ -69,6 +69,7 @@ def test_dependencies_img(tmpdir):
                                             subpath='sample.png')
 
     # Rewrite the document source file without the dependency
+    wait()  # sleep time offset needed for different mtimes
     markup = ""
     src_filepath.write_text(markup)
 

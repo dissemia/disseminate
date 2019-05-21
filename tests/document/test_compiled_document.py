@@ -43,11 +43,12 @@ def test_pdflatex(tmpdir):
     assert target_filepath.is_file()
 
 
-def test_pdflatex_caching(tmpdir):
+def test_pdflatex_caching(tmpdir, wait):
     """Tests the compilation of PDFs from tex files and the caching."""
     tmpdir = pathlib.Path(tmpdir)
 
-    # Test that rendering it again doesn't create a new pdf
+    # 1. Test that rendering the document multiple times doesn't create
+    # a new pdf
     # Create a src document
     src_path = tmpdir / "src"
     src_path.mkdir()
@@ -77,9 +78,10 @@ def test_pdflatex_caching(tmpdir):
 
     # Render again, and the mtime shouldn't change
     doc.render()
-    assert target_filepath.stat().st_mtime == pytest.approx(mtime, abs=0.0001)
+    assert target_filepath.stat().st_mtime == mtime
 
     # Now change the src tex file and make sure the pdf has changed
+    wait()  # sleep time offset needed for different mtimes
     src_filepath.write_text("""
     ---
     targets: pdf
@@ -88,7 +90,7 @@ def test_pdflatex_caching(tmpdir):
 
     # Render again, and the mtime should change
     doc.render()
-    assert target_filepath.stat().st_mtime != pytest.approx(mtime, abs=0.0001)
+    assert target_filepath.stat().st_mtime != pytest.approx(mtime, abs=0.00001)
 
 
 def test_compiled_with_existing_source(tmpdir):

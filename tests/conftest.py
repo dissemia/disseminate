@@ -1,6 +1,8 @@
 import copy
 import pytest
 import io
+import os
+from time import sleep
 from collections import namedtuple
 
 from disseminate.context import BaseContext
@@ -23,6 +25,26 @@ def pytest_collection_modifyitems(config, items):
 
     items.clear()
     items += env_items + nonenv_items
+
+
+@pytest.fixture(scope='session')
+def wait():
+    """A filesystem sleep time offset for filesystem operations.
+
+    In some tests, files are written sequentially but need to have sequential
+    modification times (mtimes) from each other. For lower time resolution
+    filesystems, the nanoseconds taken to write sequential files may not be
+    enough to generate files with sequentially increasing mtimes. This sleep
+    function can be used to offset write operations to files.
+    """
+    system = os.uname()
+    if system.sysname == 'Linux':
+        def _wait():
+            sleep(10E-3)  # 10ms
+    else:
+        def _wait():
+            pass
+    return _wait
 
 
 @pytest.fixture(scope='function')

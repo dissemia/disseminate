@@ -5,7 +5,7 @@ from disseminate.document import Document
 from disseminate.paths import SourcePath, TargetPath
 
 
-def test_reports_basic_tag_availability(tmpdir):
+def test_reports_basic_tag_availability(tmpdir, wait):
     """Test the unavailability of Part tags for basic reports."""
 
     # 1. Write a source file and create a document
@@ -15,6 +15,7 @@ def test_reports_basic_tag_availability(tmpdir):
 
     # Part and chapter tags should not be available to reports
     for name in ('part', 'chapter'):
+        wait()  # sleep time offset needed for different mtimes
         src_filepath.write_text("""
         ---
         targets: html, tex
@@ -44,6 +45,8 @@ def test_reports_basic_tag_availability(tmpdir):
                         ('subsubsection',
                          '<h5 id="subsubsec:test-dm-my-first-subsubsection">'),
                        ):
+
+        wait()  # sleep time offset needed for different mtimes
         src_filepath.write_text("""
         ---
         targets: html, tex
