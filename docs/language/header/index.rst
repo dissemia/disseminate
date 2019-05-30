@@ -225,9 +225,36 @@ statement lists the sub-documents directly subordinate to a document.
            part1/tarts.dm
 
 
+A **project** consists of one root document and, possibly, one more included
+documents. It is alternatively known as a document tree.
+
+A **root document** is the first document in a project, and it is not included
+by any other document.
+
+A **child document** is a document that was included by a document.
+
+A **parent document** is the document that was included by a document.
+
 
 Inheritance
 -----------
+Header entries from parent documents are available to child documents. If child
+documents use the same entries, then these values will be overwritten.
+
+For example, a parent document might specify a ``title`` entry in the header.
+If the parent document includes a child document, then the ``title`` entry will
+be the same for the child document, unless the child document's header also
+specifies a ``title`` entry, in which case this entry will be used.
+
+For this reason, it is useful to specify settings for an entire project in
+the header of the root document, then to overwrite these values (if needed) in
+the child document headers.
+
+From a technical perspective, header entries are loaded into the context for
+a document. The context is a Python dictionary that holds the variables needed
+to render a document.
+
+
 
 Additional Notes
 ----------------

@@ -17,6 +17,10 @@ body {
   color: #444444;
 }
 
+strong {
+  color: #0e1b4e;
+}
+
 a {
   color: #1177e4;
 }
