@@ -11,7 +11,7 @@ def uniq(l, key=None):
     ----------
     l : list
         The list to check for duplicates.
-    key : function, optional
+    key : Optional[Callable]
         A mapping function that takes a list item and returns an alternate
         value to compare for unique entries.
 
@@ -42,7 +42,7 @@ def dupes(l, key=None):
     ----------
     l : list
         The list to check for duplicates.
-    key : function, optional
+    key : Optional[Callable]
         A mapping function that takes a list item and returns an alternate
         value to compare for duplicates.
 
@@ -98,6 +98,19 @@ def unwrap(l):
 
 
 def chunks(l, N):
-    """Return a generator in chuncks of N."""
+    """Return a generator in chunks of N.
+
+    Parameters
+    ----------
+    l : Union[List, Tuple]
+        The iterable to break into chunks.
+    N : int
+        The size of chunks.
+
+    Returns
+    -------
+    Generator
+        A generator with sublists of items from 'l' broken into chunks of 'N'.
+    """
     for i in range(0, len(l), N):
         yield l[i:i + N]

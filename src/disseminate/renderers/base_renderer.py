@@ -20,14 +20,14 @@ class BaseRenderer(object):
 
     Arguments
     ---------
-    context : :obj:`disseminate.document.DocumentContext`
+    context : :obj:`DocumentContext <.DocumentContext>`
         A dict with values for the document.
     template : str
         The name or subpath of the template.
-    targets : list of str
+    targets : Union[List[str], Tuple[str]]
         The target extensions (ex: ['.html', '.tex']) of target documents.
         A template for each target should be available.
-    module_only : bool, optional
+    module_only : Optional[bool]
         Only search the disseminate module for the template--i.e. do not use
         the user templates from the project directory.
     """
@@ -67,7 +67,7 @@ class BaseRenderer(object):
 
         Returns
         -------
-        mtime : float or None
+        mtime : Union[float, None]
             The (largest) modification time for the templates.
             None is returned if an mtime could not be found.
         """
@@ -121,14 +121,14 @@ class BaseRenderer(object):
 
         Parameters
         ----------
-        target : str, optional
+        target : Optional[str]
             Return templates for the given target (ex: '.html).
             If None is specified, a listing of templates for all targets is
             returned.
 
         Returns
         -------
-        template_filenames : list of :obj:`pathlib.Path`
+        template_filenames : List[:obj:`pathlib.Path`]
             A listing of the template filenames as well as parent template
             filenames, if the template was inherited.
         """

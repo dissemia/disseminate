@@ -9,6 +9,7 @@ Tags
              
    tags
    factory
+   exceptions
    heading
    text
    img

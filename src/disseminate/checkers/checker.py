@@ -52,7 +52,7 @@ class Checker(All):
 
         Parameters
         ----------
-        executables : Iterable[str]
+        executables : Union[List[str], Tuple[str]]
             The list of executables to check for availability.
         """
         # Retrieve the listing of executables
@@ -84,7 +84,7 @@ class Checker(All):
 
             Parameters
             ----------
-            packages : Iterable[str]
+            packages : Union[List[str], Tuple[str]]
                 The list of packages to check for availability.
             """
         # Get a listing of 'check_packages' methods

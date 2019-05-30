@@ -11,7 +11,11 @@ _re_clean_spacing = re.compile(r'\s{2,}|\n')
 
 
 class MetaProcessorABC(ABCMeta):
-    """Metaclass to initialize ProcessorABC classes."""
+    """Metaclass to initialize ProcessorABC classes.
+
+    This metaclass initializes the ``short_desc`` and ``module`` attributes of
+    the class.
+    """
 
     def __init__(cls, name, bases, attrs):
 

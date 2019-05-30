@@ -11,11 +11,13 @@ def test_img_attribute(tmpdir, context_cls):
     project_root = SourcePath(project_root='tests/tags/img_example1')
     target_root = TargetPath(target_root=tmpdir)
 
+    # Setup the root context
+    context = context_cls(project_root=project_root, target_root=target_root)
+
     # Setup the dependency manager in the global context. This is needed
     # to find and convert images by the img tag.
-    dep = DependencyManager(project_root=project_root,
-                            target_root=target_root)
-    context = context_cls(dependency_manager=dep)
+    dep = DependencyManager(root_context=context)
+    context['dependency_manager'] = dep
 
     # Generate the markup
     src = "@img[width=100]{sample.pdf}"
@@ -38,17 +40,18 @@ def test_img_html(tmpdir, context_cls):
     src_filepath = SourcePath(project_root=project_root,
                               subpath='test.dm')
 
-    # Setup the dependency manager in the global context. This is needed
-    # to find and convert images by the img tag.
-    dep = DependencyManager(project_root=project_root,
-                            target_root=target_root)
-
+    # Setup the root context
     context_cls.validation_types = {'dependency_manager': DependencyManager,
                                     'src_filepath': SourcePath,
                                     'paths': list}
     paths = [project_root]
-    context = context_cls(dependency_manager=dep, src_filepath=src_filepath,
-                          paths=paths)
+    context = context_cls(src_filepath=src_filepath, project_root=project_root,
+                          target_root=target_root, paths=paths)
+
+    # Setup the dependency manager in the global context. This is needed
+    # to find and convert images by the img tag.
+    dep = DependencyManager(root_context=context)
+    context['dependency_manager'] = dep
 
     # Generate the markup
     src = "@img{sample.pdf}"
@@ -79,17 +82,18 @@ def test_img_tex(tmpdir, context_cls):
     src_filepath = SourcePath(project_root=project_root,
                               subpath='test.dm')
 
-    # Setup the dependency manager in the global context. This is needed
-    # to find and convert images by the img tag.
-    dep = DependencyManager(project_root=project_root,
-                            target_root=target_root)
-
+    # Setup the root context
     context_cls.validation_types = {'dependency_manager': DependencyManager,
                                     'src_filepath': SourcePath,
                                     'paths': list}
     paths = [project_root]
-    context = context_cls(dependency_manager=dep, src_filepath=src_filepath,
-                          paths=paths)
+    context = context_cls(src_filepath=src_filepath, project_root=project_root,
+                          target_root=target_root, paths=paths)
+
+    # Setup the dependency manager in the global context. This is needed
+    # to find and convert images by the img tag.
+    dep = DependencyManager(root_context=context)
+    context['dependency_manager'] = dep
 
     # Generate the markup
     src = "@img{sample.pdf}"

@@ -4,7 +4,6 @@ Utilities for processors to the CLI.
 from textwrap import TextWrapper
 
 from .term import term_width, colored
-from .. import settings
 
 
 def print_processors(processor_base_cls):
@@ -14,7 +13,7 @@ def print_processors(processor_base_cls):
 
     Parameters
     ----------
-    processor_base_cls : :class:`disseminate.processors.ProcessorABC`
+    processor_base_cls : :class:`.ProcessorABC`
         A *concrete* implementation class of the ProcessorABC.
     *args, **kwargs
         The arguments and keyword arguments passed to initiate the

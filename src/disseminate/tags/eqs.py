@@ -17,9 +17,9 @@ class Eq(RenderedImg):
 
     Attributes
     ----------
-    aliases : list of str, default: ('term', 'termb')
+    aliases : Tuple[str]
         A list of strs for other names a tag goes by
-    active : bool, default: True
+    active : bool
         If True, the Tag can be used by the TagFactory.
     block_equation : bool
         If True, the equation will be rendered as a LaTeX block equation using

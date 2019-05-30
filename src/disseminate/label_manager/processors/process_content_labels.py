@@ -9,8 +9,8 @@ class ProcessContentLabels(ProcessLabels):
     """A label processor for ContentLabels to which chapter/section/subsection
     a particular label belongs to.
 
-    This processor only works on content labels (:obj:`content labels
-    <disseminate.label_manager.types.ContentLabel>`)
+    This processor only works on content labels (:obj:`ContentLabel
+    <.types.ContentLabel>`)
     """
 
     includes = {ContentLabel}

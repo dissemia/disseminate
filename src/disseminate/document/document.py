@@ -26,36 +26,37 @@ class Document(object):
 
     Parameters
     ----------
-    src_filepath : str
+    src_filepath : Union[:obj:`SourcePath <.paths.SourcePath>`, str]
         The path (an absolute path or a path relative to the current directory)
         for the document (markup source) file of this document.
-    target_root : str, optional
-        The path for the rendered target files. To this directly, the target
-        extension subdirectories (ex: 'html' 'tex') will be created.
+    target_root : Optional[Union[:obj:`TargetPath <.paths.TargetPath>`, str]]
+        The path for the rendered target files. Subdirectories for the targets
+        will be created. (ex: 'html' 'tex')
         By default, if not specified, the target_root will be one directory
         above the project_root.
-    context : dict, optional
+    context : Optional[:obj:`DocumentContext <.DocumentContext>`]
         The context of the document.
 
     Attributes
     ----------
-    src_filepath : str
+    src_filepath : :obj:`SourcePath <.paths.SourcePath>`
         The filename and path for this document's (markup source) file. This
-        file should exist. This path is a render path: it's either an absolute
-        path or a path relative to the current directory.
+        file should exist.
         ex: 'src/chapter1/chapter1.dm'
-    context: :obj:`disseminate.document.DocumentContext`
+    context : :obj:`DocumentContext <.DocumentContext>`
         A context dict with the values needed to render a target document.
-    subdocuments : :obj:`collections.OrderedDict`
+    subdocuments : OrderedDict[:obj:`SourcePath <.paths.SourcePath>`, \
+        :obj:`Document <.Document>`]
         An ordered dict with the sub-documents included in this document.
-        The keys are src_filepath values as render paths, and the values
-        are the subdocuments themselves. The documents are ordered according
-        to their placement in the document tree.
+        The keys are src_filepaths, and the values are the sub-documents
+        themselves. The documents are ordered according to their placement in
+        the document tree (project).
 
-        This document owns the subdocuments and only weak references to these
-        documents should be made. (i.e. when the subdocuments dict is cleared,
-        the memory for the document objects should be released)
-    processors : :class:`disseminate.processors.ProcessContext`
+        This document owns the sub-documents and only weak references to these
+        documents should be made to these documents. (i.e. when the
+        sub-documents dict is cleared, the memory for the document objects
+        should be released)
+    processors : :class:`Type[ProcessContext] <.ProcessContext>`
         The ProcessContext base class.
     """
 
@@ -210,12 +211,10 @@ class Document(object):
 
         Returns
         -------
-        targets : dict
+        targets : Dict[str, :obj:`TargetPath <.paths.TargetPath>`
             The targets are a dict with the target extension as keys
             (ex: '.html') and the value is the target_filepath for that target.
-            (ex: 'html/index.html') These paths are render paths: they're
-            either an absolute path or a path relative to the current
-            directory.
+            (ex: 'html/index.html') These paths are target paths.
         """
         target_list = self.target_list
 
@@ -240,6 +239,11 @@ class Document(object):
         target : str
             The target extension for the target file.
             ex: '.html' or '.tex'
+
+        Returns
+        -------
+        target_filepath : :obj:`TargetPath <.paths.TargetPath>`
+            The target filepath.
         """
         return self.targets[target]
 
@@ -252,12 +256,12 @@ class Document(object):
           1. label_manager: Manages labels and references to labels.
           2. dependency_manager: Manages the media dependencies (like image
              files) for documents
-          3. project_root: the root directory (render path) for the document
-             and sub-documents
-          4. target_root: the root directory (render path) for the document
-             and sub-documents. The final target path includes a sub-directory
-             for the target's extension.
-          5. root_document: an :obj:`disseminate.Document` root document for
+          3. project_root: the root directory for the document and
+             sub-documents. :obj:`SourcePath <.paths.SourcePath>`
+          4. target_root: the root directory for the document and
+             sub-documents. The final target path includes a sub-directory
+             for the target's extension. :obj:`TargetPath <.paths.TargetPath>`
+          5. root_document: a root document (:obj:`Document <.Document>`) for
              the project.
 
         Context variables that can be local to a document are:
@@ -301,22 +305,22 @@ class Document(object):
 
         Parameters
         ----------
-        document : :obj:`disseminate.Document`, optional
+        document : Optional[:obj:`Document <.Document>`]
             The document for which to create the document list.
             If None is specified, this document will be used.
-        only_subdocuments : bool, optional
+        only_subdocuments : Optional[bool]
             If True, only the sub-documents will be returned (not this
             document or the document specified.)
-        recursive : bool, optional
+        recursive : Optional[bool]
             If True, the sub-documents of sub-documents are returned (in order)
             in the ordered dict as well
 
         Returns
         -------
-        document_dict : ordered dict of :obj:`disseminate.Document`
-            An ordered dict of documents.
-            The keys are src_filepath strings (render paths) and the values
-            are document objects.
+        document_dict : OrderedDict[:obj:`SourcePath <.paths.SourcePath>`, \
+            :obj:`Document <.Document>`]
+            An ordered dict of documents. The keys are src_filepaths and the
+            values are document objects.
         """
         document = self if document is None else document
         doc_dict = OrderedDict()
@@ -358,18 +362,18 @@ class Document(object):
 
         Parameters
         ----------
-        document : :obj:`disseminate.Document`, optional
+        document : Optional[:obj:`Document <.Document>`]
             The document for which to create the document list.
-        only_subdocuments : bool, optional
+        only_subdocuments : Optional[bool]
             If True, only the sub-documents will be returned (not this root
             document or the document specified.
-        recursive : bool, optional
+        recursive : Optional[bool]
             If True, the sub-documents of sub-documents are returned (in order)
             in the list as well
 
         Returns
         -------
-        document_list : list of :obj:`disseminate.Document`
+        document_list : List[:obj:`Document <.Document>`]
             An ordered list of documents.
         """
         doc_dict = self.documents_dict(document=document,
@@ -379,7 +383,8 @@ class Document(object):
         return list(doc_dict.values())
 
     def load_subdocuments(self):
-        """Load the sub-documents listed in the include of a local_context."""
+        """Load the sub-documents listed in the include entries in the
+        context."""
 
         # Get the root document's src_filepath and the src_filepath for all of
         # its included subdocuments to make sure we do not load documents
@@ -429,13 +434,8 @@ class Document(object):
 
         Parameters
         ----------
-        reload : bool, optional
+        reload : Optional[bool]
             If True, force the reload of the document.
-
-        Returns
-        -------
-        :obj:`disseminate.tags.core.Tag`
-            A root tag object for the AST.
         """
         # Check to make sure the file exists
         if not self.src_filepath.is_file():  # file must exist
@@ -515,7 +515,7 @@ class Document(object):
 
         Returns
         -------
-        template
+        renderer : :obj:`Type[BaseRenderer] <.BaseRenderer>`
         """
         return self.context.get('template_renderer', None)
 
@@ -524,12 +524,13 @@ class Document(object):
 
         .. note:: This method re-loads the documents since it checks the
                   modification time of tags in the context, which may become
-                  updated if the source file (or other source files) are
-                  updated.
+                  updated if the source file (or source files of sub-documents)
+                  are updated.
 
         Parameters
         ----------
-        target_filepath : The render path for the target file.
+        target_filepath : :obj:`TargetPath <.paths.TargetPath>`
+            The path for the target file.
 
         Returns
         -------
@@ -582,17 +583,17 @@ class Document(object):
 
         Parameters
         ----------
-        targets : dict or None
+        targets : Optional[Dict[str, :obj:`TargetPath <.paths.TargetPath>`]]
             If specified, only the specified targets will be rendered.
             This is a dict with the extension as keys and the target_filepath
-            (as a render path) as the value.
-        create_dirs : bool, optional
+            as the value.
+        create_dirs : Optional[bool]
             Create directories for the rendered target files, if the directories
             don't exist.
-        update_only : bool, optional
+        update_only : Optional[bool]
             If True, the file will only be rendered if the rendered file is
             older than the source file.
-        subdocuments : bool, optional
+        subdocuments : Optional[bool]
             If True, the subdocuments will be rendered (first) as well.
 
         Returns
@@ -600,7 +601,6 @@ class Document(object):
         bool
             True, if the document needed to be rendered.
             False, if the document did not need to be rendered.
-
         """
         # Make sure the latest source is loaded. This is needed in case the
         # list of targets has changed.
@@ -656,8 +656,8 @@ class Document(object):
         ----------
         target: str
             The target extension to render. ex: '.html' or '.tex'
-        target_filepath: str
-            The final render path of the target file. ex : 'html/index.html'
+        target_filepath: :obj:`TargetPath <.paths.TargetPath>`
+            The final path of the target file. ex : 'html/index.html'
         """
         # Prepare the filename to render and save to output file
         target_name = target.strip('.')
@@ -703,11 +703,11 @@ class Document(object):
         ----------
         target: str
             The target extension to render. ex: '.pdf'
-        target_filepath : :obj:`disseminate.TargetPath`
-            The final render path of the target file. ex : 'pdf/index.pdf'
-        targets : dict
+        target_filepath : :obj:`TargetPath <.paths.TargetPath>`
+            The final path of the target file. ex : 'pdf/index.pdf'
+        targets : Dict[str, :obj:`TargetPath <.paths.TargetPath>`]
             This is a dict with the extension as keys and the target_filepath
-            (as a render path) as the value.
+            as the value.
         """
         assert isinstance(target_filepath, TargetPath)
 

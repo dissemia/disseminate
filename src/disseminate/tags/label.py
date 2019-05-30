@@ -16,7 +16,7 @@ def generate_label_id(tag):
 
     Parameters
     ----------
-    tag : :obj:`Tag <disseminate.tags.tag.Tag>`
+    tag : :obj:`Tag <.Tag>`
         The tag creating the label.
 
     Returns
@@ -216,7 +216,7 @@ class LabelTag(Tag):
         ('equation',), ('heading', 'h1',)
         See :meth:`LabelManager.format_string
         <disseminate.labels.label_manager.LabelManager.format_string>`
-    prepend_id : str, optional
+    prepend_id : Optional[str]
         If specified, the label id (identifier) will have this string prepended
         to it.
 

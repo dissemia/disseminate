@@ -17,6 +17,10 @@ body {
   color: #444444;
 }
 
+a {
+  color: #1177e4;
+}
+
 h1 {
   font-size: 20pt;
 }
@@ -263,11 +267,11 @@ td.field-body blockquote {
     color: #eee;
 }
 
-.highlight .gp {
-  color: #3bd818;
-}
-
 /* API */
+
+.rubric {
+  margin-top: 1rem;
+}
 
 dl.class {
   border-left: 5px solid #c1dbf7;
@@ -297,6 +301,10 @@ dl.class th {
 }
 
 dl.class p {
+  text-indent: 0;
+}
+
+dl.class pre {
   text-indent: 0;
 }
 
@@ -332,6 +340,14 @@ del.class dl.docutils .classifier-delimiter {
 dl.class dl.docutils .classifier {
   font-weight: normal;
   color: #777777;
+}
+
+dl.class .rubric {
+  text-indent: -2em;
+}
+
+dl.class .highlight {
+  margin-left: -2em;
 }
 
 code.descclassname {
@@ -437,6 +453,14 @@ dl.function p {
   text-indent: 0;
 }
 
+dl.function .rubric {
+  text-indent: -2em;
+}
+
+dl.function .highlight {
+  margin-left: -2em;
+  text-indent: 0;
+}
 
 dl.function dl.docutils {
   font-size: 95%;
@@ -462,4 +486,15 @@ dl.function dl.docutils dd {
   border-radius: 0 0 5px 5px;
   padding: 0.25rem 0.25rem 0.25rem 2.5rem;
   text-indent: 0;
+}
+
+/* Code highlighting colors */
+
+.highlight .gp {
+  color: #21af01;
+}
+
+.highlight .c1 { /* comments */
+    color: #92a7bb;
+    font-style: italic;
 }

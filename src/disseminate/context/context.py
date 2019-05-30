@@ -55,30 +55,31 @@ class BaseContext(dict):
 
     Parameters
     ----------
-    parent_context : dict, optional
-        A parent or template context to (deep)copy values from.
+    parent_context : Optional[dict]
+        A parent or template context.
     *args, **kwargs : tuple and dict
         The entries to populate in the context dict.
 
     Attributes
     ----------
-    validation_types : dict
+    validation_types : Dict[str, type]
         A listing of entry keys and the types they should be.
-    parent : :obj:'BaseContext <disseminate.context.BaseContext>'
+        If None is listed as the type, then a type check will not be conducted.
+    parent : :obj:`BaseContext <.context.BaseContext>`
         A weakref to a BaseContext of a parent document.
-    do_not_inherit : set
-        The context entries that should not be accessed (inherited)
-        from the parent context.
-    exclude_from_reset : set
-        The context entries that should not be removed when the
-        context is reset.
+    do_not_inherit : Set[str]
+        The context keys that should not be accessed (inherited) from the
+        parent context.
+    exclude_from_reset : Set[str]
+        The context entries that should not be removed when the context is
+        reset.
 
     Entries
     -------
     _initial_values : dict
         A dict containing the initial values. Since this starts with an
         underscore, it is hidden when listing keys with the keys() function.
-    _parent_context : dict
+    _parent_context : :obj:`Type[BaseContext] <.BaseContext>`
         A dict containing the parent context from which values may be inherited.
         Since this starts with an underscore, it is hidden when listing keys
         with the keys() function.
@@ -174,11 +175,11 @@ class BaseContext(dict):
 
         Parameters
         ----------
-        only_self : bool, optional
+        only_self : Optional[bool]
             If True, only keys for entries in this context dict will be
             returned. Otherwise, keys for this context dict and all parent
             context dicts will be returned.
-        hidden_prefix : str, optional
+        hidden_prefix : Optional[str]
             If specified, keys that start with this character or these
             characters will be considered hidden and not returned.
 
@@ -203,8 +204,8 @@ class BaseContext(dict):
             do_not_inherit = all_attributes_values(cls=self.__class__,
                                                    attribute='do_not_inherit')
 
-            # dereference the parent, if needed, and add its keys (excluding those
-            # that shouldn't be inherited
+            # dereference the parent, if needed, and add its keys (excluding
+            # those that shouldn't be inherited)
             if parent is not None:
                 keys |= (parent.all_keys() - do_not_inherit
                          if hasattr(parent, 'all_keys') else
@@ -217,11 +218,11 @@ class BaseContext(dict):
 
         Parameters
         ----------
-        only_self : bool, optional
+        only_self : Optional[bool]
             If True, only values for entries in this context dict will be
             returned. Otherwise, values for this context dict and all parent
             context dicts will be returned.
-        hidden_prefix : str, optional
+        hidden_prefix : Optional[str]
             If specified, keys that start with this character or these
             characters will be considered hidden and not returned.
 
@@ -239,11 +240,11 @@ class BaseContext(dict):
 
         Parameters
         ----------
-        only_self : bool, optional
+        only_self : Optional[bool]
             If True, only items for entries in this context dict will be
             returned. Otherwise, items for this context dict and all parent
             context dicts will be returned.
-        hidden_prefix : str, optional
+        hidden_prefix : Optional[str]
             If specified, keys that start with this character or these
             characters will be considered hidden and not returned.
 
@@ -260,11 +261,11 @@ class BaseContext(dict):
 
         Parameters
         ----------
-        only_self : bool, optional
+        only_self : Optional[bool]
             If True, the number of entries only in this context dict will be
             returned. Otherwise, the number of entries this context dict
             and all parent context dicts will be returned.
-        hidden_prefix : str, optional
+        hidden_prefix : Optional[str]
             If specified, keys that start with this character or these
             characters will be considered hidden and not included in the count.
 
@@ -308,7 +309,7 @@ class BaseContext(dict):
         ----------
         string : str
             The string to load into this context.
-        strip_header : bool, optional
+        strip_header : Optional[bool]
             If True (default), the returned string will have the header
             removed.
 
@@ -350,15 +351,7 @@ class BaseContext(dict):
         """(Selectively) resets the context to its initial state.
 
         The context is reset by removing items with keys not specified in the
-        'exclude_from_clear' class attribute, then repopulating the dict with
-        values from the default context and and parent_context.
-
-        By default, entries are deep copies from the default_context and
-        parent_context. (see :meth:`update
-        <disseminate.context.context.BaseContext.update>`). Values from the
-        initial_values are shallow copies. Interim changes to the
-        default_context or parent_context  mutables in the initial values will
-        be included in the reset context.
+        'exclude_from_clear' class attribute.
 
         Examples
         --------
@@ -398,11 +391,11 @@ class BaseContext(dict):
 
         Parameters
         ----------
-        keys : tuple of str, optional
+        keys : Optional[Tuple[str]]
             If specified, only the given keys will be checked if they're in
             the validate_types class attribute. Otherwise all validate_types
             will be checked.
-        must_exist : bool, optional
+        must_exist : Optional[bool]
             If True (default), then the entry must also exist in addition to
             having the correct type.
             If False, then entries can be missing in this dict that are listed
@@ -467,9 +460,9 @@ class BaseContext(dict):
 
         Parameters
         ----------
-        changes : str or dict
+        changes : Union[str, dict, :obj:`BaseContext <.context.BaseContext>`]
             The changes to include in updating this context dict.
-        overwrite : bool, optional
+        overwrite : Optional[bool]
             If True, overwrite existing entries, if they already exist.
             If False, do not overwrite existing entries.
         """

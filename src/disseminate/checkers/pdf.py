@@ -21,7 +21,7 @@ class PdfChecker(Checker):
 
         Parameters
         ----------
-        classes : Iterable[str]
+        classes : Union[List[str], Tuple[str]]
             The list of packages to check for availability.
         """
         # Get a listing of 'check_classes' methods
@@ -39,7 +39,7 @@ class PdfChecker(Checker):
 
         Parameters
         ----------
-        listing : Iterable[str]
+        listing : Union[List[str], Tuple[str]]
             Base filenames for latex classes or packages to check. ex: 'article'
         ext : str
             The extension to search. ex: '.sty' or '.cls'
@@ -84,7 +84,7 @@ class PdfChecker(Checker):
 
         Parameters
         ----------
-        packages : Iterable[str]
+        packages : Union[List[str], Tuple[str]]
                 The list of packages to check for availability.
         """
         if packages is not None:
@@ -101,7 +101,7 @@ class PdfChecker(Checker):
 
         Parameters
         ----------
-        classes : Iterable[str]
+        classes : Union[List[str], Tuple[str]]
             The list of classes to check for availability.
         """
         if classes is not None:

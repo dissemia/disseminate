@@ -2,6 +2,6 @@ String
 ------
 
 .. automodule:: disseminate.utils.string
-    :members: hashtxt, titlelize, find_basestring, str_to_list, Metastring
+    :members:
     :imported-members:
     :show-inheritance:

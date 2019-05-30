@@ -17,7 +17,7 @@ class FindDuplicateLabels(ProcessLabels):
 
     Attributes
     ----------
-    excludes : Set[:class:`Label <disseminate.label_manager.types.Label>`]
+    excludes : Set[:class:`Type[Label] <.types.Label>`]
         If specified, the labels with this type or these types will not raise
         a DuplicateLabel exception if they share label ids with labels from
         other documents.
@@ -31,9 +31,9 @@ class FindDuplicateLabels(ProcessLabels):
 
         Parameters
         ----------
-        registered_labels : List[:obj:`disseminate.label_manager.Label`]
+        registered_labels : List[:obj:`Label <.types.Label>`]
             The list of labels that have been vetted, processed and registered.
-        collected_labels : Dict[str, List[:obj:`disseminate.labels.Label`]]
+        collected_labels : Dict[str, List[:obj:`Label <types.Label>`]]
             The new labels that have been added but not yet registered. These
             will be tested for labels with duplicate ids in the registered
             labels. The keys are doc_id strings and the values are lists of

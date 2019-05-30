@@ -12,11 +12,10 @@ class ProcessContextHeaders(ProcessContext):
     the context.
     """
 
-    # This processor should be loaded before the tags are processed
-    # (ProcessContextTags) so that the tags can use the updated values from
-    # headers in the context.
+    #: This processor should be loaded before the tags are processed
+    #: (ProcessContextTags) so that the tags can use the updated values from
+    #: headers in the context.
     order = 100
-    short_desc = "Process header blocks in all string entries of the context"
 
     def __call__(self, context):
 
@@ -35,14 +34,11 @@ class ProcessContextAdditionalHeaderFiles(ProcessContext):
     example.
     """
 
-    # This processor should be loaded after the initial headers are loaded from
-    # the context (ProcessContextHeaders) and the template
-    # (ProcessContextTemplate), but before the tags are processed
-    # (ProcessContextTags)
+    #: This processor should be loaded after the initial headers are loaded
+    #: from the context (ProcessContextHeaders) and the template
+    #: (ProcessContextTemplate), but before the tags are processed
+    #: (ProcessContextTags)
     order = 400
-
-    short_desc = ("Process additional header files in the paths listed in the "
-                  "context")
 
     def __call__(self, context):
 

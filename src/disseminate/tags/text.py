@@ -14,9 +14,9 @@ class P(Tag):
 
     Attributes
     ----------
-    active : bool, default: True
+    active : bool
         This tag is active.
-    include_paragraphs : bool, default: False
+    include_paragraphs : bool
         The contents of this tag can be included in paragraphs.
     """
     active = True
@@ -39,14 +39,14 @@ class Bold(Tag):
 
     Attributes
     ----------
-    aliases : list of str, default: ("b", "textbf", "strong")
+    aliases : Tuple[str]
         A list of strs for other names a tag goes by
-    html_name : str, default: "strong"
+    html_name : str
         If specified, use this name when rendering the tag to html. Otherwise,
         use name.
     tex_cmd : str
         Use this name to render the tex command.
-    active : bool, default: True
+    active : bool
         This tag is active.
     """
     aliases = ("b", "textbf", "strong")
@@ -60,14 +60,14 @@ class Italics(Tag):
 
     Attributes
     ----------
-    aliases : list of str, default: ("i", "textit")
+    aliases : Tuple[str]
         A list of strs for other names a tag goes by
-    html_name : str, default: "i"
+    html_name : str
         If specified, use this name when rendering the tag to html. Otherwise,
         use name.
     tex_cmd : str
         Use this name to render the tex command.
-    active : bool, default: True
+    active : bool
         This tag is active.
     """
     aliases = ("i", "textit")
@@ -81,10 +81,10 @@ class Sup(Tag):
 
     Attributes
     ----------
-    html_name : str, default: "sup"
+    html_name : str
         If specified, use this name when rendering the tag to html. Otherwise,
         use name.
-    active : bool, default: True
+    active : bool
         This tag is active.
     """
     html_name = "sup"
@@ -109,10 +109,10 @@ class Sub(Tag):
 
     Attributes
     ----------
-    html_name : str, default: "sub"
+    html_name : str
         If specified, use this name when rendering the tag to html. Otherwise,
         use name.
-    active : bool, default: True
+    active : bool
         This tag is active.
     """
     html_name = "sub"
@@ -142,7 +142,7 @@ class Supsub(Tag):
 
     Attributes
     ----------
-    active : bool, default: True
+    active : bool
         This tag is active.
     """
     active = True
@@ -191,7 +191,7 @@ class Symbol(Tag):
 
     Attributes
     ----------
-    aliases : list of str, default: ("smb",)
+    aliases : Tuple[str]
         A list of strs for other names a tag goes by
     active : bool, default: True
         This tag is active.
@@ -222,17 +222,17 @@ class Verb(Tag):
 
     Attributes
     ----------
-    aliases : list of str, default: ("v", "pre", "verbatim")
+    aliases : Tuple[str]
         A list of strs for other names a tag goes by
-    html_name : str, default: "code"
+    html_name : str
         If specified, use this name when rendering the tag to html. Otherwise,
         use name.
-    active : bool, default: True
+    active : bool
         This tag is active.
-    process_content : bool, optional
+    process_content : bool
         Do not process the contents of the tag--just take the contents
         literally.
-    include_paragraphs : bool, default: False
+    include_paragraphs : bool
         The contents of this tag cannot be included in paragraphs.
     """
 

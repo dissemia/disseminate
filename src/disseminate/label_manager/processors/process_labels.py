@@ -15,8 +15,7 @@ class ProcessLabels(ProcessorABC):
 
     Parameters
     ----------
-    context : :obj:`DocumentContext
-        <disseminate.documents.document_context.DocumentContext>`
+    context : :obj:`DocumentContext <.DocumentContext>`
         The context for the document that owns the label manager.
 
     Attributes
@@ -27,10 +26,10 @@ class ProcessLabels(ProcessorABC):
     short_desc : str
         The short description for the procedure conducted by this label
         processor
-    includes : Set[:class:`Label <disseminate.label_manager.types.Label>`]
+    includes : Set[:class:`Type[Label] <.types.Label>`]
         If specified, the labels with this type or types (or a subclass of this
         type) will be included by the filter method.
-    excludes : Set[:class:`Label <disseminate.label_manager.types.Label>`]
+    excludes : Set[:class:`Type[Label] <.types.Label>`]
         If specified, the labels with this type or types (or a subclass of
         this type) will be excluded by the filter method.
     """
@@ -43,8 +42,9 @@ class ProcessLabels(ProcessorABC):
     excludes = None
 
     #: Do not store process instances; create new processors every time the
-    #: processors method is executed. This is because the processors store
-    #: the context of documents, which are different for each document.
+    #: :meth:`processors <.ProcessorABC.processors>` method is
+    #: executed. This is because the processors store the context of documents,
+    #: which are different for each document.
     store_instances = False
 
     def __init__(self, context):

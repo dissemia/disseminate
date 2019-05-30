@@ -30,7 +30,7 @@ def ispositional(p, positionalvalue_type=PositionalValue):
     ----------
     p : object
         The parameter to test.
-    positionalvalue_type : :class:`disseminate.utils.types.PositionalValue`
+    positionalvalue_type : :class:`PositionalValue <.types.PositionalValue>`
         The PositionalValue class to test whether parameter is a subclass of
         this type.
 
@@ -63,7 +63,7 @@ def positionalvalue_type(p):
 
     Returns
     -------
-    positionalvalue_type : :class:`disseminate.utils.types.PositionalValue`
+    positionalvalue_type : :class:`PositionalValue <.types.PositionalValue>`
         The PositionalValue class or subclass that matches the given parameter.
 
     Examples

@@ -29,14 +29,14 @@ class Tag(object):
         attributes may be used as tag attributes, depending on the
         settings.html_valid_attributes, settings.tex_valid_attributes and so
         on.
-    context : :obj:`BaseContext <disseminate.context.BaseContext>`
+    context : :obj:`Type[BaseContext] <.BaseContext>`
         The context with values for the document. The tag holds a weak reference
         to the context, as it doesn't own the context.
 
     Attributes
     ----------
-    aliases : List[str]
-        A list of strs for other names a tag goes by
+    aliases : Tuple[str]
+        A tuple of strings for other names a tag goes by
     html_name : str
         If specified, use this name for the html tag. Otherwise, use name.
     tex_cmd : str
@@ -45,10 +45,6 @@ class Tag(object):
         If specified, use this name to render the tex environment.
     active : bool
         If True, the Tag can be used by the TagFactory.
-    processtag_cls : :class:`ProcessTag \
-        <disseminate.tags.processors.ProcessTag>`
-        If specified, use this class to get tag processors for tags.
-        (See the processors sub-directory)
     process_content : bool
         If True, the contents of the tag will be parsed and processed into a
         tag tree (AST) by the ProcessContent processor on creation.
@@ -59,13 +55,13 @@ class Tag(object):
     include_paragraphs : bool
         If True, then the contents of this tag can be included in paragraphs.
         See :func:`disseminate.tags.processors.process_paragraphs`.
-    paragraph_role : str, optional
+    paragraph_role : str
         If this tag is directly within a paragraph, the type of paragraph may
         be specified with a string. The following options are possible:
 
         - None : The paragraph type has not been assigned
         - 'inline' : The tag is within a paragraph that includes a mix
-                     of strings and tags
+          of strings and tags
         - 'block' : The tag is within its own paragraph.
     """
 
@@ -155,11 +151,11 @@ class Tag(object):
             processor(tag=self)
 
     def processors(self, names=None):
-        """Retrieve a (filtered list of tag processors.
+        """Retrieve a (filtered) list of tag processors.
 
         Parameters
         ----------
-        names : Union[str, List[str], None]
+        names : Optional[Union[str, List[str], Tuple[str]]
             If specified, only return tag processors matching these name(s)
         """
         # wrap names into a list, if needed
@@ -189,15 +185,15 @@ class Tag(object):
 
         Parameters
         ----------
-        tag : :obj:`Tag`, optional
+        tag : Optional[:obj:`Tag <.Tag>`]
             If specified, flatten the given tag, instead of this tag.
-        filter_tags : bool, optional
+        filter_tags : Optional[bool]
             If True, only return a list of tag objects. Otherwise, include all
             content items, including strings and lists.
 
         Returns
         -------
-        flattened_list : list of tags or list of tags or str or list
+        flattened_list : List[Union[str, :obj:`Tag <.Tag>`]]
             The flattened list.
         """
         tag = tag if tag is not None else self
@@ -241,8 +237,8 @@ class Tag(object):
 
         Parameters
         ----------
-        content : Union[str, List[Union[str, list, :obj:`Tag \
-            <disseminate.tags.Tag>`]], optional
+        content : Optional[Union[str, List[Union[str, list, :obj:`Tag \
+            <.Tag>`]]]
             Specify an alternative content from the tag's content. It can
             either be a string, a tag or a list of strings, tags and lists.
 
@@ -264,14 +260,14 @@ class Tag(object):
 
         Parameters
         ----------
-        content : Union[str, List[Union[str, list, :obj:`Tag \
-            <disseminate.tags.Tag>`]], optional
+        content : Optional[Union[str, List[Union[str, list, :obj:`Tag \
+            <.Tag>`]]]
             Specify an alternative content from the tag's content. It can
             either be a string, a tag or a list of strings, tags and lists.
-        mathmode : bool, optional
+        mathmode : Optional[bool]
             If True, the tag will be rendered in math mode. Otherwise (default)
             latex text mode is assumed.
-        level : int, optional
+        level : Optional[int]
             The level of the tag.
 
         Returns
@@ -304,11 +300,11 @@ class Tag(object):
 
         Parameters
         ----------
-        content : Union[str, List[Union[str, list, :obj:`Tag \
-            <disseminate.tags.Tag>`]], optional
+        content : Optional[Union[str, List[Union[str, list, :obj:`Tag \
+            <.Tag>`]]]
             Specify an alternative content from the tag's content. It can
             either be a string, a tag or a list of strings, tags and lists.
-        level : int, optional
+        level : Optional[int]
             The level of the tag.
 
         Returns

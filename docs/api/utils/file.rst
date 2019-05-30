@@ -2,6 +2,6 @@ File
 ----
 
 .. automodule:: disseminate.utils.file
-    :members: mkdir_p, parents
+    :members:
     :imported-members:
     :show-inheritance:

@@ -41,7 +41,7 @@ def group_paragraphs(elements):
 
     Parameters
     ----------
-    elements : list or str
+    elements : Union[list, str]
         A string or a list of items and strings to group paragraphs.
 
     Returns
@@ -118,12 +118,13 @@ def clean_paragraphs(elements):
     group_paragraphs.
 
     This function will:
+
     1. Remove sublists created by group_paragraphs that only contain empty
        strings and strings with space or newline characters.
 
     Parameters
     ----------
-    elements : list or str
+    elements : Union[list, str]
         A string or a list of items and strings to group paragraphs.
 
     Returns
@@ -165,7 +166,7 @@ def clean_paragraphs(elements):
 
 def assign_paragraph_roles(elements, tag_base_cls):
     """Assign the 'paragraph_role' attribute for tags within sublists created
-     by the group_paragraphs function.
+    by the group_paragraphs function.
 
     The 'paragraph_role' attribute can either be 'block', for tags that are
     alone in a paragraph, or 'inline' for tags that are in a paragraph with
@@ -173,10 +174,10 @@ def assign_paragraph_roles(elements, tag_base_cls):
 
     Parameters
     ----------
-    elements : Union[str, list, :obj:`disseminate.tags.Tag`]
-        The list of paragraph tags (:obj:`P <disseminate.tags.text.P>` and
+    elements : Union[str, list, :obj:`Tag <.Tag>`]
+        The list of paragraph tags (:obj:`P <.text.P>` and
         strings.
-    tag_base_cls : :class:`Tag <disseminate.tags.tag.Tag>`
+    tag_base_cls : :class:`Tag <.Tag>`
         The base class for Tag objects.
 
     Returns
@@ -216,19 +217,18 @@ def process_paragraph_tags(element, context, tag_base_cls, p_cls):
 
     Parameters
     ----------
-    element : Union[str, list, :obj:`disseminate.tags.Tag`]
+    element : Union[str, list, :obj:`Tag <.Tag>`]
         A string, tag or list of both to process for paragraphs
-    context : :obj:`DocumentContext \
-        <disseminate.document.context.DocumentContext>`
+    context : :obj:`DocumentContext <.DocumentContext>`
         The context with values for the document.
-    tag_base_cls : :class:`Tag <disseminate.tags.tag.Tag>`
+    tag_base_cls : :class:`Tag <.Tag>`
         The base class for Tag objects.
-    p_cls : :class:`P <disseminate.tags.text.P>`
+    p_cls : :class:`P <.text.P>`
         The tag class for paragraphs.
 
     Returns
     -------
-    processed_contents : str, :obj:`disseminate.tags.Tag` or list of both
+    processed_contents : Union[str, :obj:`Tag <.Tag>`, list]
         The contents with
     """
     if isinstance(element, tag_base_cls):

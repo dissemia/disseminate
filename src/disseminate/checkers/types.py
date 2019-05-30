@@ -88,9 +88,8 @@ class SoftwareDependencyList(object):
 
         Returns
         -------
-        flattened_list : List[Tuple[int, \
-            Union[:obj:`disseminate.checkers.types.SoftwareDependency`,
-                  :obj:`disseminate.checkers.types.SoftwareDependencyList`]]]
+        flattened_list : List[Tuple[int, Union[:obj:`.SoftwareDependency`, \
+            :obj:`.SoftwareDependencyList`]]]
             A flattened list of tuples with the level (int) and software
             dependencies or software dependency lists.
         """

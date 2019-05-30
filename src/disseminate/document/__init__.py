@@ -4,6 +4,9 @@ contain sub-documents, which in turn may hold sub-documents, to form a tree.
 The top-level document is known as a *root document* and the root document and
 all sub-documents are known as a project.
 
+Responsibilities
+----------------
+
 A document has the following responsibilities:
 
 1. *Managers*. The root document is responsible for create a label_manager and
@@ -28,6 +31,17 @@ A document has the following responsibilities:
    a target format.
 7. *Paths*. The document manages paths for the disseminate source file and the
    target files.
+
+Definitions
+-----------
+1. *Root document*. A document that is not included as a sub-document to another
+   document. The root document's context will have objects, like the dependency
+   manager and label manager, that are shared by its sub-documents in a project.
+2. *Project*. A root document and zero or more sub-documents forming a document
+   tree. Sub-documents are included by ``include`` statements in the header of
+   the root document.
+3. *doc_id*. The document identifier for a document. It is unique for a document
+   in a project.
 """
 
 from .document import Document, DocumentError

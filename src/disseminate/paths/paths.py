@@ -24,6 +24,13 @@ class PosixPath(pathlib.PosixPath):
 class SourcePath(object):
     """A path for a file in the source directory that keeps track of the
     project_root and subpath.
+
+    Parameters
+    ----------
+    project_root : Optional[str]
+        The path for the project's root directory.
+    subpath : Optional[str]
+        The relative path within the project's root directory.
     """
     project_root = None
     subpath = None
@@ -65,6 +72,15 @@ class SourcePath(object):
 class TargetPath(object):
     """A path for a file in a target directory that keeps track of the
     target_root, target and subpath.
+
+    Parameters
+    ----------
+    target_root : Optional[str]
+        The path for the root directory for rendered files.
+    target : Optional[str]
+        The sub-directory for the target type to render. ex: 'html' or 'tex'
+    subpath : Optional[str]
+        The relative path within the target sub-directory.
     """
     target_root = None
     target = None

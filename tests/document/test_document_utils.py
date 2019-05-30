@@ -4,7 +4,8 @@ Test the Document utilities functions.
 from pathlib import Path
 from datetime import datetime
 
-from disseminate import Document, SourcePath
+from disseminate.document import Document
+from disseminate.paths import SourcePath
 from disseminate.document.utils import (find_project_paths, load_root_documents,
                                         render_tree_html, translate_path)
 from disseminate.document.document_context import DocumentContext

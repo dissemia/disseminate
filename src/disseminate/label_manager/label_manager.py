@@ -12,7 +12,7 @@ from ..utils.string import replace_macros
 class LabelManager(object):
     """Manage labels for a project (a document tree).
 
-    Labels are added with the ``add_label`` methods. These labels are collected
+    Labels are added with the :meth:`add_label` methods. These labels are collected
     and are only available after the :meth:`register_labels` method is
     executed. Labels are automatically registered when the :meth:`get_label` and
     :meth:`get_labels` methods are used.
@@ -24,24 +24,23 @@ class LabelManager(object):
 
     Parameters
     ----------
-    root_context : :obj:`DocumentContext \
-        <disseminate.document.document_context.DocumentContext>`
+    root_context : :obj:`DocumentContext <.DocumentContext>`
         The context for the root document. The label manager does not own the
         context object, so only a weak reference to the context is stored.
 
     Attributes
     ----------
-    labels : List[:obj:`Label <disseminate.label_manager.types.Label>`]
+    labels : List[:obj:`Label <.label_manager.types.Label>`]
         A list of registered labels
     collected_labels : Dict[str, List[:obj:`Label \
-        <disseminate.label_manager.types.Label>`]]
+        <.label_manager.types.Label>`]]
         A dictionary organized by document src_filepath (key, str) and a list
-        of labels collected by the ``add_label`` methods. Collected labels
+        of labels collected by the :meth:`add_label` methods. Collected labels
         aren't registered and available for tags to use yet. The
         :meth:`register_labels` method transfers them to the labels attribute
         and sets their order.
-    processors : List[:obj:`ProcessLabel \
-        <disseminate.label_manager.processors.ProcessLabels>`
+    processors : List[:obj:`Type[ProcessLabel] \
+        <.label_manager.processors.ProcessLabels>`]
         An ordered list of label processors executed on the collected and
         registered labels by the register_labels method.
     """
@@ -58,7 +57,7 @@ class LabelManager(object):
         self.root_context = root_context
         self.processors = ProcessLabels.processors(context=root_context)
 
-    def _add_label(self, id, kind, context, label_cls, *args, **kwargs):
+    def add_label(self, id, kind, context, label_cls, *args, **kwargs):
         """Add a label.
 
         The add_label function adds a new or existing label to the
@@ -66,23 +65,27 @@ class LabelManager(object):
         method must be invoked to register all collected labels to the list
         of available labels (self.labels)
 
+        Typically, the helper methods, like :meth:`add_content_label` or
+        :meth:`add_document_label` are used instead, as these specify the label
+        class to use.
+
         Parameters
         ----------
         id : str
             The unique identifier (within a project of documents) for the label.
             ex: 'ch:nmr-introduction'
-        kind : tuple or str
+        kind : Union[str, List[str], Tuple[str]]
             The kind of the label. ex: 'figure', ('heading', 'chapter'),
             'equation'
-        context : :obj:`disseminate.BaseContext`
+        context : :obj:`DocumentContext <.DocumentContext>`
             The context for the document adding the label. (This may be
             different from the context of the root document, self.root_context)
-        label_cls : :class:`disseminate.label_manager.types.Label`
+        label_cls : :class:`Type[Label] <.label_manager.types.Label>`
             The label class (or subclass) to use in creating the label.
 
         Raises
         ------
-        DuplicateLabel
+        DuplicateLabel : :exc:`DuplicateLabel <.DuplicateLabel>`
             Raised if a label with the same id already exists in this
             label manager.
 
@@ -133,14 +136,22 @@ class LabelManager(object):
         return label
 
     def add_content_label(self, id, kind, title, context):
-        label = self._add_label(id=id, kind=kind, context=context,
-                                label_cls=ContentLabel, title=title)
+        """Add content label.
+
+        See :meth:`add_label` for usage details.
+        """
+        label = self.add_label(id=id, kind=kind, context=context,
+                               label_cls=ContentLabel, title=title)
         label.title = title
         return label
 
     def add_document_label(self, id, kind, title, context):
-        label = self._add_label(id=id, kind=kind, context=context,
-                                label_cls=DocumentLabel, title=title)
+        """Add document label.
+
+        See :meth:`add_label` for usage details.
+        """
+        label = self.add_label(id=id, kind=kind, context=context,
+                               label_cls=DocumentLabel, title=title)
         label.title = title
         return label
 
@@ -149,8 +160,7 @@ class LabelManager(object):
 
         Parameters
         ----------
-        context : :obj:`DocumentContext \
-            <disseminate.document.document_context.DocumentContext>`
+        context : :obj:`DocumentContext <.DocumentContext>`
             The context for the document whose labels are being reset.
         """
         assert context.is_valid('doc_id')
@@ -170,12 +180,12 @@ class LabelManager(object):
 
         Returns
         -------
-        label : :obj:`Label <disseminate.label_manager.types.Label>`
+        label : :obj:`Type[Label] <.label_manager.types.Label>`
             A named tuple with the label's information.
 
         Raises
         ------
-        LabelNotFound
+        LabelNotFound : :exc:`LabelNotFound <.exceptions.LabelNotFound>`
             A LabelNotFound exception is raised if a label with the given id
             could not be found.
         """
@@ -199,12 +209,11 @@ class LabelManager(object):
 
         Parameters
         ----------
-        context : Optional[:obj:`DocumentContext \
-            <disseminate.document.document_context.DocumentContext>`]
+        context : Optional[:obj:`DocumentContext <.DocumentContext>`]
             The context for the document whose labels are being retrieved.
             If None is specified, then all labels from all documents in a
             project will be selected.
-        kinds : Union[str, List[str], None]
+        kinds : Optional[Union[str, List[str], Tuple[str]]
             If None, all label kinds are returned.
             If string, all labels matching the kind string will be returned.
             If a list of strings is returned, all labels matching all the kinds
@@ -212,7 +221,7 @@ class LabelManager(object):
 
         Returns
         -------
-        labels : List[:obj:`Label <disseminate.label_manager.types.Label>`]
+        labels : List[:obj:`Type[Label] <.label_manager.types.Label>`]
             A list of label objects.
         """
         # Make sure the labels are registered
@@ -245,6 +254,7 @@ class LabelManager(object):
         """Process collected labels and register them in the label_manager.
 
         This function:
+
             1. Transfers the collected_labels to the list of registered labels
                (self.labels)
             2. Sets the local order (within a document) and global order
@@ -269,7 +279,7 @@ class LabelManager(object):
         ----------
         id : str
             The label of the label ex: 'ch:nmr-introduction'
-        keys : Optional[str]
+        keys : Optional[List[str], Tuple[str]]
             If specified, use the given keys to find entries in the format_str
             dict. (see :func:`find_entry <disseminate.utils.dict.find_entry>`)
         target : Optional[str]

@@ -15,10 +15,9 @@ class ProcessTag(ProcessorABC):
 
     Parameters
     ----------
-    tag_base_cls : :class:`Tag <disseminate.tags.tag.Tag>`
+    tag_base_cls : :class:`Tag <.Tag>`
         The base class for Tag objects.
-    tag_factory : Optional[:obj:`TagFactory \
-        <disseminate.tags.tag_factory.TagFactory>`]
+    tag_factory : Optional[:obj:`TagFactory <.TagFactory>`]
         The tag factory object to create new tags.
     """
 

@@ -97,7 +97,7 @@ def space_indent(s, number=4):
     ----------
     s : str
         The string the indent
-    number : int, optional
+    number : Optional[int]
         The number of spaces to indent by.
 
     Returns
@@ -220,7 +220,7 @@ def find_basestring(strings):
 
     Parameters
     ----------
-    strings : list of str
+    strings : List[str]
         A list of strings
 
     Returns
@@ -391,7 +391,7 @@ def group_strings(l):
 
     Parameters
     ----------
-    l : list, str or :obj:`Tag <disseminate.tags.core.Tag>`
+    l : Union[list, str or :obj:`Tag <.Tag>`]
         An AST comprising a strings, tags or lists of both.
 
     Returns
@@ -451,7 +451,7 @@ def replace_macros(s, *dicts):
     ----------
     s : str
         The input string to replace macros within.
-    *dicts : tuple of dict
+    *dicts : Tuple[dict]
         One or more dicts containing variables defined for a specific document.
         Values will be replaced with the first dict found with that value.
 
@@ -511,56 +511,3 @@ def replace_macros(s, *dicts):
         s, num_subs = _re_macro.subn(_substitute, s)
 
     return s
-
-
-# TODO: Remove
-class NewlineCounter(object):
-    """Count the newlines in strings.
-
-    Parameters
-    ----------
-    initial : int, optional
-        The line number to start the count.
-
-    Examples
-    --------
-    >>> line = NewlineCounter()
-    >>> line("my test\\nline\\nstring")
-    3
-    >>> line.number
-    3
-    >>> line("another")
-    3
-    >>> line("another\\ntwo lines")
-    4
-    """
-
-    number = None
-
-    def __init__(self, initial=1):
-        self.number = initial
-
-    def __call__(self, string):
-        """Add the newlines of the given string to the count."""
-        self.number += string.count('\n')
-        return self.number
-
-
-# TODO: Remove
-class Metastring(str):
-    """A string class that holds metadata.
-
-    Examples
-    --------
-    >>> s = Metastring('test', line_offset=3)
-    >>> print(s)
-    test
-    >>> print(hasattr(s, 'line_offset'))
-    True
-    >>> print(s.line_offset)
-    3
-    """
-    def __new__(cls, content, **kwargs):
-        new_str = super(Metastring, cls).__new__(cls, content)
-        new_str.__dict__.update(kwargs)
-        return new_str

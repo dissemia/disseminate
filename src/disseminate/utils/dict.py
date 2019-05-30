@@ -20,7 +20,7 @@ def find_entry(dicts, *keys, suffix=None, sep='_'):
     suffix : Optional[str]
         If specified, try appending the given suffix to generate the combined
         key before trying the combined key itself.
-    sep : str, optional
+    sep : Optional[str]
         The separator for joining key parts into a key.
 
     Returns

@@ -9,3 +9,4 @@ Formats
 
    html
    tex
+   exceptions

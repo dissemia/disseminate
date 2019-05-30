@@ -29,7 +29,7 @@ def test_jinja_template_search(doc):
                              module_only=True)
     t = renderer.get_template(target='.html')
     assert t.filename == str(pathlib.Path(renderer.module_path,
-                                         'default/template.html'))
+                                          'default/template.html'))
     assert '<html lang="en">' in t.render(body='')
 
     # Another built-in template
@@ -69,20 +69,17 @@ def test_jinja_mtime(tmpdir, context_cls):
     target_root = TargetPath(target_root=tmpdir)
     src_filepath = SourcePath()
 
-    # Setup the dependency manager in the global context. This is needed
-    # to find and convert images by the img tag.
-    dep_manager = DependencyManager(project_root=project_root,
-                                    target_root=target_root)
-
+    # Setup the root context
     context_cls.validation_types = {'dependency_manager': DependencyManager,
                                     'src_filepath': SourcePath,
                                     'paths': list}
-    context = context_cls(dependency_manager=dep_manager,
-                          src_filepath=src_filepath,
-                          paths=[])
+    context = context_cls(src_filepath=src_filepath, project_root=project_root,
+                          target_root=target_root, paths=[])
 
-    context_cls.validation_types = {'src_filepath': SourcePath,
-                                    'dependency_manager': DependencyManager}
+    # Setup the dependency manager in the global context. This is needed
+    # to find and convert images by the img tag.
+    dep_manager = DependencyManager(root_context=context)
+    context['dependency_manager'] = dep_manager
 
     # Default
     renderer = JinjaRenderer(context=context, targets=['.html'],
@@ -91,7 +88,7 @@ def test_jinja_mtime(tmpdir, context_cls):
     assert renderer.mtime == pathlib.Path(filename).stat().st_mtime
 
     # Try a custom template
-    custom_template = pathlib.Path(tmpdir, 'template.html').touch()
+    pathlib.Path(tmpdir, 'template.html').touch()
 
     src_filepath = SourcePath(tmpdir, 'main.dm')
     context = context_cls(dependency_manager=dep_manager,
@@ -206,18 +203,18 @@ def test_jinja_render(tmpdir, context_cls):
     target_root = TargetPath(target_root=tmpdir)
     src_filepath = SourcePath(project_root=project_root)
 
-    # Setup the dependency manager in the global context. This is needed
-    # to find and convert images by the img tag.
-    dep_manager = DependencyManager(project_root=project_root,
-                                    target_root=target_root)
-
+    # Setup the root_context
     context_cls.validation_types = {'dependency_manager': DependencyManager,
                                     'src_filepath': SourcePath,
                                     'paths': list}
-    context = context_cls(body='',
-                          dependency_manager=dep_manager,
-                          src_filepath=src_filepath,
+    context = context_cls(body='', src_filepath=src_filepath,
+                          project_root=project_root, target_root=target_root,
                           paths=[])
+
+    # Setup the dependency manager in the global context. This is needed
+    # to find and convert images by the img tag.
+    dep_manager = DependencyManager(root_context=context)
+    context['dependency_manager'] = dep_manager
 
     # Default template
     renderer = JinjaRenderer(context=context, template='default',
@@ -237,11 +234,15 @@ def test_jinja_render_dependencies(tmpdir, context_cls):
     src_filepath = SourcePath('')
     project_root = SourcePath('')
     target_root = TargetPath(target_root=tmpdir)
-    dep_manager = DependencyManager(project_root=project_root,
-                                    target_root=target_root)
 
-    context = context_cls(body='', src_filepath=src_filepath, paths=[],
-                          dependency_manager=dep_manager)
+    # Setup the root_context
+    context = context_cls(body='', src_filepath=src_filepath,
+                          project_root=project_root, target_root=target_root,
+                          paths=[])
+
+    dep_manager = DependencyManager(root_context=context)
+    context['dependency_manager'] = dep_manager
+
     renderer = JinjaRenderer(context=context, template='default',
                              targets=['.html'], module_only=True)
 

@@ -3,7 +3,8 @@ Test the collection tag.
 """
 import pytest
 
-from disseminate import Document, settings
+from disseminate import settings
+from disseminate.document import Document
 from disseminate.tags.collection import Collection
 
 

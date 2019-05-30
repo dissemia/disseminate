@@ -1,9 +1,7 @@
 """
 Tests for the figure tags.
 """
-from disseminate import Document
 from disseminate.tags import Tag
-from disseminate.utils.tests import strip_leading_space
 
 
 def test_marginfig_parsing(context_cls):

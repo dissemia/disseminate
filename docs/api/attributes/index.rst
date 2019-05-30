@@ -2,6 +2,6 @@ Attributes
 ==========
 
 .. automodule:: disseminate.attributes
-    :members: Attributes, AttributeFormatError, PositionalAttribute
+    :members: Attributes, AttributeFormatError
     :imported-members:
     :show-inheritance:

@@ -1,5 +1,6 @@
 """
-Checks for dependencies.
+Checkers are used to verify the installation and configuration of external
+software dependencies.
 """
 from .types import (All, Any, Optional,
                     SoftwareDependency, SoftwareDependencyList)

@@ -19,24 +19,25 @@ def test_asy_html(tmpdir, context_cls):
     target_root = TargetPath(target_root=tmpdir)
     project_root.mkdir()
 
+    # Setup the root context
+    context_cls.validation_types = {'dependency_manager': DependencyManager,
+                                    'project_root': SourcePath,
+                                    'target_root': TargetPath,
+                                    'src_filepath': SourcePath,
+                                    'paths': list}
+    context = context_cls(src_filepath=src_filepath,
+                          project_root=project_root,
+                          target_root=target_root,
+                          paths=[])
+
     # First, we'll test the case when asy code is used directly in the tag.
     # We will not use a document src_filepath in the context, since
     # when this is missing, it is not used in generating the cached filename
 
     # Setup the dependency manager in the context. This is needed to find and
     # convert images by the img tag.
-    dep = DependencyManager(project_root=project_root,
-                            target_root=target_root)
-    context_cls.validation_types = {'dependency_manager': DependencyManager,
-                                    'project_root': SourcePath,
-                                    'target_root': TargetPath,
-                                    'src_filepath': SourcePath,
-                                    'paths': list}
-    context = context_cls(dependency_manager=dep,
-                          src_filepath=src_filepath,
-                          project_root=project_root,
-                          target_root=target_root,
-                          paths=[])
+    dep = DependencyManager(root_context=context)
+    context['dependency_manager'] = dep
 
     # Generate the markup
     src = """@asy{
@@ -61,8 +62,7 @@ def test_asy_html(tmpdir, context_cls):
     # in 'src'
     src_filepath = SourcePath(project_root=project_root,
                               subpath='chapter/test.dm')
-    dep = DependencyManager(project_root=project_root,
-                            target_root=target_root)
+    dep = context['dependency_manager']
     context = context_cls(dependency_manager=dep,
                           src_filepath=src_filepath,
                           project_root=project_root,
@@ -76,7 +76,7 @@ def test_asy_html(tmpdir, context_cls):
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert img.html == ('<img src="/html/media/chapter/test_69a34c39e1.svg"/>'
-                         '\n')
+                        '\n')
 
 
 def test_asy_html_attribute(tmpdir, context_cls):
@@ -90,20 +90,21 @@ def test_asy_html_attribute(tmpdir, context_cls):
     target_root = TargetPath(target_root=tmpdir)
     project_root.mkdir()
 
-    # Setup the dependency manager in the global context. This is needed
-    # to find and convert images by the img tag.
-    dep = DependencyManager(project_root=project_root,
-                            target_root=target_root)
+    # Setup the root context
     context_cls.validation_types = {'dependency_manager': DependencyManager,
                                     'project_root': SourcePath,
                                     'target_root': TargetPath,
                                     'src_filepath': SourcePath,
                                     'paths': list}
-    context = context_cls(dependency_manager=dep,
-                          src_filepath=src_filepath,
+    context = context_cls(src_filepath=src_filepath,
                           project_root=project_root,
                           target_root=target_root,
                           paths=[])
+
+    # Setup the dependency manager in the global context. This is needed
+    # to find and convert images by the img tag.
+    dep = DependencyManager(root_context=context)
+    context['dependency_manager'] = dep
 
     # Generate the markup
     src = """@asy[scale=2.0]{
@@ -134,20 +135,21 @@ def test_asy_tex(tmpdir, context_cls):
     target_root = TargetPath(target_root=tmpdir)
     project_root.mkdir()
 
-    # Setup the dependency manager in the global context. This is needed
-    # to find and convert images by the img tag.
-    dep = DependencyManager(project_root=project_root,
-                            target_root=target_root)
+    # Setup the root context
     context_cls.validation_types = {'dependency_manager': DependencyManager,
                                     'project_root': SourcePath,
                                     'target_root': TargetPath,
                                     'src_filepath': SourcePath,
                                     'paths': list}
-    context = context_cls(dependency_manager=dep,
-                          src_filepath=src_filepath,
+    context = context_cls(src_filepath=src_filepath,
                           project_root=project_root,
                           target_root=target_root,
                           paths=[])
+
+    # Setup the dependency manager in the global context. This is needed
+    # to find and convert images by the img tag.
+    dep = DependencyManager(root_context=context)
+    context['dependency_manager'] = dep
 
     # Generate the markup
     src = """@asy[scale=2.0]{

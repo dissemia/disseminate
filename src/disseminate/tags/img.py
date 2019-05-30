@@ -15,9 +15,9 @@ class Img(Tag):
 
     Attributes
     ----------
-    active : bool, default: True
+    active : bool
         If True, the Tag can be used by the TagFactory.
-    html_name : str, default: img
+    html_name : str
         If specified, use this name when rendering the tag to html. Otherwise,
         use name.
     img_filepath : str
@@ -99,7 +99,7 @@ class RenderedImg(Img):
 
     Attributes
     ----------
-    active : bool, default: True
+    active : bool
         If True, the Tag can be used by the TagFactory.
     """
 
@@ -180,7 +180,7 @@ class RenderedImg(Img):
 
         Returns
         -------
-        None or dict
+        Union[None, dict]
             A dict or keyword arguments to pass to the template.
         """
         return dict()
@@ -193,7 +193,7 @@ class RenderedImg(Img):
 
         Returns
         -------
-        None or tuple
+        Union[None, tuple]
             A tuple of arguments to pass to the template as the 'args'
             parameter/variable.
         """

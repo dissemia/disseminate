@@ -1,7 +1,8 @@
 """
 Test the TOC tag.
 """
-from disseminate import Document, SourcePath, TargetPath
+from disseminate.document import Document
+from disseminate.paths import SourcePath, TargetPath
 from disseminate.tags.toc import Toc
 from disseminate.utils.tests import strip_leading_space
 

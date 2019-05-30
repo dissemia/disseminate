@@ -17,15 +17,14 @@ def tex_cmd(cmd, attributes='', formatted_content=None, indent=None):
 
     Parameters
     ----------
-    cmd : str, optional
+    cmd : Optional[str]
         The name of the LaTeX command to format.
-    attributes : Union[:obj:`Attributes <disseminate.attributes.Attributes>`, \
-        str], optional
+    attributes : Optional[Union[:obj:`Attributes <.Attributes>`, str]]
         The attributes of the tag.
-    formatted_content : str, optional
+    formatted_content : Optional[str]
         The contents of the tex environment formatted as a string in LaTeX.
         If not specified, the tex_str will not be used as a LaTeX parameter
-    indent : int, optional
+    indent : Optional[int]
         If specified, indent lines by the given number of spaces.
 
     Returns
@@ -35,10 +34,8 @@ def tex_cmd(cmd, attributes='', formatted_content=None, indent=None):
 
     Raises
     ------
-    TagError
-        A TagError is raised if:
-
-        - an non-allowed environment is used
+    TexFormatError : :exc:`TexFormatError`
+        A TexFormatError is raised if an non-allowed environment is used.
     """
     # Make sure the environment is permitted
     if (cmd not in settings.tex_cmd_arguments and
@@ -101,15 +98,14 @@ def tex_env(env, attributes, formatted_content, min_newlines=False,
     ----------
     env : str
         The name of the LaTeX environment to format.
-    attributes : Union[:obj:`Attributes <disseminate.attributes.Attributes>`, \
-        str]
+    attributes : Union[:obj:`Attributes <.Attributes>`, str]
         The attributes of the tag.
     formatted_content : str
         The contents of the tex environment formatted as a string in LaTeX.
-    min_newlines : bool, optional
+    min_newlines : Optional[bool]
         If True, extra new lines before, after and in the environment will not
         be included.
-    indent : int, optional
+    indent : Optional[int]
         If specified, indent lines by the given number of spaces.
 
     Returns
@@ -119,10 +115,8 @@ def tex_env(env, attributes, formatted_content, min_newlines=False,
 
     Raises
     ------
-    TagError
-        A TagError is raised if:
-
-        - an non-allowed environment is used
+    TexFormatError : :exc:`TexFormatError`
+        A TexFormatError is raised if an non-allowed environment is used.
     """
     # Make sure the environment is permitted
     if (env not in settings.tex_env_arguments and

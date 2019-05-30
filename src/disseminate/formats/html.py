@@ -22,10 +22,9 @@ def html_tag(name, attributes='', formatted_content=None, level=1,
 
     Parameters
     ----------
-    name : str, optional
+    name : Optional[str]
         The name of the html tag.
-    attributes : Union[:obj:`Attributes <disseminate.attributes.Attributes>`, \
-        str], optional
+    attributes : Optional[Union[:obj:`Attributes <.Attributes>`, str]]
         The attributes of the tag.
     formatted_content : Optional[Union[str, list, :obj:`lxml.builder.E`]]
         The contents of the html tag.
@@ -39,14 +38,12 @@ def html_tag(name, attributes='', formatted_content=None, level=1,
     -------
     html : str
         If level=1, a string formatted in html
-        if level>1, an html element (:obj:`lxml.build.E)
+        if level>1, an html element (:obj:`lxml.build.E`)
 
     Raises
     ------
-    TagError
-        A TagError is raised if:
-
-        - an non-allowed environment is used
+    HtmlFormatError : :exc:`HtmlFormatError`
+        A TagError is raised if a non-allowed environment is used
     """
     # See if the tag is permitted
     allowed_tag = (name in settings.html_tag_arguments or

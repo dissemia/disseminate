@@ -12,13 +12,13 @@ from .. import settings
 
 
 class DocumentContext(BaseContext):
-    """A context dict used for documents objects."""
+    """A context dict used for documents objects.
+    """
 
     __slots__ = ()
 
-    #: The following are *required* entries in the document context dict to be
-    #: a valid context--as well as their matching type.
-    #: None types are not check for the type of object stored in that entry.
+    #: Required entries in the document context dict to be a valid document
+    #: context--as well as their matching type to be checked.
     validation_types = {
         'document': None,
         'src_filepath': SourcePath,
@@ -35,7 +35,7 @@ class DocumentContext(BaseContext):
         'label_resets': dict,
     }
 
-    #: The following are context entries that should not be copied (inherited)
+    #: The keys for context entries that should not be inherited
     #: from the parent context. They should be unique to each context.
     do_not_inherit = {
         # The document reference in a context should be for the document that
@@ -77,7 +77,7 @@ class DocumentContext(BaseContext):
         settings.body_attr,
         }
 
-    #: The following are context entries that should not be removed when the
+    #: The keys for context entries that should not be removed when the
     #: context is cleared. These are typically for entries setup in the
     #: __init__ of the class.
     exclude_from_reset = {
@@ -135,8 +135,7 @@ class DocumentContext(BaseContext):
         if self.get('label_manager', None) is None:
             self['label_manager'] = LabelManager(root_context=self)
         if self.get('dependency_manager', None) is None:
-            dep = DependencyManager(project_root=document.project_root,
-                                    target_root=document.target_root)
+            dep = DependencyManager(root_context=self)
             self['dependency_manager'] = dep
 
         # Set the document's level. This is based off of the parent context's
@@ -174,11 +173,11 @@ class DocumentContext(BaseContext):
     @property
     def targets(self):
         """Retrieve a list of targets from the 'targets' or 'target'
-        entry of thedocument  context.
+        entry of the document  context.
 
         Returns
         -------
-        target_list : list or str
+        target_list : List[str]
             A list of targets specified in the context.
 
         Examples
@@ -231,8 +230,7 @@ class DocumentContext(BaseContext):
 
         Returns
         -------
-        include_list : List[SourcePath]
-            (:obj:`disseminate.utils.paths.SourcePath`)
+        include_list : List[:obj:`SourcePath <.paths.SourcePath>`]
             A list of the paths for the included subdocuments.
         """
         assert self.is_valid('src_filepath')

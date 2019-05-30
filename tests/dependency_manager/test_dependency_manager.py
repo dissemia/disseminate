@@ -1,13 +1,11 @@
 """
 Test the DependencyManager functionality
 """
-import os.path
 import pathlib
 
 import pytest
 
-from disseminate.dependency_manager import (DependencyManager,
-                                            FileDependency)
+from disseminate.dependency_manager import DependencyManager, FileDependency
 from disseminate import SourcePath, TargetPath
 
 # Get the template path for disseminate
@@ -57,11 +55,11 @@ def test_dependency_manager_copy_file(tmpdir, context_cls):
     context_cls.validation_types = {'src_filepath': SourcePath,
                                     'paths': list}
     paths = [target_root]
-    context = context_cls(src_filepath=src_filepath, paths=paths)
+    context = context_cls(src_filepath=src_filepath, project_root=project_root,
+                          target_root=target_root, paths=paths)
 
     # Create the dependency manager
-    dep_manager = DependencyManager(project_root=project_root,
-                                    target_root=target_root)
+    dep_manager = DependencyManager(root_context=context)
 
     # Check that the file hasn't been copied yet
     correct_path = TargetPath(target_root=tmpdir,
@@ -102,11 +100,11 @@ def test_dependency_manager_duplicates(tmpdir, context_cls):
     context_cls.validation_types = {'src_filepath': SourcePath,
                                     'paths': list}
     paths = [target_root]
-    context = context_cls(src_filepath=src_filepath, paths=paths)
+    context = context_cls(src_filepath=src_filepath, project_root=project_root,
+                          target_root=target_root, paths=paths)
 
     # Create the dependency manager
-    dep_manager = DependencyManager(project_root=project_root,
-                                    target_root=target_root)
+    dep_manager = DependencyManager(root_context=context)
 
     # Copy the file.
     dep_filepath = SourcePath(project_root='tests/dependency_manager/example1',
@@ -135,11 +133,11 @@ def test_dependency_manager_missing(tmpdir, context_cls):
     context_cls.validation_types = {'src_filepath': SourcePath,
                                     'paths': list}
     paths = [target_root]
-    context = context_cls(src_filepath=src_filepath, paths=paths)
+    context = context_cls(src_filepath=src_filepath, project_root=project_root,
+                          target_root=target_root, paths=paths)
 
     # Copy a file using segregate_targets
-    dep_manager = DependencyManager(project_root=project_root,
-                                    target_root=target_root)
+    dep_manager = DependencyManager(root_context=context)
 
     # Try to create the dependency
     dep_filepath = SourcePath(project_root='tests/dependency_manager/example1',
@@ -167,11 +165,11 @@ def test_dependency_manager_convert_file(tmpdir, context_cls):
     context_cls.validation_types = {'src_filepath': SourcePath,
                                     'paths': list}
     paths = [target_root]
-    context = context_cls(src_filepath=src_filepath, paths=paths)
+    context = context_cls(src_filepath=src_filepath, project_root=project_root,
+                          target_root=target_root, paths=paths)
 
     # Copy a file using segregate_targets
-    dep_manager = DependencyManager(project_root=project_root,
-                                    target_root=target_root)
+    dep_manager = DependencyManager(root_context=context)
 
     # Check that the file hasn't been converted yet
     correct_path = TargetPath(target_root=tmpdir,
@@ -215,11 +213,11 @@ def test_dependency_manager_covert_file_reuse(tmpdir, context_cls):
     context_cls.validation_types = {'src_filepath': SourcePath,
                                     'paths': list}
     paths = [target_root]
-    context = context_cls(src_filepath=src_filepath, paths=paths)
+    context = context_cls(src_filepath=src_filepath, project_root=project_root,
+                          target_root=target_root, paths=paths)
 
     # Copy a file using segregate_targets
-    dep_manager = DependencyManager(project_root=project_root,
-                                    target_root=target_root)
+    dep_manager = DependencyManager(root_context=context)
 
     # Check that the file hasn't been converted yet
     correct_path = TargetPath(target_root=tmpdir,
@@ -243,8 +241,8 @@ def test_dependency_manager_covert_file_reuse(tmpdir, context_cls):
 
     # Try the conversion again and see if the file has changed. (It shouldn't)
     deps = dep_manager.add_dependency(dep_filepath=dep_filepath,
-                                     target='.html',
-                                     context=context)
+                                      target='.html',
+                                      context=context)
 
     assert len(deps) == 1
     dep = deps.pop()
@@ -279,12 +277,12 @@ def test_dependency_manager_scape_html(tmpdir, context_cls):
     context_cls.validation_types = {'src_filepath': SourcePath,
                                     'paths': list}
     paths = [target_root]
-    context = context_cls(src_filepath=src_filepath, paths=paths,
+    context = context_cls(src_filepath=src_filepath, project_root=project_root,
+                          target_root=target_root, paths=paths,
                           base_url='/{target}/{subpath}')
 
     # Setup a file copy using segregate_targets
-    dep_manager = DependencyManager(project_root=project_root,
-                                    target_root=target_root)
+    dep_manager = DependencyManager(root_context=context)
 
     # 1. Scrape the html with a missing file. The file is not found because
     # the 'media/css/default.css' file is not in the paths entry of the context
@@ -348,11 +346,11 @@ def test_dependency_manager_scape_css(tmpdir, context_cls):
     context_cls.validation_types = {'src_filepath': SourcePath,
                                     'paths': list}
     paths = [target_root]
-    context = context_cls(src_filepath=src_filepath, paths=paths)
+    context = context_cls(src_filepath=src_filepath, project_root=project_root,
+                          target_root=target_root, paths=paths)
 
     # Setup a file copy using segregate_targets
-    dep_manager = DependencyManager(project_root=project_root,
-                                    target_root=target_root)
+    dep_manager = DependencyManager(root_context=context)
 
     # Add the path
     context['paths'].append(pathlib.Path(template_path, 'default'))

@@ -39,14 +39,14 @@ def process_typography(tag, tag_base_cls, level=1):
     ----------
     tag : Union[str, list]
         A string to parse into an AST, a list of strings or an existing AST.
-    tag_base_cls : :class:`Tag <disseminate.tags.tag.Tag>`
+    tag_base_cls : :class:`Tag <.Tag>`
         The base class for Tag objects.
     level : Optional[int]
         The current level of the tag.
 
     Returns
     -------
-    tag : :obj:`disseminate.Tag`
+    tag : :obj:`Tag <.Tag>`
         The AST is a root tag with a content comprising a list of tags or
         strings.
     """

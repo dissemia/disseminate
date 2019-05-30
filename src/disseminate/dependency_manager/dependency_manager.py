@@ -14,6 +14,7 @@ from ..tags import Tag
 from ..convert import convert
 from ..attributes import Attributes
 from ..paths import SourcePath, TargetPath
+from ..utils.classes import weakattr
 from .. import settings
 
 
@@ -29,10 +30,10 @@ class FileDependency(namedtuple('FileDependency', ['dep_filepath',
 
     Attributes
     ----------
-    dep_filepath : :obj:`disseminate.SourcePath`
+    dep_filepath : :obj:`SourcePath <.paths.SourcePath>`
         The path of the existing dependency file.
         ex: 'src/media/images/fig1.png'
-    dest_filepath: :obj:`disseminate.TargetPath`
+    dest_filepath : :obj:`TargetPath <.paths.TargetPath>`
         The destination path for the dependency file to be placed in a
         document's target directory.
         ex: 'html/media/images/fig1.png
@@ -55,38 +56,40 @@ class DependencyManager(object):
 
     Parameters
     ----------
-    project_root : :obj:`disseminate.SourcePath`
-        The root directory for the document (source markup) files. (i.e. the
-        input directory)
-        ex: 'src/'
-    target_root : :obj:`disseminate.TargetPath`
-        The target directory for the output documents (i.e. the output
-        directory). The final output directory also depends on the
-    create_dir : bool, optional
+    root_context : :obj:`DocumentContext <.document_context.DocumentContext>`
+        The context for the root document. The dependency manager does not own
+        the context object, so only a weak reference to the context is stored.
+    create_dir : Optional[bool]
         If True, the dependency manager will create directories in the target
         that do not exist.
 
     Attributes
     ----------
-    dependencies : dict of sets
+    project_root : :obj:`SourcePath <.paths.SourcePath>`
+        The root directory for the document (source markup) files. (i.e. the
+        input directory)
+        ex: 'src/'
+    target_root : :obj:`TargetPath <.paths.TargetPath>`
+        The target directory for the output documents (i.e. the output
+        directory). The final output directory also depends on the
+    dependencies : Dict[str, set]
         A dict of sets of dependencies managed by this dependency manager.
         The keys are the target names (ex: '.html') and the values are
         a set of FileDependency tuples.
     """
 
+    root_context = weakattr()
     project_root = None
     target_root = None
     create_dirs = None
     dependencies = None
 
-    # TODO: make the parameters root_context, like the label manager
-    def __init__(self, project_root, target_root,
-                 create_dirs=settings.create_dirs):
-        assert isinstance(project_root, SourcePath)
-        assert isinstance(target_root, TargetPath)
+    def __init__(self, root_context, create_dirs=settings.create_dirs):
+        assert root_context.is_valid('project_root', 'target_root')
 
-        self.project_root = project_root
-        self.target_root = target_root
+        self.project_root = root_context['project_root']
+        self.target_root = root_context['target_root']
+        self.root_context = root_context
         self.create_dirs = create_dirs
         self.dependencies = dict()
 
@@ -104,7 +107,8 @@ class DependencyManager(object):
 
         Parameters
         ----------
-        dep_filepath : :obj:`pathlib.Path` or :obj:`disseminate.SourcePath`
+        dep_filepath : Union[:obj:`pathlib.Path`, \
+            :obj:`SourcePath <.SourcePath>`]
             A subpath to the dependency file. An absolute path cannot work
             since the subpath cannot be determined. (If an absolute path was
             used, the whole directory tree leading up to the dependency file
@@ -112,15 +116,15 @@ class DependencyManager(object):
         target : str
             The extension for the target to add this dependency for. ex: .html,
             .tex
-        context : :obj:`disseminate.document.DocumentContext`
+        context : :obj:`DocumentContext <.document_context.DocumentContext>`
             The context for a document to render.
-        attributes : :obj:`Attributes <disseminate.attributes.Attributes>`
+        attributes : :obj:`Attributes <.attributes.Attributes>`
             The attributes of the tag. The attributes are used by the
             converters, if a conversion is needed.
 
         Returns
         -------
-        dependency : set of :obj:`disseminate.dependency_manager.FileDependency`
+        dependency : Set[:obj:`FileDependency <.FileDependency>`]
             The created FileDependency object(s).
             A set is returned, rather than a single object, because the file
             may contain other dependencies that must be added. Examples include
@@ -128,7 +132,7 @@ class DependencyManager(object):
 
         Raises
         ------
-        FileNotFoundError
+        MissingDependency : :exc:`MissingDependency <.MissingDependency>`
             Raised if the file identified by path could not be found in the
             paths given by context.
         """
@@ -205,14 +209,14 @@ class DependencyManager(object):
         path_func : function
             A function that takes (basepath, subpath) arguments to create a
             new path. This path will be checked to see if the file exists.
-        basepaths : list of :obj:`pathlib.Path` or :obj:`pathlib.Path` or str
+        basepaths : List[Union[:obj:`pathlib.Path` or str]]
             One or more starting parts of a path.
-        subpaths : list of :obj:`pathlib.Path` or :obj:`pathlib.Path` or str
+        subpaths : List[Union[:obj:`pathlib.Path` or str]]
             One or more ending parts of a path.
 
         Returns
         -------
-        path : :obj:`pathlib.Path` or None
+        path : Union[:obj:`pathlib.Path`, None]
             A path pointing to a valid file.
             None is returned if no valid file is found.
         """
@@ -244,11 +248,11 @@ class DependencyManager(object):
 
         Parameters
         ----------
-        dep_filepath : :obj:`disseminate.SourcePath`
+        dep_filepath : :obj:`SourcePath <.paths.SourcePath>`
             The path of the dependency file.
         target : str
             The type of document target for which this dependency is created.
-        attributes : :obj:`Attributes <disseminate.attributes.Attributes>`
+        attributes : :obj:`Attributes <.attributes.Attributes>`
             The attributes of the tag. The attributes are used by the
             converters, if a conversion is needed.
 
@@ -288,17 +292,16 @@ class DependencyManager(object):
 
         Parameters
         ----------
-        dep_filepath : :obj:`disseminate.SourcePath`
+        dep_filepath : :obj:`SourcePath <.paths.SourcePath>`
             The path of the dependency file, either in the project_root or in the
             module.
-        dest_filepath : :obj:`disseminate.TargetPath`
+        dest_filepath : :obj:`TargetPath <.paths.TargetPath>`
             The path of the file to copy/link to.
 
         Returns
         -------
         dest_filepath : str
-            The target filepath (:obj:`disseminate.TargetPath`) for the copied
-            file
+            The target filepath for the copied file.
         """
         assert isinstance(dep_filepath, SourcePath)
         assert isinstance(dest_filepath, TargetPath)
@@ -364,21 +367,21 @@ class DependencyManager(object):
 
         Parameters
         ----------
-        html : str or :obj:`pathlib.Path`
+        html : Union[str, :obj:`pathlib.Path`]
             Either a path to an html file or a string in html format.
         target : str
             The type of document target for which this dependency is created.
-        context : :obj:`disseminate.document.DocumentContext`
+        context : :obj:`DocumentContext <.document_context.DocumentContext>`
             The context for a document to render.
 
         Returns
         -------
-        html : string
+        html : str
             The processed html string.
 
         Raises
         ------
-        MissingDependency
+        MissingDependency : :exc:`MissingDependency <.MissingDependency>`
             Raised when a file was not found.
         """
         assert context.is_valid('paths')
@@ -435,21 +438,21 @@ class DependencyManager(object):
 
         Parameters
         ----------
-        css : str or :obj:`pathlib.Path`
+        css : Union[str, :obj:`pathlib.Path`]
             Either a path to a css file or a string in css format.
         target : str
             The type of document target for which this dependency is created.
-        context : :obj:`disseminate.document.DocumentContext`
+        context : :obj:`DocumentContext <.document_context.DocumentContext>`
             The context for a document to render.
 
         Returns
         -------
-        css : string
+        css : str
             The processed css string.
 
         Raises
         ------
-        MissingDependency
+        MissingDependency : :exc:`MissingDependency <.MissingDependency>`
             Raised when a file was not found.
         """
         assert context.is_valid('paths')
@@ -487,9 +490,9 @@ class DependencyManager(object):
 
         Parameters
         ----------
-        string : str or :obj:`pathlib.Path`
+        string : Union[str, :obj:`pathlib.Path`]
             Either a path to a text file or a string to parse.
-        regexpr : generator of :obj:`Match`
+        regexpr : Generator[:obj:`regex.Match`]
             A generator of regex match objects.
         repl : function
             The match replacing function
@@ -518,7 +521,7 @@ class DependencyManager(object):
 
         Parameters
         ----------
-        src_filepath : str or None
+        src_filepath : Optional[str]
             If specified, remove all dependencies for the given document
             src_filepath.
             If not specified (None), all dependencies are removed.

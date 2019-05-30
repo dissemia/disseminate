@@ -11,7 +11,7 @@ def all_subclasses(cls):
 
     Parameters
     ----------
-    cls : class object
+    cls : Type
         The class object to inspect for subclasses.
 
     Returns
@@ -36,7 +36,7 @@ def all_parent_classes(cls):
 
     Parameters
     ----------
-    cls : class object
+    cls : Type
         The class object to inspect for parent classes.
 
     Returns
@@ -63,7 +63,7 @@ def all_attributes_values(cls, attribute):
 
     Parameters
     ----------
-    cls : class object
+    cls : Type
         The class object to inspect for parent classes.
     attribute : str
         The attribute whose value should be retrieved from each class.
@@ -164,10 +164,10 @@ def trackmtimes(includeattrs=None, excludeattrs=None):
 
     Parameters
     ----------
-    includeattrs : tuple of str
+    includeattrs : Optional[Tuple[str]]
         If specified, only attributes listed in the includeattrs tuple will
         update the mtime attribute for the class when their values are changed.
-    excludeeattrs : tuple of str
+    excludeeattrs : Optional[Tuple[str]]
         If specified, attributes listed in the excludeattrs tuple will _not_
         update the mtime attribute for the class when their values are changed.
 

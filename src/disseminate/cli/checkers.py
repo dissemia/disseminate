@@ -8,17 +8,6 @@ spaces_per_level = 2
 width = 80
 
 
-def ok(check_passed):
-    """Format a bool, like True or False, to a pass/fail string."""
-    s = '['
-    if check_passed:
-        s += colored("PASS", color='green', attrs=['bold'])
-    else:
-        s += colored("FAIL", color='red', attrs=['bold'])
-    s += ']'
-    return s, 6
-
-
 def print_single_check(msg, status, color=None, attrs=None, spacer=' ',
                        level=1):
     """Print a single check line."""

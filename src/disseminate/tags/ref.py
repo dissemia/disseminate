@@ -54,8 +54,7 @@ class Ref(Tag):
 
         Returns
         -------
-        document : Union[:obj:`Document \
-            <disseminate.document.document.Document>`, None]
+        document : Union[:obj:`Document <.Document>`, None]
             The document that owns the label referenced by this tag, if
             available.
             None, if a document could not be found.

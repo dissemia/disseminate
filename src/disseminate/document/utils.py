@@ -14,15 +14,15 @@ def find_project_paths(path='', document_extension=settings.document_extension):
 
     Parameters
     ----------
-    path : str or :obj:`pathlib.Path`, optional
+    path : Optional[Union[:obj:`pathlib.Path`, str]]
         The path to search. By default, it is the current directory.
-    document_extension : str, optional
+    document_extension : Optional[str]
         The source markup document extension. ex: '.dm'
 
     Returns
     -------
-    project_paths : list
-        A list of project paths as render paths.
+    project_paths : List[:obj:`pathlib.Path`]
+        A list of project paths paths.
     """
     # expand the user for the subpath directory
     path = pathlib.Path(path).expanduser()
@@ -57,15 +57,15 @@ def load_root_documents(path='',
 
     Parameters
     ----------
-    path : str or :obj:`pathlib.Path`, optional
+    path : Optional[Union[:obj:`pathlib.Path`, str]]
         The path to search. By default, it is the current directory.
-    document_extension : str, optional
+    document_extension : Optional[str]
         The source markup document extension. ex: '.dm'
 
     Returns
     -------
-    root_documents : list
-        A list of document objects (:obj:`disseminate.Document`).
+    root_documents : List[:obj:`Document <.Document>`]
+        A list of document objects.
     """
     documents = list()
 
@@ -99,12 +99,12 @@ def translate_path(path, documents):
     ----------
     path : str
         The path relative to project_root or target_root.
-    documents : list of :obj:`disseminate.Document`
+    documents : List[:obj:`Document <.Document>`]
         The documents whose paths should be checked.
 
     Returns
     -------
-    render_path : str or None
+    render_path : Union[str, None]
     """
     # Strip leading '/' if present
     if isinstance(path, str):
@@ -138,7 +138,7 @@ def translate_path(path, documents):
 
 
 def render_tree_html(documents, level=1):
-    """Render the html html for the given documents.
+    """Render the html tree for the given documents.
 
     Returns
     -------

@@ -17,20 +17,15 @@ class ContentLabel(Label):
 
     Attributes
     ----------
-    document_label : :obj:`DocumentLabel \
-        <disseminate.label_manager.types.DocumentLabel>`
+    document_label : :obj:`DocumentLabel <.types.DocumentLabel>`
         The label object for the document that owns this label.
-    chapter_label : Optional[:obj:`ContentLabel \
-        <disseminate.label_manager.types.ContentLabel>`]
+    chapter_label : Optional[:obj:`ContentLabel <.types.ContentLabel>`]
         The label for the chapter under which this label is under.
-    section_label : Optional[:obj:`Content Label \
-        <disseminate.label_manager.types.ContentLabel>`]
+    section_label : Optional[:obj:`ContentLabel <.types.ContentLabel>`]
         The label for the section under which this label is under.
-    subsection_label : Optional[:obj:`Content Label \
-        <disseminate.label_manager.types.ContentLabel>`]
+    subsection_label : Optional[:obj:`ContentLabel <.types.ContentLabel>`]
         The label for the subsection under which this label is under.
-    subsubsection_label : Optional[:obj:`ContentLabel \
-        <disseminate.label_manager.types.ContentLabel>`]
+    subsubsection_label : Optional[:obj:`ContentLabel <.types.ContentLabel>`]
         The label for the subsubsection under which this label is under.
     """
 
@@ -52,48 +47,59 @@ class ContentLabel(Label):
 
     @property
     def part_number(self):
+        """The number for the part to which this label belongs."""
         return get_label_number(self.part_label)
 
     @property
     def part_title(self):
+        """The title for the part to which this label belongs."""
         return getattr(self.part_label, 'title', '')
 
     @property
     def chapter_number(self):
+        """The number for the chapter to which this label belongs."""
         return get_label_number(self.chapter_label)
 
     @property
     def chapter_title(self):
+        """The title for the chapter to which this label belongs."""
         return getattr(self.chapter_label, 'title', '')
 
     @property
     def section_number(self):
+        """The number for the section to which this label belongs."""
         return get_label_number(self.section_label)
 
     @property
     def section_title(self):
+        """The title for the section to which this label belongs."""
         return getattr(self.section_label, 'title', '')
 
     @property
     def subsection_number(self):
+        """The number for the subsection to which this label belongs."""
         return get_label_number(self.subsection_label)
 
     @property
     def subsection_title(self):
+        """The title for the subsection to which this label belongs."""
         return getattr(self.subsection_label, 'title', '')
 
     @property
     def subsubsection_number(self):
+        """The number for the subsubsection to which this label belongs."""
         return get_label_number(self.subsubsection_label)
 
     @property
     def subsubsection_title(self):
+        """The title for the subsubsection to which this label belongs."""
         return getattr(self.subsubsection_label, 'title', '')
 
     @property
     def tree_number(self):
         """The string for the number for the chapter, section, subsection and
         so on.
+
         e.g. Section 3.2.1."""
         # Get a tuple of the numbers, remove empty string items and None
         numbers = filter(bool, (self.part_number,

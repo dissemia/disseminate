@@ -10,4 +10,7 @@ Utilities
    classes
    file
    string
+   dict
+   list
    types
+   tests

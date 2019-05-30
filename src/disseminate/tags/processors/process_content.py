@@ -20,9 +20,6 @@ re_brace = regex.compile(r'[}{]')
 
 class ProcessContent(ProcessTag):
     """A tag processor to parse the contents of tags into sub-tags.
-
-    The contents of tags will be processed if the tag's :attr:`process_content
-    <disseminate.Tags.Tag.process_content>` attribute is True.
     """
 
     order = 200
@@ -43,20 +40,20 @@ def parse_tags(content, context, tag_factory, level=1):
 
     Parameters
     ----------
-    content : str or list
+    content : Union[str, List[Union[str, :obj:`Tag <.Tag>`]]]
         A string to parse for tags, a list of strings and tags
     context : dict
         The context with values for the document.
-    level : int, optional
+    level : Optional[int]
         The current level of the ast.
 
     Returns
     -------
-    tag_list : list of strings and tags
+    tag_list : List[Union[str, :obj:`Tag <.Tag>`]]
 
     Raises
     ------
-    TagError
+    TagError : :exc:`TagError <.exceptions.TagError>`
         Raises an TagError if the max depth has been achieved
         (settings.tag_max_depth). This is an attempt to foil the Billion Laughs
         attack.

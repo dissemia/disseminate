@@ -6,7 +6,8 @@ from ...tags import Tag, TagFactory
 
 
 class ProcessContextTags(ProcessContext):
-    """Process the tags in the context.
+    """Convert context entries into tags for entries listed the
+    process_context_tags' context entry.
 
     This function converts tags for context entries identified by keys listed
     in the 'process_context_tags' context entry
@@ -19,8 +20,6 @@ class ProcessContextTags(ProcessContext):
     """
 
     order = 1000
-    short_desc = ("Convert context entries into tags for entries listed the "
-                  "'process_context_tags' context entry")
 
     def __call__(self, context):
         assert context.is_valid('process_context_tags')

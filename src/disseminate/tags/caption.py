@@ -3,7 +3,7 @@ Tags for figure captions and references.
 """
 from .tag import Tag
 from .label import LabelMixin
-from .utils import content_to_str, format_content
+from .utils import content_to_str
 from ..formats import tex_cmd
 from ..utils.string import hashtxt
 

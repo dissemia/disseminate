@@ -20,7 +20,7 @@ class Argument(object):
         The name of the argument
     value_string : str
         The value (string) of the argument
-    default : str or None, optional
+    default : Optional[str]
         A default value of the argument, if available.
     """
 

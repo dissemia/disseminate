@@ -73,8 +73,8 @@ class Attributes(dict):
 
     .. note:: Attributes can either be key/value (ex: 'class=media') or
               positional (ex: 'red'). For positional arguments, the values
-              are None. Consequently, retrieving a positional argument's value
-              will return None. (ex: attr.get('red') is None)
+              are :class:`PositionalValue <.utils.types.PositionalValue>` class
+              objects.
     """
 
     def __init__(self, *args, **kwargs):
@@ -94,7 +94,7 @@ class Attributes(dict):
         return Attributes(**self)
 
     def load(self, s):
-        """Parses an attribute string into a tuple of attributes.
+        """Parses an attribute string into key/values for the Attributes dict.
 
         Parameters
         ----------
@@ -103,12 +103,6 @@ class Attributes(dict):
             positional attributes and keyword attributes (kwargs), and
             attributes strings have the following form:
             "key1=value1 key2=value2 value3"
-
-        Returns
-        -------
-        attrs: tuple
-            A tuple of attributes comprising either 2-ple strings
-            (key, value) or strings (positional arguments)
         """
         attrs = []
 
@@ -140,22 +134,22 @@ class Attributes(dict):
 
         Parameters
         ----------
-        attr : PositionalValue (type)
+        attr : :class`PositionalValue <.utils.types.PositionalValue>`
             The PositionalValue of the attribute to retrieve.
-        target : str, optional
+        target : Optional[str]
             If specified, search for a positional argument for the given target.
             ex: '1' will be returned for the '1.tex' positional argument and
             'tex' target, if available. Otherwise, a general positional argument
             is returned
-        default : object, optional
+        default : Optional[Any]]
             If the positional argument is not found, return this value instead.
-        sep : str, optional
+        sep : Optional[str]
             The separator character (or string) to use to separate the key
             and target.
 
         Returns
         -------
-        value
+        value : Any
             The retrieved positional argument.
 
         Examples
@@ -213,20 +207,20 @@ class Attributes(dict):
         ----------
         attr : str
             The key of the attribute to retrieve.
-        target : str, optional
+        target : Optional[str]
             If specified, search for a key for the given target.
             ex: class.html with be returned for the 'class' key and 'html'
             target, if available, otherwise, the entry for 'class' will be
             returned.
-        default : object, optional
+        default : Optional[Any]
             If the key is not found, return this value instead.
-        sep : str, optional
+        sep : Optional[str]
             The separator character (or string) to use to separate the key
             and target.
 
         Returns
         -------
-        value
+        value : Any
             The retrieved value.
             If the entry is a positional attribute, PositionalValue will be
             returned.
@@ -264,23 +258,23 @@ class Attributes(dict):
 
         Parameters
         ----------
-        attr : str or PositionalValue (type)
+        attr : Union[str, :class:`PositionalValue <.PositionalValue>`]
             The key of the attribute to retrieve or the PositionalValue to
             retrieve.
-        target : str, optional
+        target : Optional[str]
             If specified, search for a key for the given target.
             ex: class.html with be returned for the 'class' key and 'html'
             target, if available, otherwise, the entry for 'class' will be
             returned.
-        default : object, optional
+        default : Optional[Any]
             If the key is not found, return this value instead.
-        sep : str, optional
+        sep : Optional[str]
             The separator character (or string) to use to separate the key
             and target.
 
         Returns
         -------
-        value
+        value : Any
             The retrieved value.
             If the entry is a positional attribute, PositionalValue will be
             returned.
@@ -325,27 +319,27 @@ class Attributes(dict):
 
         Parameters
         ----------
-        attr : str or PositionalValue
+        attr : Union[str, :class:`PositionalValue <.PositionalValue>`]
             The key of the entry to retrieve
-        value_type : type, optional
+        value_type : Optional[Type]
             The type of value returned.
-        target : str, optional
+        target : Optional[str]
             If specified, search for a key for the given target.
             ex: class.html with be returned for the 'class' key and 'html'
             target, if available, otherwise, the entry for 'class' will be
             returned.
-        default : object, optional
+        default : Optional[Any]
             If the key is not found, return this value instead.
-        sep : str, optional
+        sep : Optional[str]
             The separator character (or string) to use to separate the key
             and target.
-        raise_error : bool, optional
+        raise_error : Optional[bool]
             If True and if the key is in this dict, but the type cannot be
             converted, raise and AttributeFormatError.
 
         Returns
         -------
-        formatted_value
+        formatted_value : Any
             The value in the specified value_type.
         """
         value = self.get(attr=attr, target=target, default=_MissingAttribute,
@@ -409,9 +403,9 @@ class Attributes(dict):
 
         Parameters
         ----------
-        attr : string
+        attr : str
             The attr (key) for the entry to set or append.
-        value : object, optional
+        value : Optional[Any]
             The value to set or append. If not specified, the attribute will
             be added as a positional argument
         """
@@ -438,20 +432,21 @@ class Attributes(dict):
 
         Parameters
         ----------
-        attrs : None, or iterable of str and PositionalValues
+        attrs : Optional[List[Union[str, :class:`PositionalValue \
+            <.PositionalValue>`]]]
             Filter keys. If specified, only entries that match one of these
             keys will be returned.
-        target : str or None, optional
+        target : Optional[str]
             Filter targets. If specified, only entries general entries will
             be returned unless a target-specific entry is present, in which
             case it will be returned.
             For example, if entries for 'class' and 'class.tex' exist and
             target='tex', then the 'class.tex' entry will be returned as
             'class'. If target is None, then the 'class' entry will be returned.
-        sep : str, optional
+        sep : Optional[str]
             The separator character (or string) to use to separate the key
             and target.
-        sort_by_attrs: bool, optional
+        sort_by_attrs : Optional[bool]
             If True, the returned attributes dict will have keys sorted in the
             same order as the attrs passed. Otherwise, the returned attributes
             dict will be sorted with keys in the same order as this attributes
@@ -459,7 +454,7 @@ class Attributes(dict):
 
         Returns
         -------
-        attributes : :obj:`disseminate.attributes.Attributes`
+        attributes : :obj:`Attributes <.attributes.Attributes>`
             A filtered attributes dict.
 
         Examples
@@ -539,19 +534,20 @@ class Attributes(dict):
 
         Parameters
         ----------
-        attrs : iterable of str or None
+        attrs : Optional[List[Union[str, :class:`PositionalValue \
+            <.PositionalValue>`]]]
             Exclude attrs. If specified, entries that match one of these
             attrs will not be returned.
-        target : str or None, optional
+        target : Optional[str]
             If specified, target-specific entries will be excluded for the
             given target.
-        sep : str, optional
+        sep : Optional[str]
             The separator character (or string) to use to separate the key
             and target.
 
         Returns
         -------
-        attributes : :obj:`disseminate.attributes.Attributes`
+        attributes : :obj:`Attributes <.attributes.Attributes>`
             A filtered attributes dict.
 
         Examples
