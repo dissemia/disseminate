@@ -92,6 +92,8 @@ class BaseContext(dict):
     do_not_inherit = {'_initial_values', '_parent_context'}
     exclude_from_reset = {'_parent_context', '_initial_values'}
 
+    _do_not_inherit = None
+
     def __init__(self, *args, **kwargs):
         super().__init__()
 
@@ -161,8 +163,7 @@ class BaseContext(dict):
             parent = self.parent_context
 
             # Get all do_not_inherit values for this class and child classes
-            do_not_inherit = all_attributes_values(cls=self.__class__,
-                                                   attribute='do_not_inherit')
+            do_not_inherit = self.find_do_not_inherit()
 
             if (key not in do_not_inherit and parent is not None and
                key in parent):
@@ -188,29 +189,24 @@ class BaseContext(dict):
         keys : set
             A set of keys for the context dict.
         """
-        # Get the keys for this context dict without hidden keys--i.e. those
-        # that start with an underscore '_'.
-        if isinstance(hidden_prefix, str):
-            keys = {k for k in super().keys()
-                    if not k.startswith(hidden_prefix)}
-        else:
-            keys = super().keys()
+        keys = {k for k in super().keys() if not isinstance(k, str) or
+                not k.startswith(hidden_prefix)}
 
         if not only_self:
-            # Try to get the keys from the parent context
+            # If not only self, get the keys from the parent context as well.
+            # This method should remove hidden keys as well if the parent
+            # context is a BaseContext.
             parent = self.parent_context
+            other_keys = parent.keys() if isinstance(parent, dict) else set()
 
-            # Get all do_not_inherit values for this class and child classes
-            do_not_inherit = all_attributes_values(cls=self.__class__,
-                                                   attribute='do_not_inherit')
+            # Do not include keys that should not be inherited
+            do_not_inherit = self.find_do_not_inherit()
+            other_keys -= do_not_inherit
 
-            # dereference the parent, if needed, and add its keys (excluding
-            # those that shouldn't be inherited)
-            if parent is not None:
-                keys |= (parent.all_keys() - do_not_inherit
-                         if hasattr(parent, 'all_keys') else
-                         parent.keys() - do_not_inherit)
+            # Add the remaining keys to the key listing
+            keys |= other_keys
 
+        # Return keys and remove hidden keys
         return keys
 
     def values(self, only_self=False, hidden_prefix='_'):
@@ -275,6 +271,14 @@ class BaseContext(dict):
             The number of entries in the context dict.
         """
         return len(self.keys(only_self=only_self, hidden_prefix=hidden_prefix))
+
+    @classmethod
+    def find_do_not_inherit(cls):
+        if cls.__dict__.get('_do_not_inherit') is None:
+            do_not_inherit = all_attributes_values(cls=cls,
+                                                   attribute='do_not_inherit')
+            cls._do_not_inherit = set(do_not_inherit)
+        return cls._do_not_inherit
 
     @property
     def parent_context(self):
