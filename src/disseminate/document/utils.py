@@ -3,6 +3,7 @@ from datetime import datetime
 
 from .document import Document
 from ..formats import html_tag
+from ..paths import SourcePath
 from .. import settings
 
 
@@ -21,7 +22,7 @@ def find_project_paths(path='', document_extension=settings.document_extension):
 
     Returns
     -------
-    project_paths : List[:obj:`pathlib.Path`]
+    project_paths : List[:obj:`SourcePath <.paths.SourcePath>`]
         A list of project paths paths.
     """
     # expand the user for the subpath directory
@@ -31,24 +32,23 @@ def find_project_paths(path='', document_extension=settings.document_extension):
     # and remove the filenames to retain the unique paths. Convert the paths
     # to strings so that they can be sorted more easily.
     glob_pattern = pathlib.Path('**', '*' + document_extension)
-    paths = {str(p.parent) for p in path.glob(str(glob_pattern))}
+    paths = {p.parent for p in path.glob(str(glob_pattern))}
 
-    # Sort the paths by length so that root paths come up first. If two strings
-    # have the same length, then they will be sorted alphabetically
-    sorted_paths = sorted(paths, key=lambda i: (len(i), i), reverse=True)
-
-    # Remove all entries that are subdirectories of the root project directories
+    # Only keep entries that are basepaths
     basepaths = set()
 
-    while sorted_paths:
-        basepath = sorted_paths.pop()
-        basepaths.add(basepath)
+    for path in paths:
+        # See if its a base path based on whether any of its parent is already
+        # located in the paths
+        parents = path.parents
+        if any(parent in paths for parent in parents):
+            continue
 
-        # Remove subdirectory
-        sorted_paths = [i for i in sorted_paths if not i.startswith(basepath)]
+        # The basepath is unique; add it to basepaths
+        basepaths.add(path)
 
     # Return the unique root paths as pathlib.Path objects.
-    return [pathlib.Path(basepath) for basepath in basepaths]
+    return [SourcePath(project_root=basepath) for basepath in basepaths]
 
 
 def load_root_documents(path='',
@@ -65,9 +65,9 @@ def load_root_documents(path='',
     Returns
     -------
     root_documents : List[:obj:`Document <.Document>`]
-        A list of document objects.
+        A list containing root documents.
     """
-    documents = list()
+    documents = []
 
     # Get the project paths and find the disseminate files in the root of these
     # paths
@@ -75,15 +75,12 @@ def load_root_documents(path='',
                                        document_extension=document_extension)
 
     for project_path in project_paths:
-        # Find the paths for the root documents (non-recursive)
+        # Find the src_filepaths for the root documents (non-recursive)
         glob_pattern = pathlib.Path('*' + document_extension)
-        src_filepaths = project_path.glob(str(glob_pattern))
+        src_filepaths = list(project_path.glob(str(glob_pattern)))
 
-        # Load the documents. Note that recursive references in documents
-        # will raise a DuplicateLabel error
-        root_documents = [Document(src_filepath=s) for s in src_filepaths]
-
-        documents += root_documents
+        for src_filepath in src_filepaths:
+            documents.append(Document(str(src_filepath)))
 
     return documents
 
@@ -152,8 +149,9 @@ def render_tree_html(documents, level=1):
         context = document.context
 
         # Column 1: the document number
+        tree_num = "{}-{}".format(number, level)
         num = html_tag('td', attributes="class=num",
-                       formatted_content=str(number), level=level + 1)
+                       formatted_content=tree_num, level=level + 1)
 
         # Column 2: the source file
         src_filepath = document.src_filepath
@@ -165,8 +163,12 @@ def render_tree_html(documents, level=1):
 
         # Column 3: target files
         targets = list(document.targets.keys())
-        tgt_links = [document.target_filepath(target).get_url(context)
+
+        # Get the target file links. By not passing a context to get_url, the
+        # urls will be listed relative to the current directory.
+        tgt_links = [document.target_filepath(target).get_url()
                      for target in targets]
+
         a_tags = [html_tag('a', attributes='href=' + link,
                            formatted_content=target.strip('.'), level=level + 1)
                   for link, target in zip(tgt_links, targets)]
@@ -179,7 +181,8 @@ def render_tree_html(documents, level=1):
                 new_a_tags.append(', ')
             new_a_tags.append(a_tags[-1])
             a_tags = new_a_tags
-        a_tags = ['('] + a_tags + [')']
+        if len(a_tags) > 0:
+            a_tags = ['('] + a_tags + [')']
 
         tgt = html_tag('td', attributes='class=tgt', formatted_content=a_tags,
                        level=level + 1)

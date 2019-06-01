@@ -34,6 +34,15 @@ def test_find_project_paths():
     assert Path('tests/document/example5/sub2') not in project_paths
     assert Path('tests/document/example5/sub3') not in project_paths
 
+    # Test example9. It has a main.dm in the 'tests/document/example9' directory
+    # and a subfile in 'tests/document/example9/sub/sub/sub.dm'. The basepath
+    # 'tests/document/example9' should be a project path, but
+    # 'tests/document/example9/sub' or 'tests/document/example9/sub/sub' should
+    # not
+    assert Path('tests/document/example9') in project_paths
+    assert Path('tests/document/example9/sub') not in project_paths
+    assert Path('tests/document/example9/sub/sub') not in project_paths
+
 
 def test_load_root_documents(tmpdir):
     """Test the load_root_documents function"""
@@ -209,7 +218,7 @@ def test_render_tree_html():
       </tr>
     </thead>
     <tr class="level-1">
-      <td class="num">1</td>
+      <td class="num">1-1</td>
       <td class="src">
         <a href="/tests/document/example6/src/file1.dm">file1.dm</a>
       </td>
@@ -217,7 +226,7 @@ def test_render_tree_html():
       <td class="date">Jan 19, 2019 at 10:14AM</td>
     </tr>
     <tr class="level-2">
-      <td class="num">1</td>
+      <td class="num">1-2</td>
       <td class="src">
         <a href="/tests/document/example6/src/file2.dm">file2.dm</a>
       </td>

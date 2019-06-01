@@ -8,7 +8,7 @@ import os.path
 
 from .processors import print_processors
 from .checkers import print_checkers
-from ..server import run
+from ..server import run_server
 from ..tags.processors import ProcessTag
 from ..label_manager.processors import ProcessLabels
 from ..document.processors import ProcessContext
@@ -136,4 +136,5 @@ def main():
         pass
 
     if args.command == 'serve':
-        run(in_directory=args.i, out_directory=args.o, port=args.p)
+        run_server()
+        #run(in_directory=args.i, out_directory=args.o, port=args.p)

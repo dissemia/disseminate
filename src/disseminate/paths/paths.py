@@ -132,7 +132,7 @@ class TargetPath(object):
         url = None
 
         # See if a relative url is requested and get that if it is
-        if context is not None and context.get('relative_links', False):
+        if context is not None and context.get('relative_links', True):
             url = self._get_relative_url(context)
 
         # If a relative url could not be produced or one was not wanted, get

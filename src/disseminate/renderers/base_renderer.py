@@ -160,8 +160,8 @@ class BaseRenderer(object):
     def _set_context_paths(self, context):
         """Add the paths for the used templates in the context's paths entry,
         if available."""
-        assert context.is_valid('paths')
-        context_paths = context['paths']
+        context_paths = (context['paths']
+                         if context is not None and 'paths' in context else [])
 
         try:
             template_filepaths = self.template_filepaths()
