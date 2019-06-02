@@ -51,6 +51,37 @@ def find_project_paths(path='', document_extension=settings.document_extension):
     return [SourcePath(project_root=basepath) for basepath in basepaths]
 
 
+def find_root_src_filepaths(path='',
+                            document_extension=settings.document_extension):
+    """Find the src_filepaths for root documents in the given path.
+
+    Parameters
+    ----------
+    path : Optional[Union[:obj:`pathlib.Path`, str]]
+        The path to search. By default, it is the current directory.
+    document_extension : Optional[str]
+        The source markup document extension. ex: '.dm'
+
+    Returns
+    -------
+    root_src_filepaths : List[:obj:`patlib.Path`]
+        A list containing root document src_filepaths.
+    """
+    src_filepaths = []
+
+    # Get the project paths and find the disseminate files in the root of these
+    # paths
+    project_paths = find_project_paths(path=path,
+                                       document_extension=document_extension)
+
+    for project_path in project_paths:
+        # Find the src_filepaths for the root documents (non-recursive)
+        glob_pattern = pathlib.Path('*' + document_extension)
+        src_filepaths += list(project_path.glob(str(glob_pattern)))
+
+    return src_filepaths
+
+
 def load_root_documents(path='',
                         document_extension=settings.document_extension):
     """Load the root documents from the project paths for the given path.
@@ -67,22 +98,9 @@ def load_root_documents(path='',
     root_documents : List[:obj:`Document <.Document>`]
         A list containing root documents.
     """
-    documents = []
-
-    # Get the project paths and find the disseminate files in the root of these
-    # paths
-    project_paths = find_project_paths(path=path,
-                                       document_extension=document_extension)
-
-    for project_path in project_paths:
-        # Find the src_filepaths for the root documents (non-recursive)
-        glob_pattern = pathlib.Path('*' + document_extension)
-        src_filepaths = list(project_path.glob(str(glob_pattern)))
-
-        for src_filepath in src_filepaths:
-            documents.append(Document(str(src_filepath)))
-
-    return documents
+    return [Document(str(src_filepath)) for src_filepath in
+            find_root_src_filepaths(path=path,
+                                    document_extension=document_extension)]
 
 
 def translate_path(path, documents):

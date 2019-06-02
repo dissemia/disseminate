@@ -1,18 +1,13 @@
 """
 Function to render the project tree.
 """
-from pathlib import Path
-from os.path import relpath
-
 from bottle import get, jinja2_view, TEMPLATE_PATH
 
-from .projects import load_projects
+from .projects import load_projects, template_path
 from ..checkers import Checker, All, Any, Optional
 from ..document.utils import render_tree_html
 
-# Get the path for the templates directory and add it to the bottle
-# TEMPLATE_PATH
-template_path = relpath(Path(__file__).parent.parent / 'templates', '')
+
 TEMPLATE_PATH.append(str(template_path))
 
 
@@ -20,7 +15,7 @@ TEMPLATE_PATH.append(str(template_path))
 
 @get('/')
 @get('/index.html')
-@jinja2_view('server/tree.html')
+@jinja2_view('tree.html')
 def render_tree():
     # Get the documents
     docs = load_projects()
@@ -80,7 +75,7 @@ def checker_to_dict(item, required=True, level=1):
 
 
 @get('/check.html')
-@jinja2_view('server/checkers.html')
+@jinja2_view('checkers.html')
 def render_checkers():
     # Get the checkers
     checker_subclses = Checker.checker_subclasses()
