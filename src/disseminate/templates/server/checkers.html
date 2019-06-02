@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Checker Status</title>
+  <meta name="description" content="Dependency Checks">
+  <meta name="author" content="Disseminate">
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato" />
+  <style>
+    body {
+      font-family: Lato, Verdana, sans-serif;
+      font-size: 12pt;
+      padding: 1.0rem 3.0rem;
+      color: #555;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      padding-top: 7px;
+    }
+
+    p {
+      padding: 0.5rem;
+      font-size: 17px;
+      color: #888;
+    }
+
+    li {
+      border-bottom: 1px solid #eee;
+      padding: 0.2rem 0;
+    }
+
+    ol ~ ol {
+      margin-bottom: 1rem;
+    }
+
+    .checkers {
+      padding-right: 30px;
+      color: #808080;
+    }
+
+    .level-1 {
+      color:#555;
+    }
+
+    .status {
+      float: right;
+    }
+
+    .status.ok {
+      color: #068406;
+    }
+
+    .status.missing {
+      color: #a9b51f;
+    }
+
+    .status.fail {
+      color: #e45d5d;
+    }
+
+    .status.unknown {
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+{%- macro recursetree(n) %}
+  <ol>
+    {%- for checker in n %}
+      <li class="level-{{ checker.level }}">
+        <span class="msg">{{ checker.msg }}</span>
+        <span class="status {{checker.status}}">{{ checker.status }}</span>
+      </li>
+    {%- if checker.subcheckers -%}
+      {{ recursetree(checker.subcheckers) }}
+    {%- endif %}
+    {%- endfor %}
+  </ol>
+{%- endmacro %}
+<div class="content">
+  <h1>Dependency Checks</h1>
+  <div class="checkers">
+    {{ recursetree(checkers) }}
+  </div>
+</div>
+</body>
+</html>

@@ -136,5 +136,5 @@ def main():
         pass
 
     if args.command == 'serve':
-        run_server()
-        #run(in_directory=args.i, out_directory=args.o, port=args.p)
+        run_server(in_directory=args.i, out_directory=args.o,
+                   port=args.p)

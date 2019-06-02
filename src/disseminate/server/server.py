@@ -7,7 +7,7 @@ from beaker.middleware import SessionMiddleware
 from .. import settings
 
 
-def run_server(in_directory='.', port=settings.default_port):
+def run_server(in_directory='.', out_directory='.', port=settings.default_port):
     # Setup the bottle app
     app = bottle.app()
     app.config['in_directory'] = in_directory
