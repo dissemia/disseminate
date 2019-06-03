@@ -24,6 +24,7 @@ def tree_to_dict(docs, level=1):
         # Get metainformation and information on the source file
         d['title'] = doc.title
         d['src_filepath'] = doc.src_filepath
+        d['project_root'] = doc.project_root
 
         # Get information on the targets
         targets = list(doc.targets.keys())  # ex: ['.html', '.pdf']
