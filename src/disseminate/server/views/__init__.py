@@ -6,3 +6,4 @@ TEMPLATE_PATH.append(str(template_path))
 
 from .tree import render_tree
 from .checker import render_checkers
+from .processors import render_processors

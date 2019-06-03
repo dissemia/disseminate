@@ -52,6 +52,7 @@ def tree_to_dict(docs, level=1):
 
 @get('/')
 @get('/index.html')
+@get('/tree.html')
 @jinja2_view('tree.html')
 def render_tree():
     # Get the documents

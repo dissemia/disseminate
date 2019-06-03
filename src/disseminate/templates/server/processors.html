@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Disseminate Processor Listing</title>
+  <meta name="description" content="Disseminate Processor Listing">
+  <meta name="author" content="Disseminate">
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato" />
+  <link rel="stylesheet" type="text/css" href="/media/css/base.css">
+  <link rel="stylesheet" type="text/css" href="/media/css/listing.css">
+</head>
+{%- macro recursetree(n) %}
+  <ol>
+    {%- for processor in n %}
+      <li class="level-{{ processor.level }}">
+        <span class="name">{{ processor.name }}</span>
+        {%- if not processor.isabstract -%}
+        <div class="sub-listing" title="Description">{{ processor.short_desc }}</div>
+        <div class="sub-listing" title="Module">{{ processor.module }}</div>
+        <div class="sub-listing" title="Order">{{ processor.order }}</div>
+        {%- endif %}
+      </li>
+    {%- if processor.subprocessors -%}
+      {{ recursetree(processor.subprocessors) }}
+    {%- endif %}
+    {%- endfor %}
+  </ol>
+{%- endmacro %}
+<body>
+{% include "menu.html" %}
+<div class="content">
+  <h1>Processor Listings</h1>
+  <div class="listing">
+    {{ recursetree(processors) }}
+  </div>
+</div>
+</body>
+</html>
