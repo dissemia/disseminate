@@ -33,6 +33,11 @@ table a {
   color: #808080;
 }
 
+caption {
+  text-align: left;
+  padding-bottom: 1em;
+}
+
 thead {
   background-color: #efefef;
 }

@@ -2,12 +2,11 @@
 Test the Document utilities functions.
 """
 from pathlib import Path
-from datetime import datetime
 
 from disseminate.document import Document
 from disseminate.paths import SourcePath
 from disseminate.document.utils import (find_project_paths, load_root_documents,
-                                        render_tree_html, translate_path)
+                                        translate_path)
 from disseminate.document.document_context import DocumentContext
 from disseminate.utils.tests import strip_leading_space
 
@@ -175,65 +174,3 @@ def test_translate_path(tmpdir):
             target_root5 / 'html' / 'sub2' / 'subsub2' / 'index.html')
     assert (translate_path('/html/sub3/index.html', docs) ==
             target_root5 / 'html' / 'sub3' / 'index.html')
-
-
-# TODO: Test with a larger source directory tree
-def test_render_tree_html():
-    """Test the render_tree_html function."""
-
-    # Load documents from example6. The example6 directory has 2 files in the
-    # 'src' directory: file1.dm, which includes file2.dm, and file2.dm. We will
-    # only use file1.dm
-    docs = load_root_documents('tests/document/example6')
-
-    # Render the html for an empty docs list
-    html = render_tree_html(docs[0:0])
-    assert html == ''
-
-    # Set a default base_url, and disable relative links
-    for doc in docs:
-        doc.context['base_url'] = '/{target}/{subpath}'
-        doc.context['relative_links'] = False
-
-    # Get the modification times for the source documents
-    mtime1 = docs[0].src_filepath.stat().st_mtime
-    datetime1 = datetime.fromtimestamp(mtime1)
-    mtime_str1 = datetime1.strftime("%b %d, %Y at %I:%M%p").replace(" 0", " ")
-
-    mtime2 = docs[1].src_filepath.stat().st_mtime
-    datetime2 = datetime.fromtimestamp(mtime2)
-    mtime_str2 = datetime2.strftime("%b %d, %Y at %I:%M%p").replace(" 0", " ")
-
-    # Render the html for file1.dm
-    html = render_tree_html(docs[0:1])
-    key = """<div class="tableset">
-  <table id="index" class="tablesorter">
-    <div class="caption-title"><strong>Project Title:</strong> file1</div>
-    <thead>
-      <tr>
-        <th>num</th>
-        <th>source</th>
-        <th>targets</th>
-        <th>last saved</th>
-      </tr>
-    </thead>
-    <tr class="level-1">
-      <td class="num">1-1</td>
-      <td class="src">
-        <a href="/tests/document/example6/src/file1.dm">file1.dm</a>
-      </td>
-      <td class="tgt">(<a href="/html/file1.html">html</a>)</td>
-      <td class="date">Jan 19, 2019 at 10:14AM</td>
-    </tr>
-    <tr class="level-2">
-      <td class="num">1-2</td>
-      <td class="src">
-        <a href="/tests/document/example6/src/file2.dm">file2.dm</a>
-      </td>
-      <td class="tgt">(<a href="/html/file2.html">html</a>)</td>
-      <td class="date">Jan 19, 2019 at 10:14AM</td>
-    </tr>
-  </table>
-</div>
-""".format(mtime1=mtime_str1, mtime2=mtime_str2)
-    assert html == key

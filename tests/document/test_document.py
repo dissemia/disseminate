@@ -365,9 +365,13 @@ def test_document_custom_template(tmpdir, wait):
     in_file = project_root / "index.dm"
     out_file = tmpdir / 'html' / "index.html"
 
+    # Create a mock template
+    template = project_root / "mytemplate.html"
+    template.write_text("""This is my template""")
+
     markup = """
     ---
-    template: server/tree
+    template: mytemplate
     targets: html
     ---
     """
@@ -376,17 +380,17 @@ def test_document_custom_template(tmpdir, wait):
     # Make document
     doc = Document(in_file)
     doc.render()
-    assert "Disseminate Project Index" in out_file.read_text()
+    assert "This is my template" in out_file.read_text()
 
     # Write to the file again, but don't include the template. This time it
-    # shouldn't contain the text "Disseminate Project Index"
+    # shouldn't contain the text "This is my template"
     wait()  # sleep time offset needed for different mtimes
     in_file.write_text("test")
 
     target_filepath = doc.targets['.html']
     assert doc.render_required(target_filepath=target_filepath)
     doc.render()
-    assert "Disseminate Project Index" not in out_file.read_text()
+    assert "This is my template" not in out_file.read_text()
 
 
 def test_document_template_updates(tmpdir, wait):

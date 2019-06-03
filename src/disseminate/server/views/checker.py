@@ -1,31 +1,13 @@
 """
-Function to render the project tree.
+Bottle view for checkers.
 """
-from bottle import get, jinja2_view, TEMPLATE_PATH
+from bottle import get, jinja2_view
 
-from .projects import load_projects, template_path
-from ..checkers import Checker, All, Any, Optional
-from ..document.utils import render_tree_html
-
-
-TEMPLATE_PATH.append(str(template_path))
-
-
-## View fpr tree.html
-
-@get('/')
-@get('/index.html')
-@jinja2_view('tree.html')
-def render_tree():
-    # Get the documents
-    docs = load_projects()
-    return {'body': render_tree_html(docs)}
-
-
-# View for check.html
+from ...checkers import Checker, All, Any, Optional
 
 
 def checker_to_dict(item, required=True, level=1):
+    """Convert checkers into a list of dicts suitable for rendering the view."""
     d = dict()
 
     d['level'] = level
