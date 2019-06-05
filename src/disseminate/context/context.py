@@ -85,12 +85,13 @@ class BaseContext(dict):
         with the keys() function.
     """
 
-    __slots__ = ('__weakref__',)  # A __dict__ attribute would be redundant
+    # A __dict__ attribute would be redundant
+    __slots__ = ('__weakref__', '_parent_context', 'initial_values')
 
     validation_types = dict()
 
-    do_not_inherit = {'_initial_values', '_parent_context'}
-    exclude_from_reset = {'_parent_context', '_initial_values'}
+    do_not_inherit = set()
+    exclude_from_reset = set()
 
     _do_not_inherit = None
 
@@ -113,7 +114,7 @@ class BaseContext(dict):
 
         # Store the initial values
         initial_values = dict(*args, **kwargs)
-        self['_initial_values'] = initial_values
+        self.initial_values = initial_values
 
         # Reset the dict with the default_context and parent_context values
         self.reset()
@@ -148,11 +149,9 @@ class BaseContext(dict):
             result[key] = self[key]
 
         # Copy over the parent_context and initial_values
-        for key in ['_initial_values', '_parent_context']:
-            try:
-                result[key] = self[key]
-            except KeyError:
-                continue
+        result.parent_context = self.parent_context
+        result.initial_values = self.initial_values
+
         return result
 
     def get(self, key, default=None):
@@ -171,7 +170,7 @@ class BaseContext(dict):
                 return val
         return default
 
-    def keys(self, only_self=False, hidden_prefix='_'):
+    def keys(self, only_self=False):
         """The keys for this context dict.
 
         Parameters
@@ -180,17 +179,13 @@ class BaseContext(dict):
             If True, only keys for entries in this context dict will be
             returned. Otherwise, keys for this context dict and all parent
             context dicts will be returned.
-        hidden_prefix : Optional[str]
-            If specified, keys that start with this character or these
-            characters will be considered hidden and not returned.
 
         Returns
         -------
         keys : set
             A set of keys for the context dict.
         """
-        keys = {k for k in super().keys() if not isinstance(k, str) or
-                not k.startswith(hidden_prefix)}
+        keys = super().keys()
 
         if not only_self:
             # If not only self, get the keys from the parent context as well.
@@ -209,7 +204,7 @@ class BaseContext(dict):
         # Return keys and remove hidden keys
         return keys
 
-    def values(self, only_self=False, hidden_prefix='_'):
+    def values(self, only_self=False):
         """The values for this context dict.
 
         Parameters
@@ -218,9 +213,6 @@ class BaseContext(dict):
             If True, only values for entries in this context dict will be
             returned. Otherwise, values for this context dict and all parent
             context dicts will be returned.
-        hidden_prefix : Optional[str]
-            If specified, keys that start with this character or these
-            characters will be considered hidden and not returned.
 
         Returns
         -------
@@ -228,10 +220,10 @@ class BaseContext(dict):
             A generator of values for the context dict.
         """
         # Get the keys for this context dict and for its parent
-        keys = self.keys(only_self=only_self, hidden_prefix=hidden_prefix)
+        keys = self.keys(only_self=only_self)
         return (self[k] for k in keys)
 
-    def items(self, only_self=False, hidden_prefix='_'):
+    def items(self, only_self=False):
         """The items for this context dict.
 
         Parameters
@@ -240,19 +232,16 @@ class BaseContext(dict):
             If True, only items for entries in this context dict will be
             returned. Otherwise, items for this context dict and all parent
             context dicts will be returned.
-        hidden_prefix : Optional[str]
-            If specified, keys that start with this character or these
-            characters will be considered hidden and not returned.
 
         Returns
         -------
         items : generator
             A generator of items for the context dict.
         """
-        keys = self.keys(only_self=only_self, hidden_prefix=hidden_prefix)
+        keys = self.keys(only_self=only_self)
         return ((k, self[k]) for k in keys)
 
-    def len(self, only_self=False, hidden_prefix='_'):
+    def len(self, only_self=False):
         """The length (number of entries) in this context dict.
 
         Parameters
@@ -261,16 +250,13 @@ class BaseContext(dict):
             If True, the number of entries only in this context dict will be
             returned. Otherwise, the number of entries this context dict
             and all parent context dicts will be returned.
-        hidden_prefix : Optional[str]
-            If specified, keys that start with this character or these
-            characters will be considered hidden and not included in the count.
 
         Returns
         -------
         length : int
             The number of entries in the context dict.
         """
-        return len(self.keys(only_self=only_self, hidden_prefix=hidden_prefix))
+        return len(self.keys(only_self=only_self))
 
     @classmethod
     def find_do_not_inherit(cls):
@@ -284,7 +270,7 @@ class BaseContext(dict):
     def parent_context(self):
         """The parent context."""
         # Try to get the keys from the parent context
-        parent = super().get('_parent_context', None)
+        parent = getattr(self, '_parent_context', None)
 
         # dereference the parent, if needed
         if parent is not None:
@@ -296,9 +282,9 @@ class BaseContext(dict):
     def parent_context(self, parent):
         # Set the parent_context in self's dict. Create a weakref, if able
         # to do so, because this context does not own the parent_context
-        self['_parent_context'] = (ref(parent)
-                                   if hasattr(parent, '__weakref__') else
-                                   parent)
+        self._parent_context = (ref(parent)
+                                if hasattr(parent, '__weakref__') else
+                                parent)
 
     def load(self, string, strip_header=True):
         """Load context entries from a string.
@@ -385,7 +371,7 @@ class BaseContext(dict):
             del self[k]
 
         # Copy in the initial value arguments.
-        self.update(self['_initial_values'])
+        self.update(self.initial_values)
 
     def is_valid(self, *keys, must_exist=True):
         """Validate the entries in the context dict.

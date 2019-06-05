@@ -359,12 +359,7 @@ def test_base_context_match_update(a_in_b):
     assert a_in_b({'paths': ['three', 'one', 'two']}, context)
 
     # The initial value mutables have not changed
-    assert context['_initial_values'] == {'paths': ['one', 'two']}
-
-    # Hidden entries are not touched
-    context = BaseContext(a=1)
-    context.matched_update('_initial_values:\n  b: 2')
-    assert context['_initial_values'] == {'a': 1}
+    assert context.initial_values == {'paths': ['one', 'two']}
 
 
 def test_base_context_match_update_with_inheritance(context_cls):
@@ -417,10 +412,10 @@ def test_context_copy(context_cls):
 
     # Check the parent_context and initial_valuues
     assert id(child.parent_context) == id(parent)
-    assert child['_parent_context'] == child_cp['_parent_context']
+    assert child._parent_context == child_cp._parent_context
     assert id(child_cp.parent_context) == id(parent)
 
-    assert child['_initial_values'] == child_cp['_initial_values']
+    assert child.initial_values == child_cp.initial_values
 
     assert child.keys(only_self=True) == child_cp.keys(only_self=True)
     assert child.keys() == child_cp.keys()
