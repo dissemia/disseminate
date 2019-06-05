@@ -1,8 +1,10 @@
 """
-Bottle view for checkers.
+View for checkers.
 """
-from bottle import get, jinja2_view
+from flask import render_template, abort
+from jinja2 import TemplateNotFound
 
+from .blueprints import editor
 from ...checkers import Checker, All, Any, Optional
 
 
@@ -56,8 +58,7 @@ def checker_to_dict(item, required=True, level=1):
     return d
 
 
-@get('/check.html')
-@jinja2_view('checkers.html')
+@editor.route('/check.html')
 def render_checkers():
     # Get the checkers
     checker_subclses = Checker.checker_subclasses()
@@ -66,5 +67,10 @@ def render_checkers():
     # run the checks
     [checker.check() for checker in checkers]
 
-    return {'checkers': map(checker_to_dict, checkers)}
+    # Convert the checkers to a list of dicts
+    checkers = map(checker_to_dict, checkers)
 
+    try:
+        return render_template('server/checkers.html', checkers=checkers)
+    except TemplateNotFound:
+        abort(404)

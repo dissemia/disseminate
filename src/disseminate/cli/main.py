@@ -137,4 +137,4 @@ def main():
 
     if args.command == 'serve':
         run_server(in_directory=args.i, out_directory=args.o,
-                   port=args.p)
+                   port=args.p, debug=args.debug)

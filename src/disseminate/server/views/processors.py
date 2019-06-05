@@ -1,10 +1,12 @@
 """
-Bottle view for processor listing.
+View for processor listing.
 """
 from inspect import isabstract
 
-from bottle import get, jinja2_view
+from flask import render_template, abort
+from jinja2 import TemplateNotFound
 
+from .blueprints import editor
 from ...processors import ProcessorABC
 
 
@@ -48,11 +50,17 @@ def processors_to_dict(processor_clses, level=1):
     return processor_list
 
 
-@get('/processors.html')
-@jinja2_view('processors.html')
+@editor.route('/processors.html')
 def render_processors():
     # Get the immediate subclasses for the ProcessorABC
     # These are base classes for the different processor types
     processor_subclses = ProcessorABC.__subclasses__()
 
-    return {'processors': processors_to_dict(processor_subclses)}
+    # Convert the processors to a list of dicts
+    processors = processors_to_dict(processor_subclses)
+
+    try:
+        return render_template('server/processors.html',
+                               processors=processors)
+    except TemplateNotFound:
+        abort(404)

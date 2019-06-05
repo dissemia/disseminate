@@ -363,7 +363,7 @@ def test_tag_html_unsafe_tag(context_cls):
 
     context = context_cls()
 
-    # The <script> tag is excluded in settings.html_excluded
+    # 1. The <script> tag is excluded in settings.html_excluded
     # Generate a simple root tag with an invalid tag in its content
     eqn = Tag(name='script', content='<script>', attributes=None,
               context=context)
@@ -373,6 +373,14 @@ def test_tag_html_unsafe_tag(context_cls):
     assert root.html == ('<span class="root">my first'
                          '<span class=\"script\">&lt;script&gt;</span>'
                          'string</span>\n')
+
+    # 2. Test a body tag with html comments. These should be escaped.
+    body = Tag(name='body', content='<!-- My escaped text -->', attributes=None,
+               context=context)
+    assert body.html == ('<span class="body">'
+                         '&lt;!&#8211;My escaped text&#8211;&gt;'
+                         '</span>\n')
+
 
 
 def test_tag_html_nested(context_cls):

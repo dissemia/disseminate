@@ -73,8 +73,7 @@ setup(
                       'lxml',            # BSD license
                       'python-slugify',  # MIT license
                       # The following are needed for the server
-                      'bottle',          # MIT license
-                      'bottle-beaker',   # MIT license
+                      'flask',          # 3-clase BSD license
                       #'pdfCropMargins'  # GPL v3
                       ],
     extras_require={  # Optional

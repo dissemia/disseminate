@@ -1,10 +1,12 @@
 """
-Bottle view for the document listing tree.
+View for the document listing tree.
 """
 from datetime import datetime
 
-from bottle import get, jinja2_view
+from flask import render_template, abort
+from jinja2 import TemplateNotFound
 
+from .blueprints import editor
 from ..projects import load_projects
 
 
@@ -50,12 +52,14 @@ def tree_to_dict(docs, level=1):
     return doc_list
 
 
-@get('/')
-@get('/index.html')
-@get('/tree.html')
-@jinja2_view('tree.html')
+@editor.route('/')
+@editor.route('/index.html')
+@editor.route('/tree.html')
 def render_tree():
-    # Get the documents
+    # Load the documents
     docs = load_projects()
 
-    return {'docs': tree_to_dict(docs)}
+    try:
+        return render_template('server/tree.html', docs=tree_to_dict(docs))
+    except TemplateNotFound:
+        abort(404)
