@@ -56,6 +56,7 @@ def tree_to_dict(docs, level=1):
 @editor.route('/index.html')
 @editor.route('/tree.html')
 def render_tree():
+    """Render the view for the source and target document files."""
     # Load the documents
     docs = load_projects()
 

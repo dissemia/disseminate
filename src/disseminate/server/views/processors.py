@@ -52,6 +52,7 @@ def processors_to_dict(processor_clses, level=1):
 
 @editor.route('/processors.html')
 def render_processors():
+    """Render the view for the different types of processors available."""
     # Get the immediate subclasses for the ProcessorABC
     # These are base classes for the different processor types
     processor_subclses = ProcessorABC.__subclasses__()

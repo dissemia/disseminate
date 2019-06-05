@@ -60,6 +60,7 @@ def checker_to_dict(item, required=True, level=1):
 
 @editor.route('/check.html')
 def render_checkers():
+    """Render the view for software dependency checkers."""
     # Get the checkers
     checker_subclses = Checker.checker_subclasses()
     checkers = [checker_subcls() for checker_subcls in checker_subclses]

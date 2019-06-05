@@ -1,3 +1,7 @@
+"""
+Flask blueprints for rendering views.
+"""
+
 from pathlib import Path
 
 from flask import Blueprint

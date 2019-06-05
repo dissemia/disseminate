@@ -28,6 +28,8 @@ def load_projects():
         store['root_documents'] = docs
         store['target_roots'] = [doc.target_root for doc in docs]
 
+    # See if any of the docs need to be rendered
+    [doc.render() for doc in store['root_documents']]
     return store['root_documents']
 
 
