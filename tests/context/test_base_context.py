@@ -80,19 +80,13 @@ def test_base_context_inheritance(context_cls):
     assert parent.get('g') is None
 
     # test keys and len
-    assert parent.keys(only_self=True) == {'d', 'e', 'f'}
     assert parent.keys() == {'a', 'b', 'c', 'd', 'e', 'f'}
-    assert set(parent.values(only_self=True)) == {5, 6, 7}
     assert set(parent.values()) == {2, 3, 4, 5, 6, 7}
-    assert set(parent.items(only_self=True)) == {('d', 5), ('e', 6), ('f', 7)}
     assert set(parent.items()) == {('a', 2), ('b', 3), ('c', 4),
                                    ('d', 5), ('e', 6), ('f', 7)}
 
     assert all(k in parent for k in {'a', 'b', 'c', 'd', 'e', 'f'})
-
     assert len(parent) == 6
-    assert parent.len(only_self=True) == 3
-    assert parent.len() == 6
 
     # iter should return all elements
     assert dict(**parent).items() == {('a', 2), ('b', 3), ('c', 4),
@@ -115,20 +109,14 @@ def test_base_context_inheritance(context_cls):
     assert child.get('g') == 8
 
     # test keys and len
-    assert child.keys(only_self=True) == {'g'}
     assert child.keys() == {'a', 'b', 'c', 'd', 'e', 'f', 'g'}
-    assert set(child.values(only_self=True)) == {8}
     assert set(child.values()) == {2, 3, 4, 5, 6, 7, 8}
-    assert set(child.items(only_self=True)) == {('g', 8)}
     assert set(child.items()) == {('a', 2), ('b', 3), ('c', 4),
                                   ('d', 5), ('e', 6), ('f', 7),
                                   ('g', 8)}
 
     assert all(k in child for k in {'a', 'b', 'c', 'd', 'e', 'f', 'g'})
-
     assert len(child) == 7
-    assert child.len(only_self=True) == 1
-    assert child.len() == 7
 
     # iter should return all elements
     assert dict(**child).items() == {('a', 2), ('b', 3), ('c', 4),
@@ -150,11 +138,9 @@ def test_base_context_do_not_inherit(context_cls):
     # Test access to the keys. The sub_child should have access to 'b' but not
     # 'a'
     assert 'a' not in sub_child
-    assert 'a' not in sub_child.keys(only_self=True)
     assert 'a' not in sub_child.keys()
 
     assert 'b' in sub_child
-    assert 'b' not in sub_child.keys(only_self=True)
     assert 'b' in sub_child.keys()
 
     with pytest.raises(KeyError):
@@ -167,11 +153,9 @@ def test_base_context_do_not_inherit(context_cls):
     sub_child['b'] = 4
 
     assert 'a' in sub_child
-    assert 'a' in sub_child.keys(only_self=True)
     assert 'a' in sub_child.keys()
 
     assert 'b' in sub_child
-    assert 'b' in sub_child.keys(only_self=True)
     assert 'b' in sub_child.keys()
 
     assert sub_child['a'] == 3
@@ -379,26 +363,6 @@ def test_base_context_match_update_with_inheritance(context_cls):
     assert parent_context['a_list'] == [1, 2, 3]
 
 
-def test_base_context_match_update_overwrite(context_cls):
-    """Tests the recursive update method for the BaseContext with the
-    overwrite option."""
-
-    # Setup the contexts
-    parent_context = context_cls(a_list=[1, 2, 3])
-    context = context_cls(parent_context=parent_context)
-
-    # Do the match update. 'a_list' isn't already in the context (though it's
-    # in the parent_context), so it should write it in the context
-    context.matched_update({'a_list': [4, 5, 6]}, overwrite=False)
-
-    assert context['a_list'] == [4, 5, 6, 1, 2, 3]
-
-    # Now, trying to overwrite the entry will not do so with overwrite=False
-    context.matched_update({'a_list': [7, 8, 9]}, overwrite=False)
-
-    assert context['a_list'] == [4, 5, 6, 1, 2, 3]
-
-
 def test_context_copy(context_cls):
     """Test the (shallow) copying of context classes."""
 
@@ -417,8 +381,5 @@ def test_context_copy(context_cls):
 
     assert child.initial_values == child_cp.initial_values
 
-    assert child.keys(only_self=True) == child_cp.keys(only_self=True)
     assert child.keys() == child_cp.keys()
-    assert (list(sorted(child.items(only_self=True))) ==
-            list(sorted(child_cp.items(only_self=True))))
     assert list(sorted(child.items())) == list(sorted(child_cp.items()))

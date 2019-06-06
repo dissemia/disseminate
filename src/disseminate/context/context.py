@@ -5,16 +5,10 @@ import logging
 from pprint import pprint
 from weakref import ref
 
-import regex
-
-from .. import settings
+from .utils import load_from_string
 from ..utils.classes import all_attributes_values
 from ..utils.string import str_to_dict, str_to_list
-
-
-re_header_block = regex.compile(r'^[\s\n]*(-{3,})\s*\n'
-                                r'(?P<header>.+?)'
-                                r'(\n\s*\g<1>)\n?', regex.DOTALL)
+from .. import settings
 
 
 class ContextException(Exception):
@@ -31,11 +25,17 @@ class BaseContext(dict):
     The BaseContext is basically a heritable dict. It keeps track of dict
     lineage and initial values so that it can be reset to its initialized state.
 
-    Contexts, by default, access the entries from a parent_context. New entries
-    that match parent_context entry will shadow that value. However, accessing
-    parent_context entries of mutables and changing those will change the
-    parent_context's mutable values.
+    .. note:: I've tried different implementations, including a ChainMap-like
+              inheritance. The problem with these is that key lookup and
+              __contains__ lookup are relatively slow, compared to a standard
+              dict. For this reason, I've decided to implement the BaseContext
+              as a simple dict with values copied from a parent_context. The
+              downside of this approach is that it's more memory intensive, but
+              this is mitigated to a great extended from creating shallow
+              copies or weak references of parent_context entries.
 
+    Examples
+    --------
     >>> parent = BaseContext(a=1, b=[])
     >>> child = BaseContext(parent_context=parent)
     >>> child['a']
@@ -119,22 +119,6 @@ class BaseContext(dict):
         # Reset the dict with the default_context and parent_context values
         self.reset()
 
-    def __getitem__(self, key):
-        val = self.get(key)
-        if val is None:
-            raise KeyError
-        else:
-            return val
-
-    def __contains__(self, key):
-        return key in self.keys()
-
-    def __len__(self):
-        return self.len()
-
-    def __iter__(self):
-        return iter(self.keys())
-
     def __repr__(self):
         return (self.__class__.__name__ + '{' +
                 ', '.join('{}: {}'.format(k, self[k])
@@ -145,118 +129,13 @@ class BaseContext(dict):
         cls = self.__class__
         result = cls.__new__(cls)
         # Copy over the entries for this context dict
-        for key in self.keys(only_self=True):
-            result[key] = self[key]
+        result.update(self)
 
         # Copy over the parent_context and initial_values
         result.parent_context = self.parent_context
         result.initial_values = self.initial_values
 
         return result
-
-    def get(self, key, default=None):
-        try:
-            val = super().__getitem__(key)
-            return val
-        except KeyError as e:
-            parent = self.parent_context
-
-            # Get all do_not_inherit values for this class and child classes
-            do_not_inherit = self.find_do_not_inherit()
-
-            if (key not in do_not_inherit and parent is not None and
-               key in parent):
-                val = parent[key]
-                return val
-        return default
-
-    def keys(self, only_self=False):
-        """The keys for this context dict.
-
-        Parameters
-        ----------
-        only_self : Optional[bool]
-            If True, only keys for entries in this context dict will be
-            returned. Otherwise, keys for this context dict and all parent
-            context dicts will be returned.
-
-        Returns
-        -------
-        keys : set
-            A set of keys for the context dict.
-        """
-        keys = super().keys()
-
-        if not only_self:
-            # If not only self, get the keys from the parent context as well.
-            # This method should remove hidden keys as well if the parent
-            # context is a BaseContext.
-            parent = self.parent_context
-            other_keys = parent.keys() if isinstance(parent, dict) else set()
-
-            # Do not include keys that should not be inherited
-            do_not_inherit = self.find_do_not_inherit()
-            other_keys -= do_not_inherit
-
-            # Add the remaining keys to the key listing
-            keys |= other_keys
-
-        # Return keys and remove hidden keys
-        return keys
-
-    def values(self, only_self=False):
-        """The values for this context dict.
-
-        Parameters
-        ----------
-        only_self : Optional[bool]
-            If True, only values for entries in this context dict will be
-            returned. Otherwise, values for this context dict and all parent
-            context dicts will be returned.
-
-        Returns
-        -------
-        values : generator
-            A generator of values for the context dict.
-        """
-        # Get the keys for this context dict and for its parent
-        keys = self.keys(only_self=only_self)
-        return (self[k] for k in keys)
-
-    def items(self, only_self=False):
-        """The items for this context dict.
-
-        Parameters
-        ----------
-        only_self : Optional[bool]
-            If True, only items for entries in this context dict will be
-            returned. Otherwise, items for this context dict and all parent
-            context dicts will be returned.
-
-        Returns
-        -------
-        items : generator
-            A generator of items for the context dict.
-        """
-        keys = self.keys(only_self=only_self)
-        return ((k, self[k]) for k in keys)
-
-    def len(self, only_self=False):
-        """The length (number of entries) in this context dict.
-
-        Parameters
-        ----------
-        only_self : Optional[bool]
-            If True, the number of entries only in this context dict will be
-            returned. Otherwise, the number of entries this context dict
-            and all parent context dicts will be returned.
-
-        Returns
-        -------
-        length : int
-            The number of entries in the context dict.
-        """
-        return len(self.keys(only_self=only_self))
 
     @classmethod
     def find_do_not_inherit(cls):
@@ -316,21 +195,8 @@ class BaseContext(dict):
         >>> print(context)
         BaseContext{test: 1}
         """
-        # Pull out the header string, if available
-        m = re_header_block.match(string)
-        rest = None
-        if m is not None:
-            # Determine the start and end position of the header
-            start, end = m.span()
-
-            # Collect the rest of the string
-            rest = string[end:]
-
-            # Get the header part of the string
-            string = m.groupdict()['header']
-
-        # Parse the string
-        d = str_to_dict(string)
+        # Process the header block
+        rest, d = load_from_string(string)
 
         # update self
         self.matched_update(d)
@@ -361,14 +227,23 @@ class BaseContext(dict):
 
         # Get a set of keys to exclude from reset from this class and
         # subclasses, and exclude these from the keys to remove
-        attrs = all_attributes_values(cls=self.__class__,
-                                      attribute='exclude_from_reset')
-        keys_to_remove = self.keys(only_self=True) - self.exclude_from_reset
-        keys_to_remove -= set(attrs)
+        exclude = all_attributes_values(cls=self.__class__,
+                                        attribute='exclude_from_reset')
+        keys_to_remove = self.keys() - exclude
 
         # Now remove the entries that are remaining
         for k in keys_to_remove:
             del self[k]
+
+        # Copy in the parent value arguments, except those that shouldn't
+        # be inherited
+        parent_context = self.parent_context
+        if parent_context is not None:
+            do_not_inherit = self.find_do_not_inherit()
+            keys_to_inherit = parent_context.keys() - do_not_inherit
+
+            for k in keys_to_inherit:
+                self[k] = parent_context[k]
 
         # Copy in the initial value arguments.
         self.update(self.initial_values)
@@ -432,35 +307,30 @@ class BaseContext(dict):
         The matched update only updates entries for matching types and appends
         to nested mutables, like lists and dicts.
 
-        1. 'Hidden' entries with keys that start with an underscore ('_') are
-           skipped.
-        2. New entries in 'changes' are copied over 'as-is' to this dict.
-        3. Lists entries in this dict are append to from the changes dict.
+        1. New entries in 'changes' are copied over 'as-is' to this dict.
+        2. Lists entries in this dict are append to from the changes dict.
            If these are strings in the changes dict, they  are first converted
            to lists. Items are added to the front.
-        4. Dict entries in this dict are append to from the changes dict.
+        3. Dict entries in this dict are append to from the changes dict.
            If these are strings in the changes dict, they  are first converted
            to a dict. The update is recursive by applying this function to
            that dict.
-        5. Other immutables, like ints and floats, are copied over to this dict
+        4. Other immutables, like ints and floats, are copied over to this dict
            if the corresponding entry in the changes dict can be converted to
            an int or float. Otherwise, they're skipped.
-        6. String entries are copied from changes to this dict if the dict's
+        5. String entries are copied from changes to this dict if the dict's
            entry is also a string.
 
         Parameters
         ----------
         changes : Union[str, dict, :obj:`BaseContext <.context.BaseContext>`]
             The changes to include in updating this context dict.
-        overwrite : Optional[bool]
-            If True, overwrite existing entries, if they already exist.
-            If False, do not overwrite existing entries.
         """
         changes = str_to_dict(changes) if isinstance(changes, str) else changes
-        self._match_update(original=self, changes=changes, overwrite=overwrite)
+        self._match_update(original=self, changes=changes)
 
     @staticmethod
-    def _match_update(original, changes, overwrite, level=1):
+    def _match_update(original, changes, level=1):
         assert isinstance(original, dict) and isinstance(changes, dict)
 
         # Make sure the context isn't too deeply nested
@@ -470,25 +340,13 @@ class BaseContext(dict):
 
         # Get a list of keys that are only in the original (not including keys
         # from the parent_context)
-        original_self_keys = (original.keys(only_self=True)
-                              if isinstance(original, BaseContext) else
-                              original.keys())
+        original_self_keys = original.keys()
 
         for key, change_value in changes.items():
-            # Skip hidden keys
-            if key.startswith('_'):
-                continue
-
             # Copy values that are not in the original--whether the key is
             # actually in the original or in the parent_context
             if key not in original.keys():
                 original[key] = change_value
-                continue
-
-            # If the entry already exists, but not in the local (self) keys
-            # and it shouldn't be overwritten, just skip the rest of the
-            # processing
-            if key in original_self_keys and not overwrite:
                 continue
 
             # Now copy over values based on the type of the original's value
@@ -524,8 +382,7 @@ class BaseContext(dict):
                 # we can overwrite entries
                 BaseContext._match_update(original=original_copy,
                                           changes=change_value,
-                                          overwrite=True,
-                                          level=level+1)
+                                          level=level + 1)
                 original[key] = original_copy
 
             # For immutable types, like ints, covert strings into their
