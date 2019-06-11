@@ -517,7 +517,10 @@ class Document(object):
         -------
         renderer : :obj:`Type[BaseRenderer] <.BaseRenderer>`
         """
-        return self.context.get('template_renderer', None)
+        if ('renderers' in self.context and
+           'template' in self.context['renderers']):
+            return self.context['renderers']['template']
+        return None
 
     def render_required(self, target_filepath):
         """Evaluate whether a render is required to write the target file.
@@ -670,7 +673,7 @@ class Document(object):
         # Otherwise, just write the string
 
         if renderer.is_available(target=target):
-            # generate a new ouput_string. The render function adds
+            # generate a new output_string. The render function adds
             # dependencies.
             output_string = renderer.render(target=target,
                                             context=self.context)

@@ -4,15 +4,16 @@ Renderers for contexts.
 A renderer is used to convert information and ASTs stored in a context dict into
 a string for a particular target, like '.html' or '.tex'.
 """
-import pathlib
+from abc import ABC, abstractmethod
 
-from ..paths import SourcePath
+from ..utils.list import uniq
+from .. import settings
 
 #: The location of the templates directory relative to this directory
 module_templates_relpath = '../templates'
 
 
-class BaseRenderer(object):
+class BaseRenderer(ABC):
     """The Base Renderer is an ABC that defines the API for renderers.
 
     A renderer selects a template and is used to render documents, dependencies
@@ -24,126 +25,187 @@ class BaseRenderer(object):
         A dict with values for the document.
     template : str
         The name or subpath of the template.
-    targets : Union[List[str], Tuple[str]]
-        The target extensions (ex: ['.html', '.tex']) of target documents.
-        A template for each target should be available.
+        ex: 'default'
     module_only : Optional[bool]
         Only search the disseminate module for the template--i.e. do not use
         the user templates from the project directory.
     """
 
-    #: If True, only search the disseminate module for templates--not the
-    #: project directories for the project being rendered
-    module_only = None
+    _module_only = None
+    _cached = None
 
     #: The base name for the template file
     template = None
-
-    #: The targets (extensions) of the files to render to.
-    targets = None
 
     #: The order for the renderer. If multiple renderers are available,
     #: The renderer with the lower order number will be used first.
     order = 1000
 
-    _module_templates_abspath = None
+    def __init__(self, context, template, module_only=None):
+        if module_only is None:
+            module_only = settings.module_only
+        self._cached = dict()
 
-    @classmethod
-    def renderer_subclasses(cls):
-        """An ordered list of BaseRenderer subclasses."""
-        return sorted(cls.__subclasses__(), key=lambda r: r.order)
-
-    def __init__(self, context, template, targets, module_only=False):
         self.module_only = module_only
         self.template = template
-        self.targets = targets
 
-        # Set the paths for this renderer in the context
-        self._set_context_paths(context)
+        # Reset the paths for this renderer in the context. This must be done
+        # after the templates are loaded since the paths of the templates must
+        # be used in setting the context paths
+        self.add_context_paths(context=context)
+
+    @property
+    def module_only(self):
+        """Retrieve templates from the module/package only.
+
+        When True, this is a safety feature as templates aren't escaped and a
+        user-generated template could contain malicious code.
+        """
+        return (settings.module_only if self._module_only is None else
+                self._module_only)
+
+    @module_only.setter
+    def module_only(self, value):
+        self._module_only = value
+
+    def is_available(self, target):
+        """Is this renderer available for the given target?"""
+        target = target if target.startswith('.') else '.' + target
+        return target in {f.suffix for f in self.template_filepaths()}
+
+    def paths(self):
+        """The ordered list of final template paths (directories).
+
+        Returns
+        -------
+        paths : List[:obj:`pathlib.Path`]
+            The template directories.
+        """
+        if 'paths' not in self._cached:
+            filepaths = self.template_filepaths()
+            paths = []
+            for template_filepath in filepaths:
+                template_parent = template_filepath.parent
+                if template_parent.is_dir():
+                    paths.append(template_parent)
+            self._cached['paths'] = uniq(paths)
+        return self._cached['paths']
+
+    @abstractmethod
+    def template_filepaths(self):
+        """The ordered list of template files.
+
+        Returns
+        -------
+        paths : List[:obj:`pathlib.Path`]
+            The template file paths.
+        """
+        pass
+
+    def context_filepaths(self):
+        """The ordered list of additional context files from templates.
+
+        Returns
+        -------
+        paths : List[:obj:`pathlib.Path`]
+            The file paths for additional context files from templates.
+        """
+        if 'context_filepaths' not in self._cached:
+            context_files = []
+            template_filepaths = self.template_filepaths
+
+            # Construct the context filepaths from the template_filepaths
+            for filepath in template_filepaths():
+                # Construct a test context filename
+                context_filepath = (filepath.parent /
+                                    settings.template_context_filename)
+
+                # See if the test context filename exists and add it to the list
+                # of context_filepaths if it isn't in there already.
+                if (context_filepath.is_file() and
+                        context_filepath not in context_files):
+                    context_files.append(context_filepath)
+
+            self._cached['context_filepaths'] = context_files
+        return self._cached['context_filepaths']
 
     @property
     def mtime(self):
-        """The last modification time for the renderer templates.
+        """The latest modification time for the renderer's templates.
 
         Returns
         -------
         mtime : Union[float, None]
-            The (largest) modification time for the templates.
-            None is returned if an mtime could not be found.
+            The modification time (if available) or None (if
+            unavailable).
         """
-        raise NotImplementedError
+        # Get all of the template files
+        template_filepaths = self.template_filepaths()
 
-    @property
-    def module_path(self):
-        """The render path for the templates directory in the disseminate
-        module.
+        # Get all of the additional context files
+        context_filepaths = self.context_filepaths()
 
-        Returns
-        -------
-        module_path : :obj:`pathlib.Path`
-            The path for the templates directory in the disseminate module.
-        """
-        cls = self.__class__
+        # Get the maximum modification time
+        mtimes = [file.stat().st_mtime
+                  for file in template_filepaths + context_filepaths]
+        return max(mtimes) if len(mtimes) > 0 else None
 
-        if cls._module_templates_abspath is None:
-            # Get the path for the current file and navigate to the templates
-            # subdirectory.
-            module_file = pathlib.Path(__file__)
-            module_path = module_file.parent
-            templates_path = module_path / module_templates_relpath
-            templates_path = SourcePath(project_root=templates_path.resolve())
-            cls._module_templates_abspath = templates_path
-
-        # Return an absolute path
-        return cls._module_templates_abspath
-
-    @property
-    def from_module(self):
-        """Is the template loaded from the disseminate module?
-
-        Templates may be loaded from other places like the user's src directory,
-        in which case, this question would answer False.
-
-        Returns
-        -------
-        from_module : bool
-            True, if the selected template is from the disseminate module.
-            False, if the selected template is from the user's project.
-        """
-        raise NotImplementedError
-
-    def template_filepaths(self, target=None):
-        """A list of the template absolute (render) file paths.
-
-        Multiple template filepaths may be returned if a template was inherited
-        from one of more parents. In this case, the parents are listed after
-        the main template file.
+    @abstractmethod
+    def render(self, target, context):
+        """Render the given context into a string for the given target.
 
         Parameters
         ----------
-        target : Optional[str]
-            Return templates for the given target (ex: '.html).
-            If None is specified, a listing of templates for all targets is
-            returned.
+        target : str
+            The target to render. ex: '.html'
+        context : dict
+            The dictionary of values to substitute in the template
 
         Returns
         -------
-        template_filenames : List[:obj:`pathlib.Path`]
-            A listing of the template filenames as well as parent template
-            filenames, if the template was inherited.
+        rendered_string : str
+            The rendered template string.
         """
-        raise NotImplementedError
+        pass
 
-    def is_available(self, target):
-        """Is a template available for the given target?"""
-        return False
+    def add_context_paths(self, context, paths=None):
+        """Add template paths to the context path entries.
 
-    def render(self, target, context):
-        """Render the given context into a string for the given target."""
-        raise NotImplementedError
+        Parameters
+        ----------
+        context : :obj:`DocumentContext <.context.DocumentContext>`
+            The context for the document.
+        paths : List[:obj:`pathlib.Path`]
+            The list of paths to add to the context paths.
+        """
+        context_paths = context.get('paths', None)
+        paths = self.paths() if paths is None else paths
 
-    def _add_dependencies(self, rendering, target, context):
-        """Add dependencies for a rendered string."""
+        if context_paths is not None and paths is not None:
+            missing_paths = [path for path in paths
+                             if path not in context_paths]
+
+            # Add the missing paths to the front of the paths list.
+            # We do this so that template directories are searched first
+            context_paths[0:0] = missing_paths
+
+    def add_dependencies(self, rendering, target, context):
+        """Add dependencies for a rendered string.
+
+        Parameters
+        ----------
+        rendering : str
+            The rendered string to add dependencies for.
+        target : str
+            The target for the rendering. ex: '.html'
+        context : :obj:`DocumentContext <.context.DocumentContext>`
+            The context for the document.
+
+        Returns
+        -------
+        processed_rendering : str
+            The rendered string with dependency links replaced.
+        """
         assert context.is_valid('dependency_manager')
         dep_manager = context['dependency_manager']
 
@@ -156,21 +218,3 @@ class BaseRenderer(object):
         if method is not None:
             processed_rendering = method(processed_rendering, target, context)
         return processed_rendering
-
-    def _set_context_paths(self, context):
-        """Add the paths for the used templates in the context's paths entry,
-        if available."""
-        context_paths = (context['paths']
-                         if context is not None and 'paths' in context else [])
-
-        try:
-            template_filepaths = self.template_filepaths()
-            template_paths = [template_filepath.parent
-                              for template_filepath in template_filepaths]
-        except NotImplementedError:
-            template_paths = []
-
-        for path in template_paths:
-            if path in context_paths:
-                continue
-            context_paths.append(path)

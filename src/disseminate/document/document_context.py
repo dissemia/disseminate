@@ -27,6 +27,7 @@ class DocumentContext(BaseContext):
         'paths': list,
         'label_manager': LabelManager,
         'dependency_manager': DependencyManager,
+        'renderers': dict,
         'mtime': float,
         'doc_id': str,
         'process_context_tags': set,
@@ -89,6 +90,7 @@ class DocumentContext(BaseContext):
         # context is reset. They should persist for a project.
         'label_manager',
         'dependency_manager',
+        'renderers',
 
         # Keep the same list for paths when resetting. Note that will place
         # the entry here to prevent the lists path from being reset by the

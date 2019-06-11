@@ -1,3 +1,5 @@
+import pathlib
+
 from .utils.types import IntPositionalValue, StringPositionalValue
 
 
@@ -191,6 +193,16 @@ default_context = {
 
 #: default basename for a template file
 template_basename = 'template'
+
+#: default filename for additional context files from templates
+template_context_filename = 'context.txt'
+
+#: Use module templates only. If True, user-specified custom templates, which
+#: may not be safe, can be used.
+module_only = False
+
+#: the paths for templates in disseminate modules
+module_template_paths = [pathlib.Path(__file__).parent / 'templates']
 
 #: modifiers for Jinja2 blocks, variables and comments. Parentheses are used
 #: instead of the default curly braces to more easily work with latex formats.

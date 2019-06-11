@@ -6,9 +6,9 @@ import pytest
 from disseminate.tags import Tag
 from disseminate.formats import TexFormatError
 from disseminate.tags.eqs import Eq
-import disseminate.document.processors as pr
-from disseminate.dependency_manager import DependencyManager
-from disseminate import SourcePath, TargetPath
+from disseminate.document.processors.process_context_headers import \
+    ProcessContextHeaders
+from disseminate import SourcePath
 
 
 @pytest.fixture
@@ -18,7 +18,7 @@ def context_eq(doc):
     context = doc.context
 
     # Setup the context processor
-    processor = pr.process_template.ProcessContextTemplate()
+    processor = ProcessContextHeaders()
     processor(context)  # add the 'equation_renderer' entry
 
     return context

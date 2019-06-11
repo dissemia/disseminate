@@ -299,7 +299,7 @@ class BaseContext(dict):
 
         return True
 
-    def matched_update(self, changes, overwrite=True):
+    def matched_update(self, changes):
         """Update with the values in the changes dict that are either missing
         in this base context dict or to match the types of existing entries in
         this base context dict.
@@ -325,9 +325,16 @@ class BaseContext(dict):
         ----------
         changes : Union[str, dict, :obj:`BaseContext <.context.BaseContext>`]
             The changes to include in updating this context dict.
+
+        Returns
+        -------
+        changed_keys
+            The keys that were updated.
         """
         changes = str_to_dict(changes) if isinstance(changes, str) else changes
         self._match_update(original=self, changes=changes)
+
+        return changes.keys()
 
     @staticmethod
     def _match_update(original, changes, level=1):
@@ -337,10 +344,6 @@ class BaseContext(dict):
         if level >= settings.context_max_depth:
             msg = "Context cannot exceed a depth of {}."
             raise ContextException(msg.format(settings.context_max_depth))
-
-        # Get a list of keys that are only in the original (not including keys
-        # from the parent_context)
-        original_self_keys = original.keys()
 
         for key, change_value in changes.items():
             # Copy values that are not in the original--whether the key is

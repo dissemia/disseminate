@@ -5,4 +5,5 @@ user-specified (local) templates.
 """
 
 from .base_renderer import BaseRenderer, module_templates_relpath
-from .jinja_renderer import JinjaRenderer
+from . import utils
+from . import jinja

@@ -4,6 +4,7 @@ Tags to render equations
 from copy import copy
 
 from .img import RenderedImg
+from .exceptions import TagError
 from .utils import content_to_str
 from ..formats import tex_cmd, tex_env
 from ..attributes import Attributes
@@ -44,8 +45,8 @@ class Eq(RenderedImg):
 
     def __init__(self, name, content, attributes, context,
                  block_equation=False):
-
-        assert context.is_valid('equation_renderer')
+        assert (context.is_valid('renderers') and
+                'equation' in context['renderers'])
         self.block_equation = block_equation
 
         # Ensure the attributes argument is an Attributes type
@@ -86,7 +87,10 @@ class Eq(RenderedImg):
     def render_content(self, content, context):
         """Render the content in LaTeX into a valid .tex file."""
         # Get the renderer for the equation
-        renderer = context['equation_renderer']
+        if ('renderers' not in context or
+           'equation' not in context['renderers']):
+            raise TagError("Missing equation renderer in the document context")
+        renderer = context['renderers']['equation']
 
         # Make a copy of the context and add the content as the 'body' entry.
         context_cp = copy(context)

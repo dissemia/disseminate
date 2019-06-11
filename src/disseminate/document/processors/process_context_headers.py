@@ -2,9 +2,8 @@
 Processors for working up the headers of strings in a context.
 """
 from .process_context import ProcessContext
-from .exceptions import ProcessContextException
+from ...renderers.utils import load_renderers
 from ...context.utils import find_header_entries, load_from_string
-from ... import settings
 
 
 class ProcessContextHeaders(ProcessContext):
@@ -33,49 +32,24 @@ class ProcessContextHeaders(ProcessContext):
             # Update the header context
             header_context.update(d)
 
-        # See if there are additional header files from the template
-        
-
-        # Load the context
         context.matched_update(header_context)
 
+        # Setup the Renderer
+        renderers = load_renderers(context)
 
-# class ProcessContextAdditionalHeaderFiles(ProcessContext):
-#     """Process additional header files in the paths listed in the context.
-#
-#     This processor will load additional context values from the template, for
-#     example.
-#     """
-#
-#     #: This processor should be loaded after the initial headers are loaded
-#     #: from the context (ProcessContextHeaders) and the template
-#     #: (ProcessContextTemplate), but before the tags are processed
-#     #: (ProcessContextTags)
-#     order = 400
-#
-#     def __call__(self, context):
-#
-#         # Get the paths from the context
-#         paths = context.get('paths', [])
-#         header_filename = context.get('additional_header_filename',
-#                                       'context.txt')
-#
-#         # Find the context.txt files
-#         for path in paths:
-#             header_path = path / header_filename
-#
-#             # See if it's a valid path
-#             if header_path.is_file():
-#                 # Check the file size
-#                 if header_path.stat().st_size > settings.context_max_size:
-#                     msg = ("Context file '{}' is larger than the maximum "
-#                            "allowed file size {}.")
-#                     msg = msg.format(header_path, settings.context_max_size)
-#                     raise ProcessContextException(msg)
-#
-#                 # Load the file and read it into the context
-#                 txt = header_path.read_text()
-#
-#                 # Load the values (without overwriting existing values) in the
-#                 # context
-#                 context.matched_update(txt, overwrite=False)
+        # See if there are additional header files from the template
+        context_filepaths = [p for r in renderers.values()
+                             for p in r.context_filepaths()]
+
+        if len(context_filepaths) > 0:
+            for context_filepath in context_filepaths:
+                context.load(context_filepath.read_text())
+
+            # Reload the document's context modifications. This is done after
+            # loading athe additional header files because these values should
+            # overwrite values written in the additional header files
+            #
+            # TODO: reloading the source file context (a second time) isn't
+            # very efficient; can this be optimized?
+            context.matched_update(header_context)
+
