@@ -1,12 +1,10 @@
 """
 Test the process_header processors.
 """
-from pathlib import Path
-
 import disseminate.document.processors as pr
 
 
-def test_process_header(context_cls):
+def test_process_context_header(context_cls):
     """Test the process_context_header function."""
 
     header = """
@@ -19,8 +17,12 @@ def test_process_header(context_cls):
     This is my @macro body.
     """
 
+    # Setup a context class with a targets attribute
+    class SubContext(context_cls):
+        targets = ['.html']
+
     # Load the header into a context
-    context = context_cls(test=header)
+    context = SubContext(test=header)
 
     # Now process the context entries
     processor = pr.process_context_headers.ProcessContextHeaders()
@@ -34,121 +36,51 @@ def test_process_header(context_cls):
     assert context['macro'] == '@i{example}'
 
 
-def test_process_header_with_type_match(context_cls):
-    """Test the process_context_header function when types need to be
-    matched."""
+def test_process_context_header_custom_template(doc):
+    """Test the process_context_header loading of custom templates."""
 
-    header = """
-    ---
-    targets: html, tex
-    ---
-    My body
-    """
+    project_root = doc.project_root
+    template_filepath = project_root / 'mytemplate.html'
+    template_filepath.touch()
 
-    # Load the header into a context
-    context = context_cls(test=header, targets=[])
+    doc.context['template'] = 'mytemplate'
 
-    # Now process the context entries
+    # Try the processor
     processor = pr.process_context_headers.ProcessContextHeaders()
-    processor(context)
+    processor(doc.context)
 
-    # Ensure that the 'test' entry's header was parsed
-    assert context['test'] == '    My body\n    '
-
-    # The targets entry should have been converted to a list because the
-    # context was created with a targets entry with a list as its value.
-    assert context['targets'] == ['html', 'tex']
+    # Make sure the custom template was read in
+    assert 'renderers' in doc.context
+    assert 'template' in doc.context['renderers']
+    assert doc.context['renderers']['template'].template == 'mytemplate'
 
 
-def test_process_context_additional_header_files(tmpdir, context_cls):
-    """Test the process_context_additional_header_files function."""
-
-    tmpdir = Path(tmpdir)
-
-    # Create temp paths
-    paths = [tmpdir / 'sub1', tmpdir / 'sub2']
-    [p.mkdir() for p in paths]
+def test_process_context_header_additional_context_files(doc):
+    """Test the process_context_header with additional context files."""
 
     # 1. Try basic value entries
     # Create a basic parent_context and context, including values needed by
     # process_context_additional_header_files
+    assert 'value' not in doc.context
 
-    parent_context = context_cls(value='a',
-                                 additional_header_filename='context.txt',
-                                 paths=paths)
-    context = context_cls(parent_context=parent_context)
+    # Create additional headers and see how they're read in. These are tied
+    # to templates, so create a template as well
+    project_root = doc.project_root
 
-    # Value is accessed from the parent context
-    assert context['value'] == 'a'
+    header1 = project_root / 'context.txt'
+    template_filepath = project_root / 'mytemplate.html'
 
-    # Create additional headers and see how they're read in
-    header1 = tmpdir / 'sub1' / 'context.txt'
     header1.write_text("value: b")
+    template_filepath.touch()
 
-    header2 = tmpdir / 'sub2' / 'context.txt'
-    header2.write_text("value: c")
+    doc.context['template'] = 'mytemplate'
 
     # Try the processor
-    processor = pr.process_context_headers.ProcessContextAdditionalHeaderFiles()
-    processor(context)
+    processor = pr.process_context_headers.ProcessContextHeaders()
+    processor(doc.context)
 
     # Since header1 is the first in the path, its value gets loaded locally
     # into the context, but the value from header2 is not overwritten.
     # Consequently, 'value' should equal 'b'. The parent_context's value should
     # still be 'a'
-    assert context['value'] == 'b'
-    assert parent_context['value'] == 'a'
-
-    # 2. Try nested values
-    parent_context = context_cls(value={'nested': 'a'},
-                                 additional_header_filename='context.txt',
-                                 paths=paths)
-    context = context_cls(parent_context=parent_context)
-
-    # Value is accessed from the parent context
-    assert context['value'] == {'nested': 'a'}
-
-    # Create additional headers and see how they're read in
-    header1 = tmpdir / 'sub1' / 'context.txt'
-    header1.write_text("value:\n  nested: b")
-
-    header2 = tmpdir / 'sub2' / 'context.txt'
-    header2.write_text("value:\n  nested: c")
-
-    # Try the processor
-    processor = pr.process_context_headers.ProcessContextAdditionalHeaderFiles()
-    processor(context)
-
-    # Since header1 is the first in the path, its value gets loaded locally
-    # into the context, but the value from header2 is not overwritten.
-    # Consequently, 'value' should equal 'b'. The parent_context's value should
-    # still be 'a'
-    assert context['value'] == {'nested': 'b'}
-    assert parent_context['value'] == {'nested': 'a'}
-
-    # 3. Try mutables, like lists
-    parent_context = context_cls(value=['a'],
-                                 additional_header_filename='context.txt',
-                                 paths=paths)
-    context = context_cls(parent_context=parent_context)
-
-    # Value is accessed from the parent context
-    assert context['value'] == ['a']
-
-    # Create additional headers and see how they're read in
-    header1 = tmpdir / 'sub1' / 'context.txt'
-    header1.write_text("value: b")
-
-    header2 = tmpdir / 'sub2' / 'context.txt'
-    header2.write_text("value: c")
-
-    # Try the processor
-    processor = pr.process_context_headers.ProcessContextAdditionalHeaderFiles()
-    processor(context)
-
-    # Since header1 is the first in the path, its value gets loaded locally
-    # into the context, but the value from header2 is not overwritten.
-    # Consequently, 'value' should equal 'b'. The parent_context's value should
-    # still be 'a'
-    assert context['value'] == ['b', 'a']
-    assert parent_context['value'] == ['a']
+    assert doc.context['value'] == 'b'

@@ -38,7 +38,7 @@ def test_dependencies_img(tmpdir, wait):
     doc = Document(src_filepath, tmpdir)
 
     # Get the template renderer
-    renderer = doc.context['template_renderer']
+    renderer = doc.context['renderers']['template']
 
     # Check that the document and dependency manager paths are correct
     assert doc.project_root == project_root
@@ -55,18 +55,10 @@ def test_dependencies_img(tmpdir, wait):
     deps = list(sorted(dep_manager.dependencies[src_filepath]))
     dep1 = deps[0]
     dep2 = deps[1]
-    assert (dep1.dep_filepath ==
-            SourcePath(project_root=renderer.module_path,
-                       subpath='default/media/css/default.css'))
-    assert (dep1.dest_filepath ==
-            TargetPath(target_root=target_root,
-                       target='html',
-                       subpath='media/css/default.css'))
-    assert dep2.dep_filepath == SourcePath(project_root=project_root,
-                                           subpath='sample.png')
-    assert dep2.dest_filepath == TargetPath(target_root=target_root,
-                                            target='html',
-                                            subpath='sample.png')
+    assert dep1.dep_filepath.match('default/media/css/default.css')
+    assert dep1.dest_filepath.match('html/media/css/default.css')
+    assert dep2.dep_filepath.match('sample.png')
+    assert dep2.dest_filepath.match('html/sample.png')
 
     # Rewrite the document source file without the dependency
     wait()  # sleep time offset needed for different mtimes

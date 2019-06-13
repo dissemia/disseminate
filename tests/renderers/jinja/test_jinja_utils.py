@@ -50,10 +50,12 @@ def test_jinja_filepaths_from_paths():
     # 1. Test the PackageLoader paths.
     pl_path = template_paths(pl)
 
-    filepaths = filepaths_from_paths(pl_path, 'default')
+    filepaths = filepaths_from_paths(pl_path, 'default',
+                                     ['.html', '.tex', '.txt'])
     assert len(filepaths) == 0
 
-    filepaths = filepaths_from_paths(pl_path, 'default/template')
+    filepaths = filepaths_from_paths(pl_path, 'default/template',
+                                     ['.html', '.tex', '.txt'])
     assert len(filepaths) >= 3
     assert filepaths[0].match('templates/default/template.html')
     assert filepaths[1].match('templates/default/template.tex')
@@ -61,10 +63,12 @@ def test_jinja_filepaths_from_paths():
 
     # 2. Test the FileSystemLoader paths.
     fl_path = template_paths(fl)
-    filepaths = filepaths_from_paths(fl_path, 'default')
+    filepaths = filepaths_from_paths(fl_path, 'default',
+                                     ['.html', '.tex', '.txt'])
     assert len(filepaths) == 0
 
-    filepaths = filepaths_from_paths(fl_path, 'default/template')
+    filepaths = filepaths_from_paths(fl_path, 'default/template',
+                                     ['.html', '.tex', '.txt'])
     assert len(filepaths) == 1
     assert filepaths[0].match('example1/src/default/template.html')
 

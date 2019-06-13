@@ -209,6 +209,12 @@ class BaseContext(dict):
         The context is reset by removing items with keys not specified in the
         'exclude_from_clear' class attribute.
 
+        .. note:: Entries in the parent_context are copied to this context.
+                  If the parent_context entry is a mutable, like a list or
+                  dict, then a copy of that mutable is created if a 'copy'
+                  method exists for that mutable. However, mutables within
+                  those mutables will still point to the original.
+
         Examples
         --------
         >>> l1, l2 = [], []
@@ -243,7 +249,13 @@ class BaseContext(dict):
             keys_to_inherit = parent_context.keys() - do_not_inherit
 
             for k in keys_to_inherit:
-                self[k] = parent_context[k]
+                parent_value = parent_context[k]
+
+                # Make a copy of mutables, otherwise copy directly.
+                # Note that this isn't a deep copy, so mutables in the copy
+                # will still point to the same mutables in parent_value.
+                self[k] = (parent_value if not hasattr(parent_value, 'copy')
+                           else parent_value.copy())
 
         # Copy in the initial value arguments.
         self.update(self.initial_values)

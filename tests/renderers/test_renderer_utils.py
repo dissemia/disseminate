@@ -5,12 +5,12 @@ from disseminate.renderers import BaseRenderer
 from disseminate.renderers.utils import load_renderers
 
 
-def test_load_renderers(context_cls):
+def test_load_renderers(doc):
     """Test the load_renderers function."""
 
-    context = context_cls()
+    context = doc.context
 
-    # Test the proper creation of renderers in the context_cls
+    # Test the proper creation of renderers in the DocumentContext
     load_renderers(context)
 
     assert 'renderers' in context

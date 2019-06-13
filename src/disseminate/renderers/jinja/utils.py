@@ -1,6 +1,5 @@
 """Utilities for the JinjaRenderer."""
 import pathlib
-from glob import glob
 
 import jinja2.meta
 
@@ -48,7 +47,7 @@ def template_paths(loader):
     return paths
 
 
-def filepaths_from_paths(template_paths, template_basename):
+def filepaths_from_paths(template_paths, template_basename, targets):
     """Find template filepaths given a list of template_paths and a
     template base name.
 
@@ -62,29 +61,25 @@ def filepaths_from_paths(template_paths, template_basename):
     template_basename : str
         The base name of the template (without extension)
         ex: report/default or report/default/template
+    targets : Union[List[str], Set[str]]
+        The targets for the templates
 
     Returns
     -------
     template_filepaths : List[:obj:`template_filepaths`]
         A list of template file paths.
     """
-    # Append the template name to the template_paths
-    base_paths = [base_path / template_basename for base_path in template_paths]
+    paths = []
 
-    template_filepaths = []
+    for template_path in template_paths:
+        for target in targets:
+            path = template_path / template_basename
+            path = path.with_suffix(target)
 
-    for base_path in base_paths:
-        # First see if there are template files directly
-        # We use glob instead of the glob method of pathlib.Path objects
-        # because the glob function works with partial filenames from
-        # base_path.
-        # ex: templates/default.*
-        filepaths = [pathlib.Path(p)
-                     for p in sorted(glob(str(base_path) + '.*'))]
+            if path.is_file():
+                paths.append(path)
 
-        template_filepaths += filepaths
-
-    return template_filepaths
+    return paths
 
 
 def filepaths_from_template(template, environment):

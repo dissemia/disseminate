@@ -546,9 +546,6 @@ class Document(object):
         # Reload document
         self.load()
 
-        # Setup variables
-        target = target_filepath.suffix
-
         # 1. A render is required if the target_filepath doesn't exist
         if not target_filepath.is_file():
             logging.debug("Render required for {}: '{}' target file "
@@ -568,13 +565,21 @@ class Document(object):
                           "is older than source.".format(self, target_filepath))
             return True
 
-        # 3. A render is required if any of the context entries to be updated.
+        # 3. A render is required if any of the context entries need to be
+        #    updated.
         entry_mtimes = [e.mtime for e in self.context.values()
                         if hasattr(e, 'mtime')]
         max_entry_mtime = max(entry_mtimes) if len(entry_mtimes) > 0 else None
         if max_entry_mtime is not None and target_mtime < max_entry_mtime:
             logging.debug("Render required for {}:  The tags reference a "
                           "document that's been updated.".format(self))
+            return True
+
+        # 4. Check the to see if the template for renderer has been updated
+        renderer = self.get_renderer()
+        if renderer.mtime > target_mtime:
+            logging.debug("Render required for {}:  The template has been "
+                          "updated.".format(self))
             return True
 
         # All tests passed. No new render is needed

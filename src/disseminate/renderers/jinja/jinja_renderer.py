@@ -6,9 +6,8 @@ import pathlib
 import jinja2
 import jinja2.meta
 
-from .utils import template_paths, filepaths_from_paths, filepaths_from_template
+from .utils import filepaths_from_template
 from ..base_renderer import BaseRenderer
-from ...utils.list import uniq
 from ... import settings
 
 
@@ -29,7 +28,7 @@ class JinjaRenderer(BaseRenderer):
     src_filepath = None
     _environment = None
 
-    def __init__(self, context, template, module_only=None):
+    def __init__(self, context, template, module_only=None, targets=None):
         self.module_only = module_only  # needed by set_context_paths
         self.template = template
 
@@ -39,13 +38,13 @@ class JinjaRenderer(BaseRenderer):
         # Set the src_filepath
         self.src_filepath = context.get('src_filepath', None)
 
+        super().__init__(context=context, template=template,
+                         module_only=module_only, targets=targets)
+
         # Load and cache the template objects. This is done after calling the
         # parent __init__ function since this function sets the 'template'
         # attribute needed by self.load_templates()
         self.load_templates()
-
-        super().__init__(context=context, template=template,
-                         module_only=module_only)
 
     @property
     def environment(self):
@@ -93,43 +92,31 @@ class JinjaRenderer(BaseRenderer):
 
         return self._environment
 
+    # TODO: use a caching decorator
     def template_filepaths(self):
-        # Load the templates. The templates must be loaded and individually
-        # checked because some templates may inherit from other templates,
-        # and these should be added to the template_filepaths
-        self.load_templates()
+        if 'template_filepaths' not in self._cached:
+            # Load the templates. The templates must be loaded and individually
+            # checked because some templates may inherit from other templates,
+            # and these should be added to the template_filepaths
+            self.load_templates()
 
-        # Get the filepaths for all templates. Sort these by the target string.
-        filepaths = []
-        for target, template in sorted(self.jinja_templates.items()):
-            filepaths += filepaths_from_template(template=template,
-                                                 environment=self.environment)
-
-        return filepaths
+            # Get the filepaths for all templates. Sort these by the target
+            # string.
+            filepaths = []
+            for target, template in sorted(self.jinja_templates.items()):
+                filepaths += filepaths_from_template(template,
+                                                     self.environment)
+            self._cached['template_filepaths'] = filepaths
+        return self._cached['template_filepaths']
 
     def load_templates(self):
         """Loads all the Jinja2 template objects needed to render the targets
         specified in the context."""
 
-        # Get the list of all template files. This will not included an parent
-        # templates for template inheritance
-        paths = template_paths(self.environment)
-
-        # Try the base template paths. ex: 'report/default'
-        template_name = self.template
-        filepaths = filepaths_from_paths(template_paths=paths,
-                                         template_basename=template_name)
-
-        # Try with the template_basename appended.
-        # ex: 'report/default/template'
-        template_name = pathlib.Path(self.template) / settings.template_basename
-        filepaths += filepaths_from_paths(template_paths=paths,
-                                          template_basename=str(template_name))
-
         # Get the targets for the template files
-        targets = {filepath.suffix for filepath in filepaths}
+        targets = self.targets
 
-        # Replace intermediary targetsfor compiled documents.
+        # Replace intermediary targets for compiled documents.
         # ex: 'pdf' targets, which need to be compiled, should be replaced
         # with their source format (.tex)
         targets = {settings.compiled_exts[t]

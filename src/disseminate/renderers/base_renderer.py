@@ -29,6 +29,10 @@ class BaseRenderer(ABC):
     module_only : Optional[bool]
         Only search the disseminate module for the template--i.e. do not use
         the user templates from the project directory.
+    targets : Union[List[str], Tuple[Str]]
+        If specified, use the given list of targets. Otherwise, use the
+        targets specified in the document context.
+        ex: ['.html', '.tex', '.txt']
     """
 
     _module_only = None
@@ -37,11 +41,13 @@ class BaseRenderer(ABC):
     #: The base name for the template file
     template = None
 
+    targets = None
+
     #: The order for the renderer. If multiple renderers are available,
     #: The renderer with the lower order number will be used first.
     order = 1000
 
-    def __init__(self, context, template, module_only=None):
+    def __init__(self, context, template, module_only=None, targets=None):
         if module_only is None:
             module_only = settings.module_only
         self._cached = dict()
@@ -49,10 +55,26 @@ class BaseRenderer(ABC):
         self.module_only = module_only
         self.template = template
 
+        # Set the template targets. Get the targets from the argument list, if
+        # available, or the context, if the targets aren't specified.
+        if targets is not None:
+            self.targets = targets
+        else:
+            # Otherwise, try getting the targets from the context. A
+            # DocumentContext is expected here, as it has an attributes
+            # (targets) that properly formats the targets entry into a list of
+            # strings with a preceeding '.'. ex: ['.html', '.tex']
+            assert context.is_valid('targets')
+            self.targets = context.targets
+
         # Reset the paths for this renderer in the context. This must be done
         # after the templates are loaded since the paths of the templates must
         # be used in setting the context paths
         self.add_context_paths(context=context)
+
+    def __repr__(self):
+        cls_name = self.__class__.__name__
+        return "{}({})".format(cls_name, self.template)
 
     @property
     def module_only(self):
@@ -73,6 +95,7 @@ class BaseRenderer(ABC):
         target = target if target.startswith('.') else '.' + target
         return target in {f.suffix for f in self.template_filepaths()}
 
+    # TODO: use a caching decorator
     def paths(self):
         """The ordered list of final template paths (directories).
 
@@ -102,6 +125,7 @@ class BaseRenderer(ABC):
         """
         pass
 
+    # TODO: use a caching decorator
     def context_filepaths(self):
         """The ordered list of additional context files from templates.
 
@@ -148,6 +172,7 @@ class BaseRenderer(ABC):
         # Get the maximum modification time
         mtimes = [file.stat().st_mtime
                   for file in template_filepaths + context_filepaths]
+
         return max(mtimes) if len(mtimes) > 0 else None
 
     @abstractmethod

@@ -8,6 +8,8 @@ from ..context import BaseContext
 from ..label_manager import LabelManager
 from ..dependency_manager import DependencyManager
 from ..paths import SourcePath, TargetPath
+from ..utils.string import str_to_list
+from ..utils.list import uniq
 from .. import settings
 
 
@@ -19,6 +21,9 @@ class DocumentContext(BaseContext):
 
     #: Required entries in the document context dict to be a valid document
     #: context--as well as their matching type to be checked.
+    #: - targets aren't listed as a list or set entry because mutables,
+    #:   like lists, are appended to, instead of replaced. Targets should
+    #:   by replaced by values in the header.
     validation_types = {
         'document': None,
         'src_filepath': SourcePath,
@@ -150,6 +155,7 @@ class DocumentContext(BaseContext):
         if self['project_root'] not in paths:
             paths.append(self['project_root'])
 
+    # TODO: Convert these entries to weakattr from utils.classes
     @property
     def document(self):
         # Retrieve and de-reference the document
@@ -208,13 +214,8 @@ class DocumentContext(BaseContext):
             targets = ''
 
         # Convert to a list, if needed
-        target_list = (targets.split(',') if isinstance(targets, str) else
+        target_list = (str_to_list(targets) if isinstance(targets, str) else
                        targets)
-
-        if len(target_list) == 1:
-            target_list = [t.strip() for t in target_list[0].split(" ")]
-        else:
-            target_list = [t.strip() for t in target_list]
 
         if 'none' in target_list:
             return []
@@ -222,8 +223,10 @@ class DocumentContext(BaseContext):
         # Remove empty entries
         target_list = list(filter(bool, target_list))
 
-        # Add trailing period to extensions in target_list
-        return [t if t.startswith('.') else '.' + t for t in target_list]
+        # Add trailing period to extensions in target_list, and make sure
+        # there are no duplicates
+        target_list = [t if t.startswith('.') else '.' + t for t in target_list]
+        return uniq(target_list)
 
     @property
     def includes(self):

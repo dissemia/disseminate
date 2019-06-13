@@ -1,6 +1,31 @@
 Release Notes
 =============
 
+0.14
+----
+
+Interfaces
+~~~~~~~~~~
+
+1. *Flask*. Implement Flask web server for viewing the document list and
+   rendered products.
+
+Backend
+~~~~~~~
+
+1. *BaseContext*. Refactor to copy values from parent_context, rather than use
+   a ChainMap implementation. This significantly speeds up look ups and loading
+   of documents.
+2. *BaseContext*. Create shallow copies of mutables from the parent_context
+   so that these aren't modified directly. This is only done for mutables that
+   have ``copy`` methods so that some mutables, like the ``LabelManager`` and
+   ``DependencyManager``, can be preserved by all contexts and documents in a
+   project
+3. *ProcessContextHeader*. Refactor to use the new implementation of the
+   BaseContext. The ``ProcessContextHeader`` now does the work of loading
+   templates and loading additional context headers.
+4. *Renderers*. Simplify the API.
+
 0.13 beta
 ---------
 

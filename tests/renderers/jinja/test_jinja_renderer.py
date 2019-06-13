@@ -12,14 +12,30 @@ from disseminate.dependency_manager import DependencyManager
 from disseminate.paths import SourcePath, TargetPath
 
 
-def test_jinjarenderer_is_available(context_cls):
+def test_jinjarenderer_is_available(doc, context_cls):
     """Test the is_available method for the JinjaRenderer."""
 
-    context = context_cls()
+    # 1. Test with a document context with targets specified in the context.
+    context = doc.context
+    context['targets'] = ['.html', '.pdf', '.txt']
+    assert context.targets == ['.html', '.pdf', '.txt']
 
-    # 1. Setup a JinjaRenderer that accesses package templates only.
+    # Setup a JinjaRenderer that accesses package templates only.
     renderer = JinjaRenderer(context=context, template='default',
                              module_only=True)
+
+    # An .html target should be available
+    assert renderer.is_available('.html')
+
+    # A .missing target should not be available
+    assert not renderer.is_available('.missing')
+
+    # 2. Test with a regular context with the targets specified on creation
+    #    of the JinjaRenderer
+    context = context_cls()
+
+    renderer = JinjaRenderer(context=context, template='default',
+                             module_only=True, targets=['.html'])
 
     # An .html target should be available
     assert renderer.is_available('.html')
@@ -33,11 +49,13 @@ def test_jinjarenderer_paths(context_cls):
     # Setup the context
     src_filepath = SourcePath(project_root='tests/renderers/example1/src',
                               subpath='main.dm')
-    context = context_cls(src_filepath=src_filepath)
+    context = context_cls(src_filepath=src_filepath,
+                          targets=['.html', '.tex'])
 
     # 1. Setup a JinjaRenderer that accesses package templates only.
     renderer = JinjaRenderer(context=context, template='default',
-                             module_only=True)
+                             module_only=True,
+                             targets=['.html', '.tex', '.txt'])
 
     # Check the template paths
     filepaths = renderer.template_filepaths()
@@ -54,7 +72,8 @@ def test_jinjarenderer_paths(context_cls):
     # 2. Setup a JinjaRenderer that accesses package templates and custom
     #    templates in the project directory.
     renderer = JinjaRenderer(context=context, template='default',
-                             module_only=False)
+                             module_only=False,
+                             targets=['.html', '.tex', '.txt'])
 
     # Check the template paths
     filepaths = renderer.template_filepaths()
@@ -71,7 +90,8 @@ def test_jinjarenderer_paths(context_cls):
 
     # 3. Check a template with inheritance
     renderer = JinjaRenderer(context=context, template='books/tufte',
-                             module_only=True)
+                             module_only=True,
+                             targets=['.html', '.tex'])
 
     # Check the template paths. The tufte book template only has '.tex' and
     # '.html' targets
@@ -93,7 +113,8 @@ def test_jinjarenderer_context_filepaths(context_cls):
     # 1. Setup a JinjaRenderer that accesses package templates only.
     #    The books/tufte template has a context.txt file
     renderer = JinjaRenderer(context=context, template='books/tufte',
-                             module_only=True)
+                             module_only=True,
+                             targets=['.html', '.tex'])
 
     # Check the template paths
     filepaths = renderer.context_filepaths()
@@ -101,18 +122,18 @@ def test_jinjarenderer_context_filepaths(context_cls):
     assert filepaths[0].match('templates/books/tufte/context.txt')
 
 
-def test_jinjarenderer_mtime(tmpdir, context_cls):
+def test_jinjarenderer_mtime(tmpdir, context_cls, wait):
     """Test the correct loading of paths by the Jinja2 template renderer."""
     # Setup a context
     context = context_cls(src_filepath=SourcePath())
 
-    # Default
+    # 1. Try a default template
     renderer = JinjaRenderer(context=context, template='default',
-                             module_only=True)
+                             module_only=True, targets=['.html'])
     filename = renderer.get_template(target='.html').filename
     assert renderer.mtime == pathlib.Path(filename).stat().st_mtime
 
-    # Try a custom template
+    # 2. Try a custom template
     project_root = SourcePath(project_root=tmpdir)
     template_root = project_root / 'default'
     template_root.mkdir()
@@ -122,9 +143,15 @@ def test_jinjarenderer_mtime(tmpdir, context_cls):
     src_filepath = SourcePath(tmpdir, 'main.dm')
     context = context_cls(src_filepath=src_filepath)
     renderer = JinjaRenderer(context=context, template='default/template',
-                             module_only=False)
+                             module_only=False, targets=['.html'])
     t = renderer.get_template(target='.html')
-    assert renderer.mtime == filename.stat().st_mtime
+    mtime = renderer.mtime
+    assert mtime == filename.stat().st_mtime
+
+    # 3. Try modifying the custom template. The mtime should be updated.
+    wait() # sleep time offset needed for different mtimes
+    filename.touch()
+    assert renderer.mtime > mtime
 
 
 def test_jinjarenderer_get_template(context_cls, tmpdir):
@@ -134,21 +161,21 @@ def test_jinjarenderer_get_template(context_cls, tmpdir):
 
     # 1. Default template
     renderer = JinjaRenderer(context=context, template='default',
-                             module_only=True)
+                             module_only=True, targets=['.tex', '.html'])
     t = renderer.get_template(target='.html')
     filepath = pathlib.Path(t.filename)
     assert filepath.match('src/disseminate/templates/default/template.html')
 
     # 2. Another built-in template
     renderer = JinjaRenderer(context=context, template='books/tufte',
-                             module_only=True)
+                             module_only=True, targets=['.tex', '.html'])
     t = renderer.get_template(target='.html')
     filepath = pathlib.Path(t.filename)
     assert filepath.match('src/disseminate/templates/books/tufte/template.html')
 
     # 3. Another built-in template (with template specified)
     renderer = JinjaRenderer(context=context, template='books/tufte/template',
-                             module_only=True)
+                             module_only=True, targets=['.tex', '.html'])
     t = renderer.get_template(target='.html')
     filepath = pathlib.Path(t.filename)
     assert filepath.match('src/disseminate/templates/books/tufte/template.html')
@@ -160,7 +187,8 @@ def test_jinjarenderer_get_template(context_cls, tmpdir):
     template_file = template_dir / 'template.html'
     template_file.touch()
 
-    renderer = JinjaRenderer(context=context, template='template')
+    renderer = JinjaRenderer(context=context, template='template',
+                             targets=['.html'])
     t = renderer.get_template(target='.html')
     assert t.filename == str(template_file)
 
@@ -171,9 +199,10 @@ def test_jinjarenderer_add_context_paths(context_cls):
 
     # 1. Default template
     src_filepath = SourcePath('')
-    context = context_cls(src_filepath=src_filepath, paths=[])
+    context = context_cls(src_filepath=src_filepath, paths=[],)
     renderer = JinjaRenderer(context=context, template='default',
-                             module_only=True)
+                             module_only=True,
+                             targets=['.html', '.tex', '.txt'])
 
     # Make sure the template path is correctly inserted in the context.
     # The paths are added by the constructor
@@ -183,7 +212,8 @@ def test_jinjarenderer_add_context_paths(context_cls):
     # 2. Try a module template with inheritance
     context = context_cls(src_filepath=src_filepath, paths=[])
     renderer = JinjaRenderer(context=context, template='books/tufte',
-                             module_only=True)
+                             module_only=True,
+                             targets=['.html', '.tex'])
 
     # Make sure the template paths were correctly inserted in the context
     # The paths are added by the constructor
@@ -203,9 +233,11 @@ def test_jinjarenderer_missing_template(context_cls):
     # 2. Try a module template with inheritance
     src_filepath = SourcePath('')
     context = context_cls(src_filepath=src_filepath, paths=[])
-    renderer = JinjaRenderer(context=context, template='non-existent',
-                             module_only=True)
+
     with pytest.raises(jinja2.exceptions.TemplateNotFound):
+        renderer = JinjaRenderer(context=context, template='non-existent',
+                                 module_only=True,
+                                 targets=['.html', '.tex', '.txt'])
         renderer.get_template('.html')
 
 
@@ -231,7 +263,8 @@ def test_jinjarenderer_render(tmpdir, context_cls):
 
     # Default template
     renderer = JinjaRenderer(context=context, template='default',
-                             module_only=True)
+                             module_only=True,
+                             targets=['.html', '.tex', '.txt'])
     assert '<html lang="en">' in renderer.render(context=context,
                                                  target='.html')
 
@@ -257,7 +290,8 @@ def test_jinjarenderer_dependencies(tmpdir, context_cls):
     context['dependency_manager'] = dep_manager
 
     renderer = JinjaRenderer(context=context, template='default',
-                             module_only=True)
+                             module_only=True,
+                             targets=['.html', '.tex', '.txt'])
 
     renderer.render(context=context, target='.html')
 
@@ -273,7 +307,8 @@ def test_jinjarenderer_dependencies(tmpdir, context_cls):
     # 2. books/tufte template. The books/tufte template has a template.html that
     #    references tufte.css, which in turn references default.css
     renderer = JinjaRenderer(context=context, template='books/tufte',
-                             module_only=True)
+                             module_only=True,
+                             targets=['.html', '.tex'])
     renderer.render(context=context, target='.html')
 
     # There should be 2 dependencies now in the dep_manager for the .css file

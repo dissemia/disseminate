@@ -440,7 +440,7 @@ def test_render_required(tmpdir, wait):
         target_filepath = d.targets['.html']
         assert d.render_required(target_filepath) is answer
 
-    # Render the 2nd document, and a the render_required should not longer be
+    # Render the 2nd document, and the render_required should no longer be
     # True.
     doc_list[1].render()
     for d in doc_list:

@@ -3,6 +3,7 @@ Utility functions for renderers.
 """
 from .base_renderer import BaseRenderer
 
+
 def load_renderers(context):
     """Load the renderers in the context.
 
@@ -11,7 +12,6 @@ def load_renderers(context):
     context : :obj:`DocumentContext <.DocumentContext>`
         The context for the document requiring renderers.
     """
-
     # Create 'renderers' dict with 'template', 'eq' entries.
     renderers = context.setdefault('renderers', dict())
 
@@ -22,17 +22,23 @@ def load_renderers(context):
 
     # Create the template renderer, if needed.
     template = context.get('template', 'default/template')
+
     if ('template' not in renderers or
        renderers['template'].template != template):
         template_renderer = renderer_cls(context=context,
                                          template=template)
         renderers['template'] = template_renderer
+    else:
+        # Otherwise, make sure the renderer has updated context values
+        renderers['template'].targets = context.targets
 
-    # Create the equation renderer, if needed.
+    # Create the equation renderer, if needed. The equation renderer only
+    # works for latex, so its target is specified as '.tex'
     if 'equation' not in renderers:
         equation_template = context.get('equation_template', 'default/eq')
         equation_renderer = renderer_cls(context=context,
-                                         template=equation_template)
+                                         template=equation_template,
+                                         targets=['.tex'])
         renderers['equation'] = equation_renderer
 
     # Add the renderer paths. When creating renderers, paths are added to the

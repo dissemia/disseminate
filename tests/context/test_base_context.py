@@ -278,17 +278,13 @@ def test_base_context_mutables(context_cls):
     parent['paths'].append(1)
     child['paths'].append(2)
 
-    assert parent['paths'] == [1, 2]
-    assert child['paths'] == [1, 2]
+    # The parent and child are independent
+    assert parent['paths'] == [1]
+    assert child['paths'] == [2]
 
-    # Now replace the paths in the child
-    child['paths'] = []
-
-    parent['paths'].append(3)
-    child['paths'].append(4)
-
-    assert parent['paths'] == [1, 2, 3]
-    assert child['paths'] == [4]
+    # Resetting the child will re-populate with the parent's value
+    child.reset()
+    assert child['paths'] == [1]
 
 
 def test_base_context_match_update(a_in_b):

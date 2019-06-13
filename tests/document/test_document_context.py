@@ -14,6 +14,10 @@ class DummyDocument(object):
 
 def test_document_context_basic_inheritence(context_cls, tmpdir):
     """Test the proper inheritence of the document context."""
+    class Mock(object):
+        """Mock object without a 'copy' method."""
+        pass
+
     # Create a DocumentContext with one entry in the class's 'do_not_inherit'
     # class attribute and one not in 'do_not_inherit'
     parent_context = {'paths': [],
@@ -21,8 +25,8 @@ def test_document_context_basic_inheritence(context_cls, tmpdir):
                                                  'dummy.dm'),
                       'project_root': SourcePath('tests/document/example1'),
                       'target_root': TargetPath(tmpdir),
-                      'label_manager': dict(),
-                      'dependency_manager': dict(),
+                      'label_manager': Mock(),
+                      'dependency_manager': Mock(),
                       }
     parent_context = context_cls(**parent_context)
 
@@ -32,7 +36,7 @@ def test_document_context_basic_inheritence(context_cls, tmpdir):
 
     def test_context_entries(context):
         # Check the entries that should be inherited by the parent
-        assert context['src_filepath'] != parent_context['src_filepath']  # Not inherited
+        assert context['src_filepath'] != parent_context['src_filepath']
         assert context['src_filepath'] == SourcePath('')
         assert context['doc_id'] == 'dummy.dm'
         assert isinstance(context['mtime'], float)
