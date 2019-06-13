@@ -12,7 +12,8 @@ try:
 except ImportError:
     DebugToolbarExtension = None
 
-from .views import editor, static_asset
+from .views.blueprints import editor, static_asset
+from .views.handlers import page_not_found
 from .. import settings
 
 
@@ -66,6 +67,7 @@ def create_app(in_directory='.', out_directory='.', debug=False):
     # Add blueprints
     app.register_blueprint(editor, url='/')
     app.register_blueprint(static_asset, url='/')
+    app.register_error_handler(404, page_not_found)
 
     # Wrap extensions
     if DebugToolbarExtension is not None:
