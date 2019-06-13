@@ -3,7 +3,7 @@ Utilities for processors to the CLI.
 """
 from textwrap import TextWrapper
 
-from .term import term_width, colored
+from ..term import term_width, colored
 
 
 def print_processors(processor_base_cls):

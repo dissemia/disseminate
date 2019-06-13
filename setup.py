@@ -68,14 +68,17 @@ setup(
     packages=find_packages("src"),
     package_dir={"": "src"},
     include_package_data=True,  # include MANIFEST.in
-    install_requires=['regex',           # No license, replaced with re
-                      'jinja2',          # 3-clause BSD
-                      'lxml',            # BSD license
-                      'python-slugify',  # MIT license
-                      # The following are needed for the server
-                      'flask',          # 3-clase BSD license
-                      #'pdfCropMargins'  # GPL v3
-                      ],
+    install_requires=[
+        'regex',           # No license, replaced with re
+        'jinja2>=2.10',    # 3-clause BSD
+        'lxml',            # BSD license
+        'python-slugify',  # MIT license
+        # The following are needed for the server
+        'flask>=1.0',      # 3-clase BSD license
+        # The following are needed for the CLI
+        'click>=7.0',      # 3-clause BSD license (comes with flask)
+        #'pdfCropMargins'  # GPL v3
+        ],
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc', 'asv'],
         'test': ['pytest', 'tox', 'coverage'],

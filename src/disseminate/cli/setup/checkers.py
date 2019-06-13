@@ -1,8 +1,8 @@
 """
 Command-line interface tools for Checkers
 """
-from .term import fill_string, colored
-from ..checkers import Checker, All, Any, Optional
+from ..term import fill_string, colored
+from ...checkers import Checker, All, Any, Optional
 
 spaces_per_level = 2
 width = 80
