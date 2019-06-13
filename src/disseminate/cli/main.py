@@ -6,6 +6,7 @@ import logging
 import argparse
 import os.path
 
+from ..__version__ import __version__
 from .processors import print_processors
 from .checkers import print_checkers
 from ..server import run_server
@@ -36,7 +37,8 @@ def main():
     """The main command-line interface (CLI) for rendering disseminate
     documents."""
     # Create the argument parser
-    parser = argparse.ArgumentParser(description='disseminate documents')
+    desc = "The Disseminate Document Processor (v{})".format(__version__)
+    parser = argparse.ArgumentParser(description=desc)
     base_parser = parser.add_subparsers(description='processor commands',
                                         dest='command')
 
