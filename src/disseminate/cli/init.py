@@ -1,15 +1,13 @@
 """
 The 'init' CLI sub-command.
 """
-from click import ClickException
-
-from .main import main
+import click
 
 
-@main.command()
+@click.command()
 def init():
     """Initialize a new template project"""
-    exc = ClickException("Not Implemented")
+    exc = click.ClickException("Not Implemented")
     exc.exit_code = 1
     raise exc
 

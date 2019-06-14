@@ -5,6 +5,10 @@ import click
 import logging
 
 from .options import debug_option
+from .init import init
+from .render import render
+from .serve import serve
+from .setup import setup
 
 from ..__version__ import __version__
 
@@ -17,3 +21,9 @@ def main(debug):
     if debug:
         logging.basicConfig(format='%(levelname)-9s:  %(message)s',
                             level=logging.DEBUG)
+
+
+main.add_command(init)
+main.add_command(render)
+main.add_command(serve)
+main.add_command(setup)

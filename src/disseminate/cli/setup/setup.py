@@ -3,7 +3,6 @@ The 'setup' CLI sub-command.
 """
 import click
 
-from ..main import main
 from .checkers import print_checkers
 from .processors import print_processors
 from ...tags.processors import ProcessTag
@@ -11,7 +10,7 @@ from ...label_manager.processors import ProcessLabels
 from ...document.processors import ProcessContext
 
 
-@main.command()
+@click.command()
 @click.option('--check', default=False, is_flag=True,
               help='Check required executables and packages')
 @click.option('--list-tag-processors', default=False, is_flag=True,

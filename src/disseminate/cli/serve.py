@@ -3,13 +3,12 @@ The 'serve' CLI sub-command for running a webserver.
 """
 import click
 
-from .main import main
 from .options import file_options, debug_option
 from ..server import run_server
 from .. import settings
 
 
-@main.command()
+@click.command()
 @file_options
 @click.option('--port', '-p', default=settings.default_port, show_default=True,
               help="The port to listen to for the webserver")
