@@ -3,12 +3,6 @@ Terminal utilities in the CLI.
 """
 import shutil
 
-try:
-    from termcolor import colored
-except ModuleNotFoundError:
-    def colored(s, *args, **kwargs):
-        return s
-
 
 def term_width():
     """Retrieve the current width of the terminal."""

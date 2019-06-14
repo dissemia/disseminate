@@ -1,14 +1,16 @@
 """
 Command-line interface tools for Checkers
 """
-from ..term import fill_string, colored
+from click import style
+
+from ..term import fill_string
 from ...checkers import Checker, All, Any, Optional
 
 spaces_per_level = 2
 width = 80
 
 
-def print_single_check(msg, status, color=None, attrs=None, spacer=' ',
+def print_single_check(msg, status, color=None, bold=False, spacer=' ',
                        level=1):
     """Print a single check line."""
     msg = (' ' * spaces_per_level * level) + msg # indent
@@ -16,7 +18,7 @@ def print_single_check(msg, status, color=None, attrs=None, spacer=' ',
     status_len = len(status_str)
 
     if color is not None:
-        status_str = colored(status_str, color=color, attrs=attrs)
+        status_str = style(status_str, fg=color, bold=bold)
     return fill_string(msg, end=status_str, end_len=status_len, spacer=spacer,
                        width=width)
 
@@ -25,19 +27,19 @@ def print_dependencies(item, required=True, level=1):
     # Setup the status string
     available = getattr(item, 'available', None)
     if available is True:
-        status_str, color, attrs, spacer = 'PASS', 'green', ['bold'], ' '
+        status_str, color, bold, spacer = 'PASS', 'green', True, ' '
     elif available is False and required:
-        status_str, color, attrs, spacer = 'FAIL', 'red', ['bold'], '.'
+        status_str, color, bold, spacer = 'FAIL', 'red', True, '.'
     elif available is False and not required:
-        status_str, color, attrs, spacer = 'MISSING', 'yellow', ['bold'], ' '
+        status_str, color, bold, spacer = 'MISSING', 'yellow', True, ' '
     else:
-        status_str, color, attrs, spacer = 'UNKNOWN', 'white', None, ' '
+        status_str, color, bold, spacer = 'UNKNOWN', 'white', False, ' '
 
     if isinstance(item, All):
         # All are required
         msg = "Checking required dependencies for '{}'".format(item.category)
         msg = print_single_check(msg=msg, status=status_str, color=color,
-                                 attrs=attrs, level=level, spacer=spacer)
+                                 bold=bold, level=level, spacer=spacer)
         print(msg)
         for i in item:
             print_dependencies(item=i, required=True, level=level + 1)
@@ -45,7 +47,7 @@ def print_dependencies(item, required=True, level=1):
         # One is required are required
         msg = "Checking alternative dependencies for '{}'".format(item.category)
         msg = print_single_check(msg=msg, status=status_str, color=color,
-                                 attrs=attrs, level=level, spacer=spacer)
+                                 bold=bold, level=level, spacer=spacer)
         print(msg)
         for i in item:
             print_dependencies(item=i, required=False, level=level + 1)
@@ -54,14 +56,14 @@ def print_dependencies(item, required=True, level=1):
         # One is required are required
         msg = "Checking alternative dependencies for '{}'".format(item.category)
         msg = print_single_check(msg=msg, status=status_str, color=color,
-                                 attrs=attrs, level=level, spacer=spacer)
+                                 bold=bold, level=level, spacer=spacer)
         print(msg)
         for i in item:
             print_dependencies(item=i, required=False, level=level + 1)
     elif hasattr(item, 'name'):
         msg = "Checking dependency '{}'".format(item.name)
         msg = print_single_check(msg=msg, status=status_str, color=color,
-                                 attrs=attrs, level=level, spacer=spacer)
+                                 bold=bold, level=level, spacer=spacer)
         print(msg)
 
 
