@@ -1,0 +1,14 @@
+Usage: dm [OPTIONS] COMMAND [ARGS]...
+
+  Disseminate Document Processor
+
+Options:
+  --version  Show the version and exit.
+  --debug    Show debugging information
+  --help     Show this message and exit.
+
+Commands:
+  init    Initialize a new template project
+  render  Render a disseminate project
+  serve   Serve documents with a local webserver
+  setup   Setup and configuration options
