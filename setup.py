@@ -75,7 +75,7 @@ setup(
         'python-slugify',  # MIT license
         # The following are needed for the CLI
         'click>=7.0',      # 3-clause BSD license (comes with flask)
-        #'pdfCropMargins'  # GPL v3
+        'pdfCropMargins',  # GPL v3
         ],
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc', 'asv'],

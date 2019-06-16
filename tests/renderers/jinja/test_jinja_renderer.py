@@ -67,7 +67,7 @@ def test_jinjarenderer_paths(context_cls):
     # Check the paths
     paths = renderer.paths()
     assert len(paths) == 1
-    assert paths[0].match('src/disseminate/templates/default')
+    assert paths[0].match('disseminate/templates/default')
 
     # 2. Setup a JinjaRenderer that accesses package templates and custom
     #    templates in the project directory.
@@ -86,7 +86,7 @@ def test_jinjarenderer_paths(context_cls):
     paths = renderer.paths()
     assert len(paths) == 2
     assert paths[0].match('tests/renderers/example1/src/default')
-    assert paths[1].match('src/disseminate/templates/default')
+    assert paths[1].match('disseminate/templates/default')
 
     # 3. Check a template with inheritance
     renderer = JinjaRenderer(context=context, template='books/tufte',
@@ -164,21 +164,21 @@ def test_jinjarenderer_get_template(context_cls, tmpdir):
                              module_only=True, targets=['.tex', '.html'])
     t = renderer.get_template(target='.html')
     filepath = pathlib.Path(t.filename)
-    assert filepath.match('src/disseminate/templates/default/template.html')
+    assert filepath.match('disseminate/templates/default/template.html')
 
     # 2. Another built-in template
     renderer = JinjaRenderer(context=context, template='books/tufte',
                              module_only=True, targets=['.tex', '.html'])
     t = renderer.get_template(target='.html')
     filepath = pathlib.Path(t.filename)
-    assert filepath.match('src/disseminate/templates/books/tufte/template.html')
+    assert filepath.match('disseminate/templates/books/tufte/template.html')
 
     # 3. Another built-in template (with template specified)
     renderer = JinjaRenderer(context=context, template='books/tufte/template',
                              module_only=True, targets=['.tex', '.html'])
     t = renderer.get_template(target='.html')
     filepath = pathlib.Path(t.filename)
-    assert filepath.match('src/disseminate/templates/books/tufte/template.html')
+    assert filepath.match('disseminate/templates/books/tufte/template.html')
 
     # 4. Try a custom template
     # Create a custom template

@@ -23,7 +23,7 @@ def test_template_paths():
     #    disseminate package
     pl_path = template_paths(pl)
     assert len(pl_path) == 1
-    assert pl_path[0].match('src/disseminate/templates')
+    assert pl_path[0].match('disseminate/templates')
 
     # 2. Test the filesystem loader path
     fl_path = template_paths(fl)

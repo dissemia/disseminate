@@ -1,9 +1,10 @@
 """
 Test the ProcessLabels class
 """
+import gc
+
 from disseminate.label_manager.processors import ProcessLabels
 from disseminate.label_manager.types import ContentLabel, Label
-from disseminate.utils.tests import cleanup_subclass
 
 
 def test_process_label_processors(context_cls):
@@ -30,7 +31,9 @@ def test_process_label_processors(context_cls):
     assert id(subprocess[0].context) == id(context)
 
     # cleanup the class
-    cleanup_subclass(SubProcessLabels)
+    del SubProcessLabels, processors, subprocess
+    gc.collect()
+    #print(ProcessLabels.__subclasses__())
 
 
 def test_process_labels_filter(context_cls):
@@ -75,4 +78,6 @@ def test_process_labels_filter(context_cls):
     assert filtered[0] == labels[0]
 
     # cleanup the class
-    cleanup_subclass(SubProcessLabels)
+    del SubProcessLabels, sub
+    gc.collect()
+    #print(ProcessLabels.__subclasses__())

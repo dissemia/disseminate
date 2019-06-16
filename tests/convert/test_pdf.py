@@ -42,7 +42,6 @@ def test_pdf2svg(tmpdir):
     assert 'height="58.2628pt"' in contents
 
 
-@pytest.mark.optional
 def test_pdf2svg_optional(tmpdir):
     """Test the Pdf2svg converter with optional pdfcrop and rsvg-convert
     dependencies."""
@@ -66,6 +65,7 @@ def test_pdf2svg_optional(tmpdir):
     assert target_filepath == correct_filepath
     assert correct_filepath.is_file()
     contents = correct_filepath.read_text()
+    print('contents', contents)
     assert 'width="21.99794pt"' in contents
     assert 'height="22.4455pt"' in contents
 
