@@ -73,8 +73,6 @@ setup(
         'jinja2>=2.10',    # 3-clause BSD
         'lxml',            # BSD license
         'python-slugify',  # MIT license
-        # The following are needed for the server
-        'flask>=1.0',      # 3-clase BSD license
         # The following are needed for the CLI
         'click>=7.0',      # 3-clause BSD license (comes with flask)
         #'pdfCropMargins'  # GPL v3
