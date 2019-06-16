@@ -5,8 +5,7 @@ from pathlib import Path
 
 from disseminate.document import Document
 from disseminate.paths import SourcePath
-from disseminate.document.utils import (find_project_paths, load_root_documents,
-                                        translate_path)
+from disseminate.document.utils import find_project_paths, load_root_documents
 from disseminate.document.document_context import DocumentContext
 from disseminate.utils.tests import strip_leading_space
 

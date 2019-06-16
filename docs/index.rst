@@ -103,7 +103,6 @@ The dependencies are only required depending on which features are used.
    :caption: Interfaces
 
    interfaces/cli/index
-   interfaces/server/index
    
 .. toctree::
    :maxdepth: 2

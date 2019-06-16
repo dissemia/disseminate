@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+0.15
+----
+
+Interfaces
+~~~~~~~~~~
+
+1. *Click*. Implemented Click for the CLI
+2. *Flask*. Removed the server interface from the project
+
 0.14
 ----
 
