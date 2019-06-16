@@ -4,7 +4,7 @@ Functions to load projects in a session.
 import flask.globals as gbl
 
 from .store import store
-from ..document.utils import load_root_documents
+from ..document import Document
 
 
 def load_projects():
@@ -20,11 +20,14 @@ def load_projects():
 
     # Make sure the project list is loaded
     if 'root_documents' not in store:
-        # Get the root directory
-        in_directory = config.get('in_directory', '.')
+        # Get project_filenames
+        project_filenames = config.get('project_filenames', [])
+        out_dir = config.get('out_dir', None)
 
         # Fetch the root documents
-        docs = load_root_documents(path=in_directory)
+        docs = [Document(src_filepath=project_filename, target_root=out_dir)
+                for project_filename in project_filenames]
+
         store['root_documents'] = docs
         store['target_roots'] = [doc.target_root for doc in docs]
 

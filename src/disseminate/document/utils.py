@@ -1,8 +1,6 @@
 import pathlib
-from datetime import datetime
 
 from .document import Document
-from ..formats import html_tag
 from ..paths import SourcePath
 from .. import settings
 
@@ -101,52 +99,3 @@ def load_root_documents(path='',
     return [Document(str(src_filepath)) for src_filepath in
             find_root_src_filepaths(path=path,
                                     document_extension=document_extension)]
-
-
-def translate_path(path, documents):
-    """Translate a path to a render path.
-
-    Given a src_filepath or target_filepath and documents, this function finds
-    the corresponding render path for a path relative to the project_root or
-    target_root. The file in the given render_path exists.
-
-    Parameters
-    ----------
-    path : str
-        The path relative to project_root or target_root.
-    documents : List[:obj:`Document <.Document>`]
-        The documents whose paths should be checked.
-
-    Returns
-    -------
-    render_path : Union[str, None]
-    """
-    # Strip leading '/' if present
-    if isinstance(path, str):
-        path = path if not path.startswith('/') else path[1:]
-
-    # Make sure the path is a path object
-    path = pathlib.Path(path)
-
-    # See if the path is valid as is.
-    if path.is_file():
-        return path
-
-    # Loop through the documents and see if a project_root or target_root
-    # path is found.
-    for document in documents:
-        # Try constructing a render src_filepath
-        src_filepath = document.project_root / path
-        if src_filepath.is_file():
-            return src_filepath
-
-        # Check to see if the path can be constructed to a target_filepath
-        targets = set()
-        for subdoc in document.documents_list(only_subdocuments=False,
-                                              recursive=True):
-            targets = subdoc.targets
-            for target, target_filepath in targets.items():
-                if target_filepath.match(str(path)):
-                    return target_filepath
-
-    return None
