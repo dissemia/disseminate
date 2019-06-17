@@ -1,0 +1,21 @@
+notifications:
+  email: false
+language: python
+python:
+- '3.6'
+- '3.7'
+branches:
+  only:
+  - master
+  - development
+os:
+- linux
+before_install:
+- sudo rm -rf /dev/shm
+- sudo ln -s /run/shm /dev/shm
+install:
+- sudo apt-get install texlive-base
+- pip install regex jinja2 lxml python-slugify click pdfCropMargins
+script:
+- python setup.py develop
+- pytest
