@@ -14,7 +14,8 @@ addons:
   apt:
     packages:
     - texlive-latex-base
-    - texlive-latex-extra
+    - texlive-latex-extra  # provides 'enumitem'
+    - texlive-fonts-recommended  # provides 'ecrm1200'
     - pdf2svg
     - librsvg2-bin
     - asymptote
