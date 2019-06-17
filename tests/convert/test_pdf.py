@@ -100,8 +100,8 @@ def test_pdf2svg_optional(tmpdir):
 
     # Check the dimensions
     width, height = svg_dims(correct_filepath)
-    assert width == 54.
-    assert height == 56.
+    assert width in (54., 56.)  # different dims based on pdf2svg version
+    assert height in (54, 56.)
 
     # Try cropping and scaling by a factor of 2, but this time with a
     # spurious kwarg
@@ -118,8 +118,8 @@ def test_pdf2svg_optional(tmpdir):
 
     # Check the dimensions
     width, height = svg_dims(correct_filepath)
-    assert width == 54.
-    assert height == 56.
+    assert width in (54., 56.)  # different dims based on pdf2svg version
+    assert height in (54, 56.)
 
 
 def test_pdf2svg_caching(tmpdir):
