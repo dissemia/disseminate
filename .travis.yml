@@ -14,6 +14,9 @@ addons:
   apt:
     packages:
     - texlive-latex-base
+    - texlive-latex-extra
+    - pdf2svg
+    - librsvg2-bin
     - asymptote
 install:
   - pip install regex jinja2 lxml python-slugify click pdfCropMargins
