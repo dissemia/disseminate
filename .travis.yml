@@ -12,6 +12,8 @@ os:
   - linux
 install:
   - sudo apt-get install texlive-base
+  - which pdflatex
+  - ls /usr/bin/pdflatex
   - pip install regex jinja2 lxml python-slugify click pdfCropMargins
   - make install
 script:
