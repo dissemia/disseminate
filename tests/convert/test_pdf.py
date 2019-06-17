@@ -1,6 +1,8 @@
 """
 Test converters for pdf files
 """
+import re
+import pathlib
 from distutils.spawn import find_executable
 from pathlib import Path
 
@@ -8,6 +10,18 @@ import pytest
 
 from disseminate.convert import convert, ConverterError
 from disseminate import SourcePath, TargetPath
+
+
+def svg_dims(svg_filename):
+    """Given and svg filename, return the width and height of the image."""
+    # Load the svg file
+    svg = pathlib.Path(svg_filename).read_text()
+
+    # Find the width and height
+    width = re.search(r'width\s*=\s*[\"\'](?P<value>[\d\.]+)', svg).group(1)
+    height = re.search(r'height\s*=\s*[\"\'](?P<value>[\d\.]+)', svg).group(1)
+
+    return float(width), float(height)
 
 
 def test_pdf2svg(tmpdir):
@@ -37,9 +51,11 @@ def test_pdf2svg(tmpdir):
                                   subpath='sample.svg')
     assert target_filepath == correct_filepath
     assert correct_filepath.is_file()
-    contents = correct_filepath.read_text()
-    assert 'width="65.5156pt"' in contents
-    assert 'height="58.2628pt"' in contents
+
+    # Check the dimensions
+    width, height = svg_dims(correct_filepath)
+    assert width == 65.5156
+    assert height == 58.2628
 
 
 def test_pdf2svg_optional(tmpdir):
@@ -54,7 +70,8 @@ def test_pdf2svg_optional(tmpdir):
     target_basefilepath = TargetPath(target_root=tmpdir, target='.pdf',
                                      subpath='sample')
 
-    # Try cropping
+    # Try cropping. This should shrink to the image from 65.5 x 58.2 pts to
+    # a figure with dimensions smaller than 25 x 25 pts
     target_filepath = convert(src_filepath=pdf_file,
                               target_basefilepath=target_basefilepath,
                               crop=True, targets=['.svg'])
@@ -65,9 +82,10 @@ def test_pdf2svg_optional(tmpdir):
     assert target_filepath == correct_filepath
     assert correct_filepath.is_file()
 
-    contents = correct_filepath.read_text()
-    assert 'width="21.99794pt"' in contents
-    assert 'height="22.4455pt"' in contents
+    # Check the dimensions
+    width, height = svg_dims(correct_filepath)
+    assert width < 25.
+    assert height < 25.
 
     # Try cropping and scaling by a factor of 2
     target_filepath = convert(src_filepath=pdf_file,
@@ -79,9 +97,11 @@ def test_pdf2svg_optional(tmpdir):
                                   subpath='sample_crop_scale2.0.svg')
     assert target_filepath == correct_filepath
     assert correct_filepath.is_file()
-    contents = correct_filepath.read_text()
-    assert 'width="54pt"' in contents or 'width="54px"' in contents
-    assert 'height="56pt"' in contents or 'height="56px"' in contents
+
+    # Check the dimensions
+    width, height = svg_dims(correct_filepath)
+    assert width == 54.
+    assert height == 56.
 
     # Try cropping and scaling by a factor of 2, but this time with a
     # spurious kwarg
@@ -95,9 +115,11 @@ def test_pdf2svg_optional(tmpdir):
                                   subpath='sample_crop_scale2.0.svg')
     assert target_filepath == correct_filepath
     assert correct_filepath.is_file()
-    contents = correct_filepath.read_text()
-    assert 'width="54pt"' in contents or 'width="54px"' in contents
-    assert 'height="56pt"' in contents or 'height="56px"' in contents
+
+    # Check the dimensions
+    width, height = svg_dims(correct_filepath)
+    assert width == 54.
+    assert height == 56.
 
 
 def test_pdf2svg_caching(tmpdir):
