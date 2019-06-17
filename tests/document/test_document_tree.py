@@ -223,7 +223,7 @@ def test_document_tree_matching_filenames(tmpdir):
     doc.render()
 
 
-def test_document_tree_updates(tmpdir):
+def test_document_tree_updates(tmpdir, wait):
     """Test the updates to the document tree and labels.
 
     Note that this test was previously conducted by checking the python 'id' of
@@ -269,6 +269,7 @@ def test_document_tree_updates(tmpdir):
     doc_list[2].test_object = 1
 
     # 2. Now change the order of the sub-documents and reload the ast
+    wait()  # sleep time offset needed for different mtimes
     src_filepath1.write_text("""---
     include:
       file3.dm
@@ -290,6 +291,7 @@ def test_document_tree_updates(tmpdir):
         assert hasattr(d, 'test_object')
 
     # 3. Now remove one document
+    wait()  # sleep time offset needed for different mtimes
     src_filepath1.write_text("""---
     include:
       file2.dm
@@ -316,6 +318,7 @@ def test_document_tree_updates(tmpdir):
         assert hasattr(d, 'test_object')
 
     # 4. Now add the document back
+    wait()  # sleep time offset needed for different mtimes
     src_filepath1.write_text("""---
     include:
       file2.dm
@@ -449,6 +452,7 @@ def test_render_required(tmpdir, wait):
 
     # 3. A render is required if the tags have been updated.
     #    In this case, place a reference in the 2nd document for the 3rd.
+    wait()  # sleep time offset needed for different mtimes
     src_filepath2.write_text("""
     @chapter{file2}
     @ref{ch:file3-dm-file3}
@@ -495,7 +499,6 @@ def test_render_required(tmpdir, wait):
     ---
     @chapter{file3}
     """)
-    wait()  # sleep time offset needed for different mtimes
 
     # Documents 3 requires a render because it was just written
     for d, answer in zip(doc_list, [False, False, True]):
@@ -517,6 +520,8 @@ def test_render_required(tmpdir, wait):
     # Now update the template, and the 3rd document will require a render.
     # However, since the source file itself hasn't changed, the 2nd document
     # doesn't require a render.
+
+    wait()  # sleep time offset needed for different mtimes
     template_filepath.write_text("""
     <html><body></body></html>
     """)

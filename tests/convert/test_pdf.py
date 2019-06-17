@@ -64,8 +64,8 @@ def test_pdf2svg_optional(tmpdir):
                                   subpath='sample_crop.svg')
     assert target_filepath == correct_filepath
     assert correct_filepath.is_file()
+
     contents = correct_filepath.read_text()
-    print('contents', contents)
     assert 'width="21.99794pt"' in contents
     assert 'height="22.4455pt"' in contents
 

@@ -228,6 +228,7 @@ def test_document_tree_updates_document_labels(tmpdir, wait):
     assert label_list[2].id == 'doc:file2-dm'
 
     # 3. Now remove one document
+    wait()  # sleep time offset needed for different mtimes
     src_filepath1.write_text("""---
     include:
       file2.dm
@@ -255,6 +256,7 @@ def test_document_tree_updates_document_labels(tmpdir, wait):
     assert label_list[1].id == 'doc:file2-dm'
 
     # 4. Now add the document back
+    wait()  # sleep time offset needed for different mtimes
     src_filepath1.write_text("""---
     include:
       file2.dm
@@ -415,6 +417,7 @@ def test_document_tree_updates_with_section_labels(tmpdir, wait):
     assert not doc_list[1].render_required(target_filepath2)
 
     # Now touch the second document.
+    wait()  # sleep time offset needed for different mtimes
     src_filepath2.touch()
 
     assert not doc_list[0].render_required(target_filepath1)
