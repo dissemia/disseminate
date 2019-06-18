@@ -69,13 +69,13 @@ setup(
     package_dir={"": "src"},
     include_package_data=True,  # include MANIFEST.in
     install_requires=[
-        'regex',           # No license, replaced with re
-        'jinja2>=2.10',    # 3-clause BSD
-        'lxml',            # BSD license
-        'python-slugify',  # MIT license
+        'regex>=2018.11.22',         # No license, replaced with re
+        'jinja2>=2.10',              # 3-clause BSD
+        'lxml>=4.3.0',               # BSD license
+        'python-slugify>=2.0.1',     # MIT license
         # The following are needed for the CLI
-        'click>=7.0',      # 3-clause BSD license (comes with flask)
-        'pdfCropMargins',  # GPL v3
+        'click>=7.0',                # 3-clause BSD license (comes with flask)
+        'pdfCropMargins>=0.1.4',     # GPL v3
         ],
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc', 'asv'],

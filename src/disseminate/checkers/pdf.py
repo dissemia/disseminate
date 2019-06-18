@@ -95,6 +95,23 @@ class PdfChecker(Checker):
             return None
         self.check_kpsewhich(packages, '.sty')
 
+    def check_fonts(self, fonts=None):
+        """Check the available of latex fonts (.tfm files) using
+        kpsewhich.
+
+        Parameters
+        ----------
+        fonts : Union[List[str], Tuple[str]]
+                The list of fonts to check for availability.
+        """
+        if fonts is not None:
+            pass
+        elif 'fonts' in self:
+            fonts = self['fonts']
+        else:
+            return None
+        self.check_kpsewhich(fonts, '.tfm')
+
     def check_classes_kpsewhich(self, classes=None):
         """Check the available of latex classes (.cls files) using
         kpsewhich.

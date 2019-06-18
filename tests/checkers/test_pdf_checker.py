@@ -32,7 +32,10 @@ def test_pdf_checker_check_packages():
     checker = PdfChecker()
     checker.check_packages()
     packages = checker['packages']
+    fonts = checker['fonts']
+
     assert packages.available
+    assert fonts.available
 
 
 @pytest.mark.environment
