@@ -5,7 +5,6 @@ from .checker import Checker
 from .utils import name_and_version
 from .types import SoftwareDependency, SoftwareDependencyList
 from ..software_dependencies import python_deps
-from ..utils.list import chunks
 
 
 class PythonChecker(Checker):
@@ -96,7 +95,7 @@ class PythonChecker(Checker):
                 # In this case, we don't care about the version--just that it's
                 # installed. It is, so mark it as installed
                 packages.available = True
-            elif installed_ver is not None and op(ver, installed_ver):
+            elif installed_ver is not None and op(installed_ver, ver):
                 # Otherwise check the version number
                 packages.available = True
 
@@ -105,21 +104,3 @@ class PythonChecker(Checker):
             # individually
             for package in packages.dependencies:
                 self.check_packages_pip(package)
-
-
-    # def check_packages_kpsewhich(self, packages=None):
-    #     """Check the available of latex packages (.sty files) using
-    #     kpsewhich.
-    #
-    #     Parameters
-    #     ----------
-    #     packages : Union[List[str], Tuple[str]]
-    #             The list of packages to check for availability.
-    #     """
-    #     if packages is not None:
-    #         pass
-    #     elif 'packages' in self:
-    #         packages = self['packages']
-    #     else:
-    #         return None
-    #     self.check_kpsewhich(packages, '.sty')
