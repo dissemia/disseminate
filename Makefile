@@ -17,23 +17,6 @@ coverage:  ## Test the coverage of tests
 develop: ## Prepare the package for active development
 	$(PYTHON) setup.py develop
 
-bench: ## Run benchmarks
-	asv run
-	asv publish
-
-bench-current:  ## Run benchmark on the latest commit
-	asv run `git log --pretty=format:'%h' -n 2|tail -n1`..`git log --pretty=format:'%h' -n 2|head -n1`
-
-bench-all: ## Run benchmarks on all tagged versions
-	asv run "--no-walk --tags"
-	asv publish
-
-bench-preview: ## Run the benchmark webserver
-	asv preview
-
-bench-profile-1:
-	asv profile bench_render.Suite.time_render_independent_files_html `git log --pretty=format:'%h' -n 1` -o profile
-
 clean:  ## Safely clean compiled package files, docs and test files
 	find . -name '*.pyc' -exec rm -f {} +
 	find . -name '*.pyo' -exec rm -f {} +
@@ -49,6 +32,9 @@ docs: develop  ## Build the documentation
 	@echo "\033[92m\n\nBuild successful!\033[0m"
 	@echo "\033[92mView the html docs at docs/_build/html/index.html.\033[0m"
 	@echo "\033[92mView the pdf docs docs/_build/latex/.\n\033[0m"
+
+docker:  ## Build the docker image
+	docker build -t  disseminate:0.15 .
 
 install:  ## Install disseminate
 	python setup.py install
