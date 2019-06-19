@@ -85,7 +85,7 @@ setup(
     scripts=['scripts/dm', ],
     entry_points={
         'console_scripts': [
-            'dm = disseminate.main:main'
+            'dm = disseminate.cli:main'
           ],
     }
 )
