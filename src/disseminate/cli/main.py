@@ -7,6 +7,7 @@ import logging
 from .options import debug_option
 from .init import init
 from .render import render
+from .preview import preview
 from .setup import setup
 
 from ..__version__ import __version__
@@ -24,4 +25,5 @@ def main(debug):
 
 main.add_command(init)
 main.add_command(render)
+main.add_command(preview)
 main.add_command(setup)

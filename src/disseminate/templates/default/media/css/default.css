@@ -42,32 +42,77 @@ sub,sup {
     font-size: 70%;
 }
 
-.toc-document ol {
-    list-style: none;
-    padding-left: 1rem;
+/* Table of Contents */
+.menu {
+  display: none;
+  position: fixed;
+  background: #ffffff;
+  z-index: 2;
+  border: 1px solid #555;
+  border-radius: 5px;
+  padding: 1rem;
+  min-width: 40rem;
 }
 
-.toc-document a {
-    color: #444444;
+.menu h1 {
+    font-size: 16pt;
+    margin-top: 0;
 }
 
-ol.toc-document {
-    list-style: none;
+label.menu-toggle {
+  margin-left: -30px;
+  margin-top: 1rem;
+  position: fixed;
+  display: block;
 }
 
-li.li-document-level-1 {
-    padding-bottom: 1rem;
-    font-size: 1.4rem;
+input.menu-toggle[type=checkbox] {
+  visibility: hidden;
+  position: absolute;
 }
 
-.li-document-level-2,
-.li-document-level-3,
-.li-document-level-3,
-.li-document-level-4,
-.li-document-level-5,
-.li-document-level-6 {
-    padding-top: 0.5rem;
+input.menu-toggle[type=checkbox]:checked ~ .menu {
+  display: block;
 }
+
+.menu-toggle #menu-toggle-inactive {
+  position: absolute;
+}
+
+.menu-toggle #menu-toggle-active {
+  visibility: hidden;
+}
+
+input.menu-toggle[type=checkbox]:checked + .menu-toggle #menu-toggle-inactive {
+  visibility: hidden;
+}
+
+input.menu-toggle[type=checkbox]:checked + .menu-toggle #menu-toggle-active {
+  visibility: visible;
+}
+
+ul.toc-level-1, ul.toc-level-2, ul.toc-level-3, ul.toc-level-4 {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+ul.toc-level-2 {
+  padding-left: 1rem;
+}
+
+ul.toc-level-3 {
+  padding-left: 2rem;
+}
+
+ul.toc-level-4 {
+  padding-left: 3rem;
+}
+
+.toc-level-2 a {
+  font-weight: 400;
+}
+
 
 .title {
     display: block;

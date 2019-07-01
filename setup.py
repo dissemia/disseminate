@@ -73,9 +73,11 @@ setup(
         'jinja2>=2.10',              # 3-clause BSD
         'lxml>=4.3.0',               # BSD license
         'python-slugify>=2.0.1',     # MIT license
+        'pdfCropMargins>=0.1.4',     # GPL v3
         # The following are needed for the CLI
         'click>=7.0',                # 3-clause BSD license (comes with flask)
-        'pdfCropMargins>=0.1.4',     # GPL v3
+        # The following are needed for the preview function
+        'flask>=1.0',
         ],
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc', 'asv'],
