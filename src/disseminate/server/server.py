@@ -1,6 +1,8 @@
 """
 Setup the server
 """
+import secrets
+
 from flask import Flask
 
 try:
@@ -12,6 +14,11 @@ from .views.blueprints import editor, static_asset
 from .views.handlers import page_not_found
 from .projects import load_projects
 from .. import settings
+
+
+def create_secret_key():
+    """Create a temporary secret key for sessions"""
+    return secrets.token_urlsafe(16)
 
 
 def create_app(project_filenames, out_dir=None, debug=False):
@@ -34,6 +41,7 @@ def create_app(project_filenames, out_dir=None, debug=False):
 
     app.config['out_dir'] = out_dir
     app.config['project_filenames'] = project_filenames
+    app.config['SECRET_KEY'] = create_secret_key()
 
     # Add blueprints
     app.register_blueprint(editor, url='/')

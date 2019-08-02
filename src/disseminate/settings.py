@@ -121,6 +121,8 @@ default_context = {
         'heading_chapter': 'Chapter @label.chapter_number. ',
 
         'ref_heading': '@label.title',
+        'ref_heading_part': 'Part @label.part_number. @label.title',
+        'ref_heading_chapter': 'Chapter @label.chapter_number. @label.title',
 
         # Citation formats
         # 'citation': '@sup{label.number}',
