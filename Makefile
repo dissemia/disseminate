@@ -10,6 +10,9 @@ test:  ## Test the package with the current python version
 test-cli:  ## Test the command-line interface
 	@$(MAKE) --no-print-directory -C tests/cli test
 
+build-wheel:  ## Make a wheel package in dist
+	python3 setup.py sdist bdist_wheel
+
 coverage:  ## Test the coverage of tests
 	pip install 'pytest' 'pytest-cov'
 	pytest --cov=src --cov-report html
