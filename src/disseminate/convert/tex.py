@@ -2,6 +2,7 @@
 Converters to convert from ``.tex`` TEX files to pdf using pdflatex.
 """
 import os
+import shutil
 import pathlib
 from tempfile import mkdtemp
 
@@ -52,6 +53,8 @@ class Pdflatex(Converter):
         except FileExistsError:
             os.remove(self.target_filepath())
             os.link(temp_filepath_pdf, self.target_filepath())
+        except OSError:
+            shutil.copy2(temp_filepath_pdf, self.target_filepath())
         return True
 
 
