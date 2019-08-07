@@ -77,13 +77,7 @@ class JinjaRenderer(BaseRenderer):
             cl = jinja2.ChoiceLoader([fsl, dl]) if fsl is not None else dl
 
             # Create the environment
-            kwargs = {'block_start_string': settings.template_block_start,
-                      'block_end_string': settings.template_block_end,
-                      'variable_start_string': settings.template_variable_start,
-                      'variable_end_string': settings.template_variable_end,
-                      'comment_start_string': settings.template_comment_start,
-                      'comment_end_string': settings.template_comment_end,
-                      'keep_trailing_newline': True,
+            kwargs = {'keep_trailing_newline': True,
                       }
 
             ae = jinja2.select_autoescape(['html', 'htm', 'xml'])

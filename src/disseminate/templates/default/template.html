@@ -4,23 +4,23 @@
 <head>
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1" name="viewport" />
-(%- if title %)
-  <title>(( title ))</title>
-(%- endif %)
-(%- if description %)
-  <meta name="description" content="(( description ))">
-(%- endif %)
-(%- if author %)
-  <meta name="author" content="(( author ))">
-(%- endif %)
-(%- if template %)
-  <meta name="template" content="(( template ))">
-(%- endif %)
-(%- block css %)
+{%- if title %}
+  <title>{{ title }}</title>
+{%- endif %}
+{%- if description %}
+  <meta name="description" content="{{ description }}">
+{%- endif %}
+{%- if author %}
+  <meta name="author" content="{{ author }}">
+{%- endif %}
+{%- if template %}
+  <meta name="template" content="{{ template }}">
+{%- endif %}
+{%- block css %}
   <link rel="stylesheet" href="/media/css/default.css">
-(% endblock %)
+{% endblock %}
 </head>
-(%- block toc %)
+{%- block toc %}
 <input type="checkbox" id="toggle-1" class="menu-toggle">
 <label for="toggle-1" class="menu-toggle">
   <svg version="1.1" id="menu-toggle-inactive" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
@@ -57,16 +57,16 @@
 </label>
 <div class="menu">
     <div class="toc">
-    (%- if title %)<h1>(( title ))</h1>(% endif %)
-    (%- if toc %)(( toc.html ))(% endif %)
+    {%- if title %}<h1>{{ title }}</h1>{% endif %}
+    {%- if toc %}{{ toc.html }}{% endif %}
     </div>
-(% endblock %)
+{% endblock %}
 </div>
 <body>
   <article>
-    (%- block body %)
-    (( body.html ))
-    (% endblock %)
+    {%- block body %}
+    {{ body.html }}
+    {% endblock %}
   </article>
 </body>
 </html>

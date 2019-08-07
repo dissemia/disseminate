@@ -1,7 +1,10 @@
-(% extends "default/template.tex" %)
-(% block class %)\documentclass{tufte-book}(% endblock %)
-(% block marginheader %)(% endblock %)
-(% block extraheader %)
+{%- extends "default/template.tex" %}
+{%- block class %}
+\documentclass{tufte-book}
+{%- endblock %}
+{%- block marginheader %}
+{%- endblock %}
+{%- block extraheader %}
 %%%
 % Remove labels from captions  
 \usepackage{etoolbox}
@@ -11,4 +14,4 @@
   {}
   {}{}
 \makeatother
-(% endblock %)  
+{%- endblock %}
