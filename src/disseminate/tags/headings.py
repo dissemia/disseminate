@@ -1,75 +1,178 @@
 """
 Tags for headings.
 """
-from .core import Tag
-from ..attributes import get_attribute_value
+from .tag import Tag
+from .label import LabelMixin
+from .utils import content_to_str
+from ..formats import tex_cmd
 
 
-toc_levels = ('section', 'subsection', 'subsubsection')
+toc_levels = ('title', 'part', 'chapter', 'section', 'subsection',
+              'subsubsection')
 
 
-class Heading(Tag):
-    """A heading tag."""
+class Heading(Tag, LabelMixin):
+    """A heading tag.
+
+    .. note::
+        If the content isn't specified and an entry exists in the context with
+        the tag's name, then this tag's content will be replaced with the
+        contents from the context.
+    """
     html_name = None
-    tex_name = None
+    tex_cmd = None
+
     active = True
     include_paragraphs = False
 
-    label_heading = True
+    id_mappings = {'title': 'title',
+                   'part': 'part',
+                   'chapter': 'ch',
+                   'section': 'sec',
+                   'subsection': 'subsec',
+                   'subsubsection': 'subsubsec',
+                    }
 
     def __init__(self, name, content, attributes, context):
-        super(Heading, self).__init__(name, content, attributes, context)
 
-        # Add a label for the heading
-        if (self.label_heading and
-            'label_manager' in context and 'document' in context):
+        # If no content is specified, see if it's specified in the context
+        if (isinstance(content, str) and content.strip() == '' and
+           name in context):
+            content = content_to_str(context[name])
 
-            label_manager = context['label_manager']
-            document = context['document']
-            kind = ('heading', self.__class__.__name__.lower())
-            id = get_attribute_value(self.attributes, 'id')
-            label_manager.add_label(document=document, tag=self, kind=kind,
-                                    id=id)
+        # Call the parent class's constructor
+        Tag.__init__(self, name, content, attributes, context)
 
-    def tex(self, level=1, mathmode=False):
-        # Add newlines around headings
-        tex = super(Heading, self).tex(level, mathmode)
-        return "\n" + tex + "\n\n"
+        if not 'nolabel' in self.attributes:
+            LabelMixin.__init__(self, name, content, attributes, context)
+
+    def generate_label_id(self):
+        if 'id' in self.attributes:
+            return self.attributes['id']
+        else:
+            # If an id wasn't specified, automatically generate one and
+            # prepend a heading id mapping. 'my-title' to 'ch:my-title'
+            cls_name = self.__class__.__name__.lower()
+            label_id = LabelMixin.generate_label_id(self)
+            return ":".join((Heading.id_mappings[cls_name], label_id))
+
+    def generate_label_kind(self):
+        cls_name = self.__class__.__name__.lower()
+        return 'heading', cls_name  # ex: ('heading', 'chapter')
+
+    def default_fmt(self, content=None):
+        # Prepare the content with the label. References for the default format
+        # are not supported
+        content = ''
+        if self.label_tag is not None:
+            content += self.label_tag.default_fmt()
+        content += content_to_str(self.content)
+
+        return super().default_fmt(content=content)
+
+    def tex_fmt(self, content=None, mathmode=False, level=1):
+        cls_name = self.__class__.__name__.lower()
+        content = ''
+
+        # Prepare the tag contents to include the label tag.
+        # ex: 'My Title' becomes 'Chap 1. My Title'
+        if self.label_tag is not None:
+            content += self.label_tag.tex_fmt(mathmode=mathmode,
+                                              level=level + 1)
+        content += self.content
+
+        # Format the heading tag. ex: \chapter{Chapter 1. My First Chapter}
+        content = tex_cmd(cls_name, attributes=self.attributes,
+                          formatted_content=content)
+
+        # Get the label for this heading to get its number, if available
+        if self.label_id is not None and self.label_anchor is not None:
+            assert self.context.is_valid('label_manager')
+
+            label_manager = self.context['label_manager']
+            label = label_manager.get_label(id=self.label_id)
+
+            number = label.order[-1] if label.order else None
+            attrs = ' '.join((cls_name, str(number)))
+
+            content = (tex_cmd('setcounter', attributes=attrs) + '\n' +
+                       content + ' ' +
+                       self.label_anchor.tex_fmt(mathmode=mathmode,
+                                                 level=level + 1))
+
+        return content
+
+    def html_fmt(self, content=None, level=1):
+        # Prepare the tag contents to include the label tag.
+        # ex: 'My Title' becomes 'Chap 1. My Title'
+        content = []
+        if self.label_tag is not None:
+            content.append(self.label_tag)
+
+        if isinstance(self.content, list):
+            content += self.content
+        else:
+            content.append(self.content)
+
+        return super().html_fmt(content=content, level=level)
+
+
+class Title(Heading):
+    aliases = ("h1",)
+    html_name = "h1"
+    tex_cmd = "title"
+    active = True
+    include_paragraphs = False
+
+
+class Part(Heading):
+    html_name = "h1"
+    tex_cmd = "part"
+    active = True
+    include_paragraphs = False
+
+
+class Chapter(Heading):
+    aliases = ("h2",)
+    html_name = "h2"
+    tex_cmd = "chapter"
+    active = True
+    include_paragraphs = False
 
 
 class Section(Heading):
     """A section heading tag."""
-    aliases = ("h2", )
-    html_name = "h2"
-    tex_name = "section"
+    aliases = ("h3", )
+    html_name = "h3"
+    tex_cmd = "section"
     active = True
     include_paragraphs = False
 
 
 class SubSection(Heading):
     """A subsection heading tag."""
-    aliases = ("h3",)
-    html_name = "h3"
-    tex_name = "subsection"
+    aliases = ("h4",)
+    html_name = "h4"
+    tex_cmd = "subsection"
     active = True
     include_paragraphs = False
 
 
 class SubSubSection(Heading):
     """A subsubsection heading tag."""
-    aliases = ("h4",)
-    html_name = "h4"
-    tex_name = "subsubsection"
+    aliases = ("h5",)
+    html_name = "h5"
+    tex_cmd = "subsubsection"
     active = True
     include_paragraphs = False
 
 
 class Para(Tag):
     """A paragraph heading tag."""
-    aliases = ("h5",)
+    aliases = ("h6",)
 
     html_name = "paragraph-heading"
-    tex_name = "paragraph"
+    tex_cmd = "paragraph"
     active = True
     include_paragraphs = False
 

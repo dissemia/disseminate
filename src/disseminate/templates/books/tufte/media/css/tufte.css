@@ -1,0 +1,237 @@
+body {
+    font-size: 14pt;
+    font-family: Palatino, serif;
+    line-height: 20pt;
+    color: #212529;
+    padding-left: 10%;
+    margin-left: auto;
+    margin-right: auto;
+    width: 90%;
+    max-width: 1400px;
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 12pt;
+    line-height: 18pt;
+    padding-left: 0;
+  }
+}
+
+a:link, a:visited, a:hover, a:active {
+    text-decoration: none;
+    font-weight: 600;
+    color: #4a4a54;
+}
+
+article {
+  padding-top: 3rem;
+  padding-bottom: 5rem;
+  position: relative;
+  width: 60%;
+  max-width: 40rem;
+}
+
+@media (max-width: 768px) {
+  article {
+    width: 100%;
+  }
+}
+
+h1,h2,h3,h4,h5,h6 {
+  font-family: sans-serif;
+}
+
+h1,h2 {
+    display: block;
+    font-size: 20pt;
+    margin-top: 20pt;
+    marbin-bottom: 20pt;
+    font-weight: 400;
+}
+
+h3 {
+    display: block;
+    font-size: 14pt;
+    margin-top: 20pt;
+    marbin-bottom: 20pt;
+    font-weight: 400;
+    text-transform: uppercase;
+}
+
+h4 {
+    display: block;
+    font-size: 14pt;
+    margin-top: 20pt;
+    margin-bottom: 20pt;
+    font-style: italic;
+    font-weight: 400;
+}
+
+h2 .label {
+  color: #b50202;
+  font-variant: small-caps;
+  font-size: 20pt;
+  display: block;
+  margin: 20pt;
+  border-bottom: solid 1pt;
+}
+
+
+p {
+  margin: 20pt 0;
+}
+    
+img {
+    background-color: white;
+    margin: 0 0.2rem;
+}
+
+sup, sub {
+  font-size: 65%;
+  vertical-align: baseline;
+  position: relative;
+}
+
+sub {
+  top: 0.3em;
+}
+
+sup {
+  top: -0.5em;
+}
+
+
+span.paragraph {
+    margin-right: 0;
+}
+
+.authors {
+    display: block;
+    font-size: 13pt;
+    margin: 18pt 0 18pt 0;
+    font-family: sans-serif;
+    text-align: right;
+}
+
+/* Table of Contents */
+.menu {
+  display: none;
+  position: fixed;
+  background: #ffffff;
+  z-index: 2;
+  border: 1px solid #555;
+  border-radius: 5px;
+  padding: 1rem;
+  min-width: 40rem;
+}
+
+.menu h1 {
+    font-size: 16pt;
+    margin-top: 0;
+}
+
+label.menu-toggle {
+  margin-left: -30px;
+  margin-top: 1rem;
+  position: fixed;
+  display: block;
+}
+
+input.menu-toggle[type=checkbox] {
+  visibility: hidden;
+  position: absolute;
+}
+
+input.menu-toggle[type=checkbox]:checked ~ .menu {
+  display: block;
+}
+
+.menu-toggle #menu-toggle-inactive {
+  position: absolute;
+}
+
+.menu-toggle #menu-toggle-active {
+  visibility: hidden;
+}
+
+input.menu-toggle[type=checkbox]:checked + .menu-toggle #menu-toggle-inactive {
+  visibility: hidden;
+}
+
+input.menu-toggle[type=checkbox]:checked + .menu-toggle #menu-toggle-active {
+  visibility: visible;
+}
+
+ul.toc-level-1, ul.toc-level-2, ul.toc-level-3, ul.toc-level-4 {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+ul.toc-level-2 {
+  padding-left: 1rem;
+}
+
+ul.toc-level-3 {
+  padding-left: 2rem;
+}
+
+ul.toc-level-4 {
+  padding-left: 3rem;
+}
+
+.toc-level-2 a {
+  font-weight: 400;
+}
+
+
+/* Formatting for the document contents */
+
+.root {
+    margin-top: 3.0rem;
+    display: block;
+}
+
+.sidenote, .marginfig {
+  display: block;
+  clear: right;
+  float: right;
+  width: 50%;
+  margin-right: -60%;
+  margin-top: 0.5rem;
+  font-size: 1.0rem;
+  line-height: 1.4;
+  padding: 0.2rem;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  background-color: #fcfcfc;
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  .sidenote, .marginfig {
+    float: none;
+  }
+}
+
+
+.caption {
+    display: block;
+}
+
+.supsub {
+   display: inline-block;
+   margin: -9em 0;
+   vertical-align: -0.1em;
+   line-height: 0.75em;
+   font-size: 70%;
+   text-align: left;
+}
+
+.eq {
+    display: inline;
+    vertical-align: middle;
+    margin: 0;
+    padding: 0;
+}

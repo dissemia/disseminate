@@ -1,22 +1,39 @@
 """
 Test converters for pdf files
 """
-import os
+import re
+import pathlib
 from distutils.spawn import find_executable
+from pathlib import Path
 
 import pytest
 
 from disseminate.convert import convert, ConverterError
+from disseminate import SourcePath, TargetPath
+
+
+def svg_dims(svg_filename):
+    """Given and svg filename, return the width and height of the image."""
+    # Load the svg file
+    svg = pathlib.Path(svg_filename).read_text()
+
+    # Find the width and height
+    width = re.search(r'width\s*=\s*[\"\'](?P<value>[\d\.]+)', svg).group(1)
+    height = re.search(r'height\s*=\s*[\"\'](?P<value>[\d\.]+)', svg).group(1)
+
+    return float(width), float(height)
 
 
 def test_pdf2svg(tmpdir):
     """Test the Pdf2svg converter."""
+    tmpdir = Path(tmpdir)
 
     # Get a test pdf file
-    pdf_file = "tests/convert/example1/sample.pdf"
+    pdf_file = SourcePath("tests/convert/example1/", "sample.pdf")
 
     # Setup a target_filepath
-    target_basefilepath = tmpdir.join('sample')
+    target_basefilepath = TargetPath(target_root=tmpdir, target='.pdf',
+                                     subpath='sample')
 
     # Try an unavailable: pdf->pdf
     with pytest.raises(ConverterError):
@@ -30,35 +47,45 @@ def test_pdf2svg(tmpdir):
                               targets=['.svg'])
 
     # See if the file was created
-    assert target_filepath == str(tmpdir.join('sample.svg'))
-    assert tmpdir.join('sample.svg').check()
-    contents = tmpdir.join('sample.svg').read()
-    assert 'width="65.5156pt"' in contents
-    assert 'height="58.2628pt"' in contents
+    correct_filepath = TargetPath(target_root=tmpdir, target='.pdf',
+                                  subpath='sample.svg')
+    assert target_filepath == correct_filepath
+    assert correct_filepath.is_file()
+
+    # Check the dimensions
+    width, height = svg_dims(correct_filepath)
+    assert width == 65.5156
+    assert height == 58.2628
 
 
-@pytest.mark.optional
 def test_pdf2svg_optional(tmpdir):
     """Test the Pdf2svg converter with optional pdfcrop and rsvg-convert
     dependencies."""
+    tmpdir = Path(tmpdir)
 
     # Get a test pdf file
-    pdf_file = "tests/convert/example1/sample.pdf"
+    pdf_file = SourcePath("tests/convert/example1", "sample.pdf")
 
     # Setup a target_filepath
-    target_basefilepath = tmpdir.join('sample')
+    target_basefilepath = TargetPath(target_root=tmpdir, target='.pdf',
+                                     subpath='sample')
 
-    # Try cropping
+    # Try cropping. This should shrink to the image from 65.5 x 58.2 pts to
+    # a figure with dimensions smaller than 25 x 25 pts
     target_filepath = convert(src_filepath=pdf_file,
                               target_basefilepath=target_basefilepath,
                               crop=True, targets=['.svg'])
 
     # See if the file was created
-    assert target_filepath == str(tmpdir.join('sample_crop.svg'))
-    assert tmpdir.join('sample_crop.svg').check()
-    contents = tmpdir.join('sample_crop.svg').read()
-    assert 'width="24pt"' in contents
-    assert 'height="24pt"' in contents
+    correct_filepath = TargetPath(target_root=tmpdir, target='.pdf',
+                                  subpath='sample_crop.svg')
+    assert target_filepath == correct_filepath
+    assert correct_filepath.is_file()
+
+    # Check the dimensions
+    width, height = svg_dims(correct_filepath)
+    assert width < 25.
+    assert height < 25.
 
     # Try cropping and scaling by a factor of 2
     target_filepath = convert(src_filepath=pdf_file,
@@ -66,11 +93,15 @@ def test_pdf2svg_optional(tmpdir):
                               crop=True, scale='2.0', targets=['.svg'])
 
     # See if the file was created
-    assert target_filepath == str(tmpdir.join('sample_crop_scale2.0.svg'))
-    assert tmpdir.join('sample_crop_scale2.0.svg').check()
-    contents = tmpdir.join('sample_crop_scale2.0.svg').read()
-    assert 'width="60pt"' in contents
-    assert 'height="60pt"' in contents
+    correct_filepath = TargetPath(target_root=tmpdir, target='.pdf',
+                                  subpath='sample_crop_scale2.0.svg')
+    assert target_filepath == correct_filepath
+    assert correct_filepath.is_file()
+
+    # Check the dimensions
+    width, height = svg_dims(correct_filepath)
+    assert width in (54., 56.)  # different dims based on pdf2svg version
+    assert height in (54, 56.)
 
     # Try cropping and scaling by a factor of 2, but this time with a
     # spurious kwarg
@@ -80,22 +111,30 @@ def test_pdf2svg_optional(tmpdir):
                               targets=['.svg'])
 
     # See if the file was created
-    assert target_filepath == str(tmpdir.join('sample_crop_scale2.0.svg'))
-    assert tmpdir.join('sample_crop_scale2.0.svg').check()
-    contents = tmpdir.join('sample_crop_scale2.0.svg').read()
-    assert 'width="60pt"' in contents
-    assert 'height="60pt"' in contents
+    correct_filepath = TargetPath(target_root=tmpdir, target='.pdf',
+                                  subpath='sample_crop_scale2.0.svg')
+    assert target_filepath == correct_filepath
+    assert correct_filepath.is_file()
+
+    # Check the dimensions
+    width, height = svg_dims(correct_filepath)
+    assert width in (54., 56.)  # different dims based on pdf2svg version
+    assert height in (54, 56.)
 
 
-def test_caching(tmpdir):
+def test_pdf2svg_caching(tmpdir):
     """Test the caching of files"""
+    tmpdir = Path(tmpdir)
+
     # Try convert the file again and see if it was updated
 
     # Get a test pdf file
-    pdf_file = "tests/convert/example1/sample.pdf"
+    pdf_file = SourcePath(project_root="tests/convert/example1",
+                          subpath="sample.pdf")
 
     # Setup a target_filepath
-    target_basefilepath = tmpdir.join('sample')
+    target_basefilepath = TargetPath(target_root=tmpdir, target='.svg',
+                                     subpath='sample')
 
     # Try the conversion
     target_filepath = convert(src_filepath=pdf_file,
@@ -104,43 +143,50 @@ def test_caching(tmpdir):
                               cache=False)
 
     # See if the file was created and get its mtime and ino
-    stats = os.stat(tmpdir.join('sample.svg'))
+    correct_filepath = TargetPath(target_root=tmpdir, target='.svg',
+                                  subpath='sample.svg')
+    assert target_filepath == correct_filepath
+    assert correct_filepath.is_file
+    stats = target_filepath.stat()
     mtime = stats.st_mtime
-    assert target_filepath == str(tmpdir.join('sample.svg'))
-    assert tmpdir.join('sample.svg').check()
 
     # Try the conversion again with caching
-    target_filepath = convert(src_filepath=pdf_file,
-                              target_basefilepath=target_basefilepath,
-                              crop=False, targets=['.svg'],
-                              cache=True)
+    new_target_filepath = convert(src_filepath=pdf_file,
+                                  target_basefilepath=target_basefilepath,
+                                  crop=False, targets=['.svg'],
+                                  cache=True)
 
     # See if the file has changed
-    new_stats = os.stat(tmpdir.join('sample.svg'))
+    assert target_filepath == new_target_filepath
+    new_stats = new_target_filepath.stat()
     assert mtime == new_stats.st_mtime
 
     # Now try to get a new version
-    target_filepath = convert(src_filepath=pdf_file,
-                              target_basefilepath=target_basefilepath,
-                              crop=False, targets=['.svg'],
-                              cache=False)
+    new_target_filepath = convert(src_filepath=pdf_file,
+                                  target_basefilepath=target_basefilepath,
+                                  crop=False, targets=['.svg'],
+                                  cache=False)
 
     # See if the file has changed
-    new_stats = os.stat(tmpdir.join('sample.svg'))
+    assert new_target_filepath == target_filepath
+    new_stats = target_filepath.stat()
     assert mtime != new_stats.st_mtime
 
 
-def test_missing_executable(tmpdir, monkeypatch):
+def test_pdf2svg_missing_executable(tmpdir, monkeypatch):
     """Test the behavior when the pdf to svg converters are missing."""
+    tmpdir = Path(tmpdir)
+
     # Remove the path from the environment
     monkeypatch.setenv("PATH", "")
     assert find_executable('pdf2svg') is None
 
     # Get a test pdf file
-    pdf_file = "tests/convert/example1/sample.pdf"
+    pdf_file = SourcePath('tests/convert/example1', 'sample.pdf')
 
     # Setup a target_filepath
-    target_basefilepath = tmpdir.join('sample')
+    target_basefilepath = TargetPath(target_root=tmpdir, target='.svg',
+                                     subpath='sample')
 
     # Try an unavailable: pdf->pdf
     with pytest.raises(ConverterError) as exc_info:
@@ -151,30 +197,3 @@ def test_missing_executable(tmpdir, monkeypatch):
     # Check the exception message
     assert "required program" in exc_info.value.args[0]
     assert "pdf2svg" in exc_info.value.args[0]
-
-
-def test_bad_pdflatex(tmpdir):
-    """Tests the compilation of a PDF from a tex file with an error."""
-
-    # Create a src document
-    src_path = tmpdir.mkdir("src")
-    target_basepath = tmpdir.join("index1")
-
-    # Save text and create a new file
-    f1 = src_path.join("index1.tex")
-    f1.write("This is my \\bad{first} document")
-
-    # Get the target_filepath for the pdf file
-    target_filepath = str(src_path) + '/index1.pdf'
-
-    # Render the document. This will raise a CompiledDocumentError
-    with pytest.raises(ConverterError) as e:
-        convert(src_filepath=str(f1),
-                target_basefilepath=target_basepath,
-                targets=['.pdf'])
-
-    assert e.match("index1.tex")  # the intermediary file should be in error
-    assert e.value.returncode != 0  # unsuccessful run
-
-    assert "! Undefined control sequence." in e.value.shell_out
-    assert "This is my \\bad" in e.value.shell_out

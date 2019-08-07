@@ -1,22 +1,17 @@
 """
 Classes and functions for rendering documents.
 """
-from collections import OrderedDict
-from weakref import ref
 from tempfile import mkdtemp
 from shutil import rmtree
-import os
-import os.path
+from collections import OrderedDict
+import logging
+import pathlib
 
-from ..ast import process_ast, process_paragraphs, process_typography
-from ..templates import get_template
-from ..header import load_yaml_header
-from ..macros import replace_macros
+from .document_context import DocumentContext
+from .processors import ProcessContext
 from ..convert import convert
-from ..labels import LabelManager
-from ..dependency_manager import DependencyManager
-from ..tags.toc import process_context_toc
-from ..utils import mkdir_p
+from ..utils.file import mkdir_p
+from ..paths import SourcePath, TargetPath
 from .. import settings
 
 
@@ -26,206 +21,189 @@ class DocumentError(Exception):
 
 
 class Document(object):
-    """A base class document rendered from a source file to a target file.
+    """A base class document rendered from a source file to one or more
+    target files.
 
     Parameters
     ----------
-    src_filepath : str
-        The path (relative to the current directory) for the document (markup
-        source) file of this document.
-    target_root : str, optional
-        The path for the rendered target files. To this directly, the target
-        extension subdirectories (ex: 'html' 'tex') will be created.
+    src_filepath : Union[:obj:`SourcePath <.paths.SourcePath>`, str]
+        The path (an absolute path or a path relative to the current directory)
+        for the document (markup source) file of this document.
+    target_root : Optional[Union[:obj:`TargetPath <.paths.TargetPath>`, str]]
+        The path for the rendered target files. Subdirectories for the targets
+        will be created. (ex: 'html' 'tex')
         By default, if not specified, the target_root will be one directory
         above the project_root.
-    context : dict, optional
+    context : Optional[:obj:`DocumentContext <.DocumentContext>`]
         The context of the document.
 
     Attributes
     ----------
-    src_filepath : str
+    src_filepath : :obj:`SourcePath <.paths.SourcePath>`
         The filename and path for this document's (markup source) file. This
-        file should exist. This path is a render path: it's either an absolute
-        path or a path relative to the current directory.
+        file should exist.
         ex: 'src/chapter1/chapter1.dm'
-    context : dict
-        The context with values for the document.
-    sub_documents : :obj:`collections.OrderedDict`
-        A dict with the sub-documents included in this document. The keys are
-        src_filepath values relative to the document's directory, and the values
-        are the sub_documents themselves.
+    context : :obj:`DocumentContext <.DocumentContext>`
+        A context dict with the values needed to render a target document.
+    subdocuments : OrderedDict[:obj:`SourcePath <.paths.SourcePath>`, \
+        :obj:`Document <.Document>`]
+        An ordered dict with the sub-documents included in this document.
+        The keys are src_filepaths, and the values are the sub-documents
+        themselves. The documents are ordered according to their placement in
+        the document tree (project).
 
-    string_processors : list of functions, **class attribute**
-        A list of functions to process the string before conversion to the
-        AST. These functions are executed in sequence and simply accept the
-        string, local_context and global_context as arguments and return a
-        processed string. The processed string can either be a 'str' or a
-        'Metastring' with additional meta information.
-
-        .. note:: String processors are run asynchronously, and the
-                  local_context and global_context dicts may not be fully
-                  populated.
-
-    ast_processors : list of functions, **class attribute**
-        A list of functions to process the AST. These functions are executed in
-        sequence and simply accept a AST argument and return a processed AST.
-
-        .. note:: AST processors are run asynchronously, and the
-                  local_context and global_context dicts may not be fully
-                  populated.
-
-    context_processors : list of functions, **class attribute**
-        A list of functions to process the document's context while the target
-        is being rendered. The context_processor functions take a context and a
-        target as parameters.
+        This document owns the sub-documents and only weak references to these
+        documents should be made to these documents. (i.e. when the
+        sub-documents dict is cleared, the memory for the document objects
+        should be released)
+    processors : :class:`Type[ProcessContext] <.ProcessContext>`
+        The ProcessContext base class.
     """
 
     src_filepath = None
     context = None
-    sub_documents = None
-    _parent_context = None
-    _label = None
+    subdocuments = None
+
+    #: Context processors
+    process_context = ProcessContext
+
+    #: The directory for the root document of a project (a document and its
+    #: subdocuments.
+    _project_root = None
+
+    #: The calculated target_root, based on the value specified or a value
+    #: evaluated from the project_root
     _target_root = None
-    _target_list = None
+
+    #: The path of a temporary directory created for this document, if needed.
     _temp_dir = None
 
-    string_processors = [load_yaml_header,  # Process YAML headers
-                         replace_macros,  # Process macros
-                         ]
-    ast_processors = [process_ast,
-                      process_paragraphs,
-                      process_typography,
-                      ]
-    context_processors = [process_context_toc,
-                          ]
+    #: Cached template objects for this document.
+    _templates = None
 
-    def __init__(self, src_filepath, target_root=None, context=None):
-        self.src_filepath = str(src_filepath)
-        self.sub_documents = OrderedDict()
-        self.context = dict()
+    #: A flag to determine whether the document was successfully loaded
+    _succesfully_loaded = False
 
-        self._parent_context = context
-        src_path = os.path.split(self.src_filepath)[0]
+    def __init__(self, src_filepath, target_root=None, parent_context=None):
+        logging.debug("Creating document: {}".format(src_filepath))
 
-        # Set the target_root.
-        # Otherwise use the directory above the src_path
+        # Populate attributes
+        self.subdocuments = OrderedDict()
+        self._templates = dict()
+
+        # Process the src_filepath
+        if isinstance(src_filepath, SourcePath):
+            project_root = src_filepath.project_root
+            self.src_filepath = src_filepath
+        else:
+            src_filepath = pathlib.Path(src_filepath)
+            project_root = SourcePath(project_root=src_filepath.parent)
+            self.src_filepath = SourcePath(project_root=project_root,
+                                           subpath=src_filepath.name)
+
+        # Set the project_root, if needed.
+        if parent_context is None or 'project_root' not in parent_context:
+            self._project_root = project_root
+
+        # Set the target_root, if needed.
         if target_root is not None:
-            # Use the specified value, if available.
-            self._target_root = target_root
-        elif isinstance(context, dict) and 'target_root' in context:
-            self._target_root = context['target_root']
-        elif src_path.endswith(settings.document_src_directory):
-            # If the src_path is in a src_directory, use the directory above
+            # Use the specified value, if available, but convert to a
+            # TargetPath, whether it's a string, pathlib.Path or TargetPath
+            self._target_root = TargetPath(target_root=target_root)
+        elif parent_context is not None and 'target_root' in parent_context:
+            # Otherwise use the one in the parent context, if available.
+            self._target_root = parent_context['target_root']
+        # In these situations, there is no 'target_root' in the parent context,
+        # and None was specified, so we have to figure one out.
+        elif project_root.match(settings.document_src_directory):
+            # If the project_root is in a src directory, use the directory above
             # this directory
-            self._target_root = os.path.split(src_path)[0]
+            self._target_root = TargetPath(target_root=project_root.parent)
         else:
             # Otherwise just use the same directory as the src directory
-            self._target_root = src_path
+            self._target_root = TargetPath(target_root=project_root)
 
-        # Reset the local_context, dependencies and labels
-        self.reset_contexts()
-        self.reset_dependencies()
-        self.reset_labels()
+        # Create the context
+        self.context = DocumentContext(document=self,
+                                       parent_context=parent_context)
 
-        # The cached AST
-        self._ast = None
-
-        # The last modification time of the document since its AST was last
-        # processed
-        self._mtime = None
-
-        # Read in the AST
-        self.get_ast()
+        # Read in the document and load sub-documents
+        self.load()
 
     def __del__(self):
         """Clean up any temp directories no longer in use."""
         if self._temp_dir is not None:
             rmtree(self._temp_dir, ignore_errors=True)
 
+        # Reset the labels and dependencies for this document
+        self.reset_labels()
+        self.reset_dependencies()
+
     def __repr__(self):
         return "Document({})".format(self.src_filepath)
+
+    @property
+    def doc_id(self):
+        """The unique string identifier (within a project) for the document."""
+        # The subpath of the src_filepath is guaranteed to be unique.
+        return str(self.src_filepath.subpath)
+
+    @property
+    def doc_ids(self):
+        """The list of all doc_id for this document and all subdocuments."""
+        return [doc.doc_id for doc in self.documents_list(recursive=True)]
 
     @property
     def title(self):
         """The title for the document."""
         if 'title' in self.context:
-            return self.context['title']
-        return self.src_filepath.strip(settings.document_extension)
+            # The title entry could be a string or a tag. If it's a tag, just
+            # get the text for the tag.
+            title = self.context['title']
+            title_str = (title.default_fmt().strip()
+                         if hasattr(title, 'default_fmt')
+                         else title)
+            return title_str
+        return str(self.src_filepath.subpath.with_suffix(''))
 
     @property
     def short(self):
         """The short title for the document."""
         if 'short' in self.context:
-            return self.context['short']
+            # The short entry could be a string or a tag. If it's a tag, just
+            # get the text for the tag.
+            short = self.context['short']
+            short_str = (short.default_fmt().strip()
+                         if hasattr(short, 'default_fmt')
+                         else short)
+            return short_str
         else:
             return self.title
 
     @property
-    def number(self):
-        """The number of the document."""
-        if ('documents' in self.context and
-           self.src_filepath in self.context['documents']):
-
-            documents = list(self.context['documents'].keys())
-            return documents.index(self.src_filepath) + 1
-        else:
-            return None
-
-    @property
     def temp_dir(self):
         if self._temp_dir is None:
-            self._temp_dir = mkdtemp()
+            self._temp_dir = pathlib.Path(mkdtemp())
         return self._temp_dir
 
     @property
+    def mtime(self):
+        return self.context.get('mtime', None)
+
+    @property
     def project_root(self):
-        if 'project_root' in self.context:
-            return self.context['project_root']
-        else:
-            return os.path.split(self.src_filepath)[0]
+        return (self._project_root if self._project_root is not None else
+                self.context.get('project_root', None))
 
     @property
     def target_root(self):
-        if 'target_root' in self.context:
-            return self.context['target_root']
-        else:
-            return self._target_root
+        return (self._target_root if self._target_root is not None else
+                self.context.get('target_root', None))
 
     @property
     def target_list(self):
-        if self._target_list is None:
-            # Get the target list from the context
-            self.target_list = self.context.get('targets',
-                                                settings.document_target_list)
-
-        if isinstance(self._target_list, list):
-            return self._target_list
-        else:
-            return []
-
-    @target_list.setter
-    def target_list(self, value):
-        """Set the target_list, which is a list of target extensions with a
-        trailing period."""
-        if isinstance(value, list):
-            target_list = value
-        elif isinstance(value, str):
-            # If it's a string, items may be separated by commas, spaces
-            # or both
-            target_exts = value.split(',')
-            if len(target_exts) == 1:
-                target_list = [t.strip() for t in
-                                     target_exts[0].split(" ")]
-            else:
-                target_list = [t.strip() for t in target_exts]
-
-        else:
-            raise AttributeError
-
-        # Prepend the targets with a period. ex: '.html'
-        target_list = ['.' + t if not t.startswith('.') else t
-                       for t in target_list]
-        self._target_list = target_list
+        """The list of targets from the context."""
+        return self.context.targets
 
     @property
     def targets(self):
@@ -233,41 +211,27 @@ class Document(object):
 
         Returns
         -------
-        targets : dict
+        targets : Dict[str, :obj:`TargetPath <.paths.TargetPath>`
             The targets are a dict with the target extension as keys
             (ex: '.html') and the value is the target_filepath for that target.
-            (ex: 'html/index.html') These paths are render paths: they're
-            either an absolute path or a path relative to the current
-            directory.
+            (ex: 'html/index.html') These paths are target paths.
         """
-        if getattr(self, '_targets', None):
-            return self._targets
-
         target_list = self.target_list
-
-        # Keep a list of extensions without the trailing period
-        # ex: ['html', 'pdf']
-        stripped_exts = [ext[1:] for ext in target_list]
 
         # Create the target dict
         targets = dict()
-        base_target = self.target_root
 
-        # Get the filename relative to the project root
-        project_filename = os.path.relpath(self.src_filepath, self.project_root)
+        # Get the filename relative to the project root (without the ext)
+        subpath = self.src_filepath.subpath
 
-        # Strip the extension
-        project_basefilename = os.path.splitext(project_filename)[0]
+        for target in target_list:
+            target_path = TargetPath(target_root=self.target_root,
+                                     target=target,
+                                     subpath=subpath.with_suffix(target))
+            targets[target] = target_path
+        return targets
 
-        for target_ext, stripped_ext in zip(target_list, stripped_exts):
-            t = (os.path.join(base_target, stripped_ext, project_basefilename) +
-                 target_ext)
-            targets[target_ext] = t
-        self._targets = targets
-
-        return self._targets
-
-    def target_filepath(self, target, render_path=True):
+    def target_filepath(self, target):
         """The filepath for the given target extension.
 
         Parameters
@@ -275,287 +239,385 @@ class Document(object):
         target : str
             The target extension for the target file.
             ex: '.html' or '.tex'
-        render_path : bool
-            If True, the returned target_filepath is a render path---i.e. it
-            is an absolute path or relative to the current directory.
-            If False, the returned target_filepath is relative to the target
-            root, including the target subdirectory.
+
+        Returns
+        -------
+        target_filepath : :obj:`TargetPath <.paths.TargetPath>`
+            The target filepath.
         """
-        assert target in self.targets
-
-        if not render_path:
-            # Get the target_root. The actual target path includes the target
-            # extension as a subdirectory.
-            target_root = os.path.join(self.target_root, target.strip('.'))
-            return os.path.relpath(self.targets[target], target_root)
-
         return self.targets[target]
 
     def reset_contexts(self):
-        """Clear and repopulate the local_context and global_context.
+        """Load, clear and reset the context.
 
         The context contains one of the following for all documents in a root
         document:
+
           1. label_manager: Manages labels and references to labels.
           2. dependency_manager: Manages the media dependencies (like image
              files) for documents
-          3. project_root: the root directory (render path) for the document
-             and sub-documents
-          4. target_root: the root directory (render path) for the document
-             and sub-documents. The final target path includes a sub-directory
-             for the target's extension.
-          5. documents: an :obj:`collections.OrderedDict` containing *all* of
-             the documents, including the root document (first item) and all
-             sub_documents. This is larger that the sub_documents attribute of
-             a document, since the sub_documents only contains the immediate
-             sub_documents of a document.
+          3. project_root: the root directory for the document and
+             sub-documents. :obj:`SourcePath <.paths.SourcePath>`
+          4. target_root: the root directory for the document and
+             sub-documents. The final target path includes a sub-directory
+             for the target's extension. :obj:`TargetPath <.paths.TargetPath>`
+          5. root_document: a root document (:obj:`Document <.Document>`) for
+             the project.
 
         Context variables that can be local to a document are:
-          1. targets: a listing of target formats to render to.
-          2. include: the sub-documents to include under a document.
-          3. title: the title of a document.
-          4. short: the short title of a document.
-          5. toc: the kind of table-of-contents to render for a document.
-          6. template: the template file to use in rendering a document.
+
+          1. include: the sub-documents to include under a document.
+          2. title: the title of a document.
+          3. short: the short title of a document.
+          4. document: a weakref to this document.
+          5. mtime: The modification time of the source document. This is
+             populated by the get_ast method.
         """
-        # Remove everything from the context dict except for objects that
-        # need to be preserved between documents, like the label_manager and
-        # dependency_manager
-        excluded_items = ('label_manager', 'dependency_manager',
-                          'project_root', 'target_root', 'documents')
-        context_keys = list(self.context.keys())
-        for k in context_keys:
-            if k in excluded_items:
-                continue
-            del self.context[k]
+        self.context.reset()
 
-        # Copy over the context values from parent context. The excluded_items
-        # do not pertain to sub-documents.
-        excluded_items = ('include', 'title', 'short')
-        if self._parent_context is not None:
-            for k, v in self._parent_context.items():
-                if k in excluded_items:
-                    continue
-                self.context[k] = v
-
-        self.context['document'] = self
-
-        # The following tests whether the context values came from a parent
-        # document
-        if self.context.get('src_filepath', None) != self.src_filepath:
-            # Set the document's level. The root document is level 1, its'
-            # sub-documents are level 2, their sub-documents are level 3
-            self.context['level'] = self.context.get('level', 0) + 1
-
-        self.context['src_filepath'] = self.src_filepath
-
-        # The following should only be set by the root target document
-        if 'project_root' not in self.context:
-            self.context['project_root'] = self.project_root
-        if 'target_root' not in self.context:
-            self.context['target_root'] = self.target_root
-        if 'label_manager' not in self.context:
-            self.context['label_manager'] = LabelManager()
-        if 'dependency_manager' not in self.context:
-            dep = DependencyManager(project_root=self.project_root,
-                                    target_root=self.target_root)
-            self.context['dependency_manager'] = dep
-        if 'documents' not in self.context:
-            self.context['documents'] = OrderedDict()
-
-        # Add this document to the documents weak refs ordered dict
-        self.context['documents'][self.src_filepath] = ref(self)
+    @property
+    def dependency_manager(self):
+        return self.context.get('dependency_manager', None)
 
     def reset_dependencies(self):
         """Clear and repopulate the dependencies for this document in the
         dependency manager."""
         if 'dependency_manager' in self.context:
-            document_src_filepath = self.src_filepath
             dep = self.context['dependency_manager']
-            dep.reset(document_src_filepath=document_src_filepath)
+            dep.reset(src_filepath=self.src_filepath)
+
+    @property
+    def label_manager(self):
+        return self.context.get('label_manager', None)
 
     def reset_labels(self):
-        """Clear and repopulate the labels for this document in the label
-        manager."""
-        if 'label_manager' in self.context:
-            label_manager = self.context['label_manager']
-            label_manager.reset(document=self)
-
-    def set_document_label(self):
-        """Set the label for this document in the label manager.
-
-        .. note:: This function is invoked as part of the get_ast method, after
-                  parsing the source file, so that the 'title' attribute can be
-                  retrieved from the local_context.
-        """
+        """Reset the labels for this document in the label manager."""
         if 'label_manager' in self.context:
             label_manager = self.context['label_manager']
 
-            # See if a label for this document exists already. If it doesn't,
-            # create it.
-            labels = label_manager.get_labels(document=self, kinds='document')
-            if len(labels) == 0:
-                # Get the filepath for this document relative to the project_root,
-                # if possible
-                project_filepath = os.path.relpath(self.src_filepath,
-                                                   self.project_root)
+            # Reset the labels for this document.
+            label_manager.reset(context=self.context)
 
-                # Get the level of the document
-                level = self.context.get('level', 1)
-
-                # Set the label for this document
-                kind = ('document', 'document-level-' + str(level))
-                label = label_manager.add_label(document=self, kind=kind,
-                                                id='doc:' + project_filepath)
-                self._label = label
-
-    def load_sub_documents(self):
-        """Load the sub-documents listed in the include of a local_context."""
-        if 'include' in self.context:
-            src_filepaths = self.context['include']
-            if isinstance(src_filepaths, str):
-                src_filepaths = src_filepaths.split()
-            src_filepaths = [s for s in src_filepaths if isinstance(s, str)]
-
-            # Create missing documents
-            current_src_filepath = os.path.split(self.src_filepath)[0]
-            for src_filepath in src_filepaths:
-                if src_filepath in self.sub_documents:
-                    continue
-
-                # Add the current path to make it a render_path
-                a_src_filepath = os.path.join(current_src_filepath,
-                                              src_filepath)
-
-                # Create the target_root relative to the project's target_root
-                doc = Document(src_filepath=a_src_filepath,
-                               context=self.context)
-                self.sub_documents[src_filepath] = doc
-
-            # Remove missing documents
-            extra_src_filepaths = (src_filepaths ^
-                                   self.sub_documents.keys())
-            for src_filepath in extra_src_filepaths:
-                del self.sub_documents[src_filepath]
-
-    def get_ast(self, reload=False):
-        """Process and return the AST.
-
-        This method generates and caches the AST. This step is conducted
-        asynchronously. (i.e. the local_context and global_context may not be
-        completed populated while the AST is processed.)
-
-        The cached AST is updated if the source file is updated.
-
-        Whenever the AST is generated, the local_context is reset to avoid
-        keeping stale values.
-
-        See the :meth:`render` method for more details.
+    # TODO: rename to documents_by_src_filepath
+    def documents_dict(self, document=None, only_subdocuments=False,
+                       recursive=False):
+        """Produce an ordered dict of a document and all its sub-documents.
 
         Parameters
         ----------
-        reload : bool, str
-            If True, force the reload of the AST.
+        document : Optional[:obj:`Document <.Document>`]
+            The document for which to create the document list.
+            If None is specified, this document will be used.
+        only_subdocuments : Optional[bool]
+            If True, only the sub-documents will be returned (not this
+            document or the document specified.)
+        recursive : Optional[bool]
+            If True, the sub-documents of sub-documents are returned (in order)
+            in the ordered dict as well
 
         Returns
         -------
-        :obj:`disseminate.tag.Tag`
-            A root tag object for the AST.
+        document_dict : OrderedDict[:obj:`SourcePath <.paths.SourcePath>`, \
+            :obj:`Document <.Document>`]
+            An ordered dict of documents. The keys are src_filepaths and the
+            values are document objects.
         """
-        # Run get_ast for the sub-documents
-        for document in self.sub_documents.values():
-            document.get_ast(reload=reload)
+        document = self if document is None else document
+        doc_dict = OrderedDict()
 
+        if not only_subdocuments:
+            doc_dict[document.src_filepath] = document
+
+        for src_filepath, subdoc in document.subdocuments.items():
+
+            if recursive:
+                subdoc_dict = subdoc.documents_dict(only_subdocuments=False,
+                                                    recursive=recursive)
+                for k,v in subdoc_dict.items():
+                    doc_dict[k] = v
+            else:
+                doc_dict[subdoc.src_filepath] = subdoc
+
+        return doc_dict
+
+    def documents_by_id(self, document=None, only_subdocuments=False,
+                        recursive=True):
+        doc_dict = self.documents_dict(document=document,
+                                       only_subdocuments=only_subdocuments,
+                                       recursive=recursive)
+        dict_by_id = OrderedDict([(doc.doc_id, doc)
+                                  for doc in doc_dict.values()])
+
+        if len(dict_by_id) < len(doc_dict):
+            # there are duplicate doc_ids
+            msg = ("The project has multiple documents with the same doc_id. "
+                   "The doc_id should be unique for each document.")
+            raise DocumentError(msg)
+
+        return dict_by_id
+
+    def documents_list(self, document=None, only_subdocuments=False,
+                       recursive=False):
+        """Produce an ordered list of a document and all its sub-documents.
+
+        Parameters
+        ----------
+        document : Optional[:obj:`Document <.Document>`]
+            The document for which to create the document list.
+        only_subdocuments : Optional[bool]
+            If True, only the sub-documents will be returned (not this root
+            document or the document specified.
+        recursive : Optional[bool]
+            If True, the sub-documents of sub-documents are returned (in order)
+            in the list as well
+
+        Returns
+        -------
+        document_list : List[:obj:`Document <.Document>`]
+            An ordered list of documents.
+        """
+        doc_dict = self.documents_dict(document=document,
+                                       only_subdocuments=only_subdocuments,
+                                       recursive=recursive)
+
+        return list(doc_dict.values())
+
+    def load_subdocuments(self):
+        """Load the sub-documents listed in the include entries in the
+        context."""
+
+        # Get the root document's src_filepath and the src_filepath for all of
+        # its included subdocuments to make sure we do not load documents
+        # recursively or twice
+        root_document = self.context.get('root_document', None)
+        root_document = root_document() if root_document is not None else None
+
+        # Get the documents dict for the root document, including all
+        # subdocuments
+        root_dict = root_document.documents_dict(document=root_document,
+                                                 only_subdocuments=False,
+                                                 recursive=True)
+
+        # Clear the subdocuments ordered dict and add new entries. Old entries
+        # will automatically be delete if the subdocument no longer holds a
+        # reference to it.
+        self.subdocuments.clear()
+
+        # Retrieve the file paths of included files in the context
+        src_filepaths = self.context.includes
+
+        for src_filepath in src_filepaths:
+            # If the src_filepath is the same as this document, do nothing, as
+            # a document shouldn't have itself as a subdocument
+            if src_filepath == self.src_filepath:
+                continue
+
+            # If the document is already loaded, copy it to the subdocuments
+            # ordered dict
+            if src_filepath in root_dict:
+                subdoc = root_dict[src_filepath]
+
+                if self.src_filepath not in subdoc.subdocuments:
+                    self.subdocuments[src_filepath] = subdoc
+                continue
+
+            # The document could not be found, at this point. Create it.
+
+            # Create the document and add it to the subdocuments ordered
+            # dict.
+            subdoc = Document(src_filepath=src_filepath,
+                              parent_context=self.context)
+            self.subdocuments[src_filepath] = subdoc
+
+    def load(self, reload=False):
+        """Load or reload the document into the context.
+
+        Parameters
+        ----------
+        reload : Optional[bool]
+            If True, force the reload of the document.
+        """
         # Check to make sure the file exists
-        if not os.path.isfile(self.src_filepath):  # file must exist
+        if not self.src_filepath.is_file():  # file must exist
             msg = "The source document '{}' must exist."
             raise DocumentError(msg.format(self.src_filepath))
 
-        stat = os.stat(self.src_filepath)
+        stat = self.src_filepath.stat()
         time = stat.st_mtime
+        last_mtime = self.mtime
 
-        # Update the AST, if needed
-        if (getattr(self, '_ast', None) is None or
-           getattr(self, '_mtime', None) is None or
-           time > self._mtime or
-           reload):
+        # Update the context, if:
+        #   1. The document hasn't been successfully loaded.
+        #   2. The body attribute hasn't been set yet.
+        #   3. The mtime for the file is now later than the one stored in the
+        #      context--i.e. the user saved the file.
+        #   4. A reload is forced
+        body_attr = settings.body_attr
+        if (not self._succesfully_loaded or
+            self.context.get(body_attr, None) is None or
+            last_mtime is None or time > last_mtime or
+            reload):
+
+            # The document hasn't been loaded yet. Reset the flat
+            self._succesfully_loaded = False
 
             # Check to make sure the file is reasonable
             filesize = stat.st_size
             if filesize > settings.document_max_size:
                 msg = ("The source document '{}' has a file size ({} kB) "
                        "that exceeds the maximum setting size of {} kB.")
+                actual_filesize = filesize / 1024
+                max_filesize = settings.document_max_size / 1024
                 raise DocumentError(msg.format(self.src_filepath,
-                                            filesize / 1024,
-                                            settings.document_max_size / 1024))
-
-            # Load the string from the src_filepath,
-            with open(self.src_filepath) as f:
-                string = f.read()
+                                               actual_filesize,
+                                               max_filesize))
 
             # Reset the local_context. When reloading an AST, the old
             # local_context is invalidated since some of the entries may have
-            # changed
+            # changed. Resetting the context also sets the updated mtime.
             self.reset_contexts()
 
             # Clear the dependencies for this document
             self.reset_dependencies()
 
-            # Clear the labels for this document
+            # Reset the registered labels for this document
             self.reset_labels()
 
-            # Process the string
-            for processor in self.string_processors:
-                string = processor(string, self.context)
+            # Load the string from the src_filepath,
+            string = self.src_filepath.read_text()
 
-            # Process and validate the AST
-            ast = string
-            for processor in self.ast_processors:
-                ast = processor(ast=ast, context=self.context,
-                                src_filepath=self.src_filepath)
+            # Place the text of the string in the 'body' attribute of the
+            # context (see settings.body_attr)
+            body_attr = settings.body_attr
+            self.context[body_attr] = string
 
-            # Set the label for this document. This is done after the source
-            # file is parsed because the source file might contain the 'title'
-            # setting.
-            self.set_document_label()
+            # Process the context
+            for processor in self.process_context.processors():
+                processor(self.context)
 
-            # Load the sub-documents
-            self.load_sub_documents()
+            # Load the sub-documents. This is done after processing the string
+            # and ast since these may include sub-files, which should be read
+            # in before being loaded.
+            self.load_subdocuments()
 
-            # cache the ast
-            self._ast = ast
-            self._mtime = time
+            # The document has been loaded
+            self._succesfully_loaded = True
 
-        return self._ast
+        # Run 'load' for the sub-documents. This should be done after
+        # loading this documentsince this document's header may have includes
+        for document in self.documents_list(only_subdocuments=True):
+            document.load(reload=reload)
+
+        return None
+
+    def get_renderer(self):
+        """Get the template renderer for this document.
+
+        Returns
+        -------
+        renderer : :obj:`Type[BaseRenderer] <.BaseRenderer>`
+        """
+        if ('renderers' in self.context and
+           'template' in self.context['renderers']):
+            return self.context['renderers']['template']
+        return None
+
+    def render_required(self, target_filepath):
+        """Evaluate whether a render is required to write the target file.
+
+        .. note:: This method re-loads the documents since it checks the
+                  modification time of tags in the context, which may become
+                  updated if the source file (or source files of sub-documents)
+                  are updated.
+
+        Parameters
+        ----------
+        target_filepath : :obj:`TargetPath <.paths.TargetPath>`
+            The path for the target file.
+
+        Returns
+        -------
+        render_required : bool
+            True, if a render is required.
+            False if a render isn't required.
+        """
+        target_filepath = pathlib.Path(target_filepath)
+
+        # Reload document
+        self.load()
+
+        # 1. A render is required if the target_filepath doesn't exist
+        if not target_filepath.is_file():
+            logging.debug("Render required for {}: '{}' target file "
+                          "does not exist.".format(self, target_filepath))
+            return True
+
+        # Get the modification time for the source file(s) (src_filepath)
+        src_mtime = self.src_filepath.stat().st_mtime
+
+        # Get the modification for the target file (target_filepath)
+        target_mtime = target_filepath.stat().st_mtime
+
+        # 2. A render is required if the src_filepath mtime is newer than the
+        # target_filepath
+        if src_mtime > target_mtime:
+            logging.debug("Render required for {}: '{}' target file "
+                          "is older than source.".format(self, target_filepath))
+            return True
+
+        # 3. A render is required if any of the context entries need to be
+        #    updated.
+        entry_mtimes = [e.mtime for e in self.context.values()
+                        if hasattr(e, 'mtime')]
+        max_entry_mtime = max(entry_mtimes) if len(entry_mtimes) > 0 else None
+        if max_entry_mtime is not None and target_mtime < max_entry_mtime:
+            logging.debug("Render required for {}:  The tags reference a "
+                          "document that's been updated.".format(self))
+            return True
+
+        # 4. Check the to see if the template for renderer has been updated
+        renderer = self.get_renderer()
+        if renderer.mtime > target_mtime:
+            logging.debug("Render required for {}:  The template has been "
+                          "updated.".format(self))
+            return True
+
+        # All tests passed. No new render is needed
+        return False
 
     def render(self, targets=None, create_dirs=settings.create_dirs,
-               update_only=True):
+               update_only=True, subdocuments=True):
         """Render the document to one or more target formats.
 
         Parameters
         ----------
-        targets : dict or None
+        targets : Optional[Dict[str, :obj:`TargetPath <.paths.TargetPath>`]]
             If specified, only the specified targets will be rendered.
             This is a dict with the extension as keys and the target_filepath
-            (as a render path) as the value.
-        create_dirs : bool, optional
+            as the value.
+        create_dirs : Optional[bool]
             Create directories for the rendered target files, if the directories
             don't exist.
-        update_only : bool, optional
+        update_only : Optional[bool]
             If True, the file will only be rendered if the rendered file is
             older than the source file.
+        subdocuments : Optional[bool]
+            If True, the subdocuments will be rendered (first) as well.
 
         Returns
         -------
         bool
             True, if the document needed to be rendered.
             False, if the document did not need to be rendered.
-
         """
-        # Process the sub-documents
-        for document in self.sub_documents.values():
-            document.render(targets=targets, create_dirs=create_dirs,
-                            update_only=update_only)
+        # Make sure the latest source is loaded. This is needed in case the
+        # list of targets has changed.
+        self.load()
+
+        if subdocuments:
+            for doc in self.documents_list(only_subdocuments=True):
+                doc.render(targets=targets, create_dirs=create_dirs,
+                           update_only=update_only)
 
         # Workup the targets into a dict, like self.targets
         if targets is None:
@@ -577,128 +639,67 @@ class Document(object):
 
             # Skip if we should update_only and the src_filepath is older
             # than the target_filepath, if target_filepath exists.
-            if (update_only and
-                os.path.isfile(target_filepath) and
-                (os.path.getmtime(self.src_filepath) <
-                 os.path.getmtime(target_filepath))):
+            # The 'render_required' also reloads the document.
+            if not self.render_required(target_filepath) and update_only:
                 continue
 
             # Determine whether it's a compiled target or uncompiled target
             if target in settings.compiled_exts:
-                self.render_compiled(target=target,
-                                     target_filepath=target_filepath,
-                                     targets=targets)
+                self._render_compiled(target=target,
+                                      target_filepath=target_filepath,
+                                      targets=targets)
             else:
-                self.render_uncompiled(target=target,
-                                       target_filepath=target_filepath)
+                self._render_uncompiled(target=target,
+                                        target_filepath=target_filepath)
 
         return True
 
-    def render_uncompiled(self, target, target_filepath):
+    def _render_uncompiled(self, target, target_filepath):
         """Render a text target format.
 
         For many output formats, like .html and .tex, the rendered file is
         simply another text file. This render_uncompiled method handles these.
 
-        The rending has the following steps:
-
-        *Asynchronous*.
-        Depends only on the source file and does not depend on variables from
-        other documents in the context. Consequently, it can be run in
-        a multi-threaded mode, and this part does not need to be repeated as
-        long as the source file has not changed.
-
-            1. get_ast (:meth:`get_ast`)
-
-        **After this step** for all documents, the `context` is populated.
-        Nothing in the subsequent steps should change these.
-
-        *Synchronous*.
-        The synchronous step depends on the target type as well as the
-        global_context. Consequently, all other documents in a tree must be
-        loaded and their ASTs processed to conduct this step.
-
-            2. convert to the target type
-
-                a. Convert the AST to target string using an AST conversion
-                   function.
-
-                b. Render this string in a template.
-
         Parameters
         ----------
         target: str
             The target extension to render. ex: '.html' or '.tex'
-        target_filepath: str
-            The final render path of the target file. ex : 'html/index.html'
+        target_filepath: :obj:`TargetPath <.paths.TargetPath>`
+            The final path of the target file. ex : 'html/index.html'
         """
-        # Step 1: Asynchronous
-        # get the ast
-        ast = self.get_ast()
-
-        # Step 2: Synchronous
-
-        # First pull out the template, if specified
-        template_basename = settings.template_basename
-        if 'template' in self.context:
-            template_basename = self.context['template']
-
-        # Prepare the context
-
-        # Add non-private variables from the  context
-        context = {k: v for k, v in self.context.items()
-                   if not str(k).startswith("_")}
-
-        # Further process the context. The context_processors render target-
-        # specific information.
-        for processor in self.context_processors:
-            processor(context, target)
-
-        # render and save to output file
+        # Prepare the filename to render and save to output file
         target_name = target.strip('.')
 
-        if hasattr(ast, target_name):
-            output_string = getattr(ast, target_name)()
-        else:
-            output_string = ast.default()
-
-        # Add the output string to the context
-        context['body'] = output_string
-
-        # get a template. The following can be done asynchronously.
-        template = get_template(self.src_filepath, target=target,
-                                template_basename=template_basename)
+        # Get a template. Reload is set to True to make sure that the latest
+        # version of the template is loaded.
+        renderer = self.get_renderer()
 
         # If a template is available, use it to render the string.
         # Otherwise, just write the string
 
-        if template is not None:
-            # generate a new ouput_string
-            output_string = template.render(**context)
+        if renderer.is_available(target=target):
+            # generate a new output_string. The render function adds
+            # dependencies.
+            output_string = renderer.render(target=target,
+                                            context=self.context)
 
-            # Add template to dependencies, if able
-            if ('dependency_manager' in self.context and
-                    hasattr(template, 'filename')):
-                dep = self.context['dependency_manager']
-
-                # See if the dependencies has a method for this target
-                meth = getattr(dep, 'add_' + target_name, None)
-                if meth is not None:
-                    meth(output_string)
-
-        # determine whether the file contents are new
-        if not os.path.isfile(target_filepath):
-            new = True
         else:
-            with open(target_filepath, 'r') as f:
-                new = (output_string != f.read())
+            # If there is no template, simply use the context's body tag as the
+            # string
+            body_attr = settings.body_attr
+            body = self.context.get(body_attr, None)
+            if hasattr(body, target_name):
+                output_string = getattr(body, target_name)
+            elif hasattr(body, 'default'):
+                output_string = getattr(body, 'default')
+            else:
+                output_string = body
 
-        # if the contents are new, write it to the file
-        if new:
-            with open(target_filepath, 'w') as f:
-                f.write(output_string)
+        # Write the file
+        with open(target_filepath, 'w') as f:
+            f.write(output_string)
 
-    def render_compiled(self, target, target_filepath, targets):
+    def _render_compiled(self, target, target_filepath, targets):
         """Render a compiled target format.
 
         For some formats, like .pdf, these have to be compiled after generating
@@ -710,33 +711,47 @@ class Document(object):
         ----------
         target: str
             The target extension to render. ex: '.pdf'
-        target_filepath : str
-            The final render path of the target file. ex : 'pdf/index.pdf'
-        targets : dict or None
-            If specified, only the specified targets will be rendered.
+        target_filepath : :obj:`TargetPath <.paths.TargetPath>`
+            The final path of the target file. ex : 'pdf/index.pdf'
+        targets : Dict[str, :obj:`TargetPath <.paths.TargetPath>`]
             This is a dict with the extension as keys and the target_filepath
-            (as a render path) as the value.
+            as the value.
         """
+        assert isinstance(target_filepath, TargetPath)
+
         # Render the intermediate target. First, see if the
         # intermediary extension is already in targets. If not, create
         # a temporary one.
         inter_ext = settings.compiled_exts[target]
         if inter_ext in targets:
-            self.render_uncompiled(target=inter_ext,
-                                   target_filepath=target_filepath)
-            src_filepath = targets[inter_ext]
+            # In this case, the intermediate target is also a specified target
+            # for this document. Use that target.
+            inter_target_filepath = targets[inter_ext]
+
+            self._render_uncompiled(target=inter_ext,
+                                    target_filepath=inter_target_filepath)
+
+            # The convert function expects a SourcePath
+            src_filepath = SourcePath(project_root=inter_target_filepath.parent,
+                                      subpath=inter_target_filepath.name)
         else:
+            # In this case, we have to create an temporary intermediary target.
             temp_dir = self.temp_dir
-            temp_filename = os.path.split(target_filepath)[1]
-            temp_filename = (os.path.splitext(temp_filename)[0] +
-                             inter_ext)
-            temp_path = os.path.join(temp_dir, temp_filename)
-            self.render_uncompiled(target=inter_ext,
-                                   target_filepath=temp_path)
-            src_filepath = temp_path
+            inter_filename = target_filepath.with_suffix(inter_ext).name
+
+            # The convert function expects a SourcePath
+            src_filepath = SourcePath(project_root=temp_dir,
+                                      subpath=inter_filename)
+
+            self._render_uncompiled(target=inter_ext,
+                                    target_filepath=src_filepath)
 
         # Now convert the file and continue
-        target_basefilepath = os.path.splitext(target_filepath)[0]
-        convert(src_filepath=src_filepath,
-                target_basefilepath=target_basefilepath,
-                targets=[target, ])
+        basefilepath = TargetPath(target_root=target_filepath.target_root,
+                                  target=target_filepath.target,
+                                  subpath=(target_filepath
+                                           .subpath
+                                           .with_suffix('')))
+        filepath = convert(src_filepath=src_filepath,
+                           target_basefilepath=basefilepath,
+                           targets=[target])

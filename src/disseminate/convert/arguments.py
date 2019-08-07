@@ -1,8 +1,9 @@
 """
-Arguments for converters
+Arguments for converters. Argument classes are used to validate the values
+passed to external converion programs.
 """
-import os.path
 import logging
+from ..paths import SourcePath, TargetPath
 
 
 class ArgumentError(Exception):
@@ -19,21 +20,21 @@ class Argument(object):
         The name of the argument
     value_string : str
         The value (string) of the argument
-    default : str or None, optional
+    default : Optional[str]
         A default value of the argument, if available.
     """
 
     required = False
 
-    def __init__(self, name, value_string, required=True):
+    def __init__(self, name, value, required=True):
         self.name = name
-        self.value_string = value_string
+        self.value = value
         self.default = None
         self.required = required
 
         if not self.is_valid():
             msg = ("The parameter '{}' did not have a valid value. "
-                   "'{}' was given".format(name, value_string))
+                   "'{}' was given".format(name, value))
             if required:
                 raise ArgumentError(msg)
             else:
@@ -49,7 +50,7 @@ class PositiveIntArgument(Argument):
     """A positive integer argument"""
 
     def is_valid(self):
-        return self.value_string.isnumeric()
+        return self.value.isnumeric()
 
 
 class PositiveFloatArgument(Argument):
@@ -57,18 +58,43 @@ class PositiveFloatArgument(Argument):
 
     def is_valid(self):
         try:
-            value = float(self.value_string)
+            value = float(self.value)
         except ValueError:
             return False
         return value > 0.0
 
 
-class PathArgument(Argument):
+class TupleArgument(Argument):
+    """A tuple argument"""
+
+    def __init__(self, name, value, length=None, required=True):
+        self.length = length
+        super().__init__(name=name, value=value, required=required)
+
+    def is_valid(self):
+        valid = isinstance(self.value, tuple)
+        if isinstance(self.length, int):
+            valid &= (len(self.value) == self.length)
+        return valid
+
+
+class SourcePathArgument(Argument):
     """A path argument.
 
     The directory must exist for this path to be considered valid.
     """
 
     def is_valid(self):
-        split = os.path.split(self.value_string)
-        return os.path.isdir(split[0]) or os.path.isdir(self.value_string)
+        return (isinstance(self.value, SourcePath) and
+                (self.value.is_dir() or self.value.parent.is_dir()))
+
+
+class TargetPathArgument(Argument):
+    """A path argument.
+
+    The directory must exist for this path to be considered valid.
+    """
+
+    def is_valid(self):
+        return (isinstance(self.value, TargetPath) and
+                (self.value.is_dir() or self.value.parent.is_dir()))

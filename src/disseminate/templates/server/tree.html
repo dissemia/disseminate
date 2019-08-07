@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Disseminate Document Listing</title>
+  <meta name="description" content="Disseminate Project Index">
+  <meta name="author" content="Disseminate">
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato" />
+  <link rel="stylesheet" type="text/css" href="/media/css/base.css">
+  <link rel="stylesheet" type="text/css" href="/media/css/tree.css">
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script> 
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.29.5/js/jquery.tablesorter.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function() {
+      $("#index").tablesorter(
+        {sortList: [[0,0],]}
+    );
+      }
+    );
+    </script>
+</head>
+{%- macro recursetree(n, depth=0) %}
+    {%- for doc in n %}
+        {%- if depth == 0 %}
+      <table class="tablesorter" id="index">
+        <caption>
+          {{ doc.title }}
+        </caption>
+        <tr>
+          <thead>
+          <th>num</th>
+          <th>source</th>
+          <th>targets</th>
+          <th>last saved</th>
+          </thead>
+        </tr>
+        {%- endif %}
+        <tr class="level-{{ doc.level }}">
+          <td class="num">{{ doc.number }}-{{ doc.level }}</td>
+          <td class="src">
+            <a href="/{{ doc.src_filepath }}">{{ doc.src_filepath.subpath }}</a>
+          </td>
+          <td class="tgt">
+            {%- if doc.targets %}
+            ({%- for target, link in doc.targets.items() -%}
+            <a href="{{ link }}">{{ target|replace('.', '') }}</a>
+              {%- if not loop.last %}, {% endif %}
+            {%- endfor %})
+            {%- endif %}
+          </td>
+          <td class="date">
+            {{ doc.date.strftime('%b %d, %Y (%I:%M%p)') }}
+          </td>
+        </tr>
+      {%- if doc.subdocs -%}
+      {{ recursetree(doc.subdocs, depth + 1) }}
+      {%- endif %}
+      {%- if depth == 0 %}
+      </table>
+      {%- endif %}
+    {%- endfor %}
+{%- endmacro %}
+<body>
+  {% include "menu.html" %}
+  <div class="content">
+    <h1>Document Listing</h1>
+    <div class="tableset">
+        {{ recursetree(docs) }}
+    </div>
+  </div>
+</body>
+</html>

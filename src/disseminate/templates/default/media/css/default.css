@@ -1,0 +1,169 @@
+body {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 3.0rem;
+    font-size: 1.2rem;
+    font-family: Palatino, serif;
+    line-height: 1.7;
+    color: #212529;
+}
+
+h1 {
+    display: block;
+    font-size: 1.8rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-weight: 400;
+}
+
+h2 {
+    display: block;
+    font-size: 1.6rem;
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+    font-weight: 400;
+}
+
+h3 {
+    display: block;
+    font-size: 1.2rem;
+    margin-top: 1.0rem;
+    margin-bottom: 0.75rem;
+    font-weight: 400;
+}
+
+img {
+    background-color: white;
+    margin: 0 0.2rem;
+}
+
+sub,sup {
+    font-size: 70%;
+}
+
+/* Table of Contents */
+.menu {
+  display: none;
+  position: fixed;
+  background: #ffffff;
+  z-index: 2;
+  border: 1px solid #555;
+  border-radius: 5px;
+  padding: 1rem;
+  min-width: 40rem;
+}
+
+.menu h1 {
+    font-size: 16pt;
+    margin-top: 0;
+}
+
+label.menu-toggle {
+  margin-left: -30px;
+  margin-top: 1rem;
+  position: fixed;
+  display: block;
+}
+
+input.menu-toggle[type=checkbox] {
+  visibility: hidden;
+  position: absolute;
+}
+
+input.menu-toggle[type=checkbox]:checked ~ .menu {
+  display: block;
+}
+
+.menu-toggle #menu-toggle-inactive {
+  position: absolute;
+}
+
+.menu-toggle #menu-toggle-active {
+  visibility: hidden;
+}
+
+input.menu-toggle[type=checkbox]:checked + .menu-toggle #menu-toggle-inactive {
+  visibility: hidden;
+}
+
+input.menu-toggle[type=checkbox]:checked + .menu-toggle #menu-toggle-active {
+  visibility: visible;
+}
+
+ul.toc-level-1, ul.toc-level-2, ul.toc-level-3, ul.toc-level-4 {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+ul.toc-level-2 {
+  padding-left: 1rem;
+}
+
+ul.toc-level-3 {
+  padding-left: 2rem;
+}
+
+ul.toc-level-4 {
+  padding-left: 3rem;
+}
+
+.toc-level-2 a {
+  font-weight: 400;
+}
+
+
+.title {
+    display: block;
+    font-size: 1.8rem;
+    text-align: center;
+    padding: 0 0 1rem 0;
+}
+
+.title-label {
+    color: #9c0303;
+}
+
+.title-label::after {
+    content: " - ";
+}
+
+span.paragraph {
+    margin-right: 0;
+}
+
+.figure .number {
+  font-weight: 600;
+}
+
+.figure .number::before {
+  content: "Fig. ";
+}
+
+.figure .number::after {
+  content: ".";
+}
+
+.authors {
+    display: block;
+    text-align: center;
+    font-size: 1.3rem;
+    padding: 0 0 1.5rem 0;
+}
+    
+.supsub {
+   display: inline-block;
+   margin: -9em 0;
+   vertical-align: -0.3em;
+   line-height: 0.75em;
+   font-size: 70%;
+   text-align: left;
+}
+
+.eq {
+    display: inline;
+    vertical-align: middle;
+    margin: 0.0;
+    padding: 0;
+}

@@ -1,10 +1,11 @@
 """
-Tags for captions and references.
+Tags for figure captions and references.
 """
-from lxml.builder import E
-
-from .core import Tag
-from ..attributes import get_attribute_value, remove_attribute
+from .tag import Tag
+from .label import LabelMixin
+from .utils import content_to_str
+from ..formats import tex_cmd
+from ..utils.string import hashtxt
 
 
 class CaptionError(Exception):
@@ -12,118 +13,100 @@ class CaptionError(Exception):
     pass
 
 
-class RefError(Exception):
-    """An error was encountered in a reference."""
-    pass
-
-
-class Caption(Tag):
+class Caption(Tag, LabelMixin):
     """A tag for captions.
 
     .. note:: The use of a naked caption tag is allowed (i.e. a caption not
               nested within a figure or table), but this won't register a label
-              with the label manager. This is because the 'add_label' method
-              will not be called.
+              with the label manager. In order to create a label, the
+              create_label method in the LabelMixin must be invoked.
+
+              :example:
+
+                 ::
+
+                    @fig{@img{image.svg}
+                         @caption{My first figure}
+                        }
     """
 
-    html_name = 'caption-text'
-    tex_name = 'caption'
-    active = True
-    label = None
+    html_name = 'span'
+    tex_cmd = 'caption'
 
-    def add_label(self, context, kind, id=None):
-        """Add a label to the caption.
-
-        .. note:: This function is run by the parent tag so that the kind is
-                  properly set.
-
-        Parameters
-        ----------
-        context : dict
-            The context for the document that owns this label.
-        kind : str
-            The kind of label. ex: 'chapter', 'figure', 'equation'
-        id : str, optional
-            The label of the label ex: 'ch:nmr-introduction'
-            If a label id is not specified, a short one based on the
-            document and label count will be generated.
-        contents : str, optional
-            The short description for the label that can be used as the
-            reference.
-        """
-        # Get the id, if this caption has one
-        id = id if id is not None else get_attribute_value(self.attributes,
-                                                           'id')
-        self.attributes = remove_attribute(self.attributes, 'id')
-
-        # Get the label manager and add the label
-        if ('label_manager' in context and
-           'document' in context):
-            label_manager = context['label_manager']
-            document = context['document']
-
-            label = label_manager.add_label(document=document, tag=self,
-                                            kind=kind, id=id)
-            self.label = label
-
-    def default(self):
-        """Add newline to the end of a caption"""
-        default = super(Caption, self).default()
-
-        if self.label is not None:
-            # add the label to the caption
-            return ' '.join((self.label.label(target='default'), default))
-        else:
-            return default
-
-    def html(self, level=1):
-        html = super(Caption, self).html(level+1)
-        if self.label is not None:
-            # add the label to the caption
-            label = self.label.label(target='.html')
-            kwargs = {'class': 'caption'}
-            return E('span', label, html, **kwargs)
-        else:
-            return html
-
-    def tex(self, level=1, mathmode=False):
-        tex = super(Caption, self).tex(level + 1, mathmode)
-
-        if self.label is not None:
-            # add the label to the caption
-            return ' '.join((self.label.label(target='.tex'), tex)) + '\n'
-        else:
-            return tex + '\n'
-
-
-class Ref(Tag):
-    """A tag to reference a label."""
-
+    kind = None
     active = True
 
-    def get_label(self):
-        """Retrieve a label from the label_manager."""
-        assert 'label_manager' in self.context
+    def __init__(self, name, content, attributes, context):
+        # Call the tag constructor, but not the LabelMixin construction.
+        # The create_label method of LabelMixin must be invoked separately.
+        Tag.__init__(self, name, content, attributes, context)
 
-        # Get the identifier; it has to be a text string
-        if not isinstance(self.content, str):
-            msg = "The reference '{}' should be a simple text identifier."
-            raise RefError(msg.format(str(self.content)))
-        id = self.content
+        # Set the attributes to the class
+        if 'class' not in self.attributes:
+            self.attributes['class'] = 'caption'
 
-        label_manager = self.context['label_manager']
-        label = label_manager.get_label(id=id)
+    def generate_label_id(self):
+        """Generate the label id and set the id in the attributes."""
+        if self.label_id is not None:
+            label_id = self.label_id
+        elif 'id' in self.attributes:
+            label_id = self.attributes['id']
+        else:
+            text = self.default_fmt()
+            label_id = 'caption-' + hashtxt(text)
 
-        return label
+        # Set the 'id' attributes
+        self.attributes['id'] = label_id
+        return label_id
 
-    def default(self, level=1):
-        label = self.get_label()
-        return label.ref(target='default')
+    def generate_label_kind(self):
+        return self.kind if self.kind is not None else ('caption',)
 
-    def html(self, level=1):
-        label = self.get_label()
-        return label.ref(target='.html')
+    def default_fmt(self, content=None):
+        # Prepare the content with the label. References for the default format
+        # are not supported
+        content = ''
+        if self.label_tag is not None:
+            content += self.label_tag.default_fmt()
+        content += content_to_str(self.content)
 
-    def tex(self, level=1, mathmode=False):
-        label = self.get_label()
-        return label.ref(target='.tex')
+        return super().default_fmt(content=content)
+
+    def tex_fmt(self, content=None, mathmode=False, level=1):
+        cls_name = self.__class__.__name__.lower()
+        content = ''
+
+        # Prepare the tag contents to include the label tag.
+        # ex: 'My Title' becomes 'Chap 1. My Title'
+        if self.label_tag is not None:
+            content += self.label_tag.tex_fmt(mathmode=mathmode,
+                                              level=level)
+
+        # Format the tag's contents into a string
+        content += content_to_str(self.content, target='.tex',
+                                  mathmode=mathmode, level=level)
+
+        # Format the heading tag. ex: \chapter{Chapter 1. My First Chapter}
+        content = tex_cmd(cls_name, attributes=self.attributes,
+                          formatted_content=content)
+
+        if self.label_anchor is not None:
+            content += ' ' + self.label_anchor.tex_fmt(mathmode=mathmode,
+                                                       level=level)
+
+        return content
+
+    def html_fmt(self, content=None, level=1):
+        # Prepare the tag contents to include the label tag.
+        # ex: 'My Title' becomes 'Chap 1. My Title'
+        content = []
+        if self.label_tag is not None:
+            content.append(self.label_tag)
+
+        if isinstance(self.content, list):
+            content += self.content
+        else:
+            content.append(self.content)
+
+        return super().html_fmt(content=content, level=level)
+

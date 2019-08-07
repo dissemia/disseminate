@@ -1,0 +1,17 @@
+{%- extends "default/template.tex" %}
+{%- block class %}
+\documentclass{tufte-book}
+{%- endblock %}
+{%- block marginheader %}
+{%- endblock %}
+{%- block extraheader %}
+%%%
+% Remove labels from captions  
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd{\@caption}
+  {\noindent\csname fnum@#1\endcsname: \ignorespaces}
+  {}
+  {}{}
+\makeatother
+{%- endblock %}

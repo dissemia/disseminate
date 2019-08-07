@@ -1,0 +1,131 @@
+
+table {
+  border-collapse: collapse;
+  margin-left: 1.5rem;
+}
+
+table a {
+  color: #808080;
+}
+
+caption {
+  text-align: left;
+  padding-bottom: 1em;
+}
+
+thead {
+  background-color: #efefef;
+}
+
+th {
+  text-align: left;
+  padding: 0.2rem 0.4rem;
+  color: #888;
+}
+
+tbody {
+  border-top: 1px solid #f2f2f2;
+}
+
+tr {
+  color: #808080;
+  border-bottom: 1px solid #eee;
+}
+
+td {
+  padding: 0.4rem;
+}
+
+td.num {
+  min-width: 2.0rem;
+  padding-left: 0.8rem;
+  font-size: 11pt;
+}
+
+td.src {
+  min-width: 25.0rem;
+}
+
+td.tgt {
+  min-width: 6.0rem;
+  font-size: 11pt;
+}
+
+td.date {
+  font-size: 11pt;
+  text-align: center;
+  width: 7.0rem;
+}
+
+tr.level-2 td.src {
+  padding-left: 1.4rem;
+}
+
+tr.level-3 td.src {
+  padding-left: 2.4rem;
+}
+
+tr.level-4 td.src {
+  padding-left: 3.4rem;
+}
+
+tr.level-5 td.src {
+  padding-left: 4.4rem;
+}
+
+/* leading bars */
+/*
+tr.level-2 td.src:before {
+  content: "";
+  width: 0.6rem;
+  height: 0.2rem;
+  border-bottom: 1px solid #e8e8e8;
+  position: absolute;
+  transform: translateX(-1.0rem) translateY(0.5rem);
+}
+
+tr.level-3 td.src:before {
+  content: "";
+  width: 1.6rem;
+  height: 0.2rem;
+  border-bottom: 1px solid #e8e8e8;
+  position: absolute;
+  transform: translateX(-2.0rem) translateY(0.5rem);
+}
+
+tr.level-4 td.src:before {
+  content: "";
+  width: 2.6rem;
+  height: 0.2rem;
+  border-bottom: 1px solid #e8e8e8;
+  position: absolute;
+  transform: translateX(-3.0rem) translateY(0.5rem);
+}
+
+tr.level-5 td.src:before {
+  content: "";
+  width: 3.6rem;
+  height: 0.2rem;
+  border-bottom: 1px solid #e8e8e8;
+  position: absolute;
+  transform: translateX(-4.0rem) translateY(0.5rem);
+}
+*/
+
+.tablesorter-headerDesc .tablesorter-header-inner:after {
+  padding-left: 0.3em;
+  content: '▽';
+  font-size: 14px;
+}
+
+.tablesorter-headerAsc .tablesorter-header-inner:after {
+  padding-left: 0.3em;
+  content: '△';
+  font-size: 14px;
+}
+
+.caption-title {
+  text-align: left;
+  padding-bottom: 1rem;
+  font-size: 19px;
+}

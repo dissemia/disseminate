@@ -22,8 +22,8 @@ def test_compiled_document_marginfig(tmpdir):
         This is my @marginfig{{Margin figure}}.
         """
 
-    # For each template type try rendering the fiel
-    for template in ('template', 'tufte',):
+    # For each template type try rendering the field
+    for template in ('default', 'books/tufte',):
         # Write the source
         src_filepath.write(src.format(template=template))
 

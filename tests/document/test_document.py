@@ -1,445 +1,586 @@
 """
 Tests for Document classes and functions.
 """
+import pathlib
+from shutil import copy
+
 import pytest
-from shutil import copyfile
 
 from disseminate.document import Document, DocumentError
-from disseminate.dependency_manager import MissingDependency
-from disseminate.labels import DuplicateLabel
-from disseminate.tags.toc import process_context_toc
+from disseminate.paths import SourcePath, TargetPath
 from disseminate.utils.tests import strip_leading_space
+from disseminate import settings
 
 
-def test_basic_conversion_html(tmpdir):
-    """Tests the conversion of a basic html file."""
-    # Get a path to a temporary file
-    temp_file = str(tmpdir.join("html")) + '/dummy.html'
+def test_document_paths(tmpdir):
+    """Tests the setting of paths for documents."""
+    tmpdir = pathlib.Path(tmpdir)
 
-    # Load the document and render it with no template
-    doc = Document("tests/document/example1/dummy.dm",
-                   str(tmpdir))
-    doc.render()
-    # Make sure the output matches the answer key
-    with open(temp_file, 'r') as f, \
-         open("tests/document/example1/test_basic_conversion_html.html") as g:
-        assert f.read() == g.read()
+    # Create a test source file
+    src_path = tmpdir / 'src'
+    src_path.mkdir()
+    src_filepath = src_path / 'file1.dm'
+    src_filepath.write_text("""
+    ---
+    targets: html
+    ---
+    """)
 
-    # An invalid file raises an error
-    with pytest.raises(DocumentError):
-        doc = Document("tests/document/missing.dm")
+    # Create the test document
+    doc = Document(src_filepath, tmpdir)
 
+    # Test the paths
+    assert isinstance(doc.src_filepath, SourcePath)
+    assert str(doc.src_filepath) == str(src_filepath)
+    assert str(doc.src_filepath.project_root) == str(src_path)
 
-def test_ast_caching(tmpdir):
-    """Tests the caching of the AST based on file modification times."""
-    # Get a path to a temporary file
-    temp_file = str(tmpdir.join("html")) + '/dummy.html'
+    assert isinstance(doc.project_root, SourcePath)
+    assert str(doc.project_root) == str(src_path)
 
-    # Load the document and render it with no template. Opening the document
-    # loads the ast.
-    doc = Document("tests/document/example1/dummy.dm",
-                   str(tmpdir))
-
-    ast = doc._ast
-    mtime = doc._mtime
-    assert ast is not None
-    assert mtime is not None
-
-    # Try loading the AST again. At this point, it shouldn't be different
-    doc.get_ast()
-    assert ast == doc._ast
-    assert mtime == doc._mtime
+    assert isinstance(doc.target_root, TargetPath)
+    assert str(doc.target_root) == str(tmpdir)
+    assert str(doc.target_root.target_root) == str(tmpdir)
 
 
-def test_target_list():
+def test_document_src_filepaths():
+    """Test the src_filepaths of documents."""
+    # 1. Example1 does not have markup source files in a src
+    #    directory.
+    doc = Document("tests/document/example1/dummy.dm")
+
+    assert isinstance(doc.src_filepath, SourcePath)
+    assert str(doc.src_filepath) == "tests/document/example1/dummy.dm"
+    assert str(doc.src_filepath.project_root) == "tests/document/example1"
+    assert str(doc.src_filepath.subpath) == "dummy.dm"
+
+    # 2. Example4 has a markup source file in a source directory,
+    #    'src'. Target files will be saved in the parent directory of the 'src'
+    #    directory
+    doc = Document("tests/document/example4/src/file.dm")
+    assert str(doc.src_filepath) == "tests/document/example4/src/file.dm"
+    assert str(doc.src_filepath.project_root) == "tests/document/example4/src"
+    assert str(doc.src_filepath.subpath) == "file.dm"
+
+    # 3. Example5 has markup source files in the root project directory, and
+    #    in the sub1, sub2 and sub3 directories.
+    doc = Document("tests/document/example5/index.dm")
+
+    assert isinstance(doc.src_filepath, SourcePath)
+    assert str(doc.src_filepath) == "tests/document/example5/index.dm"
+    assert str(doc.src_filepath.project_root) == "tests/document/example5"
+    assert str(doc.src_filepath.subpath) == "index.dm"
+
+    # Check the subdocuments
+    subdoc = list(doc.subdocuments.values())[0]
+
+    assert isinstance(subdoc.src_filepath, SourcePath)
+    assert str(subdoc.src_filepath) == "tests/document/example5/sub1/index.dm"
+    assert str(subdoc.src_filepath.project_root) == "tests/document/example5"
+    assert str(subdoc.src_filepath.subpath) == "sub1/index.dm"
+
+    subdoc = list(doc.subdocuments.values())[1]
+    assert isinstance(subdoc.src_filepath, SourcePath)
+    assert str(subdoc.src_filepath) == "tests/document/example5/sub2/index.dm"
+    assert str(subdoc.src_filepath.project_root) == "tests/document/example5"
+    assert str(subdoc.src_filepath.subpath) == "sub2/index.dm"
+
+    subdoc = list(doc.subdocuments.values())[2]
+    assert isinstance(subdoc.src_filepath, SourcePath)
+    assert str(subdoc.src_filepath) == "tests/document/example5/sub3/index.dm"
+    assert str(subdoc.src_filepath.project_root) == "tests/document/example5"
+    assert str(subdoc.src_filepath.subpath) == "sub3/index.dm"
+
+
+def test_document_targets():
+    """Test the document targets method."""
+    doc = Document("tests/document/example1/dummy.dm")
+
+    # dummy.dm has the entry 'html, tex' set in the header.
+    targets = doc.targets
+
+    assert '.html' in targets
+    assert isinstance(targets['.html'], TargetPath)
+    assert str(targets['.html']) == 'tests/document/example1/html/dummy.html'
+    assert str(targets['.html'].target_root) == 'tests/document/example1'
+    assert str(targets['.html'].target) == 'html'
+    assert str(targets['.html'].subpath) == 'dummy.html'
+
+    assert '.tex' in targets
+    assert str(targets['.tex']) == 'tests/document/example1/tex/dummy.tex'
+    assert str(targets['.tex'].target_root) == 'tests/document/example1'
+    assert str(targets['.tex'].target) == 'tex'
+    assert str(targets['.tex'].subpath) == 'dummy.tex'
+
+
+def test_document_target_list():
     """Test the setting of the target_list property."""
     doc = Document("tests/document/example1/dummy.dm")
 
     # dummy.dm has the entry 'html, tex' set in the header.
     assert doc.target_list == ['.html', '.tex']
 
-    # Try a variety of target_list strings
-    for s in (['tex', 'html'], ['.tex', '.html'],
-              'tex html', '.tex .html', 'tex, html', '.tex, .html'):
-        doc.target_list = s
-        assert doc.target_list == ['.tex', '.html']
+    # Test an empty target list
+    doc.context['targets'] = ''
+    assert doc.target_list == []
 
 
-def test_target_filepath():
+def test_document_target_filepath():
     """Test the target_filepath method."""
 
     # 1. Example1 does not have markup source files in a source
     #    directory. Target files will be saved in the project directory
     doc = Document("tests/document/example1/dummy.dm")
 
-    assert (doc.target_filepath('.html', render_path=True) ==
+    assert isinstance(doc.target_filepath('.html'), TargetPath)
+    assert (str(doc.target_filepath('.html')) ==
             "tests/document/example1/html/dummy.html")
-    assert (doc.target_filepath('.html', render_path=False) ==
+    assert (str(doc.target_filepath('.html').target_root) ==
+            "tests/document/example1")
+    assert (str(doc.target_filepath('.html').target) ==
+            "html")
+    assert (str(doc.target_filepath('.html').subpath) ==
             "dummy.html")
-    assert (doc.target_filepath('.tex', render_path=True) ==
-            "tests/document/example1/tex/dummy.tex")
-    assert (doc.target_filepath('.tex', render_path=False) ==
-            "dummy.tex")
 
     # 2. Example4 has a markup source file in a source directory,
     #    'src'. Target files will be saved in the parent directory of the 'src'
     #    directory
     doc = Document("tests/document/example4/src/file.dm")
-    assert (doc.target_filepath('.html', render_path=True) ==
+    assert (str(doc.target_filepath('.html')) ==
             "tests/document/example4/html/file.html")
-    assert (doc.target_filepath('.html', render_path=False) ==
+    assert (str(doc.target_filepath('.html').target_root) ==
+            "tests/document/example4")
+    assert (str(doc.target_filepath('.html').target) ==
+            "html")
+    assert (str(doc.target_filepath('.html').subpath) ==
             "file.html")
 
     # 3. Example5 has markup source files in the root project directory, and
     #    in the sub1, sub2 and sub3 directories.
     doc = Document("tests/document/example5/index.dm")
-    assert doc.target_root == 'tests/document/example5'
-    assert (doc.target_filepath('.html', render_path=True) ==
+    assert (str(doc.target_filepath('.html')) ==
             "tests/document/example5/html/index.html")
-    assert (doc.target_filepath('.html', render_path=False) ==
+    assert (str(doc.target_filepath('.html').target_root) ==
+            "tests/document/example5")
+    assert (str(doc.target_filepath('.html').target) ==
+            "html")
+    assert (str(doc.target_filepath('.html').subpath) ==
             "index.html")
 
-    # Check the sub_documents
-    sub_document = list(doc.sub_documents.values())[0]
-    assert sub_document.target_root == 'tests/document/example5'
-    assert (sub_document.target_filepath('.html', render_path=True) ==
+    # Check the subdocuments
+    subdoc = list(doc.subdocuments.values())[0]
+    assert isinstance(subdoc.target_root, TargetPath)
+    assert str(subdoc.target_root) == 'tests/document/example5'
+    assert (str(subdoc.target_filepath('.html')) ==
             "tests/document/example5/html/sub1/index.html")
+    assert (str(subdoc.target_filepath('.html').target_root) ==
+            "tests/document/example5")
+    assert (str(subdoc.target_filepath('.html').target) ==
+            "html")
+    assert (str(subdoc.target_filepath('.html').subpath) ==
+            "sub1/index.html")
 
-    sub_document = list(doc.sub_documents.values())[1]
-    assert sub_document.target_root == 'tests/document/example5'
-    assert (sub_document.target_filepath('.html', render_path=True) ==
+    subdoc = list(doc.subdocuments.values())[1]
+    assert isinstance(subdoc.target_root, TargetPath)
+    assert str(subdoc.target_root) == 'tests/document/example5'
+    assert (str(subdoc.target_filepath('.html')) ==
             "tests/document/example5/html/sub2/index.html")
+    assert (str(subdoc.target_filepath('.html').target_root) ==
+            "tests/document/example5")
+    assert (str(subdoc.target_filepath('.html').target) ==
+            "html")
+    assert (str(subdoc.target_filepath('.html').subpath) ==
+            "sub2/index.html")
 
-    sub_document = list(sub_document.sub_documents.values())[0]
-    assert sub_document.target_root == 'tests/document/example5'
-    assert (sub_document.target_filepath('.html', render_path=True) ==
+    subdoc = list(subdoc.subdocuments.values())[0]
+    assert isinstance(subdoc.target_root, TargetPath)
+    assert str(subdoc.target_root) == 'tests/document/example5'
+    assert (str(subdoc.target_filepath('.html')) ==
             "tests/document/example5/html/sub2/subsub2/index.html")
+    assert (str(subdoc.target_filepath('.html').target_root) ==
+            "tests/document/example5")
+    assert (str(subdoc.target_filepath('.html').target) ==
+            "html")
+    assert (str(subdoc.target_filepath('.html').subpath) ==
+            "sub2/subsub2/index.html")
 
-    sub_document = list(doc.sub_documents.values())[2]
-    assert sub_document.target_root == 'tests/document/example5'
-    assert (sub_document.target_filepath('.html', render_path=True) ==
+    subdoc = list(doc.subdocuments.values())[2]
+    assert isinstance(subdoc.target_root, TargetPath)
+    assert str(subdoc.target_root) == 'tests/document/example5'
+    assert (str(subdoc.target_filepath('.html')) ==
             "tests/document/example5/html/sub3/index.html")
+    assert (str(subdoc.target_filepath('.html').target_root) ==
+            "tests/document/example5")
+    assert (str(subdoc.target_filepath('.html').target) ==
+            "html")
+    assert (str(subdoc.target_filepath('.html').subpath) ==
+            "sub3/index.html")
 
 
-def test_custom_template(tmpdir):
+def test_document_target_list_update(tmpdir):
+    """Tests the proper updating of the target list."""
+    tmpdir = pathlib.Path(tmpdir)
+
+    # Create a test source document
+    project_root = tmpdir / 'src'
+    project_root.mkdir()
+    src_filepath = project_root / 'test.dm'
+
+    markup = """---
+    targets: txt
+    ---
+    """
+    src_filepath.write_text(strip_leading_space(markup))
+
+    doc = Document(src_filepath, tmpdir)
+
+    assert doc.target_list == ['.txt']
+
+    # Update the header
+    markup = """---
+        targets: tex
+        ---
+        """
+    src_filepath.write_text(strip_leading_space(markup))
+    doc.load()
+
+    assert doc.target_list == ['.tex']
+
+
+def test_document_ast_caching(tmpdir):
+    """Tests the caching of the AST based on file modification times."""
+    tmpdir = pathlib.Path(tmpdir)
+
+    # Load the document and render it with no template. Opening the document
+    # loads the ast.
+    doc = Document("tests/document/example1/dummy.dm", tmpdir)
+
+    body_attr = settings.body_attr
+    ast = doc.context[body_attr]
+    mtime = doc.mtime
+    assert ast is not None
+    assert mtime is not None
+
+    # Try loading the AST again. At this point, it shouldn't be different
+    doc.load()
+    assert ast == doc.context[body_attr]
+    assert mtime == doc.mtime
+
+
+def test_document_label_mtime(tmpdir):
+    """Test the label mtime method."""
+    # 1. Setup a document with 3 chapters
+    tmpdir.join('src').mkdir()
+    src_filepath = tmpdir.join('src').join('test.dm')
+
+    src_filepath.write("""
+    ---
+    targets: html
+    ---
+    @chapter[id=chapter-1]{Chapter 1}
+    @ref{chapter-3}
+    @chapter[id=chapter-2]{Chapter 2}
+    @chapter[id=chapter-3]{Chapter 3}
+    """)
+
+    # Load the document
+    doc = Document(str(src_filepath), str(tmpdir))
+    doc.render()
+
+    # Check that the labels were correctly loaded: 1 for the document and 1
+    # for each of the 3 chapters.
+    label_manager = doc.context['label_manager']
+
+    labels = label_manager.get_labels()
+    assert len(labels) == 4
+
+    # Check that the labels were properly set
+    assert label_manager.labels[0].title == 'test'
+    assert label_manager.labels[1].title == 'Chapter 1'
+    assert label_manager.labels[2].title == 'Chapter 2'
+    assert label_manager.labels[3].title == 'Chapter 3'
+
+    # The labels have been created and not modified yet. In this case, their
+    # mtime attributes should match that of the source document
+    doc_mtime = src_filepath.mtime()
+    assert doc.context['mtime'] == doc_mtime
+    assert label_manager.labels[0].mtime == doc_mtime  # document label
+    assert label_manager.labels[1].mtime == doc_mtime  # chapter 1 label
+    assert label_manager.labels[2].mtime == doc_mtime  # chapter 2 label
+    assert label_manager.labels[3].mtime == doc_mtime  # chapter 3 label
+
+    for label in label_manager.labels:
+        assert label.doc_id == doc.doc_id
+
+    # Determine the ids for the labels
+    ids = [id(label) for label in label_manager.labels]
+
+    # Change the first chapter. The labels should all now have an updated mtime
+    src_filepath.write("""
+    ---
+    targets: html
+    ---
+    @chapter[id=chapter-1-intro]{Chapter 1}
+    @ref{chapter-3}
+    @chapter[id=chapter-2]{Chapter Two}
+    @chapter[id=chapter-3]{Chapter 3}
+    """)
+
+    # Reload the document
+    doc.load()
+
+    # Check to see which labels have been created new.
+    # The chapter 1 label has a new id, so its a new label
+    # The chapter 2 label has the same id, but its title has changed and it
+    # has been modified
+    new_ids = [id(label) for label in label_manager.get_labels()]
+    assert ids[0] == new_ids[0]  # document label
+    assert ids[1] != new_ids[1]  # chapter 1 label (new label)
+    assert ids[2] == new_ids[2]  # chapter 2 label
+    assert ids[3] == new_ids[3]  # chapter 3 label
+
+    # Check that the labels were properly set
+    assert label_manager.labels[0].title == 'test'
+    assert label_manager.labels[1].title == 'Chapter 1'
+    assert label_manager.labels[2].title == 'Chapter Two'
+    assert label_manager.labels[3].title == 'Chapter 3'
+
+    # Check the label modification times. All the labels should have the new
+    # mtime of the updated document.
+    new_doc_mtime = src_filepath.mtime()
+    assert doc.context['mtime'] == new_doc_mtime
+    assert label_manager.labels[0].mtime == new_doc_mtime  # document label
+    assert label_manager.labels[1].mtime == new_doc_mtime  # chapter 1 label
+    assert label_manager.labels[2].mtime == new_doc_mtime  # chapter 2 label
+    assert label_manager.labels[3].mtime == new_doc_mtime  # chapter 3 label
+
+
+def test_document_custom_template(tmpdir, wait):
     """Tests the loading of custom templates from the yaml header."""
+    tmpdir = pathlib.Path(tmpdir)
+
     # Write a temporary file. We'll use the tree.html template, which contains
     # the text "Disseminate Project Index"
-    tmpdir.mkdir('src')
-    in_file = tmpdir.join('src').join("index.dm")
-    out_file = tmpdir.join('html').join("index.html")
+    project_root = tmpdir / 'src'
+    project_root.mkdir()
+    in_file = project_root / "index.dm"
+    out_file = tmpdir / 'html' / "index.html"
+
+    # Create a mock template
+    template = project_root / "mytemplate.html"
+    template.write_text("""This is my template""")
 
     markup = """
     ---
-    template: tree
+    template: mytemplate
     targets: html
     ---
     """
-    in_file.write(strip_leading_space(markup))
+    in_file.write_text(strip_leading_space(markup))
 
     # Make document
-    doc = Document(str(in_file))
+    doc = Document(in_file)
     doc.render()
-    assert "Disseminate Project Index" in out_file.read()
+    assert "This is my template" in out_file.read_text()
 
     # Write to the file again, but don't include the template. This time it
-    # shouldn't contain the text "Disseminate Project Index"
-    in_file.write("test")
+    # shouldn't contain the text "This is my template"
+    wait()  # sleep time offset needed for different mtimes
+    in_file.write_text("test")
+
+    target_filepath = doc.targets['.html']
+    assert doc.render_required(target_filepath=target_filepath)
     doc.render()
-    assert "Disseminate Project Index" not in out_file.read()
+    assert "This is my template" not in out_file.read_text()
 
 
-def test_local_context_update(tmpdir):
+def test_document_template_updates(tmpdir, wait):
+    """Tests the update of rendered targets when the template changes."""
+    tmpdir = pathlib.Path(tmpdir)
+
+    # Create the markup source file and a test template
+    project_root = tmpdir / 'src'
+    project_root.mkdir()
+    template = project_root / "index.html"
+    in_file = project_root / "index.dm"
+    target = tmpdir / 'html'
+    target.mkdir()
+    out_file = target / "index.html"
+
+    template.write_text("""test1""")
+    in_file.write_text("""---
+    targets: html
+    template: index
+    ---""")
+
+    # Load the document and test its contents
+    doc = Document(in_file)
+    doc.render()
+
+    assert not doc.render_required(out_file)
+    assert out_file.read_text() == 'test1'
+
+    # Change the template and see if the rendered output changes
+    wait()  # sleep time offset needed for different mtimes
+    template.write_text("""test2""")
+
+    assert doc.render_required(out_file)
+    doc.render()
+    assert out_file.read_text() == 'test2'
+
+
+def test_document_context_update(tmpdir):
     """Tests that the context is properly updated in subsequent renders."""
-    # First load a file with a header
-    doc = Document("tests/document/example2/withheader.dm", str(tmpdir))
-    doc.get_ast()
+    tmpdir = pathlib.Path(tmpdir)
 
-    # Check the contents  of the local_context
+    # First load a file with a header
+    doc = Document("tests/document/example2/withheader.dm", tmpdir)
+
+    # Check the contents of the context.
+    # The title entry is converted to a tag.
     assert 'title' in doc.context
     assert doc.context['title'] == 'My first title'
 
+    # The author entry is converted to a tag.
     assert 'author' in doc.context
     assert doc.context['author'] == 'Justin L Lorieau'
 
-    assert 'macros' in doc.context
+    # The target 'tex' is specified. It should not match the default setting,
+    # for the later test.
+    assert 'targets' in doc.context
+    assert doc.context['targets'] != settings.default_context['targets']
+    assert doc.context['targets'] == 'html, tex'
+
+    assert '@macro' in doc.context
 
     # Get the local_context id to make sure it stays the same
     context_id = id(doc.context)
 
     # Now switch to a file without a header and make sure the header values
     # are removed
-    doc.src_filepath = "tests/document/example2/noheader.dm"
-    doc.get_ast(reload=True)
+    doc.src_filepath = SourcePath(project_root="tests/document/example2",
+                                  subpath="noheader.dm")
+    doc.load(reload=True)
 
     # Check the contents  of the local_context
     assert 'title' not in doc.context
     assert 'author' not in doc.context
-    assert 'macros' not in doc.context
+    assert 'macro' not in doc.context
+
+    # The 'targets' entry should revert to the default
+    assert doc.context['targets'] == settings.default_context['targets']
 
     assert id(doc.context) == context_id
 
 
-def test_local_macros(tmpdir):
+def test_document_macros(tmpdir):
     """Tests that macros defined in the header of a document are properly
     processed."""
-    temp_file = tmpdir.join('html').join('withheader.html')
+    tmpdir = pathlib.Path(tmpdir)
+
+    temp_file = TargetPath(target_root=tmpdir,
+                           target='html',
+                           subpath='withheader.html')
 
     # First load a file with a header
-    doc = Document("tests/document/example2/withheader.dm",
-                   str(tmpdir))
+    doc = Document("tests/document/example2/withheader.dm", tmpdir)
+
     doc.render()
-
     # See if the macro was properly replaced
-    rendered_html = temp_file.read()
-
+    rendered_html = temp_file.read_text()
     assert '@macro' not in rendered_html
     assert '<i>example</i>' in rendered_html
 
 
-def test_dependencies_img(tmpdir):
-    """Tests that the image dependencies are correctly reset when the AST is
-    reprocessed."""
-    # Setup the project_root in a temp directory
-    project_root = tmpdir.join('src')
-    project_root.mkdir()
-    target_root = str(tmpdir)
+def test_document_load_on_render(doc):
+    """Test the proper loading of an updated source file on render."""
 
-    # Copy a dependency image file to this directory
-    img_path = str(project_root.join('sample.png'))
-    copyfile('tests/document/example3/sample.png',
-             img_path)
+    # The initial document has the targets listed in the settings.py
+    assert list(doc.targets.keys()) == ['.html']
 
-    # Make a document source file
-    markup = """
+    # Change the source file, and run the render function. The targets should
+    # be updated to the new values in the updated header.
+    src = """
     ---
-    targets: html
+    targets: html, txt
     ---
-    @img{sample.png}
     """
-
-    src_filepath = project_root.join('test.dm')
-    src_filepath.write(strip_leading_space(markup))
-
-    # Create a document
-    doc = Document(str(src_filepath), tmpdir)
-
-    # Check that the document and dependency manager paths are correct
-    assert doc.project_root == str(project_root)
-    assert doc.target_root == str(target_root)
-
-    dep = doc.context['dependency_manager']
-    assert dep.project_root == str(project_root)
-    assert dep.target_root == str(target_root)
-
-    # Render the document
+    doc.src_filepath.write_text(src)
     doc.render()
 
-    # The img file should be a dependency in the '.html' target
-    d = dep.get_dependency(target='.html', src_filepath=img_path)
-    assert d.dep_filepath == 'sample.png'
-
-    # Rewrite the document source file without the dependency
-    markup = ""
-    src_filepath.write(markup)
-
-    # Render the document and the dependency should have been removed.
-    doc.render()
-
-    # A missing dependency raises a MissingDependency exception
-    with pytest.raises(MissingDependency):
-        d = dep.get_dependency(target='.html', src_filepath=img_path)
+    assert list(doc.targets.keys()) == ['.html', '.txt']
 
 
-def test_document_labels(tmpdir):
-    """Test the correct assignment of labels for a document."""
+def test_document_recursion(tmpdir):
+    """Test the loading of a document with itself as the subdocument
+    (recursion)."""
 
-    # Setup the project_root in a temp directory
-    project_root = tmpdir.join('src')
-    project_root.mkdir()
-    target_root = tmpdir
+    # Create 2 test documents. First test absolute links
+    src_filepath1 = SourcePath(project_root=tmpdir, subpath='test1.dm')
+    target_root = TargetPath(target_root=tmpdir)
 
-    # Make a document source file
-    src_filepath = project_root.join('test.dm')
-    src_filepath.ensure(file=True)  # touch the file
-
-    # Create a document
-    doc = Document(str(src_filepath), str(target_root))
-
-    # 1. Test the label when the '_project_root' value is not assigned in the
-    #    global_context. In this case, the label is identified by the document's
-    #    src_filepath
-
-    # The label should have been created on document creation and calling the
-    # get_ast method
-    man = doc.context['label_manager']
-    assert len(man.labels) == 1
-    label = man.get_label(id="doc:test.dm")
-    assert label.id == "doc:test.dm"
-    assert label.kind == ('document', 'document-level-1')
-
-
-def test_document_tree(tmpdir):
-    """Test the loading of trees and sub-documents from a document."""
-
-    # Setup the project_root in a temp directory
-    project_root = tmpdir.join('src').mkdir()
-
-    # Populate some files
-    file1 = project_root.join('main.dm')
-    markup = """---
-    include:
-      sub/file2.dm
-      sub/file3.dm
-    targets: txt, tex
+    src_filepath1.write_text("""
     ---
-    """
-    file1.write(strip_leading_space(markup))
-    file2 = project_root.join('sub').join('file2.dm').ensure(file=True)
-    file3 = project_root.join('sub').join('file3.dm').ensure(file=True)
-
-    for text, f in (('file2', file2), ('file3', file3)):
-        f.write(text)
-
-    # Create the root document
-    doc = Document(src_filepath=str(file1))
-
-    # Test the paths
-    assert len(doc.sub_documents) == 2
-    assert doc.src_filepath == str(file1)
-
-    keys = list(doc.sub_documents.keys())
-    assert doc.sub_documents[keys[0]].src_filepath == str(file2)
-    assert doc.sub_documents[keys[1]].src_filepath == str(file3)
-
-    # Update the root document and remove a file
-    markup = """---
-    include:
-      sub/file2.dm
-    targets: txt, tex
+    include: test1.dm
     ---
-    """
-    file1.write(strip_leading_space(markup))
-    doc.get_ast()
+    @chapter{one}
+    """)
 
-    # Test the paths
-    assert len(doc.sub_documents) == 1
-    assert doc.src_filepath == str(file1)
-
-    keys = list(doc.sub_documents.keys())
-    assert doc.sub_documents[keys[0]].src_filepath == str(file2)
-
-    # Now test Example5. Example5 has a file in the root directory, a file in
-    # the 'sub1', 'sub2' and 'sub3' directories and a file in the 'sub2/subsub2'
-    # directory
-    doc = Document('tests/document/example5/index.dm',
-                   target_root=str(tmpdir))
-
-    assert len(doc.sub_documents) == 3  # Only sub_documents of doc
-    assert len(doc.context['documents']) == 5  # all sub_documents
-
-    sub_docs = list(doc.sub_documents.values())
-    assert sub_docs[0].src_filepath == 'tests/document/example5/sub1/index.dm'
-    assert sub_docs[1].src_filepath == 'tests/document/example5/sub2/index.dm'
-    assert sub_docs[2].src_filepath == 'tests/document/example5/sub3/index.dm'
-
-    all_docs = [d() for d in doc.context['documents'].values()]
-    assert all_docs[0].src_filepath == 'tests/document/example5/index.dm'
-    assert all_docs[1].src_filepath == 'tests/document/example5/sub1/index.dm'
-    assert all_docs[2].src_filepath == 'tests/document/example5/sub2/index.dm'
-    assert all_docs[3].src_filepath == ('tests/document/example5/sub2/subsub2/'
-                                        'index.dm')
-    assert all_docs[4].src_filepath == 'tests/document/example5/sub3/index.dm'
-
-    # Check that the targets are rendered in the right locations
-    doc.render()
-
-    assert tmpdir.join('html').join('index.html').exists()
-    assert tmpdir.join('html').join('sub1').join('index.html').exists()
-    assert tmpdir.join('html').join('sub2').join('index.html').exists()
-    assert (tmpdir.join('html').join('sub2').join('subsub2')
-            .join('index.html').exists())
-    assert tmpdir.join('html').join('sub3').join('index.html').exists()
+    doc = Document(src_filepath1, target_root)
 
 
-def test_document_tree_recursive_reference(tmpdir):
-    """Test the loading of trees and sub-documents with recursive references."""
-
-    # Setup the project_root in a temp directory
-    project_root = tmpdir.join('src').mkdir()
-
-    # Populate some files
-    file1 = project_root.join('file1.dm')
-    markup = """---
-    include:
-      file2.dm
-    targets: txt, tex
-    ---
-    """
-    file1.write(strip_leading_space(markup))
-
-    file2 = project_root.join('file2.dm')
-    markup = """---
-    include:
-      file1.dm
-    targets: txt, tex
-    ---
-    """
-    file2.write(strip_leading_space(markup))
-
-    # Create the root document. This will raise a DuplicateLabel error since
-    # a document is loaded twice.
-    with pytest.raises(DuplicateLabel):
-        doc = Document(src_filepath=str(file1))
+# Test targets
+@pytest.fixture(params=['.html', '.tex'])
+def target(request):
+    return request.param
 
 
-def test_document_tree_matching_filenames(tmpdir):
-    """Test the loading of trees with matching filenames in sub-directories."""
+def test_document_render(tmpdir, target):
+    """Tests the conversion of a basic html file."""
+    tmpdir = pathlib.Path(tmpdir)
 
-    # Setup the project_root in a temp directory
-    project_root = tmpdir.join('src').mkdir()
+    ext = target
+    stripped_ext = ext.strip('.')
 
-    # Populate some files
-    file1 = project_root.join('file1.dm')
-    markup = """---
-    include:
-      sub/file1.dm
-    targets: txt, tex
-    ---
-    """
-    file1.write(strip_leading_space(markup))
+    # Get a path to a temporary file
+    temp_file = TargetPath(target_root=tmpdir,
+                           target=stripped_ext,
+                           subpath='dummy' + ext)
 
-    project_root.join('sub').mkdir()
-    file2 = project_root.join('sub').join('file1.dm')
-    markup = """test"""
-    file2.write(strip_leading_space(markup))
+    # Load the document and render it with no template
+    doc = Document("tests/document/example1/dummy.dm", tmpdir)
 
-    # Create the root document
-    doc = Document(src_filepath=str(file1))
-    doc.render()
+    targets = {k: v for k, v in doc.targets.items() if k == ext}
+    doc.render(targets=targets)
+
+    # Make sure the output matches the answer key
+    render_file = doc.target_filepath(target=ext)
+    assert temp_file.read_text() == render_file.read_text()
+
+    # An invalid file raises an error
+    with pytest.raises(DocumentError):
+        doc = Document("tests/document/missing.dm")
 
 
-def test_document_toc(tmpdir):
-    """Test the generation of a toc from the header of a document."""
-    # Load example4, which has a file.dm with a 'toc' entry in the heading
-    # for documents.
-    doc = Document('tests/document/example4/src/file.dm',
-                   target_root=str(tmpdir))
+def test_document_example8(tmpdir):
+    """Test the example8 document directory."""
+    tmpdir = pathlib.Path(tmpdir)
 
-    # Render the doc
-    doc.render()
+    # Setup the paths
+    src_path = tmpdir / 'src'
+    src_path.mkdir()
+    src_filepath = src_path / 'inept.dm'
 
-    # Make sure the 'toc' context entry is correct
-    assert doc.context['toc'] == 'documents'
+    # Copy the source tree
+    copy("tests/document/example8/src/fundamental_solnNMR/inept/inept.dm",
+         src_filepath)
 
-    # Make a context and process the toc
-    context = dict(doc.context)
-    process_context_toc(context, target='.html')
+    # Load the document and render it with no template
+    doc = Document(src_filepath, tmpdir)
 
-    key = """<ol class="toc-document">
-      <li>
-        <a class="document-level-1-ref" href="/file.html">My first title</a>
-      </li>
-    </ol>
-    """
-    assert strip_leading_space(key) == context['toc']
+    targets = {'.html': doc.target_filepath(target='.html'),
+               '.tex': doc.target_filepath(target='.tex')}
+    doc.render(targets=targets)
+
+    # Check the rendered html
+    key = pathlib.Path('tests/document/example8/html/inept.html').read_text()
+    assert targets['.html'].read_text() == key

@@ -1,12 +1,14 @@
 """
-Converters for TEX files.
+Converters to convert from ``.tex`` TEX files to pdf using pdflatex.
 """
 import os
+import shutil
+import pathlib
 from tempfile import mkdtemp
 
+from ..paths import SourcePath, TargetPath
 from .converter import Converter, convert
-from .arguments import PathArgument
-from ..utils.file import parents
+from .arguments import SourcePathArgument
 from .pdf import Pdf2svg
 
 
@@ -23,22 +25,27 @@ class Pdflatex(Converter):
     def convert(self):
         """Convert a tex to a pdf file."""
         pdflatex_exec = self.find_executable('pdflatex')
+        src_filepath = self.src_filepath.value
 
         # Setup temp directory and setup the path of the created pdf
-        temp_dir = mkdtemp()
-        filename = os.path.split(self.src_filepath.value_string)[1]
-        filename_pdf = os.path.splitext(filename)[0] + '.pdf'
-        temp_filepath_pdf = os.path.join(temp_dir, filename_pdf)
+        temp_dir = pathlib.Path(mkdtemp())
+        filename_pdf = src_filepath.with_suffix('.pdf').name
+        temp_filepath_pdf = TargetPath(target_root=temp_dir,
+                                       subpath=filename_pdf)
 
         # Setup the environment. This will list the source tex directory and all
         # parent directories in the TEXINPUTS path
-        texinputs = ':'.join(parents(self.src_filepath.value_string))
+        texinputs = ':'.join(str(i) for i in src_filepath.parents)
         env = {'TEXINPUTS': ":" + texinputs}
 
         # Setup the command and run in
         args = [pdflatex_exec, "-interaction=nonstopmode",
-                "-output-directory="+temp_dir, self.src_filepath.value_string]
-        self.run(args, env=env, raise_error=True)
+                "-output-directory=" + str(temp_dir),
+                str(self.src_filepath.value)]
+
+        # Run twice
+        for i in range(2):
+            self.run(args, env=env, raise_error=True)
 
         # Copy the processed file to the target
         try:
@@ -46,6 +53,8 @@ class Pdflatex(Converter):
         except FileExistsError:
             os.remove(self.target_filepath())
             os.link(temp_filepath_pdf, self.target_filepath())
+        except OSError:
+            shutil.copy2(temp_filepath_pdf, self.target_filepath())
         return True
 
 
@@ -65,8 +74,9 @@ class Tex2svg(Pdf2svg):
 
         # Setup a temporary file for the intermediary pdf
         temp_filepath = self.temp_filepath()
-        temp_basefilepath = os.path.splitext(temp_filepath)[0]
-        src_filepath = self.src_filepath.value_string
+        temp_basefilepath = TargetPath(target_root=temp_filepath.parent,
+                                       subpath=temp_filepath.stem)
+        src_filepath = self.src_filepath.value
 
         # Convert Tex->pdf
         target_filepath = convert(src_filepath=src_filepath,
@@ -76,9 +86,13 @@ class Tex2svg(Pdf2svg):
         if target_filepath is None:
             return False
 
+        # Convert the target_filepath to a source path
+        src_filepath = SourcePath(project_root=target_filepath.parent,
+                                  subpath=target_filepath.name)
+
         # Now the target of tex->pdf is the source for this file
-        self.src_filepath = PathArgument('src_filepath',
-                                         target_filepath,
-                                         required=True)
+        self.src_filepath = SourcePathArgument('src_filepath',
+                                               src_filepath,
+                                               required=True)
 
         return super(Tex2svg, self).convert()

@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Secret files
+src/disseminate/server/secret.txt
+
 # C extensions
 *.so
 
@@ -46,6 +49,9 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+
+# Benchmark
+.asv
 
 # Re-include .cache directories from test examples
 !tests/**/.cache
@@ -111,3 +117,6 @@ ENV/
 
 # Misc temp directory
 tmp/
+
+# disseminate stuff
+.cache

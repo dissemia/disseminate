@@ -1,4 +1,4 @@
-#.PHONY: inplace inplace-force clean docs test test-all test-cli build-data develop clean-data help docs profile
+#.PHONY: test coverage develop bench bench-all bench-preview clean docs install help
 .DEFAULT_GOAL := help
 
 PYTHON ?= python
@@ -6,6 +6,12 @@ PYTHON ?= python
 test:  ## Test the package with the current python version
 	pip install 'pytest'
 	pytest
+
+test-cli:  ## Test the command-line interface
+	@$(MAKE) --no-print-directory -C tests/cli test
+
+build-wheel:  ## Make a wheel package in dist
+	python3 setup.py sdist bdist_wheel
 
 coverage:  ## Test the coverage of tests
 	pip install 'pytest' 'pytest-cov'
@@ -29,6 +35,9 @@ docs: develop  ## Build the documentation
 	@echo "\033[92m\n\nBuild successful!\033[0m"
 	@echo "\033[92mView the html docs at docs/_build/html/index.html.\033[0m"
 	@echo "\033[92mView the pdf docs docs/_build/latex/.\n\033[0m"
+
+#docker:  ## Build the docker image
+#	docker build -t  disseminate:0.15 .
 
 install:  ## Install disseminate
 	python setup.py install

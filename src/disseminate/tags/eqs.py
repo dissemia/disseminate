@@ -1,120 +1,135 @@
 """
-Equation tags.
+Tags to render equations
 """
-from .core import Tag
+from copy import copy
+
 from .img import RenderedImg
-from ..attributes import (set_attribute, remove_attribute, get_attribute_value,
-                          format_tex_attributes)
-
-
-def raw_content_string(content):
-    """Generate a string from the content."""
-    if isinstance(content, str):
-        return content
-
-    elif isinstance(content, list) or hasattr(content, '__iter__'):
-        return ''.join(map(raw_content_string, content))
-
-    elif isinstance(content, Tag) and hasattr(content, 'tex'):
-        return content.tex(mathmode=True)
-
-    elif hasattr(content, 'content'):
-        return raw_content_string(content.content)
-
-    else:
-        return ""
+from .exceptions import TagError
+from .utils import content_to_str
+from ..formats import tex_cmd, tex_env
+from ..attributes import Attributes
 
 
 class Eq(RenderedImg):
-    """The inline equation tag"""
+    """The inline equation tag
+
+    Render an equation in native LaTeX (.tex targets) or into a rendered
+    SVG image using LaTeX (.html targets).
+
+    Attributes
+    ----------
+    aliases : Tuple[str]
+        A list of strs for other names a tag goes by
+    active : bool
+        If True, the Tag can be used by the TagFactory.
+    block_equation : bool
+        If True, the equation will be rendered as a LaTeX block equation using
+        a math environment. ex: \begin{equation}...\end{equation}
+        If False, the equation will be rendered as a LaTeX inline equation.
+        ex: "\ensuremath{y=x}
+    """
     # TODO: "@eq[bold color=blue]{y=x}"
 
     aliases = ('term', 'termb')
-    src_filepath = None
     active = True
+
+    process_content = False
 
     block_equation = None
     bold = None
     color = None
 
-    _raw_content = None
-    _raw_attributes = None
+    tex_content = None
 
-    tex_format = "{content}"
-    tex_inline_format = "\\ensuremath{{{content}}}"
-    tex_block_format = ("\\begin{{{env}}}{attrs} %\n"
-                        "{content}\n\\end{{{env}}}")
     default_block_env = "align*"
 
-    def __init__(self, name, content, attributes, context, block_equation=False,
-                 eq_template=None):
+    def __init__(self, name, content, attributes, context,
+                 block_equation=False):
+        assert (context.is_valid('renderers') and
+                'equation' in context['renderers'])
         self.block_equation = block_equation
 
-        # Set the equation template for rendering pdf/svg versions of equations
-        eq_template = 'eq' if eq_template is None else eq_template
+        # Ensure the attributes argument is an Attributes type
+        attributes = Attributes(attributes)
 
-        # Get the environment type
-        env = get_attribute_value(attributes, attribute_name='env',
-                                  target='.tex')
-        attributes = remove_attribute(attributes, 'env')
+        # Get various properties from the attributes
+        env = attributes.get('env', target='.tex')
+        self.block_equation = (True if env is not None or
+                               block_equation else False)
+        self.tex_env = env if env is not None else self.default_block_env
 
-        # If the env attribute is specified, then it must be a block environment
-        if env:
-            self.block_equation = True
-        self.env = env if env is not None else self.default_block_env
+        # Prepare the tag to only have its contents processed
+        self.context = context
+        self.content = content
+        self.attributes = attributes
 
-        # Determine if bold
-        bold = get_attribute_value(attributes, attribute_name='bold',
-                                   target='.tex')
-        attributes = remove_attribute(attributes, 'bold')
-        if bold or name == 'termb':
-            self.bold = True
-        else:
-            self.bold = False
+        # Replace macros and process content
+        self.process(names='process_content')
 
-        # Determine if a color was specified
-        color = get_attribute_value(attributes, attribute_name='color',
-                                   target='.tex')
-        attributes = remove_attribute(attributes, 'color')
-        self.color = color
+        # Take the content, and convert it to latex. Save the tex_content
+        # separately because the contents of this tag will be converted to
+        # an image path by the parent class.
+        tex_content = content_to_str(self.content, target='.tex', mathmode=True)
+        tex_content = tex_content.strip(' \t\n')
+        self.tex_content = tex_content
+        content = self.tex
 
-        # Save the raw content and raw attributes and format the content in tex
-        self._raw_attributes = attributes
-        self._raw_content = content
-        content = self.tex()
+        # Crop equation images created by the dependency manager. This removes
+        # white space around the image so that the equation images.
+        # Note: This crop command should not cut off baselines such that
+        # equation images won't line up properly with the surrounding text.
+        # ex: H vs Hy
+        attributes['crop'] = (100, 100, 0, 0)
 
-        super(Eq, self).__init__(name=name, content=content,
-                                 attributes=attributes,
-                                 context=context,
-                                 render_target='.tex',
-                                 template=eq_template)
+        super().__init__(name=name, content=content, attributes=attributes,
+                         context=context, render_target='.tex')
 
-    def html(self, level=1):
+    def render_content(self, content, context):
+        """Render the content in LaTeX into a valid .tex file."""
+        # Get the renderer for the equation
+        if ('renderers' not in context or
+           'equation' not in context['renderers']):
+            raise TagError("Missing equation renderer in the document context")
+        renderer = context['renderers']['equation']
+
+        # Make a copy of the context and add the content as the 'body' entry.
+        context_cp = copy(context)
+        context_cp['body'] = content
+
+        # Get the kwargs and args to pass to the template
+        kwargs = self.template_kwargs()
+
+        return renderer.render(context=context_cp, target='.tex', **kwargs)
+
+    def html_fmt(self, content=None, level=1):
         if self.block_equation:
-            self.attributes = set_attribute(self.attributes,
-                                            ('class', 'eq blockeq'))
+            self.attributes['class'] = 'eq blockeq'
         else:
-            self.attributes = set_attribute(self.attributes,
-                                            ('class', 'eq'))
-        return super(Eq, self).html(level)
+            self.attributes['class'] = 'eq'
+        return super(Eq, self).html_fmt(content=content, level=level)
 
-    def tex(self, level=1, mathmode=False):
-        raw_content = raw_content_string(self._raw_content).strip(' \t\n')
-        content = raw_content
+    def tex_fmt(self, content=None, mathmode=False, level=1):
+        if content is None:
+            content = (self.tex_content if self.tex_content is not None
+                       else self.content)
 
         # Add bold and color if specified
-        if self.color:
-            content = "\\textcolor{" + self.color + "}{" + content + "}"
-        if self.bold:
-            content = "\\boldsymbol{" + content + "}"
+        if 'color' in self.attributes:
+            content = tex_cmd(cmd='textcolor',
+                              attributes=self.attributes['color'],
+                              formatted_content=content)
+        if 'bold' in self.attributes or self.name == 'termb':
+            content = tex_cmd(cmd='boldsymbol', formatted_content=content)
+
+        # Remove extra space around the content
+        content = content.strip()
 
         if mathmode:
             return content
         else:
-            if self.block_equation:
-                attrs = format_tex_attributes(self._raw_attributes,
-                                              left_bracket="{", right_bracket="}")
-                return self.tex_block_format.format(env=self.env, attrs=attrs,
-                                                    content=content)
+            if self.block_equation or self.paragraph_role == 'block':
+                return tex_env(env=self.tex_env, attributes=self.attributes,
+                               formatted_content=content, min_newlines=True)
             else:
-                return self.tex_inline_format.format(content=content)
+                return tex_cmd(cmd='ensuremath', attributes=self.attributes,
+                               formatted_content=content)

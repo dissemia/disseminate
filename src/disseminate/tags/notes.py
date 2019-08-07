@@ -1,7 +1,7 @@
 """
 Tags for note environments.
 """
-from .core import Tag
+from .tag import Tag
 
 
 class Sidenote(Tag):
@@ -10,6 +10,6 @@ class Sidenote(Tag):
     aliases = ('marginnote',)
 
     html_name = 'sidenote'
-    tex_name = 'marginnote'
+    tex_cmd = 'marginnote'
 
     active = True

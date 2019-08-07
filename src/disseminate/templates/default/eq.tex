@@ -1,0 +1,30 @@
+%%%
+% Template for rendering equation snippets in pdf and svg
+\documentclass{article}
+\usepackage{graphics}
+\usepackage[fleqn]{amsmath}
+\usepackage{mathtools}
+\usepackage[active, pdftex, tightpage, displaymath]{preview}
+
+%%%
+% Load UTF-8 characters
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\DeclareUnicodeCharacter{26AC}{\circ}  % used for degrees
+\DeclareUnicodeCharacter{25CB}{\ensuremath{\circ}}  % used for degrees
+
+%%%
+% Colors
+\usepackage{xcolor}
+
+%%%
+% Math display options
+\setlength{\mathindent}{0pt}
+
+\begin{document} %
+\begin{preview} %
+{\Large %
+{{ body }} %
+} %
+\end{preview}
+\end{document}

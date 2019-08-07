@@ -1,83 +1,92 @@
 """
 Image tags
 """
-import os.path
-import hashlib
+import pathlib
 
-from .core import Tag, TagError
-from ..attributes import set_attribute, format_tex_attributes
-from ..utils.file import mkdir_p
-from ..templates import get_template
+from .tag import Tag, TagError
+from ..formats import tex_cmd
+from ..utils.string import hashtxt
+from ..paths import SourcePath
 from .. import settings
-from . import settings as tag_settings
 
 
 class Img(Tag):
-    """The img tag for inserting images."""
+    """The img tag for inserting images.
+
+    Attributes
+    ----------
+    active : bool
+        If True, the Tag can be used by the TagFactory.
+    html_name : str
+        If specified, use this name when rendering the tag to html. Otherwise,
+        use name.
+    img_filepath : str
+        The path for the image.
+    """
 
     active = True
+
+    process_content = False
+    process_typography = False
+
     html_name = 'img'
-    src_filepath = None
-    dependency_manager = None
+    img_filepath = None
 
     def __init__(self, name, content, attributes, context):
-        super(Img, self).__init__(name, content, attributes, context)
+        super().__init__(name=name, content=content, attributes=attributes,
+                         context=context)
 
         # Move the contents to the src_filpath attribute
         if isinstance(content, list):
             contents = ''.join(content).strip()
+        elif isinstance(content, SourcePath):
+            contents = content
         else:
             contents = self.content.strip()
         self.content = ''
 
         if contents:
-            self.src_filepath = contents
+            self.img_filepath = contents
         else:
             msg = "An image path must be used with the img tag."
             raise TagError(msg)
 
-    def tex(self, level=1, mathmode=False):
+    def tex_fmt(self, content=None, mathmode=False, level=1):
         # Get the file dependency
-        assert 'dependency_manager' in self.context
+        assert self.context.is_valid('dependency_manager')
 
-        deps = self.context['dependency_manager']
-        document_src_filepath = (self.context['src_filepath']
-                                 if 'src_filepath' in self.context else
-                                 None)
-        deps.add_file(targets=['.tex'], path=self.src_filepath,
-                      document_src_filepath=document_src_filepath,
-                      attributes=self.attributes)
-        dep = deps.get_dependency(target='.tex',
-                                  src_filepath=self.src_filepath)
-        path = dep.dep_filepath
+        dep_manager = self.context['dependency_manager']
 
-        # get the attributes for tex
-        valid_attrs = tag_settings.tex_valid_attributes.get('img', None)
-        attrs_str = format_tex_attributes(self.attributes,
-                                          attribute_names=valid_attrs)
-        return "\\includegraphics" + attrs_str + "{{{}}}".format(path)
+        # Raises MissingDependency if the file is not found
+        deps = dep_manager.add_dependency(dep_filepath=self.img_filepath,
+                                          target='.tex',
+                                          context=self.context,
+                                          attributes=self.attributes)
+        dep = deps.pop()
+        dest_filepath = dep.dest_filepath
+        dest_subpath = dest_filepath.subpath
 
-    def html(self, level=1):
+        return tex_cmd(cmd='includegraphics', attributes=self.attributes,
+                       formatted_content=str(dest_subpath))
+
+    def html_fmt(self, content=None, level=1):
         # Add the file dependency
-        assert 'dependency_manager' in self.context
+        assert self.context.is_valid('dependency_manager')
+        dep_manager = self.context['dependency_manager']
 
-        deps = self.context['dependency_manager']
-        document_src_filepath = (self.context['src_filepath']
-                                 if 'src_filepath' in self.context else
-                                 None)
-        deps.add_file(targets=['.html'], path=self.src_filepath,
-                      document_src_filepath=document_src_filepath,
-                      attributes=self.attributes)
-        dep = deps.get_dependency(target='.html',
-                                  src_filepath=self.src_filepath)
-        url = dep.url
+        # Raises MissingDependency if the file is not found
+        deps = dep_manager.add_dependency(dep_filepath=self.img_filepath,
+                                          target='.html',
+                                          context=self.context,
+                                          attributes=self.attributes)
+        dep = deps.pop()
+        url = dep.get_url(context=self.context)
 
         # Use the parent method to render the tag. However, the 'src' attribute
         # should be fixed first.
 
-        self.attributes = set_attribute(self.attributes, ('src', url),
-                                        method='r')
-        return super(Img, self).html(level)
+        self.attributes['src'] = url
+        return super(Img, self).html_fmt(level=level)
 
 
 class RenderedImg(Img):
@@ -90,110 +99,91 @@ class RenderedImg(Img):
 
     Attributes
     ----------
-    template : str, optional
-        If specified, use this template to render the file. The contents of the
-        tag will be passed as the 'body' variable.
+    active : bool
+        If True, the Tag can be used by the TagFactory.
     """
 
     active = False
 
-    template = None
-
-    def __init__(self, name, content, attributes, context, render_target,
-                 template=None):
-        self.template = template
+    def __init__(self, name, content, attributes, context, render_target):
         if isinstance(content, list):
             content = ''.join(content).strip()
         else:
             content = content.strip()
 
         # Determine if contents is a file or code
-        if os.path.isfile(content):
+        content_line = content.splitlines()[0]  # check filename in 1st line
+        if pathlib.Path(content_line).is_file():
+            # It's a file. Use it directly.
             pass
         else:
-            # Get the cache path from the dependency manager
-            assert 'dependency_manager' in context
-            deps = context['dependency_manager']
+            # Render the content, if needed.
+            content = self.render_content(content=content, context=context)
 
-            # ex: cache_path = '.cache'
-            cache_path = deps.cache_path()
+            # Get the cache filepath from the dependency manager
+            cache_filepath = self.cache_filepath(content=content,
+                                                 context=context,
+                                                 target=render_target)
 
-            # Get the media_path. The temporary file will be stored in this
-            # directory.
-            # ex: media_path = '.cache/media'
-            media_path = os.path.join(cache_path, settings.media_dir)
-
-            # Get the doc_src_filepath and root_path to better organize the
-            # temporary files in the final directories. This allows the
-            # directory structure of the source file to be created in the
-            # target
-            doc_src_filepath = context.get('src_filepath', None)
-            project_root = context.get('project_root', None)
-
-            # Find the cache directory for the file to create
-            # ex: cache_dir = '.cache/media/chapter1'
-            if project_root and doc_src_filepath:
-                doc_src_path = os.path.relpath(doc_src_filepath, project_root)
-                doc_src_path = os.path.split(doc_src_path)[0]
-                cache_dir = os.path.join(media_path,
-                                         doc_src_path)
-            else:
-                cache_dir = media_path
-
-            # Use a template, if specified
-            if self.template:
-                src_filepath = context.get('src_filepath', '')
-                template = get_template(src_filepath=src_filepath,
-                                        target='.tex',
-                                        template_basename=self.template)
-
-                # Get the kwargs and args to pass to the template
-                kwargs = self.template_kwargs()
-                kwargs = kwargs if kwargs is not None else dict()
-                args = self.template_args()
-                args = args if args is not None else tuple()
-                kwargs['args'] = args
-
-                content = template.render(body=content, **kwargs)
-
-            # Construct the filename for the rendered image
-            # ex: filename = 'chapter1_231aef342.asy'
-            content_hash = hashlib.md5(content.encode("UTF-8")).hexdigest()[:10]
-            if doc_src_filepath:
-                doc_basefilename = os.path.split(doc_src_filepath)[1]
-                filename = (os.path.splitext(doc_basefilename)[0] + '_' +
-                            content_hash + render_target)
-            else:
-                filename = content_hash + render_target
-
-            # Construct the final cache filepath
-            # ex: cache_filepath='.cache/media/chapter1/chapter1_231aef342.asy'
-            cache_filepath = os.path.join(cache_dir, filename)
-
-            # write the contents, if needed
-            if not os.path.isfile(cache_filepath):
+            # Write the contents, if the cached file hasn't been written
+            # already. Modification times do not need to be checked since the
+            # hash guarantees that if the contents to render have changed, the
+            # hash changes
+            if not cache_filepath.is_file():
                 # Create the needed directories
-                mkdir_p(cache_dir)
+                cache_filepath.parent.mkdir(parents=True, exist_ok=True)
 
                 # Write the file using
-                with open(cache_filepath, 'w') as f:
-                    f.write(content)
+                cache_filepath.write_text(content)
 
             # Set the tag content to the newly saved file path. This path
             # should be relative to the .cache directory
-            content = os.path.relpath(cache_filepath, cache_path)
+            content = cache_filepath
 
-        super(RenderedImg, self).__init__(name, content, attributes, context)
+        super().__init__(name=name, content=content, attributes=attributes,
+                         context=context)
+
+    def render_content(self, content, context):
+        """Render the content.
+
+        This function is called to render the content into a format that can
+        be saved. By default, this function returns the content unaltered.
+        Subclasses may override this function to implement their own renderers.
+        """
+        return content
+
+    def cache_filepath(self, content, context, target):
+        """Return a SourcePath for the file to render in the cached directory.
+        """
+        assert context.is_valid('dependency_manager', 'src_filepath')
+
+        dep_manager = context['dependency_manager']
+        src_filepath = context['src_filepath']
+
+        # Get the cache path. ex: cache_path = {target_root}/'.cache'
+        cache_path = dep_manager.cache_path
+
+        # Construct the filename for the rendered image, including the
+        # subpath.
+        # ex: filename = 'chapter1/intro_231aef342.asy'
+        content_hash = hashtxt(content)
+        filepath = (str(src_filepath.subpath.with_suffix('')) + '_' +
+                    content_hash + target)
+        filepath = pathlib.Path(settings.media_path, filepath)
+
+        # Construct a filepath in the cache directory. Create dirs as
+        # needed.
+        return SourcePath(project_root=cache_path, subpath=filepath)
 
     def template_kwargs(self):
         """Get the kwargs to pass to the template.
 
         Returns
         -------
-        None or dict
+        Union[None, dict]
             A dict or keyword arguments to pass to the template.
         """
-        return None
+        return dict()
 
     def template_args(self):
         """Get the args to pass to the template
@@ -203,8 +193,8 @@ class RenderedImg(Img):
 
         Returns
         -------
-        None or tuple
+        Union[None, tuple]
             A tuple of arguments to pass to the template as the 'args'
             parameter/variable.
         """
-        return None
+        return tuple()

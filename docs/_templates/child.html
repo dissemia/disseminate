@@ -1,0 +1,27 @@
+(% extends "template.html" %)
+
+(% block body %)
+<div class="row component">
+  <div class="col-sm-3 sidebar">
+    <div class="sidebar-contents">
+      <div class="heading">
+        <a href="/index.html">
+          <img src="/media/imgs/disseminate.svg">
+          <h3>Disseminate</h3>
+          <h4>Document Processing</h4>
+        </a>
+      </div>
+      <div class="toc">
+        {%- for sidebartemplate in sidebars %}
+        {%- include sidebartemplate %}
+        {%- endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-9">
+    (% if title %)<h1>(( title ))</h1>(% endif %)
+    (( body.html ))
+  </div>
+</div>
+(% endblock %)

@@ -1,359 +1,85 @@
 """
 Test the caption and reg tags.
 """
-import pytest
-
-from disseminate import Document
-from disseminate.tags.caption import Caption
-from disseminate.ast import process_ast
-from disseminate.labels import LabelManager, LabelNotFound
+from disseminate.tags import Tag
 
 
-def test_naked_caption():
+def test_naked_caption(context_cls):
     """Tests the parsing of naked captions (i.e. those not nested in a figure
-    or table)."""
-    # Create a label manager
-    label_man = LabelManager()
+    or table).
 
-    # Create a mock context
-    context = {'label_manager': label_man}
+    Naked captions will not create a label.
+    """
+
+    context = context_cls()
 
     # Generate the markup without an id
     src = "@caption{This is my caption}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=context)
-
+    root = Tag(name='root', content=src, attributes='', context=context)
     caption = root.content
+
     assert caption.name == 'caption'
-    assert caption.attributes == tuple()
+    assert caption.attributes['class'] == 'caption'
     assert caption.content == 'This is my caption'
 
-    # Naked captions do not register labels
-    assert len(label_man.labels) == 0
 
+# Test tex targets
 
-def test_figure_caption_no_id(tmpdir):
-    """Tests the parsing of captions in figure tags when no id is specified."""
-    # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
+def test_caption_tex(context_cls):
+    """Test the formatting of naked captions for tex targets.
 
-    doc = Document(src_filepath=src_filepath)
-    doc.context['figure_label'] = "Fig. {number}."
-    doc.target_list = ['.html']
-    label_man = doc.context['label_manager']
+    Naked captions will not create a label.
+    """
 
-    # Generate the markup without an id
-    src = "@marginfig{@caption{This is my caption}}"
+    context = context_cls()
+
+    # 1. Test a basic caption.
+    src = "@caption{This is my caption}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=doc.context)
+    root = Tag(name='root', content=src, attributes='', context=context)
+    caption = root.content
 
-    fig = root.content
-    assert fig.name == 'marginfig'
-    assert fig.attributes == tuple()
+    assert caption.tex == '\\caption{This is my caption}'
 
-    # Get the caption
-    assert isinstance(fig.content, list)
-    caption = [i for i in fig.content if isinstance(i, Caption)][0]
+    # 2. Test a caption with nested tags
+    src = "@caption{This is @b{my} caption}"
 
-    assert caption.name == 'caption'
-    assert caption.attributes == tuple()
-    assert caption.default() == 'Fig. 1. This is my caption'
+    root = Tag(name='root', content=src, attributes='', context=context)
+    caption = root.content
 
-    # A label should have been registered. Altogether, there should be 1 label
-    # for the document and one for the figure
-    assert len(label_man.labels) == 2
-    labels = label_man.get_labels(kinds='figure')
-    label = labels[0]
-    assert label.id == None
-    assert label.kind == ('figure',)
-    assert label.local_order == (1,)
-    assert label.global_order == (1,)
+    assert caption.tex == ('\\caption{This is \\textbf{my} caption}')
 
 
-def test_figure_caption_no_id_html(tmpdir):
-    """Tests the html generation of captions in figure tags when no id is
-    specified."""
-    # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
+# Test html targets
 
-    doc = Document(src_filepath=src_filepath)
-    doc.context['figure_label'] = "Fig. {number}."
-    doc.target_list = ['.html']
-    label_man = doc.context['label_manager']
+def test_caption_html(context_cls):
+    """Test the formatting of nakedcaptions for html targets.
 
-    # Generate the markup without an id
-    src = "@marginfig{@caption{This is my caption}}"
+    Naked captions will not create a label.
+    """
+
+    context = context_cls()
+
+    # 1. Test a basic caption.
+    src = "@caption{This is my caption}"
 
     # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=doc.context)
+    root = Tag(name='root', content=src, attributes='', context=context)
+    caption = root.content
 
-    # Test the caption's html
-    # The following root tags have to be stripped for the html strings
-    root_start = '<span class="root">\n  '
-    root_end = '\n</span>\n'
+    assert caption.html == '<span class="caption">This is my caption</span>\n'
 
-    root_html = root.html()
+    # 2. Test a caption with nested tags
+    src = "@caption{This is @b{my} caption}"
 
-    # Remove the root tag
-    root_html = root_html[len(root_start):]  # strip the start
-    root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
+    root = Tag(name='root', content=src, attributes='', context=context)
+    caption = root.content
 
-    key = """<span class="marginfig">
-    <span class="caption">
-      <span class="figure-label">Fig. 1.</span>
-      <span class="caption-text">This is my caption</span>
-    </span>
-  </span>"""
-    assert root_html == key
+    assert caption.html == ('<span class="caption">'
+                            'This is <strong>my</strong> caption</span>\n')
 
 
-def test_figure_caption_no_id_tex(tmpdir):
-    """Tests the tex generation of captions in figure tags when no id is
-    specified."""
-    # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
 
-    doc = Document(src_filepath=src_filepath)
-    doc.context['figure_label'] = "Fig. {number}."
-    doc.target_list = ['.html']
-    label_man = doc.context['label_manager']
-
-    # Generate the markup without an id
-    src = "@marginfig{@caption{This is my caption}}"
-
-    # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=doc.context)
-    root_tex = root.tex()
-    key = """
-\\begin{marginfigure}
-Fig. 1. \\caption{This is my caption}
-\\end{marginfigure}
-"""
-    assert root_tex == key
-
-
-def test_figure_caption_with_id(tmpdir):
-    # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
-
-    doc = Document(src_filepath=src_filepath)
-    doc.context['figure_label'] = "Fig. {number}."
-    doc.target_list = ['.html']
-    label_man = doc.context['label_manager']
-
-    """Tests the parsing of captions in figure tags when an id is specified."""
-    # Test two cases: one in which the id is in the figure tag, and one in which
-    # the id is in the caption tag
-    for src in ("@marginfig[id=fig-1]{@caption{This is my caption}}",
-                "@marginfig{@caption[id=fig-1]{This is my caption}}"):
-
-        # Reset the label manager
-        label_man.reset()
-
-        # Generate a tag and compare the generated tex to the answer key
-        root = process_ast(src, doc.context)
-
-        fig = root.content
-        assert fig.name == 'marginfig'
-
-        # Get the caption
-        assert isinstance(fig.content, list)
-        caption = [i for i in fig.content if isinstance(i, Caption)][0]
-
-        assert caption.name == 'caption'
-        assert caption.content == 'This is my caption'
-
-        # 1 label should be registered for the figure
-        assert len(label_man.labels) == 1
-        labels = label_man.get_labels(kinds='figure')
-        label = labels[0]
-        assert label.id == 'fig-1'
-        assert label.kind == ('figure',)
-        assert label.local_order == (1,)
-        assert label.global_order == (1,)
-
-
-def test_figure_caption_with_id_html(tmpdir):
-    """Tests the html generation of captions in figure tags when an id is
-    specified."""
-    # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
-
-    doc = Document(src_filepath=src_filepath)
-    doc.context['figure_label'] = "Fig. {number}."
-    doc.target_list = ['.html']
-    label_man = doc.context['label_manager']
-
-    # Test two cases: one in which the id is in the figure tag, and one in which
-    # the id is in the caption tag
-    srcs = ("@marginfig[id=fig-1]{@caption{This is my caption}}",
-            "@marginfig{@caption[id=fig-1]{This is my caption}}")
-    for count, src in enumerate(srcs):
-        # Reset the label manager
-        label_man.reset()
-
-        # Generate a tag and compare the generated tex to the answer key
-        root = process_ast(src, context=doc.context)
-
-        # Test the caption's html
-        # The following root tags have to be stripped for the html strings
-        root_start = '<span class="root">'
-        root_end = '</span>\n'
-
-        root_html = root.html()
-        # Remove the root tag
-        root_html = root_html[len(root_start):]  # strip the start
-        root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
-        assert root_html == ('\n  <span class="marginfig">\n'
-                             '    <span class="caption">\n'
-                             '      <span id="fig-1" class="figure-label">'
-                             'Fig. 1.</span>\n'
-                             '      <span class="caption-text">This is my '
-                             'caption</span>\n'
-                             '    </span>\n'
-                             '  </span>\n')
-
-
-def test_figure_caption_with_id_tex(tmpdir):
-    """Tests the tex generation of captions in figure tags when an id is
-    specified."""
-    # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
-
-    doc = Document(src_filepath=src_filepath)
-    doc.context['figure_label'] = "Fig. {number}."
-    doc.target_list = ['.html']
-    label_man = doc.context['label_manager']
-
-    # Test two cases: one in which the id is in the figure tag, and one in which
-    # the id is in the caption tag
-    srcs = ("@marginfig[id=fig-1]{@caption{This is my caption}}",
-            "@marginfig{@caption[id=fig-1]{This is my caption}}")
-    for count, src in enumerate(srcs):
-        # Reset the label manager
-        label_man.reset()
-
-        # Generate a tag and compare the generated tex to the answer key
-        root = process_ast(src, context=doc.context)
-
-        root_tex = root.tex()
-        assert root_tex == ('\n\\begin{marginfigure}\n'
-                            'Fig. 1. \\caption{This is my caption}\n'
-                            '\\end{marginfigure}\n')
-
-
-def test_ref_missing(tmpdir):
-    """Test the ref tag for a missing caption"""
-    # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
-
-    doc = Document(src_filepath=src_filepath)
-    doc.context['figure_label'] = "Fig. {number}."
-    doc.target_list = ['.html']
-    label_man = doc.context['label_manager']
-
-    # Generate the markup without an id
-    src = "@ref{test} @caption{This is my caption}"
-
-    # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=doc.context)
-
-    # Trying to convert the root ast to a target type, like html, will raise
-    # an LabelNotFound error
-    with pytest.raises(LabelNotFound):
-        root.html()
-
-    # There should be only one label for the document
-    assert len(label_man.labels) == 1
-    assert len(label_man.get_labels(kinds='document')) == 1
-
-
-def test_ref_html(tmpdir):
-    """Test the ref tag for a present caption in the html format"""
-    # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
-
-    doc = Document(src_filepath=src_filepath)
-    doc.context['figure_ref'] = "Fig. {number}"
-    doc.context['figure_label'] = "Fig. {number}."
-    doc.target_list = ['.html']
-    label_man = doc.context['label_manager']
-
-    # Generate the markup with an id. The marginfig tag is needed to
-    # set the kind of the label.
-    src = "@ref{test} @marginfig{@caption[id=test]{This is my caption}}"
-
-    # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=doc.context)
-
-    #  Test the ref's html
-    root_html = root.html()
-
-    # The following root tags have to be stripped for the html strings
-    root_start = '<span class="root">'
-    root_end = '</span>\n'
-
-    # Remove the root tag
-    root_html = root_html[len(root_start):]  # strip the start
-    root_html = root_html[:(len(root_html) - len(root_end))]  # strip end
-
-    assert ('<a class="figure-ref" href="/main.html#test">'
-            'Fig. 1</a>') in root_html
-
-
-def test_ref_tex(tmpdir):
-    """Test the ref tag for a present caption in the texformat"""
-    # Create a temporary document
-    src_filepath = tmpdir.join('src').join('main.dm')
-    tmpdir.join('src').mkdir()
-    src_filepath.ensure(file=True)
-
-    doc = Document(src_filepath=src_filepath)
-    doc.context['figure_ref'] = "Fig. {number}"
-    doc.context['figure_label'] = "Fig. {number}."
-    doc.context['figure_link_tex'] = ('\\hyperlink{{{id}}}{{Fig. '
-                                      '{number}}}')
-    doc.target_list = ['.tex']
-
-    # Generate the markup without an id. A reference cannot be made, and a
-    # LabelNotFound exception is raised
-    src = "@ref{test} @marginfig{@caption{This is my caption}}"
-
-    # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=doc.context)
-
-    # Rendering the tex raises the LabelNotFound exception
-    with pytest.raises(LabelNotFound):
-        root.tex()
-
-    # Reset the labels
-    doc.context['label_manager'].reset()
-
-    # Generate the markup with an id. The marginfig tag is needed to
-    # set the kind of the label.
-    src = "@ref{test} @marginfig{@caption[id=test]{This is my caption}}"
-
-    # Generate a tag and compare the generated tex to the answer key
-    root = process_ast(src, context=doc.context)
-
-    #  Test the ref's html
-    root_tex = root.tex()
-    assert root_tex.startswith('\hyperlink{test}{Fig. 1}')

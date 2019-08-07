@@ -39,7 +39,7 @@ def parents(path):
 
     Returns
     -------
-    parents : list of str
+    parents : List[str]
         The parents of the path
 
     Examples

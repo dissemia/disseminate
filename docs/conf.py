@@ -20,12 +20,7 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
-theme = 'guzzle'
-
-if theme == 'guzzle':
-    import guzzle_sphinx_theme
-if theme == 'nameko':
-    import sphinx_nameko_theme
+#theme = 'pyramid'
 
 # -- General configuration ------------------------------------------------
 
@@ -103,29 +98,15 @@ todo_include_todos = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-#html_theme = 'nature'
-#html_theme = 'alabaster'
-
-if theme == 'guzzle':
-    html_theme_path = guzzle_sphinx_theme.html_theme_path()
-    html_theme = 'guzzle_sphinx_theme'
-
-    extensions.append("guzzle_sphinx_theme")
-    html_theme_options = {
-        # Set the name of the project to appear in the sidebar
-        "project_nav_name": "disseminate",
-    }
-elif theme == 'nameko':
-    html_theme_path = [sphinx_nameko_theme.get_html_theme_path()]
-    html_theme = 'nameko'
-else:
-    html_theme = theme
+html_theme = 'basic'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+#html_theme_options = {
+# 'includehidden': True,
+#}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -134,7 +115,8 @@ html_static_path = ['_static']
 
 html_context = {
     'css_files': [
-        '_static/theme_overrides.css',  # override wide tables in RTD theme
+        '_static/css/bootstrap.min.css',
+        '_static/css/customizations.css',
         ],
      }
 
@@ -143,21 +125,6 @@ html_context = {
 #
 # This is required for the alabaster theme
 # refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
-
-if theme == 'guzzle':
-    html_sidebars = {
-        '**': ['logo-text.html',
-               'globaltoc.html',
-               'searchbox.html']
-    }
-else:
-    html_sidebars = {
-        '**': [
-            'globaltoc.html',
-            #'relations.html',  # needs 'show_related': True theme option to display
-            'searchbox.html',
-        ]
-    }
 
 
 # -- Options for HTMLHelp output ------------------------------------------

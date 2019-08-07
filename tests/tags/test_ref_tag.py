@@ -1,0 +1,125 @@
+"""
+Test the Ref tag.
+"""
+import pytest
+
+from disseminate.paths import SourcePath, TargetPath
+from disseminate.tags import Tag
+from disseminate.tags.ref import Ref
+from disseminate.label_manager import LabelNotFound
+
+
+def test_ref_missing(doc):
+    """Test the ref tag for a missing caption"""
+
+    # Prepare a ref tag
+    src = "@ref{test}"
+
+    # Generate a tag and compare the generated tex to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+
+    # Trying to convert the root ast to a target type, like html, will raise
+    # an LabelNotFound error
+    with pytest.raises(LabelNotFound):
+        root.html
+
+
+# html tests
+
+def test_ref_html(doc):
+    """Test the ref tag for a present caption in the html format"""
+
+    # Prepare a ref tag and the formatting string
+    src = "@ref{test}"
+    fmt = '@b{My Fig. @label.number}'
+    doc.context['label_fmts']['ref_caption_figure_html'] = fmt
+
+    # Create a label in the label manager
+    label_manager = doc.context['label_manager']
+    label_manager.add_content_label(id='test', kind=('caption', 'figure'),
+                                    title='my test', context=doc.context)
+
+    # Generate a root tag with a ref tag
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+
+    # Generate the tag and test the ref tag's html content
+    ref = root.content
+
+    assert isinstance(ref, Ref)
+    assert ref.html == ('<a href="#test" class="ref">'
+                        '<strong>My Fig. 1</strong></a>')
+
+
+def test_ref_html_crossreference_html(doc_cls, tmpdir):
+    """Test the ref tag between documents, using the html target."""
+
+    # Setup 2 documents; doc2 is a subordinate to doc1
+    target_root = TargetPath(target_root=tmpdir)
+
+    src_filepath1 = SourcePath(project_root=tmpdir, subpath='test1.dm')
+    src_filepath2 = SourcePath(project_root=tmpdir, subpath='test2.dm')
+
+    src_filepath1.write_text("""
+    ---
+    include: test2.dm
+    ----""")
+    src_filepath2.touch()
+
+    doc1 = doc_cls(src_filepath=src_filepath1, target_root=target_root)
+    doc2 = doc1.documents_list()[1]
+
+    assert doc1.doc_id == 'test1.dm'
+    assert doc2.doc_id == 'test2.dm'
+
+    # Create label for doc1 and doc2
+    label_manager = doc1.context['label_manager']
+    label_manager.add_content_label(id='doc1', kind=('caption', 'figure'),
+                                    title='my test', context=doc1.context)
+    label_manager.add_content_label(id='doc2', kind=('caption', 'figure'),
+                                    title='my test', context=doc2.context)
+
+    # Prepare the format string for the ref tag
+    fmt = '@b{My Fig. @label.number}'
+    doc1.context['label_fmts']['ref_caption_figure_html'] = fmt
+
+    # Generate a root tag with a ref tag
+    root1 = Tag(name='root', content='@ref{doc2}', attributes='',
+                context=doc1.context)
+    root2 = Tag(name='root', content='@ref{doc1}', attributes='',
+                context=doc2.context)
+
+    # Generate the tag and test the ref tag's html content
+    ref1 = root1.content
+    ref2 = root2.content
+
+    assert isinstance(ref1, Ref)
+    assert ref1.html == ('<a href="test2.html#doc2" class="ref">'
+                         '<strong>My Fig. 2</strong></a>')
+    assert isinstance(ref2, Ref)
+    assert ref2.html == ('<a href="test1.html#doc1" class="ref">'
+                         '<strong>My Fig. 1</strong></a>')
+
+
+# tex tests
+
+def test_ref_tex(doc):
+    """Test the ref tag for a present caption in the texformat"""
+
+    # Prepare a ref tag and the formatting string
+    src = "@ref{test}"
+    fmt = '@b{My Fig. @label.number}'
+    doc.context['label_fmts']['ref_caption_figure_tex'] = fmt
+
+    # Create a label in the label manager
+    label_manager = doc.context['label_manager']
+    label_manager.add_content_label(id='test', kind=('caption', 'figure'),
+                                    title='my test', context=doc.context)
+
+    # Generate a tag and compare the generated tex to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+
+    # Generate the tag and test the ref tag's html content
+    ref = root.content
+
+    assert isinstance(ref, Ref)
+    assert ref.tex == '\\hyperref[test]{\\textbf{My Fig. 1}}'

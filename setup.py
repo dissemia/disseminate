@@ -3,22 +3,19 @@
 
 from setuptools import setup, find_packages
 from codecs import open
-from os import path
-from glob import glob
-from os.path import basename, dirname, join, splitext
+import os
 
 
-here = path.abspath(path.dirname(__file__))
+here = os.path.abspath(os.path.dirname(__file__))
 
 # Get the long description from the README file
-with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
+with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 # Get the version number and package information.  The __version__.py
 # file is executed so that the disseminate package is not loaded.  At
 # this point, the C/C++ extensions may not be built, and loading the
-# mollib package will lead to an ImportError. This approach
-# circumvents this problem.
+# package will lead to an ImportError. This approach circumvents this problem.
 __version__ = None  # This is a version string
 VERSION = None  # This is a 5-item version tuple
 exec(open("./src/disseminate/__version__.py").read())
@@ -43,7 +40,6 @@ classifiers += [
           'Operating System :: POSIX :: Linux',
           'Programming Language :: Python',
           'Programming Language :: Python :: 3',
-          'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
           'Topic :: Text Processing :: General',
           'Topic :: Text Processing :: Markup',
@@ -71,14 +67,27 @@ setup(
     keywords='document processor academic publishing',
     packages=find_packages("src"),
     package_dir={"": "src"},
-    install_requires=['regex', 'jinja2', 'pyyaml', 'lxml'],
+    include_package_data=True,  # include MANIFEST.in
+    install_requires=[
+        'regex>=2018.11.22',         # No license, replaced with re
+        'jinja2>=2.10',              # 3-clause BSD
+        'lxml>=4.3.0',               # BSD license
+        'python-slugify>=2.0.1',     # MIT license
+        'pdfCropMargins>=0.1.4',     # GPL v3
+        # The following are needed for the CLI
+        'click>=7.0',                # 3-clause BSD license (comes with flask)
+        # The following are needed for the preview function
+        'flask>=1.0',
+        ],
     extras_require={  # Optional
-        'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc'],
+        'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc', 'asv'],
         'test': ['pytest', 'tox', 'coverage'],
+        'termcolor': ['termcolor']  # MIT license
     },
     scripts=['scripts/dm', ],
     entry_points={
         'console_scripts': [
-            'dm = dm.main:main'
-          ],}
+            'dm = disseminate.cli:main'
+          ],
+    }
 )

@@ -3,88 +3,134 @@ Text formatting tags
 """
 from textwrap import wrap
 
-from lxml.etree import Entity
-from lxml.builder import E
-
-from .core import Tag, TagError
-from ..attributes import set_attribute
-from . import settings
+from .tag import Tag
+from .exceptions import TagError, assert_content_str
+from ..formats import tex_cmd, tex_env, html_entity, html_tag
+from .utils import format_content
 
 
 class P(Tag):
-    """A Paragraph tag"""
+    """A Paragraph tag
+
+    Attributes
+    ----------
+    active : bool
+        This tag is active.
+    include_paragraphs : bool
+        The contents of this tag can be included in paragraphs.
+    """
     active = True
     include_paragraphs = False
 
-    def tex(self, level=1, mathmode=False):
-        tex = super(P, self).tex(level, mathmode)
+    def tex_fmt(self, content=None, mathmode=False, level=1):
+        tex = super(P, self).tex_fmt(content=content, mathmode=mathmode,
+                                     level=level)
 
         # Rewrap the text
-        if settings.tex_paragraph_width > 0:
-            tex = "\n".join(wrap(tex, settings.tex_paragraph_width))
+        # if settings.tex_paragraph_width > 0:
+        #     tex = "\n".join(wrap(tex, settings.tex_paragraph_width))
 
         # Add newlines around headings
         return "\n" + tex + "\n"
 
 
 class Bold(Tag):
-    """A bold tag."""
+    """A bold tag.
+
+    Attributes
+    ----------
+    aliases : Tuple[str]
+        A list of strs for other names a tag goes by
+    html_name : str
+        If specified, use this name when rendering the tag to html. Otherwise,
+        use name.
+    tex_cmd : str
+        Use this name to render the tex command.
+    active : bool
+        This tag is active.
+    """
     aliases = ("b", "textbf", "strong")
     html_name = "strong"
-    tex_name = "textbf"
+    tex_cmd = "textbf"
     active = True
-    include_paragraphs = False
 
 
 class Italics(Tag):
-    """An italics tag."""
+    """An italics tag.
+
+    Attributes
+    ----------
+    aliases : Tuple[str]
+        A list of strs for other names a tag goes by
+    html_name : str
+        If specified, use this name when rendering the tag to html. Otherwise,
+        use name.
+    tex_cmd : str
+        Use this name to render the tex command.
+    active : bool
+        This tag is active.
+    """
     aliases = ("i", "textit")
     html_name = "i"
-    tex_name = "textit"
+    tex_cmd = "textit"
     active = True
-    include_paragraphs = False
 
 
 class Sup(Tag):
-    """A superscript tag."""
+    """A superscript tag.
+
+    Attributes
+    ----------
+    html_name : str
+        If specified, use this name when rendering the tag to html. Otherwise,
+        use name.
+    active : bool
+        This tag is active.
+    """
     html_name = "sup"
     active = True
-    include_paragraphs = False
 
-    def tex(self, level=1, mathmode=False):
+    def tex_fmt(self, content=None, mathmode=False, level=1):
+        content = content if content is not None else self.content
+
         # Collect the content elements
-        if isinstance(self.content, list):
-            elements = ''.join([i.tex(level + 1, mathmode)
-                                if hasattr(i, 'tex') else i
-                                for i in self.content])
-        elif isinstance(self.content, str):
-            elements = self.content
-        else:
-            elements = None
+        content = format_content(content=content, format_func='tex_fmt',
+                                 level=level + 1, mathmode=mathmode)
+        content = ''.join(content) if isinstance(content, list) else content
 
-        return ("\\ensuremath{^{" + elements + "}}" if not mathmode else
-                "^{" + elements + "}")
+        content = '^{' + content + '}'
+        return (tex_cmd(cmd='ensuremath', attributes='', formatted_content=content)
+                if not mathmode else
+                content)
 
 
 class Sub(Tag):
-    """A subscript tag."""
+    """A subscript tag.
+
+    Attributes
+    ----------
+    html_name : str
+        If specified, use this name when rendering the tag to html. Otherwise,
+        use name.
+    active : bool
+        This tag is active.
+    """
     html_name = "sub"
     active = True
-    include_paragraphs = False
 
-    def tex(self, level=1, mathmode=False):
+    def tex_fmt(self, content=None, mathmode=False, level=1):
+        content = content if content is not None else self.content
+
         # Collect the content elements
-        if isinstance(self.content, list):
-            elements = ''.join([i.tex(level + 1, mathmode)
-                                if hasattr(i, 'tex') else i
-                                for i in self.content])
-        elif isinstance(self.content, str):
-            elements = self.content
-        else:
-            elements = None
+        content = format_content(content=content, format_func='tex_fmt',
+                                 level=level + 1, mathmode=mathmode)
+        content = ''.join(content) if isinstance(content, list) else content
 
-        return ("\\ensuremath{_{" + elements + "}}" if not mathmode else
-                "_{" + elements + "}")
+        content = '_{' + content + '}'
+        return (tex_cmd(cmd='ensuremath', attributes='',
+                        formatted_content=content)
+                if not mathmode else
+                content)
 
 
 class Supsub(Tag):
@@ -93,8 +139,12 @@ class Supsub(Tag):
 
     The content of the tag consists of two elements separated by a '&&'
     character. ex: @supsub{superscript && subscript}
+
+    Attributes
+    ----------
+    active : bool
+        This tag is active.
     """
-    include_paragraphs = False
     active = True
 
     _sup = None
@@ -120,57 +170,90 @@ class Supsub(Tag):
         self._sup = sup.strip()
         self._sub = sub.strip()
 
-    def html(self, level=1):
-        kwargs = {'class': 'supsub'}
-        return E('span', self._sup, E('br'), self._sub, **kwargs)
+    def html_fmt(self, content=None, level=1):
+        attrs = self.attributes.copy()
+        attrs['class'] = 'supsub'
+        br_tag = html_tag(name='br', level=level + 1)
+        return html_tag(name='span', attributes=attrs,
+                        formatted_content=[self._sup, br_tag, self._sub],
+                        level=level,)
 
-    def tex(self, level=1, mathmode=False):
+    def tex_fmt(self, content=None, mathmode=False, level=1):
         formatted = "^{" + self._sup + "}_{" + self._sub + "}"
-        return ("\\ensuremath{" + formatted + "}"
-                if not mathmode else formatted)
+        return (tex_cmd(cmd='ensuremath', attributes='',
+                        formatted_content=formatted)
+                if not mathmode else
+                formatted)
 
 
 class Symbol(Tag):
-    """One or more greek characters."""
+    """One or more greek characters.
+
+    Attributes
+    ----------
+    aliases : Tuple[str]
+        A list of strs for other names a tag goes by
+    active : bool, default: True
+        This tag is active.
+    """
 
     aliases = ("smb ",)
     active = True
-    include_paragraphs = False
 
-    def assert_not_nested(self):
-        """Raise a TagError if this tag is nested."""
-        if not isinstance(self.content, str):
-            msg = "The @greek tag cannot have tags nested within it."
-            raise TagError(msg)
+    def __init__(self, name, content, attributes, context):
+        assert_content_str(content)
+        super().__init__(name=name, content=content, attributes=attributes,
+                         context=context)
 
-    def html(self, level=1):
-        self.assert_not_nested()
-        return Entity(self.content.strip())
+    def html_fmt(self, content=None, level=1):
+        return html_entity(entity=self.content, level=level)
 
-    def tex(self, level=1, mathmode=False):
-        self.assert_not_nested()
-        content = "\\" + self.content
-        return ("\\ensuremath{" + content + "}" if not mathmode else
+    def tex_fmt(self, content=None, mathmode=False, level=1):
+        content = content if content is not None else self.content
+        content = "\\" + content
+        return (tex_cmd(cmd='ensuremath', attributes='',
+                        formatted_content=content)
+                if not mathmode else
                 content)
 
 
 class Verb(Tag):
-    """A verbatim tag for displaying unformatted blocks of text."""
+    """A verbatim tag for displaying unformatted blocks of text.
+
+    Attributes
+    ----------
+    aliases : Tuple[str]
+        A list of strs for other names a tag goes by
+    html_name : str
+        If specified, use this name when rendering the tag to html. Otherwise,
+        use name.
+    active : bool
+        This tag is active.
+    process_content : bool
+        Do not process the contents of the tag--just take the contents
+        literally.
+    include_paragraphs : bool
+        The contents of this tag cannot be included in paragraphs.
+    """
 
     aliases = ("v", "pre", "verbatim")
     active = True
+
+    process_content = False
+    process_typography = False
+
     include_paragraphs = False
 
     html_name = 'code'
 
-    def html(self, level=1):
+    def html_fmt(self, content=None, level=1):
         if self.name == "verbatim":
-            self.attributes = set_attribute(self.attributes, ('class', 'block'))
-        return super(Verb, self).html(level)
+            self.attributes['class'] = 'block'
+        return super(Verb, self).html_fmt(content=content, level=level + 1)
 
-    def tex(self, *args, **kwargs):
+    def tex_fmt(self, *args, **kwargs):
         if self.name == "verbatim":
-            return ("\n\\begin{verbatim}\n" + self.default() +
-                    "\\end{verbatim}\n")
+            return tex_env(env='verbatim', attributes='',
+                           formatted_content=self.default_fmt())
         else:
-            return "\\verb|" + self.default() + "|"
+            return "\\verb|" + self.default_fmt() + "|"

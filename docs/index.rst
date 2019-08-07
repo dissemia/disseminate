@@ -71,37 +71,47 @@ The dependencies are only required depending on which features are used.
 | **rsvg-convert** | Enables the scaling of svg images.                          |
 +------------------+-------------------------------------------------------------+
 
-Table of Contents
------------------
 .. toctree::
+   :maxdepth: 2
    :hidden:
    :caption: Overview
 
-   self
+   overview/motivation
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: Markup Language
+
+   language/header/index
+   language/tags/index
+   language/macros/index
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: Projects
+
+   projects/document/index
+   projects/templates/index
+   projects/dependency_manager/index
+   projects/converter/index
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: Interfaces
+
+   interfaces/cli/index
    
 .. toctree::
    :maxdepth: 2
-   :caption: Markup Language
-
-   language/tags
-   language/macros
-
-.. toctree::
-   :maxdepth: 2
+   :hidden:
    :caption: Development
 
    development/development
-
-.. toctree::
-   :maxdepth: 2
-   :caption: API Documentation
-             
-   api/tags
-   api/ast
-   api/document
-   api/tree
-   api/server
-
+   api/index
+   development/releasenotes
 
 
 Indices and tables

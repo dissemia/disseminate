@@ -1,0 +1,80 @@
+
+.content li {
+  border-bottom: 1px solid #eee;
+  padding: 0.2rem 0;
+}
+
+.content ol > ol {
+  margin-bottom: 1rem;
+}
+
+.content ol > ol > ol{
+  margin-bottom: 1rem;
+}
+
+.content ol > ol > ol > ol{
+  margin-bottom: 0;
+}
+
+.listing {
+  padding-right: 30px;
+  color: #808080;
+}
+
+.level-1 {
+  color:#555;
+}
+
+.listing .sub-listing {
+  margin-left: 6em;
+  text-indent: -6em;
+  font-size: 11pt;
+}
+
+.listing .sub-listing::before {
+  content: attr(title) "\003a\0020";
+  color: #6cabef;
+  display: inline-block;
+  min-width: 6em;
+  text-indent: 0;
+}
+
+.listing .level-2 span.name {
+  margin-bottom: 0.25em;
+  display: block;
+}
+
+.listing .level-3 span.name {
+  margin-bottom: 0.25em;
+  display: block;
+}
+
+.listing .level-4 span.name {
+  margin-bottom: 0.25em;
+  display: block;
+}
+
+.listing .level-5 span.name {
+  margin-bottom: 0.25em;
+  display: block;
+}
+
+.status {
+  float: right;
+}
+
+.status.ok {
+  color: #068406;
+}
+
+.status.missing {
+  color: #a9b51f;
+}
+
+.status.fail {
+  color: #e45d5d;
+}
+
+.status.unknown {
+  color: #888;
+}

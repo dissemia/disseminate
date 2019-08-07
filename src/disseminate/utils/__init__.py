@@ -1,2 +1,3 @@
-from .file import *
-from .string import *
+"""
+Extra utilities for Python
+"""
