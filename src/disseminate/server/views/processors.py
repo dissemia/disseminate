@@ -3,10 +3,8 @@ View for processor listing.
 """
 from inspect import isabstract
 
-from flask import render_template, abort
-from jinja2 import TemplateNotFound
-
-from .blueprints import editor
+from .blueprints import system
+from ..templates import render_template
 from ...processors import ProcessorABC
 
 
@@ -50,8 +48,8 @@ def processors_to_dict(processor_clses, level=1):
     return processor_list
 
 
-@editor.route('/processors.html')
-def render_processors():
+@system.route('/processors.html')
+async def render_processors(request):
     """Render the view for the different types of processors available."""
     # Get the immediate subclasses for the ProcessorABC
     # These are base classes for the different processor types
@@ -60,8 +58,5 @@ def render_processors():
     # Convert the processors to a list of dicts
     processors = processors_to_dict(processor_subclses)
 
-    try:
-        return render_template('server/processors.html',
-                               processors=processors)
-    except TemplateNotFound:
-        abort(404)
+    return render_template('processors.html', request=request,
+                           processors=processors)
