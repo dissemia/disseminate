@@ -79,9 +79,7 @@ def test_jinja_filepaths_from_template():
     # Setup environments and loaders
     pl = jinja2.loaders.PackageLoader('disseminate', 'templates')
 
-    kwargs = {'loader': pl,
-              'block_start_string': settings.template_block_start,
-              'block_end_string': settings.template_block_end}
+    kwargs = {'loader': pl}
     env = jinja2.environment.Environment(**kwargs)
 
     # Get a template with inherited parent templates

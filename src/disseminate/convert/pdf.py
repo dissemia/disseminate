@@ -3,6 +3,7 @@ Converters to convert from ``.pdf`` files using pdf2svg and, optionally,
 pdfcrop and rsvg-convert.
 """
 import os
+import shutil
 
 from .converter import Converter
 from .arguments import (PositiveIntArgument, PositiveFloatArgument,
@@ -128,5 +129,7 @@ class Pdf2svg(Converter):
             os.link(current_svg, self.target_filepath())
         except FileExistsError:
             os.remove(self.target_filepath())
-            os.link(temp_filepath_svg, self.target_filepath())
+            os.link(current_svg, self.target_filepath())
+        except OSError:
+            shutil.copy2(current_svg, self.target_filepath())
         return True

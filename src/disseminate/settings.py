@@ -121,6 +121,8 @@ default_context = {
         'heading_chapter': 'Chapter @label.chapter_number. ',
 
         'ref_heading': '@label.title',
+        'ref_heading_part': 'Part @label.part_number. @label.title',
+        'ref_heading_chapter': 'Chapter @label.chapter_number. @label.title',
 
         # Citation formats
         # 'citation': '@sup{label.number}',
@@ -203,15 +205,6 @@ module_only = False
 
 #: the paths for templates in disseminate modules
 module_template_paths = [pathlib.Path(__file__).parent / 'templates']
-
-#: modifiers for Jinja2 blocks, variables and comments. Parentheses are used
-#: instead of the default curly braces to more easily work with latex formats.
-template_block_start = '(%'
-template_block_end = '%)'
-template_variable_start = '(('
-template_variable_end = '))'
-template_comment_start = '(#'
-template_comment_end = '#)'
 
 #: Dependency Defaults
 #: -------------------

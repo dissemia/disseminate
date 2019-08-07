@@ -105,7 +105,7 @@ def test_toc_absolute_and_relative_links(tmpdir):
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="#ch:test1-dm-one" class="ref">one</a>
+      <a href="#ch:test1-dm-one" class="ref">Chapter 1. one</a>
     </li>
   </ul>
   <li>
@@ -133,7 +133,7 @@ def test_toc_absolute_and_relative_links(tmpdir):
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="#ch:test1-dm-one" class="ref">one</a>
+      <a href="#ch:test1-dm-one" class="ref">Chapter 1. one</a>
     </li>
   </ul>
   <li>
@@ -335,55 +335,6 @@ def test_toc_heading_html(tmpdir):
 </ul>
 """
     assert toc.html == key
-
-
-# def test_toc_header_html(tmpdir):
-#     """Test the creation of a chapter header for TOCs in html."""
-#
-#     # The 'tests/tags/toc_example2' directory contains three markup files:
-#     # file1.dm, file2.dm and file3.dm. The 'file1.dm' includes 'file2.dm' and
-#     # 'file3.dm' The 'file2.dm' has a header and a sub-header.
-#     # This test has headers with id anchors specified.
-#     # Setup paths
-#     src_filepath = SourcePath(project_root='tests/tags/toc_example2',
-#                               subpath='file1.dm')
-#     target_root = TargetPath(tmpdir)
-#     doc = Document(src_filepath, target_root)
-#
-#     # Make sure the 'base_url' entry matches a basic format.
-#     doc.context['base_url'] = '/{target}/{subpath}'
-#     doc.context['relative_links'] = False
-#
-#     # Create a toc for the root document, file1.dm, only.
-#     toc = Toc(name='toc', content='headings', attributes='',
-#               context=doc.context)
-#
-#     key = """<ul class="toc-level-1">
-#   <li>
-#     <a href="#heading-1" class="ref">Heading 1</a>
-#   </li>
-# </ul>
-# """
-#     assert toc.html == key
-#
-#     # Now try adding the header
-#     toc = Toc(name='toc', content='headings', attributes='header',
-#               context=doc.context)
-#
-#     key = """<ul class="toc-level-1">
-#   <li>
-#     <span class="ref">
-#       <a href="/html/file1.html#heading-1"><span class="number">1.</span> Heading 1</a>
-#     </span>
-#   </li>
-# </ul>
-# """
-#     print(toc.html)
-#     assert toc.html == key
-#
-#     # Make sure a label was not created for the heading
-#     label_manager = doc.context['label_manager']
-#     assert len(label_manager.get_labels(kinds='chapter')) == 0
 
 
 def test_toc_document_html(tmpdir):

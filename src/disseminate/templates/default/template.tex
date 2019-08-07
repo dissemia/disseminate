@@ -1,5 +1,7 @@
-(% block class %)\documentclass[12pt]{article}(% endblock %)
-(% block header %)
+{%- block class %}
+\documentclass[12pt]{article}
+{%- endblock %}
+{%- block header %}
 %%%
 % Graphics
 \usepackage{graphicx}
@@ -25,9 +27,10 @@
 % Hyperref package for links
 \usepackage{hyperref}
 \hypersetup{colorlinks, linkcolor=blue,
-            pdftitle={(( title ))},
-            pdfauthor={(( author ))},
-            pdfcreator={Disseminate}}
+            {%- if title %}pdftitle={{ title }},{%- endif %}
+            {%- if author %}pdfauthor={{ author }},{%- endif %}
+            pdfcreator=Disseminate
+            }
 
 %%%
 % Customizations for lists
@@ -52,21 +55,34 @@
 % Colors
 \usepackage{xcolor}
 
+%%%
+% Counters
+\newcounter{title}
+
 %%% 
 % Symbols
 \renewcommand{\deg}{^\circ}
-(% endblock %)
-(% block marginheader %)
+{%- endblock %}
+{%- block marginheader %}
 %%%
 % Extra shim environments for marginfig, figure, ... environments.
-\newenvironment{marginfigure}[1][]{%
-\begin{figure}}
-{\end{figure}}
-(% endblock %)
-(% block extraheader %)
-(% endblock %)
-(% if title %) \title{ (% if title_label %)(( title_label )) (( document_number )). (% endif %)(( title ))} (% endif %)
-(% if author %) \author{(( author ))} (% endif %)
+\newenvironment{marginfigure}[1][]{\begin{figure}}{\end{figure}}
+{%- endblock %}
+{%- block extraheader %}
+{%- endblock %}
+{%- if title %}
+\title{
+    {%- if title_label %}
+        {{ title_label }} {{ document_number }}.
+    {%- endif %}
+        {{ title }}
+    }
+{%- endif %}
+{%- if author %}
+    \author{
+        {{ author }}
+    }
+{%- endif %}
 \begin{document}
-(( body.tex ))
+{{ body.tex }}
 \end{document}

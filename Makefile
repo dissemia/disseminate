@@ -36,8 +36,8 @@ docs: develop  ## Build the documentation
 	@echo "\033[92mView the html docs at docs/_build/html/index.html.\033[0m"
 	@echo "\033[92mView the pdf docs docs/_build/latex/.\n\033[0m"
 
-docker:  ## Build the docker image
-	docker build -t  disseminate:0.15 .
+#docker:  ## Build the docker image
+#	docker build -t  disseminate:0.15 .
 
 install:  ## Install disseminate
 	python setup.py install
