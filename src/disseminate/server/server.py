@@ -3,16 +3,11 @@ Setup the server
 """
 import secrets
 
-from flask import Flask
+from sanic import Sanic
+from sanic.response import text
+from sanic.exceptions import FileNotFound
 
-try:
-    from flask_debugtoolbar import DebugToolbarExtension
-except ImportError:
-    DebugToolbarExtension = None
-
-from .views.blueprints import editor, static_asset
-from .views.handlers import page_not_found
-from .projects import load_projects
+from .views.blueprints import system, tree, static_path
 from .. import settings
 
 
@@ -21,8 +16,12 @@ def create_secret_key():
     return secrets.token_urlsafe(16)
 
 
+async def server_404_handler(request, exception):
+    return text("File Not Found", status=404)
+
+
 def create_app(project_filenames, out_dir=None, debug=False):
-    """Create and configure a flask app.
+    """Create and configure a the app.
 
     Parameters
     ----------
@@ -33,8 +32,8 @@ def create_app(project_filenames, out_dir=None, debug=False):
     debug : Optional[bool]
         If true, include debugging information.
     """
-    # Setup the Flask app
-    app = Flask('disseminate', instance_relative_config=True)
+    # Setup the app
+    app = Sanic()
 
     # Configure the app
     app.debug = debug
@@ -44,17 +43,16 @@ def create_app(project_filenames, out_dir=None, debug=False):
     app.config['SECRET_KEY'] = create_secret_key()
 
     # Add blueprints
-    app.register_blueprint(editor, url='/')
-    app.register_blueprint(static_asset, url='/')
-    app.register_error_handler(404, page_not_found)
+    app.blueprint(tree)
+    app.blueprint(system)
 
-    # Wrap extensions
-    if DebugToolbarExtension is not None:
-        toolbar = DebugToolbarExtension(app)
+    # Add the the cwd for static files
+    app.static('/favicon.ico', str(static_path / 'favicon.ico'))
+    app.static('/media', str(static_path))
+    app.static('/', './')
 
-    # Load the documents and projects
-    with app.app_context():
-        load_projects()
+    # Add exception handlers
+    app.error_handler.add(FileNotFound, server_404_handler)
 
     return app
 
