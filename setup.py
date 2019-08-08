@@ -80,7 +80,8 @@ setup(
         'sanic>=19.0',               # MIT license
         ],
     extras_require={  # Optional
-        'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc', 'asv'],
+        'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc',
+                'asv'],
         'test': ['pytest', 'tox', 'coverage'],
         'termcolor': ['termcolor']  # MIT license
     },

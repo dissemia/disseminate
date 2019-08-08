@@ -21,6 +21,7 @@ class DocumentContext(BaseContext):
 
     #: Required entries in the document context dict to be a valid document
     #: context--as well as their matching type to be checked.
+    #:
     #: - targets aren't listed as a list or set entry because mutables,
     #:   like lists, are appended to, instead of replaced. Targets should
     #:   by replaced by values in the header.
