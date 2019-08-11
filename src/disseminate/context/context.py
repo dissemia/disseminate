@@ -2,6 +2,7 @@
 The base class for Context objects that include functions to validate a context.
 """
 import logging
+import copy
 from pprint import pprint
 from weakref import ref
 
@@ -34,25 +35,6 @@ class BaseContext(dict):
               this is mitigated to a great extended from creating shallow
               copies or weak references of parent_context entries.
 
-    Examples
-    --------
-    >>> parent = BaseContext(a=1, b=[])
-    >>> child = BaseContext(parent_context=parent)
-    >>> child['a']
-    1
-    >>> child['a'] = 2
-    >>> child['a']
-    2
-    >>> parent['a']
-    1
-    >>> child['b'].append(1)
-    >>> parent['b']
-    [1]
-    >>> child['b'] = []
-    >>> child['b'].append(2)
-    >>> parent['b']
-    [1]
-
     Parameters
     ----------
     parent_context : Optional[dict]
@@ -73,9 +55,6 @@ class BaseContext(dict):
     exclude_from_reset : Set[str]
         The context entries that should not be removed when the context is
         reset.
-
-    Entries
-    -------
     _initial_values : dict
         A dict containing the initial values. Since this starts with an
         underscore, it is hidden when listing keys with the keys() function.
@@ -83,6 +62,23 @@ class BaseContext(dict):
         A dict containing the parent context from which values may be inherited.
         Since this starts with an underscore, it is hidden when listing keys
         with the keys() function.
+
+    Examples
+    --------
+    >>> parent = BaseContext(a=1, b=[])
+    >>> child = BaseContext(parent_context=parent)
+    >>> child['a']
+    1
+    >>> child['a'] = 2
+    >>> child['a']
+    2
+    >>> parent['a']
+    1
+    >>> child['b'].append(1)
+    >>> child['b']
+    [1]
+    >>> parent['b']
+    []
     """
 
     # A __dict__ attribute would be redundant
@@ -122,7 +118,7 @@ class BaseContext(dict):
     def __repr__(self):
         return (self.__class__.__name__ + '{' +
                 ', '.join('{}: {}'.format(k, self[k])
-                          for k in self.keys(only_self=True)) +
+                          for k in self.keys()) +
                 '}')
 
     def __copy__(self):
@@ -139,6 +135,15 @@ class BaseContext(dict):
 
     @classmethod
     def find_do_not_inherit(cls):
+        """Retrieve a union set for the do_not_inherit attribute of this class
+        and all parent classes.
+
+        Returns
+        -------
+        do_not_inherit : Set[str]
+            A set of all attributes that should not be inherited by child class
+            instances.
+        """
         if cls.__dict__.get('_do_not_inherit') is None:
             do_not_inherit = all_attributes_values(cls=cls,
                                                    attribute='do_not_inherit')
@@ -191,15 +196,15 @@ class BaseContext(dict):
         Examples
         --------
         >>> context = BaseContext()
-        >>> context.load('test: 1')
+        >>> rest = context.load('test: 1')
         >>> print(context)
         BaseContext{test: 1}
         """
-        # Process the header block
+        # Process the header block into a dict
         rest, d = load_from_string(string)
 
-        # update self
-        self.matched_update(d)
+        # update self with the dict entries
+        self.match_update(changes=d)
 
         return rest if rest is not None and strip_header else string
 
@@ -228,8 +233,8 @@ class BaseContext(dict):
         >>> 'l2' in context
         False
         """
-        # The first step is to remove all entries except those listed in
-        # the 'exclude_from_reset' attributes.
+        # 1. The first step is to remove all entries except those listed in
+        #    the 'exclude_from_reset' attributes.
 
         # Get a set of keys to exclude from reset from this class and
         # subclasses, and exclude these from the keys to remove
@@ -248,17 +253,11 @@ class BaseContext(dict):
             do_not_inherit = self.find_do_not_inherit()
             keys_to_inherit = parent_context.keys() - do_not_inherit
 
-            for k in keys_to_inherit:
-                parent_value = parent_context[k]
+            self.match_update(parent_context, keys=keys_to_inherit)
 
-                # Make a copy of mutables, otherwise copy directly.
-                # Note that this isn't a deep copy, so mutables in the copy
-                # will still point to the same mutables in parent_value.
-                self[k] = (parent_value if not hasattr(parent_value, 'copy')
-                           else parent_value.copy())
-
-        # Copy in the initial value arguments.
-        self.update(self.initial_values)
+        # Copy in the initial value arguments. The initial values should
+        # not be modified, so copies of mutabes are created
+        self.match_update(changes=self.initial_values)
 
     def is_valid(self, *keys, must_exist=True):
         """Validate the entries in the context dict.
@@ -311,120 +310,142 @@ class BaseContext(dict):
 
         return True
 
-    def matched_update(self, changes):
-        """Update with the values in the changes dict that are either missing
-        in this base context dict or to match the types of existing entries in
-        this base context dict.
+    def match_update(self, changes, keys=None, level=1):
+        """Update this context dict with changes by matching entry types.
 
-        The matched update only updates entries for matching types and appends
-        to nested mutables, like lists and dicts.
+        Matched update behaves like a dict's update method with these key
+        differences:
 
-        1. New entries in 'changes' are copied over 'as-is' to this dict.
-        2. Lists entries in this dict are append to from the changes dict.
-           If these are strings in the changes dict, they  are first converted
-           to lists. Items are added to the front.
-        3. Dict entries in this dict are append to from the changes dict.
-           If these are strings in the changes dict, they  are first converted
-           to a dict. The update is recursive by applying this function to
-           that dict.
-        4. Other immutables, like ints and floats, are copied over to this dict
-           if the corresponding entry in the changes dict can be converted to
-           an int or float. Otherwise, they're skipped.
-        5. String entries are copied from changes to this dict if the dict's
-           entry is also a string.
+        1. If changes is a string, it is first converted to a dict.
+        2. Existing entries from changes are converted to the same type as the
+           value in this dict. See examples below.
+        3. Mutable values are deep copied from the changes dict.
 
         Parameters
         ----------
-        changes : Union[str, dict, :obj:`BaseContext <.context.BaseContext>`]
-            The changes to include in updating this context dict.
+        changes : Union[str, dict, :obj:`.BaseContext`]
+            The changes to update into this context dict.
+        key : Optional[Iterable[str]]
+            If specified, only update the given keys
+        level : Optional[int]
+            The level of recursion for this function.
 
-        Returns
-        -------
-        changed_keys
-            The keys that were updated.
+        Notes
+        -----
+        The matched update only updates entries for matching types and appends
+        to nested mutables, like lists and dicts.
+
+        1. New entries from 'changes' are copied
+           a. If the change's value has a 'copy' method, a copy is created
+              with that method
+           b. Otherwise, the value is copied directly
+        2. Existing entries are converted to the type of the value in this
+           context dict.
+           a. Lists, sets and dicts: A copy of the changes value is converted to
+              the respective type and appended to this context dict's list, set
+              or dict.
+           b. Immutables are converted and added directly.
+
+        Examples
+        --------
+        >>> orig = BaseContext(test = [])
+        >>> orig.match_update(changes={'test': 'test'})
+        >>> orig['test']
+        ['test']
+        >>> orig.match_update(changes={'test': 'more changes'})
+        >>> orig['test']
+        ['more changes', 'test']
         """
-        changes = str_to_dict(changes) if isinstance(changes, str) else changes
-        self._match_update(original=self, changes=changes)
-
-        return changes.keys()
-
-    @staticmethod
-    def _match_update(original, changes, level=1):
-        assert isinstance(original, dict) and isinstance(changes, dict)
+        # When first invoking this function, 'changes' may simply be a string
+        # in YAML format. If so, convert it to a dict to pull values from
+        if level == 1 and isinstance(changes, str):
+            changes = str_to_dict(changes)
 
         # Make sure the context isn't too deeply nested
         if level >= settings.context_max_depth:
             msg = "Context cannot exceed a depth of {}."
             raise ContextException(msg.format(settings.context_max_depth))
 
-        for key, change_value in changes.items():
-            # Copy values that are not in the original--whether the key is
-            # actually in the original or in the parent_context
-            if key not in original.keys():
-                original[key] = change_value
+        # Select the keys for entries to copy over
+        keys = changes.keys() if keys is None else keys
+
+        # Copy the entries in the changes dict one-by-one
+        for key in keys:
+            if key not in changes:
+                # Skip if the key is not found in changes
                 continue
 
-            # Now copy over values based on the type of the original's value
-            original_value = original[key]
+            change_value = changes[key]
 
-            # For list entries, convert strings to a list and append the
-            # items to the original's list.
+            # 1. *Missing entries*. Copy values that are not in the
+            #    original--whether the key is actually in the original or in
+            #    the parent_context
+            if key not in self.keys():
+
+                if hasattr(change_value, 'copy'):
+                    # Try making a copy
+                    self[key] = change_value.copy()
+                else:
+                    # Otherwise copy the value directly
+                    self[key] = change_value
+                continue
+
+            ## Set context for all objects (Below)
+            ## Get original_value about and return MissingValue to test
+            ## new key. set context below
+
+            # Now copy over values based on the type of the original value's
+            # type
+            original_value = self[key]
+
+            # 2. *lists*. Create a copy from changes and append to self's list
             if isinstance(original_value, list):
                 change_value = (str_to_list(change_value)
                                 if isinstance(change_value, str) else
                                 list(change_value))
-                new_list = change_value + original_value
-                original[key] = new_list
+                original_value[0:0] = change_value  # prepend to top
 
-            # For list entries, convert strings to a list and append the
-            # items to the original's list.
+            # 3. *sets*. Create a copy from changes and append to self's set
             elif isinstance(original_value, set):
                 change_value = (str_to_list(change_value)
                                 if isinstance(change_value, str) else
                                 list(change_value))
-                new_set = original_value.union(change_value)
-                original[key] = new_set
+                original_value |= set(change_value)
 
-            # For dict entries, convert strings to a dict and append the
-            # items to the original's dict.
+            # 4. *dicts*. Create a copy from changes and append to self's set
             elif isinstance(original_value, dict):
                 change_value = (str_to_dict(change_value)
                                 if isinstance(change_value, str) else
                                 dict(change_value))
-                original_copy = original_value.copy()
-
-                # match update the dict. Since original_copy is a copy,
-                # we can overwrite entries
-                BaseContext._match_update(original=original_copy,
-                                          changes=change_value,
-                                          level=level + 1)
-                original[key] = original_copy
+                BaseContext.match_update(self=original_value,
+                                         changes=change_value,
+                                         level=level + 1)
 
             # For immutable types, like ints, covert strings into their
             # proper format and replace the original's value
             elif isinstance(original_value, bool):
                 change_value_lower = change_value.lower().strip()
                 if change_value_lower == 'false':
-                    original[key] = False
+                    self[key] = False
                 elif change_value_lower == 'true':
-                    original[key] = True
+                    self[key] = True
 
             elif isinstance(original_value, int):
                 try:
-                    original[key] = int(change_value)
+                    self[key] = int(change_value)
                 except ValueError:
                     pass
 
             elif isinstance(original_value, float):
                 try:
-                    original[key] = float(change_value)
+                    self[key] = float(change_value)
                 except ValueError:
                     pass
 
             # Otherwise, if the original value's type and change value type
             # match, like for strings, just replace the original's value
             elif type(original_value) == type(change_value):
-                original[key] = change_value
+                self[key] = change_value
 
     def print(self):
         """Pretty print this context"""

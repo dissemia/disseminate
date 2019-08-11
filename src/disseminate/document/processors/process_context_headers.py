@@ -32,7 +32,7 @@ class ProcessContextHeaders(ProcessContext):
             # Update the header context
             header_context.update(d)
 
-        context.matched_update(header_context)
+        context.match_update(header_context)
 
         # Setup the Renderer
         renderers = load_renderers(context)
@@ -51,5 +51,5 @@ class ProcessContextHeaders(ProcessContext):
             #
             # TODO: reloading the source file context (a second time) isn't
             # very efficient; can this be optimized?
-            context.matched_update(header_context)
+            context.match_update(header_context)
 
