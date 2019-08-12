@@ -7,6 +7,18 @@ from disseminate.tags import Tag, TagError
 from disseminate.tags.text import P
 
 
+def test_tag_comparison(context_cls):
+    """Test the equivalence operator for tags."""
+
+    context = context_cls()
+
+    test1 = Tag(name='test', content='my test', attributes='', context=context)
+    test2 = Tag(name='test', content='my test', attributes='', context=context)
+
+    assert test1 == test2
+    assert not test1 != test2
+
+
 def test_tag_basic_strings(context_cls):
     """Test the parsing of basic tag strings."""
 
@@ -208,6 +220,21 @@ def test_tag_processors(context_cls):
                 [p.__class__.__name__ for p in root.processors()])
 
 
+def test_tag_copy(context_cls):
+    """Test the copy method."""
+
+    # 1. Create a test tag
+    context = context_cls()
+    root = Tag(name='root', content='test', attributes='', context=context)
+
+    # 2. Create a copy a check its properties
+    cp = root.copy()
+
+    assert id(cp) != id(root)
+    assert cp.name == root.name
+    assert cp.content == root.content
+
+
 def test_flatten_tag(context_cls):
     """Test the flatten method."""
     context = context_cls()
@@ -229,7 +256,7 @@ def test_flatten_tag(context_cls):
     # Parse it
     root = Tag(name='root', content=test, attributes='', context=context)
 
-    # Convert the root tag to a flattened list and check the items
+    # 1. Convert the root tag to a flattened list and check the items
     flattened_tag = root.flatten(filter_tags=False)
 
     assert len(flattened_tag) == 20
@@ -254,7 +281,7 @@ def test_flatten_tag(context_cls):
     assert flattened_tag[18].name == 'i'
     assert isinstance(flattened_tag[19], str)
 
-    # Convert the root tag to a flattened list with only tags
+    # 2. Convert the root tag to a flattened list with only tags
     flattened_tag = root.flatten(filter_tags=True)
 
     assert len(flattened_tag) == 8
@@ -266,6 +293,25 @@ def test_flatten_tag(context_cls):
     assert flattened_tag[5].name == 'i'
     assert flattened_tag[6].name == '13C'
     assert flattened_tag[7].name == 'i'
+
+    # 3. Test a tag with multiple levels
+    context = context_cls()
+    test = ("This is my test document. It has @b{nested @i{tags}} and "
+            "@i{root-level} tags and @b{tags with @sub{@i{@i{sub}}}} tags.")
+    root = Tag(name='root', content=test, attributes='', context=context)
+
+    flattened_tags = root.flatten(filter_tags=True)
+
+    assert len(flattened_tags) == 8
+    assert flattened_tags[0].name == 'root'
+    assert flattened_tags[1].name == 'b'
+    assert flattened_tags[2].name == 'i'
+    assert flattened_tags[3].name == 'i'
+    assert flattened_tags[4].name == 'b'
+    assert flattened_tags[5].name == 'sub'
+    assert flattened_tags[6].name == 'i'
+    assert flattened_tags[7].name == 'i'
+
 
 
 # Test for the default target

@@ -5,7 +5,8 @@ import pytest
 
 from disseminate.tags import Tag
 from disseminate.tags.text import Italics
-from disseminate.tags.utils import repl_tags, content_to_str
+from disseminate.tags.utils import (repl_tags, content_to_str, replace_context,
+                                    copy_tag)
 
 
 def test_content_to_str(context_cls):
@@ -76,3 +77,64 @@ def test_repl_tags(context_cls):
                             replacement='replaced')
     assert id(l) == id(new_element)  # same list
     assert new_element == [1, 2, 'replaced', '3']
+
+
+def test_replace_context(context_cls):
+    """Test the replace context function."""
+
+    context = context_cls()
+
+    # 1. Replace the context for a root tag with nested tags
+    test = """This is my test document. It has @b{nested @i{tags}} and
+        @i{root-level} tags and @b{tags with @sub{@i{@i{sub}}}} tags."""
+
+    root = Tag(name='root', content=test, attributes='', context=context)
+
+    # Collect a list of all tags
+    flattened_tags = root.flatten(filter_tags=True)
+
+    assert len(flattened_tags) == 8
+    assert all(id(tag.context) == id(context) for tag in flattened_tags)
+
+    # Replace the context
+    new_context = context_cls()
+    replace_context(root, new_context)
+
+    # Check the replacements
+    assert all(id(tag.context) != id(context) for tag in flattened_tags)
+    assert all(id(tag.context) == id(new_context) for tag in flattened_tags)
+
+
+def test_tag_copy(context_cls):
+    """Test the tag_copy function."""
+
+    context = context_cls()
+
+    # 1. Copy a root tag with nested tags
+    test = """This is my test document. It has @b{nested @i{tags}} and
+            @i{root-level} tags and @b{tags with @sub{@i{@i{sub}}}} tags."""
+
+    root = Tag(name='root', content=test, attributes='', context=context)
+
+    root_cp = copy_tag(root)
+
+    # Check that the root_cp is an actual cp
+    def test_tag_equiv(tag, other):
+        return (id(tag) != id(other)  and # different objs
+                tag == other  and # but equivalent
+                id(root.attributes) != id(root_cp.attributes) and
+                root.attributes == root_cp.attributes and
+                id(root.content) != id(root_cp.content) and
+                root.content == root_cp.content  and # but equivalent
+                id(root.context) == id(root_cp.context))  # same object
+
+    # the root tag and all its subtags
+    assert test_tag_equiv(root, root_cp)
+
+    root_flattened = root.flatten(filter_tags=True)
+    root_cp_flattened = root_cp.flatten(filter_tags=True)
+
+    assert len(root_cp_flattened) == 8
+    assert len(root_flattened) == len(root_cp_flattened)
+    assert all(test_tag_equiv(i, j) for i, j in
+               zip(root_flattened, root_cp_flattened))

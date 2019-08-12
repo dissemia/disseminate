@@ -1,6 +1,7 @@
 """
 Misc utilities for tags.
 """
+from copy import copy
 
 
 def content_to_str(content, target='.txt', **kwargs):
@@ -59,7 +60,7 @@ def repl_tags(element, tag_class, replacement):
 
     Parameters
     ----------
-    element : str, list or :obj:`Tag <disseminate.tags.core.Tag>`
+    element : Union[str, list :obj:`Tag <disseminate.tags.core.Tag>`]
         The element to replace tags with a replacement string.
     tag_class : :class:`Tag <disseminate.tags.core.Tag>
         A tag class or subclass to replace.
@@ -79,3 +80,58 @@ def repl_tags(element, tag_class, replacement):
                                    replacement=replacement)
 
     return element
+
+
+def replace_context(tag, new_context):
+    """Replace the context for the given tag (and all subtags) to the given
+    new_context.
+
+    Parameters
+    ----------
+    tag : :obj:`Tag <disseminate.tags.core.Tag>`
+        The tag to replace the context.
+    new_context : :obj:`Type[BaseContext] <.context.BaseContext>`
+        The new context to replace.
+    """
+    # Get all of the tags for the given tag
+    flattened_tags = tag.flatten(filter_tags=True)
+
+    # Replace the context for all tags
+    for tag in flattened_tags:
+        tag.context = new_context
+
+
+def copy_tag(tag):
+    """Create a copy of the given tag.
+
+    The tag, attributes and content are deep copies, and the context points to the
+    same context as the given tag.
+
+    Parameters
+    ----------
+    tag : Union[str, list :obj:`Tag <disseminate.tags.core.Tag>`]
+        The tag to copy.
+
+    Returns
+    -------
+    tag_copy : :obj:`Tag <disseminate.tags.core.Tag>`
+        The tag copy.
+    """
+    if isinstance(tag, str):
+        # Do nothing for strings
+        return tag
+    if isinstance(tag, list):
+        # Process each item in lists
+        return [copy_tag(i) for i in tag]
+
+    # At this point, the tag parameter should actually be a tag. First, copy
+    # this tag
+    tag_copy = copy(tag)  # shallow copy
+
+    # Copy its attributes
+    tag_copy.attributes = tag.attributes.copy()
+
+    # Copy its content
+    tag_copy.content = copy_tag(tag_copy.content)
+
+    return tag_copy
