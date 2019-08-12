@@ -120,13 +120,14 @@ def test_tag_copy(context_cls):
 
     # Check that the root_cp is an actual cp
     def test_tag_equiv(tag, other):
-        return (id(tag) != id(other)  and # different objs
-                tag == other  and # but equivalent
+        return (id(tag) != id(other) and  # different objs
+                tag == other and  # but equivalent
                 id(root.attributes) != id(root_cp.attributes) and
                 root.attributes == root_cp.attributes and
                 id(root.content) != id(root_cp.content) and
-                root.content == root_cp.content  and # but equivalent
-                id(root.context) == id(root_cp.context))  # same object
+                root.content == root_cp.content and
+                id(root.context) == id(root_cp.context) and # same object
+                id(root.__weakrefattrs__) != id(root_cp.__weakrefattrs__))
 
     # the root tag and all its subtags
     assert test_tag_equiv(root, root_cp)
@@ -138,3 +139,15 @@ def test_tag_copy(context_cls):
     assert len(root_flattened) == len(root_cp_flattened)
     assert all(test_tag_equiv(i, j) for i, j in
                zip(root_flattened, root_cp_flattened))
+
+    # 2. Try changing the contexts separately. This is possible because we
+    #    created a copy of the __weakrefattrs__ dict.
+    other = context_cls()
+    for tag in root_cp_flattened:
+        tag.context = other
+
+    for tag1, tag2 in zip(root_flattened, root_cp_flattened):
+        print(tag1.__dict__); print(tag2.__dict__)
+        assert id(tag1) != id(tag2)
+        assert id(tag1.context) == id(context)
+        assert id(tag2.context) == id(other)

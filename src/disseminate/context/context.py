@@ -2,11 +2,11 @@
 The base class for Context objects that include functions to validate a context.
 """
 import logging
-import copy
 from pprint import pprint
 from weakref import ref
 
 from .utils import load_from_string
+from ..tags import Tag
 from ..utils.classes import all_attributes_values
 from ..utils.string import str_to_dict, str_to_list
 from .. import settings
@@ -382,17 +382,19 @@ class BaseContext(dict):
             #    the parent_context
             if key not in self.keys():
 
-                if hasattr(change_value, 'copy'):
-                    # Try making a copy
+                try:
+                    # Try making a copy. Some objects, like tags, take a
+                    # new_context parameter to set the new context in the
+                    # created object
+                    self[key] = change_value.copy(new_context=self)
+                except TypeError:
+                    # Other objects, like dicts, have a copy method to create
+                    # a shallow copy, but these do not accept keyword arguments
                     self[key] = change_value.copy()
-                else:
+                except AttributeError:
                     # Otherwise copy the value directly
                     self[key] = change_value
                 continue
-
-            ## Set context for all objects (Below)
-            ## Get original_value about and return MissingValue to test
-            ## new key. set context below
 
             # Now copy over values based on the type of the original value's
             # type
@@ -412,7 +414,7 @@ class BaseContext(dict):
                                 list(change_value))
                 original_value |= set(change_value)
 
-            # 4. *dicts*. Create a copy from changes and append to self's set
+            # 4. *dicts*. Create a copy from changes and append to self's dict
             elif isinstance(original_value, dict):
                 change_value = (str_to_dict(change_value)
                                 if isinstance(change_value, str) else
@@ -420,6 +422,20 @@ class BaseContext(dict):
                 BaseContext.match_update(self=original_value,
                                          changes=change_value,
                                          level=level + 1)
+
+            # 5. *tags*. Create a copy
+            elif isinstance(original_value, Tag):
+                if isinstance(change_value, str):
+                    # create a tag
+                    tag = Tag(name=key, content=change_value, attributes='',
+                              context=self)
+                elif isinstance(change_value, Tag):
+                    tag = change_value.copy(new_context=self)
+                else:
+                    # Do nothing if the change value is neither a tag or a
+                    # string, as this cannot be converted
+                    continue
+                self[key] = tag
 
             # For immutable types, like ints, covert strings into their
             # proper format and replace the original's value

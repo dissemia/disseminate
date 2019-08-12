@@ -128,8 +128,13 @@ def copy_tag(tag):
     # this tag
     tag_copy = copy(tag)  # shallow copy
 
-    # Copy its attributes
-    tag_copy.attributes = tag.attributes.copy()
+    # make copies of the following fields. The __weakrefattrs__ dict needs
+    # to be copied so that entries stored in it (like the context weak ref)
+    # can be changed independently for the source and copied tags.
+    for field in ('attributes', '__weakrefattrs__'):
+        if hasattr(tag, field):
+            value = getattr(tag, field)
+            setattr(tag_copy, field, value.copy())
 
     # Copy its content
     tag_copy.content = copy_tag(tag_copy.content)

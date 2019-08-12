@@ -5,6 +5,7 @@ import pytest
 import copy
 
 from disseminate.context import BaseContext
+from disseminate.tags import Tag
 
 
 def test_base_context_dict():
@@ -122,6 +123,38 @@ def test_base_context_inheritance(context_cls):
     assert dict(**child).items() == {('a', 2), ('b', 3), ('c', 4),
                                      ('d', 5), ('e', 6), ('f', 7),
                                      ('g', 8)}
+
+
+def test_base_context_inheritance_with_context_values(context_cls):
+    """Test the BaseContext inheritance for entries with values that refer
+    to the context. When these are copied, their contexts should point to the
+    new context..
+
+    This behavior is needed for some context values, like Tags.
+    """
+    # Create a test tag that holds a reference to the context that owns the
+    # object
+    parent = context_cls()
+    tag = Tag(name='tag', content='test', attributes='', context=parent)
+    parent['tag'] = tag
+
+    assert id(tag.context) == id(parent)
+
+    # Now create a child context. The test object should be a new object, but
+    # its context attribute should point to the new child context
+    child = context_cls(parent_context=parent)
+
+    # A copy of the 'tag' object should have been inherited by the child.
+    # Since the test object has a 'copy' method, it will be run to create a
+    # copy of itself
+    assert id(tag.context) == id(parent)
+    assert 'tag' in child
+    assert id(child['tag']) != id(parent['tag'])  # test is a copy
+
+    # However, the context should now point to the new context object
+    assert child['tag'].context is not None
+    assert id(child['tag'].context) == id(child)
+    assert id(parent['tag'].context) == id(parent)
 
 
 def test_base_context_do_not_inherit(context_cls):
@@ -292,54 +325,61 @@ def test_base_context_match_update(a_in_b):
 
     # Converts a string to a dict
     context = BaseContext()
-    context.matched_update('test: one')
+    context.match_update('test: one')
     assert a_in_b({'test': 'one'}, context)
 
     # Existing values are overwritten
     context = BaseContext(test='one')
-    context.matched_update('test: two')
+    context.match_update('test: two')
     assert a_in_b({'test': 'two'}, context)
 
     # Types are not changed
     context = BaseContext(test=1)
-    context.matched_update('test: two')
+    context.match_update('test: two')
     assert a_in_b({'test': 1}, context)
 
     # Unless they can be converted
     context = BaseContext(test=1)
-    context.matched_update('test: 2')
+    context.match_update('test: 2')
     assert a_in_b({'test': 2}, context)
 
     # Try a dict entry with a mismatched type
     context = BaseContext(test={'a': 1})
-    context.matched_update('test: 2')
+    context.match_update('test: 2')
     assert a_in_b({'test': {'a': 1}}, context)
 
     # Try a dict entry with a dict change
     context = BaseContext(test={'a': 1})
-    context.matched_update('test:\n  a: 2')
+    context.match_update('test:\n  a: 2')
     assert a_in_b({'test': {'a': 2}}, context)
 
     context = BaseContext(test={'a': 1})
-    context.matched_update('test:\n  b: 2')
+    context.match_update('test:\n  b: 2')
     assert a_in_b({'test': {'a': 1, 'b': '2'}}, context)
 
     # Try bool entries
     context = BaseContext(test=True)
-    context.matched_update('test: false')
+    context.match_update('test: false')
     assert a_in_b({'test': False}, context)
 
     context = BaseContext(test=1)
-    context.matched_update('test: false')
+    context.match_update('test: false')
     assert a_in_b({'test': 1}, context)
 
     # Try a list entry
     context = BaseContext(paths=['one', 'two'])
-    context.matched_update('paths: three')
+    context.match_update('paths: three')
     assert a_in_b({'paths': ['three', 'one', 'two']}, context)
 
     # The initial value mutables have not changed
     assert context.initial_values == {'paths': ['one', 'two']}
+
+    # Test a matched update with only a subset of keys
+    context = BaseContext(a=1)
+    context.match_update({'b': 2, 'c': 3}, keys=('b',))
+    assert context['a'] == 1
+    assert context['b'] == 2
+    assert 'c' not in context
 
 
 def test_base_context_match_update_with_inheritance(context_cls):
@@ -350,7 +390,7 @@ def test_base_context_match_update_with_inheritance(context_cls):
     parent_context = context_cls(a_list=[1, 2, 3])
     context = context_cls(parent_context=parent_context)
 
-    context.matched_update({'a_list': [4, 5, 6]})
+    context.match_update({'a_list': [4, 5, 6]})
 
     # The context entry is set
     assert context['a_list'] == [4, 5, 6, 1, 2, 3]
@@ -371,6 +411,7 @@ def test_context_copy(context_cls):
     child_cp = copy.copy(child)
 
     # Check the parent_context and initial_valuues
+    assert id(child) != id (child_cp)
     assert id(child.parent_context) == id(parent)
     assert child._parent_context == child_cp._parent_context
     assert id(child_cp.parent_context) == id(parent)
