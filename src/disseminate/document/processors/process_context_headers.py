@@ -42,14 +42,9 @@ class ProcessContextHeaders(ProcessContext):
                              for p in r.context_filepaths()]
 
         if len(context_filepaths) > 0:
+            # Load the additional headers, if there are any present. In this
+            # case, do not overwrite existing values in the context. Only load
+            # missing values because values loaded in the context already (by
+            # this document or parent documents) take precedence.
             for context_filepath in context_filepaths:
-                context.load(context_filepath.read_text())
-
-            # Reload the document's context modifications. This is done after
-            # loading athe additional header files because these values should
-            # overwrite values written in the additional header files
-            #
-            # TODO: reloading the source file context (a second time) isn't
-            # very efficient; can this be optimized?
-            context.match_update(header_context)
-
+                context.load(context_filepath.read_text(), overwrite=False)

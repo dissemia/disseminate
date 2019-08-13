@@ -399,6 +399,24 @@ def test_base_context_match_update_with_inheritance(context_cls):
     assert parent_context['a_list'] == [1, 2, 3]
 
 
+def test_base_context_match_update_overwrite(context_cls):
+    """Tests match_update with the overwrite parameter flag."""
+
+    # Setup the contexts
+    parent_context = context_cls(a=1)
+    context = context_cls(parent_context=parent_context)
+
+    context.match_update({'a': 2}, overwrite=False)
+
+    # The original value is preserved
+    assert context['a'] == 1
+
+    context.match_update({'a': 2}, overwrite=True)
+
+    # The original value is preserved
+    assert context['a'] == 2
+
+
 def test_context_copy(context_cls):
     """Test the (shallow) copying of context classes."""
 

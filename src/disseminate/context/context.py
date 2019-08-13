@@ -169,7 +169,7 @@ class BaseContext(dict):
                                 if hasattr(parent, '__weakref__') else
                                 parent)
 
-    def load(self, string, strip_header=True):
+    def load(self, string, strip_header=True, overwrite=True):
         """Load context entries from a string.
 
         The load function interprets a string containing a dict in the format
@@ -185,6 +185,9 @@ class BaseContext(dict):
         strip_header : Optional[bool]
             If True (default), the returned string will have the header
             removed.
+        overwrite : Optional[bool]
+            If True, allow existing entries in self to be overwritten by
+            changes.
 
         Returns
         -------
@@ -203,7 +206,7 @@ class BaseContext(dict):
         rest, d = load_from_string(string)
 
         # update self with the dict entries
-        self.match_update(changes=d)
+        self.match_update(changes=d, overwrite=overwrite)
 
         return rest if rest is not None and strip_header else string
 
@@ -308,7 +311,7 @@ class BaseContext(dict):
 
         return True
 
-    def match_update(self, changes, keys=None, level=1):
+    def match_update(self, changes, keys=None, overwrite=True, level=1):
         """Update this context dict with changes by matching entry types.
 
         Matched update behaves like a dict's update method with these key
@@ -323,8 +326,11 @@ class BaseContext(dict):
         ----------
         changes : Union[str, dict, :obj:`.BaseContext`]
             The changes to update into this context dict.
-        key : Optional[Iterable[str]]
+        keys : Optional[Iterable[str]]
             If specified, only update the given keys
+        overwrite : Optional[bool]
+            If True, allow existing entries in self to be overwritten by
+            changes.
         level : Optional[int]
             The level of recursion for this function.
 
@@ -393,6 +399,11 @@ class BaseContext(dict):
                 except AttributeError:
                     # Otherwise copy the value directly
                     self[key] = change_value
+                continue
+
+            # At this point, the key already exists in self. If overwrite is
+            # not enabled, then don't do anything else
+            if not overwrite:
                 continue
 
             # Now copy over values based on the type of the original value's
