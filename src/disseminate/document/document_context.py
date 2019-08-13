@@ -101,6 +101,18 @@ class DocumentContext(BaseContext):
         'paths'
         }
 
+    # Preload the following entries
+    # The ProcessContextHeaders processor first reads the context from the
+    # header of the document and loads context information from additional
+    # context files in the templates before loading these values in the document
+    # context. The following entries are loaded in the context before the
+    # additional context files from templates are loaded.
+    preload = {
+        'renderers',
+        'template',
+        'targets',
+    }
+
     def __init__(self, document, *args, **kwargs):
         self.document = document
 

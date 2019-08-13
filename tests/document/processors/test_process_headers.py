@@ -20,6 +20,7 @@ def test_process_context_header(context_cls):
     # Setup a context class with a targets attribute
     class SubContext(context_cls):
         targets = ['.html']
+        preload = {'targets', 'renderers', 'template'}
 
     # Load the header into a context
     context = SubContext(test=header)
