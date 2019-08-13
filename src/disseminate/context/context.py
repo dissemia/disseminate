@@ -105,7 +105,6 @@ class BaseContext(dict):
         if 'parent_context' in kwargs:
             parent = kwargs.get('parent_context', None)
             del kwargs['parent_context']
-
             self.parent_context = parent
 
         # Store the initial values
@@ -252,7 +251,6 @@ class BaseContext(dict):
         if parent_context is not None:
             do_not_inherit = self.find_do_not_inherit()
             keys_to_inherit = parent_context.keys() - do_not_inherit
-
             self.match_update(parent_context, keys=keys_to_inherit)
 
         # Copy in the initial value arguments. The initial values should
@@ -387,6 +385,7 @@ class BaseContext(dict):
                     # new_context parameter to set the new context in the
                     # created object
                     self[key] = change_value.copy(new_context=self)
+
                 except TypeError:
                     # Other objects, like dicts, have a copy method to create
                     # a shallow copy, but these do not accept keyword arguments
@@ -426,9 +425,11 @@ class BaseContext(dict):
             # 5. *tags*. Create a copy
             elif isinstance(original_value, Tag):
                 if isinstance(change_value, str):
-                    # create a tag
-                    tag = Tag(name=key, content=change_value, attributes='',
-                              context=self)
+                    # If the change_value is a string, then convert it to
+                    # a tag of the same type
+                    tag_cls = original_value.__class__
+                    tag = tag_cls(name=key, content=change_value,
+                                  attributes='', context=self)
                 elif isinstance(change_value, Tag):
                     tag = change_value.copy(new_context=self)
                 else:

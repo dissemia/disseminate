@@ -3,6 +3,7 @@ Tests the DocumentContext class.
 """
 from disseminate import SourcePath, TargetPath
 from disseminate.document import DocumentContext, Document
+from disseminate.tags import Tag, TagFactory
 
 
 # A DummyDocument class
@@ -251,3 +252,22 @@ def test_document_context_includes(doc):
 
     del context['include']
     assert context.includes == []
+
+
+def test_document_context_tag_inheritance(context_cls):
+    """Test tag inheritance for contexts."""
+
+    # Create a parent context with a toc tag
+    parent = context_cls()
+    factory = TagFactory(tag_base_cls=Tag)
+    toc = factory.tag(tag_name='toc', tag_content='heading collapsed',
+                      tag_attributes='', context=parent)
+    parent['toc'] = toc
+
+    # Now create a child context with a toc entry that is a string. It should
+    # be converted to a toc tag
+    child = context_cls(toc='heading expanded', parent_context=parent)
+
+    assert id(child['toc']) != id(toc)  # a new tag was created
+    assert type(child['toc']) == type(toc)  # of the same type
+    assert child['toc'].content == 'heading expanded'  # different contents

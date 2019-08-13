@@ -223,7 +223,7 @@ def test_toc_heading_html(tmpdir):
     doc.context['base_url'] = '/{target}/{subpath}'
     doc.context['relative_links'] = False
 
-    # Create a toc for all headings
+    # Create a toc for all headings and doc1
     toc = Toc(name='toc', content='all headings', attributes='',
               context=doc.context)
 
@@ -272,12 +272,13 @@ def test_toc_heading_html(tmpdir):
     src_filepath = SourcePath(project_root='tests/tags/toc_example2',
                               subpath='file1.dm')
     doc = Document(src_filepath, target_root)
+    doc2, doc3 = doc.documents_list(only_subdocuments=True)
 
     # Make sure the 'base_url' entry matches a basic format.
     doc.context['base_url'] = '/{target}/{subpath}'
     doc.context['relative_links'] = False
 
-    # Create a toc for all headings
+    # Create a toc for all headings and doc (the first document)
     toc = Toc(name='toc', content='all headings', attributes='',
               context=doc.context)
 
@@ -312,7 +313,34 @@ def test_toc_heading_html(tmpdir):
 """
     assert toc.html == key
 
-    # 3. Test with relative links
+    # Create a toc for all headings and doc2
+    # Make sure the 'base_url' entry matches a basic format.
+    doc2.context['base_url'] = '/{target}/{subpath}'
+    doc2.context['relative_links'] = False
+
+    toc = Toc(name='toc', content='all headings', attributes='',
+              context=doc2.context)
+
+    key = """<ul class="toc-level-1">
+  <li>
+    <a href="/html/file1.html#heading-1" class="ref">Heading 1</a>
+  </li>
+  <li>
+    <a href="#heading-2" class="ref">Heading 2</a>
+  </li>
+  <ul class="toc-level-2">
+    <li>
+      <a href="#subheading-2" class="ref">sub-Heading 2</a>
+    </li>
+  </ul>
+  <li>
+    <a href="/html/file3.html#heading-3" class="ref">Heading 3</a>
+  </li>
+</ul>
+"""
+    assert toc.html == key
+
+    # 3. Test with relative links and doc1
     doc.context['relative_links'] = True
     toc = Toc(name='toc', content='all headings', attributes='',
               context=doc.context)
@@ -327,6 +355,29 @@ def test_toc_heading_html(tmpdir):
   <ul class="toc-level-2">
     <li>
       <a href="file2.html#subheading-2" class="ref">sub-Heading 2</a>
+    </li>
+  </ul>
+  <li>
+    <a href="file3.html#heading-3" class="ref">Heading 3</a>
+  </li>
+</ul>
+"""
+    assert toc.html == key
+
+    # Test with relative links and doc2
+    doc2.context['relative_links'] = True
+    toc = Toc(name='toc', content='all headings', attributes='',
+              context=doc2.context)
+    key = """<ul class="toc-level-1">
+  <li>
+    <a href="file1.html#heading-1" class="ref">Heading 1</a>
+  </li>
+  <li>
+    <a href="#heading-2" class="ref">Heading 2</a>
+  </li>
+  <ul class="toc-level-2">
+    <li>
+      <a href="#subheading-2" class="ref">sub-Heading 2</a>
     </li>
   </ul>
   <li>
