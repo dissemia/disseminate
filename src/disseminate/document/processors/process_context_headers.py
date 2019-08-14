@@ -31,8 +31,9 @@ class ProcessContextHeaders(ProcessContext):
         # See which context entries have a header
         keys = find_header_entries(context)
 
-        # Load the context into a BaseContext
-        pre_context = BaseContext()
+        # Load the context from the document's header into a subcontext,
+        # to be added to the context later
+        header_context = BaseContext()
         for key in keys:
             rest, d = load_from_string(context[key])
 
@@ -40,30 +41,52 @@ class ProcessContextHeaders(ProcessContext):
             context[key] = rest
 
             # Update the header context
-            pre_context.update(d)
+            header_context.update(d)
 
-        # Preload some of the entries needed for the renderer and for loading
-        # additional header files from the template
+        # Load the template contexts. This only needs to be done once for
+        # a tree of contexts with the same template. A fresh renderer should
+        # be loaded for each subdocument.
+        # To load a template, we need to preload some of the entries needed for
+        # the renderer and for loading additional header files from the template
+
+        # Load these values into a subcontext, to be added to the context
+        # later
+        template_context = BaseContext()
         for entry in getattr(context, 'preload', set()):
-            if entry in pre_context:
-                context[entry] = pre_context[entry]
+            if entry in header_context:
+                context[entry] = header_context[entry]
         renderers = load_renderers(context)
+        template = context.get('template', None)
+        template_loaded = (context.get('template_loaded', False) == template)
 
         # See if there are additional header files from the template
         context_filepaths = [p for r in renderers.values()
                              for p in r.context_filepaths()]
 
-        if len(context_filepaths) > 0:
-            # Load the additional headers, if there are any present. In this
-            # case, do not overwrite existing values in the context. Only load
-            # missing values because values loaded in the context already (by
-            # this document or parent documents) take precedence.
+        if not template_loaded and len(context_filepaths) > 0:
+            # Load the additional headers, if there are any present. The only
+            # needs to be done once per template
             for context_filepath in context_filepaths:
-                pre_context.load(context_filepath.read_text(), overwrite=False)
+                template_context.load(context_filepath.read_text())
 
-        # Load the rest of the pre-context into this context. Exclude entries
-        # that have already been preloaded.
-        keys_to_update = pre_context.keys()
-        keys_to_update -= getattr(context, 'preload', set())
-        context.match_update({k: v for k, v in pre_context.items()
-                              if k in keys_to_update})
+            # The template contexts have now been loaded. Mark an entry for
+            # this accomplishement in the context.
+            context['template_loaded'] = template
+
+        # Load the rest of the subcontexts (header_context, template_context)
+        # into this context.
+        # 1. The header_context should always overwrite values in the context,
+        #    butit should be loaded after the template context
+        # 2. The template_context has optional values that should be written
+        #    if they don't already exist
+        # Exclude entriesthat have already been preloaded.
+        for subcontext in (template_context, header_context):
+
+            # Remove entries that have already been preloaded
+            keys_to_update = subcontext.keys()
+            keys_to_update -= getattr(subcontext, 'preload', set())
+
+            # Load the entries from the subcontext into the context
+            context.match_update({k: v for k, v in subcontext.items()
+                                  if k in keys_to_update})
+        print(context.get('toc'))
