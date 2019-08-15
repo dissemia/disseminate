@@ -399,7 +399,7 @@ class Document(object):
                                                  recursive=True)
 
         # Clear the subdocuments ordered dict and add new entries. Old entries
-        # will automatically be delete if the subdocument no longer holds a
+        # will automatically be deleted if the subdocument no longer holds a
         # reference to it.
         self.subdocuments.clear()
 
@@ -416,18 +416,54 @@ class Document(object):
             # ordered dict
             if src_filepath in root_dict:
                 subdoc = root_dict[src_filepath]
+                subdoc.load()  # Make sure the subdocument is loaded
 
                 if self.src_filepath not in subdoc.subdocuments:
                     self.subdocuments[src_filepath] = subdoc
                 continue
 
             # The document could not be found, at this point. Create it.
-
             # Create the document and add it to the subdocuments ordered
             # dict.
             subdoc = Document(src_filepath=src_filepath,
                               parent_context=self.context)
             self.subdocuments[src_filepath] = subdoc
+
+    def load_required(self):
+        """Evaluate whether a load is required.
+
+        Returns
+        -------
+        load_required : bool
+            True, if a load is required.
+            False if a load isn't required.
+        """
+        # Reload the document if:
+        # 1. The document hasn't been successfully loaded.
+        if not self._succesfully_loaded:
+            return True
+
+        # 2. The body attribute hasn't been set yet.
+        body_attr = settings.body_attr
+        if self.context.get(body_attr, None) is None:
+            return True
+
+        # 3. The mtime for the file is now later than the one stored in the
+        #    context--i.e. the user saved the file.
+        src_mtime = self.src_filepath.stat().st_mtime
+        last_mtime = self.mtime
+        if last_mtime is None or src_mtime > last_mtime:
+            return True
+
+        # 4. This is a subdocument whose context has a parent_context, and the
+        #    parent_context has been updated
+        parent_context = self.context.parent_context
+        parent_mtime = (parent_context.get('mtime')
+                        if parent_context is not None else None)
+        if parent_mtime is not None and parent_mtime > last_mtime:
+            return True
+
+        return False
 
     def load(self, reload=False):
         """Load or reload the document into the context.
@@ -442,26 +478,14 @@ class Document(object):
             msg = "The source document '{}' must exist."
             raise DocumentError(msg.format(self.src_filepath))
 
-        stat = self.src_filepath.stat()
-        time = stat.st_mtime
-        last_mtime = self.mtime
-
-        # Update the context, if:
-        #   1. The document hasn't been successfully loaded.
-        #   2. The body attribute hasn't been set yet.
-        #   3. The mtime for the file is now later than the one stored in the
-        #      context--i.e. the user saved the file.
-        #   4. A reload is forced
-        body_attr = settings.body_attr
-        if (not self._succesfully_loaded or
-            self.context.get(body_attr, None) is None or
-            last_mtime is None or time > last_mtime or
-            reload):
+        # Load document if a load is required or forced
+        if self.load_required() or reload:
 
             # The document hasn't been loaded yet. Reset the flat
             self._succesfully_loaded = False
 
             # Check to make sure the file is reasonable
+            stat = self.src_filepath.stat()
             filesize = stat.st_size
             if filesize > settings.document_max_size:
                 msg = ("The source document '{}' has a file size ({} kB) "

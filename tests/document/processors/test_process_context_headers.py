@@ -119,7 +119,7 @@ def test_process_context_header_precedence(doctree):
     ---
     """)
     for doc in (doc1, doc2, doc3):
-        doc.load(reload=True)
+        doc.load()
 
     assert doc1.context['template'] == 'test'
     assert doc1.context['inactive_tags'] == {'chapter'}
@@ -139,7 +139,7 @@ def test_process_context_header_precedence(doctree):
     ---
     """)
     for doc in (doc1, doc2, doc3):
-        doc.load(reload=True)
+        doc.load()
 
     assert doc1.context['inactive_tags'] == {'title', 'chapter'}  # appended
     assert doc2.context['inactive_tags'] == {'title', 'chapter'}
