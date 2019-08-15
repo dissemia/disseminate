@@ -89,4 +89,3 @@ class ProcessContextHeaders(ProcessContext):
             # Load the entries from the subcontext into the context
             context.match_update({k: v for k, v in subcontext.items()
                                   if k in keys_to_update})
-        print(context.get('toc'))
