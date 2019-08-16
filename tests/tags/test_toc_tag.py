@@ -204,6 +204,51 @@ def test_toc_absolute_and_relative_links(tmpdir):
     assert toc.html == key
 
 
+def test_toc_levels_html(doc):
+    """Test the correct assignment of toc-levels."""
+
+    # 1. Setup a test document with a @toc tag in the body
+    markup = """
+    ---
+    title: my first file
+    relative_links: True
+    ---
+    @title
+    @chapter{My first chapter}
+    @section[id=section1]{My first section}
+    @subsection{My first sub-section}
+    @subsubsection{My first sub-sub-section}
+    
+    @toc{all headings expanded}
+    """
+    doc.src_filepath.write_text(strip_leading_space(markup))
+
+    # Create the document and render
+    doc.render()
+
+    # Retrieve the rendered file and check its contents
+    html_filepath = doc.targets['.html']
+    html = html_filepath.read_text()
+
+    # Check the toc
+    key = ('<ul class="toc-level-1">'
+             '<li><a href="#title:test-dm-my-first-file" class="ref">my first file</a></li>'
+             '<ul class="toc-level-2">'
+               '<li><a href="#ch:test-dm-my-first-chapter" class="ref">Chapter 1. My first chapter</a></li>'
+               '<ul class="toc-level-3">'
+                 '<li><a href="#section1" class="ref">My first section</a></li>'
+                 '<ul class="toc-level-4">'
+                   '<li><a href="#subsec:test-dm-my-first-sub-section" class="ref">My first sub-section</a></li>'
+                   '<ul class="toc-level-5">'
+                     '<li><a href="#subsubsec:test-dm-my-first-sub-sub-section" class="ref">My first sub-sub-section</a></li>'
+                   '</ul>'
+                 '</ul>'
+               '</ul>'
+             '</ul>'
+           '</ul>')
+    assert key in html
+
+
 # html tests
 
 def test_toc_heading_html(tmpdir):

@@ -275,7 +275,8 @@ class Toc(Tag):
         self.ref_tags = tags
         self._mtime = latest_mtime
 
-    def html_fmt(self, content=None, listtype='ul', elements=None, level=1):
+    def html_fmt(self, content=None, listtype='ul', elements=None,
+                 toc_level=1, level=1):
         """Convert the tag to an html listing.
 
         .. note:: The 'document' toc is special since it uses the documents
@@ -291,7 +292,9 @@ class Toc(Tag):
         listtype : str, optional
             The type of list to render (ol, ul).
         elements : str, optional
-            The the reference tags.
+            The reference tags.
+        toc_level : int, optional
+            The level of the toc.
         level : int, optional
             The level of the tag.
 
@@ -327,7 +330,8 @@ class Toc(Tag):
                 # The element is a list of tags. Process this list as a group.
                 returned_elements.append(self.html_fmt(content=None,
                                                        elements=e,
-                                                       level=level + 1))
+                                                       level=level + 1,
+                                                       toc_level=toc_level + 1))
             else:
                 # Otherwise it's a ref tag, get its html and wrap it in a list
                 # item
@@ -338,7 +342,7 @@ class Toc(Tag):
 
         # Create list tag
         list_tag = html_tag(listtype,
-                            attributes='class=toc-level-{}'.format(level),
+                            attributes='class=toc-level-{}'.format(toc_level),
                             formatted_content=returned_elements,
                             level=level)
         return list_tag
