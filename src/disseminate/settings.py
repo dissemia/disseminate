@@ -149,9 +149,8 @@ default_context = {
         'subsection': {'subsubsection'},
     },
 
-
     # The following tags are unavailable. See
-    # disseminate.tags.factory.TagFactory
+    # disseminate.tags.factory.TagFactory.
     'inactive_tags': set(),
 
     # Macros are string entries that aren't processed into tags and asts.

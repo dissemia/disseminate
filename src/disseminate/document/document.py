@@ -382,52 +382,41 @@ class Document(object):
 
         return list(doc_dict.values())
 
-    def load_subdocuments(self):
-        """Load the sub-documents listed in the include entries in the
-        context."""
+    def load_required(self):
+        """Evaluate whether a load is required.
 
-        # Get the root document's src_filepath and the src_filepath for all of
-        # its included subdocuments to make sure we do not load documents
-        # recursively or twice
-        root_document = self.context.get('root_document', None)
-        root_document = root_document() if root_document is not None else None
+        Returns
+        -------
+        load_required : bool
+            True, if a load is required.
+            False if a load isn't required.
+        """
+        # Reload the document if:
+        # 1. The document hasn't been successfully loaded.
+        if not self._succesfully_loaded:
+            return True
 
-        # Get the documents dict for the root document, including all
-        # subdocuments
-        root_dict = root_document.documents_dict(document=root_document,
-                                                 only_subdocuments=False,
-                                                 recursive=True)
+        # 2. The body attribute hasn't been set yet.
+        body_attr = settings.body_attr
+        if self.context.get(body_attr, None) is None:
+            return True
 
-        # Clear the subdocuments ordered dict and add new entries. Old entries
-        # will automatically be delete if the subdocument no longer holds a
-        # reference to it.
-        self.subdocuments.clear()
+        # 3. The mtime for the file is now later than the one stored in the
+        #    context--i.e. the user saved the file.
+        src_mtime = self.src_filepath.stat().st_mtime
+        last_mtime = self.mtime
+        if last_mtime is None or src_mtime > last_mtime:
+            return True
 
-        # Retrieve the file paths of included files in the context
-        src_filepaths = self.context.includes
+        # 4. This is a subdocument whose context has a parent_context, and the
+        #    parent_context has been updated
+        parent_context = self.context.parent_context
+        parent_mtime = (parent_context.get('mtime')
+                        if parent_context is not None else None)
+        if parent_mtime is not None and parent_mtime > last_mtime:
+            return True
 
-        for src_filepath in src_filepaths:
-            # If the src_filepath is the same as this document, do nothing, as
-            # a document shouldn't have itself as a subdocument
-            if src_filepath == self.src_filepath:
-                continue
-
-            # If the document is already loaded, copy it to the subdocuments
-            # ordered dict
-            if src_filepath in root_dict:
-                subdoc = root_dict[src_filepath]
-
-                if self.src_filepath not in subdoc.subdocuments:
-                    self.subdocuments[src_filepath] = subdoc
-                continue
-
-            # The document could not be found, at this point. Create it.
-
-            # Create the document and add it to the subdocuments ordered
-            # dict.
-            subdoc = Document(src_filepath=src_filepath,
-                              parent_context=self.context)
-            self.subdocuments[src_filepath] = subdoc
+        return False
 
     def load(self, reload=False):
         """Load or reload the document into the context.
@@ -442,26 +431,14 @@ class Document(object):
             msg = "The source document '{}' must exist."
             raise DocumentError(msg.format(self.src_filepath))
 
-        stat = self.src_filepath.stat()
-        time = stat.st_mtime
-        last_mtime = self.mtime
-
-        # Update the context, if:
-        #   1. The document hasn't been successfully loaded.
-        #   2. The body attribute hasn't been set yet.
-        #   3. The mtime for the file is now later than the one stored in the
-        #      context--i.e. the user saved the file.
-        #   4. A reload is forced
-        body_attr = settings.body_attr
-        if (not self._succesfully_loaded or
-            self.context.get(body_attr, None) is None or
-            last_mtime is None or time > last_mtime or
-            reload):
+        # Load document if a load is required or forced
+        if self.load_required() or reload:
 
             # The document hasn't been loaded yet. Reset the flat
             self._succesfully_loaded = False
 
             # Check to make sure the file is reasonable
+            stat = self.src_filepath.stat()
             filesize = stat.st_size
             if filesize > settings.document_max_size:
                 msg = ("The source document '{}' has a file size ({} kB) "
@@ -509,6 +486,53 @@ class Document(object):
             document.load(reload=reload)
 
         return None
+
+    def load_subdocuments(self):
+        """Load the sub-documents listed in the include entries in the
+        context."""
+
+        # Get the root document's src_filepath and the src_filepath for all of
+        # its included subdocuments to make sure we do not load documents
+        # recursively or twice
+        root_document = self.context.get('root_document', None)
+        root_document = root_document() if root_document is not None else None
+
+        # Get the documents dict for the root document, including all
+        # subdocuments
+        root_dict = root_document.documents_dict(document=root_document,
+                                                 only_subdocuments=False,
+                                                 recursive=True)
+
+        # Clear the subdocuments ordered dict and add new entries. Old entries
+        # will automatically be deleted if the subdocument no longer holds a
+        # reference to it.
+        self.subdocuments.clear()
+
+        # Retrieve the file paths of included files in the context
+        src_filepaths = self.context.includes
+
+        for src_filepath in src_filepaths:
+            # If the src_filepath is the same as this document, do nothing, as
+            # a document shouldn't have itself as a subdocument
+            if src_filepath == self.src_filepath:
+                continue
+
+            # If the document is already loaded, copy it to the subdocuments
+            # ordered dict
+            if src_filepath in root_dict:
+                subdoc = root_dict[src_filepath]
+                subdoc.load()  # Make sure the subdocument is loaded
+
+                if self.src_filepath not in subdoc.subdocuments:
+                    self.subdocuments[src_filepath] = subdoc
+                continue
+
+            # The document could not be found, at this point. Create it.
+            # Create the document and add it to the subdocuments ordered
+            # dict.
+            subdoc = Document(src_filepath=src_filepath,
+                              parent_context=self.context)
+            self.subdocuments[src_filepath] = subdoc
 
     def get_renderer(self):
         """Get the template renderer for this document.

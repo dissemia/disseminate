@@ -2,10 +2,10 @@
 Core classes and functions for tags.
 """
 from .exceptions import TagError
-from .utils import format_content
 from .processors import ProcessTag
 from ..formats import tex_env, tex_cmd, html_tag
 from ..attributes import Attributes
+from .utils import format_content, replace_context, copy_tag
 from ..utils.string import titlelize, convert_camelcase
 from ..utils.classes import weakattr
 
@@ -97,6 +97,13 @@ class Tag(object):
         return "{type}{{{content}}}".format(type=self.name,
                                             content=self.content)
 
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__ and
+                self.name == other.name and
+                self.attributes == other.attributes and
+                self.content == other.content and
+                id(self.context) == id(other.context))
+
     def __getitem__(self, item):
         """Index accession."""
         if not isinstance(self.content, list):
@@ -180,6 +187,26 @@ class Tag(object):
                                convert_camelcase(processor.__class__.__name__),
                                True)]
 
+    def copy(self, new_context=None):
+        """Create a copy of this tag and all sub-tabs.
+
+        The tag copy is a deep copy of the attributes and content, but the
+        context is either kept the same or replaced with the specified
+        new_context.
+
+        Parameters
+        ----------
+        new_context : Optional[:obj:`Type[BaseContext] <.context.BaseContext>`]
+            The new context to replace, if specified.
+        """
+        # Copy the tag
+        cp = copy_tag(tag=self)
+
+        # Set the new context
+        if new_context is not None:
+            replace_context(tag=cp, new_context=new_context)
+        return cp
+
     def flatten(self, tag=None, filter_tags=True):
         """Generate a flat list with this tag and all sub-tags and elements.
 
@@ -197,7 +224,7 @@ class Tag(object):
             The flattened list.
         """
         tag = tag if tag is not None else self
-        flattened_list = [tag]
+        flattened_list = [tag]  # add the given tag to the list
 
         # Process the tag's contents if present
         if hasattr(tag, 'content'):
@@ -212,9 +239,10 @@ class Tag(object):
             # Add the item to the ast
             flattened_list.append(item)
 
-            # Process tag's sub-items, if present
-            if hasattr(item, 'content') and isinstance(item.content, list):
-                # Process lists recursively
+            # Process tag's sub tags or lists, if present
+            if (hasattr(item, 'content') and
+                (isinstance(item.content, list) or
+                 isinstance(item.content, Tag))):
                 flattened_list += self.flatten(tag=item.content,
                                                filter_tags=filter_tags)
 
