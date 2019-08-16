@@ -12,6 +12,44 @@ from disseminate.utils.tests import strip_leading_space
 from disseminate import settings
 
 
+# Tests for documeht methods
+
+def test_document_load_required(doc, wait):
+    """Tests the load_required method for documents."""
+
+    # Check that the doc was succesfully loaded
+    assert not doc.load_required()
+
+    # 1. Test load required when not successfully loaded
+    doc._succesfully_loaded = False
+    assert doc.load_required()
+    doc._succesfully_loaded = True
+    assert not doc.load_required()
+
+    # 2. Test load required when body attribute hasn't been set
+    del doc.context[settings.body_attr]
+    assert doc.load_required()
+    doc.load()
+    assert not doc.load_required()
+
+    # 3. Test load required when the source file is newer than the mtime in
+    #    the context
+    wait()  # needed to offset filesystem times
+    doc.src_filepath.touch()
+    assert doc.load_required()
+    doc.load()
+    assert not doc.load_required()
+
+    # 4. Test load required when the parent context's mtime is newer than the
+    #    mtime in the context
+    doc.context.parent_context['mtime'] = doc.context['mtime'] + 1.0
+    assert doc.load_required()
+    del doc.context.parent_context['mtime']
+    assert not doc.load_required()
+
+
+# Tests for other functionality
+
 def test_document_paths(tmpdir):
     """Tests the setting of paths for documents."""
     tmpdir = pathlib.Path(tmpdir)

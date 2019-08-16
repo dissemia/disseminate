@@ -382,53 +382,6 @@ class Document(object):
 
         return list(doc_dict.values())
 
-    def load_subdocuments(self):
-        """Load the sub-documents listed in the include entries in the
-        context."""
-
-        # Get the root document's src_filepath and the src_filepath for all of
-        # its included subdocuments to make sure we do not load documents
-        # recursively or twice
-        root_document = self.context.get('root_document', None)
-        root_document = root_document() if root_document is not None else None
-
-        # Get the documents dict for the root document, including all
-        # subdocuments
-        root_dict = root_document.documents_dict(document=root_document,
-                                                 only_subdocuments=False,
-                                                 recursive=True)
-
-        # Clear the subdocuments ordered dict and add new entries. Old entries
-        # will automatically be deleted if the subdocument no longer holds a
-        # reference to it.
-        self.subdocuments.clear()
-
-        # Retrieve the file paths of included files in the context
-        src_filepaths = self.context.includes
-
-        for src_filepath in src_filepaths:
-            # If the src_filepath is the same as this document, do nothing, as
-            # a document shouldn't have itself as a subdocument
-            if src_filepath == self.src_filepath:
-                continue
-
-            # If the document is already loaded, copy it to the subdocuments
-            # ordered dict
-            if src_filepath in root_dict:
-                subdoc = root_dict[src_filepath]
-                subdoc.load()  # Make sure the subdocument is loaded
-
-                if self.src_filepath not in subdoc.subdocuments:
-                    self.subdocuments[src_filepath] = subdoc
-                continue
-
-            # The document could not be found, at this point. Create it.
-            # Create the document and add it to the subdocuments ordered
-            # dict.
-            subdoc = Document(src_filepath=src_filepath,
-                              parent_context=self.context)
-            self.subdocuments[src_filepath] = subdoc
-
     def load_required(self):
         """Evaluate whether a load is required.
 
@@ -533,6 +486,53 @@ class Document(object):
             document.load(reload=reload)
 
         return None
+
+    def load_subdocuments(self):
+        """Load the sub-documents listed in the include entries in the
+        context."""
+
+        # Get the root document's src_filepath and the src_filepath for all of
+        # its included subdocuments to make sure we do not load documents
+        # recursively or twice
+        root_document = self.context.get('root_document', None)
+        root_document = root_document() if root_document is not None else None
+
+        # Get the documents dict for the root document, including all
+        # subdocuments
+        root_dict = root_document.documents_dict(document=root_document,
+                                                 only_subdocuments=False,
+                                                 recursive=True)
+
+        # Clear the subdocuments ordered dict and add new entries. Old entries
+        # will automatically be deleted if the subdocument no longer holds a
+        # reference to it.
+        self.subdocuments.clear()
+
+        # Retrieve the file paths of included files in the context
+        src_filepaths = self.context.includes
+
+        for src_filepath in src_filepaths:
+            # If the src_filepath is the same as this document, do nothing, as
+            # a document shouldn't have itself as a subdocument
+            if src_filepath == self.src_filepath:
+                continue
+
+            # If the document is already loaded, copy it to the subdocuments
+            # ordered dict
+            if src_filepath in root_dict:
+                subdoc = root_dict[src_filepath]
+                subdoc.load()  # Make sure the subdocument is loaded
+
+                if self.src_filepath not in subdoc.subdocuments:
+                    self.subdocuments[src_filepath] = subdoc
+                continue
+
+            # The document could not be found, at this point. Create it.
+            # Create the document and add it to the subdocuments ordered
+            # dict.
+            subdoc = Document(src_filepath=src_filepath,
+                              parent_context=self.context)
+            self.subdocuments[src_filepath] = subdoc
 
     def get_renderer(self):
         """Get the template renderer for this document.
