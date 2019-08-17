@@ -9,15 +9,11 @@ import pathlib
 
 from .document_context import DocumentContext
 from .processors import ProcessContext
+from . import exceptions
 from ..convert import convert
 from ..utils.file import mkdir_p
 from ..paths import SourcePath, TargetPath
 from .. import settings
-
-
-class DocumentError(Exception):
-    """An error generated while loading and processing a document."""
-    pass
 
 
 class Document(object):
@@ -244,8 +240,18 @@ class Document(object):
         -------
         target_filepath : :obj:`TargetPath <.paths.TargetPath>`
             The target filepath.
+
+        Raises
+        ------
+        MissingTargetException
+            Raised if the target is not available
         """
-        return self.targets[target]
+        try:
+            return self.targets[target]
+        except KeyError:
+            msg = "The target '{}' is not available for document '{}'"
+            msg = msg.format(target, self.doc_id)
+            raise exceptions.MissingTargetException(msg)
 
     def reset_contexts(self):
         """Load, clear and reset the context.
@@ -342,6 +348,27 @@ class Document(object):
 
     def documents_by_id(self, document=None, only_subdocuments=False,
                         recursive=True):
+        """Produce an ordered dict of a document and sub-documents entered by
+        doc_id.
+
+       Parameters
+       ----------
+       document : Optional[:obj:`Document <.Document>`]
+           The document for which to create the document dict.
+           If None is specified, this document will be used.
+       only_subdocuments : Optional[bool]
+           If True, only the sub-documents will be returned (not this
+           document or the document specified.)
+       recursive : Optional[bool]
+           If True, the sub-documents of sub-documents are returned (
+           in order) in the ordered dict as well
+
+       Returns
+       -------
+       document_dict : OrderedDict[str, :obj:`Document <.Document>`]
+           An ordered dict of documents. The keys are doc_ids
+           and the values are document objects.
+       """
         doc_dict = self.documents_dict(document=document,
                                        only_subdocuments=only_subdocuments,
                                        recursive=recursive)
@@ -352,7 +379,7 @@ class Document(object):
             # there are duplicate doc_ids
             msg = ("The project has multiple documents with the same doc_id. "
                    "The doc_id should be unique for each document.")
-            raise DocumentError(msg)
+            raise exceptions.DocumentException(msg)
 
         return dict_by_id
 
@@ -429,7 +456,7 @@ class Document(object):
         # Check to make sure the file exists
         if not self.src_filepath.is_file():  # file must exist
             msg = "The source document '{}' must exist."
-            raise DocumentError(msg.format(self.src_filepath))
+            raise exceptions.DocumentException(msg.format(self.src_filepath))
 
         # Load document if a load is required or forced
         if self.load_required() or reload:
@@ -445,9 +472,9 @@ class Document(object):
                        "that exceeds the maximum setting size of {} kB.")
                 actual_filesize = filesize / 1024
                 max_filesize = settings.document_max_size / 1024
-                raise DocumentError(msg.format(self.src_filepath,
-                                               actual_filesize,
-                                               max_filesize))
+                raise exceptions.DocumentException(msg.format(self.src_filepath,
+                                                   actual_filesize,
+                                                   max_filesize))
 
             # Reset the local_context. When reloading an AST, the old
             # local_context is invalidated since some of the entries may have
@@ -650,7 +677,7 @@ class Document(object):
             pass
         else:
             msg = "Specified targets '{}' must be a dict"
-            raise DocumentError(msg.format(targets))
+            raise exceptions.DocumentException(msg.format(targets))
 
         # Check to see if the target directories need to be created
         if create_dirs:
