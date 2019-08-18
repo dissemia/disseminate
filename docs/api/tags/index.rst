@@ -18,6 +18,7 @@ Tags
    figs
    caption
    refs
+   navigation
    collection
 
 .. toctree::
