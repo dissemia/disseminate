@@ -103,12 +103,13 @@ class Toc(Tag):
         assert self.context.is_valid('label_manager')
 
         # If 'all' is specified in the toc_kind, then all documents should be
-        # selected. This is done by having a context of None with the
+        # selected. This is done by having a doc_id of None with the
         # 'get_labels' method of the label manager. If 'all' is not
-        # specified, then use this document's context. This will return labels
+        # specified, then use this document's doc_id. This will return labels
         # only for this document and its context from the 'get_labels' method
         # of the label manager.
-        context = self.context if 'all' not in self.toc_kind else None
+        context = self.context
+        doc_id = context.get('doc_id') if 'all' not in self.toc_kind else None
 
         # Create a default function for order labels. This may be overwritten
         # below, depending on the type of TOC.
@@ -124,8 +125,8 @@ class Toc(Tag):
 
         if 'heading' in self.toc_kind or 'headings' in self.toc_kind:
             # Retrieve heading labels, either for this document or all documents
-            # (depending on the value of context)
-            labels = label_manager.get_labels(context=context,
+            # (depending on the value of doc_id)
+            labels = label_manager.get_labels(doc_id=doc_id,
                                               kinds='heading')
 
             last_heading_level = None
@@ -153,19 +154,17 @@ class Toc(Tag):
             return labels, order_function, 'heading'
 
         if 'document' in self.toc_kind or 'documents' in self.toc_kind:
-            # Get the doc_id for the current document
-            doc_id = self.context['doc_id']
-
             # Retrieve the labels for the documents and the headings. Either
             # for this document or all documents (depending on the value of
-            # context)
-            document_labels = label_manager.get_labels(context=context,
+            # doc_id)
+            document_labels = label_manager.get_labels(doc_id=doc_id,
                                                        kinds='document')
-            heading_labels = label_manager.get_labels(context=context,
+            heading_labels = label_manager.get_labels(doc_id=doc_id,
                                                       kinds='heading')
 
             # Reorganize the document and heading labels such that the headings
             # are between documents
+            current_doc_id = self.context['doc_id']
             merged_labels = []
             for document_label in document_labels:
                 merged_labels.append(document_label)
@@ -175,7 +174,7 @@ class Toc(Tag):
                 # current document
                 if ('expanded' in self.toc_kind or
                    ('abbreviated' in self.toc_kind and
-                    document_label.doc_id == doc_id)):
+                    document_label.doc_id == current_doc_id)):
 
                     merged_labels += [l for l in heading_labels
                                       if l.doc_id == document_label.doc_id]

@@ -113,6 +113,7 @@ def test_toc_absolute_and_relative_links(tmpdir):
   </li>
 </ul>
 """
+    print(toc.html)
     assert toc.html == key
 
     # 2. Test with relative links
