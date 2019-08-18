@@ -56,7 +56,7 @@ def test_document_toc(tmpdir):
     assert toc_tag.name == 'toc'
     key = """<ul class="toc-level-1">
   <li>
-    <a href="#doc:file-dm" class="ref">My first title</a>
+    <a href="" class="ref">My first title</a>
   </li>
 </ul>
 """
@@ -210,11 +210,9 @@ def test_document_tree_updates_document_labels(tmpdir, wait):
     doc_list = doc.documents_list()
     assert len(doc_list) == 3
 
-    # There should be 3 labels, one for each document. However, they haven't
-    # been registered yet since this is done when we get labels. The only
-    # document whose ast has been reloaded and the labels have been reset is
-    # document 1 so there should only be collected labels for this document.
-    assert len(label_manager.collected_labels) == 1
+    # There should be 3 labels, one for each document. Changing the root
+    # document reloads all documents
+    assert len(label_manager.collected_labels) == 3
 
     assert doc_list[0].src_filepath == src_filepath1
     assert doc_list[1].src_filepath == src_filepath3

@@ -21,6 +21,7 @@ class DocumentContext(BaseContext):
 
     #: Required entries in the document context dict to be a valid document
     #: context--as well as their matching type to be checked.
+    #:
     #: - targets aren't listed as a list or set entry because mutables,
     #:   like lists, are appended to, instead of replaced. Targets should
     #:   by replaced by values in the header.
@@ -59,10 +60,6 @@ class DocumentContext(BaseContext):
 
         #: The doc_id is unique for each document
         'doc_id',
-
-        #: The toc entry is constructed for each document, and it should be
-        #: unique to the document
-        'toc',
 
         # The modification time is the last time a document was changed. This
         # should be different for each document and subdocument. Note that the
@@ -103,6 +100,18 @@ class DocumentContext(BaseContext):
         # entry in the paths list without creating a new list object.
         'paths'
         }
+
+    # Preload the following entries
+    # The ProcessContextHeaders processor first reads the context from the
+    # header of the document and loads context information from additional
+    # context files in the templates before loading these values in the document
+    # context. The following entries are loaded in the context before the
+    # additional context files from templates are loaded.
+    preload = {
+        'renderers',
+        'template',
+        'targets',
+    }
 
     def __init__(self, document, *args, **kwargs):
         self.document = document

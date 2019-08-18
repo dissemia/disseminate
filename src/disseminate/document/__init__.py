@@ -42,7 +42,10 @@ Definitions
    the root document.
 3. *doc_id*. The document identifier for a document. It is unique for a document
    in a project.
+
+
 """
 
-from .document import Document, DocumentError
+from .document import Document
 from .document_context import DocumentContext
+from . import exceptions

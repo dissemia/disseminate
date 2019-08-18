@@ -109,7 +109,6 @@ The dependencies are only required depending on which features are used.
    :hidden:
    :caption: Development
 
-   development/development
    api/index
    development/releasenotes
 

@@ -84,13 +84,17 @@ default_context = {
     'targets': 'html',
     'paths': [],
 
+    # Entries for relative links to documents
+    'prev': '',
+    'next': '',
+
     # Options related to links
     'relative_links': True,
     'base_url': '/{target}/{subpath}',
 
     # Process tags for the following entries in a context
     # (see processors/process_context_tags.py)
-    'process_context_tags': {body_attr, 'toc'},
+    'process_context_tags': {body_attr, 'toc', 'prev', 'next'},
 
     # Process paragraphs for tags with the following names
     # (see tags/paragraphs.py)
@@ -149,9 +153,8 @@ default_context = {
         'subsection': {'subsubsection'},
     },
 
-
     # The following tags are unavailable. See
-    # disseminate.tags.factory.TagFactory
+    # disseminate.tags.factory.TagFactory.
     'inactive_tags': set(),
 
     # Macros are string entries that aren't processed into tags and asts.

@@ -51,4 +51,6 @@ stages of publication so that the targets have the final desired appearance.
    asy
    figs
    caption
+   toc
+   navigation
    collection

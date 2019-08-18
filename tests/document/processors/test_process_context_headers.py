@@ -2,6 +2,7 @@
 Test the process_header processors.
 """
 import disseminate.document.processors as pr
+from disseminate import settings
 
 
 def test_process_context_header(context_cls):
@@ -20,6 +21,7 @@ def test_process_context_header(context_cls):
     # Setup a context class with a targets attribute
     class SubContext(context_cls):
         targets = ['.html']
+        preload = {'targets', 'renderers', 'template'}
 
     # Load the header into a context
     context = SubContext(test=header)
@@ -84,3 +86,67 @@ def test_process_context_header_additional_context_files(doc):
     # Consequently, 'value' should equal 'b'. The parent_context's value should
     # still be 'a'
     assert doc.context['value'] == 'b'
+
+
+def test_process_context_header_precedence(doctree):
+    """Test the precedence of context entries between the default context,
+    template context and document context."""
+
+    # Load the 3 documents from the doctree
+    doc1, doc2, doc3 = doctree.documents_list()
+
+    # 1. Take an attribute, and it should match the default context
+    for doc in (doc1, doc2, doc3):
+        assert (doc.context['inactive_tags'] ==
+                settings.default_context['inactive_tags'])
+
+    # 2. Now add a template with a context.txt
+    src_path = doc1.src_filepath.parent
+    template_filepath = src_path / 'test.html'
+    context_filepath = src_path / 'context.txt'
+
+    template_filepath.write_text("""
+    <html>
+    </html>
+    """)
+    context_filepath.write_text("""
+    inactive_tags: chapter
+    attr: string
+    """)
+    doc1.src_filepath.write_text("""
+    ---
+    template: test
+    ---
+    """)
+    for doc in (doc1, doc2, doc3):
+        doc.load()
+
+    assert doc1.context['template'] == 'test'
+    assert doc1.context['inactive_tags'] == {'chapter'}
+    assert doc2.context['inactive_tags'] == {'chapter'}
+    assert doc3.context['inactive_tags'] == {'chapter'}
+    assert doc1.context['attr'] == 'string'
+    assert doc2.context['attr'] == 'string'
+    assert doc3.context['attr'] == 'string'
+
+    # 3. Now write the attribute in the root document (doc1) and it should
+    #    override the value for the document and subdocuments
+    doc1.src_filepath.write_text("""
+    ---
+    template: test
+    inactive_tags: title
+    attr: new string
+    ---
+    """)
+    for doc in (doc1, doc2, doc3):
+        doc.load()
+
+    assert doc1.context['inactive_tags'] == {'title', 'chapter'}  # appended
+    assert doc2.context['inactive_tags'] == {'title', 'chapter'}
+    assert doc3.context['inactive_tags'] == {'title', 'chapter'}
+    assert doc1.context['attr'] == 'new string'  # replaced
+    assert doc2.context['attr'] == 'new string'
+    assert doc3.context['attr'] == 'new string'
+
+
+
