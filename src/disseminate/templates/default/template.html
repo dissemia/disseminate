@@ -60,13 +60,27 @@
     {%- if title %}<h1>{{ title }}</h1>{% endif %}
     {%- if toc %}{{ toc.html }}{% endif %}
     </div>
-{% endblock %}
+{%- endblock %}
 </div>
 <body>
   <article>
     {%- block body %}
     {{ body.html }}
-    {% endblock %}
+    {%- endblock %}
+    {%- block footer %}
+      {%- block footer_nav %}
+        {%- if prev %}
+        <span class="prev">
+          {{ prev.html }}
+        </span>
+        {%- endif %}
+        {%- if next %}
+        <span class="next">
+          {{ next.html }}
+        </span>
+        {%- endif %}
+      {%- endblock %}
+    {%- endblock %}
   </article>
 </body>
 </html>
