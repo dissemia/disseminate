@@ -201,7 +201,7 @@ class LabelManager(object):
 
         return existing_labels.pop()
 
-    def get_labels(self, context=None, kinds=None):
+    def get_labels(self, context=None, doc_id=None, kinds=None):
         """Return a filtered and sorted list of all labels for the given
         document.
 
@@ -213,6 +213,9 @@ class LabelManager(object):
             The context for the document whose labels are being retrieved.
             If None is specified, then all labels from all documents in a
             project will be selected.
+        doc_id : Optional[str]
+            If specified, only label for the given document id will be returned.
+            (This is used an alternative to the context.
         kinds : Optional[Union[str, List[str], Tuple[str]]
             If None, all label kinds are returned.
             If string, all labels matching the kind string will be returned.
@@ -227,12 +230,13 @@ class LabelManager(object):
         # Make sure the labels are registered
         self.register_labels()
 
-        # Get the doc_id from the document's context
-        doc_id = context.get('doc_id', None) if context is not None else None
+        # Get the doc_id from the document's context, if a doc_id was not
+        # specified
+        if doc_id is None and context is not None:
+            doc_id = context.get('doc_id', None)
 
         # Filter labels by document.
-        if context is not None and 'doc_id' in context:
-            doc_id = context['doc_id']
+        if doc_id is not None:
             document_labels = [l for l in self.labels if l.doc_id == doc_id]
         else:
             document_labels = self.labels

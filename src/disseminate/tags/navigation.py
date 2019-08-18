@@ -5,8 +5,10 @@ from .tag import Tag
 from .ref import Ref
 
 
-def relative_doc_label(context, relative_position, target=None):
-    """Find a document label relative to the specified context's document.
+def relative_label(context, relative_position, top_header_label=True,
+                   target=None):
+    """Find a label for a document relative to the document specified by the
+    given context.
 
     Parameters
     ----------
@@ -17,6 +19,9 @@ def relative_doc_label(context, relative_position, target=None):
         ex: -1 is the previous document
             0 is the current document
             1 is the next document
+    top_header_label : Optional[bool]
+        If True, return the first header label instead of the document label.
+        Otherwise, the document label is returned.
     target : Optional[str]
         If specified, only documents with the given target are included in
         the document list.
@@ -63,7 +68,18 @@ def relative_doc_label(context, relative_position, target=None):
                    len(doc_labels) > other_doc_index >= 0 else
                    None)
 
-    return other_label
+    # Return the document label, if the top header label is not requested,
+    # or None if the other_label was not found
+    if not top_header_label or other_label is None:
+        return other_label
+
+    # Try fetching the top header label instead of the document label
+    other_doc_id = other_label.doc_id
+    other_header_labels = label_manager.get_labels(doc_id=other_doc_id,
+                                                   kinds='heading')
+    return (other_header_labels[0]
+            if len(other_header_labels) > 0 else other_label)
+
 
 
 class Next(Ref):
@@ -89,9 +105,9 @@ class Next(Ref):
 
     def html_fmt(self, content=None, level=1):
         # Get the label_id for the next document
-        next_label = relative_doc_label(context=self.context,
-                                        relative_position=1,
-                                        target='.html')
+        next_label = relative_label(context=self.context,
+                                    relative_position=1,
+                                    target='.html')
 
         if next_label is not None:
             self.label_id = next_label.id
@@ -123,9 +139,9 @@ class Prev(Ref):
 
     def html_fmt(self, content=None, level=1):
         # Get the label_id for the next document
-        prev_label = relative_doc_label(context=self.context,
-                                        relative_position=-1,
-                                        target='.html')
+        prev_label = relative_label(context=self.context,
+                                    relative_position=-1,
+                                    target='.html')
 
         if prev_label is not None:
             self.label_id = prev_label.id
