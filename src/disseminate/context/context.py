@@ -340,11 +340,14 @@ class BaseContext(dict):
         to nested mutables, like lists and dicts.
 
         1. New entries from 'changes' are copied
+
            a. If the change's value has a 'copy' method, a copy is created
               with that method
            b. Otherwise, the value is copied directly
+
         2. Existing entries are converted to the type of the value in this
            context dict.
+
            a. Lists, sets and dicts: A copy of the changes value is converted to
               the respective type and appended to this context dict's list, set
               or dict.
