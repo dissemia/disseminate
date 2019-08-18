@@ -1,13 +1,11 @@
 CLI
 ===
 
-.. automodule:: disseminate.checkers
+.. automodule:: disseminate.cli
 
 .. toctree::
    :maxdepth: 2
-   :caption: Checkers
 
    main
-   checkers
-   processors
+   setup
    term

@@ -1,6 +1,20 @@
 Release Notes
 =============
 
+0.16
+----
+
+Backend
+~~~~~~~
+
+1. *Webserver*. Implement sanic for preview server.
+2. *Heritable tags*. Allow tags to be copied and inherited between documents.
+   This enables ``@toc`` tags and navigation tags to be shared between a
+   document and its subdocuments.
+3. *Navigation tags*. Add navigations tags ``@prev`` and ``@next`` to add html
+   links for the previous or next page. These are available as the ``prev`` and
+   ``next`` entries in the context.
+
 0.15
 ----
 

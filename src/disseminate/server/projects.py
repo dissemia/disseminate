@@ -1,13 +1,11 @@
 """
 Functions to load projects in a session.
 """
-import flask.globals as gbl
-
 from .store import store
 from ..document import Document
 
 
-def load_projects():
+def load_projects(request):
     """Retrieve the root documents from the store.
 
     Returns
@@ -16,7 +14,7 @@ def load_projects():
         The loaded root documents.
     """
     # Get the session and config
-    config = gbl.current_app.config
+    config = request.app.config
 
     # Make sure the project list is loaded
     if 'root_documents' not in store:
@@ -36,7 +34,7 @@ def load_projects():
     return store['root_documents']
 
 
-def target_roots():
+def target_roots(request):
     """Retrieve the target root paths from the store.
 
     Returns
@@ -45,6 +43,6 @@ def target_roots():
         The target root paths for the loaded root documents.
     """
     if 'target_roots' not in store:
-        load_projects()
+        load_projects(request)
 
     return store['target_roots']

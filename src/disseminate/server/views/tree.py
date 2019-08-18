@@ -3,10 +3,8 @@ View for the document listing tree.
 """
 from datetime import datetime
 
-from flask import render_template, abort
-from jinja2 import TemplateNotFound
-
-from .blueprints import editor
+from .blueprints import tree
+from ..templates import render_template
 from ..projects import load_projects
 
 
@@ -52,15 +50,12 @@ def tree_to_dict(docs, level=1):
     return doc_list
 
 
-@editor.route('/')
-@editor.route('/index.html')
-@editor.route('/tree.html')
-def render_tree():
+@tree.route('/')
+@tree.route('/index.html')
+@tree.route('/tree.html')
+async def render_tree(request):
     """Render the view for the source and target document files."""
     # Load the documents
-    docs = load_projects()
-
-    try:
-        return render_template('server/tree.html', docs=tree_to_dict(docs))
-    except TemplateNotFound:
-        abort(404)
+    docs = load_projects(request)
+    return render_template('tree.html', request=request,
+                           docs=tree_to_dict(docs))

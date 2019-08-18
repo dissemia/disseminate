@@ -1,10 +1,8 @@
 """
 View for checkers.
 """
-from flask import render_template, abort
-from jinja2 import TemplateNotFound
-
-from .blueprints import editor
+from .blueprints import system
+from ..templates import render_template
 from ...checkers import Checker, All, Any, Optional
 
 
@@ -58,8 +56,8 @@ def checker_to_dict(item, required=True, level=1):
     return d
 
 
-@editor.route('/check.html')
-def render_checkers():
+@system.route('/check.html')
+async def render_checkers(request):
     """Render the view for software dependency checkers."""
     # Get the checkers
     checker_subclses = Checker.checker_subclasses()
@@ -71,7 +69,5 @@ def render_checkers():
     # Convert the checkers to a list of dicts
     checkers = map(checker_to_dict, checkers)
 
-    try:
-        return render_template('server/checkers.html', checkers=checkers)
-    except TemplateNotFound:
-        abort(404)
+    return render_template('checkers.html', request=request,
+                           checkers=checkers)

@@ -32,7 +32,7 @@ def test_toc_changes(doc):
 
     key = """<ul class="toc-level-1">
   <li>
-    <a href="#doc:test-dm" class="ref">my first file</a>
+    <a href="" class="ref">my first file</a>
   </li>
   <ul class="toc-level-2">
     <li>
@@ -60,7 +60,7 @@ def test_toc_changes(doc):
               attributes='', context=doc.context)
     key = """<ul class="toc-level-1">
   <li>
-    <a href="#doc:test-dm" class="ref">my first file</a>
+    <a href="" class="ref">my first file</a>
   </li>
   <ul class="toc-level-2">
     <li>
@@ -101,7 +101,7 @@ def test_toc_absolute_and_relative_links(tmpdir):
               attributes='', context=doc.context)
     key = """<ul class="toc-level-1">
   <li>
-    <a href="#doc:test1-dm" class="ref">test1</a>
+    <a href="" class="ref">test1</a>
   </li>
   <ul class="toc-level-2">
     <li>
@@ -109,10 +109,11 @@ def test_toc_absolute_and_relative_links(tmpdir):
     </li>
   </ul>
   <li>
-    <a href="/html/test2.html#doc:test2-dm" class="ref">test2</a>
+    <a href="/html/test2.html" class="ref">test2</a>
   </li>
 </ul>
 """
+    print(toc.html)
     assert toc.html == key
 
     # 2. Test with relative links
@@ -129,7 +130,7 @@ def test_toc_absolute_and_relative_links(tmpdir):
               attributes='', context=doc.context)
     key = """<ul class="toc-level-1">
   <li>
-    <a href="#doc:test1-dm" class="ref">test1</a>
+    <a href="" class="ref">test1</a>
   </li>
   <ul class="toc-level-2">
     <li>
@@ -137,7 +138,7 @@ def test_toc_absolute_and_relative_links(tmpdir):
     </li>
   </ul>
   <li>
-    <a href="test2.html#doc:test2-dm" class="ref">test2</a>
+    <a href="test2.html" class="ref">test2</a>
   </li>
 </ul>
 """
@@ -164,14 +165,14 @@ def test_toc_absolute_and_relative_links(tmpdir):
     # Match the default toc (format: 'collapsed')
     key = """<ul class="toc-level-1">
   <li>
-    <a href="#doc:file1-dm" class="ref">file1</a>
+    <a href="" class="ref">file1</a>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/html/sub/file21.html#doc:sub-file21-dm" class="ref">sub/file21</a>
+      <a href="/html/sub/file21.html" class="ref">sub/file21</a>
     </li>
     <li>
-      <a href="/html/sub/file22.html#doc:sub-file22-dm" class="ref">sub/file22</a>
+      <a href="/html/sub/file22.html" class="ref">sub/file22</a>
     </li>
   </ul>
 </ul>
@@ -189,19 +190,64 @@ def test_toc_absolute_and_relative_links(tmpdir):
     # Match the default toc (format: 'collapsed')
     key = """<ul class="toc-level-1">
   <li>
-    <a href="#doc:file1-dm" class="ref">file1</a>
+    <a href="" class="ref">file1</a>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="sub/file21.html#doc:sub-file21-dm" class="ref">sub/file21</a>
+      <a href="sub/file21.html" class="ref">sub/file21</a>
     </li>
     <li>
-      <a href="sub/file22.html#doc:sub-file22-dm" class="ref">sub/file22</a>
+      <a href="sub/file22.html" class="ref">sub/file22</a>
     </li>
   </ul>
 </ul>
 """
     assert toc.html == key
+
+
+def test_toc_levels_html(doc):
+    """Test the correct assignment of toc-levels."""
+
+    # 1. Setup a test document with a @toc tag in the body
+    markup = """
+    ---
+    title: my first file
+    relative_links: True
+    ---
+    @title
+    @chapter{My first chapter}
+    @section[id=section1]{My first section}
+    @subsection{My first sub-section}
+    @subsubsection{My first sub-sub-section}
+    
+    @toc{all headings expanded}
+    """
+    doc.src_filepath.write_text(strip_leading_space(markup))
+
+    # Create the document and render
+    doc.render()
+
+    # Retrieve the rendered file and check its contents
+    html_filepath = doc.targets['.html']
+    html = html_filepath.read_text()
+
+    # Check the toc
+    key = ('<ul class="toc-level-1">'
+             '<li><a href="#title:test-dm-my-first-file" class="ref">my first file</a></li>'
+             '<ul class="toc-level-2">'
+               '<li><a href="#ch:test-dm-my-first-chapter" class="ref">Chapter 1. My first chapter</a></li>'
+               '<ul class="toc-level-3">'
+                 '<li><a href="#section1" class="ref">My first section</a></li>'
+                 '<ul class="toc-level-4">'
+                   '<li><a href="#subsec:test-dm-my-first-sub-section" class="ref">My first sub-section</a></li>'
+                   '<ul class="toc-level-5">'
+                     '<li><a href="#subsubsec:test-dm-my-first-sub-sub-section" class="ref">My first sub-sub-section</a></li>'
+                   '</ul>'
+                 '</ul>'
+               '</ul>'
+             '</ul>'
+           '</ul>')
+    assert key in html
 
 
 # html tests
@@ -223,7 +269,7 @@ def test_toc_heading_html(tmpdir):
     doc.context['base_url'] = '/{target}/{subpath}'
     doc.context['relative_links'] = False
 
-    # Create a toc for all headings
+    # Create a toc for all headings and doc1
     toc = Toc(name='toc', content='all headings', attributes='',
               context=doc.context)
 
@@ -272,12 +318,13 @@ def test_toc_heading_html(tmpdir):
     src_filepath = SourcePath(project_root='tests/tags/toc_example2',
                               subpath='file1.dm')
     doc = Document(src_filepath, target_root)
+    doc2, doc3 = doc.documents_list(only_subdocuments=True)
 
     # Make sure the 'base_url' entry matches a basic format.
     doc.context['base_url'] = '/{target}/{subpath}'
     doc.context['relative_links'] = False
 
-    # Create a toc for all headings
+    # Create a toc for all headings and doc (the first document)
     toc = Toc(name='toc', content='all headings', attributes='',
               context=doc.context)
 
@@ -312,7 +359,34 @@ def test_toc_heading_html(tmpdir):
 """
     assert toc.html == key
 
-    # 3. Test with relative links
+    # Create a toc for all headings and doc2
+    # Make sure the 'base_url' entry matches a basic format.
+    doc2.context['base_url'] = '/{target}/{subpath}'
+    doc2.context['relative_links'] = False
+
+    toc = Toc(name='toc', content='all headings', attributes='',
+              context=doc2.context)
+
+    key = """<ul class="toc-level-1">
+  <li>
+    <a href="/html/file1.html#heading-1" class="ref">Heading 1</a>
+  </li>
+  <li>
+    <a href="#heading-2" class="ref">Heading 2</a>
+  </li>
+  <ul class="toc-level-2">
+    <li>
+      <a href="#subheading-2" class="ref">sub-Heading 2</a>
+    </li>
+  </ul>
+  <li>
+    <a href="/html/file3.html#heading-3" class="ref">Heading 3</a>
+  </li>
+</ul>
+"""
+    assert toc.html == key
+
+    # 3. Test with relative links and doc1
     doc.context['relative_links'] = True
     toc = Toc(name='toc', content='all headings', attributes='',
               context=doc.context)
@@ -327,6 +401,29 @@ def test_toc_heading_html(tmpdir):
   <ul class="toc-level-2">
     <li>
       <a href="file2.html#subheading-2" class="ref">sub-Heading 2</a>
+    </li>
+  </ul>
+  <li>
+    <a href="file3.html#heading-3" class="ref">Heading 3</a>
+  </li>
+</ul>
+"""
+    assert toc.html == key
+
+    # Test with relative links and doc2
+    doc2.context['relative_links'] = True
+    toc = Toc(name='toc', content='all headings', attributes='',
+              context=doc2.context)
+    key = """<ul class="toc-level-1">
+  <li>
+    <a href="file1.html#heading-1" class="ref">Heading 1</a>
+  </li>
+  <li>
+    <a href="#heading-2" class="ref">Heading 2</a>
+  </li>
+  <ul class="toc-level-2">
+    <li>
+      <a href="#subheading-2" class="ref">sub-Heading 2</a>
     </li>
   </ul>
   <li>
@@ -359,14 +456,14 @@ def test_toc_document_html(tmpdir):
     # Match the default toc (format: 'collapsed')
     key = """<ul class="toc-level-1">
   <li>
-    <a href="#doc:file1-dm" class="ref">file1</a>
+    <a href="" class="ref">file1</a>
   </li>
   <ul class="toc-level-2">
     <li>
-      <a href="/html/sub/file21.html#doc:sub-file21-dm" class="ref">sub/file21</a>
+      <a href="/html/sub/file21.html" class="ref">sub/file21</a>
     </li>
     <li>
-      <a href="/html/sub/file22.html#doc:sub-file22-dm" class="ref">sub/file22</a>
+      <a href="/html/sub/file22.html" class="ref">sub/file22</a>
     </li>
   </ul>
 </ul>
@@ -383,7 +480,7 @@ def test_toc_document_html(tmpdir):
               context=doc.context)
     key = """<ul class="toc-level-1">
   <li>
-    <a href="#doc:file1-dm" class="ref">file1</a>
+    <a href="" class="ref">file1</a>
   </li>
   <ul class="toc-level-2">
     <li>
@@ -421,10 +518,10 @@ def test_toc_document_html(tmpdir):
     </li>
   </ul>
   <li>
-    <a href="/html/sub/file21.html#doc:sub-file21-dm" class="ref">sub/file21</a>
+    <a href="/html/sub/file21.html" class="ref">sub/file21</a>
   </li>
   <li>
-    <a href="/html/sub/file22.html#doc:sub-file22-dm" class="ref">sub/file22</a>
+    <a href="/html/sub/file22.html" class="ref">sub/file22</a>
   </li>
 </ul>
 """
@@ -436,7 +533,7 @@ def test_toc_document_html(tmpdir):
 
     key = """<ul class="toc-level-1">
   <li>
-    <a href="#doc:file1-dm" class="ref">file1</a>
+    <a href="" class="ref">file1</a>
   </li>
   <ul class="toc-level-2">
     <li>
@@ -474,10 +571,10 @@ def test_toc_document_html(tmpdir):
     </li>
   </ul>
   <li>
-    <a href="/html/sub/file21.html#doc:sub-file21-dm" class="ref">sub/file21</a>
+    <a href="/html/sub/file21.html" class="ref">sub/file21</a>
   </li>
   <li>
-    <a href="/html/sub/file22.html#doc:sub-file22-dm" class="ref">sub/file22</a>
+    <a href="/html/sub/file22.html" class="ref">sub/file22</a>
   </li>
 </ul>
 """
@@ -490,7 +587,7 @@ def test_toc_document_html(tmpdir):
     # Match the default toc (collapsed)
     key = """<ul class="toc-level-1">
   <li>
-    <a href="#doc:file1-dm" class="ref">file1</a>
+    <a href="" class="ref">file1</a>
   </li>
 </ul>
 """

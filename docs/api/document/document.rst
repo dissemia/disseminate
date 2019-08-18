@@ -2,6 +2,6 @@ Document
 --------
 
 .. automodule:: disseminate.document.document
-    :members: DocumentError, Document
+    :members: Document
     :imported-members:
     :show-inheritance:

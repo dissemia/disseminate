@@ -1,5 +1,5 @@
 """
-Utilities for processors to the CLI.
+Command-line interface tools for Processors
 """
 from textwrap import TextWrapper
 

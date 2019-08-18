@@ -3,6 +3,7 @@ body {
     margin-left: auto;
     margin-right: auto;
     margin-top: 3.0rem;
+    padding-bottom: 3rem;
     font-size: 1.2rem;
     font-family: Palatino, serif;
     line-height: 1.7;
@@ -40,6 +41,10 @@ img {
 
 sub,sup {
     font-size: 70%;
+}
+
+footer {
+  padding-bottom: 3rem;
 }
 
 /* Table of Contents */

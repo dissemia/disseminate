@@ -9,19 +9,19 @@
 <h1 class="menu-title">Disseminate Menu</h1>
 <ul class="menu-listing">
   <li class="menu-item">
-    <a href="/tree.html">
+    <a href="{{ url_for('tree.render_tree') }}">
       <img class="icon" src="/media/icons/doctree.svg" alt="doc tree icon" />
       Document Listing
     </a>
   </li>
   <li class="menu-item">
-    <a href="/check.html">
+    <a href="{{ url_for('system.render_checkers') }}">
       <img class="icon" src="/media/icons/check.svg" alt="check icon" />
       Check Dependencies
     </a>
   </li>
   <li class="menu-item">
-    <a href="/processors.html">
+    <a href="{{ url_for('system.render_processors') }}">
       <img class="icon" src="/media/icons/process.svg" alt="check icon" />
       List Processors
     </a>
