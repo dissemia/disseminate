@@ -59,10 +59,11 @@ def test_jinjarenderer_paths(context_cls):
 
     # Check the template paths
     filepaths = renderer.template_filepaths()
-    assert len(filepaths) == 3
+    assert len(filepaths) == 4
     assert filepaths[0].match('disseminate/templates/default/template.html')
-    assert filepaths[1].match('disseminate/templates/default/template.tex')
-    assert filepaths[2].match('disseminate/templates/default/template.txt')
+    assert filepaths[1].match('disseminate/templates/default/menu.html')
+    assert filepaths[2].match('disseminate/templates/default/template.tex')
+    assert filepaths[3].match('disseminate/templates/default/template.txt')
 
     # Check the paths
     paths = renderer.paths()
@@ -96,11 +97,13 @@ def test_jinjarenderer_paths(context_cls):
     # Check the template paths. The tufte book template only has '.tex' and
     # '.html' targets
     filepaths = renderer.template_filepaths()
-    assert len(filepaths) == 4
+    assert len(filepaths) == 6
     assert filepaths[0].match('disseminate/templates/books/tufte/template.html')
     assert filepaths[1].match('disseminate/templates/default/template.html')
-    assert filepaths[2].match('disseminate/templates/books/tufte/template.tex')
-    assert filepaths[3].match('disseminate/templates/default/template.tex')
+    assert filepaths[2].match('disseminate/templates/default/menu.html')
+    assert filepaths[3].match('disseminate/templates/default/nav.html')
+    assert filepaths[4].match('disseminate/templates/books/tufte/template.tex')
+    assert filepaths[5].match('disseminate/templates/default/template.tex')
 
 
 def test_jinjarenderer_context_filepaths(context_cls):
