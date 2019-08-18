@@ -619,7 +619,7 @@ class Document(object):
         # 3. A render is required if any of the context entries need to be
         #    updated.
         entry_mtimes = [e.mtime for e in self.context.values()
-                        if hasattr(e, 'mtime')]
+                        if hasattr(e, 'mtime') and e.mtime is not None]
         max_entry_mtime = max(entry_mtimes) if len(entry_mtimes) > 0 else None
         if max_entry_mtime is not None and target_mtime < max_entry_mtime:
             logging.debug("Render required for {}:  The tags reference a "
