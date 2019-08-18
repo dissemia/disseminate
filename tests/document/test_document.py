@@ -6,7 +6,7 @@ from shutil import copy
 
 import pytest
 
-from disseminate.document import Document, DocumentError
+from disseminate.document import Document, exceptions
 from disseminate.paths import SourcePath, TargetPath
 from disseminate.utils.tests import strip_leading_space
 from disseminate import settings
@@ -595,7 +595,7 @@ def test_document_render(tmpdir, target):
     assert temp_file.read_text() == render_file.read_text()
 
     # An invalid file raises an error
-    with pytest.raises(DocumentError):
+    with pytest.raises(exceptions.DocumentException):
         doc = Document("tests/document/missing.dm")
 
 

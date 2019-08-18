@@ -24,7 +24,8 @@ def test_label_manager_basic_labels(doc):
 
     # Getting labels returns only the document label and resets the
     # collected labels
-    labels = label_man.get_labels(context=doc.context)  # register labels
+    doc_id = doc.doc_id
+    labels = label_man.get_labels(doc_id=doc_id)  # register labels
     assert doc.src_filepath not in label_man.collected_labels
     assert len(labels) == 3
 
@@ -64,9 +65,9 @@ def test_label_manager_basic_labels(doc):
 
     # Getting the labels will register the new labels, removing the old labels,
     # and leaving the 2 new labels
-    labels = label_man.get_labels(context=doc.context)  # registers labels
+    labels = label_man.get_labels(doc_id=doc_id)  # registers labels
     assert len(labels) == 2
-    labels = label_man.get_labels(context=doc.context)
+    labels = label_man.get_labels(doc_id=doc_id)
     assert len(labels) == 2
 
     # Make sure the labels are properly assigned: 2 ContentLabels. The
@@ -150,11 +151,16 @@ def test_label_manager_get_labels(doctree):
     assert len(labels) == 5
 
     # Get labels for each of the documents document
-    labels1 = label_man.get_labels(context=doc1.context)
+    doc_id1 = doc1.doc_id
+    labels1 = label_man.get_labels(doc_id=doc_id1)
     assert len(labels1) == 3
-    labels2 = label_man.get_labels(context=doc2.context)
+
+    doc_id2 = doc2.doc_id
+    labels2 = label_man.get_labels(doc_id=doc_id2)
     assert len(labels2) == 1
-    labels3 = label_man.get_labels(context=doc3.context)
+
+    doc_id3 = doc3.doc_id
+    labels3 = label_man.get_labels(doc_id=doc_id3)
     assert len(labels3) == 1
 
     # Filter by kind

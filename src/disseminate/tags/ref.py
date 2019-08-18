@@ -4,8 +4,8 @@ The Ref tag to reference captions and other labels.
 from .tag import Tag
 from .exceptions import assert_content_str
 from .utils import content_to_str, format_content
+from ..label_manager.types import DocumentLabel
 from ..formats import html_tag, tex_cmd
-from ..utils.classes import weakattr
 
 
 class RefError(Exception):
@@ -18,17 +18,22 @@ class Ref(Tag):
 
     Attributes
     ----------
-    doc_id : Optional[str]
+    doc_id : str
         The doc_id for the document that owns the label referenced. This
         might be different to the doc_id listed in the context if a reference
         is made to a label in another document.
+    label_id : str
+        The id of the label referenced by this tag.
+
+    .. note:: The ref tag takes the label id as the content. If the label is
+              not found, a label manager exception is raised.
+              (:exc:`.label_manager.exceptions.LabelNotFound`)
     """
 
     active = True
 
     doc_id = None
     label_id = None
-    label_manager = weakattr()
 
     def __init__(self, name, content, attributes, context):
         assert_content_str(content)
@@ -38,15 +43,15 @@ class Ref(Tag):
         # Set the label_id and doc_id
         self.label_id = self.content.strip()
 
-        if 'label_manager' in context:
-            self.label_manager = context['label_manager']
-
     @property
     def label(self):
         """Retrieve the label for this ref tag."""
         assert self.context.is_valid('label_manager')
         label_manager = self.context['label_manager']
-        return label_manager.get_label(id=self.label_id)
+        if self.label_id is not None:
+            return label_manager.get_label(id=self.label_id)
+        else:
+            return None
 
     @property
     def document(self):
@@ -90,9 +95,30 @@ class Ref(Tag):
         else:
             return None
 
-    @property
-    def url(self):
-        """The html url for the label referenced by this tag."""
+    def url(self, target='.html', include_html_anchor=True):
+        """The url path for the document referenced by the label for this tag.
+
+        Parameters
+        ----------
+        target : Optional[str]
+            The target extension for the target file.
+            ex: '.html' or '.tex'
+        include_html_anchor : Optional[bool]
+            If True (default), the html link anchor will be appended to the
+            url path.
+
+        Returns
+        -------
+        url_path : str
+            The url path for the document owning the label referenced by this
+            tag.
+        """
+        context = self.context
+        assert context.is_valid('doc_id')
+
+        # Format the target string
+        target = (target if target.startswith('.') else '.' + target)
+
         # Get the doc_ids for the document that owns this tag (doc_id) and
         # the document that owns the label (other_doc_id). See if they're the
         # same document, in which case an internal link is returned.
@@ -105,15 +131,19 @@ class Ref(Tag):
                    "'{}'")
             raise RefError(msg.format(self))
         elif doc_id is not None and doc_id == other_doc_id:
-            return '#' + label.id
+            return ('#' + label.id
+                    if 'html' in target and include_html_anchor
+                    else '')
 
         # In this case, the label and tag documents are different. Return a
         # link to the label's document.
         document = self.document
-        target_filepath = document.target_filepath('.html')
+        target_filepath = document.target_filepath(target)
         link = target_filepath.get_url(context=self.context)
 
-        return link + '#' + label.id
+        return (link + '#' + label.id
+                if 'html' in target and include_html_anchor
+                else link)
 
     @property
     def mtime(self):
@@ -125,7 +155,7 @@ class Ref(Tag):
 
     def default_fmt(self, content=None):
         # Get the label tag format
-        label_manager = self.label_manager
+        label_manager = self.context.get('label_manager')
         context = self.context
         label = self.label
 
@@ -141,9 +171,10 @@ class Ref(Tag):
             return ''
 
     def tex_fmt(self, content=None, mathmode=False, level=1):
-        label_manager = self.label_manager
+        label_manager = self.context.get('label_manager')
         label = self.label
         context = self.context
+
         if all(i is not None for i in (label_manager, label, context)):
             # Retrieve the format string for the reference
             keys = ('ref', *label.kind)
@@ -164,7 +195,7 @@ class Ref(Tag):
             return ''
 
     def html_fmt(self, content=None, level=1):
-        label_manager = self.label_manager
+        label_manager = self.context.get('label_manager')
         label = self.label
         context = self.context
 
@@ -184,7 +215,12 @@ class Ref(Tag):
 
             attributes = self.attributes.copy()
             attributes['class'] = 'ref'
-            attributes['href'] = self.url
+
+            # setup the url path and include the anchor if the label is not
+            # for a DocumentLabel. DocumentLabels should just point to the
+            # file itself.
+            include_anchor = not isinstance(label, DocumentLabel)
+            attributes['href'] = self.url(include_html_anchor=include_anchor)
 
             # wrap content in 'a' tag
             return html_tag('a', attributes=attributes,

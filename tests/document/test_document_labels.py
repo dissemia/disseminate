@@ -56,7 +56,7 @@ def test_document_toc(tmpdir):
     assert toc_tag.name == 'toc'
     key = """<ul class="toc-level-1">
   <li>
-    <a href="#doc:file-dm" class="ref">My first title</a>
+    <a href="" class="ref">My first title</a>
   </li>
 </ul>
 """
