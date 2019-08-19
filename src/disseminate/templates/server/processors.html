@@ -6,6 +6,7 @@
   <meta name="description" content="Disseminate Processor Listing">
   <meta name="author" content="Disseminate">
   <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato" />
+  <link rel="stylesheet" href="/media/css/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="/media/css/base.css">
   <link rel="stylesheet" type="text/css" href="/media/css/listing.css">
 </head>
@@ -27,12 +28,12 @@
   </ol>
 {%- endmacro %}
 <body>
-{% include "menu.html" %}
-<div class="content">
-  <h1>Processor Listings</h1>
-  <div class="listing">
-    {{ recursetree(processors) }}
-  </div>
+  <div class="container">
+    {% include "default/menu.html" %}
+    <h2>Processor Listings</h2>
+    <div class="listing">
+      {{ recursetree(processors) }}
+    </div>
 </div>
 </body>
 </html>
