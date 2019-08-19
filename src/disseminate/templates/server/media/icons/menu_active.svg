@@ -1,0 +1,17 @@
+<svg version="1.1" id="menu-toggle-active" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+     viewBox="0 0 20 20" width="20" height="20" style="enable-background:new 0 0 20 20;" xml:space="preserve">
+<style type="text/css">
+    .st3{fill:#444444;}
+    .st4{fill:#666666;}
+    .st5{fill:none;stroke:#BBBBBB;stroke-width:2;stroke-linecap:round;stroke-miterlimit:10;}
+</style>
+<g>
+    <path class="st3" d="M1.8,19.5c-0.7,0-1.3-0.6-1.3-1.3V1.8c0-0.7,0.6-1.3,1.3-1.3h16.4c0.7,0,1.3,0.6,1.3,1.3v16.3
+        c0,0.7-0.6,1.3-1.3,1.3H1.8z"/>
+    <path class="st4" d="M18.2,1C18.6,1,19,1.4,19,1.8v16.3c0,0.4-0.4,0.8-0.8,0.8H1.8C1.4,19,1,18.6,1,18.2V1.8C1,1.4,1.4,1,1.8,1
+        H18.2 M18.2,0H1.8C0.8,0,0,0.8,0,1.8v16.3c0,1,0.8,1.8,1.8,1.8h16.4c1,0,1.8-0.8,1.8-1.8V1.8C20,0.8,19.2,0,18.2,0L18.2,0z"/>
+    <line class="st5" x1="4.5" y1="4.5" x2="15.5" y2="4.5"/>
+    <line class="st5" x1="4.5" y1="10" x2="15.5" y2="10"/>
+    <line class="st5" x1="4.5" y1="15.5" x2="15.5" y2="15.5"/>
+</g>
+</svg>

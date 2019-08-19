@@ -8,11 +8,15 @@ from sanic import Blueprint
 
 # Get the path for the templates directory and add it to the bottle
 # TEMPLATE_PATH
-template_path = Path(__file__).parent.parent.parent / 'templates' / 'server'
-static_path = template_path / 'media'
+server_template_path = (Path(__file__).parent.parent.parent / 'templates' /
+                        'server')
+server_static_path = server_template_path / 'media'
 
 #: Blueprint for tree view
 tree = Blueprint('tree', url_prefix='/')
 
 #: Blueprint for system tools
 system = Blueprint('system', url_prefix='/system')
+
+#: Blueprint for pages
+page = Blueprint('page', url_prefix='/')

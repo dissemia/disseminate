@@ -57,5 +57,5 @@ async def render_tree(request):
     """Render the view for the source and target document files."""
     # Load the documents
     docs = load_projects(request)
-    return render_template('tree.html', request=request,
+    return render_template('server/tree.html', request=request,
                            docs=tree_to_dict(docs))

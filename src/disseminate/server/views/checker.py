@@ -69,5 +69,5 @@ async def render_checkers(request):
     # Convert the checkers to a list of dicts
     checkers = map(checker_to_dict, checkers)
 
-    return render_template('checkers.html', request=request,
+    return render_template('server/checkers.html', request=request,
                            checkers=checkers)

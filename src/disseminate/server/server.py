@@ -7,7 +7,7 @@ from sanic import Sanic
 from sanic.response import text
 from sanic.exceptions import FileNotFound
 
-from .views.blueprints import system, tree, static_path
+from .views.blueprints import system, tree, page, server_static_path
 from .. import settings
 
 
@@ -45,10 +45,12 @@ def create_app(project_filenames, out_dir=None, debug=False):
     # Add blueprints
     app.blueprint(tree)
     app.blueprint(system)
+    app.blueprint(page)
 
     # Add the the cwd for static files
-    app.static('/favicon.ico', str(static_path / 'favicon.ico'))
-    app.static('/media', str(static_path))
+    app.static('/favicon.ico', str(server_static_path / 'favicon.ico'))
+    app.static('/media', str(server_static_path))
+    app.static('/', './', pattern="/?.+\.tex", content_type='text/plain')
     app.static('/', './')
 
     # Add exception handlers

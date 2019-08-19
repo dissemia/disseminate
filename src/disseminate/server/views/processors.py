@@ -58,5 +58,5 @@ async def render_processors(request):
     # Convert the processors to a list of dicts
     processors = processors_to_dict(processor_subclses)
 
-    return render_template('processors.html', request=request,
+    return render_template('server/processors.html', request=request,
                            processors=processors)
