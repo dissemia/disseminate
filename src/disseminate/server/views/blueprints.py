@@ -16,3 +16,6 @@ tree = Blueprint('tree', url_prefix='/')
 
 #: Blueprint for system tools
 system = Blueprint('system', url_prefix='/system')
+
+#: Blueprint for pages
+page = Blueprint('page', url_prefix='/')
