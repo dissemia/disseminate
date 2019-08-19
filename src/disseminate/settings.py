@@ -228,14 +228,6 @@ tracked_deps = {
 #: Tags
 #: ----
 
-default_attrs = {'Toc': "bolded='chapter' "
-                        "dotted='section subsection subsubsection'"}
-
-toc_listing = 'toclist'
-toc_pageref_width = '5ex'
-toc_bolded_kinds = ('part', 'chapter')
-toc_dotted_kinds = ('section', 'subsection', 'subsubsection')
-
 empty = tuple()
 
 #: HTML targets
