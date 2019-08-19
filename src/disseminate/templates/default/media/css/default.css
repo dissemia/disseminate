@@ -1,174 +1,216 @@
-body {
-    max-width: 720px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 3.0rem;
-    padding-bottom: 3rem;
-    font-size: 1.2rem;
-    font-family: Palatino, serif;
-    line-height: 1.7;
-    color: #212529;
+/*
+ * CSS for templates/default/template.html
+ */
+
+article {
+  font-size: 14pt;
+  font-family: Palatino, serif;
+  line-height: 22pt;
+  color: #444444;
+  width: 70%;
 }
 
-h1 {
-    display: block;
-    font-size: 1.8rem;
-    margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
-    font-weight: 400;
+h1, h2, h3, h4, h5 {
+  font-family: sans-serif;
 }
 
-h2 {
-    display: block;
-    font-size: 1.6rem;
-    margin-top: 1.25rem;
-    margin-bottom: 0.75rem;
-    font-weight: 400;
-}
-
-h3 {
-    display: block;
-    font-size: 1.2rem;
-    margin-top: 1.0rem;
-    margin-bottom: 0.75rem;
-    font-weight: 400;
-}
-
-img {
-    background-color: white;
-    margin: 0 0.2rem;
-}
-
-sub,sup {
-    font-size: 70%;
-}
-
-footer {
-  padding-bottom: 3rem;
-}
-
-/* Table of Contents */
-.menu {
-  display: none;
-  position: fixed;
-  background: #ffffff;
-  z-index: 2;
-  border: 1px solid #555;
-  border-radius: 5px;
-  padding: 1rem;
-  min-width: 40rem;
-}
-
-.menu h1 {
-    font-size: 16pt;
-    margin-top: 0;
-}
-
-label.menu-toggle {
-  margin-left: -30px;
-  margin-top: 1rem;
-  position: fixed;
+h1, h2 {
   display: block;
-}
-
-input.menu-toggle[type=checkbox] {
-  visibility: hidden;
-  position: absolute;
-}
-
-input.menu-toggle[type=checkbox]:checked ~ .menu {
-  display: block;
-}
-
-.menu-toggle #menu-toggle-inactive {
-  position: absolute;
-}
-
-.menu-toggle #menu-toggle-active {
-  visibility: hidden;
-}
-
-input.menu-toggle[type=checkbox]:checked + .menu-toggle #menu-toggle-inactive {
-  visibility: hidden;
-}
-
-input.menu-toggle[type=checkbox]:checked + .menu-toggle #menu-toggle-active {
-  visibility: visible;
-}
-
-ul.toc-level-1, ul.toc-level-2, ul.toc-level-3, ul.toc-level-4 {
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-
-ul.toc-level-2 {
-  padding-left: 1rem;
-}
-
-ul.toc-level-3 {
-  padding-left: 2rem;
-}
-
-ul.toc-level-4 {
-  padding-left: 3rem;
-}
-
-.toc-level-2 a {
+  margin-top: 1.0em;
+  margin-bottom: 1.0em;
   font-weight: 400;
 }
 
-
-.title {
-    display: block;
-    font-size: 1.8rem;
-    text-align: center;
-    padding: 0 0 1rem 0;
+h1 {
+  font-size: 1.6em;
+  text-align: center;
 }
 
-.title-label {
-    color: #9c0303;
+h2 {
+  font-size: 1.4em;
+  margin-top: 1.0em;
+  margin-bottom: 0.75em;
 }
 
-.title-label::after {
-    content: " - ";
+h2 .label {
+  color: #b50202;
+  font-variant: small-caps;
+  display: block;
+  margin: 1rem;
+  border-bottom: 1pt solid #efc3c3;
 }
 
-span.paragraph {
-    margin-right: 0;
+h3, h4, h5 {
+  font-size: 1.0em;
+  margin-top: 1.0em;
+  margin-bottom: 1.0em;
 }
 
-.figure .number {
+h3 {
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+h4 {
+  font-weight: 400;
+  font-style: italic;
+}
+
+strong {
   font-weight: 600;
 }
 
-.figure .number::before {
-  content: "Fig. ";
+a.ref {
+  color: #444444;
 }
 
-.figure .number::after {
-  content: ".";
+ul {/* Remove margin for all <ul>s */
+     margin-left: 0;
+     padding-left: 0;
 }
 
-.authors {
-    display: block;
-    text-align: center;
-    font-size: 1.3rem;
-    padding: 0 0 1.5rem 0;
+ul ul {/* Add a margin nested <ul> */
+    margin-left: 14pt;
 }
-    
+
+span.label::after {
+    content: " ";
+}
+
 .supsub {
-   display: inline-block;
-   margin: -9em 0;
-   vertical-align: -0.3em;
-   line-height: 0.75em;
-   font-size: 70%;
-   text-align: left;
+    display: inline-block;
+    margin: -9em 0;
+    vertical-align: -0.1em;
+    line-height: 0.75em;
+    font-size: 70%;
+    text-align: left;
 }
 
-.eq {
-    display: inline;
-    vertical-align: middle;
-    margin: 0.0;
-    padding: 0;
+/* Menu - TOC */
+
+.menu .toc ul.toc-level-1 {
+  font-size: 1.1rem;
 }
+
+.menu .toc ul.toc-level-2, .menu .toc ul.toc-level-3, .menu .toc ul.toc-level-4, .menu .toc ul.toc-level-5, .menu .toc ul.toc-level-6, .menu .toc ul.toc-level-7, .menu .toc ul.toc-level-8 {
+  font-size: 0.9rem;
+}
+
+/* TOC */
+
+ul[class^="toc-level-"] {
+  list-style: none;
+  font-family: sans-serif;
+}
+
+ul[class^="toc-level-"] li {
+  margin-right: 14pt;
+  display: inline-block;
+  min-width: 30%;
+}
+
+ul[class^="toc-level-"] a {
+  color: #444444;
+}
+
+ul.toc-level-1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+ul.toc-level-1 li {
+  padding: 1.25rem 0;
+}
+
+ul.toc-level-2 {
+  font-size: 1.0rem;
+  font-weight: 600;
+}
+
+ul.toc-level-3, ul.toc-level-4, ul.toc-level-5, ul.toc-level-6, ul.toc-level-7, ul.toc-level-8 {
+  font-size: 1.0rem;
+  font-weight: 400;
+}
+
+ul.toc-level-2 li, ul.toc-level-3 li, ul.toc-level-4 li, ul.toc-level-5 li, ul.toc-level-6 li, ul.toc-level-7 li, ul.toc-level-8 li {
+  padding: 0rem;
+}
+
+/* author listing */
+
+div.authors {
+  font-family: sans-serif;
+  text-align: right;
+  font-weight: 400;
+  margin: 14pt 0 28pt 14pt;
+}
+
+/* sidenotes and marginfigs */
+span.marginfig, span.sidenote {
+    clear: right;
+    float: right;
+    width: 40%;
+    margin-right: -45%;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    vertical-align: top;
+    position: relative;
+    font-size: 0.8em;
+    line-height: 1.4;
+    padding: 0.2rem;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    background-color: #fcfcfc;
+    overflow-x: hidden;
+}
+
+span.marginfig span.caption {
+    display: block;
+}
+
+/* Footer - navigation */
+
+footer {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+footer span.prev {
+  display: block;
+  position: relative;
+  left: 0;
+}
+
+footer span.next {
+  display: block;
+  position: relative;
+  right: -18rem;
+}
+
+footer a.ref {
+  color: #666666;
+  padding: 0.25rem;
+}
+
+footer span.prev a.ref::before {
+  content: "« ";
+}
+
+footer span.prev a.ref {
+  border: 1px solid #dddddd;
+  border-bottom: 0px;
+  border-right: 0px;
+  border-top-left-radius: 5px;
+}
+
+footer span.next a.ref::after {
+  content: " »";
+}
+
+footer span.next a.ref {
+  border: 1px solid #dddddd;
+  border-top: 0px;
+  border-left: 0px;
+  border-bottom-right-radius: 5px;
+}
+

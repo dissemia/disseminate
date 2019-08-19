@@ -1,0 +1,182 @@
+/*
+ * CSS for templates/base/base.html
+ */
+
+body {
+  color: #444444;
+  background: #fcfcfc;
+  font-weight: 200;
+  margin: 0 auto 4rem auto;
+}
+
+h1 {
+  font-weight: 300;
+}
+
+h2, h3, h4, h5, h6 {
+  font-weight: 200;
+}
+
+.container {
+  padding-top: 1rem;
+  padding-left: 2rem;
+  max-width: 960px;
+}
+
+/* Menu customizations */
+
+.menu {
+  display: none;
+  position: fixed;
+  background: #f4f4f4fa;
+  color: #444444;
+  font-size: 11pt;
+  z-index: 2;
+  border: 1px solid #aaaaaa;
+  border-radius: 5px;
+  padding: 0.5rem;
+  margin: 0;
+  min-width: 65%;
+}
+
+.menu h4 {
+  font-size: 1.6em;
+  font-weight: 200;
+  margin: 0 0 0 0.5rem;
+}
+
+label.menu-toggle {
+  margin-left: -2rem;
+  position: fixed;
+  display: block;
+}
+
+label.menu-toggle img {
+  position: absolute;
+  top: 0;
+}
+
+input.menu-toggle[type=checkbox] {
+  visibility: hidden;
+  position: absolute;
+}
+
+input.menu-toggle[type=checkbox]:checked ~ .menu {
+  display: block;
+}
+
+.menu-toggle #menu-toggle-inactive {
+  position: absolute;
+}
+
+.menu-toggle #menu-toggle-active {
+  visibility: hidden;
+}
+
+input.menu-toggle[type=checkbox]:checked + .menu-toggle #menu-toggle-inactive {
+  visibility: hidden;
+}
+
+input.menu-toggle[type=checkbox]:checked + .menu-toggle #menu-toggle-active {
+  visibility: visible;
+}
+
+/* Menu - Functions bar */
+
+.functions a, hr {
+  color: #444444;
+}
+
+ul.functions {
+  margin: -0.5rem -0.5rem -0.25rem -0.5rem;
+  background: #ffffff;
+  border-radius: 5px 5px 0 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  font-size: 1.1em;
+}
+
+.functions li.list-group-item {
+  padding: 0.25rem 0.5rem;
+  border: 0px;
+}
+
+/* Menu - account submenu */
+
+.submenu {
+  display: none;
+  position: absolute;
+  z-index: 2;
+  font-size: 0.875rem;
+  background: #ffffff;
+  width: 8rem;
+  border: 1px #cccccc solid;
+  border-radius: 3px;
+  padding: 0.5rem;
+  right: 0;
+  top: 1.8rem;
+}
+
+.submenu-toggle {
+  margin-bottom: 0;
+}
+
+input.submenu-toggle[type=checkbox] {
+  visibility: hidden;
+  position: absolute;
+}
+
+input.submenu-toggle[type=checkbox]:checked ~ .submenu {
+  display: block;
+}
+
+
+/* Root page customizations */
+
+.features {
+  padding-top: 3rem;
+  max-width: 768px;
+  margin: 0 auto;
+}
+
+.features h5 {
+  font-weight: 300;
+}
+
+.features .card {
+  height: 11rem;
+  border: 1px solid rgba(0, 0, 0, 0.0875);
+  background: #f4f4f4;
+}
+
+.features .card-body {
+  padding: 1.0rem;
+}
+
+/* Project listing on main page */
+
+.project-list {
+  padding-top: 3rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.project-list h5 {
+  font-weight: 300;
+}
+
+.project-list img.icon {
+  height: 12px;
+  margin: 0 2px 2px 0;
+}
+
+/*.project-list .list-group-item {*/
+/*  padding: 0.5rem 1.0rem;*/
+/*  border: 1px solid rgba(0,0,0,.05);*/
+/*  border-right: 0;*/
+/*  border-left: 0;*/
+/*}*/
+
+/*.meta .list-group-item {*/
+/*  padding: 0;*/
+/*  margin: 0;*/
+/*}*/
