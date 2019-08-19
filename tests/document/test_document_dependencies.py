@@ -53,12 +53,14 @@ def test_dependencies_img(tmpdir, wait):
 
     # The img file should be a dependency
     deps = list(sorted(dep_manager.dependencies[src_filepath]))
-    dep1 = deps[0]
-    dep2 = deps[1]
-    assert dep1.dep_filepath.match('default/media/css/default.css')
-    assert dep1.dest_filepath.match('html/media/css/default.css')
-    assert dep2.dep_filepath.match('sample.png')
-    assert dep2.dest_filepath.match('html/sample.png')
+    assert deps[0].dep_filepath.match('default/media/css/base.css')
+    assert deps[0].dest_filepath.match('html/media/css/base.css')
+    assert deps[1].dep_filepath.match('default/media/css/bootstrap.min.css')
+    assert deps[1].dest_filepath.match('html/media/css/bootstrap.min.css')
+    assert deps[2].dep_filepath.match('default/media/css/default.css')
+    assert deps[2].dest_filepath.match('html/media/css/default.css')
+    assert deps[3].dep_filepath.match('sample.png')
+    assert deps[3].dest_filepath.match('html/sample.png')
 
     # Rewrite the document source file without the dependency
     wait()  # sleep time offset needed for different mtimes
@@ -69,5 +71,5 @@ def test_dependencies_img(tmpdir, wait):
     doc.render()
 
     # The rendered document no longer has a dependency on the image.
-    assert len(dep_manager.dependencies[src_filepath]) == 1
-    assert dep_manager.dependencies[src_filepath] == {dep1}
+    assert len(dep_manager.dependencies[src_filepath]) == 3
+    assert dep_manager.dependencies[src_filepath] == set(deps[0:3])
