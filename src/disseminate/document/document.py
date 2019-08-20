@@ -458,8 +458,17 @@ class Document(object):
             msg = "The source document '{}' must exist."
             raise exceptions.DocumentException(msg.format(self.src_filepath))
 
+        stat = self.src_filepath.stat()
+        time = stat.st_mtime
+        last_mtime = self.mtime
+
         # Load document if a load is required or forced
-        if self.load_required() or reload:
+        # if self.load_required() or reload:
+        body_attr = settings.body_attr
+        if (not self._succesfully_loaded or
+                self.context.get(body_attr, None) is None or
+                last_mtime is None or time > last_mtime or
+                reload):
 
             # The document hasn't been loaded yet. Reset the flat
             self._succesfully_loaded = False
