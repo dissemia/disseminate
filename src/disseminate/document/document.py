@@ -584,7 +584,11 @@ class Document(object):
             # Update the subdoc's mtime to this context's mtime. This is because
             # this context has been updated, and the sub-document's mtime must
             # be updated so that a load_required is not triggered my a newer
-            # parent_context.
+            # parent_context. Even if the subdoc's mtime is updated to a newer
+            # version, it should not cause problems in triggering a
+            # load_required for the subdoc if the src_filepath is updated
+            # because the src_filepath's mtime will be later than the current
+            # document's mtime.
             subdoc_mtime = subdoc.context.get('mtime')
             if (subdoc_mtime is not None and mtime is not None and
                mtime > subdoc_mtime):
