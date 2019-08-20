@@ -368,19 +368,20 @@ def test_document_tree_updates_with_section_labels(tmpdir, wait):
     assert title_labels[1].id == 'ch:file3-dm-file3'
     assert title_labels[2].id == 'ch:file2-dm-file2'
 
-    # A render should be required for file1.dm
+    # A render should be required for file1.dm. This will also trigger
+    # a load required for its subdocuments
     doc1, doc2, doc3 = doc.documents_list(only_subdocuments=False,
                                           recursive=True)
 
     assert doc1.render_required(target_filepath1)
-    assert not doc2.render_required(target_filepath2)
-    assert not doc3.render_required(target_filepath3)
+    assert doc2.render_required(target_filepath2)
+    assert doc3.render_required(target_filepath3)
 
     # The files have therefore been updated
     doc.render()
-    assert mtime1 != target_filepath1.stat().st_mtime
-    assert mtime2 == target_filepath2.stat().st_mtime
-    assert mtime3 == target_filepath3.stat().st_mtime
+    assert mtime1 < target_filepath1.stat().st_mtime  # reloaded
+    assert mtime2 < target_filepath2.stat().st_mtime  # reloaded
+    assert mtime3 < target_filepath3.stat().st_mtime  # reloaded
 
     # 2. Test coupled documents
 

@@ -421,11 +421,15 @@ class Document(object):
         # Reload the document if:
         # 1. The document hasn't been successfully loaded.
         if not self._succesfully_loaded:
+            logging.debug("Load required for {}: The document was not "
+                          "previously loaded successfully.".format(self))
             return True
 
         # 2. The body attribute hasn't been set yet.
         body_attr = settings.body_attr
         if self.context.get(body_attr, None) is None:
+            logging.debug("Load required for {}: The '{}' tag has "
+                          "not been loaded yet.".format(self, body_attr))
             return True
 
         # 3. The mtime for the file is now later than the one stored in the
@@ -433,6 +437,9 @@ class Document(object):
         src_mtime = self.src_filepath.stat().st_mtime
         last_mtime = self.mtime
         if last_mtime is None or src_mtime > last_mtime:
+            logging.debug("Load required for {}: The '{}' source file is newer "
+                          "than the loaded "
+                          "document.".format(self, self.src_filepath.subpath))
             return True
 
         # 4. This is a subdocument whose context has a parent_context, and the
@@ -441,6 +448,8 @@ class Document(object):
         parent_mtime = (parent_context.get('mtime')
                         if parent_context is not None else None)
         if parent_mtime is not None and parent_mtime > last_mtime:
+            logging.debug("Load required for {}: The parent document is newer "
+                          "than this document.".format(self))
             return True
 
         return False
@@ -499,18 +508,18 @@ class Document(object):
             for processor in self.process_context.processors():
                 processor(self.context)
 
+            # The document has been loaded
+            self._succesfully_loaded = True
+
             # Load the sub-documents. This is done after processing the string
             # and ast since these may include sub-files, which should be read
             # in before being loaded.
             self.load_subdocuments()
 
-            # The document has been loaded
-            self._succesfully_loaded = True
-
         # Run 'load' for the sub-documents. This should be done after
         # loading this documentsince this document's header may have includes
-        for document in self.documents_list(only_subdocuments=True):
-            document.load(reload=reload)
+        # for document in self.documents_list(only_subdocuments=True):
+        #     document.load(reload=reload)
 
         return None
 
@@ -542,6 +551,10 @@ class Document(object):
         # Retrieve the file paths of included files in the context
         src_filepaths = self.context.includes
 
+        # Get the modification time for this context. This will be set
+        # as the subdocument's mtime if the parent's mtime is newer.
+        mtime = self.context.get('mtime')
+
         for src_filepath in src_filepaths:
             # If the src_filepath is the same as this document, do nothing, as
             # a document shouldn't have itself as a subdocument
@@ -550,20 +563,32 @@ class Document(object):
 
             # If the document is already loaded and controlled by this document,
             # copy it to the subdocuments ordered dict
-            if src_filepath in subs_dict:
+            elif src_filepath in subs_dict:
                 subdoc = subs_dict[src_filepath]
+                subdoc.load()  # reload the subdocument
 
                 if self.src_filepath not in subdoc.subdocuments:
                     self.subdocuments[src_filepath] = subdoc
-                continue
 
             # The document could not be found, at this point. Create it--as long
             # as it's not controlled by another document--i.e. it's not already
             # loaded in root_dict
-            if src_filepath not in root_dict:
+            elif src_filepath not in root_dict:
                 subdoc = Document(src_filepath=src_filepath,
                                   parent_context=self.context)
                 self.subdocuments[src_filepath] = subdoc
+
+            else:
+                continue
+
+            # Update the subdoc's mtime to this context's mtime. This is because
+            # this context has been updated, and the sub-document's mtime must
+            # be updated so that a load_required is not triggered my a newer
+            # parent_context.
+            subdoc_mtime = subdoc.context.get('mtime')
+            if (subdoc_mtime is not None and mtime is not None and
+               mtime > subdoc_mtime):
+               subdoc.context['mtime'] = mtime
 
     def get_renderer(self):
         """Get the template renderer for this document.
