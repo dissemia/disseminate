@@ -524,11 +524,15 @@ class Document(object):
         root_document = self.context.get('root_document', None)
         root_document = root_document() if root_document is not None else None
 
-        # Get the documents dict for the root document, including all
-        # subdocuments
+        # Get a dict with all documents in a project
         root_dict = root_document.documents_dict(document=root_document,
                                                  only_subdocuments=False,
                                                  recursive=True)
+
+        # Get a dict with all documents owned by this document. This document
+        # can control those documents, but it cannot control other documents in
+        # the root_dict. This avoids recursion.
+        subs_dict = self.documents_dict(only_subdocuments=False, recursive=True)
 
         # Clear the subdocuments ordered dict and add new entries. Old entries
         # will automatically be deleted if the subdocument no longer holds a
@@ -544,22 +548,22 @@ class Document(object):
             if src_filepath == self.src_filepath:
                 continue
 
-            # If the document is already loaded, copy it to the subdocuments
-            # ordered dict
-            if src_filepath in root_dict:
-                subdoc = root_dict[src_filepath]
-                subdoc.load()  # Make sure the subdocument is loaded
+            # If the document is already loaded and controlled by this document,
+            # copy it to the subdocuments ordered dict
+            if src_filepath in subs_dict:
+                subdoc = subs_dict[src_filepath]
 
                 if self.src_filepath not in subdoc.subdocuments:
                     self.subdocuments[src_filepath] = subdoc
                 continue
 
-            # The document could not be found, at this point. Create it.
-            # Create the document and add it to the subdocuments ordered
-            # dict.
-            subdoc = Document(src_filepath=src_filepath,
-                              parent_context=self.context)
-            self.subdocuments[src_filepath] = subdoc
+            # The document could not be found, at this point. Create it--as long
+            # as it's not controlled by another document--i.e. it's not already
+            # loaded in root_dict
+            if src_filepath not in root_dict:
+                subdoc = Document(src_filepath=src_filepath,
+                                  parent_context=self.context)
+                self.subdocuments[src_filepath] = subdoc
 
     def get_renderer(self):
         """Get the template renderer for this document.

@@ -552,7 +552,7 @@ def test_document_recursion(tmpdir):
     """Test the loading of a document with itself as the subdocument
     (recursion)."""
 
-    # Create 2 test documents. First test absolute links
+    # 1. Create a test document that references itself
     src_filepath1 = SourcePath(project_root=tmpdir, subpath='test1.dm')
     target_root = TargetPath(target_root=tmpdir)
 
@@ -564,6 +564,33 @@ def test_document_recursion(tmpdir):
     """)
 
     doc = Document(src_filepath1, target_root)
+
+    # The document should not have itself as a subdocument
+    assert len(doc.subdocuments) == 0
+
+    # 2. Create 2 test documents that reference each other
+    src_filepath1 = SourcePath(project_root=tmpdir, subpath='test-a.dm')
+    src_filepath2 = SourcePath(project_root=tmpdir, subpath='test-b.dm')
+
+    src_filepath1.write_text("""
+    ---
+    include: test-b.dm
+    ---
+    @chapter{one}
+    """)
+    src_filepath2.write_text("""
+    ---
+    include: test-a.dm
+    ---
+    @chapter{one}
+    """)
+    doc1 = Document(src_filepath1, target_root)
+    doc2 = Document(src_filepath2, target_root)
+
+    # The document should not have itself as a subdocument, but it can have
+    # the other as a root document.
+    assert len(doc1.subdocuments) == 1  # test-b as subdoc
+    assert len(doc2.subdocuments) == 1  # test-a as subdoc
 
 
 # Test targets
