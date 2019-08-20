@@ -437,11 +437,11 @@ class Document(object):
 
         # 4. This is a subdocument whose context has a parent_context, and the
         #    parent_context has been updated
-        parent_context = self.context.parent_context
-        parent_mtime = (parent_context.get('mtime')
-                        if parent_context is not None else None)
-        if parent_mtime is not None and parent_mtime > last_mtime:
-            return True
+        # parent_context = self.context.parent_context
+        # parent_mtime = (parent_context.get('mtime')
+        #                 if parent_context is not None else None)
+        # if parent_mtime is not None and parent_mtime > last_mtime:
+        #     return True
 
         return False
 
@@ -458,17 +458,8 @@ class Document(object):
             msg = "The source document '{}' must exist."
             raise exceptions.DocumentException(msg.format(self.src_filepath))
 
-        stat = self.src_filepath.stat()
-        time = stat.st_mtime
-        last_mtime = self.mtime
-
         # Load document if a load is required or forced
-        # if self.load_required() or reload:
-        body_attr = settings.body_attr
-        if (not self._succesfully_loaded or
-                self.context.get(body_attr, None) is None or
-                last_mtime is None or time > last_mtime or
-                reload):
+        if self.load_required() or reload:
 
             # The document hasn't been loaded yet. Reset the flat
             self._succesfully_loaded = False
