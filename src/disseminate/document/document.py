@@ -437,11 +437,11 @@ class Document(object):
 
         # 4. This is a subdocument whose context has a parent_context, and the
         #    parent_context has been updated
-        # parent_context = self.context.parent_context
-        # parent_mtime = (parent_context.get('mtime')
-        #                 if parent_context is not None else None)
-        # if parent_mtime is not None and parent_mtime > last_mtime:
-        #     return True
+        parent_context = self.context.parent_context
+        parent_mtime = (parent_context.get('mtime')
+                        if parent_context is not None else None)
+        if parent_mtime is not None and parent_mtime > last_mtime:
+            return True
 
         return False
 
