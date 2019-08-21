@@ -9,6 +9,7 @@ from disseminate.context import BaseContext
 from disseminate.attributes import Attributes
 from disseminate.paths import SourcePath, TargetPath
 from disseminate.document import Document
+from disseminate.server.server import create_app
 
 
 def pytest_collection_modifyitems(config, items):
@@ -147,3 +148,16 @@ def a_in_b():
         return False
 
     return _a_in_b
+
+
+# server fixtures
+
+@pytest.yield_fixture
+def app(tmpdir):
+    app = create_app(in_path='tests/document/example7', out_dir=tmpdir)
+    yield app
+
+
+@pytest.fixture
+def test_client(loop, app, sanic_client):
+    return loop.run_until_complete(sanic_client(app))
