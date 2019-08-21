@@ -13,7 +13,6 @@ from .. import settings
 @click.option('--port', '-p', default=settings.default_port, show_default=True,
               help="The port to listen to for the webserver")
 @debug_option
-def preview(project_filenames, out_dir, port, debug):
+def preview(in_path, out_dir, port, debug):
     """Preview documents with a local webserver"""
-    run_server(project_filenames=project_filenames, out_dir=out_dir, port=port,
-               debug=debug)
+    run_server(in_path=in_path, out_dir=out_dir, port=port, debug=debug)

@@ -20,6 +20,7 @@ def test_cli_render_simple_document(tmpdir):
     #    'dummy.tex'. Write the generated files an compare them to the
     #    answer keys.
     result = runner.invoke(main, ['render',
+                                  '-i',
                                   'tests/document/example1/dummy.dm',
                                   '-o', str(tmpdir)])
 
@@ -45,7 +46,7 @@ def test_cli_render_simple_document(tmpdir):
     shutil.copy('tests/document/example1/dummy.dm', str(src_filepath))
 
     # run the command
-    result = runner.invoke(main, ['render', str(src_filepath)])
+    result = runner.invoke(main, ['render', '-i', str(src_filepath)])
 
     # Make sure the command was successfully run
     assert result.exit_code == 0

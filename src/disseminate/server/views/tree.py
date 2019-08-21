@@ -28,7 +28,7 @@ def tree_to_dict(docs, level=1):
 
         # Get information on the targets
         targets = list(doc.targets.keys())  # ex: ['.html', '.pdf']
-        target_links = [doc.target_filepath(target).get_url()
+        target_links = [doc.target_filepath(target)
                         for target in targets]
         d['targets'] = {target: target_link for target, target_link in
                         zip(targets, target_links)}
