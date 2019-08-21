@@ -51,7 +51,7 @@ def test_document_load_required(doctree, wait, caplog):
 
     # 3. Test load required when the source file is newer than the mtime in
     #    the context
-    wait()  # needed to offset filesystem times
+    wait()  # sleep time offset needed for different mtimes
     doc.src_filepath.touch()
     assert doc.load_required()  # 1 load required message
     assert len(caplog.record_tuples) == 4
@@ -90,6 +90,7 @@ def test_document_load_required(doctree, wait, caplog):
 
     # 6. Touch a subdocument, and it should be the only one that requires an
     #    update
+    wait()  # sleep time offset needed for different mtimes
     doc2.src_filepath.touch()
     assert not doc.load_required()
     assert doc2.load_required()  # 1 load_required message
@@ -99,6 +100,7 @@ def test_document_load_required(doctree, wait, caplog):
             caplog.record_tuples[-1][2])
 
     # 7. Touch the root document, and all 3 documents should need an update
+    wait()  # sleep time offset needed for different mtimes
     doc.src_filepath.touch()
     doc.load()  # 3 load required messages
     assert len(caplog.record_tuples) == 12

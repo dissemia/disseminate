@@ -88,7 +88,7 @@ def test_process_context_header_additional_context_files(doc):
     assert doc.context['value'] == 'b'
 
 
-def test_process_context_header_precedence(doctree):
+def test_process_context_header_precedence(doctree, wait):
     """Test the precedence of context entries between the default context,
     template context and document context."""
 
@@ -101,6 +101,7 @@ def test_process_context_header_precedence(doctree):
                 settings.default_context['inactive_tags'])
 
     # 2. Now add a template with a context.txt
+    wait()  # sleep time offset needed for different mtimes
     src_path = doc1.src_filepath.parent
     template_filepath = src_path / 'test.html'
     context_filepath = src_path / 'context.txt'
@@ -131,6 +132,7 @@ def test_process_context_header_precedence(doctree):
 
     # 3. Now write the attribute in the root document (doc1) and it should
     #    override the value for the document and subdocuments
+    wait()  # sleep time offset needed for different mtimes
     doc1.src_filepath.write_text("""
     ---
     template: test
