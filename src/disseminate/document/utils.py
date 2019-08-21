@@ -64,6 +64,12 @@ def find_root_src_filepaths(path='',
     -------
     root_src_filepaths : List[:obj:`patlib.Path`]
         A list containing root document src_filepaths.
+
+    Notes
+    -----
+    This function doesn't actually load documents. If there are multiple
+    disseminate files in the project root path, even if one is a root document
+    and the others are not, they will all be returned.
     """
     src_filepaths = []
 
