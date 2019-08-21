@@ -15,6 +15,8 @@ def tree_to_dict(docs, level=1):
     doc_list = []
 
     for number, doc in enumerate(docs, 1):
+        if level == 1:
+            number = 1
         d = dict()
 
         # Set the number and level for the doc
