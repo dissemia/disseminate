@@ -33,7 +33,7 @@ Basic Entries
 ~~~~~~~~~~~~~
 
 ``title``
-   The document's title
+   The project's title
 
    .. index::
       single: header; title
