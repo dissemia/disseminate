@@ -1,0 +1,10 @@
+{%- extends "default/template.html" %}
+{%- block extra_css %}
+<link rel="stylesheet" href="/media/css/novel.css">
+{%- endblock %}
+{%- block body %}
+  {{ body.html }}
+{%- endblock %}
+{%- block footer %}
+  {% include "default/nav.html" %}
+{%- endblock %}

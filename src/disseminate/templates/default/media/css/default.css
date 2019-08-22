@@ -136,6 +136,15 @@ ul.toc-level-2 li, ul.toc-level-3 li, ul.toc-level-4 li, ul.toc-level-5 li, ul.t
   padding: 0rem;
 }
 
+article ul.toc-level-1 {
+  border-width: 1px 0 1px 0;
+  border-style: solid;
+  border-color: #dddddd;
+  background: #f9f9f9;
+  padding: 0 0 1rem 1rem;
+  line-height: 18pt;
+}
+
 /* author listing */
 
 div.authors {
@@ -183,8 +192,8 @@ footer span.prev {
 
 footer span.next {
   display: block;
-  position: relative;
-  right: -18rem;
+  float: right;
+  margin-right: 30%;
 }
 
 footer a.ref {

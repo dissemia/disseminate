@@ -83,6 +83,7 @@ context_max_size = 8192  # 8kB
 default_context = {
     'targets': 'html',
     'paths': [],
+    'template': 'default/template',
 
     # Entries for relative links to documents
     'prev': '',
