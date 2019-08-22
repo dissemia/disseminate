@@ -516,11 +516,6 @@ class Document(object):
             # in before being loaded.
             self.load_subdocuments()
 
-        # Run 'load' for the sub-documents. This should be done after
-        # loading this documentsince this document's header may have includes
-        # for document in self.documents_list(only_subdocuments=True):
-        #     document.load(reload=reload)
-
         return None
 
     def load_subdocuments(self):
