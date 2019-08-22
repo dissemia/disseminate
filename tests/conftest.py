@@ -2,6 +2,7 @@ import copy
 import pytest
 import io
 import os
+import shutil
 from time import sleep
 from collections import namedtuple
 
@@ -9,6 +10,7 @@ from disseminate.context import BaseContext
 from disseminate.attributes import Attributes
 from disseminate.paths import SourcePath, TargetPath
 from disseminate.document import Document
+from disseminate.server.server import create_app
 
 
 def pytest_collection_modifyitems(config, items):
@@ -147,3 +149,19 @@ def a_in_b():
         return False
 
     return _a_in_b
+
+
+# server fixtures
+
+@pytest.yield_fixture
+def app(tmpdir):
+    project_path = tmpdir.join('example7')
+    shutil.copytree('tests/document/example7', project_path)
+    app = create_app(in_path=str(project_path))
+    app.config['PROJECTPATH'] = project_path
+    yield app
+
+
+@pytest.fixture
+def test_client(loop, app, sanic_client):
+    return loop.run_until_complete(sanic_client(app))

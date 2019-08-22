@@ -82,7 +82,7 @@ setup(
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc',
                 'asv'],
-        'test': ['pytest', 'tox', 'coverage'],
+        'test': ['pytest', 'pytest-sanic', 'tox', 'coverage'],
         'termcolor': ['termcolor']  # MIT license
     },
     scripts=['scripts/dm', ],

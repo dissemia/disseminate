@@ -10,12 +10,16 @@ debug_option = click.option('--debug', default=False, is_flag=True,
 # Project path options
 
 _file_options = [
-    click.argument('project_filenames', required=True, nargs=-1,
-                   type=click.Path(exists=True)),
-    click.option('--out-dir', '-o', required=False,
-                 type=click.Path(exists=True, file_okay=False, dir_okay=True),
-                 help=("the target directory for the generated output "
-                       "documents"))
+    click.option('--in-path', '-i', required=False,
+                 type=click.Path(exists=True, file_okay=True, dir_okay=True),
+                 default='.',
+                 help="the directory or file path for a project root "
+                      "document"),
+    # click.option('--out-dir', '-o', required=False,
+    #              type=click.Path(exists=True, file_okay=False, dir_okay=True),
+    #              default=None,
+    #              help=("the target directory for the generated output "
+    #                    "documents"))
 ]
 
 

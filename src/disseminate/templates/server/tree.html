@@ -29,15 +29,15 @@
         </caption>
         <tr>
           <thead>
-          <th>num</th>
-          <th>source</th>
-          <th>targets</th>
-          <th>last saved</th>
+          <th class="num">num</th>
+          <th class="src">source</th>
+          <th class="tgt">targets</th>
+          <th class="date">last saved</th>
           </thead>
         </tr>
         {%- endif %}
         <tr class="level-{{ doc.level }}">
-          <td class="num">{{ doc.number }}-{{ doc.level }}</td>
+          <td class="num">{{ doc.level }}-{{ doc.number }}</td>
           <td class="src">
             <a href="/{{ doc.src_filepath }}">{{ doc.src_filepath.subpath }}</a>
           </td>
