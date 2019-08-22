@@ -2,6 +2,7 @@ import copy
 import pytest
 import io
 import os
+import shutil
 from time import sleep
 from collections import namedtuple
 
@@ -154,7 +155,10 @@ def a_in_b():
 
 @pytest.yield_fixture
 def app(tmpdir):
-    app = create_app(in_path='tests/document/example7', out_dir=tmpdir)
+    project_path = tmpdir.join('example7')
+    shutil.copytree('tests/document/example7', project_path)
+    app = create_app(in_path=str(project_path))
+    app.config['PROJECTPATH'] = project_path
     yield app
 
 

@@ -15,11 +15,11 @@ _file_options = [
                  default='.',
                  help="the directory or file path for a project root "
                       "document"),
-    click.option('--out-dir', '-o', required=False,
-                 type=click.Path(exists=True, file_okay=False, dir_okay=True),
-                 default=None,
-                 help=("the target directory for the generated output "
-                       "documents"))
+    # click.option('--out-dir', '-o', required=False,
+    #              type=click.Path(exists=True, file_okay=False, dir_okay=True),
+    #              default=None,
+    #              help=("the target directory for the generated output "
+    #                    "documents"))
 ]
 
 

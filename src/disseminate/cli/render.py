@@ -11,7 +11,7 @@ from ..document.utils import load_root_documents
 
 @click.command()
 @file_options
-def render(in_path, out_dir):
+def render(in_path, out_dir=None):
     """Render a disseminate project"""
     docs = load_root_documents(path=in_path, target_root=out_dir)
 

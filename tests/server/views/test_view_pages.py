@@ -1,13 +1,13 @@
 """
-Test the tree (document list) view.
+Test the page rendering view.
 """
-import os
 
 
-async def test_view_tree(app, test_client):
+async def test_view_page(app, test_client):
     """Test the rendering of the checkers view."""
     # Get the url for the checkers view
-    url = app.url_for('tree.render_tree')
+    project_path = app.config.get('PROJECTPATH')
+    url = app.url_for('page.render_page', path='html/file1')
 
     # Retrieve the page
     response = await test_client.get(url)
@@ -22,7 +22,4 @@ async def test_view_tree(app, test_client):
     #         └── subsub1
     #             └── file111.dm
     assert response.status == 200
-    assert 'source' in body
-    assert 'file1.dm' in body
-    assert 'sub1/file11.dm' in body
-    assert 'sub1/subsub1/file111.dm' in body
+    assert '<p>file1.dm</p>' in body
