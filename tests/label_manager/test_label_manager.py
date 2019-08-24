@@ -199,8 +199,7 @@ def test_label_manager_label_reordering(doctree):
     label_man.add_content_label(id="fig:two", kind='figure', title="figure 2-2",
                                 context=doc2.context)
 
-    # Get and register the labels. This will include 2 document labels and 4
-    # figure labels
+    # Get and register the labels.
     for i in range(2):
         # There should be 7 labels altogether: 3 DocumentLabels, 4 ContentLabels
         labels = label_man.get_labels()
@@ -262,6 +261,8 @@ def test_label_manager_label_reordering(doctree):
     assert label7.kind == ('document', 'document-level-2')
     assert label7.order == (2, 2)
 
-    # Now delete the 2nd document and the labels should be removed too.
+    # Now delete the 2nd and 3rd documents and the labels should be removed too.
     doc1.subdocuments.clear()
+    del doc1, doc2
+
     assert len(label_man.get_labels()) == 0

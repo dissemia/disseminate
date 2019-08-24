@@ -16,7 +16,7 @@ words = dummy_text.split()
 
 class Suite:
 
-    count = 25  # number of chapters
+    count = 50  # number of chapters
     word_count = 10000  # number of words per chapter
 
     def setup(self):
@@ -36,7 +36,10 @@ class Suite:
             chapter_filenames.append(chapter_filename)
 
             remaining_words = self.word_count
-            text = ""
+            text = ("---\n"
+                    "toc: all headings collapsed\n"
+                    "---\n")
+            text += "@chapter{{{}}}\n".format(i)
             while remaining_words > 0:
                 # Add a paragraph.
                 text += " ".join([random.choice(words) for i in range(150)])
@@ -54,6 +57,7 @@ class Suite:
             f.write("""
         ---
         targets: html, tex
+        toc: all headings expanded
         include:
           {}
         ---

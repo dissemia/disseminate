@@ -18,6 +18,7 @@ Table of Contents
    document
    document_context
    exceptions
+   signals
    processors/index
    utils
    

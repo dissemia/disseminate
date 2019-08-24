@@ -9,7 +9,7 @@ import pathlib
 
 from .document_context import DocumentContext
 from .processors import ProcessContext
-from . import exceptions
+from . import exceptions, signals
 from ..convert import convert
 from ..utils.file import mkdir_p
 from ..paths import SourcePath, TargetPath
@@ -126,8 +126,14 @@ class Document(object):
         # Read in the document and load sub-documents
         self.load()
 
+        # Send the 'document_created' signal
+        signals.document_created.send(self)
+
     def __del__(self):
         """Clean up any temp directories no longer in use."""
+        # Send the 'document_deleted' signal
+        signals.document_deleted.send(self)
+
         if self._temp_dir is not None:
             rmtree(self._temp_dir, ignore_errors=True)
 

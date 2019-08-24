@@ -10,4 +10,5 @@ Label Manager
    label_manager
    types
    processors
+   signals
    exceptions
