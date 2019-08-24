@@ -257,9 +257,10 @@ class LabelManager(object):
             3. Sets references to the heading labels and the counts for
                heading labels.
         """
-        for processor in self.processors:
-            processor(registered_labels=self.labels,
-                      collected_labels=self.collected_labels)
+        if len(self.collected_labels) > 0:
+            for processor in self.processors:
+                processor(registered_labels=self.labels,
+                          collected_labels=self.collected_labels)
 
         return None
 
