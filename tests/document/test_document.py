@@ -112,8 +112,6 @@ def test_document_load_required(doctree, wait, caplog):
             caplog.record_tuples[-1][2])
 
 
-# Tests for other functionality
-
 def test_document_paths(tmpdir):
     """Tests the setting of paths for documents."""
     tmpdir = pathlib.Path(tmpdir)
@@ -317,6 +315,8 @@ def test_document_target_filepath():
     assert (str(subdoc.target_filepath('.html').subpath) ==
             "sub3/index.html")
 
+
+# Tests for other functionality
 
 def test_document_target_list_update(tmpdir):
     """Tests the proper updating of the target list."""
