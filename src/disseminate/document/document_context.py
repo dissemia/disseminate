@@ -167,6 +167,7 @@ class DocumentContext(BaseContext):
     # TODO: Convert these entries to weakattr from utils.classes
     @property
     def document(self):
+        """The document that owns this context"""
         # Retrieve and de-reference the document
         doc_ref = self.get('document', None)
         return doc_ref() if isinstance(doc_ref, weakref.ref) else None
@@ -178,6 +179,7 @@ class DocumentContext(BaseContext):
 
     @property
     def root_document(self):
+        """The root document for a project"""
         # Retrieve and de-reference the document
         doc_ref = self.get('root_document', None)
         return doc_ref() if isinstance(doc_ref, weakref.ref) else None
@@ -190,7 +192,7 @@ class DocumentContext(BaseContext):
     @property
     def targets(self):
         """Retrieve a list of targets from the 'targets' or 'target'
-        entry of the document  context.
+        entry of the document.
 
         Returns
         -------
