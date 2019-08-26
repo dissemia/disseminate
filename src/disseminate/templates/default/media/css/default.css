@@ -127,12 +127,16 @@ ul.toc-level-2 {
   font-weight: 600;
 }
 
+ul.toc-level-2 li {
+  padding: 1.0rem 0 0 0;
+}
+
 ul.toc-level-3, ul.toc-level-4, ul.toc-level-5, ul.toc-level-6, ul.toc-level-7, ul.toc-level-8 {
   font-size: 1.0rem;
   font-weight: 400;
 }
 
-ul.toc-level-2 li, ul.toc-level-3 li, ul.toc-level-4 li, ul.toc-level-5 li, ul.toc-level-6 li, ul.toc-level-7 li, ul.toc-level-8 li {
+ul.toc-level-3 li, ul.toc-level-4 li, ul.toc-level-5 li, ul.toc-level-6 li, ul.toc-level-7 li, ul.toc-level-8 li {
   padding: 0rem;
 }
 
