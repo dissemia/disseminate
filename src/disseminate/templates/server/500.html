@@ -1,0 +1,38 @@
+{% extends "server/error.html" %}
+{% block message %}
+      <h3>{{ exception.__class__.__name__ }}</h3>
+      {% if exception.__doc__ %}
+        <p class="docstring">{{ exception.__doc__ }}</p>
+      {% endif %}
+
+      {%- if exception.args %}
+      {%- for arg in exception.args %}
+        <p>{{ arg }}</p>
+      {%- endfor %}
+      {%- endif %}
+
+      {%- if traceback %}
+      <input id="traceback-collapsible" class="toggle" type="checkbox">
+      <label for="traceback-collapsible" class="lbl-toggle btn btn-outline-primary">Traceback</label>
+      <div class="traceback">
+        {%- for frame in traceback %}
+        <div class="subbox frame">{{ frame }}</div>
+        {%- endfor %}
+      </div>
+      {%- endif %}
+
+      {% if exception.shell_out %}
+      <input id="shell-collapsible" class="toggle" type="checkbox">
+      <label for="shell-collapsible" class="lbl-toggle btn btn-outline-primary">Terminal Output</label>
+      <div class="shell">
+        <h4>Command</h4>
+        <div class="subbox">{{ exception.cmd }}</div>
+        <h4>Return code</h4>
+        <div class="subbox">{{ exception.returncode }}</div>
+        <h4>Shell output</h4>
+        <div class="subbox">{{ exception.shell_out }}</div>
+        <h4>Shell error</h4>
+        <div class="subbox">{{ exception.shell_err }}</div>
+      </div>
+      {% endif %}
+{% endblock %}

@@ -191,12 +191,14 @@ footer span.prev {
   display: block;
   position: relative;
   left: 0;
+  margin-bottom: 0.5rem;
 }
 
 footer span.next {
   display: block;
   float: right;
   margin-right: 30%;
+  margin-top: 0.5rem;
 }
 
 footer a.ref {

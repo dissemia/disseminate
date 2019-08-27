@@ -5,19 +5,16 @@ import secrets
 
 from sanic import Sanic
 from sanic.response import text
-from sanic.exceptions import FileNotFound
+from sanic.exceptions import NotFound
 
 from .views.blueprints import system, tree, page, server_static_path
+from .views.exceptions import handle_500, handle_404
 from .. import settings
 
 
 def create_secret_key():
     """Create a temporary secret key for sessions"""
     return secrets.token_urlsafe(16)
-
-
-async def server_404_handler(request, exception):
-    return text("File Not Found", status=404)
 
 
 def create_app(in_path, out_dir=None, debug=False):
@@ -47,14 +44,15 @@ def create_app(in_path, out_dir=None, debug=False):
     app.blueprint(system)
     app.blueprint(page)
 
+    # Add error handlers
+    app.error_handler.add(NotFound, handle_404)
+    app.error_handler.add(Exception, handle_500)
+
     # Add the the cwd for static files
     app.static('/favicon.ico', str(server_static_path / 'favicon.ico'))
     app.static('/media', str(server_static_path))
     app.static('/', './', pattern="/?.+\.tex", content_type='text/plain')
     app.static('/', './')
-
-    # Add exception handlers
-    app.error_handler.add(FileNotFound, server_404_handler)
 
     return app
 

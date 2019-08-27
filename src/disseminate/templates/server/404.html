@@ -1,23 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Page not Found (404)</title>
-  <meta name="description" content="Disseminate 404 page">
-  <meta name="author" content="Disseminate">
-  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato" />
-  <link rel="stylesheet" type="text/css" href="/media/css/base.css">
-  <link rel="stylesheet" type="text/css" href="/media/css/handlers.css">
-</head>
-<body>
-{% include "menu.html" %}
-<div class="frame">
-  <h1>Page not Found!</h1>
-  <h2>Error 404</h2>
-  <div class="content">
-    <h2>Resolution</h2>
-    Visit the <a href="/">Disseminate Document Tree</a> for a document listing
-  </div>
-</div>
-</body>
-</html>
+{% extends "server/error.html" %}
+{% block message %}
+      <h3>File not Found!</h3>
+{% endblock %}
