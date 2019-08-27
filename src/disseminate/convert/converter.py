@@ -264,7 +264,7 @@ class Converter(object):
             if raise_error:
                 e = ConverterError(error_msg)
                 e.cmd = " ".join(args)
-                e.returncode = None
+                e.returncode = returncode
                 e.shell_out = out.decode('utf-8')
                 e.shell_err = err.decode('utf-8')
                 raise e

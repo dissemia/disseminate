@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Disseminate Exception</title>
+  <meta name="description" content="Dependency Checks">
+  <meta name="author" content="Disseminate">
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato" />
+  <link rel="stylesheet" href="/media/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="/media/css/base.css">
+  <link rel="stylesheet" type="text/css" href="/media/css/error.css">
+</head>
+<body>
+  <div class="container">
+    {% include "default/menu.html" %}
+    <div class="message">
+    {% block message %}
+    {% endblock %}
+    </div>
+  </div>
+</body>
+</html>
