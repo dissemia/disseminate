@@ -15,103 +15,6 @@ from disseminate import settings
 
 # Tests for document methods
 
-def test_document_load_required(doctree, wait, caplog):
-    """Tests the load_required method for documents."""
-    # Capture DEBUG logging messages
-    caplog.set_level(logging.DEBUG)
-    caplog.clear()
-
-    # Setup the documents in the doctree. The setup has 3 load_required messages
-    doc = doctree
-    doc2, doc3 = doctree.documents_list(only_subdocuments=True,
-                                        recursive=True)
-
-    # Check that the doc was succesfully loaded
-    assert not doc.load_required()
-
-    # 1. Test load required when not successfully loaded
-    doc._succesfully_loaded = False
-    assert doc.load_required()  # 1 load required logging message
-    assert len(caplog.record_tuples) == 1  # only 1 DEBUG message
-    assert ("The document was not previously loaded successfully" in
-            caplog.record_tuples[-1][2])
-
-    doc._succesfully_loaded = True
-    assert not doc.load_required()  # 1 load_required logging messages
-
-    # 2. Test load required when body attribute hasn't been set
-    del doc.context[settings.body_attr]
-    assert doc.load_required()  # 1 load_required logging messages
-    assert len(caplog.record_tuples) == 2
-    assert "tag has not been loaded yet" in caplog.record_tuples[-1][2]
-
-    doc.load()  # 1 load_required message
-    assert len(caplog.record_tuples) == 3
-    assert not doc.load_required()
-
-    # 3. Test load required when the source file is newer than the mtime in
-    #    the context
-    wait()  # sleep time offset needed for different mtimes
-    doc.src_filepath.touch()
-    assert doc.load_required()  # 1 load required message
-    assert len(caplog.record_tuples) == 4
-    assert ("source file is newer than the loaded document" in
-            caplog.record_tuples[-1][2])
-
-    doc.load()  # 3 load_required messages. The parent (test1.dm) is reloaded
-                # so the children (test2.dm, test3.dm) are reloaded because it
-                # has a later mtime.
-
-    assert len(caplog.record_tuples) == 7
-    assert ("source file is newer than the loaded document" in
-            caplog.record_tuples[-3][2])  # test1.dm
-    assert ("The parent document is newer than this document" in
-            caplog.record_tuples[-2][2])  # test2.dm
-    assert ("The parent document is newer than this document" in
-            caplog.record_tuples[-1][2])  # test3.dm
-    assert not doc.load_required()
-
-    # 4. Test load required when the parent context's mtime is newer than the
-    #    mtime in the context
-    doc.context.parent_context['mtime'] = doc.context['mtime'] + 1.0
-    assert doc.load_required()  # 1 load_required message
-    assert len(caplog.record_tuples) == 8
-    assert ("The parent document is newer than this document" in
-            caplog.record_tuples[-1][2])
-
-    del doc.context.parent_context['mtime']
-    assert not doc.load_required()
-
-    # 5. Test load required when the parent context' mtime is newer than the
-    #    context mtime for subdocuments
-    assert not doc2.load_required()
-    assert not doc3.load_required()
-    assert len(caplog.record_tuples) == 8  # same number of messages as before.
-
-    # 6. Touch a subdocument, and it should be the only one that requires an
-    #    update
-    wait()  # sleep time offset needed for different mtimes
-    doc2.src_filepath.touch()
-    assert not doc.load_required()
-    assert doc2.load_required()  # 1 load_required message
-    assert not doc3.load_required()
-    assert len(caplog.record_tuples) == 9
-    assert ("source file is newer than the loaded document" in
-            caplog.record_tuples[-1][2])
-
-    # 7. Touch the root document, and all 3 documents should need an update
-    wait()  # sleep time offset needed for different mtimes
-    doc.src_filepath.touch()
-    doc.load()  # 3 load required messages
-    assert len(caplog.record_tuples) == 12
-    assert ("source file is newer than the loaded document" in
-            caplog.record_tuples[-3][2])
-    assert ("source file is newer than the loaded document" in
-            caplog.record_tuples[-2][2])
-    assert ("The parent document is newer than this document" in
-            caplog.record_tuples[-1][2])
-
-
 def test_document_paths(tmpdir):
     """Tests the setting of paths for documents."""
     tmpdir = pathlib.Path(tmpdir)
@@ -314,6 +217,118 @@ def test_document_target_filepath():
             "html")
     assert (str(subdoc.target_filepath('.html').subpath) ==
             "sub3/index.html")
+
+
+def test_document_load_required(doctree, wait, caplog):
+    """Tests the load_required method for documents."""
+    # Capture DEBUG logging messages
+    caplog.set_level(logging.DEBUG)
+    caplog.clear()
+
+    # Setup the documents in the doctree. The setup has 3 load_required messages
+    doc = doctree
+    doc2, doc3 = doctree.documents_list(only_subdocuments=True,
+                                        recursive=True)
+
+    # Check that the doc was succesfully loaded
+    assert not doc.load_required()
+
+    # 1. Test load required when not successfully loaded
+    doc._succesfully_loaded = False
+    assert doc.load_required()  # 1 load required logging message
+    assert len(caplog.record_tuples) == 1  # only 1 DEBUG message
+    assert ("The document was not previously loaded successfully" in
+            caplog.record_tuples[-1][2])
+
+    doc._succesfully_loaded = True
+    assert not doc.load_required()  # 1 load_required logging messages
+
+    # 2. Test load required when body attribute hasn't been set
+    del doc.context[settings.body_attr]
+    assert doc.load_required()  # 1 load_required logging messages
+    assert len(caplog.record_tuples) == 2
+    assert "tag has not been loaded yet" in caplog.record_tuples[-1][2]
+
+    doc.load()  # 1 load_required message
+    assert len(caplog.record_tuples) == 3
+    assert not doc.load_required()
+
+    # 3. Test load required when the source file is newer than the mtime in
+    #    the context
+    wait()  # sleep time offset needed for different mtimes
+    doc.src_filepath.touch()
+    assert doc.load_required()  # 1 load required message
+    assert len(caplog.record_tuples) == 4
+    assert ("source file is newer than the loaded document" in
+            caplog.record_tuples[-1][2])
+
+    doc.load()  # 3 load_required messages. The parent (test1.dm) is reloaded
+                # so the children (test2.dm, test3.dm) are reloaded because it
+                # has a later mtime.
+
+    assert len(caplog.record_tuples) == 7
+    assert ("source file is newer than the loaded document" in
+            caplog.record_tuples[-3][2])  # test1.dm
+    assert ("The parent document is newer than this document" in
+            caplog.record_tuples[-2][2])  # test2.dm
+    assert ("The parent document is newer than this document" in
+            caplog.record_tuples[-1][2])  # test3.dm
+    assert not doc.load_required()
+
+    # 4. Test load required when the parent context's mtime is newer than the
+    #    mtime in the context
+    doc.context.parent_context['mtime'] = doc.context['mtime'] + 1.0
+    assert doc.load_required()  # 1 load_required message
+    assert len(caplog.record_tuples) == 8
+    assert ("The parent document is newer than this document" in
+            caplog.record_tuples[-1][2])
+
+    del doc.context.parent_context['mtime']
+    assert not doc.load_required()
+
+    # 5. Test load required when the parent context' mtime is newer than the
+    #    context mtime for subdocuments
+    assert not doc2.load_required()
+    assert not doc3.load_required()
+    assert len(caplog.record_tuples) == 8  # same number of messages as before.
+
+    # 6. Touch a subdocument, and it should be the only one that requires an
+    #    update
+    wait()  # sleep time offset needed for different mtimes
+    doc2.src_filepath.touch()
+    assert not doc.load_required()
+    assert doc2.load_required()  # 1 load_required message
+    assert not doc3.load_required()
+    assert len(caplog.record_tuples) == 9
+    assert ("source file is newer than the loaded document" in
+            caplog.record_tuples[-1][2])
+
+    # 7. Touch the root document, and all 3 documents should need an update
+    wait()  # sleep time offset needed for different mtimes
+    doc.src_filepath.touch()
+    doc.load()  # 3 load required messages
+    assert len(caplog.record_tuples) == 12
+    assert ("source file is newer than the loaded document" in
+            caplog.record_tuples[-3][2])
+    assert ("source file is newer than the loaded document" in
+            caplog.record_tuples[-2][2])
+    assert ("The parent document is newer than this document" in
+            caplog.record_tuples[-1][2])
+
+
+def test_document_update_mtime(doctree):
+    """Test the _update_mtime method."""
+
+    # Find the maximum mtime for all documents
+    doc1 = doctree
+    doc2, doc3 = doctree.documents_list(recursive=False, only_subdocuments=True)
+    mtime = max((doc1.mtime, doc2.mtime, doc3.mtime))
+
+    # Increase the mtime and check that all documents are updated
+    mtime += 10.0
+    Document._update_mtime(doc1, mtime=mtime)
+
+    assert all([doc.mtime == mtime for doc in (doc1, doc2, doc3)])
 
 
 # Tests for other functionality

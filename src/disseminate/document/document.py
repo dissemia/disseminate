@@ -524,6 +524,34 @@ class Document(object):
 
         return None
 
+    @staticmethod
+    def _update_mtime(document, mtime=None):
+        """Update the mtime of all subdocuments for a given document if the
+        document's mtime is later.
+
+        Parameters
+        ----------
+        document : :obj:`.Document`
+            The root document.
+        mtime : Optional[float]
+            The modification time to update, if newer
+        """
+        document_mtime = getattr(document, 'mtime')
+        mtime = document_mtime if mtime is None else mtime
+        subdocuments = getattr(document, 'subdocuments')
+
+        # Update the document's mtime
+        if (mtime is not None and document_mtime is not None and
+                mtime > document_mtime):
+            document.context['mtime'] = mtime
+
+        if subdocuments:
+            # Process the subdocuments
+            [Document._update_mtime(doc, mtime)
+             for doc in subdocuments.values()]
+
+        return mtime
+
     def load_subdocuments(self):
         """Load the sub-documents listed in the include entries in the
         context."""
@@ -552,10 +580,6 @@ class Document(object):
         # Retrieve the file paths of included files in the context
         src_filepaths = self.context.includes
 
-        # Get the modification time for this context. This will be set
-        # as the subdocument's mtime if the parent's mtime is newer.
-        mtime = self.context.get('mtime')
-
         for src_filepath in src_filepaths:
             # If the src_filepath is the same as this document, do nothing, as
             # a document shouldn't have itself as a subdocument
@@ -582,18 +606,14 @@ class Document(object):
             else:
                 continue
 
-            # Update the subdoc's mtime to this context's mtime. This is because
-            # this context has been updated, and the sub-document's mtime must
-            # be updated so that a load_required is not triggered my a newer
-            # parent_context. Even if the subdoc's mtime is updated to a newer
-            # version, it should not cause problems in triggering a
-            # load_required for the subdoc if the src_filepath is updated
-            # because the src_filepath's mtime will be later than the current
-            # document's mtime.
-            subdoc_mtime = subdoc.context.get('mtime')
-            if (subdoc_mtime is not None and mtime is not None and
-               mtime > subdoc_mtime):
-               subdoc.context['mtime'] = mtime
+        # Update the subdocuments mtimes to this document's mtime. The
+        # sub-document's mtime must updated so that a load_required is not
+        # triggered by a newer parent_context. Even if the subdoc's mtime is
+        # updated to a newer version, it should not cause problems in
+        # triggering a load_required for the subdoc if the src_filepath is
+        # updated because the src_filepath's mtime will be later than the
+        # current document's mtime.
+        Document._update_mtime(document=self)
 
     def get_renderer(self):
         """Get the template renderer for this document.
