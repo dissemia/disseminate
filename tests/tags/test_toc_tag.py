@@ -77,6 +77,31 @@ def test_toc_changes(doc):
     assert toc.html == key
 
 
+def test_toc_mtime(tmpdir):
+    """Test the correct mtime for tocs."""
+
+    # 1. The 'tests/tags/toc_example2' directory contains three markup files:
+    #     file1.dm, file2.dm and file3.dm. The 'file1.dm' includes 'file2.dm'
+    #     and 'file3.dm'. All 3 files have headings
+    target_root = TargetPath(target_root=tmpdir)
+    src_filepath = SourcePath(project_root='tests/tags/toc_example2',
+                              subpath='file1.dm')
+    doc1 = Document(src_filepath, target_root)
+    doc2, doc3 = doc1.documents_list(only_subdocuments=True)
+
+    # Create a toc tag for all 3 documents. The mtime of the toc should match
+    # the greatest mtime for all 3 documents, since the toc has labels that
+    # depend on each of the documents
+    max_mtime = max([doc.mtime for doc in (doc1, doc2, doc3)])
+
+    for doc in (doc1, doc2, doc3):
+        # Create a toc for all headings and doc (the first document)
+        toc = Toc(name='toc', content='all headings', attributes='',
+                  context=doc.context)
+
+        assert toc.mtime == max_mtime
+
+
 def test_toc_absolute_and_relative_links(tmpdir):
     """Test the generation of TOCs with absolute and relative links."""
 
