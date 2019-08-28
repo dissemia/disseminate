@@ -86,66 +86,53 @@ span.label::after {
     text-align: left;
 }
 
-/* Menu - TOC */
-
-.menu .toc ul.toc-level-1 {
-  font-size: 1.1rem;
-}
-
-.menu .toc ul.toc-level-2, .menu .toc ul.toc-level-3, .menu .toc ul.toc-level-4, .menu .toc ul.toc-level-5, .menu .toc ul.toc-level-6, .menu .toc ul.toc-level-7, .menu .toc ul.toc-level-8 {
-  font-size: 0.9rem;
-}
-
 /* TOC */
 
-ul[class^="toc-level-"] {
+article ul.toc {
+  border-width: 1px 0 1px 0;
+  border-style: solid;
+  border-color: #dddddd;
+  background: #f5f5f5;
+  padding: 0 0 1rem 1rem;
+  line-height: 18pt;
   list-style: none;
   font-family: sans-serif;
 }
 
-ul[class^="toc-level-"] li {
-  margin-right: 14pt;
-  display: inline-block;
-  min-width: 30%;
+ul.toc li.toc-level-0 { /* title */
+  font-size: 120%;
+  font-weight: 400;
+  padding: 0.5em 0 0.5em 0.5em;
 }
 
-ul[class^="toc-level-"] a {
-  color: #444444;
-}
-
-ul.toc-level-1 {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-ul.toc-level-1 li {
-  padding: 1.25rem 0;
-}
-
-ul.toc-level-2 {
-  font-size: 1.0rem;
-  font-weight: 600;
-}
-
-ul.toc-level-2 li {
-  padding: 1.0rem 0 0 0;
-}
-
-ul.toc-level-3, ul.toc-level-4, ul.toc-level-5, ul.toc-level-6, ul.toc-level-7, ul.toc-level-8 {
-  font-size: 1.0rem;
+ul.toc li.toc-level-1 { /* part */
+  padding: 0.5em 0 0.5em 1em;
   font-weight: 400;
 }
 
-ul.toc-level-3 li, ul.toc-level-4 li, ul.toc-level-5 li, ul.toc-level-6 li, ul.toc-level-7 li, ul.toc-level-8 li {
-  padding: 0rem;
+ul.toc li.toc-level-2 { /* chapter */
+  padding: 0.5em 0 0.0em 2em;
+  font-weight: 400;
 }
 
-article ul.toc-level-1 {
-  border-width: 1px 0 1px 0;
-  border-style: solid;
-  border-color: #dddddd;
-  padding: 0 0 1rem 1rem;
-  line-height: 18pt;
+ul.toc li.toc-level-3 { /* section */
+  padding-left: 3em;
+  font-size: 90%;
+}
+
+ul.toc li.toc-level-4 { /* subsection */
+  padding-left: 4em;
+  font-size: 90%;
+}
+
+ul.toc li.toc-level-5 { /* subsubsection */
+  padding-left: 5em;
+  font-size: 90%;
+}
+
+ul.toc li.toc-level-6 { /* paragraph */
+  padding-left: 6em;
+  font-size: 90%;
 }
 
 /* author listing */
@@ -191,14 +178,12 @@ footer span.prev {
   display: block;
   position: relative;
   left: 0;
-  margin-bottom: 0.5rem;
 }
 
 footer span.next {
   display: block;
   float: right;
   margin-right: 30%;
-  margin-top: 0.5rem;
 }
 
 footer a.ref {
