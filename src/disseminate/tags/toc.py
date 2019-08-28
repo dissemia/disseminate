@@ -98,6 +98,14 @@ class Toc(Tag):
             self.header_tag = Heading(name='TOC', content='Table of Contents',
                                       attributes='nolabel', context=context)
 
+    @property
+    def mtime(self):
+        # Get the maximum mtimes from the labels this toc tag depends on
+        labels, order_function, heading_type = self.get_labels()
+        label_mtimes = [label.mtime for label in labels]
+        mtimes = list(filter(bool, label_mtimes + [self._mtime]))
+        return max(mtimes)
+
     def get_labels(self):
         """Get the labels, ordering function and labeling type."""
         assert self.context.is_valid('label_manager')
