@@ -104,7 +104,7 @@ class Toc(Tag):
         labels, order_function, heading_type = self.get_labels()
         label_mtimes = [label.mtime for label in labels]
         mtimes = list(filter(bool, label_mtimes + [self._mtime]))
-        return max(mtimes)
+        return max(mtimes) if mtimes else None
 
     def get_labels(self):
         """Get the labels, ordering function and labeling type."""
