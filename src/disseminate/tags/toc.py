@@ -8,7 +8,6 @@ from .ref import Ref
 from .tag import Tag
 from . import exceptions
 from ..formats import html_tag, tex_env, tex_cmd
-from ..utils.string import strip_multi_newlines
 
 
 class TocError(Exception):
@@ -22,19 +21,19 @@ class TocRef(Ref):
     This is a separate class so that the label_fmt may be different for TOC
     entries.
     """
-
-    def tex_fmt(self, content=None, mathmode=False, level=1):
-        # Add the pageref
-        label = self.label
-        tex_str = super().tex_fmt(content=content, mathmode=mathmode,
-                                  level=level)
-
-        if label is not None:
-            return (tex_str + " " +
-                    tex_cmd('hfill') + " " +
-                    tex_cmd('pageref', attributes=label.id))
-        else:
-            return tex_str
+    pass
+    # def tex_fmt(self, content=None, mathmode=False, level=1):
+    #     # Add the pageref
+    #     label = self.label
+    #     tex_str = super().tex_fmt(content=content, mathmode=mathmode,
+    #                               level=level)
+    #
+    #     if label is not None:
+    #         return (tex_str  + " " +
+    #                 tex_cmd('hfill') + " " +
+    #                 tex_cmd('pageref', attributes=label.id))
+    #     else:
+    #         return tex_str
 
 
 class Toc(Tag):
@@ -246,7 +245,7 @@ class Toc(Tag):
                             level=level)
         return list_tag
 
-    def tex_fmt(self, content=None, elements=None, listtype='toclist',
+    def tex_fmt(self, content=None, elements=None, listtype='easylist',
                 mathmode=False, level=1):
         """Convert the tag to a tex listing.
 
@@ -259,45 +258,26 @@ class Toc(Tag):
         tex : str
             A string in TEX format
         """
-        # Update the ref tags, if it's the root invocation--i.e. an elements
-        # list hasn't been passed by this function to itself.
-        if elements is None:
-            self.update_tags()
+        # Get the ref tags
+        tags = self.reference_tags
 
-        # Get the content. It should be a list of TocRef tags.
-        content = content if content is not None else self.ref_tags
-        elements = elements if elements is not None else content
+        # Convert the tags to tuples of toclevels and tags
+        tags = [(tag.attributes['level'], tag) for tag in tags]
 
-        if elements is None:
-            return ''
+        # Set a level offset for the 'booktoc' style of easylist
+        level_offset = 0
 
-        if not hasattr(elements, '__iter__'):
-            elements = [elements]
+        # Wrap the tags in list items
+        items = []
+        for toclevel, tag in tags:
+            item = "§" * (toclevel + level_offset) + " "
+            item += tag.tex_fmt(level=level + 1)
+            items.append(item)
 
-        returned_elements = []
-        for e in elements:
-
-            if isinstance(e, tuple) and len(e) == 2:
-                # Unpack the element if it's a tuple with the order and the
-                # element
-                order, e = e
-
-            if isinstance(e, list):
-                # The element is a list of tags. Process this list as a group.
-                returned_elements.append(self.tex_fmt(content=None,
-                                                      elements=e,
-                                                      level=level + 1))
-            else:
-                # Otherwise it's a ref tag, get its tex and wrap it in a list
-                # item
-                entry = (tex_cmd('item', indent=2) + " " +
-                         e.tex_fmt(level=level + 1)) + "\n"
-                returned_elements.append(entry)
-
-        if len(returned_elements) > 0:
-            returned_elements = strip_multi_newlines(''.join(returned_elements))
-            return (tex_env(listtype, attributes='',
-                    formatted_content=returned_elements,
-                    indent=2 if level > 1 else 0))
+        # Create the list
+        if len(items) > 0:
+            list_tag = tex_env(listtype, attributes='booktoc',
+                               formatted_content='\n'.join(items))
+            return list_tag
         else:
-            return ''
+            return ""

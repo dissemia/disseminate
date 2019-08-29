@@ -84,6 +84,17 @@ def test_attributes_get_positional():
     assert attrs.get_positional(IntPositionalValue, target='tex') is None
     assert attrs.get_positional(IntPositionalValue) is None
 
+    # 3. Test positional arguments with paths/urls
+    attrs = Attributes('link#anchor')
+    assert attrs.get_positional(PositionalValue) == 'link#anchor'
+
+    attrs = Attributes('my_file.pdf#link-anchor')
+    assert attrs.get_positional(PositionalValue) == 'my_file.pdf#link-anchor'
+    assert (attrs.get_positional(PositionalValue, target='.tex') ==
+            'my_file.pdf#link-anchor')
+    assert (attrs.get_positional(StringPositionalValue, target='.tex') ==
+            'my_file.pdf#link-anchor')
+
 
 def test_attributes_get():
     """Test the get method of Attributes classes."""
@@ -171,13 +182,12 @@ def test_attributes_filter():
 
     # 3. Test positional arguments
     attrs = Attributes('class=basic class.html=specific 3.1416 2.718.tex')
-    print(attrs.filter(target='tex'))
     assert attrs.filter(target='tex') == Attributes('class=basic '
                                                     '3.1416 2.718')
     assert attrs.filter(target='html') == Attributes('class=specific '
                                                     '3.1416')
 
-    # 4. Test an example for allowed attributes with equations
+    # 4. Test examples for allowed attributes with equations
     attrs = Attributes('class=basic src=img.txt env=alignat* 3')
     filtered_attrs = attrs.filter(attrs=(IntPositionalValue, 'env'),
                                   target='tex')
@@ -186,6 +196,26 @@ def test_attributes_filter():
     filtered_attrs = attrs.filter(attrs=(IntPositionalValue,),
                                   target='tex')
     assert filtered_attrs == Attributes('3')
+
+    # 5. Test examples with paths
+    attrs = Attributes('my_file.pdf#link-anchor')
+    filtered_attrs = attrs.filter(attrs=(StringPositionalValue,),
+                                  target='tex')
+    assert 'my_file.pdf#link-anchor' in filtered_attrs
+
+    filtered_attrs = attrs.filter(attrs=(StringPositionalValue,),
+                                  target='tex',
+                                  sort_by_attrs=True)
+    assert 'my_file.pdf#link-anchor' in filtered_attrs
+
+    # Filtering without a target attribute doesn't work
+    filtered_attrs = attrs.filter(target='tex')
+    assert len(filtered_attrs) == 0
+
+    # But filtering with a target attribute does work
+    attrs = Attributes('my_file.pdf#link-anchor.tex')
+    filtered_attrs = attrs.filter(target='tex')
+    assert 'my_file.pdf#link-anchor' in filtered_attrs
 
 
 def test_attributes_filter_order():
@@ -224,14 +254,16 @@ def test_attributes_html():
 
     # 2. Test target-specific attributes
     attrs = Attributes('class=basic class.html=specific')
+    assert attrs.html == "class='basic' class.html='specific'"
+    attrs = attrs.filter(target='.html')
     assert attrs.html == "class='specific'"
 
-    attrs = Attributes('width.tex=200')
+    attrs = Attributes('width.tex=200').filter(target='html')
     assert attrs.html == ""
 
     # 3. Test with filter
     attrs = Attributes('src="test" width.html=100 height.tex=20')
-    attrs.filter(attrs=('src', 'width', 'height'), target='html')
+    attrs = attrs.filter(attrs=('src', 'width', 'height'), target='html')
     assert attrs.html == "src='test' width='100'"
 
 
@@ -280,3 +312,11 @@ def test_attributes_tex():
                                   sort_by_attrs=True)
     assert attrs_filtered.tex_arguments == '{3}{alignat*}'
 
+    # 5. Test paths and urls. Without specifying the '.tex' target, an
+    #    argument is not returned
+    attrs = Attributes('my_file.pdf#link-anchor')
+    assert attrs.tex_arguments == "{my_file.pdf#link-anchor}"
+
+    # But it does work with a target attribute
+    attrs = Attributes('my_file.pdf#link-anchor.tex').filter(target='.tex')
+    assert attrs.tex_arguments == "{my_file.pdf#link-anchor}"

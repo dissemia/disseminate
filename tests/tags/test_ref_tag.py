@@ -122,4 +122,4 @@ def test_ref_tex(doc):
     ref = root.content
 
     assert isinstance(ref, Ref)
-    assert ref.tex == '\\hyperref[test]{\\textbf{My Fig. 1}}'
+    assert ref.tex == '\\href{#test}{\\textbf{My Fig. 1}}'

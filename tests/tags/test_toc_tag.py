@@ -528,23 +528,17 @@ def test_toc_heading_tex(tmpdir):
               context=doc.context)
 
     key = """
-\\begin{toclist}
-  \\item \\hyperref[sec:file1-dm-heading-1]{Heading 1} \\hfill \\pageref{sec:file1-dm-heading-1}
-  \\item \\hyperref[sec:file1-dm-heading-2]{Heading 2} \\hfill \\pageref{sec:file1-dm-heading-2}
-  \\begin{toclist}
-    \\item \\hyperref[subsec:file1-dm-sub-heading-2-1]{sub-Heading 2.1} \\hfill \\pageref{subsec:file1-dm-sub-heading-2-1}
-    \\item \\hyperref[subsec:file1-dm-sub-heading-2-2]{sub-Heading 2.2} \\hfill \\pageref{subsec:file1-dm-sub-heading-2-2}
-    \\begin{toclist}
-      \\item \\hyperref[subsubsec:file1-dm-sub-sub-header-2-2-1]{sub-sub-Header 2.2.1} \\hfill \\pageref{subsubsec:file1-dm-sub-sub-header-2-2-1}
-    \\end{toclist}
-    \\item \\hyperref[subsec:file1-dm-sub-heading-2-3]{sub-Heading 2.3} \\hfill \\pageref{subsec:file1-dm-sub-heading-2-3}
-  \\end{toclist}
-  \\item \\hyperref[sec:file1-dm-heading-3]{Heading 3} \\hfill \\pageref{sec:file1-dm-heading-3}
-  \\begin{toclist}
-    \\item \\hyperref[subsubsec:file1-dm-sub-sub-header-3-1-1]{sub-sub-header 3.1.1} \\hfill \\pageref{subsubsec:file1-dm-sub-sub-header-3-1-1}
-  \\end{toclist}
-  \\item \\hyperref[sec:file1-dm-heading-4]{Heading 4} \\hfill \\pageref{sec:file1-dm-heading-4}
-\\end{toclist}
+\\begin{easylist}[booktoc]
+§§§ \\href{#sec:file1-dm-heading-1}{Heading 1}
+§§§ \\href{#sec:file1-dm-heading-2}{Heading 2}
+§§§§ \\href{#subsec:file1-dm-sub-heading-2-1}{sub-Heading 2.1}
+§§§§ \\href{#subsec:file1-dm-sub-heading-2-2}{sub-Heading 2.2}
+§§§§§ \\href{#subsubsec:file1-dm-sub-sub-header-2-2-1}{sub-sub-Header 2.2.1}
+§§§§ \\href{#subsec:file1-dm-sub-heading-2-3}{sub-Heading 2.3}
+§§§ \\href{#sec:file1-dm-heading-3}{Heading 3}
+§§§§§ \\href{#subsubsec:file1-dm-sub-sub-header-3-1-1}{sub-sub-header 3.1.1}
+§§§ \\href{#sec:file1-dm-heading-4}{Heading 4}
+\\end{easylist}
 """
     assert key == toc.tex
 
@@ -562,14 +556,12 @@ def test_toc_heading_tex(tmpdir):
               context=doc.context)
 
     key = """
-\\begin{toclist}
-  \\item \\hyperref[heading-1]{Heading 1} \\hfill \\pageref{heading-1}
-  \\item \\hyperref[heading-2]{Heading 2} \\hfill \\pageref{heading-2}
-  \\begin{toclist}
-    \\item \\hyperref[subheading-2]{sub-Heading 2} \\hfill \\pageref{subheading-2}
-  \\end{toclist}
-  \\item \\hyperref[heading-3]{Heading 3} \\hfill \\pageref{heading-3}
-\\end{toclist}
+\\begin{easylist}[booktoc]
+§§§ \\href{#heading-1}{Heading 1}
+§§§ Heading 2
+§§§§ sub-Heading 2
+§§§ Heading 3
+\\end{easylist}
 """
     assert key == toc.tex
 
@@ -578,50 +570,11 @@ def test_toc_heading_tex(tmpdir):
               context=doc.context)
 
     key = """
-\\begin{toclist}
-  \\item \\hyperref[heading-1]{Heading 1} \\hfill \\pageref{heading-1}
-\\end{toclist}
+\\begin{easylist}[booktoc]
+§§§ \\href{#heading-1}{Heading 1}
+\\end{easylist}
 """
     assert key == toc.tex
-
-
-# def test_toc_header_tex(tmpdir):
-#     """Test the creation of a chapter header for TOCs in tex."""
-#     # The 'tests/tags/toc_example2' directory contains three markup files:
-#     # file1.dm, file2.dm and file3.dm. The 'file1.dm' includes 'file2.dm' and
-#     # 'file3.dm' The 'file2.dm' has a header and a sub-header.
-#     # This test has headers with id anchors specified.
-#     # Setup paths
-#     src_filepath = SourcePath(project_root='tests/tags/toc_example2',
-#                               subpath='file1.dm')
-#     target_root = TargetPath(tmpdir)
-#     doc = Document(src_filepath, target_root)
-#
-#     # Create a toc for the root document, file1.dm, only.
-#     toc = Toc(name='toc', content='headings', attributes='',
-#               context=doc.context)
-#
-#     key = """
-# \\begin{toclist}
-#   \\item \\hyperref[heading-1]{1. Heading 1} \\hfill \\pageref{heading-1}
-# \\end{toclist}
-# """
-#     assert toc.tex == key
-#
-#     # Now try adding the header
-#     toc = Toc(name='toc', content='headings', attributes='header',
-#               context=doc.context)
-#
-#     key = """
-# \\begin{toclist}
-#   \\item \\hyperref[heading-1]{1. Heading 1} \\hfill \\pageref{heading-1}
-# \\end{toclist}
-# """
-#     assert toc.tex == key
-#
-#     # Make sure a label was not created for the heading
-#     label_manager = doc.context['label_manager']
-#     assert len(label_manager.get_labels(kinds='chapter')) == 0
 
 
 def test_toc_document_tex(tmpdir):
@@ -640,12 +593,10 @@ def test_toc_document_tex(tmpdir):
               context=doc.context)
 
     key = """
-\\begin{toclist}
-  \\item \\hyperref[doc:file1-dm]{file1} \\hfill \\pageref{doc:file1-dm}
-  \\begin{toclist}
-    \\item \\hyperref[doc:sub-file21-dm]{sub/file21} \\hfill \\pageref{doc:sub-file21-dm}
-    \\item \\hyperref[doc:sub-file22-dm]{sub/file22} \\hfill \\pageref{doc:sub-file22-dm}
-  \\end{toclist}
-\\end{toclist}
+\\begin{easylist}[booktoc]
+§ file1
+§ \\href{sub/file21.pdf}{sub/file21}
+§ \\href{sub/file22.pdf}{sub/file22}
+\\end{easylist}
 """
     assert toc.tex == key

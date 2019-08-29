@@ -265,12 +265,12 @@ class Converter(object):
                 e = ConverterError(error_msg)
                 e.cmd = " ".join(args)
                 e.returncode = returncode
-                e.shell_out = out.decode('utf-8')
-                e.shell_err = err.decode('utf-8')
+                e.shell_out = out.decode('latin1')
+                e.shell_err = err.decode('latin1')
                 raise e
             else:
                 logging.warning(error_msg)
-                logging.debug(err.decode('utf-8'))
+                logging.debug(err.decode('latin1'))
 
     @classmethod
     def get_converter(cls, src_filepath, target_basefilepath, targets,
