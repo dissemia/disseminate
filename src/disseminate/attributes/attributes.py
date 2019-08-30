@@ -36,6 +36,10 @@ def gen_attr(attr, sep=settings.attribute_target_sep):
     'width'
     >>> gen_attr('width')
     'width'
+    >>> gen_attr('my_file.pdf#link-anchor')
+    'my_file'
+    >>> gen_attr('my_file.pdf#link-anchor.tex')
+    'my_file.pdf#link-anchor'
     """
     if not isinstance(attr, str):
         return attr
@@ -55,7 +59,8 @@ def gen_attr(attr, sep=settings.attribute_target_sep):
         # See if the last piece matches a target.
         # ex:
         #     '3.1416', return '3.1416'
-        return (sep.join(split) if split[-1].isdigit() else
+        return (sep.join(split)
+                if split[-1].isdigit() else
                 sep.join(split[0:-1]))
 
 
@@ -432,8 +437,8 @@ class Attributes(dict):
 
         Parameters
         ----------
-        attrs : Optional[List[Union[str, :class:`PositionalValue \
-            <.PositionalValue>`]]]
+        attrs : Optional[Union[str, List[Union[str, :class:`PositionalValue \
+            <.PositionalValue>`]]]]
             Filter keys. If specified, only entries that match one of these
             keys will be returned.
         target : Optional[str]
@@ -597,8 +602,18 @@ class Attributes(dict):
 
     @property
     def html(self):
-        """Format the attributes for html."""
-        d = self.filter(target='html')
+        """Format the attributes for html.
+
+        Notes
+        -----
+        - This function won't strip target tags ('.html'), and a filter
+          for the '.html' target should be applied before using this property
+
+        """
+        # Disable filtering here because the command that uses this property
+        # already filters the attributes dict
+        # d = self.filter(target='html')  # previously
+        d = self
 
         # Create an attribute string in html format
         entries = ["{}='{}'".format(k, v) if not ispositional(v) else
@@ -610,12 +625,20 @@ class Attributes(dict):
     def tex_arguments(self):
         """Format arguments for tex.
 
+        Notes
+        -----
+        - This function won't strip target tags ('.tex'), and a filter
+          for the '.tex' target should be applied before using this property
+
         Examples
         --------
         >>> Attributes('width=302 3').tex_arguments
         '{302}{3}'
         """
-        d = self.filter(target='tex')
+        # Disable filtering here because the format command that uses this
+        # property already filters the attributes dict
+        # d = self.filter(target='tex')  # previously
+        d = self
 
         # Create an attribute in tex format
         entries = ["{{{}}}".format(v)
@@ -628,12 +651,20 @@ class Attributes(dict):
     def tex_optionals(self):
         """Format optional arguments for tex.
 
+        Notes
+        -----
+        - This function won't strip target tags ('.tex'), and a filter
+          for the '.tex' target should be applied before using this property
+
         Examples
         --------
         >>> Attributes('width=302 3').tex_optionals
         '[width=302, 3]'
         """
-        d = self.filter(target='tex')
+        # Disable filtering here because the command that uses this property
+        # already filters the attributes dict
+        # d = self.filter(target='tex')  # previously
+        d = self
 
         # Create an attribute in tex format
         entries = ["{}={}".format(k, v)

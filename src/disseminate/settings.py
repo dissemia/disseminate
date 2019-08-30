@@ -311,6 +311,8 @@ tex_env_optionals = {# ex: \begin{enumerate}[I]
 
                      # ex: \begin{figure}[h]
                      'figure': (StringPositionalValue,),
+
+                     'easylist': (StringPositionalValue,),
                      }
 
 tex_cmd_arguments = {'textbf': empty,
@@ -349,10 +351,10 @@ tex_cmd_arguments = {'textbf': empty,
 
                      'hfill': empty,
                      'pageref': (StringPositionalValue,),
+                     'href': (StringPositionalValue,),
                      }
 
 tex_cmd_optionals = {'includegraphics': ('width', 'height'),
-                     'hyperref': (StringPositionalValue,),
                      }
 
 

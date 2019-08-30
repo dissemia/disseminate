@@ -50,8 +50,7 @@ def tex_cmd(cmd, attributes='', formatted_content=None, indent=None):
     # Get the required arguments
     if cmd in settings.tex_cmd_arguments:
         reqs = attributes.filter(attrs=settings.tex_cmd_arguments[cmd],
-                                 target='tex',
-                                 sort_by_attrs=True)
+                                 sort_by_attrs=True, target='tex')
         reqs_str = reqs.tex_arguments
     else:
         reqs = None

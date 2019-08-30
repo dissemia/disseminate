@@ -111,5 +111,4 @@ def test_img_tex(tmpdir, context_cls):
     # Generate a tag and compare the generated tex to the answer key
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
-
     assert img.tex == "\\includegraphics[height=20]{sample.pdf}"

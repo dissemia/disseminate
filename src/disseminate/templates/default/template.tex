@@ -16,6 +16,14 @@
 \usepackage[utf8]{inputenc}
 \DeclareUnicodeCharacter{26AC}{\circ}  % used for degrees
 \DeclareUnicodeCharacter{25CB}{\ensuremath{\circ}}  % used for degrees
+\DeclareUnicodeCharacter{00A7}{^^a7}
+
+%%%
+% Lists
+\usepackage{easylist}
+
+\usepackage{enumitem}
+\setlistdepth{9}
 
 %%%
 % Math
@@ -26,18 +34,13 @@
 %%%
 % Hyperref package for links
 \usepackage{hyperref}
-\hypersetup{colorlinks, linkcolor=blue,
+\hypersetup{ %colorlinks,
+            %linkcolor=black!50!blue,
+            %filecolor=black!50!blue,
             {%- if title %}pdftitle={{ title }},{%- endif %}
             {%- if author %}pdfauthor={{ author }},{%- endif %}
             pdfcreator=Disseminate
             }
-
-%%%
-% Customizations for lists
-\usepackage{enumitem}
-\setlistdepth{9}
-\newlist{toclist}{itemize}{9}
-\setlist[toclist]{label=}
 
 %%%
 % Page Layout
