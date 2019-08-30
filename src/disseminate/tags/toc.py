@@ -268,7 +268,9 @@ class Toc(Tag):
         level_offset = 0
 
         # Wrap the tags in list items
-        items = []
+        items = list()
+        items.append("\\ListProperties(Hide=2)")
+
         for toclevel, tag in tags:
             item = "§" * (toclevel + level_offset) + " "
             item += tag.tex_fmt(level=level + 1)
