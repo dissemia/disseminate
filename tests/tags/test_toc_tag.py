@@ -529,6 +529,7 @@ def test_toc_heading_tex(tmpdir):
 
     key = """
 \\begin{easylist}[booktoc]
+\\ListProperties(Hide=2)
 §§§ \\href{#sec:file1-dm-heading-1}{Heading 1}
 §§§ \\href{#sec:file1-dm-heading-2}{Heading 2}
 §§§§ \\href{#subsec:file1-dm-sub-heading-2-1}{sub-Heading 2.1}
@@ -557,6 +558,7 @@ def test_toc_heading_tex(tmpdir):
 
     key = """
 \\begin{easylist}[booktoc]
+\\ListProperties(Hide=2)
 §§§ \\href{#heading-1}{Heading 1}
 §§§ Heading 2
 §§§§ sub-Heading 2
@@ -571,6 +573,7 @@ def test_toc_heading_tex(tmpdir):
 
     key = """
 \\begin{easylist}[booktoc]
+\\ListProperties(Hide=2)
 §§§ \\href{#heading-1}{Heading 1}
 \\end{easylist}
 """
@@ -594,6 +597,7 @@ def test_toc_document_tex(tmpdir):
 
     key = """
 \\begin{easylist}[booktoc]
+\\ListProperties(Hide=2)
 § file1
 § \\href{sub/file21.pdf}{sub/file21}
 § \\href{sub/file22.pdf}{sub/file22}

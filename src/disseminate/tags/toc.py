@@ -272,6 +272,7 @@ class Toc(Tag):
         items.append("\\ListProperties(Hide=2)")
 
         for toclevel, tag in tags:
+            toclevel = toclevel + 1 if toclevel == 0 else toclevel
             item = "§" * (toclevel + level_offset) + " "
             item += tag.tex_fmt(level=level + 1)
             items.append(item)
