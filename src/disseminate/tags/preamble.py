@@ -2,6 +2,7 @@
 Tags for document preambles.
 """
 from .tag import Tag
+from .headings import Title
 from ..formats import html_tag
 from ..utils.string import str_to_list
 
@@ -69,6 +70,10 @@ class Titlepage(Tag):
     def __init__(self, name, content, attributes, context):
         super(Titlepage, self).__init__(name, content, attributes, context)
 
+        # Setup the title tag
+        self.title_tag = Title(name='title', content='', attributes='',
+                               context=context)
+
         # Setup the author tag
         self.authors_tag = Authors(name='authors', content='',
                                    attributes=tuple(), context=context)
@@ -89,8 +94,7 @@ class Titlepage(Tag):
             return self.context['author']
 
     def html_fmt(self, content=None, level=1):
-        title_tag = html_tag('h1', attributes='class=title',
-                             formatted_content=self.title, level=level + 1)
+        title_tag = self.title_tag.html_fmt(level=level + 1)
         author_tag = self.authors_tag.html_fmt(content=content, level=level + 1)
         return html_tag('div', attributes='class=title-page',
                         formatted_content=[title_tag, author_tag], level=level)
