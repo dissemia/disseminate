@@ -38,6 +38,7 @@ def create_app(in_path, out_dir=None, debug=False):
     app.config['out_dir'] = out_dir
     app.config['in_path'] = in_path
     app.config['SECRET_KEY'] = create_secret_key()
+    app.config['RESPONSE_TIMEOUT'] = 300  # seconds
 
     # Add blueprints
     app.blueprint(tree)
