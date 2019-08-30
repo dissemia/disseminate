@@ -75,17 +75,8 @@ class Titlepage(Tag):
 
     @property
     def title(self):
-        """The title of the document"""
-        title = ''
-
-        if 'document' in self.context:
-            doc = self.context['document']
-            if hasattr(doc, 'title'):
-                title = doc.title
-        elif 'title' in self.context:
-            title = self.context['title']
-
-        return title
+        """The title of the project"""
+        return self.context.get('title', '')
 
     @property
     def authors(self):
