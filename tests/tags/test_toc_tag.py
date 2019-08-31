@@ -236,7 +236,7 @@ def test_toc_absolute_and_relative_links(tmpdir):
     assert toc.html == key
 
     # 3. The 'tests/tags/toc_example1' directory contains three markup files:
-    #    ile1.dm, in the root folder, and file21.dm and file2.dm in the 'sub'
+    #    file1.dm, in the root folder, and file21.dm and file2.dm in the 'sub'
     #    folder. The 'file1.dm' includes 'file21.dm' and 'file22.dm'.
     #    Setup the paths
     #    First test with absolute links

@@ -135,6 +135,14 @@ ul.toc li.toc-level-6 { /* paragraph */
   font-size: 90%;
 }
 
+/* Document utils */
+
+ul.document-utils {
+  float: right;
+  list-style: none;
+  margin: 0.25em;
+}
+
 /* author listing */
 
 div.authors {

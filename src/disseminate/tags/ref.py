@@ -77,8 +77,7 @@ class Ref(Tag):
         if doc_id is not None and doc_id == other_doc_id:
             # Return this document, if the label is owned by the same document
             # as the owner of this tag.
-            return (self.context['document']() if 'document' in self.context
-                    else None)  # document needs to be de-reference
+            return self.context.document
 
         # The other_doc_id and doc_id are different, so this Ref tag references
         # a label owned by another document.

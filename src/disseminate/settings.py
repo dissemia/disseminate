@@ -85,9 +85,10 @@ default_context = {
     'paths': [],
     'template': 'default/template',
 
-    # Entries for relative links to documents
+    # Entries for navigation
     'prev': '',
     'next': '',
+    'pdflink': '',
 
     # Options related to links
     'relative_links': True,
@@ -95,7 +96,7 @@ default_context = {
 
     # Process tags for the following entries in a context
     # (see processors/process_context_tags.py)
-    'process_context_tags': {body_attr, 'toc', 'prev', 'next'},
+    'process_context_tags': {body_attr, 'toc', 'prev', 'next', 'pdflink'},
 
     # Process paragraphs for tags with the following names
     # (see tags/paragraphs.py)
