@@ -23,6 +23,9 @@
       </a>
     </li>
   </ul>
+  <ul class="document-utils">
+    {%- if pdflink %}<li class="pdf">{{ pdflink.html }}</li>{%- endif %}
+  </ul>
   <div class="toc">
   {%- if toc %}{{ toc.html }}{% endif %}
   </div>

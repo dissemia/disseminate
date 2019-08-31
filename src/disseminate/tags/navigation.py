@@ -1,8 +1,11 @@
 """
 Navigation tags
 """
+from os.path import relpath
+
 from .tag import Tag
 from .ref import Ref
+from ..formats import html_tag, tex_cmd
 
 
 def relative_label(context, relative_position, kinds='heading',
@@ -155,3 +158,53 @@ class Prev(Ref):
             return super(Prev, self).html_fmt(content=content, level=level)
         else:
             return ""
+
+
+class Pdflink(Ref):
+    """Produces a link to the pdf for this document.
+
+    Notes
+    -----
+    1. As opposed to the parent Ref tag, if a label is not found, an empty
+       string is returned by the target format functions.
+    """
+
+    active = True
+
+    def __init__(self, name, content, attributes, context):
+        # Bypass the Ref initiator, as it sets the label_id
+        Tag.__init__(self, name, content, attributes, context)
+
+    def default_fmt(self, content=None):
+        # The next reference is designed for html only
+        return ""
+
+    def tex_fmt(self, content=None, mathmode=False, level=1):
+        # The next reference is designed for html only
+        return ""
+
+    def html_fmt(self, content=None, level=1):
+        context = self.context
+
+        # Only works if the document that owns this tag will be rendered to
+        # a pdf.
+        if '.pdf' not in context.targets:
+            return ""
+
+        # Get the document that owns this context and reconstruct the link to
+        # the pdf.
+        document = context.document
+        pdf_target_filepath = document.target_filepath('.pdf')
+        html_target_filepath = document.target_filepath('.html')
+
+        # Get the relative path do this html document
+        relative_path = relpath(pdf_target_filepath ,html_target_filepath)
+        attrs = self.attributes.copy()
+        attrs['class'] = 'ref'
+        attrs['href'] = relative_path
+
+        # wrap content in 'a' tag
+        return html_tag('a', attributes=attrs,
+                        formatted_content='pdf',
+                        level=level,
+                        pretty_print=False)  # no line breaks
