@@ -312,6 +312,7 @@ tex_env_optionals = {# ex: \begin{enumerate}[I]
 
                      # ex: \begin{figure}[h]
                      'figure': (StringPositionalValue,),
+                     'figure*': (StringPositionalValue,),
 
                      'easylist': (StringPositionalValue,),
                      }

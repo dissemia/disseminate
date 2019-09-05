@@ -4,6 +4,7 @@ Image tags
 import pathlib
 
 from .tag import Tag, TagError
+from .utils import find_files
 from ..formats import tex_cmd
 from ..utils.string import hashtxt
 from ..paths import SourcePath
@@ -79,6 +80,7 @@ class Img(Tag):
                                           target='.html',
                                           context=self.context,
                                           attributes=self.attributes)
+
         dep = deps.pop()
         url = dep.get_url(context=self.context)
 
@@ -112,10 +114,11 @@ class RenderedImg(Img):
             content = content.strip()
 
         # Determine if contents is a file or code
-        content_line = content.splitlines()[0]  # check filename in 1st line
-        if pathlib.Path(content_line).is_file():
+        filepaths = find_files(content, context=context)
+        if len(filepaths) == 1:
             # It's a file. Use it directly.
-            pass
+            content = filepaths[0]
+
         else:
             # Render the content, if needed.
             content = self.render_content(content=content, context=context)

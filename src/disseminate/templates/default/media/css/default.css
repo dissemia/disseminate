@@ -73,10 +73,6 @@ ul ul {/* Add a margin nested <ul> */
     margin-left: 14pt;
 }
 
-span.label::after {
-    content: " ";
-}
-
 .supsub {
     display: inline-block;
     margin: -9em 0;
@@ -173,6 +169,16 @@ span.marginfig, span.sidenote {
 
 span.marginfig span.caption {
     display: block;
+}
+
+/* Tags */
+
+span.caption {
+  display: block;
+}
+
+span.label::after {
+    content: " ";
 }
 
 /* Footer - navigation */

@@ -33,7 +33,26 @@ class BaseFigure(Tag):
 
 
 class Marginfig(BaseFigure):
+    """The @marginfig tag"""
 
     html_name = 'marginfig'
     tex_env = 'marginfigure'
+    active = True
+
+
+class Figure(BaseFigure):
+    """The @figure/@fig tag"""
+
+    aliases = ('fig',)
+    html_name = 'figure'
+    tex_env = 'figure'
+    active = True
+
+
+class FullFigure(BaseFigure):
+    """The @fullfigure/@ffig tag"""
+
+    aliases = ('ffig', 'fullfig')
+    html_name = 'fullfigure'
+    tex_env = 'figure*'
     active = True

@@ -6,7 +6,7 @@ import pytest
 from disseminate.tags import Tag
 from disseminate.tags.text import Italics
 from disseminate.tags.utils import (repl_tags, content_to_str, replace_context,
-                                    copy_tag)
+                                    copy_tag, find_files)
 
 
 def test_content_to_str(context_cls):
@@ -151,3 +151,17 @@ def test_tag_copy(context_cls):
         assert id(tag1) != id(tag2)
         assert id(tag1.context) == id(context)
         assert id(tag2.context) == id(other)
+
+
+def test_find_files(doc):
+    """Test the find_files function."""
+    context = doc.context
+
+    # The source file should be found
+    filepaths = find_files('test.dm', context)
+    assert len(filepaths) == 1
+    assert filepaths[0].name == 'test.dm'
+
+    # Invalid files are not found
+    filepaths = find_files('garbage331.py', context)
+    assert len(filepaths) == 0

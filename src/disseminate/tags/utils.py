@@ -2,6 +2,7 @@
 Misc utilities for tags.
 """
 from copy import copy
+from ..paths import SourcePath
 
 
 def content_to_str(content, target='.txt', **kwargs):
@@ -140,3 +141,57 @@ def copy_tag(tag):
     tag_copy.content = copy_tag(tag_copy.content)
 
     return tag_copy
+
+
+def find_files(string, context):
+    """Determine if filenames for valid files are present in the given
+    string.
+
+    Parameters
+    ----------
+    string : str
+        The string that may contain filenames
+    context : :obj:`.DocumentContext`
+        A document context that contains paths to search.
+
+    Returns
+    filepaths : List[:obj:`pathlib.Path`]
+        List of found paths
+    """
+    assert context.is_valid('paths')
+
+    # Setup arguments and return values
+    # First remove extra spaces and newlines on the ends.
+    string = string.strip()
+    filepaths = list()
+    paths = ['.'] + context['paths']
+
+    # Go line-by-line and find valid files. Stop when no more lines can
+    # be found
+    for line in string.splitlines():
+        # Skip empty lines
+        if line == "":
+            continue
+
+        # Try different filepaths
+        filepath = None
+        for path in paths:
+            filepath = SourcePath(project_root=path, subpath=line)
+            if filepath.is_file():
+                # A valid file was found! Use it.
+                break
+            else:
+                filepath = None
+
+        if filepath is None:
+            # No valid filepath was found. We'll assume the following strings
+            # do not contain valid files
+            break
+        else:
+            # A valid file and filepath was found. Add it to the list of
+            # filepaths and continue looking for files.
+            filepaths.append(filepath)
+
+    return filepaths
+
+
