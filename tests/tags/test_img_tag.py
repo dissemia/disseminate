@@ -1,9 +1,35 @@
 """
 Test the img tag.
 """
+import pathlib
+
 from disseminate.tags import Tag
 from disseminate.dependency_manager import DependencyManager
 from disseminate.paths import SourcePath, TargetPath
+
+
+def test_img_mtime(doc):
+    """Test the correct modification time for images referenced by
+    an @img tag."""
+    # Copy an image to the temporary directory
+    img_src = """<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+</svg"""
+    src_path = doc.src_filepath.parent
+    img_filepath = src_path / 'test.svg'
+    img_filepath.write_text(img_src)
+
+    # Create an image tag
+    src = "@img{{{}}}".format(str(img_filepath))
+
+    # Generate a tag and compare the generated tex to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    img = root.content
+
+    # Check the mtimes
+    assert img.mtime == img_filepath.stat().st_mtime
+    assert root.mtime == img.mtime  # root should be at least as late as @img
+    assert root.mtime > doc.mtime  # and the root tag is later than the src file
 
 
 def test_img_attribute(tmpdir, context_cls):

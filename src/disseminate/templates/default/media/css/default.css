@@ -158,8 +158,8 @@ span.marginfig, span.sidenote {
     margin-bottom: 0.5rem;
     vertical-align: top;
     position: relative;
-    font-size: 0.8em;
-    line-height: 1.4;
+    font-size: 10pt;
+    line-height: 12pt;
     padding: 0.2rem;
     border-top: 1px solid #eee;
     border-bottom: 1px solid #eee;
@@ -167,8 +167,28 @@ span.marginfig, span.sidenote {
     overflow-x: hidden;
 }
 
-span.marginfig span.caption {
-    display: block;
+
+/* figures */
+
+span.fullfigure {
+  padding: 0.5rem 0;
+  display: block;
+  width: 145%;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+span.figure {
+  padding: 0.5rem 0;
+  display: block;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+span.caption {
+  display: block;
+  font-size: 10pt;
+  line-height: 12pt;
 }
 
 /* Tags */

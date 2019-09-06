@@ -137,12 +137,16 @@ class Tag(object):
     def mtime(self):
         """The last modification time of this tag's (and subtag) document and
         for the documents of all labels referenced by this tag."""
-        # Get the latest mtime for this label and all sub-labels
-        flattened_list = self.flatten(filter_tags=True)
+        # Get mtimes for sub-tags
+        if isinstance(self.content, list):
+            mtimes = [tag.mtime for tag in self.content
+                      if hasattr(tag, 'mtime')]
+        elif isinstance(self.content, Tag):
+            mtimes = [self.content.mtime]
+        else:
+            mtimes = list()
 
-        mtimes = [tag.context.get('mtime', None)
-                  for tag in flattened_list if hasattr(tag, 'context')]
-        mtimes += [self.context.get('mtime', None)]
+        mtimes.append(self.context.get('mtime', None))
 
         # Remove None values from mtimes
         mtimes = list(filter(bool, mtimes))

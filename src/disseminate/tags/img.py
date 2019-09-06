@@ -52,6 +52,23 @@ class Img(Tag):
             msg = "An image path must be used with the img tag."
             raise TagError(msg)
 
+    @property
+    def mtime(self):
+        """The last modification time of this tag and dependent files."""
+        mtimes = [super().mtime]
+
+        # Get the image file's modification time
+        img_filepath = pathlib.Path(self.img_filepath)
+        if img_filepath.is_file():
+            mtime = img_filepath.stat().st_mtime
+            mtimes.append(mtime)
+
+        # Remove None values from mtimes
+        mtimes = list(filter(bool, mtimes))
+
+        # The mtime is the latest mtime of all the tags and labels
+        return max(mtimes)
+
     def tex_fmt(self, content=None, mathmode=False, level=1):
         # Get the file dependency
         assert self.context.is_valid('dependency_manager')

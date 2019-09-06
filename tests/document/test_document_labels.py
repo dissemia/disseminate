@@ -138,16 +138,12 @@ def test_document_tag_mtime(tmpdir, wait):
     # Check that the first file was written before the second.
     assert src_filepath1.mtime() < src_filepath2.mtime()
 
-    # The labels haven't been registered yet, so the root tags should have the
-    # same modification time as the files
-    assert src_filepath1.mtime() == root1.mtime
-    assert src_filepath2.mtime() == root2.mtime
-
-    # Registering the labels with the 'get_labels' will register the labels
-    # doc1's mtime doesn't change because the @ref tag's label hasn't changed
-    # Neither has doc2.
-    labels = label_manager.get_labels()
-    assert src_filepath1.mtime() == root1.mtime
+    # The labels have been registered. The root1 depends on the second document,
+    # which is later than the first document, so it should have it's mtime
+    # instead of the mtime of the first document.
+    assert src_filepath1.mtime() < src_filepath2.mtime()
+    assert src_filepath1.mtime() < root1.mtime
+    assert src_filepath2.mtime() == root1.mtime
     assert src_filepath2.mtime() == root2.mtime
 
 
