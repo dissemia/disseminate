@@ -172,18 +172,45 @@ span.marginfig, span.sidenote {
 
 span.fullfigure {
   padding: 0.5rem 0;
-  display: block;
+  display: flex;
   width: 145%;
   border-top: 1px solid #eee;
   border-bottom: 1px solid #eee;
 }
 
+span.fullfigure img {
+  padding-right: 0.25rem;
+  flex-grow: 1.0;
+}
+
 span.figure {
   padding: 0.5rem 0;
-  display: block;
+  display: flex;
   border-top: 1px solid #eee;
   border-bottom: 1px solid #eee;
 }
+
+span.figure img {
+  padding-right: 0.25rem;
+  flex-grow: 1.0;
+}
+
+span.figure span.caption {
+  clear: right;
+  float: right;
+  width: 40%;
+  margin-right: -45%;
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
+  vertical-align: top;
+  position: relative;
+  padding: 0.2rem;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  background-color: #fcfcfc;
+  overflow-x: hidden;
+}
+
 
 span.caption {
   display: block;
