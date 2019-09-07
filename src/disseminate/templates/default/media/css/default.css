@@ -199,6 +199,7 @@ span.figure span.caption {
   clear: right;
   float: right;
   width: 40%;
+  display: table;
   margin-right: -45%;
   margin-top: -0.5rem;
   margin-bottom: 0.5rem;
