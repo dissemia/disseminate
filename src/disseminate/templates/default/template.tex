@@ -11,9 +11,10 @@
 \usepackage[labelformat=empty]{caption}
 
 %%%
-% Figure text sizes
-\usepackage{etoolbox}
-\AtBeginEnvironment{minipage}{\footnotesize}
+% Panels for figures
+\newenvironment{panel}[1]
+{\begin{minipage}{ #1}\footnotesize}
+{\end{minipage}}
 
 %%%
 % Load UTF-8 characters

@@ -189,14 +189,15 @@ def test_panel_html(doc):
     assert panel.html == key
 
     # 2. Generate a panel tag a width
-    src = "@panel[width='30%']{This is my panel}"
+    src = "@panel[width='30%' ]{This is my panel}"
 
     # Generate a tag and compare the generated html to the answer key
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     panel = root.content
 
-    key = '<span class="panel" width="30.0%">This is my panel</span>\n'
+    key = '<span class="panel" style="width: 30.0%">This is my panel</span>\n'
     assert panel.html == key
+
 
 # tex tests
 
@@ -312,8 +313,7 @@ def test_panel_tex(doc):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     panel = root.content
 
-    key = ('\n'
-           '\\begin{minipage}{0.3\\textwidth}\n'
+    key = ('\\begin{panel}{0.3\\textwidth}\n'
            'This is my panel\n'
-           '\\end{minipage}\n')
+           '\\end{panel}')
     assert panel.tex == key

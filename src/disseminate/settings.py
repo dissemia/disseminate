@@ -306,7 +306,7 @@ tex_env_arguments = {'enumerate': empty,  # no required arguments
                      'verbatim': empty,
                      'toclist': empty,
 
-                     'minipage': (StringPositionalValue,),
+                     'panel': (StringPositionalValue,),
                      }
 
 tex_env_optionals = {# ex: \begin{enumerate}[I]

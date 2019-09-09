@@ -86,7 +86,7 @@ class Panel(Tag):
 
         # Raises an error if a width is not present. Strip multiple newlines
         # as these break up side-by-side figures
-        env = tex_env("minipage", attributes=attrs, formatted_content=content)
+        env = tex_env("panel", attributes=attrs, formatted_content=content)
         return strip_multi_newlines(env).strip()
 
     def html_fmt(self, content=None, level=1):
