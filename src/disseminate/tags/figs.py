@@ -66,33 +66,25 @@ class Panel(Tag):
 
     active = True
     html_name = 'panel'
-    tex_env = 'minipage'
+    tex_env = 'panel'
 
     def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
-        # Collect the content elements
-        content = content if content is not None else self.content
-
-        content = format_content(content=content, format_func='tex_fmt',
-                                 level=level + 1, mathmode=mathmode)
-        content = ''.join(content) if isinstance(content, list) else content
+        attrs = self.attributes.copy() if attributes is None else attributes
 
         # Format the width
-        attrs = format_attribute_width(self.attributes, target='.tex')
+        attrs = format_attribute_width(attrs, target='.tex')
 
         # Raises an error if a width is not present. Strip multiple newlines
         # as these break up side-by-side figures
-        env = tex_env("panel", attributes=attrs, formatted_content=content)
+        env = super().tex_fmt(content=content, attributes=attrs,
+                              mathmode=mathmode, level=level)
         return strip_multi_newlines(env).strip()
 
     def html_fmt(self, content=None, attributes=None, level=1):
-        # Collect the content elements
-        content = content if content is not None else self.content
-        content = format_content(content=content, format_func='html_fmt',
-                                 level=level + 1)
+        attrs = self.attributes.copy() if attributes is None else attributes
 
         # Format the width
-        attrs = format_attribute_width(self.attributes, target='.html')
+        attrs = format_attribute_width(attrs, target='.html')
         attrs['class'] = 'panel'
 
-        return html_tag('span', attributes=attrs, formatted_content=content,
-                        level=level)
+        return super().html_fmt(content=content, attributes=attrs, level=level)

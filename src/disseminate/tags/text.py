@@ -248,10 +248,11 @@ class Verb(Tag):
     html_name = 'code'
 
     def html_fmt(self, content=None, attributes=None, level=1):
+        attrs = self.attributes.copy() if attributes is None else attributes
+
         if self.name == "verbatim":
-            self.attributes['class'] = 'block'
-        return super(Verb, self).html_fmt(content=content,
-                                          attributes=attributes,
+            attrs['class'] = 'block'
+        return super(Verb, self).html_fmt(content=content, attributes=attrs,
                                           level=level + 1)
 
     def tex_fmt(self, *args, **kwargs):

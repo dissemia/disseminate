@@ -262,7 +262,7 @@ class Tag(object):
     def txt(self):
         return self.default_fmt()
 
-    def default_fmt(self, content=None):
+    def default_fmt(self, content=None, attributes=None):
         """Convert the tag to a text string.
 
         Strips the tag information and simply return the content of the tag.
@@ -273,6 +273,9 @@ class Tag(object):
             <.Tag>`]]]
             Specify an alternative content from the tag's content. It can
             either be a string, a tag or a list of strings, tags and lists.
+        attributes : Optional[Union[str, :obj:`Attributes <.Attributes>`]]
+            Specify an alternative attributes dict from the tag's attributes.
+            It can either be a string or an attributes dict.
 
         Returns
         -------

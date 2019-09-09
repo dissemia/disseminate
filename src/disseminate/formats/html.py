@@ -16,7 +16,7 @@ class HtmlFormatError(FormattingError):
     pass
 
 
-def html_tag(name, attributes='', formatted_content=None, level=1,
+def html_tag(name, attributes=None, formatted_content=None, level=1,
              pretty_print=settings.html_pretty):
     """Format an html tag string.
 
@@ -50,12 +50,20 @@ def html_tag(name, attributes='', formatted_content=None, level=1,
                    name in settings.html_tag_optionals)
 
     # Format the attributes
+    attributes = '' if attributes is None else attributes
     attributes = (Attributes(attributes) if isinstance(attributes, str) else
                   attributes)
 
     # Get the required arguments
     if name in settings.html_tag_arguments:
+        # If it's an allowed tag, get the required arguments for that tag
         reqs = attributes.filter(attrs=settings.html_tag_arguments[name],
+                                 target='html',
+                                 sort_by_attrs=True)
+    elif not allowed_tag and 'span' in settings.html_tag_arguments:
+        # If it's not an allowed tag, use a 'span' tag and its required
+        # arguments
+        reqs = attributes.filter(attrs=settings.html_tag_arguments['span'],
                                  target='html',
                                  sort_by_attrs=True)
     else:
@@ -69,7 +77,14 @@ def html_tag(name, attributes='', formatted_content=None, level=1,
 
     # Get optional arguments
     if name in settings.html_tag_optionals:
+        # If it's an allowed tag, get the optional arguments for that tag
         opts = attributes.filter(attrs=settings.html_tag_optionals[name],
+                                 target='html',
+                                 sort_by_attrs=True)
+    elif not allowed_tag and 'span' in settings.html_tag_optionals:
+        # If it's not an allowed tag, use a 'span' tag and its optional
+        # arguments
+        opts = attributes.filter(attrs=settings.html_tag_optionals['span'],
                                  target='html',
                                  sort_by_attrs=True)
     else:

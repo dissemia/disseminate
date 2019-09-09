@@ -106,8 +106,8 @@ class Img(Tag):
         url = dep.get_url(context=self.context)
 
         # Format the width and attributes
-        attributes = attributes if attributes is not None else self.attributes
-        attrs = format_attribute_width(attributes, target='.html')
+        attrs = self.attributes.copy() if attributes is None else attributes
+        attrs = format_attribute_width(attrs, target='.html')
         attrs['src'] = url
 
         return super().html_fmt(attributes=attrs, level=level)

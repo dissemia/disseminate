@@ -49,18 +49,16 @@ class Collection(Tag):
 
         return max(mtimes) if len(mtimes) > 0 else None
 
-    def default_fmt(self, content=None):
+    def default_fmt(self, attributes=None, content=None):
         tags = self.fetch_tags(content=None, target=None)
-        return super(Collection, self).default_fmt(content=tags)
+        return super().default_fmt(content=tags, attributes=attributes)
 
     def html_fmt(self, content=None, attributes=None, level=1):
         tags = self.fetch_tags(content=None, target='.html')
-        return super(Collection, self).html_fmt(content=tags,
-                                                attributes=attributes,
-                                                level=level)
+        return super().html_fmt(content=tags, attributes=attributes,
+                                level=level)
 
     def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         tags = self.fetch_tags(content=None, target='.tex')
-        return super(Collection, self).tex_fmt(content=tags, mathmode=mathmode,
-                                               attributes=attributes,
-                                               level=level)
+        return super().tex_fmt(content=tags, mathmode=mathmode,
+                               attributes=attributes, level=level)

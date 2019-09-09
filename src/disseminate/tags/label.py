@@ -255,7 +255,7 @@ class LabelTag(Tag):
         if 'id' in self.attributes:
             del self.attributes['id']
 
-    def default_fmt(self, content=None):
+    def default_fmt(self, content=None, attributes=None):
         # Get the label tag format
         label_manager = self.label_manager
         label_id = self.label_id
@@ -305,8 +305,8 @@ class LabelTag(Tag):
             content = format_content(content=processed_tag.content,
                                      format_func='html_fmt', level=level + 1)
 
-            attributes = self.attributes if attributes is None else attributes
-            attributes = attributes.copy()
+            attributes = (self.attributes.copy()
+                          if attributes is None else attributes)
             attributes['class'] = 'label'
             return html_tag('span', attributes=attributes,
                             formatted_content=content,

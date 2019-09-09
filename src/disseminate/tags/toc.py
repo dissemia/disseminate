@@ -213,6 +213,9 @@ class Toc(Tag):
             <disseminate.tags.Tag>`]], optional
             Specify an alternative content from the tag's content. It can
             either be a string, a tag or a list of strings, tags and lists.
+        attributes : Optional[Union[str, :obj:`Attributes <.Attributes>`]]
+            Specify an alternative attributes dict from the tag's attributes.
+            It can either be a string or an attributes dict.
         listtype : str, optional
             The type of list to render (ol, ul).
         elements : str, optional
@@ -239,10 +242,8 @@ class Toc(Tag):
             items.append(html_tag('li', formatted_content=content,
                                   attributes=attributes, level=level + 1))
         # Create the list
-        list_tag = html_tag(listtype,
-                            formatted_content=items,
-                            attributes='class="toc"',
-                            level=level)
+        list_tag = html_tag(listtype, formatted_content=items,
+                            attributes='class="toc"', level=level)
         return list_tag
 
     def tex_fmt(self, content=None, attributes=None, elements=None,

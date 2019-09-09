@@ -200,8 +200,7 @@ class Pdflink(Ref):
         # Get the relative path do this html document
         relative_path = relpath(pdf_target_filepath ,html_target_filepath)
 
-        attributes = attributes if attributes is not None else self.attributes
-        attrs = attributes.copy()
+        attrs = self.attributes.copy() if attributes is None else attributes
         attrs['class'] = 'ref'
         attrs['href'] = relative_path
 
