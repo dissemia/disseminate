@@ -90,13 +90,12 @@ def test_img_html(tmpdir, context_cls):
 
     # Now test an html-specific attribute
     # Generate the markup
-    src = "@img[width.html=100 height.tex=20]{sample.pdf}"
+    src = "@img[width.html=100% height.tex=20%]{sample.pdf}"
 
     # Generate a tag and compare the generated tex to the answer key
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
-
-    assert img.html == '<img src="/html/sample.svg" width="100"/>\n'
+    assert img.html == '<img src="/html/sample.svg" style="width: 100.0%"/>\n'
 
 
 # tex targets

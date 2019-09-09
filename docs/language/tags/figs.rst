@@ -97,7 +97,7 @@ Tags to insert figures
 
    :attributes:
 
-      ``width=x``
+      ``width="x%"``
 
          The panel's width (percentage)
 

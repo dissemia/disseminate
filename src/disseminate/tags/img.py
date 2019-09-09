@@ -4,8 +4,8 @@ Image tags
 import pathlib
 
 from .tag import Tag, TagError
-from .utils import find_files
-from ..formats import tex_cmd
+from .utils import find_files, format_attribute_width, format_content
+from ..formats import tex_cmd, html_tag
 from ..utils.string import hashtxt
 from ..paths import SourcePath
 from .. import settings
@@ -84,7 +84,10 @@ class Img(Tag):
         dest_filepath = dep.dest_filepath
         dest_subpath = dest_filepath.subpath
 
-        return tex_cmd(cmd='includegraphics', attributes=self.attributes,
+        # Format the width
+        attrs = format_attribute_width(self.attributes, target='.tex')
+
+        return tex_cmd(cmd='includegraphics', attributes=attrs,
                        formatted_content=str(dest_subpath))
 
     def html_fmt(self, content=None, level=1):
@@ -101,11 +104,22 @@ class Img(Tag):
         dep = deps.pop()
         url = dep.get_url(context=self.context)
 
-        # Use the parent method to render the tag. However, the 'src' attribute
-        # should be fixed first.
+        # Format the width and attributes
+        attrs = format_attribute_width(self.attributes, target='.html')
+        attrs['src'] = url
 
-        self.attributes['src'] = url
-        return super(Img, self).html_fmt(level=level)
+        # Format the tag
+        name = (self.html_name if self.html_name is not None else
+                self.name.lower())
+
+        # Collect the content elements
+        content = content if content is not None else self.content
+        content = format_content(content=content, format_func='html_fmt',
+                                 level=level + 1)
+
+        # Format the html tag
+        return html_tag(name=name, level=level, attributes=attrs,
+                        formatted_content=content)
 
 
 class RenderedImg(Img):

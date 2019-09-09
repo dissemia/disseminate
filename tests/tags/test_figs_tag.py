@@ -196,7 +196,6 @@ def test_panel_html(doc):
     panel = root.content
 
     key = '<span class="panel" style="width: 30.0%">This is my panel</span>\n'
-    print(panel.html)
     assert panel.html == key
 
 

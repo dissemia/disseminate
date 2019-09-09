@@ -21,22 +21,22 @@ Tags to insert and format images
 
          the css class to use for the image in ``html`` targets.
       
-      ``width=x``
+      ``width=x%``
       
-         the width of the image using the specified number
+         the width of the image using the percentage
 
          (for all targets)
 
       ``html.width=x``
       
-         the width of the image using the specified number. The width
+         the width of the image using the specified percentage. The width
          is used in the ``<img />`` tag.
 
          (``html`` targets)
 
       ``tex.width=x``
 
-         the width of the image using the specified number. The width
+         the width of the image using the specified percentage. The width
          is used in the ``\includegraphics`` macro.
 
          (``tex`` and ``pdf`` targets)
@@ -67,4 +67,4 @@ Tags to insert and format images
       ::
          
          @img[class=icon]{media/imgs/template.svg}
-         @img[tex.width=300 html.width=150]{media/imgs/simulation.svg}
+         @img[tex.width=30% html.width=15%]{media/imgs/simulation.svg}
