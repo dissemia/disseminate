@@ -69,7 +69,7 @@ class Img(Tag):
         # The mtime is the latest mtime of all the tags and labels
         return max(mtimes)
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         # Get the file dependency
         assert self.context.is_valid('dependency_manager')
 
@@ -85,12 +85,13 @@ class Img(Tag):
         dest_subpath = dest_filepath.subpath
 
         # Format the width
-        attrs = format_attribute_width(self.attributes, target='.tex')
+        attributes = attributes if attributes is not None else self.attributes
+        attrs = format_attribute_width(attributes, target='.tex')
 
         return tex_cmd(cmd='includegraphics', attributes=attrs,
                        formatted_content=str(dest_subpath))
 
-    def html_fmt(self, content=None, level=1):
+    def html_fmt(self, content=None, attributes=None, level=1):
         # Add the file dependency
         assert self.context.is_valid('dependency_manager')
         dep_manager = self.context['dependency_manager']
@@ -105,21 +106,11 @@ class Img(Tag):
         url = dep.get_url(context=self.context)
 
         # Format the width and attributes
-        attrs = format_attribute_width(self.attributes, target='.html')
+        attributes = attributes if attributes is not None else self.attributes
+        attrs = format_attribute_width(attributes, target='.html')
         attrs['src'] = url
 
-        # Format the tag
-        name = (self.html_name if self.html_name is not None else
-                self.name.lower())
-
-        # Collect the content elements
-        content = content if content is not None else self.content
-        content = format_content(content=content, format_func='html_fmt',
-                                 level=level + 1)
-
-        # Format the html tag
-        return html_tag(name=name, level=level, attributes=attrs,
-                        formatted_content=content)
+        return super().html_fmt(attributes=attrs, level=level)
 
 
 class RenderedImg(Img):

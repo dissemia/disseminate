@@ -184,3 +184,11 @@ def test_format_attribute_width():
     attrs = format_attribute_width('width.tex=30 class="test"', target='.tex')
     assert attrs['30.0\\textwidth.tex'] == StringPositionalValue
     assert attrs['class'] == 'test'
+
+    # Test widths in other units
+    attrs = format_attribute_width('width.html=300px', target='.html')
+    assert attrs['style'] == "width: 300px"
+
+    attrs = format_attribute_width('width.tex=2in', target='.tex')
+    print(attrs)
+    assert attrs['2in'] == StringPositionalValue

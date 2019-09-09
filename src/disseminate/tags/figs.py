@@ -68,7 +68,7 @@ class Panel(Tag):
     html_name = 'panel'
     tex_env = 'minipage'
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         # Collect the content elements
         content = content if content is not None else self.content
 
@@ -84,7 +84,7 @@ class Panel(Tag):
         env = tex_env("panel", attributes=attrs, formatted_content=content)
         return strip_multi_newlines(env).strip()
 
-    def html_fmt(self, content=None, level=1):
+    def html_fmt(self, content=None, attributes=None, level=1):
         # Collect the content elements
         content = content if content is not None else self.content
         content = format_content(content=content, format_func='html_fmt',

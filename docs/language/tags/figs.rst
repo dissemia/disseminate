@@ -97,9 +97,17 @@ Tags to insert figures
 
    :attributes:
 
-      ``width="x%"``
+      ``width="x"``
 
-         The panel's width (percentage)
+         The panel's width in percentage, px units
+
+      ``width.html="x"``
+
+         The panel's width in percentage, px units (for ``html`` targets)
+
+      ``width.tex="x"``
+
+         The panel's width in percentage, px units (for ``tex`` targets)
 
    :examples:
 

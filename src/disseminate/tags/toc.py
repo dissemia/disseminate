@@ -200,7 +200,7 @@ class Toc(Tag):
         self._mtime = latest_mtime
         return self._ref_tags
 
-    def html_fmt(self, content=None, listtype='ul', level=1):
+    def html_fmt(self, content=None, attributes=None, listtype='ul', level=1):
         """Convert the tag to an html listing.
 
         .. note:: The 'document' toc is special since it uses the documents
@@ -245,8 +245,8 @@ class Toc(Tag):
                             level=level)
         return list_tag
 
-    def tex_fmt(self, content=None, elements=None, listtype='easylist',
-                mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, elements=None,
+                listtype='easylist', mathmode=False, level=1):
         """Convert the tag to a tex listing.
 
         .. note:: The 'document' toc is special since it uses the documents

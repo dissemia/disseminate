@@ -195,7 +195,7 @@ class LabelAnchor(Tag):
         super().__init__(name=name, attributes=attributes, content=content,
                          context=context)
 
-    def html_fmt(self, content=None, level=1):
+    def html_fmt(self, content=None, attributes=None, level=1):
         # <span id="#label-id" />
         html_id = self.label_id
         return html_tag('span', attributes='id=' + html_id, level=level)
@@ -269,7 +269,7 @@ class LabelTag(Tag):
         else:
             return ''
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         # Get the label tag format
         label_manager = self.label_manager
         label_id = self.label_id
@@ -289,7 +289,7 @@ class LabelTag(Tag):
         else:
             return ''
 
-    def html_fmt(self, content=None, level=1):
+    def html_fmt(self, content=None, attributes=None, level=1):
         # Get the label tag format
         label_manager = self.label_manager
         label_id = self.label_id
@@ -305,7 +305,8 @@ class LabelTag(Tag):
             content = format_content(content=processed_tag.content,
                                      format_func='html_fmt', level=level + 1)
 
-            attributes = self.attributes.copy()
+            attributes = self.attributes if attributes is None else attributes
+            attributes = attributes.copy()
             attributes['class'] = 'label'
             return html_tag('span', attributes=attributes,
                             formatted_content=content,

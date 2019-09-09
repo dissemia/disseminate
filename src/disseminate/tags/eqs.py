@@ -101,14 +101,16 @@ class Eq(RenderedImg):
 
         return renderer.render(context=context_cp, target='.tex', **kwargs)
 
-    def html_fmt(self, content=None, level=1):
+    def html_fmt(self, content=None, attributes=None, level=1):
+        attrs = self.attributes.copy()
         if self.block_equation:
-            self.attributes['class'] = 'eq blockeq'
+            attrs['class'] = 'eq blockeq'
         else:
-            self.attributes['class'] = 'eq'
-        return super(Eq, self).html_fmt(content=content, level=level)
+            attrs['class'] = 'eq'
+        return super(Eq, self).html_fmt(content=content, attributes=attrs,
+                                        level=level)
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         if content is None:
             content = (self.tex_content if self.tex_content is not None
                        else self.content)

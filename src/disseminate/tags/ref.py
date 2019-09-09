@@ -166,7 +166,7 @@ class Ref(Tag):
         else:
             return ''
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         label_manager = self.context.get('label_manager')
         label = self.label
         context = self.context
@@ -208,7 +208,7 @@ class Ref(Tag):
         else:
             return ''
 
-    def html_fmt(self, content=None, level=1):
+    def html_fmt(self, content=None, attributes=None, level=1):
         label_manager = self.context.get('label_manager')
         label = self.label
         context = self.context
@@ -227,7 +227,9 @@ class Ref(Tag):
             content = format_content(content=processed_tag.content,
                                      format_func='html_fmt', level=level + 1)
 
-            attributes = self.attributes.copy()
+            attributes = (attributes if attributes is not None else
+                          self.attributes)
+            attributes = attributes.copy()
             attributes['class'] = 'ref'
 
             # setup the url path and include the anchor if the label is not

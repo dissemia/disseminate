@@ -261,11 +261,21 @@ def format_attribute_width(attributes, target):
                                        if 'width' not in k})
 
     width = attributes.get('width', target=target)
-    width = percentage(width)
+    percentage_width = percentage(width)
 
-    if target == '.tex' and width is not None:
-        formatted_attributes.load("{}\\textwidth.tex".format(width / 100.))
-    elif target == '.html' and width is not None:
-        formatted_attributes['style'] = 'width: {}%'.format(width)
+    if target == '.tex':
+        if percentage_width:
+            attr = "{}\\textwidth.tex".format(percentage_width / 100.)
+            formatted_attributes.load(attr)
+        elif width:
+            attr = "{}".format(width)
+            formatted_attributes.load(attr)
+    elif target == '.html':
+        if percentage_width:
+            attr = 'width: {}%'.format(percentage_width)
+            formatted_attributes['style'] = attr
+        elif width:
+            attr = 'width: {}'.format(width)
+            formatted_attributes['style'] = attr
 
     return formatted_attributes

@@ -179,11 +179,11 @@ class Pdflink(Ref):
         # The next reference is designed for html only
         return ""
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         # The next reference is designed for html only
         return ""
 
-    def html_fmt(self, content=None, level=1):
+    def html_fmt(self, content=None, attributes=None, level=1):
         context = self.context
 
         # Only works if the document that owns this tag will be rendered to
@@ -199,7 +199,9 @@ class Pdflink(Ref):
 
         # Get the relative path do this html document
         relative_path = relpath(pdf_target_filepath ,html_target_filepath)
-        attrs = self.attributes.copy()
+
+        attributes = attributes if attributes is not None else self.attributes
+        attrs = attributes.copy()
         attrs['class'] = 'ref'
         attrs['href'] = relative_path
 

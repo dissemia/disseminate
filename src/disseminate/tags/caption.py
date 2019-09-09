@@ -72,7 +72,7 @@ class Caption(Tag, LabelMixin):
 
         return super().default_fmt(content=content)
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         cls_name = self.__class__.__name__.lower()
         content = ''
 
@@ -96,7 +96,7 @@ class Caption(Tag, LabelMixin):
 
         return content
 
-    def html_fmt(self, content=None, level=1):
+    def html_fmt(self, content=None, attributes=None, level=1):
         # Prepare the tag contents to include the label tag.
         # ex: 'My Title' becomes 'Chap 1. My Title'
         content = []

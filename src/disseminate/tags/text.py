@@ -22,9 +22,9 @@ class P(Tag):
     active = True
     include_paragraphs = False
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         tex = super(P, self).tex_fmt(content=content, mathmode=mathmode,
-                                     level=level)
+                                     attributes=attributes, level=level)
 
         # Rewrap the text
         # if settings.tex_paragraph_width > 0:
@@ -90,7 +90,7 @@ class Sup(Tag):
     html_name = "sup"
     active = True
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         content = content if content is not None else self.content
 
         # Collect the content elements
@@ -99,7 +99,8 @@ class Sup(Tag):
         content = ''.join(content) if isinstance(content, list) else content
 
         content = '^{' + content + '}'
-        return (tex_cmd(cmd='ensuremath', attributes='', formatted_content=content)
+        return (tex_cmd(cmd='ensuremath', attributes='',
+                        formatted_content=content)
                 if not mathmode else
                 content)
 
@@ -118,7 +119,7 @@ class Sub(Tag):
     html_name = "sub"
     active = True
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         content = content if content is not None else self.content
 
         # Collect the content elements
@@ -170,7 +171,7 @@ class Supsub(Tag):
         self._sup = sup.strip()
         self._sub = sub.strip()
 
-    def html_fmt(self, content=None, level=1):
+    def html_fmt(self, content=None, attributes=None, level=1):
         attrs = self.attributes.copy()
         attrs['class'] = 'supsub'
         br_tag = html_tag(name='br', level=level + 1)
@@ -178,7 +179,7 @@ class Supsub(Tag):
                         formatted_content=[self._sup, br_tag, self._sub],
                         level=level,)
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         formatted = "^{" + self._sup + "}_{" + self._sub + "}"
         return (tex_cmd(cmd='ensuremath', attributes='',
                         formatted_content=formatted)
@@ -205,10 +206,10 @@ class Symbol(Tag):
         super().__init__(name=name, content=content, attributes=attributes,
                          context=context)
 
-    def html_fmt(self, content=None, level=1):
+    def html_fmt(self, content=None, attributes=None, level=1):
         return html_entity(entity=self.content, level=level)
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         content = content if content is not None else self.content
         content = "\\" + content
         return (tex_cmd(cmd='ensuremath', attributes='',
@@ -246,10 +247,12 @@ class Verb(Tag):
 
     html_name = 'code'
 
-    def html_fmt(self, content=None, level=1):
+    def html_fmt(self, content=None, attributes=None, level=1):
         if self.name == "verbatim":
             self.attributes['class'] = 'block'
-        return super(Verb, self).html_fmt(content=content, level=level + 1)
+        return super(Verb, self).html_fmt(content=content,
+                                          attributes=attributes,
+                                          level=level + 1)
 
     def tex_fmt(self, *args, **kwargs):
         if self.name == "verbatim":
