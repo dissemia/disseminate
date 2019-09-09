@@ -6,7 +6,9 @@ import pytest
 from disseminate.tags import Tag
 from disseminate.tags.text import Italics
 from disseminate.tags.utils import (repl_tags, content_to_str, replace_context,
-                                    copy_tag, find_files)
+                                    copy_tag, find_files,
+                                    format_attribute_width)
+from disseminate.utils.types import StringPositionalValue
 
 
 def test_content_to_str(context_cls):
@@ -165,3 +167,20 @@ def test_find_files(doc):
     # Invalid files are not found
     filepaths = find_files('garbage331.py', context)
     assert len(filepaths) == 0
+
+
+def test_format_attribute_width():
+    """Test the format_attribute_width function."""
+    attrs = format_attribute_width('width=30%', target='.html')
+    assert attrs['style'] == "width: 30.0%"
+
+    attrs = format_attribute_width('width=30%', target='.tex')
+    assert attrs['0.3\\textwidth.tex'] == StringPositionalValue
+
+    attrs = format_attribute_width('width.html=30 class="test"', target='.html')
+    assert attrs['style'] == "width: 3000.0%"
+    assert attrs['class'] == 'test'
+
+    attrs = format_attribute_width('width.tex=30 class="test"', target='.tex')
+    assert attrs['30.0\\textwidth.tex'] == StringPositionalValue
+    assert attrs['class'] == 'test'

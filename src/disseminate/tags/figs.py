@@ -3,7 +3,7 @@ Tags for figure environments.
 """
 from .tag import Tag
 from .caption import Caption
-from .utils import percentage, format_content
+from .utils import format_content, format_attribute_width
 from ..utils.string import strip_multi_newlines
 from ..formats import tex_env, html_tag
 
@@ -77,12 +77,7 @@ class Panel(Tag):
         content = ''.join(content) if isinstance(content, list) else content
 
         # Format the width
-        width = self.attributes.get('width', target='.tex')
-        width = percentage(width)
-        if width is not None:
-            attrs = "{}\\textwidth.tex".format(width / 100.)
-        else:
-            attrs = ""
+        attrs = format_attribute_width(self.attributes, target='.tex')
 
         # Raises an error if a width is not present. Strip multiple newlines
         # as these break up side-by-side figures
@@ -96,12 +91,8 @@ class Panel(Tag):
                                  level=level + 1)
 
         # Format the width
-        width = self.attributes.get('width', target='.html')
-        width = percentage(width)
-        if width is not None:
-            attrs = "class='panel' style='width: {}%'".format(width)
-        else:
-            attrs = "class='panel'"
+        attrs = format_attribute_width(self.attributes, target='.html')
+        attrs['class'] = 'panel'
 
         return html_tag('span', attributes=attrs, formatted_content=content,
                         level=level)

@@ -189,13 +189,14 @@ def test_panel_html(doc):
     assert panel.html == key
 
     # 2. Generate a panel tag a width
-    src = "@panel[width='30%' ]{This is my panel}"
+    src = "@panel[width='30%']{This is my panel}"
 
     # Generate a tag and compare the generated html to the answer key
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     panel = root.content
 
     key = '<span class="panel" style="width: 30.0%">This is my panel</span>\n'
+    print(panel.html)
     assert panel.html == key
 
 

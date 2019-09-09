@@ -84,3 +84,27 @@ Tags to insert figures
             @img{media/graph.svg}
             @caption{My first graph}
               }
+
+``@panel{...}``
+   Insert a panel in a figure.
+
+   .. index::
+      single: tags; @panel
+
+   :contents:
+
+      An ``@img`` tag and text
+
+   :attributes:
+
+      ``width=x``
+
+         The panel's width (percentage)
+
+   :examples:
+
+      ::
+
+         @panel[width=30%]{
+            @img{media/graph.svg}
+              }

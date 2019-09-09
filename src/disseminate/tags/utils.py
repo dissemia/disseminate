@@ -3,6 +3,7 @@ Misc utilities for tags.
 """
 from copy import copy
 from ..paths import SourcePath
+from ..attributes import Attributes
 
 
 def content_to_str(content, target='.txt', **kwargs):
@@ -238,3 +239,33 @@ def percentage(value):
         return abs(float(value))
     except (ValueError, TypeError):
         return None
+
+
+def format_attribute_width(attributes, target):
+    """Format the width entry for an attributes dict and the given target.
+
+    Parameters
+    ----------
+    attributes : :obj:`.attributes.Attributes`
+        The attributes dict
+    target : str
+        The target format to format the attribute dict for.
+
+    Returns
+    -------
+    formatted_attributes : :obj:`.attributes.Attributes`
+        The attributes dict with formatted width for the given target.
+    """
+    attributes = Attributes(attributes)
+    formatted_attributes = Attributes({k: v for k, v in attributes.items()
+                                       if 'width' not in k})
+
+    width = attributes.get('width', target=target)
+    width = percentage(width)
+
+    if target == '.tex' and width is not None:
+        formatted_attributes.load("{}\\textwidth.tex".format(width / 100.))
+    elif target == '.html' and width is not None:
+        formatted_attributes['style'] = 'width: {}%'.format(width)
+
+    return formatted_attributes
