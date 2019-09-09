@@ -270,7 +270,7 @@ html_tag_optionals = {'a': ('class', 'role'),
                       'ol': ('class',),
                       'p': ('class',),
                       'pre': ('class',),
-                      'span': ('class', 'id'),
+                      'span': ('class', 'id', 'style'),
                       'strong': empty,
                       'sub': empty,
                       'sup': empty,
@@ -305,6 +305,8 @@ tex_env_arguments = {'enumerate': empty,  # no required arguments
                      'center': empty,
                      'verbatim': empty,
                      'toclist': empty,
+
+                     'minipage': (StringPositionalValue,),
                      }
 
 tex_env_optionals = {# ex: \begin{enumerate}[I]

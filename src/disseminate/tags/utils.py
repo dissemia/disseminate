@@ -195,3 +195,46 @@ def find_files(string, context):
     return filepaths
 
 
+def percentage(value):
+    """Given a strings (or floats or ints), convert into a float number between
+    [0.0, 100.0].
+
+    Parameters
+    ----------
+    value : Union[str, int, float]
+
+    Returns
+    -------
+    percentage : Union[float, None]
+        The percentage from 0.0 to 100, or
+        None if the value could not be converted.
+
+    Examples
+    --------
+    >>> percentage('10.2%')
+    10.2
+    >>> percentage('10.2')
+    1019.9999999999999
+    >>> percentage('0.3%')
+    0.3
+    >>> percentage('0.3')
+    30.0
+    >>> percentage(30)
+    30.0
+    """
+    if isinstance(value, str):
+        if '%' in value:
+            try:
+                value = float(value.strip().strip('%'))
+            except ValueError:
+                value = None
+        else:
+            try:
+                value = float(value.strip()) * 100.0
+            except ValueError:
+                value = None
+
+    try:
+        return abs(float(value))
+    except (ValueError, TypeError):
+        return None

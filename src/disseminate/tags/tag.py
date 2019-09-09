@@ -307,9 +307,8 @@ class Tag(object):
         tex_string : str
             The formatted tex string.
         """
-        content = content if content is not None else self.content
-
         # Collect the content elements
+        content = content if content is not None else self.content
         content = format_content(content=content, format_func='tex_fmt',
                                  level=level + 1, mathmode=mathmode)
         content = ''.join(content) if isinstance(content, list) else content
@@ -347,9 +346,8 @@ class Tag(object):
         name = (self.html_name if self.html_name is not None else
                 self.name.lower())
 
-        content = content if content is not None else self.content
-
         # Collect the content elements
+        content = content if content is not None else self.content
         content = format_content(content=content, format_func='html_fmt',
                                  level=level + 1)
 

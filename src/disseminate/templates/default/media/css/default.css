@@ -219,6 +219,13 @@ span.caption {
   line-height: 12pt;
 }
 
+span.panel {
+  font-size: 10pt;
+  line-height: 12pt;
+  padding-right: 0.25rem;
+  flex-grow: 1.0;
+}
+
 /* Tags */
 
 span.caption {

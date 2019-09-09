@@ -1,7 +1,10 @@
 """
 Tests for the figure tags.
 """
+import pytest
+
 from disseminate.tags import Tag
+from disseminate.formats.tex import TexFormatError
 
 
 # Tag tests
@@ -161,7 +164,7 @@ def test_fullfigure_html(doc):
     # Generate the markup without an id
     src = "@fullfigure{@caption{This is my caption}}"
 
-    # Generate a tag and compare the generated tex to the answer key
+    # Generate a tag and compare the generated html to the answer key
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     marginfig = root.content
 
@@ -171,6 +174,29 @@ def test_fullfigure_html(doc):
            '</span>\n')
     assert marginfig.html == key
 
+
+def test_panel_html(doc):
+    """Test the @panel tag html format"""
+
+    # 1. Generate a panel tag without a width
+    src = "@panel{This is my panel}"
+
+    # Generate a tag and compare the generated html to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    panel = root.content
+
+    key = '<span class="panel">This is my panel</span>\n'
+    assert panel.html == key
+
+    # 2. Generate a panel tag a width
+    src = "@panel[width='30%']{This is my panel}"
+
+    # Generate a tag and compare the generated html to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    panel = root.content
+
+    key = '<span class="panel" width="30.0%">This is my panel</span>\n'
+    assert panel.html == key
 
 # tex tests
 
@@ -263,3 +289,31 @@ def test_fullfigure_tex(doc):
            '\\label{caption-92042fbb8b}\n'
            '\\end{figure*}\n')
     assert fig.tex == key
+
+
+def test_panel_tex(doc):
+    """Test the @panel tag tex format"""
+
+    # 1. Generate a panel tag without a width. This will fail because the
+    #    width is required
+    src = "@panel{This is my panel}"
+
+    # Generate a tag and compare the generated html to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    panel = root.content
+
+    with pytest.raises(TexFormatError):
+        assert panel.tex
+
+    # 2. Generate a panel tag a width
+    src = "@panel[width='30%']{This is my panel}"
+
+    # Generate a tag and compare the generated html to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    panel = root.content
+
+    key = ('\n'
+           '\\begin{minipage}{0.3\\textwidth}\n'
+           'This is my panel\n'
+           '\\end{minipage}\n')
+    assert panel.tex == key

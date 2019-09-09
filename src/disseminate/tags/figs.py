@@ -3,6 +3,9 @@ Tags for figure environments.
 """
 from .tag import Tag
 from .caption import Caption
+from .utils import percentage, format_content
+from ..utils.string import strip_multi_newlines
+from ..formats import tex_env, html_tag
 
 
 class BaseFigure(Tag):
@@ -56,3 +59,49 @@ class FullFigure(BaseFigure):
     html_name = 'fullfigure'
     tex_env = 'figure*'
     active = True
+
+
+class Panel(Tag):
+    """A panel (sub-figure) for a figure."""
+
+    active = True
+    html_name = 'panel'
+    tex_env = 'minipage'
+
+    def tex_fmt(self, content=None, mathmode=False, level=1):
+        # Collect the content elements
+        content = content if content is not None else self.content
+
+        content = format_content(content=content, format_func='tex_fmt',
+                                 level=level + 1, mathmode=mathmode)
+        content = ''.join(content) if isinstance(content, list) else content
+
+        # Format the width
+        width = self.attributes.get('width', target='.tex')
+        width = percentage(width)
+        if width is not None:
+            attrs = "{}\\textwidth.tex".format(width / 100.)
+        else:
+            attrs = ""
+
+        # Raises an error if a width is not present. Strip multiple newlines
+        # as these break up side-by-side figures
+        env = tex_env("minipage", attributes=attrs, formatted_content=content)
+        return strip_multi_newlines(env).strip()
+
+    def html_fmt(self, content=None, level=1):
+        # Collect the content elements
+        content = content if content is not None else self.content
+        content = format_content(content=content, format_func='html_fmt',
+                                 level=level + 1)
+
+        # Format the width
+        width = self.attributes.get('width', target='.html')
+        width = percentage(width)
+        if width is not None:
+            attrs = "class='panel' style='width: {}%'".format(width)
+        else:
+            attrs = "class='panel'"
+
+        return html_tag('span', attributes=attrs, formatted_content=content,
+                        level=level)
