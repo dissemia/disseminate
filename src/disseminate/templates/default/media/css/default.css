@@ -73,10 +73,6 @@ ul ul {/* Add a margin nested <ul> */
     margin-left: 14pt;
 }
 
-span.label::after {
-    content: " ";
-}
-
 .supsub {
     display: inline-block;
     margin: -9em 0;
@@ -162,8 +158,8 @@ span.marginfig, span.sidenote {
     margin-bottom: 0.5rem;
     vertical-align: top;
     position: relative;
-    font-size: 0.8em;
-    line-height: 1.4;
+    font-size: 10pt;
+    line-height: 12pt;
     padding: 0.2rem;
     border-top: 1px solid #eee;
     border-bottom: 1px solid #eee;
@@ -171,8 +167,73 @@ span.marginfig, span.sidenote {
     overflow-x: hidden;
 }
 
-span.marginfig span.caption {
-    display: block;
+
+/* figures */
+
+span.fullfigure {
+  padding: 0.5rem 0;
+  display: flex;
+  width: 145%;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+span.fullfigure img {
+  padding-right: 0.25rem;
+  flex-grow: 1.0;
+}
+
+span.figure {
+  padding: 0.5rem 0;
+  display: flex;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+span.figure img {
+  padding-right: 0.25rem;
+  flex-grow: 1.0;
+}
+
+span.figure span.caption {
+  clear: right;
+  float: right;
+  width: 40%;
+  display: table;
+  margin-right: -45%;
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
+  vertical-align: top;
+  position: relative;
+  padding: 0.2rem;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  background-color: #fcfcfc;
+  overflow-x: hidden;
+}
+
+
+span.caption {
+  display: block;
+  font-size: 10pt;
+  line-height: 12pt;
+}
+
+span.panel {
+  font-size: 10pt;
+  line-height: 12pt;
+  padding-right: 0.25rem;
+  flex-grow: 1.0;
+}
+
+/* Tags */
+
+span.caption {
+  display: block;
+}
+
+span.label::after {
+    content: " ";
 }
 
 /* Footer - navigation */

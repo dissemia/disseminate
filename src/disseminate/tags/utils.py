@@ -2,6 +2,8 @@
 Misc utilities for tags.
 """
 from copy import copy
+from ..paths import SourcePath
+from ..attributes import Attributes
 
 
 def content_to_str(content, target='.txt', **kwargs):
@@ -140,3 +142,140 @@ def copy_tag(tag):
     tag_copy.content = copy_tag(tag_copy.content)
 
     return tag_copy
+
+
+def find_files(string, context):
+    """Determine if filenames for valid files are present in the given
+    string.
+
+    Parameters
+    ----------
+    string : str
+        The string that may contain filenames
+    context : :obj:`.DocumentContext`
+        A document context that contains paths to search.
+
+    Returns
+    filepaths : List[:obj:`pathlib.Path`]
+        List of found paths
+    """
+    assert context.is_valid('paths')
+
+    # Setup arguments and return values
+    # First remove extra spaces and newlines on the ends.
+    string = string.strip()
+    filepaths = list()
+    paths = ['.'] + context['paths']
+
+    # Go line-by-line and find valid files. Stop when no more lines can
+    # be found
+    for line in string.splitlines():
+        # Skip empty lines
+        if line == "":
+            continue
+
+        # Try different filepaths
+        filepath = None
+        for path in paths:
+            filepath = SourcePath(project_root=path, subpath=line)
+            if filepath.is_file():
+                # A valid file was found! Use it.
+                break
+            else:
+                filepath = None
+
+        if filepath is None:
+            # No valid filepath was found. We'll assume the following strings
+            # do not contain valid files
+            break
+        else:
+            # A valid file and filepath was found. Add it to the list of
+            # filepaths and continue looking for files.
+            filepaths.append(filepath)
+
+    return filepaths
+
+
+def percentage(value):
+    """Given a strings (or floats or ints), convert into a float number between
+    [0.0, 100.0].
+
+    Parameters
+    ----------
+    value : Union[str, int, float]
+
+    Returns
+    -------
+    percentage : Union[float, None]
+        The percentage from 0.0 to 100, or
+        None if the value could not be converted.
+
+    Examples
+    --------
+    >>> percentage('10.2%')
+    10.2
+    >>> percentage('10.2')
+    1019.9999999999999
+    >>> percentage('0.3%')
+    0.3
+    >>> percentage('0.3')
+    30.0
+    >>> percentage(30)
+    30.0
+    """
+    if isinstance(value, str):
+        if '%' in value:
+            try:
+                value = float(value.strip().strip('%'))
+            except ValueError:
+                value = None
+        else:
+            try:
+                value = float(value.strip()) * 100.0
+            except ValueError:
+                value = None
+
+    try:
+        return abs(float(value))
+    except (ValueError, TypeError):
+        return None
+
+
+def format_attribute_width(attributes, target):
+    """Format the width entry for an attributes dict and the given target.
+
+    Parameters
+    ----------
+    attributes : :obj:`.attributes.Attributes`
+        The attributes dict
+    target : str
+        The target format to format the attribute dict for.
+
+    Returns
+    -------
+    formatted_attributes : :obj:`.attributes.Attributes`
+        The attributes dict with formatted width for the given target.
+    """
+    attributes = Attributes(attributes)
+    formatted_attributes = Attributes({k: v for k, v in attributes.items()
+                                       if 'width' not in k})
+
+    width = attributes.get('width', target=target)
+    percentage_width = percentage(width)
+
+    if target == '.tex':
+        if percentage_width:
+            attr = "{}\\textwidth.tex".format(percentage_width / 100.)
+            formatted_attributes.load(attr)
+        elif width:
+            attr = "{}".format(width)
+            formatted_attributes.load(attr)
+    elif target == '.html':
+        if percentage_width:
+            attr = 'width: {}%'.format(percentage_width)
+            formatted_attributes['style'] = attr
+        elif width:
+            attr = 'width: {}'.format(width)
+            formatted_attributes['style'] = attr
+
+    return formatted_attributes

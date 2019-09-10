@@ -166,7 +166,7 @@ class Ref(Tag):
         else:
             return ''
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         label_manager = self.context.get('label_manager')
         label = self.label
         context = self.context
@@ -208,7 +208,7 @@ class Ref(Tag):
         else:
             return ''
 
-    def html_fmt(self, content=None, level=1):
+    def html_fmt(self, content=None, attributes=None, level=1):
         label_manager = self.context.get('label_manager')
         label = self.label
         context = self.context
@@ -227,19 +227,17 @@ class Ref(Tag):
             content = format_content(content=processed_tag.content,
                                      format_func='html_fmt', level=level + 1)
 
-            attributes = self.attributes.copy()
-            attributes['class'] = 'ref'
+            attrs = self.attributes.copy() if attributes is None else attributes
+            attrs['class'] = 'ref'
 
             # setup the url path and include the anchor if the label is not
             # for a DocumentLabel. DocumentLabels should just point to the
             # file itself.
             include_anchor = not isinstance(label, DocumentLabel)
-            attributes['href'] = self.url(include_anchor=include_anchor)
+            attrs['href'] = self.url(include_anchor=include_anchor)
 
             # wrap content in 'a' tag
-            return html_tag('a', attributes=attributes,
-                            formatted_content=content,
-                            level=level,
-                            pretty_print=False)  # no line breaks
+            return html_tag('a', attributes=attrs, formatted_content=content,
+                            level=level, pretty_print=False)  # no line breaks
         else:
             return ''

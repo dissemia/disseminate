@@ -11,6 +11,12 @@
 \usepackage[labelformat=empty]{caption}
 
 %%%
+% Panels for figures
+\newenvironment{panel}[1]
+{\begin{minipage}{ #1}\footnotesize}
+{\end{minipage}}
+
+%%%
 % Load UTF-8 characters
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}

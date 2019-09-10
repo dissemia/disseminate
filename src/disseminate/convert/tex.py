@@ -44,8 +44,12 @@ class Pdflatex(Converter):
                 str(self.src_filepath.value)]
 
         # Run twice
-        for i in range(2):
-            self.run(args, env=env, raise_error=True)
+        try:
+            for i in range(2):
+                self.run(args, env=env, raise_error=True)
+        except Exception as e:
+            self.annotate_exception(e)
+            raise e
 
         # Copy the processed file to the target
         try:
@@ -56,6 +60,19 @@ class Pdflatex(Converter):
         except OSError:
             shutil.copy2(temp_filepath_pdf, self.target_filepath())
         return True
+
+    @staticmethod
+    def annotate_exception(exception):
+        """Add additional annotations to an exception raised from running
+        pdflatex."""
+        # Try to pull out the error from the terminal
+        out = getattr(exception, 'shell_out', None)
+
+        if out is not None:
+            lines = out.splitlines()
+            error_lines = [l for l in lines
+                           if l.startswith('!') or l.startswith('l.')]
+            exception.args += tuple(error_lines)
 
 
 class Tex2svg(Pdf2svg):

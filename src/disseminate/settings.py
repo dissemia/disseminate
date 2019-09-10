@@ -266,11 +266,11 @@ html_tag_optionals = {'a': ('class', 'role'),
                       'li': ('class',),
                       'link': ('href', 'media'),
                       'i': empty,
-                      'img': ('alt', 'class', 'width', 'height'),
+                      'img': ('alt', 'class', 'style'),
                       'ol': ('class',),
                       'p': ('class',),
                       'pre': ('class',),
-                      'span': ('class', 'id'),
+                      'span': ('class', 'id', 'style'),
                       'strong': empty,
                       'sub': empty,
                       'sup': empty,
@@ -305,6 +305,8 @@ tex_env_arguments = {'enumerate': empty,  # no required arguments
                      'center': empty,
                      'verbatim': empty,
                      'toclist': empty,
+
+                     'panel': (StringPositionalValue,),
                      }
 
 tex_env_optionals = {# ex: \begin{enumerate}[I]
@@ -312,6 +314,7 @@ tex_env_optionals = {# ex: \begin{enumerate}[I]
 
                      # ex: \begin{figure}[h]
                      'figure': (StringPositionalValue,),
+                     'figure*': (StringPositionalValue,),
 
                      'easylist': (StringPositionalValue,),
                      }

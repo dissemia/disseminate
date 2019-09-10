@@ -30,9 +30,9 @@
         <h4>Return code</h4>
         <div class="subbox">{{ exception.returncode }}</div>
         <h4>Shell output</h4>
-        <div class="subbox">{{ exception.shell_out }}</div>
+        <div class="subbox">{{ exception.shell_out | replace("\n", "<br/>") }}</div>
         <h4>Shell error</h4>
-        <div class="subbox">{{ exception.shell_err }}</div>
+        <div class="subbox">{{ exception.shell_err | replace("\n", "<br/>") }}</div>
       </div>
       {% endif %}
 {% endblock %}

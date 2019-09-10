@@ -137,12 +137,16 @@ class Tag(object):
     def mtime(self):
         """The last modification time of this tag's (and subtag) document and
         for the documents of all labels referenced by this tag."""
-        # Get the latest mtime for this label and all sub-labels
-        flattened_list = self.flatten(filter_tags=True)
+        # Get mtimes for sub-tags
+        if isinstance(self.content, list):
+            mtimes = [tag.mtime for tag in self.content
+                      if hasattr(tag, 'mtime')]
+        elif isinstance(self.content, Tag):
+            mtimes = [self.content.mtime]
+        else:
+            mtimes = list()
 
-        mtimes = [tag.context.get('mtime', None)
-                  for tag in flattened_list if hasattr(tag, 'context')]
-        mtimes += [self.context.get('mtime', None)]
+        mtimes.append(self.context.get('mtime', None))
 
         # Remove None values from mtimes
         mtimes = list(filter(bool, mtimes))
@@ -258,7 +262,7 @@ class Tag(object):
     def txt(self):
         return self.default_fmt()
 
-    def default_fmt(self, content=None):
+    def default_fmt(self, content=None, attributes=None):
         """Convert the tag to a text string.
 
         Strips the tag information and simply return the content of the tag.
@@ -269,6 +273,9 @@ class Tag(object):
             <.Tag>`]]]
             Specify an alternative content from the tag's content. It can
             either be a string, a tag or a list of strings, tags and lists.
+        attributes : Optional[Union[str, :obj:`Attributes <.Attributes>`]]
+            Specify an alternative attributes dict from the tag's attributes.
+            It can either be a string or an attributes dict.
 
         Returns
         -------
@@ -283,7 +290,7 @@ class Tag(object):
     def tex(self):
         return self.tex_fmt()
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         """Format the tag in LaTeX format.
 
         Parameters
@@ -292,6 +299,9 @@ class Tag(object):
             <.Tag>`]]]
             Specify an alternative content from the tag's content. It can
             either be a string, a tag or a list of strings, tags and lists.
+        attributes : Optional[Union[str, :obj:`Attributes <.Attributes>`]]
+            Specify an alternative attributes dict from the tag's attributes.
+            It can either be a string or an attributes dict.
         mathmode : Optional[bool]
             If True, the tag will be rendered in math mode. Otherwise (default)
             latex text mode is assumed.
@@ -303,18 +313,20 @@ class Tag(object):
         tex_string : str
             The formatted tex string.
         """
-        content = content if content is not None else self.content
-
         # Collect the content elements
+        content = content if content is not None else self.content
         content = format_content(content=content, format_func='tex_fmt',
                                  level=level + 1, mathmode=mathmode)
         content = ''.join(content) if isinstance(content, list) else content
 
+        # Set the attributes
+        attributes = self.attributes if attributes is None else attributes
+
         if self.tex_cmd:
-            return tex_cmd(cmd=self.tex_cmd, attributes=self.attributes,
+            return tex_cmd(cmd=self.tex_cmd, attributes=attributes,
                            formatted_content=content)
         elif self.tex_env:
-            return tex_env(env=self.tex_env, attributes=self.attributes,
+            return tex_env(env=self.tex_env, attributes=attributes,
                            formatted_content=content)
         else:
             return content
@@ -323,7 +335,7 @@ class Tag(object):
     def html(self):
         return self.html_fmt()
 
-    def html_fmt(self, content=None, level=1):
+    def html_fmt(self, content=None, attributes=None, level=1):
         """Convert the tag to an html string or html element.
 
         Parameters
@@ -332,6 +344,9 @@ class Tag(object):
             <.Tag>`]]]
             Specify an alternative content from the tag's content. It can
             either be a string, a tag or a list of strings, tags and lists.
+        attributes : Optional[Union[str, :obj:`Attributes <.Attributes>`]]
+            Specify an alternative attributes dict from the tag's attributes.
+            It can either be a string or an attributes dict.
         level : Optional[int]
             The level of the tag.
 
@@ -343,12 +358,14 @@ class Tag(object):
         name = (self.html_name if self.html_name is not None else
                 self.name.lower())
 
-        content = content if content is not None else self.content
-
         # Collect the content elements
+        content = content if content is not None else self.content
         content = format_content(content=content, format_func='html_fmt',
                                  level=level + 1)
 
+        # Set the attributes
+        attributes = self.attributes if attributes is None else attributes
+
         # Format the html tag
-        return html_tag(name=name, level=level, attributes=self.attributes,
+        return html_tag(name=name, level=level, attributes=attributes,
                         formatted_content=content)

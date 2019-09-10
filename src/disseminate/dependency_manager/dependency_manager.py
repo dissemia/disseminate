@@ -144,11 +144,9 @@ class DependencyManager(object):
             dep_filepath = pathlib.Path(dep_filepath)
             dep_filepath = SourcePath(project_root=dep_filepath.parent,
                                       subpath=dep_filepath.name)
-
         deps = set()
 
         # Workup the dep_filepath
-        path = None
         if dep_filepath.is_file():
             # Source files can be used, since they have already parsed the
             # subpath of the file. However, the file must exist.
@@ -167,20 +165,11 @@ class DependencyManager(object):
             msg = "The file '{}' was not found.".format(str(dep_filepath))
             raise FileNotFoundError(msg)
 
-        # See if a dest_filepath already exists
-        tracked_deps = settings.tracked_deps[target]
-        path_func = lambda b, s: TargetPath(target_root=self.target_root,
-                                            target=target,
-                                            subpath=path.subpath.with_suffix(s))
-        dest_filepath = self._search_file(path_func=path_func,
-                                          basepaths='',
-                                          subpaths=tracked_deps)
-
-        # If a valid dest_filepath was not found, the file needs to be copied
-        # or converted
-        if dest_filepath is None:
-            dest_filepath = self._add_file(dep_filepath=path, target=target,
-                                           attributes=attributes)
+        # add the file dependency. The _add_file method uses methods (_copy_file
+        # and _convert_file) that reuse the destination if it's valid and
+        # already exists
+        dest_filepath = self._add_file(dep_filepath=path, target=target,
+                                       attributes=attributes)
 
         # See if a valid dest_filepath has been found or created. If so, create
         # a dependency.
