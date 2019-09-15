@@ -3,7 +3,6 @@ Code formatting tags
 """
 from pygments import highlight, lexers, formatters
 from markupsafe import Markup
-from lxml.html import etree
 
 from .tag import Tag
 from .utils import find_files, content_to_str
@@ -65,7 +64,8 @@ class Code(Tag):
             formatter = formatters.HtmlFormatter(cssclass=cssclass)
 
             html = highlight(content, lexer, formatter)
-            return etree.fromstring(html) if level > 1 else Markup(html)
+            return html_tag('div', attributes='class="code"',
+                            formatted_content=Markup(html), level=level)
         else:
             return html_tag('code', attributes=self.attributes,
                             formatted_content=content, level=level)

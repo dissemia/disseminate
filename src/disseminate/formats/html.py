@@ -93,12 +93,26 @@ def html_tag(name, attributes=None, formatted_content=None, level=1,
     # Prepare other attributes
     other = Attributes()
 
-    # Wrap the formatted_content in a list and remove empty strings
+    # Wrap the formatted_content in a list
     formatted_content = ([formatted_content]
                          if not isinstance(formatted_content, list) else
                          formatted_content)
-    formatted_content = [i for i in formatted_content
-                         if i != '' and i is not None]
+    # Clean up the formatted contents
+    new_formatted_content = []
+    for element in formatted_content:
+        # Remove empty items
+        if element == '' or element is None:
+            continue
+
+        # Format safe content into an Html element
+        if isinstance(element, Markup):
+            element = etree.fromstring(element)
+
+        # Append the item to the new list
+        new_formatted_content.append(element)
+
+    formatted_content.clear()
+    formatted_content += new_formatted_content
 
     # Create the tag
     if not allowed_tag:

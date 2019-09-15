@@ -96,16 +96,7 @@ def test_tag_code_html(doc):
     # Check the @code tag
     code = root.content
     code.paragraph_role = 'block'
-    assert code.html == ('<div class="highlight block">'
-                            '<pre>'
-                                '<span></span>'
-                                '<span class="k">print</span>'
-                                '<span class="p">(</span>'
-                                '<span class="s1">&#39;test&#39;</span>'
-                                '<span class="p">)</span>\n'
-                            '</pre>'
-                         '</div>\n')
-    assert root.html == ('<span class="root">'
+    assert code.html == ('<div class="code">'
                          '<div class="highlight block">'
                             '<pre>'
                                 '<span></span>'
@@ -114,6 +105,19 @@ def test_tag_code_html(doc):
                                 '<span class="s1">\'test\'</span>'
                                 '<span class="p">)</span>\n'
                             '</pre>'
+                         '</div>'
+                         '</div>\n')
+    assert root.html == ('<span class="root">'
+                         '<div class="code">'
+                         '<div class="highlight block">'
+                            '<pre>'
+                                '<span></span>'
+                                '<span class="k">print</span>'
+                                '<span class="p">(</span>'
+                                '<span class="s1">\'test\'</span>'
+                                '<span class="p">)</span>\n'
+                            '</pre>'
+                         '</div>'
                          '</div>'
                          '</span>\n')
 
@@ -128,15 +132,18 @@ def test_tag_code_html(doc):
     # Check the @code tag
     code = root.content
     code.paragraph_role = 'block'
-    assert code.html == ('<div class="highlight block">'
+
+    assert code.html == ('<div class="code">'
+                         '<div class="highlight block">'
                            '<pre>'
                              '<span></span>'
                              '<span class="p">&lt;</span>'
                              '<span class="nt">script</span>'
                              '<span class="p">&gt;</span>'
                              '<span class="err">&lt;/script</span>\n'
-                         '</pre></div>\n')
+                         '</pre></div></div>\n')
     assert root.html == ('<span class="root">'
+                           '<div class="code">'
                            '<div class="highlight block">'
                              '<pre>'
                                '<span></span>'
@@ -144,7 +151,7 @@ def test_tag_code_html(doc):
                                '<span class="nt">script</span>'
                                '<span class="p">&gt;</span>'
                                '<span class="err">&lt;/script</span>\n'
-                         '</pre></div></span>\n')
+                         '</pre></div></div></span>\n')
 
     # Test inline
     code.paragraph_role = 'inline'

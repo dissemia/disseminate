@@ -78,9 +78,13 @@ def test_html_escaping():
                      formatted_content=['<script>unsafe</script>']) ==
             key)
 
-    # 3. Test with a safe string (Not supported currently)
-    key = '<span class="script">&lt;script&gt;unsafe&lt;/script&gt;</span>\n'
-    assert (html_tag('script', attributes='test',
-                     formatted_content=Markup('<script>unsafe</script>')) ==
-            key)
 
+def test_html_safe_contents():
+    """Test the html_tag with safe contents."""
+
+    assert (html_tag('span', attributes='', formatted_content='<b>test</b>')
+            == '<span>&lt;b&gt;test&lt;/b&gt;</span>\n')
+
+    assert (html_tag('span', attributes='',
+                     formatted_content=Markup('<b>test</b>'))
+            == '<span><b>test</b></span>\n')
