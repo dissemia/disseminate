@@ -80,7 +80,6 @@ class Tag(object):
 
     process_content = True
     process_typography = True
-
     include_paragraphs = True
     paragraph_role = None
 

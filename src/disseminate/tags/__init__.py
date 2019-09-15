@@ -8,5 +8,5 @@ from .tag import Tag
 from .factory import TagFactory
 from .exceptions import TagError
 from . import processors
-from . import (headings, text, img, asy, notes, figs, caption, eqs, toc,
+from . import (headings, text, img, asy, notes, figs, caption, code, eqs, toc,
                preamble, collection, label, ref, navigation)

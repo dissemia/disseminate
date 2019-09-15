@@ -302,10 +302,10 @@ def test_jinjarenderer_dependencies(tmpdir, context_cls):
 
     renderer.render(context=context, target='.html')
 
-    # There should be 3 dependencies now in the dep_manager: bootstrap.min.css,
-    # base.css and default.css. These are referenced by the module's
-    # default/template.html file.
-    assert len(dep_manager.dependencies[src_filepath]) == 3
+    # There should be 4 dependencies now in the dep_manager: bootstrap.min.css,
+    # base.css, default.css and pygments.css. These are referenced by the
+    # module's default/template.html file.
+    assert len(dep_manager.dependencies[src_filepath]) == 4
     deps = sorted(dep_manager.dependencies[src_filepath],
                   key=lambda d: d.dest_filepath)
 
@@ -322,6 +322,10 @@ def test_jinjarenderer_dependencies(tmpdir, context_cls):
     assert deps[2].dest_filepath.match('html/media/css/default.css')
     assert deps[2].get_url() == '/html/media/css/default.css'
 
+    assert deps[3].dep_filepath.match('templates/default/media/css/pygments.css')
+    assert deps[3].dest_filepath.match('html/media/css/pygments.css')
+    assert deps[3].get_url() == '/html/media/css/pygments.css'
+
     # 2. books/tufte template. The books/tufte template has a template.html that
     #    references tufte.css, which in turn references default.css
     renderer = JinjaRenderer(context=context, template='books/tufte',
@@ -329,9 +333,9 @@ def test_jinjarenderer_dependencies(tmpdir, context_cls):
                              targets=['.html', '.tex'])
     renderer.render(context=context, target='.html')
 
-    # There should be 3 dependencies now in the dep_manager for the .css file
+    # There should be 4 dependencies now in the dep_manager for the .css file
     # referenced by the default/template.html file.
-    assert len(dep_manager.dependencies[src_filepath]) == 3
+    assert len(dep_manager.dependencies[src_filepath]) == 4
     deps = sorted(dep_manager.dependencies[src_filepath],
                   key=lambda d: d.dest_filepath)
 
@@ -344,7 +348,12 @@ def test_jinjarenderer_dependencies(tmpdir, context_cls):
                                       'bootstrap.min.css')
     assert deps[1].dest_filepath.match('html/media/css/bootstrap.min.css')
 
-    # dep2 points to tufte.css
+    # dep[2] points to tufte.css
     assert deps[2].dep_filepath.match('templates/default/media/css/'
                                       'default.css')
     assert deps[2].dest_filepath.match('html/media/css/default.css')
+
+    # dep[3] points to pygments.css
+    assert deps[3].dep_filepath.match('templates/default/media/css/'
+                                      'pygments.css')
+    assert deps[3].dest_filepath.match('html/media/css/pygments.css')
