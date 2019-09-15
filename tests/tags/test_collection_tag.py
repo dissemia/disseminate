@@ -143,12 +143,13 @@ def test_collection_html(doctree):
     body_attr = settings.body_attr
     root1 = doctree.context[body_attr]
 
-    key = """<span class="body">
-  <h2 id="ch:main-dm-one"><span class="label">Chapter 1. </span>one</h2>
-  <span class="collection">
-<span class="body"><h2 id="ch:sub1-dm-two"><span class="label">Chapter 2. </span>two</h2></span>
-<span class="body"><h2 id="ch:sub2-dm-three"><span class="label">Chapter 3. </span>three</h2></span></span>
-</span>
+    key = """<span class="body"><h2 id="ch:main-dm-one">
+<span class="label">Chapter 1. </span>one</h2>
+<span class="collection">
+<span class="body"><h2 id="ch:sub1-dm-two">
+<span class="label">Chapter 2. </span>two</h2></span>
+<span class="body"><h2 id="ch:sub2-dm-three">
+<span class="label">Chapter 3. </span>three</h2></span></span></span>
 """
     assert root1.html == key
 
@@ -157,8 +158,10 @@ def test_collection_html(doctree):
                      context=doctree.context)
 
     key = """<span class="collection">
-<span class="body"><h2 id="ch:sub1-dm-two"><span class="label">Chapter 2. </span>two</h2></span>
-<span class="body"><h2 id="ch:sub2-dm-three"><span class="label">Chapter 3. </span>three</h2></span></span>
+<span class="body"><h2 id="ch:sub1-dm-two">
+<span class="label">Chapter 2. </span>two</h2></span>
+<span class="body"><h2 id="ch:sub2-dm-three">
+<span class="label">Chapter 3. </span>three</h2></span></span>
 """
     assert tag.html == key
 
@@ -178,8 +181,7 @@ def test_collection_html(doctree):
 
     root1 = doctree.context[body_attr]
 
-    key = """<span class="body">
-  <h2 id="ch:main-dm-one"><span class="label">Chapter 1. </span>one</h2>
-</span>
+    key = """<span class="body"><h2 id="ch:main-dm-one">
+<span class="label">Chapter 1. </span>one</h2></span>
 """
     assert root1.html == key

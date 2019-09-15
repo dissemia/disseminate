@@ -100,9 +100,9 @@ def test_marginfig_caption_no_id_html(doc):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     marginfig = root.content
 
-    key = ('<span class="marginfig">\n'
-           '  <span class="caption" id="caption-92042fbb8b">'
-           '<span class="label">My Fig. 1. </span>This is my caption</span>\n'
+    key = ('<span class="marginfig">'
+           '<span class="caption" id="caption-92042fbb8b">'
+           '<span class="label">My Fig. 1. </span>This is my caption</span>'
            '</span>\n')
     assert marginfig.html == key
 
@@ -120,9 +120,9 @@ def test_marginfig_caption_with_id_html(doc):
     srcs = ("@marginfig[id=fig-1]{@caption{This is my caption}}",
             "@marginfig{@caption[id=fig-1]{This is my caption}}")
 
-    key = ('<span class="marginfig">\n'
-           '  <span class="caption" id="fig-1">'
-           '<span class="label">My Fig. 1. </span>This is my caption</span>\n'
+    key = ('<span class="marginfig">'
+           '<span class="caption" id="fig-1">'
+           '<span class="label">My Fig. 1. </span>This is my caption</span>'
            '</span>\n')
 
     for count, src in enumerate(srcs):
@@ -147,9 +147,9 @@ def test_figure_html(doc):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     marginfig = root.content
 
-    key = ('<span class="figure">\n'
-           '  <span class="caption" id="caption-92042fbb8b">'
-           '<span class="label">My Fig. 1. </span>This is my caption</span>\n'
+    key = ('<span class="figure">'
+           '<span class="caption" id="caption-92042fbb8b">'
+           '<span class="label">My Fig. 1. </span>This is my caption</span>'
            '</span>\n')
     assert marginfig.html == key
 
@@ -168,9 +168,9 @@ def test_fullfigure_html(doc):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     marginfig = root.content
 
-    key = ('<span class="fullfigure">\n'
-           '  <span class="caption" id="caption-92042fbb8b">'
-           '<span class="label">My Fig. 1. </span>This is my caption</span>\n'
+    key = ('<span class="fullfigure">'
+           '<span class="caption" id="caption-92042fbb8b">'
+           '<span class="label">My Fig. 1. </span>This is my caption</span>'
            '</span>\n')
     assert marginfig.html == key
 

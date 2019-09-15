@@ -139,12 +139,8 @@ def test_toc_changes(doc):
               attributes='', context=doc.context)
 
     key = """<ul class="toc">
-  <li class="toc-level-3">
-    <a href="#heading1" class="ref">My first heading</a>
-  </li>
-  <li class="toc-level-3">
-    <a href="" class="ref">my first file</a>
-  </li>
+<li class="toc-level-3"><a href="#heading1" class="ref">My first heading</a></li>
+<li class="toc-level-3"><a href="" class="ref">my first file</a></li>
 </ul>
 """
     assert toc.html == key
@@ -165,15 +161,9 @@ def test_toc_changes(doc):
     toc = Toc(name='toc', content='all documents headings abbreviated',
               attributes='', context=doc.context)
     key = """<ul class="toc">
-  <li class="toc-level-3">
-    <a href="#heading1" class="ref">My first heading</a>
-  </li>
-  <li class="toc-level-4">
-    <a href="#subheading1" class="ref">My first sub-heading</a>
-  </li>
-  <li class="toc-level-4">
-    <a href="" class="ref">my first file</a>
-  </li>
+<li class="toc-level-3"><a href="#heading1" class="ref">My first heading</a></li>
+<li class="toc-level-4"><a href="#subheading1" class="ref">My first sub-heading</a></li>
+<li class="toc-level-4"><a href="" class="ref">my first file</a></li>
 </ul>
 """
     assert toc.html == key
@@ -202,12 +192,8 @@ def test_toc_absolute_and_relative_links(tmpdir):
     toc = Toc(name='toc', content='all headings abbreviated',
               attributes='', context=doc.context)
     key = """<ul class="toc">
-  <li class="toc-level-2">
-    <a href="#ch:test1-dm-one" class="ref">Chapter 1. one</a>
-  </li>
-  <li class="toc-level-2">
-    <a href="/html/test2.html#ch:test2-dm-two" class="ref">Chapter 2. two</a>
-  </li>
+<li class="toc-level-2"><a href="#ch:test1-dm-one" class="ref">Chapter 1. one</a></li>
+<li class="toc-level-2"><a href="/html/test2.html#ch:test2-dm-two" class="ref">Chapter 2. two</a></li>
 </ul>
 """
     assert toc.html == key
@@ -225,12 +211,8 @@ def test_toc_absolute_and_relative_links(tmpdir):
     toc = Toc(name='toc', content='all headings abbreviated',
               attributes='', context=doc.context)
     key = """<ul class="toc">
-  <li class="toc-level-2">
-    <a href="#ch:test1-dm-one" class="ref">Chapter 1. one</a>
-  </li>
-  <li class="toc-level-2">
-    <a href="test2.html#ch:test2-dm-two" class="ref">Chapter 2. two</a>
-  </li>
+<li class="toc-level-2"><a href="#ch:test1-dm-one" class="ref">Chapter 1. one</a></li>
+<li class="toc-level-2"><a href="test2.html#ch:test2-dm-two" class="ref">Chapter 2. two</a></li>
 </ul>
 """
     assert toc.html == key
@@ -255,15 +237,9 @@ def test_toc_absolute_and_relative_links(tmpdir):
 
     # Match the default toc (format: 'collapsed')
     key = """<ul class="toc">
-  <li class="toc-level-1">
-    <a href="" class="ref">file1</a>
-  </li>
-  <li class="toc-level-1">
-    <a href="/html/sub/file21.html" class="ref">sub/file21</a>
-  </li>
-  <li class="toc-level-1">
-    <a href="/html/sub/file22.html" class="ref">sub/file22</a>
-  </li>
+<li class="toc-level-1"><a href="" class="ref">file1</a></li>
+<li class="toc-level-1"><a href="/html/sub/file21.html" class="ref">sub/file21</a></li>
+<li class="toc-level-1"><a href="/html/sub/file22.html" class="ref">sub/file22</a></li>
 </ul>
 """
     assert toc.html == key
@@ -278,15 +254,9 @@ def test_toc_absolute_and_relative_links(tmpdir):
 
     # Match the default toc (format: 'collapsed')
     key = """<ul class="toc">
-  <li class="toc-level-1">
-    <a href="" class="ref">file1</a>
-  </li>
-  <li class="toc-level-1">
-    <a href="sub/file21.html" class="ref">sub/file21</a>
-  </li>
-  <li class="toc-level-1">
-    <a href="sub/file22.html" class="ref">sub/file22</a>
-  </li>
+<li class="toc-level-1"><a href="" class="ref">file1</a></li>
+<li class="toc-level-1"><a href="sub/file21.html" class="ref">sub/file21</a></li>
+<li class="toc-level-1"><a href="sub/file22.html" class="ref">sub/file22</a></li>
 </ul>
 """
     assert toc.html == key
@@ -319,22 +289,22 @@ def test_toc_levels_html(doc):
     html = html_filepath.read_text()
 
     # Check the toc
-    key = ('<ul class="toc">'
-             '<li class="toc-level-0">'
-               '<a href="#title:test-dm-my-first-file" class="ref">my first file</a>'
-             '</li>'
-             '<li class="toc-level-2">'
-               '<a href="#ch:test-dm-my-first-chapter" class="ref">Chapter 1. My first chapter</a>'
-             '</li>'
-             '<li class="toc-level-3">'
-               '<a href="#section1" class="ref">My first section</a>'
-             '</li>'
-             '<li class="toc-level-4">'
-               '<a href="#subsec:test-dm-my-first-sub-section" class="ref">My first sub-section</a>'
-             '</li>'
-             '<li class="toc-level-5">'
-               '<a href="#subsubsec:test-dm-my-first-sub-sub-section" class="ref">My first sub-sub-section</a>'
-             '</li>'
+    key = ('<ul class="toc">\n'
+           '<li class="toc-level-0">'
+           '<a href="#title:test-dm-my-first-file" class="ref">my first file</a>'
+           '</li>\n'
+           '<li class="toc-level-2">'
+           '<a href="#ch:test-dm-my-first-chapter" class="ref">Chapter 1. My first chapter</a>'
+           '</li>\n'
+           '<li class="toc-level-3">'
+           '<a href="#section1" class="ref">My first section</a>'
+           '</li>\n'
+           '<li class="toc-level-4">'
+           '<a href="#subsec:test-dm-my-first-sub-section" class="ref">My first sub-section</a>'
+           '</li>\n'
+           '<li class="toc-level-5">'
+           '<a href="#subsubsec:test-dm-my-first-sub-sub-section" class="ref">My first sub-sub-section</a>'
+           '</li>\n'
            '</ul>')
     assert key in html
 
@@ -363,33 +333,15 @@ def test_toc_heading_html(tmpdir):
               context=doc.context)
 
     key = """<ul class="toc">
-  <li class="toc-level-3">
-    <a href="#sec:file1-dm-heading-1" class="ref">Heading 1</a>
-  </li>
-  <li class="toc-level-3">
-    <a href="#sec:file1-dm-heading-2" class="ref">Heading 2</a>
-  </li>
-  <li class="toc-level-4">
-    <a href="#subsec:file1-dm-sub-heading-2-1" class="ref">sub-Heading 2.1</a>
-  </li>
-  <li class="toc-level-4">
-    <a href="#subsec:file1-dm-sub-heading-2-2" class="ref">sub-Heading 2.2</a>
-  </li>
-  <li class="toc-level-5">
-    <a href="#subsubsec:file1-dm-sub-sub-header-2-2-1" class="ref">sub-sub-Header 2.2.1</a>
-  </li>
-  <li class="toc-level-4">
-    <a href="#subsec:file1-dm-sub-heading-2-3" class="ref">sub-Heading 2.3</a>
-  </li>
-  <li class="toc-level-3">
-    <a href="#sec:file1-dm-heading-3" class="ref">Heading 3</a>
-  </li>
-  <li class="toc-level-5">
-    <a href="#subsubsec:file1-dm-sub-sub-header-3-1-1" class="ref">sub-sub-header 3.1.1</a>
-  </li>
-  <li class="toc-level-3">
-    <a href="#sec:file1-dm-heading-4" class="ref">Heading 4</a>
-  </li>
+<li class="toc-level-3"><a href="#sec:file1-dm-heading-1" class="ref">Heading 1</a></li>
+<li class="toc-level-3"><a href="#sec:file1-dm-heading-2" class="ref">Heading 2</a></li>
+<li class="toc-level-4"><a href="#subsec:file1-dm-sub-heading-2-1" class="ref">sub-Heading 2.1</a></li>
+<li class="toc-level-4"><a href="#subsec:file1-dm-sub-heading-2-2" class="ref">sub-Heading 2.2</a></li>
+<li class="toc-level-5"><a href="#subsubsec:file1-dm-sub-sub-header-2-2-1" class="ref">sub-sub-Header 2.2.1</a></li>
+<li class="toc-level-4"><a href="#subsec:file1-dm-sub-heading-2-3" class="ref">sub-Heading 2.3</a></li>
+<li class="toc-level-3"><a href="#sec:file1-dm-heading-3" class="ref">Heading 3</a></li>
+<li class="toc-level-5"><a href="#subsubsec:file1-dm-sub-sub-header-3-1-1" class="ref">sub-sub-header 3.1.1</a></li>
+<li class="toc-level-3"><a href="#sec:file1-dm-heading-4" class="ref">Heading 4</a></li>
 </ul>
 """
     assert toc.html == key
@@ -412,18 +364,10 @@ def test_toc_heading_html(tmpdir):
               context=doc.context)
 
     key = """<ul class="toc">
-  <li class="toc-level-3">
-    <a href="#heading-1" class="ref">Heading 1</a>
-  </li>
-  <li class="toc-level-3">
-    <a href="/html/file2.html#heading-2" class="ref">Heading 2</a>
-  </li>
-  <li class="toc-level-4">
-    <a href="/html/file2.html#subheading-2" class="ref">sub-Heading 2</a>
-  </li>
-  <li class="toc-level-3">
-    <a href="/html/file3.html#heading-3" class="ref">Heading 3</a>
-  </li>
+<li class="toc-level-3"><a href="#heading-1" class="ref">Heading 1</a></li>
+<li class="toc-level-3"><a href="/html/file2.html#heading-2" class="ref">Heading 2</a></li>
+<li class="toc-level-4"><a href="/html/file2.html#subheading-2" class="ref">sub-Heading 2</a></li>
+<li class="toc-level-3"><a href="/html/file3.html#heading-3" class="ref">Heading 3</a></li>
 </ul>
 """
     assert toc.html == key
@@ -432,11 +376,7 @@ def test_toc_heading_html(tmpdir):
     toc = Toc(name='toc', content='headings', attributes='',
               context=doc.context)
 
-    key = """<ul class="toc">
-  <li class="toc-level-3">
-    <a href="#heading-1" class="ref">Heading 1</a>
-  </li>
-</ul>
+    key = """<ul class="toc"><li class="toc-level-3"><a href="#heading-1" class="ref">Heading 1</a></li></ul>
 """
     assert toc.html == key
 
@@ -449,18 +389,10 @@ def test_toc_heading_html(tmpdir):
               context=doc2.context)
 
     key = """<ul class="toc">
-  <li class="toc-level-3">
-    <a href="/html/file1.html#heading-1" class="ref">Heading 1</a>
-  </li>
-  <li class="toc-level-3">
-    <a href="#heading-2" class="ref">Heading 2</a>
-  </li>
-  <li class="toc-level-4">
-    <a href="#subheading-2" class="ref">sub-Heading 2</a>
-  </li>
-  <li class="toc-level-3">
-    <a href="/html/file3.html#heading-3" class="ref">Heading 3</a>
-  </li>
+<li class="toc-level-3"><a href="/html/file1.html#heading-1" class="ref">Heading 1</a></li>
+<li class="toc-level-3"><a href="#heading-2" class="ref">Heading 2</a></li>
+<li class="toc-level-4"><a href="#subheading-2" class="ref">sub-Heading 2</a></li>
+<li class="toc-level-3"><a href="/html/file3.html#heading-3" class="ref">Heading 3</a></li>
 </ul>
 """
     assert toc.html == key
@@ -471,18 +403,10 @@ def test_toc_heading_html(tmpdir):
               context=doc.context)
 
     key = """<ul class="toc">
-  <li class="toc-level-3">
-    <a href="#heading-1" class="ref">Heading 1</a>
-  </li>
-  <li class="toc-level-3">
-    <a href="file2.html#heading-2" class="ref">Heading 2</a>
-  </li>
-  <li class="toc-level-4">
-    <a href="file2.html#subheading-2" class="ref">sub-Heading 2</a>
-  </li>
-  <li class="toc-level-3">
-    <a href="file3.html#heading-3" class="ref">Heading 3</a>
-  </li>
+<li class="toc-level-3"><a href="#heading-1" class="ref">Heading 1</a></li>
+<li class="toc-level-3"><a href="file2.html#heading-2" class="ref">Heading 2</a></li>
+<li class="toc-level-4"><a href="file2.html#subheading-2" class="ref">sub-Heading 2</a></li>
+<li class="toc-level-3"><a href="file3.html#heading-3" class="ref">Heading 3</a></li>
 </ul>
 """
     assert toc.html == key
@@ -492,18 +416,10 @@ def test_toc_heading_html(tmpdir):
     toc = Toc(name='toc', content='all headings', attributes='',
               context=doc2.context)
     key = """<ul class="toc">
-  <li class="toc-level-3">
-    <a href="file1.html#heading-1" class="ref">Heading 1</a>
-  </li>
-  <li class="toc-level-3">
-    <a href="#heading-2" class="ref">Heading 2</a>
-  </li>
-  <li class="toc-level-4">
-    <a href="#subheading-2" class="ref">sub-Heading 2</a>
-  </li>
-  <li class="toc-level-3">
-    <a href="file3.html#heading-3" class="ref">Heading 3</a>
-  </li>
+<li class="toc-level-3"><a href="file1.html#heading-1" class="ref">Heading 1</a></li>
+<li class="toc-level-3"><a href="#heading-2" class="ref">Heading 2</a></li>
+<li class="toc-level-4"><a href="#subheading-2" class="ref">sub-Heading 2</a></li>
+<li class="toc-level-3"><a href="file3.html#heading-3" class="ref">Heading 3</a></li>
 </ul>
 """
     assert toc.html == key

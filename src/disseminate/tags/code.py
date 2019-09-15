@@ -8,6 +8,7 @@ from lxml.html import etree
 from .tag import Tag
 from .utils import find_files, content_to_str
 from ..utils.types import StringPositionalValue
+from ..formats import html_tag
 
 
 class Code(Tag):
@@ -57,16 +58,17 @@ class Code(Tag):
         content = content_to_str(content=content)
 
         # Get the lexer for the code and formatter for html
-        lexer = self.lexer
-        cssclass = ('highlight' if self.paragraph_role is None else
-                    'highlight ' + self.paragraph_role)
-        formatter = formatters.HtmlFormatter(cssclass=cssclass)
+        if self.paragraph_role == 'block':
+            lexer = self.lexer
+            cssclass = ('highlight' if self.paragraph_role is None else
+                        'highlight ' + self.paragraph_role)
+            formatter = formatters.HtmlFormatter(cssclass=cssclass)
 
-        html = highlight(content, lexer, formatter)
-        if level > 1:
-            return etree.fromstring(html)
+            html = highlight(content, lexer, formatter)
+            return etree.fromstring(html) if level > 1 else Markup(html)
         else:
-            return Markup(html)  # mark as safe
+            return html_tag('code', attributes=self.attributes,
+                            formatted_content=content, level=level)
 
     def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         # Format contents

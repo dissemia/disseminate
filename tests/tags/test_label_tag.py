@@ -161,7 +161,7 @@ def test_labelanchor_html(doc, mocktag_cls):
 
     labelanchor1 = LabelAnchor(name='label', content=label1_id, attributes='',
                                context=context)
-    assert labelanchor1.html == '<span id="test-dm-my-title"/>\n'
+    assert labelanchor1.html == '<span id="test-dm-my-title"></span>\n'
 
 
 def test_labeltag_html(doc, mocktag_cls):

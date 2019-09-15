@@ -25,7 +25,7 @@ class ProcessParagraphs(ProcessTag):
                                    p_cls=p_cls)
 
 
-re_para = regex.compile(r'(?:\n{2,})')
+re_para = regex.compile(r'(?:\s*\n\s*\n\s*\n*)')
 
 
 def group_paragraphs(elements):

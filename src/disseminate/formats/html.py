@@ -118,7 +118,7 @@ def html_tag(name, attributes=None, formatted_content=None, level=1,
 
     # Format the tag into a string, if it's the root level
     if level == 1:
-        s = (etree.tostring(e, pretty_print=pretty_print)
+        s = (etree.tostring(e, pretty_print=pretty_print, method='html')
                   .decode("utf-8"))
         return Markup(s)  # Mark string as safe, since it's escaped by lxml
     else:
@@ -162,7 +162,7 @@ def html_entity(entity, level=1, pretty_print=settings.html_pretty):
 
     e = Entity(entity.strip())
     if level == 1:
-        s = (etree.tostring(e, pretty_print=pretty_print)
+        s = (etree.tostring(e, pretty_print=pretty_print, method='html')
              .decode("utf-8"))
         return Markup(s)  # Mark string as safe, since it's escaped by lxml
     else:

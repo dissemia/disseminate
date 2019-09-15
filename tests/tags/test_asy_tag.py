@@ -51,7 +51,7 @@ def test_asy_html(tmpdir, context_cls):
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert img.html == '<img src="/html/media/test_69a34c39e1.svg"/>\n'
+    assert img.html == '<img src="/html/media/test_69a34c39e1.svg">\n'
 
     # Second, we'll test the case when asy code is used directly in the tag.
     # We will now use a src_filepath of the markup document in the
@@ -75,7 +75,7 @@ def test_asy_html(tmpdir, context_cls):
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert img.html == ('<img src="/html/media/chapter/test_69a34c39e1.svg"/>'
+    assert img.html == ('<img src="/html/media/chapter/test_69a34c39e1.svg">'
                         '\n')
 
 
@@ -118,7 +118,7 @@ def test_asy_html_attribute(tmpdir, context_cls):
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert img.html == ('<img src="/html/media/test_cd0ec1067e_scale2.0.svg"/>'
+    assert img.html == ('<img src="/html/media/test_cd0ec1067e_scale2.0.svg">'
                          '\n')
 
 

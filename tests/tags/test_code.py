@@ -53,6 +53,36 @@ def test_tag_code_lexer(doc):
     assert code.lexer.name == 'Python'
 
 
+def test_tag_code_paragraphs(doc):
+    """Test the @code tag with paragraphs."""
+    # Setup the context
+    context = doc.context
+    context['process_paragraphs'] = 'root'
+
+    # 1. Setup a code tag with a specified lexer
+    src = """This is my code.
+    
+    @code[python]{print('test')}
+    
+    This is my @code{inline} code.
+    """
+    root = Tag(name='root', content=src, attributes='', context=context)
+
+    # Check the @code tag
+    assert root.content[0].name == 'p'
+    assert root.content[0].content == 'This is my code.'
+
+    assert root.content[1].name == 'p'
+    assert root.content[1].content.name == 'code'
+    assert root.content[1].content.paragraph_role == 'block'
+
+    assert root.content[2].name == 'p'
+    assert root.content[2].content[0] == "This is my "
+    assert root.content[2].content[1].name == 'code'
+    assert root.content[2].content[1].paragraph_role == 'inline'
+    assert root.content[2].content[2] == ' code.\n    '
+
+
 # Tests for html targets
 
 def test_tag_code_html(doc):
@@ -65,21 +95,31 @@ def test_tag_code_html(doc):
 
     # Check the @code tag
     code = root.content
-    assert code.html == ('<div class="highlight">'
-                         '<pre><span></span><span class="k">print</span>'
-                         '<span class="p">(</span>'
-                         '<span class="s1">&#39;test&#39;</span>'
-                         '<span class="p">)</span>\n'
-                         '</pre></div>\n')
-    assert root.html == ('<span class="root">\n'
-                         '  <div class="highlight">\n'
-                         '    <pre><span/><span class="k">print</span>'
-                         '<span class="p">'
-                         '(</span><span class="s1">\'test\'</span>'
-                         '<span class="p">)</span>\n'
-                         '</pre>\n'
-                         '  </div>\n'
+    code.paragraph_role = 'block'
+    assert code.html == ('<div class="highlight block">'
+                            '<pre>'
+                                '<span></span>'
+                                '<span class="k">print</span>'
+                                '<span class="p">(</span>'
+                                '<span class="s1">&#39;test&#39;</span>'
+                                '<span class="p">)</span>\n'
+                            '</pre>'
+                         '</div>\n')
+    assert root.html == ('<span class="root">'
+                         '<div class="highlight block">'
+                            '<pre>'
+                                '<span></span>'
+                                '<span class="k">print</span>'
+                                '<span class="p">(</span>'
+                                '<span class="s1">\'test\'</span>'
+                                '<span class="p">)</span>\n'
+                            '</pre>'
+                         '</div>'
                          '</span>\n')
+
+    # Test inline
+    code.paragraph_role = 'inline'
+    assert code.html == '<code>print(\'test\')</code>\n'
 
     # 2. Test unsafe tags
     src = "@code[html]{<script></script}"
@@ -87,23 +127,28 @@ def test_tag_code_html(doc):
 
     # Check the @code tag
     code = root.content
-    assert code.html == ('<div class="highlight">'
-                         '<pre><span></span>'
-                         '<span class="p">&lt;</span>'
-                         '<span class="nt">script</span>'
-                         '<span class="p">&gt;</span>'
-                         '<span class="err">&lt;/script</span>\n'
+    code.paragraph_role = 'block'
+    assert code.html == ('<div class="highlight block">'
+                           '<pre>'
+                             '<span></span>'
+                             '<span class="p">&lt;</span>'
+                             '<span class="nt">script</span>'
+                             '<span class="p">&gt;</span>'
+                             '<span class="err">&lt;/script</span>\n'
                          '</pre></div>\n')
-    assert root.html == ('<span class="root">\n'
-                         '  <div class="highlight">\n'
-                         '    <pre><span/><span class="p">&lt;</span>'
-                         '<span class="nt">script</span>'
-                         '<span class="p">&gt;</span>'
-                         '<span class="err">&lt;/script</span>\n'
-                         '</pre>\n'
-                         '  </div>\n'
-                         '</span>\n')
+    assert root.html == ('<span class="root">'
+                           '<div class="highlight block">'
+                             '<pre>'
+                               '<span></span>'
+                               '<span class="p">&lt;</span>'
+                               '<span class="nt">script</span>'
+                               '<span class="p">&gt;</span>'
+                               '<span class="err">&lt;/script</span>\n'
+                         '</pre></div></span>\n')
 
+    # Test inline
+    code.paragraph_role = 'inline'
+    assert code.html == '<code>&lt;script&gt;&lt;/script</code>\n'
 
 # Tests for tex targets
 
