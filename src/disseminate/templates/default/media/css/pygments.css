@@ -79,3 +79,9 @@
 .highlight.inline pre {
   margin: 0 0 -0.4em;
 }
+
+code {
+  color: #000000;
+  background: #f8f8f8;
+  font-size: 80%;
+}
