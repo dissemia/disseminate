@@ -79,6 +79,8 @@ setup(
         'click>=7.0',                # 3-clause BSD license
         # The following are needed for the preview function
         'sanic>=19.0',               # MIT license
+        # The following is needed for the @code tag
+        'pygments>=2.4',             # BSD 2 license
         ],
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc',

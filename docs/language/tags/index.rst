@@ -48,6 +48,7 @@ stages of publication so that the targets have the final desired appearance.
    text
    image
    equation
+   code
    asy
    figs
    caption

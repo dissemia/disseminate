@@ -86,7 +86,7 @@ def test_img_html(tmpdir, context_cls):
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
 
-    assert img.html == '<img src="/html/sample.svg"/>\n'
+    assert img.html == '<img src="/html/sample.svg">\n'
 
     # Now test an html-specific attribute
     # Generate the markup
@@ -95,7 +95,7 @@ def test_img_html(tmpdir, context_cls):
     # Generate a tag and compare the generated tex to the answer key
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
-    assert img.html == '<img src="/html/sample.svg" style="width: 100.0%"/>\n'
+    assert img.html == '<img src="/html/sample.svg" style="width: 100.0%">\n'
 
 
 # tex targets

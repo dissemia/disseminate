@@ -428,7 +428,6 @@ def test_tag_html_unsafe_tag(context_cls):
                          '</span>\n')
 
 
-
 def test_tag_html_nested(context_cls):
     """Nest nested tags with html"""
 
@@ -437,8 +436,8 @@ def test_tag_html_nested(context_cls):
     # Test a basic string without additional tags
     p = P(name='p', content='paragraph', attributes=None, context=context)
     root = Tag(name='root', content=p, attributes=None, context=context)
-    assert root.html == ('<span class="root">\n'
-                         '  <p>paragraph</p>\n'
+    assert root.html == ('<span class="root">'
+                         '<p>paragraph</p>'
                          '</span>\n')
 
 

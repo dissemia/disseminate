@@ -277,7 +277,7 @@ def test_process_paragraph_tags_leading_spaces(doc):
     assert root.content[0].name == 'section'
     assert root.content[0].content == 'A heading with leading spaces'
     assert root.content[1].name == 'p'
-    assert root.content[1].content == '\n  \n  This is my paragraph.\n'
+    assert root.content[1].content == 'This is my paragraph.\n'
 
 
 def test_process_paragraph_tags_subtags(context_cls):

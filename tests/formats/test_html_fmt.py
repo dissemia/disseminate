@@ -19,30 +19,30 @@ def test_html_tag():
 
     # 2. Test the formatting of basic tags with required and optional arguments
     #    For the img tag, 'src' is required, 'class' is optional
-    key = '<img src="~/mytest/test.png"/>\n'
+    key = '<img src="~/mytest/test.png">\n'
     assert (html_tag('img', attributes='src=~/mytest/test.png') ==
             key)
 
-    key = '<img src="~/mytest/test.png" class="myclass"/>\n'
+    key = '<img src="~/mytest/test.png" class="myclass">\n'
     assert (html_tag('img', attributes='src=~/mytest/test.png class=myclass') ==
             key)
 
     # 3. Test the formatting of a tag element with non-valid attributes
-    key = '<img src="~/mytest/test.png"/>\n'
+    key = '<img src="~/mytest/test.png">\n'
     assert (html_tag('img', attributes='src=~/mytest/test.png null=myclass') ==
             key)
 
     # 4. Test the formatting of a tag with an invalid tag type
-    key = '<span class="invalid"/>\n'
+    key = '<span class="invalid"></span>\n'
     assert (html_tag('invalid', attributes='null=myclass') ==
             key)
 
-    key = '<span class="invalid"/>\n'
+    key = '<span class="invalid"></span>\n'
     assert (html_tag('invalid', attributes='class=myclass') ==
             key)
 
     # The script tag is not allowed. It will be rendered as a span.
-    key = '<span class="script"/>\n'
+    key = '<span class="script"></span>\n'
     assert (html_tag('script', attributes='test') ==
             key)
 
@@ -78,9 +78,13 @@ def test_html_escaping():
                      formatted_content=['<script>unsafe</script>']) ==
             key)
 
-    # 3. Test with a safe string (Not supported currently)
-    key = '<span class="script">&lt;script&gt;unsafe&lt;/script&gt;</span>\n'
-    assert (html_tag('script', attributes='test',
-                     formatted_content=Markup('<script>unsafe</script>')) ==
-            key)
 
+def test_html_safe_contents():
+    """Test the html_tag with safe contents."""
+
+    assert (html_tag('span', attributes='', formatted_content='<b>test</b>')
+            == '<span>&lt;b&gt;test&lt;/b&gt;</span>\n')
+
+    assert (html_tag('span', attributes='',
+                     formatted_content=Markup('<b>test</b>'))
+            == '<span><b>test</b></span>\n')

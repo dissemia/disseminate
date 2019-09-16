@@ -35,7 +35,7 @@ Tags to insert figures
       single: tags; @fig
       single: tags; @figure
 
-    :aliases: ``@figure``
+   :aliases: ``@figure``
 
    :contents:
 
@@ -56,6 +56,7 @@ Tags to insert figures
             @caption{My first graph}
               }
 
+
 ``@fullfig{...}``
    Insert a full figure that spans the main text and margin.
 
@@ -64,7 +65,7 @@ Tags to insert figures
       single: tags; @fullfigure
       single: tags; @fullfig
 
-    :aliases: ``@fullfigure``, ``@ffig``
+   :aliases: ``@fullfigure``, ``@ffig``
 
    :contents:
 
@@ -84,6 +85,7 @@ Tags to insert figures
             @img{media/graph.svg}
             @caption{My first graph}
               }
+
 
 ``@panel{...}``
    Insert a panel in a figure.

@@ -52,7 +52,7 @@ def test_tag_text_html(context_cls):
                '@i{italics}': '<i>italics</i>\n',
                '@sup{superscript}': '<sup>superscript</sup>\n',
                '@sub{subscript}': '<sub>subscript</sub>\n',
-               '@supsub{sup && sub}': ('<span class="supsub">sup<br/>'
+               '@supsub{sup && sub}': ('<span class="supsub">sup<br>'
                                        'sub</span>\n'),
                }
 
