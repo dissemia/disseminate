@@ -108,4 +108,3 @@ def test_tag_verb():
     assert (tex_verb('test') == "\\verb|test|")
     assert (tex_verb('te|st') == "\\verb!te|st!")
     assert (tex_verb('te!|st') == "\\verb^te!|st^")
-    

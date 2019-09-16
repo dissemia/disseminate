@@ -83,6 +83,23 @@ def test_tag_code_paragraphs(doc):
     assert root.content[2].content[2] == ' code.\n    '
 
 
+def test_tag_code_specific(doc):
+    """Test code tags for specific languages"""
+    context = doc.context
+
+    for language in ('python', 'html', 'ruby', 'java', 'javascript'):
+        src1 = "@code[{}]".format(language) + "{test}"
+        root1 = Tag(name='root', content=src1, attributes='', context=context)
+        code1 = root1.content
+
+        src2 = "@" + language + "{test}"
+        root2 = Tag(name='root', content=src2, attributes='', context=context)
+        code2 = root2.content
+
+        assert code1.html == code2.html
+        assert code1.tex == code2.tex
+
+
 # Tests for html targets
 
 def test_tag_code_html(doc):

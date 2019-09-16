@@ -80,3 +80,43 @@ class Code(Tag):
             return highlight(content, lexer, formatters.LatexFormatter())
         else:
             return tex_verb(content)
+
+
+class Python(Code):
+    """A tag for displaying python code"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.attributes['python'] = StringPositionalValue
+
+
+class Html(Code):
+    """A tag for displaying html code"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.attributes['html'] = StringPositionalValue
+
+
+class Ruby(Code):
+    """A tag for displaying ruby code"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.attributes['ruby'] = StringPositionalValue
+
+
+class Java(Code):
+    """A tag for displaying ruby code"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.attributes['java'] = StringPositionalValue
+
+
+class Javascript(Code):
+    """A tag for displaying javascript code"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.attributes['javascript'] = StringPositionalValue
