@@ -5,7 +5,7 @@ from textwrap import wrap
 
 from .tag import Tag
 from .exceptions import TagError, assert_content_str
-from ..formats import tex_cmd, tex_env, html_entity, html_tag
+from ..formats import tex_cmd, tex_env, tex_verb, html_entity, html_tag
 from .utils import format_content
 
 
@@ -260,4 +260,4 @@ class Verb(Tag):
             return tex_env(env='verbatim', attributes='',
                            formatted_content=self.default_fmt())
         else:
-            return "\\verb|" + self.default_fmt() + "|"
+            return tex_verb(self.default_fmt())

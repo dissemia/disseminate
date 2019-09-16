@@ -7,7 +7,7 @@ from markupsafe import Markup
 from .tag import Tag
 from .utils import find_files, content_to_str
 from ..utils.types import StringPositionalValue
-from ..formats import html_tag
+from ..formats import html_tag, tex_verb
 
 
 class Code(Tag):
@@ -75,5 +75,8 @@ class Code(Tag):
         content = self.content if content is None else content
         content = content_to_str(content=content)
 
-        lexer = self.lexer
-        return highlight(content, lexer, formatters.LatexFormatter())
+        if self.paragraph_role == 'block':
+            lexer = self.lexer
+            return highlight(content, lexer, formatters.LatexFormatter())
+        else:
+            return tex_verb(content)

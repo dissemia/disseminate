@@ -157,6 +157,7 @@ def test_tag_code_html(doc):
     code.paragraph_role = 'inline'
     assert code.html == '<code>&lt;script&gt;&lt;/script</code>\n'
 
+
 # Tests for tex targets
 
 def test_tag_code_tex(doc):
@@ -169,6 +170,7 @@ def test_tag_code_tex(doc):
 
     # Check the @code tag
     code = root.content
+    code.paragraph_role = 'block'
     assert code.tex == ('\\begin{Verbatim}[commandchars=\\\\\\{\\}]\n'
                         '\\PY{k}{print}\\PY{p}{(}\\PY{l+s+s1}{\\PYZsq{}}'
                         '\\PY{l+s+s1}{test}\\PY{l+s+s1}{\\PYZsq{}}\\PY{p}{)}\n'
@@ -178,4 +180,7 @@ def test_tag_code_tex(doc):
                         '\\PY{l+s+s1}{test}\\PY{l+s+s1}{\\PYZsq{}}\\PY{p}{)}\n'
                         '\\end{Verbatim}\n')
 
-    # Check the definitions
+    # Test inline
+    code.paragraph_role = 'inline'
+    assert code.tex == "\\verb|print('test')|"
+    assert root.tex == "\\verb|print('test')|"

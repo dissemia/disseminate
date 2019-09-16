@@ -180,3 +180,27 @@ def tex_env(env, attributes, formatted_content, min_newlines=False,
         tex_text = "\n" + tex_text + "\n"
 
     return tex_text
+
+
+def tex_verb(formatted_content):
+    """Format a tex verb command
+
+    Parameters
+    ----------
+    formatted_content : str
+        The contents of the tex environment formatted as a string in LaTeX.
+
+    Returns
+    -------
+    tex_verb : str
+        The LaTeX verb string
+    """
+    assert isinstance(formatted_content, str)
+
+    if '|' not in formatted_content:
+        return "\\verb|" + formatted_content + "|"
+    elif '!' not in formatted_content:
+        return "\\verb!" + formatted_content + "!"
+    elif '^' not in formatted_content:
+        return "\\verb^" + formatted_content + "^"
+    return formatted_content
