@@ -4,8 +4,8 @@ Image tags
 import pathlib
 
 from .tag import Tag, TagError
-from .utils import find_files, format_attribute_width, format_content
-from ..formats import tex_cmd, html_tag
+from .utils import find_files, format_attribute_width
+from ..formats import tex_cmd
 from ..utils.string import hashtxt
 from ..paths import SourcePath
 from .. import settings

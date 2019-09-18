@@ -22,7 +22,7 @@ class Heading(Tag, LabelMixin):
     html_name = None
     tex_cmd = None
 
-    active = True
+    active = False
     include_paragraphs = False
 
     id_mappings = {'title': 'title',
