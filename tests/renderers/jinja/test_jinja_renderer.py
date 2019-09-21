@@ -60,10 +60,11 @@ def test_jinjarenderer_paths(context_cls):
     # Check the template paths
     filepaths = renderer.template_filepaths()
     assert len(filepaths) == 4
-    assert filepaths[0].match('disseminate/templates/default/template.html')
-    assert filepaths[1].match('disseminate/templates/default/menu.html')
-    assert filepaths[2].match('disseminate/templates/default/template.tex')
-    assert filepaths[3].match('disseminate/templates/default/template.txt')
+    for s in ('disseminate/templates/default/template.html',
+              'disseminate/templates/default/menu.html',
+              'disseminate/templates/default/template.tex',
+              'disseminate/templates/default/template.txt'):
+        assert any(fp.match(s) for fp in filepaths)
 
     # Check the paths
     paths = renderer.paths()
@@ -79,15 +80,17 @@ def test_jinjarenderer_paths(context_cls):
     # Check the template paths
     filepaths = renderer.template_filepaths()
     assert len(filepaths) == 3
-    assert filepaths[0].match('renderers/example1/src/default/template.html')
-    assert filepaths[1].match('disseminate/templates/default/template.tex')
-    assert filepaths[2].match('disseminate/templates/default/template.txt')
+    for s in ('renderers/example1/src/default/template.html',
+              'disseminate/templates/default/template.tex',
+              'disseminate/templates/default/template.txt'):
+        assert any(fp.match(s) for fp in filepaths)
 
     # Check the paths
     paths = renderer.paths()
     assert len(paths) == 2
-    assert paths[0].match('tests/renderers/example1/src/default')
-    assert paths[1].match('disseminate/templates/default')
+    for s in ('tests/renderers/example1/src/default',
+              'disseminate/templates/default'):
+        assert any(fp.match(s) for fp in paths)
 
     # 3. Check a template with inheritance
     renderer = JinjaRenderer(context=context, template='books/tufte',
@@ -98,12 +101,13 @@ def test_jinjarenderer_paths(context_cls):
     # '.html' targets
     filepaths = renderer.template_filepaths()
     assert len(filepaths) == 6
-    assert filepaths[0].match('disseminate/templates/books/tufte/template.html')
-    assert filepaths[1].match('disseminate/templates/default/template.html')
-    assert filepaths[2].match('disseminate/templates/default/menu.html')
-    assert filepaths[3].match('disseminate/templates/default/nav.html')
-    assert filepaths[4].match('disseminate/templates/books/tufte/template.tex')
-    assert filepaths[5].match('disseminate/templates/default/template.tex')
+    for s in ('disseminate/templates/books/tufte/template.html',
+              'disseminate/templates/default/template.html',
+              'disseminate/templates/default/menu.html',
+              'disseminate/templates/default/nav.html',
+              'disseminate/templates/books/tufte/template.tex',
+              'disseminate/templates/default/template.tex'):
+        assert any(fp.match(s) for fp in filepaths)
 
 
 def test_jinjarenderer_context_filepaths(context_cls):
@@ -357,3 +361,22 @@ def test_jinjarenderer_dependencies(tmpdir, context_cls):
     assert deps[3].dep_filepath.match('templates/default/media/css/'
                                       'pygments.css')
     assert deps[3].dest_filepath.match('html/media/css/pygments.css')
+
+
+def test_jinjarenderer_other_targets(doc):
+    """Test the JinjaRenderer shows other targets are available for a given
+    template."""
+    # By default, doc has 'html' as the target
+    assert doc.context.targets == ['.html']
+
+    # doc should have 'default/template' as its default template.
+    # Check that the renderer is available for other targets
+    renderer = doc.context['renderers']['template']
+    assert renderer.template == 'default/template'
+    assert renderer.is_available('.html')
+
+    # The other targets should be available too, as long as they're in the
+    # doc.context
+    assert not renderer.is_available('.tex')
+    doc.context['targets'] = ['.html', '.tex']
+    assert renderer.is_available('.tex')

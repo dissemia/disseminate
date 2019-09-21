@@ -793,12 +793,13 @@ class Document(object):
             # string
             body_attr = settings.body_attr
             body = self.context.get(body_attr, None)
-            if hasattr(body, target_name):
-                output_string = getattr(body, target_name)
-            elif hasattr(body, 'default'):
-                output_string = getattr(body, 'default')
-            else:
-                output_string = body
+
+            # Try to get the output_string from different sources
+            output_string = getattr(body, target_name, None)
+            output_string = (output_string if output_string is not None else
+                             getattr(body, 'default', None))
+            output_string = (output_string if output_string is not None else
+                             str(body))
 
         # Write the file
         with open(target_filepath, 'w') as f:

@@ -7,6 +7,7 @@ a string for a particular target, like '.html' or '.tex'.
 from abc import ABC, abstractmethod
 
 from ..utils.list import uniq
+from ..utils.classes import weakattr
 from .. import settings
 
 #: The location of the templates directory relative to this directory
@@ -35,39 +36,30 @@ class BaseRenderer(ABC):
         ex: ['.html', '.tex', '.txt']
     """
 
-    _module_only = None
-    _cached = None
-
     #: The base name for the template file
     template = None
-
-    targets = None
+    context = weakattr()
 
     #: The order for the renderer. If multiple renderers are available,
     #: The renderer with the lower order number will be used first.
     order = 1000
 
+    _module_only = None
+    _targets = None
+    _paths = None
+    _context_filepaths = None
+
     def __init__(self, context, template, module_only=None, targets=None):
         if module_only is None:
             module_only = settings.module_only
-        self._cached = dict()
 
-        self.module_only = module_only
+        # Set the attributes
+        self.context = context  # weakattr
         self.template = template
+        self.module_only = module_only
+        self.targets = targets
 
-        # Set the template targets. Get the targets from the argument list, if
-        # available, or the context, if the targets aren't specified.
-        if targets is not None:
-            self.targets = targets
-        else:
-            # Otherwise, try getting the targets from the context. A
-            # DocumentContext is expected here, as it has an attributes
-            # (targets) that properly formats the targets entry into a list of
-            # strings with a preceeding '.'. ex: ['.html', '.tex']
-            assert context.is_valid('targets')
-            self.targets = context.targets
-
-        # Reset the paths for this renderer in the context. This must be done
+        # Add the paths for this renderer in the context. This must be done
         # after the templates are loaded since the paths of the templates must
         # be used in setting the context paths
         self.add_context_paths(context=context)
@@ -75,6 +67,28 @@ class BaseRenderer(ABC):
     def __repr__(self):
         cls_name = self.__class__.__name__
         return "{}({})".format(cls_name, self.template)
+
+    @property
+    def targets(self):
+        """The targets specified for the renderer, or the targets for the
+        document's context, if targets for the renderer have not been
+        specified.
+        """
+        # Try first to see if targets have been set
+        targets = getattr(self, '_targets', None)
+
+        # Otherwise get it from the context
+        if targets is None:
+            try:
+                return self.context.targets
+            except AttributeError:
+                return None
+        else:
+            return targets
+
+    @targets.setter
+    def targets(self, value):
+        self._targets = value
 
     @property
     def module_only(self):
@@ -95,7 +109,6 @@ class BaseRenderer(ABC):
         target = target if target.startswith('.') else '.' + target
         return target in {f.suffix for f in self.template_filepaths()}
 
-    # TODO: use a caching decorator
     def paths(self):
         """The ordered list of final template paths (directories).
 
@@ -104,15 +117,16 @@ class BaseRenderer(ABC):
         paths : List[:obj:`pathlib.Path`]
             The template directories.
         """
-        if 'paths' not in self._cached:
+        paths = getattr(self, '_paths', None)
+        if paths is None:
             filepaths = self.template_filepaths()
             paths = []
             for template_filepath in filepaths:
                 template_parent = template_filepath.parent
                 if template_parent.is_dir():
                     paths.append(template_parent)
-            self._cached['paths'] = uniq(paths)
-        return self._cached['paths']
+            self._paths = uniq(paths)
+        return self._paths
 
     @abstractmethod
     def template_filepaths(self):
@@ -134,7 +148,8 @@ class BaseRenderer(ABC):
         paths : List[:obj:`pathlib.Path`]
             The file paths for additional context files from templates.
         """
-        if 'context_filepaths' not in self._cached:
+        context_filepaths = getattr(self, '_context_filepaths', None)
+        if context_filepaths is None:
             context_files = []
             template_filepaths = self.template_filepaths
 
@@ -150,8 +165,9 @@ class BaseRenderer(ABC):
                         context_filepath not in context_files):
                     context_files.append(context_filepath)
 
-            self._cached['context_filepaths'] = context_files
-        return self._cached['context_filepaths']
+            self._context_filepaths = context_files
+
+        return self._context_filepaths
 
     @property
     def mtime(self):

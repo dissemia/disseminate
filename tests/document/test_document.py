@@ -6,6 +6,7 @@ from shutil import copy
 import logging
 
 import pytest
+from jinja2.exceptions import TemplateNotFound
 
 from disseminate.document import Document, exceptions
 from disseminate.paths import SourcePath, TargetPath
@@ -703,6 +704,25 @@ def test_document_render(tmpdir, target):
     # An invalid file raises an error
     with pytest.raises(exceptions.DocumentException):
         doc = Document("tests/document/missing.dm")
+
+
+def test_document_render_missing_template(tmpdir):
+    """Tests the rendering of a document when a specified templates is
+    missing."""
+    tmpdir = pathlib.Path(tmpdir)
+
+    # 1. Prepare the document with a missing template
+    src_filepath = tmpdir / 'test.dm'
+    src = ("---\n"
+           "targets: html, tex, pdf\n"
+           "template: missing\n"
+           "---\n"
+           "test\n")
+    src_filepath.write_text(src)
+
+    # Raises a template not found error
+    with pytest.raises(TemplateNotFound):
+        doc = Document(src_filepath=src_filepath, target_root=tmpdir)
 
 
 def test_document_example8(tmpdir):

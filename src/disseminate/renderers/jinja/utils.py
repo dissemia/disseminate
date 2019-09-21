@@ -83,6 +83,20 @@ def filepaths_from_paths(template_paths, template_basename, targets):
 
 
 def filepaths_from_template(template, environment):
+    """Return a list of filepaths from a Jinja2 template object.
+
+    Parameters
+    ----------
+    template : :obj:`jinja2.Template`
+        The jinja2 template object to load filepaths for
+    environment : :obj:`jinja2.Environment`
+        The jinja2 environment object
+
+    Returns
+    -------
+    filepaths : List[:obj:`pathlib.Path`]
+        A list of paths.
+    """
     # Prepare a list of absolute paths (render paths) for the templates
     filenames = list()
 
