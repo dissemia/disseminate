@@ -1,6 +1,9 @@
 """
 Tests for the tag utilities.
 """
+import pathlib
+from os import curdir
+
 import pytest
 
 from disseminate.tags import Tag
@@ -168,6 +171,12 @@ def test_find_files(doc):
     filepaths = find_files('garbage331.py', context)
     assert len(filepaths) == 0
 
+    # Try absolute paths
+    img_path = (pathlib.Path(curdir) / 'tests' / 'tags' / 'img_example1' /
+                'sample.pdf').absolute()
+    filepaths = find_files(img_path, context)
+    assert len(filepaths) == 1
+
 
 def test_format_attribute_width():
     """Test the format_attribute_width function."""
@@ -190,5 +199,4 @@ def test_format_attribute_width():
     assert attrs['style'] == "width: 300px"
 
     attrs = format_attribute_width('width.tex=2in', target='.tex')
-    print(attrs)
     assert attrs['2in'] == StringPositionalValue

@@ -163,4 +163,5 @@ def test_asy_tex(tmpdir, context_cls):
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert img.tex == '\\includegraphics{media/test_48a82ce699.pdf}'
+    img_filepath = tmpdir / 'tex' / 'media' / 'test_48a82ce699.pdf'
+    assert img.tex == '\\includegraphics{{{}}}'.format(img_filepath)

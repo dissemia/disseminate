@@ -59,9 +59,3 @@ def test_process_typography_verbatim(context_cls):
     root1 = Tag(name='root', content=test1, attributes='', context=context)
     verb = root1.content
     assert verb.txt == "An emdash---this is a test of that"
-
-    # Test an img tag
-    test2 = "@img{y---x}"
-    root2 = Tag(name='root', content=test2, attributes='', context=context)
-    img = root2.content
-    assert img.img_filepath == "y---x"

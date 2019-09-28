@@ -2,6 +2,7 @@
 Tests for all templates
 """
 import pathlib
+from os import curdir
 
 from disseminate import __path__ as path
 from disseminate import settings
@@ -31,8 +32,7 @@ def test_all_tags_and_templates_tex(doc):
                "target: pdf\n"
                "---\n").format(template)
 
-        for tag in list(tag_classes.keys())[:3]:
-
+        for tag in list(tag_classes.keys())[:23]:
             # Prepare the attributes. Some tags have special attribute
             # requirements
             if tag == 'panel':
@@ -45,9 +45,13 @@ def test_all_tags_and_templates_tex(doc):
             if tag == 'supsub':
                 src += 'one && two'
             elif tag == 'img':
-                src += 'tests/templates/example1/sample.png'
+                img_path = (pathlib.Path(curdir).absolute() /
+                            'tests' / 'templates' / 'example1' / 'sample.png')
+                src += str(img_path)
             elif tag == 'ref':
                 src += 'doc:' + doc.doc_id.replace('.', '-')
+            elif tag == 'smb' or tag == 'symbol':
+                src += 'alpha'
             else:
                 src += tag
             src += '}\n'

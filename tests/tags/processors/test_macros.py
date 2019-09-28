@@ -10,7 +10,7 @@ test = """
 
     Here is a new one with @b{bolded} text as an example.
     @myfig[offset=-1.0em]{
-      @img{media/files}
+      @myimg{media/files}
       @caption{This is my @i{first} figure.}
     }
 
@@ -24,7 +24,7 @@ expected_result = """
 
     Here is a new one with @b{bolded} text as an example.
     @myfig[offset=-1.0em]{
-      @img{media/files}
+      @myimg{media/files}
       @caption{This is my @i{first} figure.}
     }
 
@@ -38,7 +38,7 @@ expected_result_txt = """
 
     Here is a new one with bolded text as an example.
     
-      
+      media/files
       This is my first figure.
     
 

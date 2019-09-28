@@ -37,13 +37,17 @@ class Img(Tag):
         super().__init__(name=name, content=content, attributes=attributes,
                          context=context)
 
-        # Move the contents to the src_filpath attribute
+        # Move the contents to the img_filepath attribute
         if isinstance(content, list):
             contents = ''.join(content).strip()
-        elif isinstance(content, SourcePath):
+        elif isinstance(content, pathlib.Path) and content.is_file():
             contents = content
+        elif isinstance(content, str):
+            # Get the filepath for the file
+            filepaths = find_files(content, context)
+            contents = (filepaths[0] if filepaths else None)
         else:
-            contents = self.content.strip()
+            contents = None
         self.content = ''
 
         if contents:
@@ -82,14 +86,13 @@ class Img(Tag):
                                           attributes=self.attributes)
         dep = deps.pop()
         dest_filepath = dep.dest_filepath
-        dest_subpath = dest_filepath.subpath
 
         # Format the width
         attributes = attributes if attributes is not None else self.attributes
         attrs = format_attribute_width(attributes, target='.tex')
 
         return tex_cmd(cmd='includegraphics', attributes=attrs,
-                       formatted_content=str(dest_subpath))
+                       formatted_content=str(dest_filepath))
 
     def html_fmt(self, content=None, attributes=None, level=1):
         # Add the file dependency
