@@ -32,7 +32,7 @@ def test_all_tags_and_templates_tex(doc):
                "target: pdf\n"
                "---\n").format(template)
 
-        for tag in list(tag_classes.keys())[:23]:
+        for tag in list(tag_classes.keys())[:24]:
             # Prepare the attributes. Some tags have special attribute
             # requirements
             if tag == 'panel':
@@ -55,7 +55,7 @@ def test_all_tags_and_templates_tex(doc):
             else:
                 src += tag
             src += '}\n'
-
+        print(src.splitlines()[-1])
         # Write the source document
         doc.src_filepath.write_text(src)
         doc.load()

@@ -31,13 +31,13 @@ class Img(Tag):
     process_typography = False
 
     html_name = 'img'
-    img_filepath = None
+    filepath = None
 
     def __init__(self, name, content, attributes, context):
         super().__init__(name=name, content=content, attributes=attributes,
                          context=context)
 
-        # Move the contents to the img_filepath attribute
+        # Move the contents to the filepath attribute
         if isinstance(content, list):
             contents = ''.join(content).strip()
         elif isinstance(content, pathlib.Path) and content.is_file():
@@ -51,7 +51,7 @@ class Img(Tag):
         self.content = ''
 
         if contents:
-            self.img_filepath = contents
+            self.filepath = contents
         else:
             msg = "An image path must be used with the img tag."
             raise TagError(msg)
@@ -62,7 +62,7 @@ class Img(Tag):
         mtimes = [super().mtime]
 
         # Get the image file's modification time
-        img_filepath = pathlib.Path(self.img_filepath)
+        img_filepath = pathlib.Path(self.filepath)
         if img_filepath.is_file():
             mtime = img_filepath.stat().st_mtime
             mtimes.append(mtime)
@@ -80,7 +80,7 @@ class Img(Tag):
         dep_manager = self.context['dependency_manager']
 
         # Raises MissingDependency if the file is not found
-        deps = dep_manager.add_dependency(dep_filepath=self.img_filepath,
+        deps = dep_manager.add_dependency(dep_filepath=self.filepath,
                                           target='.tex',
                                           context=self.context,
                                           attributes=self.attributes)
@@ -100,7 +100,7 @@ class Img(Tag):
         dep_manager = self.context['dependency_manager']
 
         # Raises MissingDependency if the file is not found
-        deps = dep_manager.add_dependency(dep_filepath=self.img_filepath,
+        deps = dep_manager.add_dependency(dep_filepath=self.filepath,
                                           target='.html',
                                           context=self.context,
                                           attributes=self.attributes)

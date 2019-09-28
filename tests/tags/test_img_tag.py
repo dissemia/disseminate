@@ -30,13 +30,13 @@ def test_img_paths(tmpdir, context_cls):
     src = "@img{sample.pdf}"
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
-    assert img.img_filepath.match('sample.pdf')
+    assert img.filepath.match('sample.pdf')
 
     # 2. Test a absolute path
     src = "@img{{{}}}".format(project_root.absolute() / 'sample.pdf')
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
-    assert img.img_filepath.match('sample.pdf')
+    assert img.filepath.match('sample.pdf')
 
     # 3. Test a missing file. Raises a TagError
     src = "@img{missing.pdf}"
