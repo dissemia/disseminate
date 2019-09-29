@@ -123,9 +123,9 @@ def test_process_context_header_precedence(doctree, wait):
         doc.load()
 
     assert doc1.context['template'] == 'test'
-    assert doc1.context['inactive_tags'] == {'chapter'}
-    assert doc2.context['inactive_tags'] == {'chapter'}
-    assert doc3.context['inactive_tags'] == {'chapter'}
+    assert doc1.context.inactive_tags == {'chapter'}
+    assert doc2.context.inactive_tags == {'chapter'}
+    assert doc3.context.inactive_tags == {'chapter'}
     assert doc1.context['attr'] == 'string'
     assert doc2.context['attr'] == 'string'
     assert doc3.context['attr'] == 'string'
@@ -143,9 +143,9 @@ def test_process_context_header_precedence(doctree, wait):
     for doc in (doc1, doc2, doc3):
         doc.load()
 
-    assert doc1.context['inactive_tags'] == {'title', 'chapter'}  # appended
-    assert doc2.context['inactive_tags'] == {'title', 'chapter'}
-    assert doc3.context['inactive_tags'] == {'title', 'chapter'}
+    assert doc1.context.inactive_tags == {'title'}  # replaced
+    assert doc2.context.inactive_tags == {'title'}
+    assert doc3.context.inactive_tags == {'title'}
     assert doc1.context['attr'] == 'new string'  # replaced
     assert doc2.context['attr'] == 'new string'
     assert doc3.context['attr'] == 'new string'

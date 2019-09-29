@@ -277,3 +277,24 @@ class DocumentContext(BaseContext):
                                subpath=subpath / path)
                     for path in includes]
         return includes
+
+    @property
+    def inactive_tags(self):
+        """Retrieve a list of inactive tags for the document
+
+        Returns
+        -------
+        inactive_tags : List[str]
+            A list of the inactive tags for the document.
+        """
+        # Get the inactive tags from the context.
+        inactive_tags = self.get('inactive_tags', '')
+
+        # Convert to a list, if needed
+        inactive_tags_list = (str_to_list(inactive_tags)
+                              if isinstance(inactive_tags, str) else
+                              inactive_tags)
+
+        # Remove empty entries, and return set
+        return {inactive_tag for inactive_tag in inactive_tags_list
+                if inactive_tag}

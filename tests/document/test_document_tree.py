@@ -181,9 +181,9 @@ def test_document_tree_load_required(doctree):
     doc1.load()
 
     assert doc1.context['template'] == 'test'
-    assert doc1.context['inactive_tags'] == {'chapter'}
-    assert doc2.context['inactive_tags'] == {'chapter'}
-    assert doc3.context['inactive_tags'] == {'chapter'}
+    assert doc1.context.inactive_tags == {'chapter'}
+    assert doc2.context.inactive_tags == {'chapter'}
+    assert doc3.context.inactive_tags == {'chapter'}
 
 
 def test_document_garbage_collection(tmpdir):
