@@ -203,11 +203,6 @@ class Document(object):
                 self.context.get('target_root', None))
 
     @property
-    def target_list(self):
-        """The list of targets from the context."""
-        return self.context.targets
-
-    @property
     def targets(self):
         """The targets dict.
 
@@ -218,15 +213,13 @@ class Document(object):
             (ex: '.html') and the value is the target_filepath for that target.
             (ex: 'html/index.html') These paths are target paths.
         """
-        target_list = self.target_list
-
         # Create the target dict
         targets = dict()
 
         # Get the filename relative to the project root (without the ext)
         subpath = self.src_filepath.subpath
 
-        for target in target_list:
+        for target in self.context.targets:
             target_path = TargetPath(target_root=self.target_root,
                                      target=target,
                                      subpath=subpath.with_suffix(target))

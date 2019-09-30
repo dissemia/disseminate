@@ -49,7 +49,7 @@ def relative_label(context, relative_position, kinds='heading',
     # Filter by available target, if available, and order the doc_ids
     if target is not None:
         doc_ids = [doc_id for doc_id, doc in docs_by_id.items()
-                   if target in doc.target_list]
+                   if target in doc.targets]
     else:
         doc_ids = list(docs_by_id.keys())
 

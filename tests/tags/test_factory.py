@@ -41,7 +41,7 @@ def test_tag_factory_inactive_tags(doc):
     assert isinstance(available, Available)
 
     # 2. Disable the Available tag subclass from the context
-    context['inactive_tags'] = 'available'
+    context['inactive_tags'] = {'available'}
 
     available = factory.tag(tag_name='available', tag_attributes='',
                             tag_content='', context=context)

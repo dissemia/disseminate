@@ -1,2 +1,2 @@
 toc: headings collapsed
-inactive_tags: part, chapter
+inactive_tags: part, chapter, sidenote

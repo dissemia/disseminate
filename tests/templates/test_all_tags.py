@@ -55,7 +55,7 @@ def test_all_tags_and_templates_tex(doc):
             else:
                 src += tag
             src += '}\n'
-        print(src.splitlines()[-1])
+        print(template, src.splitlines()[-1])
         # Write the source document
         doc.src_filepath.write_text(src)
         doc.load()

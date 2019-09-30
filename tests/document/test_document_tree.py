@@ -146,46 +146,6 @@ def test_document_tree(tmpdir):
         assert target_filepath.is_file()
 
 
-def test_document_tree_load_required(doctree):
-    """Test the load_required method for document trees."""
-    # Load the 3 documents from the doctree
-    doc1, doc2, doc3 = doctree.documents_list()
-
-    # 1. Take an attribute, and it should match the default context
-    for doc in (doc1, doc2, doc3):
-        assert (doc.context['inactive_tags'] ==
-                settings.default_context['inactive_tags'])
-
-    # 2. Now add a template with a context.txt
-    src_path = doc1.src_filepath.parent
-    template_filepath = src_path / 'test.html'
-    context_filepath = src_path / 'context.txt'
-
-    template_filepath.write_text("""
-    <html>
-    </html>
-    """)
-    context_filepath.write_text("""
-    inactive_tags: chapter
-    """)
-    doc1.src_filepath.write_text("""
-    ---
-    template: test
-    include:
-      test2.dm
-      test3.dm
-    ---
-    """)
-
-    # Load the root document should reload the child documents
-    doc1.load()
-
-    assert doc1.context['template'] == 'test'
-    assert doc1.context.inactive_tags == {'chapter'}
-    assert doc2.context.inactive_tags == {'chapter'}
-    assert doc3.context.inactive_tags == {'chapter'}
-
-
 def test_document_garbage_collection(tmpdir):
     """Test the garbage collection of document trees."""
 

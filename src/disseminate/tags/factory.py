@@ -61,8 +61,7 @@ class TagFactory(object):
 
         if (tag_cls is not None and
             getattr(tag_cls, 'active', False) and
-            tag_cls.__name__.lower() not in
-                getattr(context, 'inactive_tags', ())):
+           tag_cls.__name__.lower() not in context.get('inactive_tags', ())):
             # First, see if the tag_name matches one of the tag subclasses (or
             # tag aliases) in disseminate
             return tag_cls

@@ -18,7 +18,7 @@ def test_jinjarenderer_is_available(doc, context_cls):
     # 1. Test with a document context with targets specified in the context.
     context = doc.context
     context['targets'] = ['.html', '.pdf', '.txt']
-    assert context.targets == ['.html', '.pdf', '.txt']
+    assert context.targets == {'.html', '.pdf', '.txt'}
 
     # Setup a JinjaRenderer that accesses package templates only.
     renderer = JinjaRenderer(context=context, template='default',
@@ -125,8 +125,9 @@ def test_jinjarenderer_context_filepaths(context_cls):
 
     # Check the template paths
     filepaths = renderer.context_filepaths()
-    assert len(filepaths) == 1
+    assert len(filepaths) == 2
     assert filepaths[0].match('templates/books/tufte/context.txt')
+    assert filepaths[1].match('templates/default/context.txt')
 
 
 def test_jinjarenderer_mtime(tmpdir, context_cls, wait):
@@ -367,7 +368,7 @@ def test_jinjarenderer_other_targets(doc):
     """Test the JinjaRenderer shows other targets are available for a given
     template."""
     # By default, doc has 'html' as the target
-    assert doc.context.targets == ['.html']
+    assert doc.context.targets == {'.html'}
 
     # doc should have 'default/template' as its default template.
     # Check that the renderer is available for other targets

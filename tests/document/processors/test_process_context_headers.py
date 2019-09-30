@@ -95,12 +95,16 @@ def test_process_context_header_precedence(doctree, wait):
     # Load the 3 documents from the doctree
     doc1, doc2, doc3 = doctree.documents_list()
 
-    # 1. Take an attribute, and it should match the default context
+    # 1. Initially, these documents should have default context entries from
+    #    the default context (settings) and the default template
+    #    (templates/default/context.txt). Updating the default template's
+    #    context may require updating this test.
     for doc in (doc1, doc2, doc3):
-        assert (doc.context['inactive_tags'] ==
-                settings.default_context['inactive_tags'])
+        assert 'attr' not in doc.context
+        assert doc.context['inactive_tags'] == {'sidenote'}
+        assert doc.context['template'] == 'default/template'
 
-    # 2. Now add a template with a context.txt
+    # 2. Add a template with a context.txt
     wait()  # sleep time offset needed for different mtimes
     src_path = doc1.src_filepath.parent
     template_filepath = src_path / 'test.html'
@@ -123,9 +127,9 @@ def test_process_context_header_precedence(doctree, wait):
         doc.load()
 
     assert doc1.context['template'] == 'test'
-    assert doc1.context.inactive_tags == {'chapter'}
-    assert doc2.context.inactive_tags == {'chapter'}
-    assert doc3.context.inactive_tags == {'chapter'}
+    assert doc1.context['inactive_tags'] == {'chapter'}
+    assert doc2.context['inactive_tags'] == {'chapter'}
+    assert doc3.context['inactive_tags'] == {'chapter'}
     assert doc1.context['attr'] == 'string'
     assert doc2.context['attr'] == 'string'
     assert doc3.context['attr'] == 'string'
@@ -143,9 +147,9 @@ def test_process_context_header_precedence(doctree, wait):
     for doc in (doc1, doc2, doc3):
         doc.load()
 
-    assert doc1.context.inactive_tags == {'title'}  # replaced
-    assert doc2.context.inactive_tags == {'title'}
-    assert doc3.context.inactive_tags == {'title'}
+    assert doc1.context['inactive_tags'] == {'title'}  # replaced
+    assert doc2.context['inactive_tags'] == {'title'}
+    assert doc3.context['inactive_tags'] == {'title'}
     assert doc1.context['attr'] == 'new string'  # replaced
     assert doc2.context['attr'] == 'new string'
     assert doc3.context['attr'] == 'new string'
