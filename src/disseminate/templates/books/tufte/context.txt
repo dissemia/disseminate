@@ -1,2 +1,2 @@
 toc: headings collapsed
-inactive_tags: ''
+inactive_tags: subsubsection

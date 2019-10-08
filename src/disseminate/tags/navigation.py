@@ -5,7 +5,7 @@ from os.path import relpath
 
 from .tag import Tag
 from .ref import Ref
-from ..formats import html_tag, tex_cmd
+from ..formats import html_tag
 
 
 def relative_label(context, relative_position, kinds='heading',
@@ -94,17 +94,19 @@ class Next(Ref):
 
     def __init__(self, name, content, attributes, context):
         # Bypass the Ref initiator, as it sets the label_id
+        # Do not use the tag contents--this tag cannot do anything with it.
+        content = ''
         Tag.__init__(self, name, content, attributes, context)
 
     def default_fmt(self, content=None):
         # The next reference is designed for html only
         return ""
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         # The next reference is designed for html only
         return ""
 
-    def html_fmt(self, content=None, level=1):
+    def html_fmt(self, content=None, attributes=None, level=1):
         kind = self.attributes.get('kind', default='heading')
 
         # Get the label_id for the next document
@@ -136,17 +138,19 @@ class Prev(Ref):
 
     def __init__(self, name, content, attributes, context):
         # Bypass the Ref initiator, as it sets the label_id
+        # Do not use the tag contents--this tag cannot do anything with it.
+        content = ''
         Tag.__init__(self, name, content, attributes, context)
 
     def default_fmt(self, content=None):
         # The next reference is designed for html only
         return ""
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         # The next reference is designed for html only
         return ""
 
-    def html_fmt(self, content=None, level=1):
+    def html_fmt(self, content=None, attributes=None, level=1):
         kind = self.attributes.get('kind', default='heading')
 
         # Get the label_id for the next document
@@ -173,6 +177,8 @@ class Pdflink(Ref):
 
     def __init__(self, name, content, attributes, context):
         # Bypass the Ref initiator, as it sets the label_id
+        # Do not use the tag contents--this tag cannot do anything with it.
+        content = ''
         Tag.__init__(self, name, content, attributes, context)
 
     def default_fmt(self, content=None):

@@ -1,13 +1,11 @@
 """
 Formatting of Table of Contents for documents
 """
-from itertools import groupby
-
 from .headings import toc_levels as heading_toc_levels, Heading
 from .ref import Ref
 from .tag import Tag
 from . import exceptions
-from ..formats import html_tag, tex_env, tex_cmd
+from ..formats import html_tag, tex_env
 
 
 class TocError(Exception):
@@ -21,19 +19,9 @@ class TocRef(Ref):
     This is a separate class so that the label_fmt may be different for TOC
     entries.
     """
-    pass
-    # def tex_fmt(self, content=None, mathmode=False, level=1):
-    #     # Add the pageref
-    #     label = self.label
-    #     tex_str = super().tex_fmt(content=content, mathmode=mathmode,
-    #                               level=level)
-    #
-    #     if label is not None:
-    #         return (tex_str  + " " +
-    #                 tex_cmd('hfill') + " " +
-    #                 tex_cmd('pageref', attributes=label.id))
-    #     else:
-    #         return tex_str
+    # The tocref tag should not be accessible on its own; it is created
+    # by the Toc tag
+    active = False
 
 
 class Toc(Tag):

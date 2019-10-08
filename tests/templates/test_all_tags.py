@@ -30,31 +30,40 @@ def test_all_tags_and_templates_tex(doc):
         src = ("---\n"
                "template: {}\n"
                "target: pdf\n"
+               "title: My Title\n"
                "---\n").format(template)
 
-        for tag in list(tag_classes.keys())[:24]:
+        for tag in sorted(tag_classes.keys()):
             # Prepare the attributes. Some tags have special attribute
             # requirements
             if tag == 'panel':
-                attrs = '[100%]'
+                attrs = '[width=100%]'
             else:
                 attrs = ''
 
             # Add the tag to the source body. Some tags have special content
-            src += settings.tag_prefix + tag + attrs + '{'
+            tag_src = settings.tag_prefix + tag + attrs + '{'
             if tag == 'supsub':
-                src += 'one && two'
+                tag_src += 'one && two'
             elif tag == 'img':
                 img_path = (pathlib.Path(curdir).absolute() /
                             'tests' / 'templates' / 'example1' / 'sample.png')
-                src += str(img_path)
+                tag_src += str(img_path)
+            elif tag == 'asy':
+                img_path = (pathlib.Path(curdir).absolute() / 'tests' /
+                            'convert' / 'asy_example1' / 'diagram.asy')
+                tag_src += str(img_path)
             elif tag == 'ref':
-                src += 'doc:' + doc.doc_id.replace('.', '-')
+                tag_src += 'doc:' + doc.doc_id.replace('.', '-')
             elif tag == 'smb' or tag == 'symbol':
-                src += 'alpha'
+                tag_src += 'alpha'
+            elif tag == 'caption':
+                tag_src = (settings.tag_prefix + "@figure{" +
+                           settings.tag_prefix + "@caption{caption}")
             else:
-                src += tag
-            src += '}\n'
+                tag_src += tag
+            tag_src += '}\n'
+            src += tag_src
         print(template, src.splitlines()[-1])
         # Write the source document
         doc.src_filepath.write_text(src)

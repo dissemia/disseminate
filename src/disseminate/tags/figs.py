@@ -3,9 +3,8 @@ Tags for figure environments.
 """
 from .tag import Tag
 from .caption import Caption
-from .utils import format_content, format_attribute_width
+from .utils import format_attribute_width
 from ..utils.string import strip_multi_newlines
-from ..formats import tex_env, html_tag
 
 
 class BaseFigure(Tag):
