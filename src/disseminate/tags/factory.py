@@ -38,8 +38,8 @@ class TagFactory(object):
             The content of the tag. ex: 'this is bold'
         tag_attributes : str
             The attributes of a tag. ex: 'width=32pt'
-        context : dict
-            The document's context dict.
+        context : :obj:`.document.DocumentContext`
+            The document's context.
 
         Returns
         -------
@@ -54,15 +54,14 @@ class TagFactory(object):
         return tag
 
     def tag_class(self, tag_name, context):
-        """The retrieve the tag class for the given tag_name"""
+        """Retrieve the tag class for the given tag_name"""
         tag_classes = self.tag_classes
         tag_name_lower = tag_name.lower()
         tag_cls = tag_classes.get(tag_name_lower, None)
 
         if (tag_cls is not None and
-                getattr(tag_cls, 'active', False) and
-                tag_cls.__name__.lower() not in context.get('inactive_tags',
-                                                            ())):
+            getattr(tag_cls, 'active', False) and
+           tag_cls.__name__.lower() not in context.get('inactive_tags', ())):
             # First, see if the tag_name matches one of the tag subclasses (or
             # tag aliases) in disseminate
             return tag_cls

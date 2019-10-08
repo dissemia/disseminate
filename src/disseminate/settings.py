@@ -81,7 +81,10 @@ context_max_depth = 6
 context_max_size = 8192  # 8kB
 
 default_context = {
-    'targets': 'html',
+    # The default targets to render. This is a string so that documents
+    # can overwrite these values
+    'targets': {'html'},
+
     'paths': [],
     'template': 'default/template',
 
@@ -155,7 +158,8 @@ default_context = {
         'subsection': {'subsubsection'},
     },
 
-    # The following tags are unavailable. See
+    # The following tags are unavailable. This is a string so that contexts
+    # from templates can replace these values. See
     # disseminate.tags.factory.TagFactory.
     'inactive_tags': set(),
 

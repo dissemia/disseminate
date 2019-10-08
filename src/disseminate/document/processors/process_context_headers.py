@@ -27,7 +27,6 @@ class ProcessContextHeaders(ProcessContext):
     order = 100
 
     def __call__(self, context):
-
         # See which context entries have a header
         keys = find_header_entries(context)
 
@@ -46,15 +45,14 @@ class ProcessContextHeaders(ProcessContext):
         # Load the template contexts. This only needs to be done once for
         # a tree of contexts with the same template. A fresh renderer should
         # be loaded for each subdocument.
+
         # To load a template, we need to preload some of the entries needed for
         # the renderer and for loading additional header files from the template
-
-        # Load these values into a subcontext, to be added to the context
-        # later
         template_context = BaseContext()
-        for entry in getattr(context, 'preload', set()):
-            if entry in header_context:
-                context[entry] = header_context[entry]
+        preload_entries = getattr(context, 'preload', set())
+        context.match_update({k: v for k, v in header_context.items()
+                              if k in preload_entries})
+
         renderers = load_renderers(context)
         template = context.get('template', None)
         template_loaded = (context.get('template_loaded', False) == template)
@@ -65,23 +63,25 @@ class ProcessContextHeaders(ProcessContext):
 
         if not template_loaded and len(context_filepaths) > 0:
             # Load the additional headers, if there are any present. The only
-            # needs to be done once per template
-            for context_filepath in context_filepaths:
+            # needs to be done once per template.
+            # It should be done in *reverse* order because the first
+            # context_filepath corresponds to the template actually used whereas
+            # later context_filepaths are from inherited templates.
+            for context_filepath in context_filepaths[::-1]:  # reverse order
                 template_context.load(context_filepath.read_text())
 
             # The template contexts have now been loaded. Mark an entry for
-            # this accomplishement in the context.
+            # this in the context.
             context['template_loaded'] = template
 
         # Load the rest of the subcontexts (header_context, template_context)
         # into this context.
         # 1. The header_context should always overwrite values in the context,
-        #    butit should be loaded after the template context
+        #    but it should be loaded after the template context
         # 2. The template_context has optional values that should be written
         #    if they don't already exist
-        # Exclude entriesthat have already been preloaded.
+        # Exclude entries that have already been preloaded.
         for subcontext in (template_context, header_context):
-
             # Remove entries that have already been preloaded
             keys_to_update = subcontext.keys()
             keys_to_update -= getattr(subcontext, 'preload', set())

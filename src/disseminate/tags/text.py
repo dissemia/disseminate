@@ -198,7 +198,7 @@ class Symbol(Tag):
         This tag is active.
     """
 
-    aliases = ("smb ",)
+    aliases = ("smb",)
     active = True
 
     def __init__(self, name, content, attributes, context):

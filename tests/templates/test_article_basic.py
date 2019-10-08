@@ -19,7 +19,7 @@ def test_reports_basic_tag_availability(tmpdir, wait):
         src_filepath.write_text("""
         ---
         targets: html, tex
-        template: reports/basic
+        template: articles/basic
         ---
         @{name}{{My first {name}}}
         """.format(name=name))
@@ -32,10 +32,10 @@ def test_reports_basic_tag_availability(tmpdir, wait):
         assert ('<span class="{name}">My first {name}</span>'.format(name=name)
                 in html_targetfile.read_text())
 
-        # Check the rendered tex. Shouldn't contain the '\part' or '\chapter'
+        # Check the rendered tex. Shouldn't contain the '\part{' or '\chapter{'
         # tex command
         tex_targetfile = doc.targets['.tex']
-        assert '\\' + name not in tex_targetfile.read_text()
+        assert '\\{name}{{'.format(name=name) not in tex_targetfile.read_text()
 
     # Section, subsection and subsubsection tags should be available to reports
     for name, html in (('section',
@@ -50,7 +50,7 @@ def test_reports_basic_tag_availability(tmpdir, wait):
         src_filepath.write_text("""
         ---
         targets: html, tex
-        template: reports/basic
+        template: articles/basic
         ---
         @{name}{{My first {name}}}
         """.format(name=name))

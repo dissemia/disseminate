@@ -6,6 +6,7 @@ from shutil import copy
 import logging
 
 import pytest
+from jinja2.exceptions import TemplateNotFound
 
 from disseminate.document import Document, exceptions
 from disseminate.paths import SourcePath, TargetPath
@@ -101,6 +102,8 @@ def test_document_targets():
     # dummy.dm has the entry 'html, tex' set in the header.
     targets = doc.targets
 
+    assert targets.keys() == {'.html', '.tex'}
+
     assert '.html' in targets
     assert isinstance(targets['.html'], TargetPath)
     assert str(targets['.html']) == 'tests/document/example1/html/dummy.html'
@@ -114,17 +117,9 @@ def test_document_targets():
     assert str(targets['.tex'].target) == 'tex'
     assert str(targets['.tex'].subpath) == 'dummy.tex'
 
-
-def test_document_target_list():
-    """Test the setting of the target_list property."""
-    doc = Document("tests/document/example1/dummy.dm")
-
-    # dummy.dm has the entry 'html, tex' set in the header.
-    assert doc.target_list == ['.html', '.tex']
-
-    # Test an empty target list
-    doc.context['targets'] = ''
-    assert doc.target_list == []
+    # Test changing the targets from the context
+    doc.context['targets'] = set()
+    assert doc.targets.keys() == set()
 
 
 def test_document_target_filepath():
@@ -350,7 +345,7 @@ def test_document_target_list_update(tmpdir):
 
     doc = Document(src_filepath, tmpdir)
 
-    assert doc.target_list == ['.txt']
+    assert doc.targets.keys() == {'.txt'}
 
     # Update the header
     markup = """---
@@ -360,7 +355,7 @@ def test_document_target_list_update(tmpdir):
     src_filepath.write_text(strip_leading_space(markup))
     doc.load()
 
-    assert doc.target_list == ['.tex']
+    assert doc.targets.keys() == {'.tex'}
 
 
 def test_document_ast_caching(tmpdir):
@@ -565,7 +560,8 @@ def test_document_context_update(tmpdir):
     # for the later test.
     assert 'targets' in doc.context
     assert doc.context['targets'] != settings.default_context['targets']
-    assert doc.context['targets'] == 'html, tex'
+    assert doc.context['targets'] == {'html', 'tex'}
+    assert doc.context.targets == {'.html', '.tex'}
 
     assert '@macro' in doc.context
 
@@ -612,7 +608,7 @@ def test_document_load_on_render(doc):
     """Test the proper loading of an updated source file on render."""
 
     # The initial document has the targets listed in the settings.py
-    assert list(doc.targets.keys()) == ['.html']
+    assert doc.targets.keys() == {'.html'}
 
     # Change the source file, and run the render function. The targets should
     # be updated to the new values in the updated header.
@@ -624,7 +620,7 @@ def test_document_load_on_render(doc):
     doc.src_filepath.write_text(src)
     doc.render()
 
-    assert list(doc.targets.keys()) == ['.html', '.txt']
+    assert doc.targets.keys() == {'.html', '.txt'}
 
 
 def test_document_recursion(tmpdir):
@@ -703,6 +699,25 @@ def test_document_render(tmpdir, target):
     # An invalid file raises an error
     with pytest.raises(exceptions.DocumentException):
         doc = Document("tests/document/missing.dm")
+
+
+def test_document_render_missing_template(tmpdir):
+    """Tests the rendering of a document when a specified templates is
+    missing."""
+    tmpdir = pathlib.Path(tmpdir)
+
+    # 1. Prepare the document with a missing template
+    src_filepath = tmpdir / 'test.dm'
+    src = ("---\n"
+           "targets: html, tex, pdf\n"
+           "template: missing\n"
+           "---\n"
+           "test\n")
+    src_filepath.write_text(src)
+
+    # Raises a template not found error
+    with pytest.raises(TemplateNotFound):
+        doc = Document(src_filepath=src_filepath, target_root=tmpdir)
 
 
 def test_document_example8(tmpdir):

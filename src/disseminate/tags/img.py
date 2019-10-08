@@ -4,8 +4,8 @@ Image tags
 import pathlib
 
 from .tag import Tag, TagError
-from .utils import find_files, format_attribute_width, format_content
-from ..formats import tex_cmd, html_tag
+from .utils import find_files, format_attribute_width
+from ..formats import tex_cmd
 from ..utils.string import hashtxt
 from ..paths import SourcePath
 from .. import settings
@@ -31,23 +31,27 @@ class Img(Tag):
     process_typography = False
 
     html_name = 'img'
-    img_filepath = None
+    filepath = None
 
     def __init__(self, name, content, attributes, context):
         super().__init__(name=name, content=content, attributes=attributes,
                          context=context)
 
-        # Move the contents to the src_filpath attribute
+        # Move the contents to the filepath attribute
         if isinstance(content, list):
             contents = ''.join(content).strip()
-        elif isinstance(content, SourcePath):
+        elif isinstance(content, pathlib.Path) and content.is_file():
             contents = content
+        elif isinstance(content, str):
+            # Get the filepath for the file
+            filepaths = find_files(content, context)
+            contents = (filepaths[0] if filepaths else None)
         else:
-            contents = self.content.strip()
+            contents = None
         self.content = ''
 
         if contents:
-            self.img_filepath = contents
+            self.filepath = contents
         else:
             msg = "An image path must be used with the img tag."
             raise TagError(msg)
@@ -58,7 +62,7 @@ class Img(Tag):
         mtimes = [super().mtime]
 
         # Get the image file's modification time
-        img_filepath = pathlib.Path(self.img_filepath)
+        img_filepath = pathlib.Path(self.filepath)
         if img_filepath.is_file():
             mtime = img_filepath.stat().st_mtime
             mtimes.append(mtime)
@@ -76,20 +80,19 @@ class Img(Tag):
         dep_manager = self.context['dependency_manager']
 
         # Raises MissingDependency if the file is not found
-        deps = dep_manager.add_dependency(dep_filepath=self.img_filepath,
+        deps = dep_manager.add_dependency(dep_filepath=self.filepath,
                                           target='.tex',
                                           context=self.context,
                                           attributes=self.attributes)
         dep = deps.pop()
         dest_filepath = dep.dest_filepath
-        dest_subpath = dest_filepath.subpath
 
         # Format the width
         attributes = attributes if attributes is not None else self.attributes
         attrs = format_attribute_width(attributes, target='.tex')
 
         return tex_cmd(cmd='includegraphics', attributes=attrs,
-                       formatted_content=str(dest_subpath))
+                       formatted_content=str(dest_filepath))
 
     def html_fmt(self, content=None, attributes=None, level=1):
         # Add the file dependency
@@ -97,7 +100,7 @@ class Img(Tag):
         dep_manager = self.context['dependency_manager']
 
         # Raises MissingDependency if the file is not found
-        deps = dep_manager.add_dependency(dep_filepath=self.img_filepath,
+        deps = dep_manager.add_dependency(dep_filepath=self.filepath,
                                           target='.html',
                                           context=self.context,
                                           attributes=self.attributes)

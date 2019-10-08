@@ -29,10 +29,10 @@ def test_tag_factory_available(context_cls):
     assert not isinstance(unavailable, Unavailable)
 
 
-def test_tag_factory_inactive_tags(context_cls):
+def test_tag_factory_inactive_tags(doc):
     """Tests the 'inactive_tags' entry of the context."""
 
-    context = context_cls()
+    context = doc.context
     factory = TagFactory(tag_base_cls=Tag)
 
     # 1. Try an instance of the available class

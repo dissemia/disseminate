@@ -40,8 +40,9 @@ def test_process_context_tags(doc):
     assert isinstance(context['author'], str)
     assert context['author'] == 'Justin L Lorieau'
 
-    assert isinstance(context['targets'], str)
-    assert context['targets'] == 'html, tex'
+    assert isinstance(context['targets'], set)
+    assert context['targets'] == {'html', 'tex'}
+    assert context.targets == {'.html', '.tex'}
 
     # The 'macro isn't listed in the 'process_context_tags' entry of the
     # context, so it isn't processed

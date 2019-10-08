@@ -1,5 +1,5 @@
 {%- block class %}
-\documentclass[12pt]{article}
+\documentclass[12pt]{report}
 {%- endblock %}
 {%- block header %}
 %%%
@@ -9,6 +9,12 @@
 %%%
 % Caption customization
 \usepackage[labelformat=empty]{caption}
+
+%%%
+% title, section labels
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries}{}{0pt}{\Large}
 
 %%%
 % Panels for figures

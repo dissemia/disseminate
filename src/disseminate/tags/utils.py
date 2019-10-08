@@ -1,8 +1,9 @@
 """
 Misc utilities for tags.
 """
+import pathlib
+
 from copy import copy
-from ..paths import SourcePath
 from ..attributes import Attributes
 
 
@@ -163,7 +164,7 @@ def find_files(string, context):
 
     # Setup arguments and return values
     # First remove extra spaces and newlines on the ends.
-    string = string.strip()
+    string = str(string).strip()
     filepaths = list()
     paths = ['.'] + context['paths']
 
@@ -174,15 +175,20 @@ def find_files(string, context):
         if line == "":
             continue
 
-        # Try different filepaths
-        filepath = None
-        for path in paths:
-            filepath = SourcePath(project_root=path, subpath=line)
-            if filepath.is_file():
-                # A valid file was found! Use it.
-                break
-            else:
-                filepath = None
+        # Try an absolute path
+        filepath = pathlib.Path(line)
+
+        # If the filepath isn't an absolute path, try constructing the
+        # filepath from different paths
+        if not filepath.is_file():
+            filepath = None
+            for path in paths:
+                filepath = pathlib.Path(path) / line
+                if filepath.is_file():
+                    # A valid file was found! Use it.
+                    break
+                else:
+                    filepath = None
 
         if filepath is None:
             # No valid filepath was found. We'll assume the following strings
