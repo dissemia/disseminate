@@ -7,6 +7,7 @@ import regex
 
 from .tag import Tag
 from ..attributes import Attributes
+from ..formats import tex_env
 from .. import settings
 
 
@@ -124,7 +125,7 @@ def normalize_levels(parsed_list, list_level_spaces=settings.list_level_spaces):
     >>> normalize_levels(l)
     [(0, 'This is my first item.'), (2, 'This is my first subitem')]
     """
-    min_level = min(level for level, item in parsed_list)
+    min_level = min(level for level, item in parsed_list) if parsed_list else 0
     return [(ceil((level - min_level)/list_level_spaces), item)
             for level, item in parsed_list]
 
@@ -197,12 +198,21 @@ class ListItem(Tag):
     active = False
     html_name = "li"
 
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+        list_level_str = self.attributes.get('class', '').replace('level-', '')
+        list_level = int(list_level_str) if list_level_str.isdigit() else 1
+        tex_content = super().tex_fmt(content=content, attributes=attributes,
+                                      mathmode=mathmode, level=level)
+        return "§" * (list_level + 1) + " " + tex_content + "\n"
+
 
 class List(Tag):
     """A tag for lists"""
 
     active = True
     html_name = "ul"
+    tex_env = "easylist"
+    list_style = 'itemize'
 
     def __init__(self, name, content, attributes, context):
         self.name = name
@@ -218,6 +228,10 @@ class List(Tag):
                                  context=context)
                         for level, list_content in parsed_list]
 
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+        return super().tex_fmt(content=content, attributes=self.list_style,
+                               mathmode=mathmode, level=level)
+
 
 class OrderedList(List):
     """A tag for ordered lists"""
@@ -225,3 +239,4 @@ class OrderedList(List):
     active = True
     html_name = "ol"
     aliases = ('outline',)
+    list_style = 'enumerate'

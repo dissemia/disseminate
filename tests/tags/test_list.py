@@ -163,3 +163,73 @@ def test_list_html(doc):
                       '<li class="level-1">Two with multiple lines</li>\n'
                       '<li class="level-0">Three</li>\n'
                       '</ol>\n')
+
+    # 3. Test a list with tags
+    src = """
+    - One
+      - Two with
+        @b{multiple} lines
+    - Three
+    """
+    l = List(name='list', content=src, attributes='', context=doc.context)
+
+    assert l.html == ('<ul>\n'
+                      '<li class="level-0">One</li>\n'
+                      '<li class="level-1">Two with '
+                        '<strong>multiple</strong> lines</li>\n'
+                      '<li class="level-0">Three</li>\n'
+                      '</ul>\n')
+
+
+# tex targets
+
+def test_list_tex(doc):
+    """Test the @list tag with the tex format"""
+
+    # 1. Test a simple (unordered) nested list
+    src = """
+    - One
+      - Two with
+        multiple lines
+    - Three
+    """
+    l = List(name='list', content=src, attributes='', context=doc.context)
+    assert l.tex == ('\n'
+                     '\\begin{easylist}[itemize]\n'
+                     '§ One\n'
+                     '§§ Two with multiple lines\n'
+                     '§ Three\n'
+                     '\\end{easylist}\n')
+
+    # 2. Test a simple (ordered) nested list
+    src = """
+       - One
+         - Two with
+           multiple lines
+       - Three
+       """
+    l = OrderedList(name='list', content=src, attributes='',
+                    context=doc.context)
+
+    assert l.tex == ('\n'
+                     '\\begin{easylist}[enumerate]\n'
+                     '§ One\n'
+                     '§§ Two with multiple lines\n'
+                     '§ Three\n'
+                     '\\end{easylist}\n')
+
+    # 3. Test a list with tags
+    src = """
+        - One
+          - Two with
+            @b{multiple} lines
+        - Three
+        """
+    l = List(name='list', content=src, attributes='', context=doc.context)
+
+    assert l.tex == ('\n'
+                     '\\begin{easylist}[itemize]\n'
+                     '§ One\n'
+                     '§§ Two with \\textbf{multiple} lines\n'
+                     '§ Three\n'
+                     '\\end{easylist}\n')
