@@ -1,9 +1,13 @@
 """
 Tags for lists.
 """
+from math import ceil
+
 import regex
 
-from .tag import Tag, TagError
+from .tag import Tag
+from ..attributes import Attributes
+from .. import settings
 
 
 # Find lists with entries labeled with a '-' or '*' bullet for each list item
@@ -99,6 +103,32 @@ def clean_string_list(parsed_list):
             for level, s in parsed_list ]
 
 
+def normalize_levels(parsed_list, list_level_spaces=settings.list_level_spaces):
+    """Normalize the levels from a parse_list so that the first level is 0,
+    and subsequent levels are properly incremented.
+
+    Parameters
+    ----------
+    parsed_list : List[Tuple[int, str]]
+        The parsed list from parse_string_list.
+    list_level_spaces : int
+        The number of spaces used to identify sub-levels in a list.
+
+    Returned
+    --------
+    normalized_list : List[Tuple[int, str]]
+        The normalized list with levels fixed.
+
+    >>> l = parse_string_list("- This is my first item.\\n"
+    ...                   "  - This is my first subitem\\n")
+    >>> normalize_levels(l)
+    [(0, 'This is my first item.'), (2, 'This is my first subitem')]
+    """
+    min_level = min(level for level, item in parsed_list)
+    return [(ceil((level - min_level)/list_level_spaces), item)
+            for level, item in parsed_list]
+
+
 def parse_list(content, context):
     """Parse lists (and sublists) from a string or list of content.
 
@@ -162,5 +192,36 @@ def parse_list(content, context):
 
 
 class ListItem(Tag):
+    """An item in a list"""
 
     active = False
+    html_name = "li"
+
+
+class List(Tag):
+    """A tag for lists"""
+
+    active = True
+    html_name = "ul"
+
+    def __init__(self, name, content, attributes, context):
+        self.name = name
+        self.attributes = Attributes(attributes)
+        self.context = context
+
+        # Parse the content string into list items
+        parsed_list = parse_string_list(content)
+        parsed_list = clean_string_list(parsed_list)
+        parsed_list = normalize_levels(parsed_list)
+        self.content = [ListItem(name='listitem', content=list_content,
+                                 attributes='class="level-{}"'.format(level),
+                                 context=context)
+                        for level, list_content in parsed_list]
+
+
+class OrderedList(List):
+    """A tag for ordered lists"""
+
+    active = True
+    html_name = "ol"
+    aliases = ('outline',)

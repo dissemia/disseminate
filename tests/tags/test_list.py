@@ -2,7 +2,8 @@
 Test the @list tag.
 """
 from disseminate.tags.list import (parse_list, parse_string_list,
-                                   clean_string_list, ListItem)
+                                   clean_string_list, ListItem, List,
+                                   OrderedList)
 
 
 def test_parse_string_list():
@@ -126,3 +127,39 @@ def test_parse_list_strings(doc):
     assert returned_list[2].name == "listitem"
     assert returned_list[2].content == "Three"
     assert returned_list[2].attributes['level'] == '4'
+
+
+# html targets
+
+def test_list_html(doc):
+    """Test the @list tag with the html format"""
+
+    # 1. Test a simple (unordered) nested list
+    src = """
+    - One
+      - Two with
+        multiple lines
+    - Three
+    """
+    l = List(name='list', content=src, attributes='', context=doc.context)
+
+    assert l.html == ('<ul>\n'
+                      '<li class="level-0">One</li>\n'
+                      '<li class="level-1">Two with multiple lines</li>\n'
+                      '<li class="level-0">Three</li>\n'
+                      '</ul>\n')
+
+    # 2. Test a simple (ordered) nested list
+    src = """
+    - One
+      - Two with
+        multiple lines
+    - Three
+    """
+    l = OrderedList(name='list', content=src, attributes='', context=doc.context)
+
+    assert l.html == ('<ol>\n'
+                      '<li class="level-0">One</li>\n'
+                      '<li class="level-1">Two with multiple lines</li>\n'
+                      '<li class="level-0">Three</li>\n'
+                      '</ol>\n')
