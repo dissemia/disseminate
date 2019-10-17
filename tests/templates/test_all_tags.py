@@ -60,6 +60,8 @@ def test_all_tags_and_templates_tex(doc):
             elif tag == 'caption':
                 tag_src = (settings.tag_prefix + "@figure{" +
                            settings.tag_prefix + "@caption{caption}")
+            elif tag == 'list':
+                tag_src += "- my list"
             else:
                 tag_src += tag
             tag_src += '}\n'

@@ -470,8 +470,8 @@ def test_document_custom_template(tmpdir, wait):
     """Tests the loading of custom templates from the yaml header."""
     tmpdir = pathlib.Path(tmpdir)
 
-    # Write a temporary file. We'll use the tree.html template, which contains
-    # the text "Disseminate Project Index"
+    # 1. Write a temporary file. We'll use the tree.html template, which
+    # contains the text "Disseminate Project Index"
     project_root = tmpdir / 'src'
     project_root.mkdir()
     in_file = project_root / "index.dm"
@@ -494,7 +494,24 @@ def test_document_custom_template(tmpdir, wait):
     doc.render()
     assert "This is my template" in out_file.read_text()
 
-    # Write to the file again, but don't include the template. This time it
+    # 2. Write to the file again, but don't include the template. This time it
+    # shouldn't contain the text "This is my template"
+    wait()  # sleep time offset needed for different mtimes
+    markup = """
+    ---
+    template: mytemplate
+    targets: html
+    ---
+    New file
+    """
+    in_file.write_text(markup)
+
+    target_filepath = doc.targets['.html']
+    assert doc.render_required(target_filepath=target_filepath)
+    doc.render()
+    assert "This is my template" in out_file.read_text()
+
+    # 3. Write to the file again, but don't include the template. This time it
     # shouldn't contain the text "This is my template"
     wait()  # sleep time offset needed for different mtimes
     in_file.write_text("test")
