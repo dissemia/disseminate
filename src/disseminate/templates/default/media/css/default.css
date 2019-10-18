@@ -65,13 +65,24 @@ a.ref {
 }
 
 ul {/* Remove margin for all <ul>s */
-     margin-left: 0;
-     padding-left: 0;
+  margin-left: 0;
+  padding-left: 1em;
 }
 
 ul ul {/* Add a margin nested <ul> */
-    margin-left: 14pt;
+  margin-left: 2em;
 }
+
+ol {/* Remove margin for all <ol>s */
+  margin-left: 0;
+  padding-left: 1em;
+}
+
+ol ol {/* Add a margin nested <ol> */
+  margin-left: 2em;
+  list-style: lower-latin;
+}
+
 
 .supsub {
     display: inline-block;
@@ -95,40 +106,52 @@ article ul.toc {
   font-family: sans-serif;
 }
 
+ul.toc ul {
+  margin-left: 0;
+  padding-left: 0;
+}
+
 ul.toc li.toc-level-0 { /* title */
   font-size: 120%;
   font-weight: 400;
   padding: 0.5em 0 0.5em 0.5em;
+  list-style: none;
 }
 
 ul.toc li.toc-level-1 { /* part */
   padding: 0.5em 0 0.5em 1em;
   font-weight: 400;
+  list-style: none;
 }
 
 ul.toc li.toc-level-2 { /* chapter */
-  padding: 0.5em 0 0.0em 2em;
+  padding: 0.5em 0 0.0em 1em;
   font-weight: 400;
+  list-style: none;
 }
 
 ul.toc li.toc-level-3 { /* section */
-  padding-left: 3em;
+  padding-left: 2em;
   font-size: 90%;
+  list-style: none;
 }
 
 ul.toc li.toc-level-4 { /* subsection */
-  padding-left: 4em;
+  padding-left: 3em;
   font-size: 90%;
+  list-style: none;
 }
 
 ul.toc li.toc-level-5 { /* subsubsection */
-  padding-left: 5em;
+  padding-left: 4em;
   font-size: 90%;
+  list-style: none;
 }
 
 ul.toc li.toc-level-6 { /* paragraph */
-  padding-left: 6em;
+  padding-left: 5em;
   font-size: 90%;
+  list-style: none;
 }
 
 /* Document utils */
