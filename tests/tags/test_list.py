@@ -61,17 +61,17 @@ def test_parse_list_strings(doc):
     assert isinstance(returned_list[0], ListItem)
     assert returned_list[0].name == "listitem"
     assert returned_list[0].content == "One"
-    assert returned_list[0].attributes['level'] == '4'
+    assert returned_list[0].attributes['level'] == 4
 
     assert isinstance(returned_list[1], ListItem)
     assert returned_list[1].name == "listitem"
     assert returned_list[1].content == "Two"
-    assert returned_list[1].attributes['level'] == '4'
+    assert returned_list[1].attributes['level'] == 4
 
     assert isinstance(returned_list[2], ListItem)
     assert returned_list[2].name == "listitem"
     assert returned_list[2].content == "Three"
-    assert returned_list[2].attributes['level'] == '4'
+    assert returned_list[2].attributes['level'] == 4
 
     # 2. Test a nested list
     t2 = """
@@ -87,17 +87,17 @@ def test_parse_list_strings(doc):
     assert isinstance(returned_list[0], ListItem)
     assert returned_list[0].name == "listitem"
     assert returned_list[0].content == "One"
-    assert returned_list[0].attributes['level'] == '4'
+    assert returned_list[0].attributes['level'] == 4
 
     assert isinstance(returned_list[1], ListItem)
     assert returned_list[1].name == "listitem"
     assert returned_list[1].content == "Two with multiple lines"
-    assert returned_list[1].attributes['level'] == '6'
+    assert returned_list[1].attributes['level'] == 6
 
     assert isinstance(returned_list[2], ListItem)
     assert returned_list[2].name == "listitem"
     assert returned_list[2].content == "Three"
-    assert returned_list[2].attributes['level'] == '4'
+    assert returned_list[2].attributes['level'] == 4
 
     # 3. Test a list with tags
     t3 = """
@@ -113,7 +113,7 @@ def test_parse_list_strings(doc):
     assert isinstance(returned_list[0], ListItem)
     assert returned_list[0].name == "listitem"
     assert returned_list[0].content == "One"
-    assert returned_list[0].attributes['level'] == '4'
+    assert returned_list[0].attributes['level'] == 4
 
     assert isinstance(returned_list[1], ListItem)
     assert returned_list[1].name == "listitem"
@@ -121,12 +121,12 @@ def test_parse_list_strings(doc):
     assert returned_list[1].content[1].name == "b"
     assert returned_list[1].content[1].content == "multiple"
     assert returned_list[1].content[2] == " lines"
-    assert returned_list[1].attributes['level'] == '6'
+    assert returned_list[1].attributes['level'] == 6
 
     assert isinstance(returned_list[2], ListItem)
     assert returned_list[2].name == "listitem"
     assert returned_list[2].content == "Three"
-    assert returned_list[2].attributes['level'] == '4'
+    assert returned_list[2].attributes['level'] == 4
 
 
 # html targets
@@ -142,11 +142,12 @@ def test_list_html(doc):
     - Three
     """
     l = List(name='list', content=src, attributes='', context=doc.context)
-
     assert l.html == ('<ul>\n'
-                      '<li class="level-0">One</li>\n'
-                      '<li class="level-1">Two with multiple lines</li>\n'
-                      '<li class="level-0">Three</li>\n'
+                        '<li>One</li>\n'
+                        '<ul>'
+                          '<li>Two with multiple lines</li>'
+                        '</ul>\n'
+                        '<li>Three</li>\n'
                       '</ul>\n')
 
     # 2. Test a simple (ordered) nested list
@@ -157,11 +158,12 @@ def test_list_html(doc):
     - Three
     """
     l = OrderedList(name='list', content=src, attributes='', context=doc.context)
-
     assert l.html == ('<ol>\n'
-                      '<li class="level-0">One</li>\n'
-                      '<li class="level-1">Two with multiple lines</li>\n'
-                      '<li class="level-0">Three</li>\n'
+                        '<li>One</li>\n'
+                        '<ol>'
+                        '<li>Two with multiple lines</li>'
+                        '</ol>\n'
+                        '<li>Three</li>\n'
                       '</ol>\n')
 
     # 3. Test a list with tags
@@ -172,12 +174,12 @@ def test_list_html(doc):
     - Three
     """
     l = List(name='list', content=src, attributes='', context=doc.context)
-
     assert l.html == ('<ul>\n'
-                      '<li class="level-0">One</li>\n'
-                      '<li class="level-1">Two with '
-                        '<strong>multiple</strong> lines</li>\n'
-                      '<li class="level-0">Three</li>\n'
+                        '<li>One</li>\n'
+                        '<ul>'
+                          '<li>Two with <strong>multiple</strong> lines</li>'
+                        '</ul>\n'
+                        '<li>Three</li>\n'
                       '</ul>\n')
 
 

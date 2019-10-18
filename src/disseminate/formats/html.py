@@ -1,6 +1,8 @@
 """
 Utilities for formatting html strings and text.
 """
+from itertools import groupby
+
 from lxml.builder import E
 from lxml import etree
 from lxml.etree import Entity
@@ -181,3 +183,74 @@ def html_entity(entity, level=1, pretty_print=settings.html_pretty):
         return Markup(s)  # Mark string as safe, since it's escaped by lxml
     else:
         return e
+
+
+def html_list(*elements, attributes=None, listtype='ol', level=1,
+              pretty_print=settings.html_pretty):
+    """
+
+    Parameters
+    ----------
+    elements : Tuple[Tuple[int, :obj:`lxml.builder.E`]]
+        Each element is a tuple of the list element level and the 'li' lxml
+        element.
+    attributes : Optional[Union[:obj:`Attributes <.Attributes>`, str]]
+        The attributes of the tag.
+    listtype : Optional[str]
+        The type of list to create. ex: ul, ol
+    level : Optional[int]
+        The level of the tag.
+    pretty_print : Optional[bool]
+        If True, make the formatted html pretty--i.e. with newlines and spacing
+        for nested tags.
+
+    Returns
+    -------
+    html : str
+        If level=1, a string formatted in html
+        if level>1, an html element (:obj:`lxml.build.E`)
+
+    Raises
+    ------
+    HtmlFormatError : :exc:`HtmlFormatError`
+        A TagError is raised if a non-allowed list environment is used
+    """
+    current_elements = []
+    listlevel = elements[0][0] if elements else 0
+
+    _count = 0
+
+    # Setup a counter function for list levels. When a new list item is
+    # encountered, all sub items will receive the same number so that they're
+    # grouped together.
+    def counter(item):
+        nonlocal _count
+        if item[0] == listlevel:
+            _count += 1
+        return _count
+
+    # Go by each list item and its group of sublists
+    for is_same_list, group in groupby(elements, counter):
+        group = list(group)
+
+        # Add the parent list item
+        current_elements.append(group[0][1])
+
+        # If there are sub list items, add these as well
+        if group[1:]:
+            l = html_list(*group[1:], listtype=listtype, level=level+1,
+                          pretty_print=pretty_print)
+            current_elements.append(l)
+
+    # Wrap current_elements in a list
+    if level == 1:
+        e = html_tag(name=listtype, formatted_content=current_elements,
+                     attributes=attributes, level=level + 1,
+                     pretty_print=pretty_print)
+        s = (etree.tostring(e, pretty_print=pretty_print, method='html')
+             .decode("utf-8"))
+        return Markup(s)  # Mark string as safe, since it's escaped by lxml
+    else:
+        return html_tag(name=listtype, formatted_content=current_elements,
+                        level=level+1, pretty_print=pretty_print)
+

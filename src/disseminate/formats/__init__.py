@@ -3,4 +3,4 @@ Wrappers and utilities for formatting text and tags into different formats
 """
 
 from .tex import tex_env, tex_cmd, tex_verb, TexFormatError
-from .html import html_tag, html_entity, HtmlFormatError
+from .html import html_tag, html_entity, html_list, HtmlFormatError
