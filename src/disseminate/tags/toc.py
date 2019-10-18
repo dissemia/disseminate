@@ -29,7 +29,9 @@ class TocRef(Ref):
         # Wrap the tocref item in a list item
         html = super().html_fmt(content=content, attributes=attributes,
                                 level=level)
-        return html_tag('li', formatted_content=html)
+        tag_class = ('class="toc-level-{}"'.format(self.attributes['level'])
+                     if 'level' in self.attributes else '')
+        return html_tag('li', formatted_content=html, attributes=tag_class)
 
     def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         list_level = self.attributes['level']
