@@ -130,6 +130,8 @@ def html_tag(name, attributes=None, formatted_content=None, level=1,
     # Add the reqs and opts attributes
     for attrs in (i for i in (reqs, opts, other) if i is not None):
         for k, v in attrs.items():
+            if v is None:
+                continue
             e.set(k, v)
 
     # Format the tag into a string, if it's the root level
@@ -186,7 +188,8 @@ def html_entity(entity, level=1, pretty_print=settings.html_pretty):
 
 
 def html_list(*elements, attributes=None, listtype='ol', level=1,
-              pretty_print=settings.html_pretty):
+              pretty_print=settings.html_pretty,
+              inner=False):
     """
 
     Parameters
@@ -203,6 +206,9 @@ def html_list(*elements, attributes=None, listtype='ol', level=1,
     pretty_print : Optional[bool]
         If True, make the formatted html pretty--i.e. with newlines and spacing
         for nested tags.
+    inner : Optional[bool]
+        If True, this function is invoked as an inner html list. This is
+        useful for adding html attributes only to the outer list.
 
     Returns
     -------
@@ -239,10 +245,11 @@ def html_list(*elements, attributes=None, listtype='ol', level=1,
         # If there are sub list items, add these as well
         if group[1:]:
             l = html_list(*group[1:], listtype=listtype, level=level+1,
-                          pretty_print=pretty_print)
+                          pretty_print=pretty_print, inner=True)
             current_elements.append(l)
 
     # Wrap current_elements in a list
+    attributes = attributes if not inner else ''
     if level == 1:
         e = html_tag(name=listtype, formatted_content=current_elements,
                      attributes=attributes, level=level + 1,
@@ -252,5 +259,6 @@ def html_list(*elements, attributes=None, listtype='ol', level=1,
         return Markup(s)  # Mark string as safe, since it's escaped by lxml
     else:
         return html_tag(name=listtype, formatted_content=current_elements,
-                        level=level+1, pretty_print=pretty_print)
+                        attributes=attributes, level=level+1,
+                        pretty_print=pretty_print)
 
