@@ -60,20 +60,29 @@ def test_document_tree(tmpdir):
     # Populate some files
     file1 = SourcePath(project_root=project_root,
                        subpath='main.dm')
-    markup = """---
+    markup1 = """---
     include:
       sub/file2.dm
       sub/file3.dm
     targets: txt, tex
     ---
     """
-    file1.write_text(strip_leading_space(markup))
+    markup2 = """---
+    targets: pdf
+    ---
+    """
+    markup3 = """---
+    targets: pdf
+    ---
+    """
+
+    file1.write_text(strip_leading_space(markup1))
     file2 = SourcePath(project_root=project_root, subpath='sub/file2.dm')
     file3 = SourcePath(project_root=project_root, subpath='sub/file3.dm')
 
     # Write to the subdocuments
-    file2.write_text('file2')
-    file3.write_text('file3')
+    file2.write_text(markup2)
+    file3.write_text(markup3)
 
     # Create the root document
     doc = Document(file1)
@@ -85,6 +94,10 @@ def test_document_tree(tmpdir):
     keys = list(doc.subdocuments.keys())
     assert doc.subdocuments[keys[0]].src_filepath == file2
     assert doc.subdocuments[keys[1]].src_filepath == file3
+
+    # Test the targets
+    assert doc.targets.keys() == {'.txt', '.tex'}
+    assert doc.get_renderer().targets == {'.txt', '.tex'}
 
     # Update the root document and remove a file
     markup = """---
@@ -102,6 +115,10 @@ def test_document_tree(tmpdir):
 
     keys = list(doc.subdocuments.keys())
     assert doc.subdocuments[keys[0]].src_filepath == file2
+
+    # Test the targets
+    assert doc.targets.keys() == {'.txt', '.tex'}
+    assert doc.get_renderer().targets == {'.txt', '.tex'}
 
     # Now test Example5. Example5 has a file in the root directory, a file in
     # the 'sub1', 'sub2' and 'sub3' directories and a file in the 'sub2/subsub2'

@@ -5,7 +5,8 @@ import pytest
 
 from markupsafe import Markup
 
-from disseminate.formats import html_tag, html_entity, HtmlFormatError
+from disseminate.formats import (html_tag, html_entity, html_list,
+                                 HtmlFormatError)
 
 
 def test_html_tag():
@@ -88,3 +89,33 @@ def test_html_safe_contents():
     assert (html_tag('span', attributes='',
                      formatted_content=Markup('<b>test</b>'))
             == '<span><b>test</b></span>\n')
+
+
+def test_html_list():
+    """Test the html_list function"""
+
+    # 1. Create a list of list items
+    elements = [(0, html_tag('li', formatted_content='1', level=2)),
+                (1, html_tag('li', formatted_content='1.1', level=2)),
+                (1, html_tag('li', formatted_content='1.2', level=2)),
+                (2, html_tag('li', formatted_content='1.2.3', level=2)),
+                (0, html_tag('li', formatted_content='2', level=2)),
+                (0, html_tag('li', formatted_content='3', level=2)),
+                (1, html_tag('li', formatted_content='3.1', level=2))]
+
+    html = html_list(*elements)
+    assert html == ('<ol>\n'
+                      '<li>1</li>\n'
+                      '<ol>\n'
+                        '<li>1.1</li>\n'
+                        '<li>1.2</li>\n'
+                        '<ol>'
+                          '<li>1.2.3</li>'
+                        '</ol>\n'
+                      '</ol>\n'
+                      '<li>2</li>\n'
+                      '<li>3</li>\n'
+                      '<ol>'
+                        '<li>3.1</li>'
+                      '</ol>\n'
+                    '</ol>\n')

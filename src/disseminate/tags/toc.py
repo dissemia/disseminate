@@ -5,7 +5,7 @@ from .headings import toc_levels as heading_toc_levels, Heading
 from .ref import Ref
 from .tag import Tag
 from . import exceptions
-from ..formats import html_tag, tex_env
+from ..formats import html_tag, html_list, tex_env
 
 
 class TocError(Exception):
@@ -22,6 +22,22 @@ class TocRef(Ref):
     # The tocref tag should not be accessible on its own; it is created
     # by the Toc tag
     active = False
+
+    html_name = "li"
+
+    def html_fmt(self, content=None, attributes=None, level=1):
+        # Wrap the tocref item in a list item
+        html = super().html_fmt(content=content, attributes=attributes,
+                                level=level)
+        tag_class = ('class="toc-level-{}"'.format(self.attributes['level'])
+                     if 'level' in self.attributes else '')
+        return html_tag('li', formatted_content=html, attributes=tag_class)
+
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+        list_level = self.attributes['level']
+        tex_content = super().tex_fmt(content=content, attributes=attributes,
+                                      mathmode=mathmode, level=level)
+        return "§" * list_level + " " + tex_content + "\n"
 
 
 class Toc(Tag):
@@ -54,6 +70,10 @@ class Toc(Tag):
     toc_kind = None
     toc_elements = None
     header_tag = None
+
+    tex_env = "easylist"
+    list_style = 'booktoc'
+    html_name = 'ul'
 
     process_typography = False
 
@@ -188,88 +208,19 @@ class Toc(Tag):
         self._mtime = latest_mtime
         return self._ref_tags
 
-    def html_fmt(self, content=None, attributes=None, listtype='ul', level=1):
-        """Convert the tag to an html listing.
-
-        .. note:: The 'document' toc is special since it uses the documents
-                  directly to construct the tree. All other toc types will
-                  get the labels from the label_manager
-
-        Parameters
-        ----------
-        content : Union[str, List[Union[str, list, :obj:`Tag \
-            <disseminate.tags.Tag>`]], optional
-            Specify an alternative content from the tag's content. It can
-            either be a string, a tag or a list of strings, tags and lists.
-        attributes : Optional[Union[str, :obj:`Attributes <.Attributes>`]]
-            Specify an alternative attributes dict from the tag's attributes.
-            It can either be a string or an attributes dict.
-        listtype : str, optional
-            The type of list to render (ol, ul).
-        elements : str, optional
-            The reference tags.
-        toc_level : int, optional
-            The level of the toc.
-        level : int, optional
-            The level of the tag.
-
-        Returns
-        -------
-        html : str or html element
-            A string in HTML format or an HTML element (:obj:`lxml.builder.E`).
-        """
-        # Get the ref tags
+    def html_fmt(self, content=None, attributes=None, level=1):
         tags = self.reference_tags
+        elements = []
 
-        # Wrap the tags in list items
-        items = []
         for tag in tags:
-            toclevel = tag.attributes['level']
-            attributes = 'class="toc-level-{}"'.format(toclevel)
-            content = tag.html_fmt(level=level + 1)
-            items.append(html_tag('li', formatted_content=content,
-                                  attributes=attributes, level=level + 1))
-        # Create the list
-        list_tag = html_tag(listtype, formatted_content=items,
-                            attributes='class="toc"', level=level)
-        return list_tag
+            listlevel = tag.attributes['level']
+            tag_html = tag.html_fmt(level=level + 1)
+            elements.append((listlevel, tag_html))
 
-    def tex_fmt(self, content=None, attributes=None, elements=None,
-                listtype='easylist', mathmode=False, level=1):
-        """Convert the tag to a tex listing.
+        return html_list(*elements, attributes='class="toc"',
+                         listtype=self.html_name, level=level)
 
-        .. note:: The 'document' toc is special since it uses the documents
-                  directly to construct the tree. All other toc types will
-                  get the labels from the label_manager
-
-        Returns
-        -------
-        tex : str
-            A string in TEX format
-        """
-        # Get the ref tags
-        tags = self.reference_tags
-
-        # Convert the tags to tuples of toclevels and tags
-        tags = [(tag.attributes['level'], tag) for tag in tags]
-
-        # Set a level offset for the 'booktoc' style of easylist
-        level_offset = 0
-
-        # Wrap the tags in list items
-        items = list()
-        items.append("\\ListProperties(Hide=2)")
-
-        for toclevel, tag in tags:
-            toclevel = toclevel + 1 if toclevel == 0 else toclevel
-            item = "§" * (toclevel + level_offset) + " "
-            item += tag.tex_fmt(level=level + 1)
-            items.append(item)
-
-        # Create the list
-        if len(items) > 0:
-            list_tag = tex_env(listtype, attributes='booktoc',
-                               formatted_content='\n'.join(items))
-            return list_tag
-        else:
-            return ""
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+        tags = list(self.reference_tags)
+        tags[0:0] = "\\ListProperties(Hide=2)\n"  # Add to front
+        return super().tex_fmt(content=tags, attributes=self.list_style)

@@ -236,6 +236,9 @@ tracked_deps = {
 
 empty = tuple()
 
+#: The number of spaces to identify sublist items.
+list_level_spaces = 2
+
 #: HTML targets
 #: ~~~~~~~~~~~~
 
