@@ -127,12 +127,12 @@ class Document(object):
         self.load()
 
         # Send the 'document_created' signal
-        signals.document_created.send(self)
+        signals.document_created.emit(document=self)
 
     def __del__(self):
         """Clean up any temp directories no longer in use."""
         # Send the 'document_deleted' signal
-        signals.document_deleted.send(self)
+        signals.document_deleted.emit(document=self)
 
         if self._temp_dir is not None:
             rmtree(self._temp_dir, ignore_errors=True)

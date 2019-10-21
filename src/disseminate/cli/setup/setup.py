@@ -13,8 +13,7 @@ from ...signals.signals import signals
               help='Check required executables and packages')
 @click.option('--list-signals', default=False, is_flag=True,
               help='List the available signals')
-def setup(check, list_signals, list_label_manager_processors,
-          list_context_processors):
+def setup(check, list_signals):
     """Setup and configuration options"""
     if check:
         print_checkers()

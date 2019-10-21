@@ -15,7 +15,7 @@ The labels and label manager are responsible for:
    the label so that references to those labels can trigger a document
    rendering.
 """
-from . import processors, signals
+from . import processors, receivers
 from .types import ContentLabel, DocumentLabel
 from .exceptions import LabelNotFound
 from .label_manager import LabelManager

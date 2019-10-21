@@ -1,18 +1,18 @@
 """
 Signals for label events
 """
-from blinker import signal
+from ..signals import signal
 
 
-document_deleted = signal('document.deleted')
+document_deleted = signal('document_deleted')
 
 
-@document_deleted.connect
-def deregister_labels(sender):
+@document_deleted.connect_via(order=100)
+def deregister_labels(document):
     """A signal subscriber for removing labels when a document is deleted"""
 
     # Get the doc_id and label_manager for the document being destroyed
-    context = sender.context
+    context = document.context
     doc_id = context.get('doc_id')
     label_manager = context.get('label_manager')
 
