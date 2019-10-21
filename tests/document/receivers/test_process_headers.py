@@ -1,8 +1,7 @@
 """
 Test the process_header processors.
 """
-import disseminate.document.processors as pr
-from disseminate import settings
+from disseminate.document.receivers import process_headers
 
 
 def test_process_context_header(context_cls):
@@ -27,8 +26,7 @@ def test_process_context_header(context_cls):
     context = SubContext(test=header)
 
     # Now process the context entries
-    processor = pr.process_context_headers.ProcessContextHeaders()
-    processor(context)
+    process_headers(context)
 
     # Ensure that the 'test' entry's header was parsed
     assert context['test'] == '    This is my @macro body.\n    '
@@ -48,8 +46,7 @@ def test_process_context_header_custom_template(doc):
     doc.context['template'] = 'mytemplate'
 
     # Try the processor
-    processor = pr.process_context_headers.ProcessContextHeaders()
-    processor(doc.context)
+    process_headers(doc.context)
 
     # Make sure the custom template was read in
     assert 'renderers' in doc.context
@@ -78,8 +75,7 @@ def test_process_context_header_additional_context_files(doc):
     doc.context['template'] = 'mytemplate'
 
     # Try the processor
-    processor = pr.process_context_headers.ProcessContextHeaders()
-    processor(doc.context)
+    process_headers(doc.context)
 
     # Since header1 is the first in the path, its value gets loaded locally
     # into the context, but the value from header2 is not overwritten.
@@ -88,7 +84,7 @@ def test_process_context_header_additional_context_files(doc):
     assert doc.context['value'] == 'b'
 
 
-def test_process_context_header_precedence(doctree, wait):
+def test_process_headers_precedence(doctree, wait):
     """Test the precedence of context entries between the default context,
     template context and document context."""
 

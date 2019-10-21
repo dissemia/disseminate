@@ -8,7 +8,6 @@ import logging
 import pathlib
 
 from .document_context import DocumentContext
-from .processors import ProcessContext
 from . import exceptions, signals
 from ..convert import convert
 from ..utils.file import mkdir_p
@@ -52,16 +51,11 @@ class Document(object):
         documents should be made to these documents. (i.e. when the
         sub-documents dict is cleared, the memory for the document objects
         should be released)
-    processors : :class:`Type[ProcessContext] <.ProcessContext>`
-        The ProcessContext base class.
     """
 
     src_filepath = None
     context = None
     subdocuments = None
-
-    #: Context processors
-    process_context = ProcessContext
 
     #: The directory for the root document of a project (a document and its
     #: subdocuments.
@@ -442,11 +436,7 @@ class Document(object):
                                                    max_filesize))
 
             # Emit the load signal
-            signals.document_onload.emit(document=self)
-
-            # Process the context
-            for processor in self.process_context.processors():
-                processor(self.context)
+            signals.document_onload.emit(document=self, context=self.context)
 
             # The document has been loaded
             self._succesfully_loaded = True

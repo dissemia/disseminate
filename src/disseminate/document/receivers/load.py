@@ -6,7 +6,7 @@ from ... import settings
 
 
 @document_onload.connect_via(order=200)
-def load_document(document):
+def load_document(document, **kwargs):
     """Load the document text file into the document context."""
     # Load the string from the src_filepath,
     string = document.src_filepath.read_text()

@@ -2,7 +2,7 @@
 Test the process_context_tags processor.
 """
 from disseminate.tags import Tag
-import disseminate.document.processors as pr
+from disseminate.document.receivers import process_tags
 
 
 def test_process_context_tags(doc):
@@ -26,8 +26,7 @@ def test_process_context_tags(doc):
     context['body'] = body
 
     # Now process the context entries
-    processor = pr.process_context_tags.ProcessContextTags()
-    processor(context)
+    process_tags(context)
 
     # Check the entries
     assert isinstance(context['title'], Tag)
@@ -62,11 +61,8 @@ def test_process_context_tags_multiple_runs(context_cls):
     context = context_cls(process_context_tags=['test'],
                           test='My test')
 
-    # Now process the context entries, try with multiple processings
-    processor = pr.process_context_tags.ProcessContextTags()
-
     for i in range(3):
-        processor(context)
+        process_tags(context)
 
     # Check that the 'test' entry was only processed once
     assert context['test'].name == 'test'

@@ -6,7 +6,7 @@ from ..signals import document_onload, document_deleted
 
 @document_onload.connect_via(order=100)
 @document_deleted.connect_via(order=100)
-def reset_document(document):
+def reset_document(document, **kwargs):
     """Reset the context and managers for a document on load."""
     # Reset the context
     document.context.reset()
