@@ -8,7 +8,7 @@ from ..signals import tag_created
 
 @tag_created.connect_via(order=300)
 def process_typography(tag, tag_base_cls, **kwargs):
-    """A tag processor to parse the typography of tags."""
+    """A receiver to parse the typography of tags."""
     return process_tag_typography(tag=tag, tag_base_cls=tag_base_cls)
 
 

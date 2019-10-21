@@ -8,7 +8,7 @@ from ..signals import tag_created
 
 @tag_created.connect_via(order=400)
 def process_paragraphs(tag, tag_factory, tag_base_cls, **kwargs):
-    """A tag processor to parse the typography of tags."""
+    """A receiver to parse the paragraphs of tags."""
     if tag.name in tag.context.get('process_paragraphs', []):
         context = tag.context
         p_cls = tag_factory.tag_class(tag_name='P', context=context)

@@ -19,7 +19,7 @@ re_brace = regex.compile(r'[}{]')
 
 @tag_created.connect_via(order=200)
 def process_content(tag, tag_factory, **kwargs):
-    """A tag processor to parse the contents of tags into sub-tags."""
+    """A receiver to parse the contents of tags into sub-tags."""
     content = parse_tags(content=tag.content, context=tag.context,
                          tag_factory=tag_factory)
     tag.content = content

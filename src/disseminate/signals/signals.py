@@ -64,6 +64,12 @@ class Signal(object):
                 return_values.append(None)
         return return_values
 
+    def receivers_dict(self):
+        """Return a dict of receivers (values) and their orders (keys)."""
+        d = {order: rec() if isinstance(rec, weakref.ref) else rec
+             for order, rec in self.receivers.items()}
+        return {k: v for k, v in d.items() if v is not None}
+
     def reset(self):
         """Reset the signal to its initial state"""
         self.receivers.clear()
@@ -90,5 +96,5 @@ class Namespace(dict):
         except KeyError:
             return self.setdefault(name, Signal(name, doc))
 
-
-signal = Namespace().signal
+signals = Namespace()
+signal = signals.signal

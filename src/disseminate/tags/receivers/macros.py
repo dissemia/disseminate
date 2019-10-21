@@ -7,7 +7,7 @@ from ...utils.string import replace_macros
 
 @tag_created.connect_via(order=100)
 def process_macros(tag, **kwargs):
-    """A tag processor for replacing macros in pre-parsed tag strings."""
+    """A receiver for replacing macros in pre-parsed tag strings."""
     # Skip non-string entries and macro entries. Macros themselves don't
     # need to be processed, and processing these can introduce problems
     # with recursion
