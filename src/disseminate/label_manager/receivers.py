@@ -7,7 +7,7 @@ from ..signals import signal
 document_deleted = signal('document_deleted')
 
 
-@document_deleted.connect_via(order=100)
+@document_deleted.connect_via(order=1000)
 def deregister_labels(document):
     """A signal subscriber for removing labels when a document is deleted"""
 

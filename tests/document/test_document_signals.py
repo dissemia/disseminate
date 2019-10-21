@@ -16,7 +16,7 @@ def test_document_creation_deletion_signals(tmpdir):
     document_deleted = signal('document_deleted')
     signals_dict = dict()
 
-    @document_deleted.connect_via(order=1)
+    @document_deleted.connect_via(order=-1)
     def delete(document):
         signals_dict['delete'] = True
 
@@ -33,7 +33,7 @@ def test_document_creation_deletion_signals(tmpdir):
     # 2. Try the create document create signal
     document_created = signal('document_created')
 
-    @document_created.connect_via(order=1)
+    @document_created.connect_via(order=-1)
     def create(document):
         signals_dict['created'] = True
 
@@ -42,5 +42,5 @@ def test_document_creation_deletion_signals(tmpdir):
     assert 'created' in signals_dict
 
     # Disconnect the signals
-    document_deleted.reset()
-    document_created.reset()
+    del document_deleted.receivers[-1]
+    del document_created.receivers[-1]

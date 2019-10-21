@@ -263,6 +263,6 @@ def test_label_manager_label_reordering(doctree):
 
     # Now delete the 2nd and 3rd documents and the labels should be removed too.
     doc1.subdocuments.clear()
-    del doc1, doc2
+    del doc1, doc2, doc3
 
     assert len(label_man.get_labels()) == 0

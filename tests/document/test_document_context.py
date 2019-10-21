@@ -117,7 +117,7 @@ def test_document_context_simple_documents(tmpdir):
     test_context_entries(doc)
 
     # Reset the context, and test again
-    doc.reset_contexts()
+    doc.context.reset()
     test_context_entries(doc)
 
     # Load example7. It has a main document (file1.dm) and 1 subdocuments
@@ -172,7 +172,7 @@ def test_document_context_simple_documents(tmpdir):
     test_context_entries(doc)
 
     # Reset the context, and test again
-    doc.reset_contexts()
+    doc.context.reset()
     test_context_entries(doc)
 
 

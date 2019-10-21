@@ -137,9 +137,9 @@ class Document(object):
         if self._temp_dir is not None:
             rmtree(self._temp_dir, ignore_errors=True)
 
-        # Reset the labels and dependencies for this document
-        self.reset_labels()
-        self.reset_dependencies()
+        # # Reset the labels and dependencies for this document
+        # self.reset_labels()
+        # self.reset_dependencies()
 
     def __repr__(self):
         return "Document({})".format(self.src_filepath)
@@ -252,56 +252,13 @@ class Document(object):
             msg = msg.format(target, self.doc_id)
             raise exceptions.MissingTargetException(msg)
 
-    def reset_contexts(self):
-        """Load, clear and reset the context.
-
-        The context contains one of the following for all documents in a root
-        document:
-
-          1. label_manager: Manages labels and references to labels.
-          2. dependency_manager: Manages the media dependencies (like image
-             files) for documents
-          3. project_root: the root directory for the document and
-             sub-documents. :obj:`SourcePath <.paths.SourcePath>`
-          4. target_root: the root directory for the document and
-             sub-documents. The final target path includes a sub-directory
-             for the target's extension. :obj:`TargetPath <.paths.TargetPath>`
-          5. root_document: a root document (:obj:`Document <.Document>`) for
-             the project.
-
-        Context variables that can be local to a document are:
-
-          1. include: the sub-documents to include under a document.
-          2. title: the title of a document.
-          3. short: the short title of a document.
-          4. document: a weakref to this document.
-          5. mtime: The modification time of the source document. This is
-             populated by the get_ast method.
-        """
-        self.context.reset()
-
     @property
     def dependency_manager(self):
         return self.context.get('dependency_manager', None)
 
-    def reset_dependencies(self):
-        """Clear and repopulate the dependencies for this document in the
-        dependency manager."""
-        if 'dependency_manager' in self.context:
-            dep = self.context['dependency_manager']
-            dep.reset(src_filepath=self.src_filepath)
-
     @property
     def label_manager(self):
         return self.context.get('label_manager', None)
-
-    def reset_labels(self):
-        """Reset the labels for this document in the label manager."""
-        if 'label_manager' in self.context:
-            label_manager = self.context['label_manager']
-
-            # Reset the labels for this document.
-            label_manager.reset(context=self.context)
 
     # TODO: rename to documents_by_src_filepath
     def documents_dict(self, document=None, only_subdocuments=False,
@@ -484,24 +441,8 @@ class Document(object):
                                                    actual_filesize,
                                                    max_filesize))
 
-            # Reset the local_context. When reloading an AST, the old
-            # local_context is invalidated since some of the entries may have
-            # changed. Resetting the context also sets the updated mtime.
-            self.reset_contexts()
-
-            # Clear the dependencies for this document
-            self.reset_dependencies()
-
-            # Reset the registered labels for this document
-            self.reset_labels()
-
-            # Load the string from the src_filepath,
-            string = self.src_filepath.read_text()
-
-            # Place the text of the string in the 'body' attribute of the
-            # context (see settings.body_attr)
-            body_attr = settings.body_attr
-            self.context[body_attr] = string
+            # Emit the load signal
+            signals.document_onload.emit(document=self)
 
             # Process the context
             for processor in self.process_context.processors():
