@@ -1,6 +1,8 @@
 """
 Tests for the signals submodule.
 """
+from types import MethodType
+
 import pytest
 
 from disseminate.signals import signal, DuplicateSignal
@@ -64,3 +66,36 @@ def test_signal_decorator():
     assert d['received'] == 1
 
     test.reset()
+
+
+def test_signal_method_replacement():
+    """Test method replacement for signak objects."""
+    # Create a test receiver
+    test2 = signal('test2')
+    test3 = signal('test3')
+
+    @test2.connect_via(1000)
+    def receiver1(d):
+        d['received'] = 1
+
+    @test3.connect_via(1000)
+    def receiver2(d):
+        d['received'] = 2
+
+    def custom_emit(self, **kwargs):
+        pass
+
+    test2.emit = MethodType(custom_emit, test2)
+
+    assert id(test2.emit) != id(test3.emit)
+
+    # Make sure on the test3 signal modifies the dict
+    d = dict()
+    test2.emit(d=d)
+    assert 'received' not in d
+
+    test3.emit(d=d)
+    assert d['received'] == 2
+
+    test2.reset()
+    test3.reset()

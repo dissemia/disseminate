@@ -6,14 +6,13 @@ from os import curdir
 
 from disseminate import __path__ as path
 from disseminate import settings
-from disseminate.tags import TagFactory, Tag
+from disseminate.tags import TagFactory
 
 
 def test_all_tags_and_templates_tex(doc):
     """Test the use of all tags with all templates."""
     # Get a list of all tags
-    factory = TagFactory(tag_base_cls=Tag)
-    tag_classes = factory.tag_classes
+    tag_classes = TagFactory.tag_classes()
 
     # Get the path for the built-in templates
     template_basepath = pathlib.Path(path[0]) / 'templates'

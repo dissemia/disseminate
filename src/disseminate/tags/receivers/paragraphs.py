@@ -1,28 +1,21 @@
 """
-Tag processors for identifying paragraphs in tags.
+Receivers for processing a tag's paragraphs on tag creation.
 """
-
 import regex
 
-from .process_tag import ProcessTag
+from ..signals import tag_created
 
 
-class ProcessParagraphs(ProcessTag):
-    """A tag processor to identify and tag paragraphs in tags.
-
-    The contents of tags will be processed if the tag's name is listed
-    in the context's process_paragraphs entry.
-    """
-
-    order = 400
-
-    def __call__(self, tag):
-        if tag.name in tag.context.get('process_paragraphs', []):
-            context = tag.context
-            p_cls = self.tag_factory.tag_class(tag_name='P', context=context)
-            process_paragraph_tags(tag, context=tag.context,
-                                   tag_base_cls=self.tag_base_cls,
-                                   p_cls=p_cls)
+@tag_created.connect_via(order=400)
+def process_paragraphs(tag, tag_factory, tag_base_cls, **kwargs):
+    """A tag processor to parse the typography of tags."""
+    if tag.name in tag.context.get('process_paragraphs', []):
+        context = tag.context
+        p_cls = tag_factory.tag_class(tag_name='P', context=context)
+        process_paragraph_tags(tag, context=tag.context,
+                               tag_base_cls=tag_base_cls,
+                               p_cls=p_cls)
+    return tag
 
 
 re_para = regex.compile(r'(?:\s*\n\s*\n\s*\n*)')

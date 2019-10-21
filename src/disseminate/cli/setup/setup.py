@@ -5,7 +5,6 @@ import click
 
 from .checkers import print_checkers
 from .processors import print_processors
-from ...tags.processors import ProcessTag
 from ...label_manager.processors import ProcessLabels
 from ...document.processors import ProcessContext
 

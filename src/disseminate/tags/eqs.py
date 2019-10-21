@@ -3,8 +3,10 @@ Tags to render equations
 """
 from copy import copy
 
+from .tag import TagFactory
 from .img import RenderedImg
 from .exceptions import TagError
+from .receivers import process_content, process_macros
 from .utils import content_to_str
 from ..formats import tex_cmd, tex_env
 from ..attributes import Attributes
@@ -64,7 +66,8 @@ class Eq(RenderedImg):
         self.attributes = attributes
 
         # Replace macros and process content
-        self.process(names='process_content')
+        process_macros(tag=self)
+        process_content(tag=self, tag_factory=TagFactory)
 
         # Take the content, and convert it to latex. Save the tex_content
         # separately because the contents of this tag will be converted to

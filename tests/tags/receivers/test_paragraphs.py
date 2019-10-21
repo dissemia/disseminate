@@ -1,7 +1,7 @@
 """
 Test the proces_paragraphs function.
 """
-from disseminate.tags.processors.process_paragraphs import (
+from disseminate.tags.receivers.paragraphs import (
     group_paragraphs, clean_paragraphs, assign_paragraph_roles,
     process_paragraph_tags)
 from disseminate.utils.string import replace_macros

@@ -1,24 +1,15 @@
 """
-Function(s) to make typographic substitutions.
+Receivers for processing a tag's typography.
 """
 import regex
 
-from .process_tag import ProcessTag
+from ..signals import tag_created
 
 
-class ProcessTypography(ProcessTag):
-    """A tag processor to identify and format typography in tags.
-
-    The contents of tags will be processed if the tag's
-    :attr:`process_typography <disseminate.Tags.Tag.process_content>`
-    attribute is True.
-    """
-
-    order = 300
-    short_desc = "Identify and replace typographic characters, like endashes"
-
-    def __call__(self, tag):
-        process_typography(tag, tag_base_cls=self.tag_base_cls)
+@tag_created.connect_via(order=300)
+def process_typography(tag, tag_base_cls, **kwargs):
+    """A tag processor to parse the typography of tags."""
+    return process_tag_typography(tag=tag, tag_base_cls=tag_base_cls)
 
 
 re_endash = regex.compile(r"[\s\u00a0]*(--|\u2013)[\s\u00a0]*")
@@ -30,7 +21,7 @@ re_double_start = regex.compile(r"(?<!\w)\"(?=\S)")
 re_double_end = regex.compile(r"(?<=\S)\"(?!\w)")
 
 
-def process_typography(tag, tag_base_cls, level=1):
+def process_tag_typography(tag, tag_base_cls, level=1):
     """Process the typography for an AST.
 
     .. note:: This function should be run after process_ast.

@@ -59,6 +59,15 @@ def test_inline_equation(context_eq):
     assert eq7.tex == "\\ensuremath{\\boldsymbol{this is my y=x}}"
 
 
+def test_equation_typography(context_eq):
+    """Test the tex rendering of equations with text typography (i.e. it
+    shouldn't be replaced)."""
+
+    # Example 1 - simple equation
+    eq1 = Eq(name='eq', content='y---x', attributes='', context=context_eq)
+    assert eq1.tex == "\\ensuremath{y---x}"
+
+
 def test_block_equation(context_eq):
     """Test the tex rendering of a simple block equations."""
 

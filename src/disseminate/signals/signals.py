@@ -53,11 +53,16 @@ class Signal(object):
 
     def emit(self, **kwargs):
         """Emit (send) the signal and run the receiver functions."""
+        return_values = []
         for order, receiver in sorted(self.receivers.items()):
             # De-reference receiver, if needed
             receiver = (receiver() if isinstance(receiver, weakref.ref) else
                         receiver)
-            receiver(**kwargs)
+            if receiver is not None:
+                return_values.append(receiver(**kwargs))
+            else:
+                return_values.append(None)
+        return return_values
 
     def reset(self):
         """Reset the signal to its initial state"""
@@ -78,7 +83,10 @@ class Namespace(dict):
             The description documentation for the signal.
         """
         try:
-            return self[name]
+            signal = self[name]
+            if doc is not None:
+                signal.__doc__ = doc
+            return signal
         except KeyError:
             return self.setdefault(name, Signal(name, doc))
 

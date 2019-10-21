@@ -2,7 +2,7 @@
 Processor for tags in contexts.
 """
 from .process_context import ProcessContext
-from ...tags import Tag, TagFactory
+from ...tags import TagFactory
 
 
 class ProcessContextTags(ProcessContext):
@@ -31,9 +31,6 @@ class ProcessContextTags(ProcessContext):
         keys = set(context.keys())
         keys = keys.intersection(process_tags)
 
-        # Create a tag factory to create new tags
-        factory = TagFactory(tag_base_cls=Tag)
-
         for k in keys:
             value = context[k]
 
@@ -41,9 +38,7 @@ class ProcessContextTags(ProcessContext):
             if not isinstance(value, str):
                 continue
 
-            context[k] = factory.tag(tag_name=k,
-                                     tag_content=value,
-                                     tag_attributes='',
-                                     context=context)
+            context[k] = TagFactory.tag(tag_name=k, tag_content=value,
+                                        tag_attributes='', context=context)
 
         return context
