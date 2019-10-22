@@ -26,7 +26,7 @@ def print_signals(signal_namespace):
                             subsequent_indent=' ' * 4,
                             width=term_width())
     wrap_fields = TextWrapper(initial_indent=' ' * 4,
-                              subsequent_indent=' ' * 6,
+                              subsequent_indent=' ' * 7,
                               width=term_width())
     lowercase = list(ascii_lowercase)
 

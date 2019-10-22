@@ -1,11 +1,11 @@
 """
 Test the ProcessContentLabels class
 """
-from disseminate.label_manager.processors import (ProcessContentLabels)
+from disseminate.label_manager.receivers import assign_content_labels
 from disseminate.label_manager.types import ContentLabel
 
 
-def test_process_content_labels_processor_part(context_cls):
+def test_assign_content_labels_part(context_cls):
     """Test the ProcessContentLabels processor with 'part' headings."""
 
     context = context_cls()
@@ -27,12 +27,9 @@ def test_process_content_labels_processor_part(context_cls):
     label3.order = (3, 1)
     label4.order = (4, 1)
 
-    # Setup the processors
-    processor = ProcessContentLabels(context=context)
-
     # Process the labels
     registered_labels = [label1, label2, label3, label4]
-    processor(registered_labels=registered_labels)
+    assign_content_labels(registered_labels=registered_labels)
 
     # Check the values of the labels
     assert label1.part_label == label1
@@ -96,7 +93,7 @@ def test_process_content_labels_processor_part(context_cls):
     assert label4.tree_number == '1.1.1.1'
 
 
-def test_process_content_labels_processor_chapter(context_cls):
+def test_assign_content_labels_chapter(context_cls):
     """Test the ProcessContentLabels processor with 'chapter' headings."""
 
     context = context_cls()
@@ -119,12 +116,9 @@ def test_process_content_labels_processor_chapter(context_cls):
     label3.order = (3, 1)
     label4.order = (4, 1)
 
-    # Setup the processors
-    processor = ProcessContentLabels(context=context)
-
     # Process the labels
     registered_labels = [label1, label2, label3, label4]
-    processor(registered_labels=registered_labels)
+    assign_content_labels(registered_labels=registered_labels)
 
     # Check the values of the labels
     assert label1.part_label is None
