@@ -11,6 +11,6 @@ document_deleted = signal('document_deleted',
                           doc="Signal sent before a document is deleted. "
                           "Receivers take a document parameter.")
 document_onload = signal('document_onload',
-                         doc="Signal send when a document is loaded. "
+                         doc="Signal sent when a document is loaded. "
                          "Receivers take a document or document context "
                          "parameter.")

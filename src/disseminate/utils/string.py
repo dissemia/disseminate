@@ -118,6 +118,32 @@ def space_indent(s, number=4):
     return '\n'.join(" " * number + t for t in s.splitlines())
 
 
+_re_newline_space = regex.compile(r'\s*\n\s*')
+
+
+def stub(s):
+    """Takes a string, like a docstring, and returns only the first
+    line.
+
+    Parameters
+    ----------
+    s : str
+        The string to generate a stub for.
+
+    Returns
+    -------
+    stub : str
+        The string with its first line stripped.
+
+    Examples
+    --------
+    >>> stub(stub.__doc__)
+    'Takes a string, like a docstring, and returns only the first line.'
+    """
+    first = s.split('\n\n')[0]
+    return _re_newline_space.sub(' ', first,)
+
+
 _re_multilines = regex.compile(r'(?:\n{2,})')
 
 
