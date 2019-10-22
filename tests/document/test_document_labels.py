@@ -408,9 +408,10 @@ def test_document_tree_updates_with_section_labels(tmpdir, wait):
     assert not doc_list[0].render_required(target_filepath1)
     assert not doc_list[1].render_required(target_filepath2)
 
-    # Now touch the second document.
+    # Now touch the second document. doc2 will need a new render, since it's
+    # updated, and doc1 will need a render since it depends on doc2
     wait()  # sleep time offset needed for different mtimes
     src_filepath2.touch()
 
-    assert not doc_list[0].render_required(target_filepath1)
+    assert doc_list[0].render_required(target_filepath1)
     assert doc_list[1].render_required(target_filepath2)

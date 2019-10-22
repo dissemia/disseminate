@@ -131,10 +131,6 @@ class Document(object):
         if self._temp_dir is not None:
             rmtree(self._temp_dir, ignore_errors=True)
 
-        # # Reset the labels and dependencies for this document
-        # self.reset_labels()
-        # self.reset_dependencies()
-
     def __repr__(self):
         return "Document({})".format(self.src_filepath)
 
@@ -411,7 +407,13 @@ class Document(object):
         ----------
         reload : Optional[bool]
             If True, force the reload of the document.
+
+        Returns
+        -------
+        document_loaded : bool
+            True, if a sub-document was (re)loaded.
         """
+        document_loaded = False
         # Check to make sure the file exists
         if not self.src_filepath.is_file():  # file must exist
             msg = "The source document '{}' must exist."
@@ -440,13 +442,19 @@ class Document(object):
 
             # The document has been loaded
             self._succesfully_loaded = True
+            document_loaded |= True
 
-            # Load the sub-documents. This is done after processing the string
-            # and ast since these may include sub-files, which should be read
-            # in before being loaded.
-            self.load_subdocuments()
+        # Load the sub-documents. This is done after processing the string
+        # and ast since these may include sub-files, which should be read
+        # in before being loaded.
+        document_loaded |= self.load_subdocuments()
 
-        return None
+        # Emit a signal if this is the root document and a document (or sub-
+        # document) was reloaded
+        if document_loaded and self.context.is_root_document:
+            signals.document_tree_updated.emit(root_document=self)
+
+        return document_loaded
 
     @staticmethod
     def _update_mtime(document, mtime=None):
@@ -478,7 +486,14 @@ class Document(object):
 
     def load_subdocuments(self):
         """Load the sub-documents listed in the include entries in the
-        context."""
+        context.
+
+        Returns
+        -------
+        document_loaded : bool
+            True, if a sub-document was (re)loaded.
+        """
+        document_loaded = False
 
         # Get the root document's src_filepath and the src_filepath for all of
         # its included subdocuments to make sure we do not load documents
@@ -514,7 +529,7 @@ class Document(object):
             # copy it to the subdocuments ordered dict
             elif src_filepath in subs_dict:
                 subdoc = subs_dict[src_filepath]
-                subdoc.load()  # reload the subdocument
+                document_loaded |= subdoc.load()  # reload the subdocument
 
                 if self.src_filepath not in subdoc.subdocuments:
                     self.subdocuments[src_filepath] = subdoc
@@ -526,7 +541,7 @@ class Document(object):
                 subdoc = Document(src_filepath=src_filepath,
                                   parent_context=self.context)
                 self.subdocuments[src_filepath] = subdoc
-
+                document_loaded |= True
             else:
                 continue
 
@@ -538,6 +553,8 @@ class Document(object):
         # updated because the src_filepath's mtime will be later than the
         # current document's mtime.
         Document._update_mtime(document=self)
+
+        return document_loaded
 
     def get_renderer(self):
         """Get the template renderer for this document.

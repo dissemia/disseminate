@@ -8,19 +8,22 @@ from ..signals import document_onload, document_deleted
 @document_deleted.connect_via(order=100)
 def reset_document(document, **kwargs):
     """Reset the context and managers for a document on load."""
-    # Reset the context
-    document.context.reset()
+    context = getattr(document, 'context', dict())
+    src_filepath = context.get('src_filepath', None)
 
     # Reset the dependency manager
-    if 'dependency_manager' in document.context:
-        dep = document.context['dependency_manager']
+    if 'dependency_manager' in context and src_filepath is not None:
+        dep = context['dependency_manager']
         dep.reset(src_filepath=document.src_filepath)
 
     # Reset the label manager
-    if 'label_manager' in document.context:
-        label_manager = document.context['label_manager']
+    if 'label_manager' in context and src_filepath is not None:
+        label_manager = context['label_manager']
 
         # Reset the labels for this document.
-        label_manager.reset(context=document.context)
+        label_manager.reset(context=context)
+
+    # Reset the context
+    context.reset()
 
     return document

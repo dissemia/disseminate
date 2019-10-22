@@ -14,3 +14,8 @@ document_onload = signal('document_onload',
                          doc="Signal sent when a document is loaded. "
                          "Receivers take a document or document context "
                          "parameter.")
+
+document_tree_updated = signal('document_tree_updated',
+                               doc="Signal sent when a root document or one "
+                               "of its sub-documents was re-loaded. Takes a "
+                               "root document as a parameter.")

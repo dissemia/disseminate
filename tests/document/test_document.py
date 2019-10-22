@@ -244,7 +244,8 @@ def test_document_load_required(doctree, wait, caplog):
     assert len(caplog.record_tuples) == 2
     assert "tag has not been loaded yet" in caplog.record_tuples[-1][2]
 
-    doc.load()  # 1 load_required message
+    # 1 load_required message
+    assert doc.load() is True  # documents were loaded
     assert len(caplog.record_tuples) == 3
     assert not doc.load_required()
 
@@ -257,9 +258,9 @@ def test_document_load_required(doctree, wait, caplog):
     assert ("source file is newer than the loaded document" in
             caplog.record_tuples[-1][2])
 
-    doc.load()  # 3 load_required messages. The parent (test1.dm) is reloaded
-                # so the children (test2.dm, test3.dm) are reloaded because it
-                # has a later mtime.
+    # 3 load_required messages. The parent (test1.dm) is reloaded so the
+    # children (test2.dm, test3.dm) are reloaded because it has a later mtime.
+    assert doc.load() is True  # documents were loaded
 
     assert len(caplog.record_tuples) == 7
     assert ("source file is newer than the loaded document" in
@@ -301,7 +302,9 @@ def test_document_load_required(doctree, wait, caplog):
     # 7. Touch the root document, and all 3 documents should need an update
     wait()  # sleep time offset needed for different mtimes
     doc.src_filepath.touch()
-    doc.load()  # 3 load required messages
+
+    # 3 load required messages
+    assert doc.load() is True  # documents were loaded
     assert len(caplog.record_tuples) == 12
     assert ("source file is newer than the loaded document" in
             caplog.record_tuples[-3][2])
@@ -349,9 +352,9 @@ def test_document_target_list_update(tmpdir):
 
     # Update the header
     markup = """---
-        targets: tex
-        ---
-        """
+    targets: tex
+    ---
+    """
     src_filepath.write_text(strip_leading_space(markup))
     doc.load()
 
