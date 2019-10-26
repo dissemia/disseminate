@@ -29,8 +29,11 @@ class Document(object):
         will be created. (ex: 'html' 'tex')
         By default, if not specified, the target_root will be one directory
         above the project_root.
-    context : Optional[:obj:`DocumentContext <.DocumentContext>`]
-        The context of the document.
+    parent_context : Optional[:obj:`DocumentContext <.DocumentContext>`]
+        The context of the parent document or default context.
+    level : Optional[int]
+            The level of document loaded. Sub-documents are loaded at a higher
+            level (>1) than the root document.
 
     Attributes
     ----------
@@ -74,7 +77,8 @@ class Document(object):
     #: A flag to determine whether the document was successfully loaded
     _succesfully_loaded = False
 
-    def __init__(self, src_filepath, target_root=None, parent_context=None):
+    def __init__(self, src_filepath, target_root=None, parent_context=None,
+                 level=1):
         logging.debug("Creating document: {}".format(src_filepath))
 
         # Populate attributes
@@ -118,7 +122,7 @@ class Document(object):
                                        parent_context=parent_context)
 
         # Read in the document and load sub-documents
-        self.load()
+        self.load(level=level)
 
         # Send the 'document_created' signal
         signals.document_created.emit(document=self)
@@ -400,13 +404,16 @@ class Document(object):
 
         return False
 
-    def load(self, reload=False):
+    def load(self, reload=False, level=1):
         """Load or reload the document into the context.
 
         Parameters
         ----------
         reload : Optional[bool]
             If True, force the reload of the document.
+        level : Optional[int]
+            The level of document loaded. Sub-documents are loaded at a higher
+            level (>1) than the root document.
 
         Returns
         -------
@@ -447,12 +454,13 @@ class Document(object):
         # Load the sub-documents. This is done after processing the string
         # and ast since these may include sub-files, which should be read
         # in before being loaded.
-        document_loaded |= self.load_subdocuments()
+        document_loaded |= self.load_subdocuments(level=level + 1)
 
         # Emit a signal if this is the root document and a document (or sub-
         # document) was reloaded
-        if document_loaded and self.context.is_root_document:
-            signals.document_tree_updated.emit(root_document=self)
+        if document_loaded and level == 1:
+            root_document = self.context.root_document
+            signals.document_tree_updated.emit(root_document=root_document)
 
         return document_loaded
 
@@ -484,9 +492,15 @@ class Document(object):
 
         return mtime
 
-    def load_subdocuments(self):
+    def load_subdocuments(self, level=1):
         """Load the sub-documents listed in the include entries in the
         context.
+
+        Parameters
+        ----------
+        level : Optional[int]
+            The level of document loaded. Sub-documents are loaded at a higher
+            level (>1) than the root document.
 
         Returns
         -------
@@ -529,7 +543,7 @@ class Document(object):
             # copy it to the subdocuments ordered dict
             elif src_filepath in subs_dict:
                 subdoc = subs_dict[src_filepath]
-                document_loaded |= subdoc.load()  # reload the subdocument
+                document_loaded |= subdoc.load(level=level + 1)
 
                 if self.src_filepath not in subdoc.subdocuments:
                     self.subdocuments[src_filepath] = subdoc
@@ -539,7 +553,8 @@ class Document(object):
             # loaded in root_dict
             elif src_filepath not in root_dict:
                 subdoc = Document(src_filepath=src_filepath,
-                                  parent_context=self.context)
+                                  parent_context=self.context,
+                                  level=level+1)
                 self.subdocuments[src_filepath] = subdoc
                 document_loaded |= True
             else:

@@ -54,8 +54,7 @@ class Ref(Tag):
         else:
             return None
 
-    @property
-    def document(self):
+    def document(self, label=None):
         """The document that owns the label referenced by this tag.
 
         Returns
@@ -67,7 +66,7 @@ class Ref(Tag):
         """
         assert self.context.is_valid('root_document')
 
-        label = self.label
+        label = self.label if label is None else label
 
         # Get the doc_ids for the document that owns this tag (doc_id) and
         # the document that owns the label (other_doc_id)
@@ -95,7 +94,7 @@ class Ref(Tag):
         else:
             return None
 
-    def url(self, target='.html', include_anchor=True):
+    def url(self, target='.html', label=None, include_anchor=True):
         """The url path for the document referenced by the label for this tag.
 
         Parameters
@@ -122,7 +121,7 @@ class Ref(Tag):
         # Get the doc_ids for the document that owns this tag (doc_id) and
         # the document that owns the label (other_doc_id). See if they're the
         # same document, in which case an internal link is returned.
-        label = self.label
+        label = self.label if label is None else label
         doc_id = self.context.get('doc_id', None)
         other_doc_id = label.doc_id if label is not None else None
 
@@ -135,7 +134,7 @@ class Ref(Tag):
 
         # In this case, the label and tag documents are different. Return a
         # link to the label's document.
-        document = self.document
+        document = self.document(label=label)
         target_filepath = document.target_filepath(target)
         link = target_filepath.get_url(context=self.context)
 
@@ -149,11 +148,31 @@ class Ref(Tag):
         label = self.label
         return label.mtime if label is not None else None
 
-    def default_fmt(self, content=None):
+    def default_fmt(self, content=None, attributes=None, label=None):
+        """Convert the tag to a text string.
+
+        Parameters
+        ----------
+        content : Optional[Union[str, List[Union[str, list, :obj:`Tag \
+            <.Tag>`]]]
+            Specify an alternative content from the tag's content. It can
+            either be a string, a tag or a list of strings, tags and lists.
+        attributes : Optional[Union[str, :obj:`Attributes <.Attributes>`]]
+            Specify an alternative attributes dict from the tag's attributes.
+            It can either be a string or an attributes dict.
+        label : :obj:`.types.label.Label`
+            A different label to use in rendering this tag then the label
+            defined by this tag's content.
+
+        Returns
+        -------
+        text_string : str
+            A text string with the tags stripped.
+        """
         # Get the label tag format
         label_manager = self.context.get('label_manager')
         context = self.context
-        label = self.label
+        label = self.label if label is None else label
 
         if all(i is not None for i in (label_manager, label, context)):
             # Format the format string keys for a ref
@@ -166,9 +185,35 @@ class Ref(Tag):
         else:
             return ''
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, label=None,
+                level=1):
+        """Format the tag in LaTeX format.
+
+        Parameters
+        ----------
+        content : Optional[Union[str, List[Union[str, list, :obj:`Tag \
+            <.Tag>`]]]
+            Specify an alternative content from the tag's content. It can
+            either be a string, a tag or a list of strings, tags and lists.
+        attributes : Optional[Union[str, :obj:`Attributes <.Attributes>`]]
+            Specify an alternative attributes dict from the tag's attributes.
+            It can either be a string or an attributes dict.
+        mathmode : Optional[bool]
+            If True, the tag will be rendered in math mode. Otherwise (default)
+            latex text mode is assumed.
+        label : :obj:`.types.label.Label`
+            A different label to use in rendering this tag then the label
+            defined by this tag's content.
+        level : Optional[int]
+            The level of the tag.
+
+        Returns
+        -------
+        tex_string : str
+            The formatted tex string.
+        """
         label_manager = self.context.get('label_manager')
-        label = self.label
+        label = self.label if label is None else label
         context = self.context
 
         if all(i is not None for i in (label_manager, label, context)):
@@ -190,7 +235,8 @@ class Ref(Tag):
             # Tex formats will only work with pdf links
             include_anchor = not isinstance(label, DocumentLabel)
             try:
-                url = self.url(include_anchor=include_anchor, target='.pdf')
+                url = self.url(include_anchor=include_anchor, label=label,
+                               target='.pdf')
 
                 # Add a target-specific attribute to the url so that it's
                 # properly
@@ -208,9 +254,31 @@ class Ref(Tag):
         else:
             return ''
 
-    def html_fmt(self, content=None, attributes=None, level=1):
+    def html_fmt(self, content=None, attributes=None, label=None, level=1):
+        """Convert the tag to an html string or html element.
+
+        Parameters
+        ----------
+        content : Optional[Union[str, List[Union[str, list, :obj:`Tag \
+            <.Tag>`]]]
+            Specify an alternative content from the tag's content. It can
+            either be a string, a tag or a list of strings, tags and lists.
+        attributes : Optional[Union[str, :obj:`Attributes <.Attributes>`]]
+            Specify an alternative attributes dict from the tag's attributes.
+            It can either be a string or an attributes dict.
+        label : :obj:`.types.label.Label`
+            A different label to use in rendering this tag then the label
+            defined by this tag's content
+        level : Optional[int]
+            The level of the tag.
+
+        Returns
+        -------
+        html : str or html element
+            A string in HTML format or an HTML element (:obj:`lxml.builder.E`).
+        """
         label_manager = self.context.get('label_manager')
-        label = self.label
+        label = self.label if label is None else label
         context = self.context
 
         if all(i is not None for i in (label_manager, label, context)):
@@ -234,7 +302,8 @@ class Ref(Tag):
             # for a DocumentLabel. DocumentLabels should just point to the
             # file itself.
             include_anchor = not isinstance(label, DocumentLabel)
-            attrs['href'] = self.url(include_anchor=include_anchor)
+            attrs['href'] = self.url(label=label,
+                                     include_anchor=include_anchor)
 
             # wrap content in 'a' tag
             return html_tag('a', attributes=attrs, formatted_content=content,

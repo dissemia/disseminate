@@ -19,28 +19,6 @@ def add_headings(*docs, wait):
 
 # html tests
 
-def test_prev_doc_label_html(doctree):
-    """Test the prev tag for html targets with document labels"""
-
-    # Get the documents from the doctree
-    doc1, doc2, doc3 = doctree.documents_list(only_subdocuments=False)
-
-    # Create a next tag for each document
-    prev1 = Prev(name='prev', content='prev', attributes='kind=document',
-                 context=doc1.context)
-    assert prev1.html == ''
-
-    prev2 = Prev(name='prev', content='prev', attributes='kind=document',
-                 context=doc2.context)
-    assert (prev2.html ==
-            '<a href="test1.html" class="ref">test1</a>')
-
-    prev3 = Prev(name='prev', content='prev', attributes='kind=document',
-                 context=doc3.context)
-    assert (prev3.html ==
-            '<a href="test2.html" class="ref">test2</a>')
-
-
 def test_prev_heading_label_html(doctree, wait):
     """Test the prev tag for html targets with heading labels"""
 
@@ -64,28 +42,6 @@ def test_prev_heading_label_html(doctree, wait):
                  context=doc3.context)
     assert (prev3.html ==
             '<a href="test2.html#sec:test2-dm-1" class="ref">1</a>')
-
-
-def test_next_doc_label_html(doctree):
-    """Test the next tag for html targets with document labels"""
-
-    # Get the documents from the doctree
-    doc1, doc2, doc3 = doctree.documents_list(only_subdocuments=False)
-
-    # Create a next tag for each document
-    next1 = Next(name='next', content='next', attributes='kind=document',
-                 context=doc1.context)
-    assert (next1.html ==
-            '<a href="test2.html" class="ref">test2</a>')
-
-    next2 = Next(name='next', content='next', attributes='kind=document',
-                 context=doc2.context)
-    assert (next2.html ==
-            '<a href="test3.html" class="ref">test3</a>')
-
-    next3 = Next(name='next', content='next', attributes='kind=document',
-                 context=doc3.context)
-    assert next3.html == ''
 
 
 def test_next_heading_label_html(doctree, wait):
@@ -124,9 +80,9 @@ def test_prev_context_html(doctree, wait):
 
     # First test out the context entries when no headings are available.
     # These should return empty strings
-    assert doc1.context['prev'].html == ''
-    assert doc2.context['prev'].html == ''
-    assert doc3.context['prev'].html == ''
+    assert 'prev_html' not in doc1.context
+    assert 'prev_html' not in doc2.context
+    assert 'prev_html' not in doc3.context
 
     # Next add headings to the documents
     add_headings(doc1, doc2, doc3, wait=wait)
@@ -149,9 +105,9 @@ def test_next_context_html(doctree, wait):
 
     # First test out the context entries when no headings are available.
     # These should return empty strings
-    assert doc1.context['next'].html == ''
-    assert doc2.context['next'].html == ''
-    assert doc3.context['next'].html == ''
+    assert 'next_html' not in doc1.context
+    assert 'next_html' not in doc2.context
+    assert 'next_html' not in doc3.context
 
     # Next add headings and these should be properly formatted
     add_headings(doc1, doc2, doc3, wait=wait)
@@ -191,6 +147,7 @@ def test_navigation_missing_target_html(doctree, wait):
     ---
     @section{1}
     """)
+    print('here')
     doc2.load()
 
     assert (doc1.context['next'].html ==

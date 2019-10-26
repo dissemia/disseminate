@@ -468,15 +468,14 @@ def test_render_required(tmpdir, wait):
     assert doc_list[1].context[body_attr].mtime == mtime2
     assert doc_list[2].context[body_attr].mtime == mtime3
 
-    # Only the 2nd document requires a render now
+    # The doc2 requires a render now.
     for d, answer in zip(doc_list, [False, True, False]):
         target_filepath = d.targets['.html']
         assert d.render_required(target_filepath) is answer
 
-    # Render the 2nd document, and the render_required should no longer be
-    # True.
-    doc_list[1].render()
+    # Render the documents
     for d in doc_list:
+        d.render()
         target_filepath = d.targets['.html']
         assert not d.render_required(target_filepath)
 
@@ -488,14 +487,14 @@ def test_render_required(tmpdir, wait):
     @ref{ch:file3-dm-file3}
     """)
 
-    # Now the 2nd document needs to be rendered
+    # Now the 2nd document needs to be rendered.
     for d, answer in zip(doc_list, [False, True, False]):
         target_filepath = d.targets['.html']
         assert d.render_required(target_filepath) is answer
 
-    # Render the document and all three documents do not require a rendering
-    doc_list[1].render()
+    # Render the documents and the documents will not require a rendering
     for d in doc_list:
+        d.render()
         target_filepath = d.targets['.html']
         assert not d.render_required(target_filepath)
 
