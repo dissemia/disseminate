@@ -1,7 +1,12 @@
 """
 Test the label manager.
 """
+import pathlib
+
+import pytest
+
 from disseminate.label_manager import ContentLabel, DocumentLabel
+from disseminate.document import Document
 
 
 def test_label_manager_basic_labels(doc):
@@ -174,12 +179,34 @@ def test_label_manager_get_labels(doctree):
     assert len(labels) == 0
 
 
-def test_label_manager_label_reordering(doctree):
+def test_label_manager_label_reordering(tmpdir):
     """Tests the reordering of labels when labels are registered."""
 
+    # Create a document tree. A document tree is created here, rather than
+    # use the doctree fixture, because this function needs to own the document
+    # tree to properly call the __del__ function of all created documents.
+    target_root = pathlib.Path(tmpdir)
+    src_dir = pathlib.Path(tmpdir) / 'src'
+    src_dir.mkdir()
+
+    src_filepath1 = src_dir / 'test1.dm'
+    src_filepath2 = src_dir / 'test2.dm'
+    src_filepath3 = src_dir / 'test3.dm'
+
+    src_filepath1.write_text("""
+    ---
+    include:
+      test2.dm
+      test3.dm
+    ---
+    """)
+    src_filepath2.touch()
+    src_filepath3.touch()
+
+    doc1 = Document(src_filepath1, target_root=target_root)
+
     # Get the label manager from the document and the documents in the tree
-    doc1 = doctree
-    doc2, doc3 = doctree.documents_list(only_subdocuments=True)
+    doc2, doc3 = doc1.documents_list(only_subdocuments=True)
     label_man = doc1.context['label_manager']
 
     # Generate a couple of short labels
@@ -257,13 +284,22 @@ def test_label_manager_label_reordering(doctree):
     assert label7.kind == ('caption', 'figure',)
     assert label7.order == (2, 2)
 
-    # Now delete the 2nd and 3rd documents and the labels should be removed too.
+    # delete the documents, and the labels should be removed
     doc_id1 = doc1.doc_id
     doc_id2 = doc2.doc_id
     doc_id3 = doc3.doc_id
 
+    # Clear the sub-documents first
     doc1.subdocuments.clear()
     del doc2, doc3
 
     assert len(label_man.get_labels(doc_id=doc_id2)) == 0
     assert len(label_man.get_labels(doc_id=doc_id3)) == 0
+
+    # Clear the root document. Getting the labels at this point will raise an
+    # attribute error because the label manager get_labels method checks for
+    # a root_document in the context, and the context no longer exists.
+    del doc1
+
+    with pytest.raises(AttributeError):
+        label_man.get_labels()
