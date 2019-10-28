@@ -19,6 +19,6 @@ Table of Contents
    document_context
    exceptions
    signals
-   processors/index
+   receivers
    utils
    

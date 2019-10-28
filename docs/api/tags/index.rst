@@ -8,7 +8,6 @@ Tags
    :caption: Tags
              
    tags
-   factory
    exceptions
    heading
    text
@@ -23,6 +22,7 @@ Tags
 
 .. toctree::
    :maxdepth: 2
-   :caption: Tag Processors
+   :caption: Signals and Receivers
 
-   processors/index
+   signals
+   receivers

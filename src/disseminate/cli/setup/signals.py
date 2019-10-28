@@ -11,11 +11,12 @@ from ...utils.string import stub
 
 
 def print_signals(signal_namespace):
-    """Given an signal namespace, print all signals and connected receivers
+    """Given an signal namespace, print all signals and connected receivers.
 
     Parameters
     ----------
-    signal_namespace : :obj:`.signals.signals.Namespace
+    signal_namespace : :obj:`.signals.signals.Namespace`
+        The namespace for all signals.
 
     Returns
     -------

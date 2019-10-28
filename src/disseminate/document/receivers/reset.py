@@ -30,7 +30,7 @@ def reset_document(document, **kwargs):
 
 @document_deleted.connect_via(order=100)
 def delete_document(document, **kwargs):
-    """Reset the context and managers for a document on load."""
+    """Reset the context and managers for a document on document deletion."""
     context = getattr(document, 'context', dict())
     src_filepath = context.get('src_filepath', None)
 

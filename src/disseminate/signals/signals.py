@@ -96,5 +96,6 @@ class Namespace(dict):
         except KeyError:
             return self.setdefault(name, Signal(name, doc))
 
+
 signals = Namespace()
 signal = signals.signal

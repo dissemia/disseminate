@@ -6,3 +6,7 @@ Signals
 .. autodata:: disseminate.document.signals.document_created
 
 .. autodata:: disseminate.document.signals.document_deleted
+
+.. autodata:: disseminate.document.signals.document_onload
+
+.. autodata:: disseminate.document.signals.document_tree_updated
