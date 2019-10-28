@@ -54,8 +54,16 @@ class Ref(Tag):
         else:
             return None
 
-    def document(self, label=None):
+    def document(self, label=None, documents_by_id=None):
         """The document that owns the label referenced by this tag.
+
+        Parameters
+        ----------
+        label : Optional[:obj:`.types.Label`]
+            If specified, use the given label to render the reference.
+        documents_by_id: Optional[Dict[str, :obj:`.Document`]]
+            If specified, use the given documents_by_id dict, instead of
+            generating it for each document.
 
         Returns
         -------
@@ -83,18 +91,22 @@ class Ref(Tag):
         #
         # Fetch the root document to figure out which document corresponds to
         # the doc_id of this ref tag's label.
-        root_document = (self.context['root_document']()
-                         if 'root_document' in self.context else
-                         None)  # de-reference root document, if available
-        docs_by_doc_ids = (root_document.documents_by_id(recursive=True)
-                           if root_document is not None else None)
+        if documents_by_id is None:
+            root_document = (self.context['root_document']()
+                             if 'root_document' in self.context else
+                             None)  # de-reference root document, if available
+            docs_by_doc_ids = (root_document.documents_by_id(recursive=True)
+                               if root_document is not None else None)
+        else:
+            docs_by_doc_ids = documents_by_id
 
         if other_doc_id in docs_by_doc_ids:
             return docs_by_doc_ids[other_doc_id]
         else:
             return None
 
-    def url(self, target='.html', label=None, include_anchor=True):
+    def url(self, target='.html', label=None, documents_by_id=None,
+            include_anchor=True):
         """The url path for the document referenced by the label for this tag.
 
         Parameters
@@ -102,6 +114,11 @@ class Ref(Tag):
         target : Optional[str]
             The target extension for the target file.
             ex: '.html' or '.tex'
+        label : Optional[:obj:`.types.Label`]
+            If specified, use the given label to render the reference.
+        documents_by_id: Optional[Dict[str, :obj:`.Document`]]
+            If specified, use the given documents_by_id dict, instead of
+            generating it for each document.
         include_anchor : Optional[bool]
             If True (default), the html link anchor will be appended to the
             url path.
@@ -134,7 +151,7 @@ class Ref(Tag):
 
         # In this case, the label and tag documents are different. Return a
         # link to the label's document.
-        document = self.document(label=label)
+        document = self.document(label=label, documents_by_id=documents_by_id)
         target_filepath = document.target_filepath(target)
         link = target_filepath.get_url(context=self.context)
 
@@ -164,6 +181,7 @@ class Ref(Tag):
             A different label to use in rendering this tag then the label
             defined by this tag's content.
 
+
         Returns
         -------
         text_string : str
@@ -186,7 +204,7 @@ class Ref(Tag):
             return ''
 
     def tex_fmt(self, content=None, attributes=None, mathmode=False, label=None,
-                level=1):
+                documents_by_id=None, level=1):
         """Format the tag in LaTeX format.
 
         Parameters
@@ -204,6 +222,9 @@ class Ref(Tag):
         label : :obj:`.types.label.Label`
             A different label to use in rendering this tag then the label
             defined by this tag's content.
+        documents_by_id: Optional[Dict[str, :obj:`.Document`]]
+            If specified, use the given documents_by_id dict, instead of
+            generating it for each document.
         level : Optional[int]
             The level of the tag.
 
@@ -236,7 +257,7 @@ class Ref(Tag):
             include_anchor = not isinstance(label, DocumentLabel)
             try:
                 url = self.url(include_anchor=include_anchor, label=label,
-                               target='.pdf')
+                               documents_by_id=documents_by_id, target='.pdf')
 
                 # Add a target-specific attribute to the url so that it's
                 # properly
@@ -254,7 +275,8 @@ class Ref(Tag):
         else:
             return ''
 
-    def html_fmt(self, content=None, attributes=None, label=None, level=1):
+    def html_fmt(self, content=None, attributes=None, label=None,
+                 documents_by_id=None, level=1):
         """Convert the tag to an html string or html element.
 
         Parameters
@@ -269,6 +291,9 @@ class Ref(Tag):
         label : :obj:`.types.label.Label`
             A different label to use in rendering this tag then the label
             defined by this tag's content
+        documents_by_id: Optional[Dict[str, :obj:`.Document`]]
+            If specified, use the given documents_by_id dict, instead of
+            generating it for each document.
         level : Optional[int]
             The level of the tag.
 
@@ -278,7 +303,7 @@ class Ref(Tag):
             A string in HTML format or an HTML element (:obj:`lxml.builder.E`).
         """
         label_manager = self.context.get('label_manager')
-        label = self.label if label is None else label
+        label = label if label is not None else self.label
         context = self.context
 
         if all(i is not None for i in (label_manager, label, context)):
@@ -303,7 +328,8 @@ class Ref(Tag):
             # file itself.
             include_anchor = not isinstance(label, DocumentLabel)
             attrs['href'] = self.url(label=label,
-                                     include_anchor=include_anchor)
+                                     include_anchor=include_anchor,
+                                     documents_by_id=documents_by_id)
 
             # wrap content in 'a' tag
             return html_tag('a', attributes=attrs, formatted_content=content,
