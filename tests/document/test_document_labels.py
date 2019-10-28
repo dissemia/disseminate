@@ -177,15 +177,11 @@ def test_document_tree_updates_document_labels(tmpdir, wait):
     assert doc_list[1].src_filepath == src_filepath2
     assert doc_list[2].src_filepath == src_filepath3
 
-    # There should be 3 labels, one for each document. However, they haven't
-    # been registered yet since this is done when we get labels
-    assert len(label_manager.collected_labels) == 3
-    assert len(label_manager.labels) == 0
+    # There should be 3 labels, one for each document
+    assert len(label_manager.labels) == 3
 
     # Get the labels, and register them
-    label_list = label_manager.get_labels()  # registers labels
-    assert len(label_manager.collected_labels) == 0
-    assert len(label_manager.labels) == 3
+    label_list = label_manager.get_labels()
 
     assert label_list[0].id == 'doc:file1-dm'
     assert label_list[1].id == 'doc:file2-dm'
@@ -205,7 +201,7 @@ def test_document_tree_updates_document_labels(tmpdir, wait):
 
     # There should be 3 labels, one for each document. Changing the root
     # document reloads all documents
-    assert len(label_manager.collected_labels) == 3
+    assert len(label_manager.labels) == 3
 
     assert doc_list[0].src_filepath == src_filepath1
     assert doc_list[1].src_filepath == src_filepath3
@@ -213,7 +209,7 @@ def test_document_tree_updates_document_labels(tmpdir, wait):
 
     # Check the ordering of labels
     label_list = label_manager.get_labels()  # register labels
-    assert len(label_manager.labels) == 3
+    assert len(label_list) == 3
     assert label_list[0].id == 'doc:file1-dm'
     assert label_list[1].id == 'doc:file3-dm'
     assert label_list[2].id == 'doc:file2-dm'
@@ -408,9 +404,10 @@ def test_document_tree_updates_with_section_labels(tmpdir, wait):
     assert not doc_list[0].render_required(target_filepath1)
     assert not doc_list[1].render_required(target_filepath2)
 
-    # Now touch the second document.
+    # Now touch the second document. doc2 will need a new render, since it's
+    # updated, and doc1 will need a render since it depends on doc2
     wait()  # sleep time offset needed for different mtimes
     src_filepath2.touch()
 
-    assert not doc_list[0].render_required(target_filepath1)
+    assert doc_list[0].render_required(target_filepath1)
     assert doc_list[1].render_required(target_filepath2)

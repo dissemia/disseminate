@@ -6,7 +6,7 @@ System Setup
     :imported-members:
     :show-inheritance:
 
-.. automodule:: disseminate.cli.setup.processors
-    :members: print_processors
+.. automodule:: disseminate.cli.setup.signals
+    :members: print_signals
     :imported-members:
     :show-inheritance:

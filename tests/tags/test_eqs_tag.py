@@ -6,8 +6,7 @@ import pytest
 from disseminate.tags import Tag
 from disseminate.formats import TexFormatError
 from disseminate.tags.eqs import Eq
-from disseminate.document.processors.process_context_headers import \
-    ProcessContextHeaders
+from disseminate.document.receivers import process_headers
 from disseminate import SourcePath
 
 
@@ -18,8 +17,7 @@ def context_eq(doc):
     context = doc.context
 
     # Setup the context processor
-    processor = ProcessContextHeaders()
-    processor(context)  # add the 'equation_renderer' entry
+    process_headers(context)  # add the 'equation_renderer' entry
 
     return context
 
@@ -57,6 +55,15 @@ def test_inline_equation(context_eq):
     eq7 = Eq(name='eq', content=['this is my ', eq1], attributes='bold',
              context=context_eq)
     assert eq7.tex == "\\ensuremath{\\boldsymbol{this is my y=x}}"
+
+
+def test_equation_typography(context_eq):
+    """Test the tex rendering of equations with text typography (i.e. it
+    shouldn't be replaced)."""
+
+    # Example 1 - simple equation
+    eq1 = Eq(name='eq', content='y---x', attributes='', context=context_eq)
+    assert eq1.tex == "\\ensuremath{y---x}"
 
 
 def test_block_equation(context_eq):

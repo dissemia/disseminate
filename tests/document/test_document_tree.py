@@ -48,7 +48,7 @@ def test_documents_list():
     assert docs[0].src_filepath == src_filepath2
 
 
-def test_document_tree(tmpdir):
+def test_document_tree(tmpdir, wait):
     """Test the loading of trees and sub-documents from a document."""
 
     # Setup the project_root in a temp directory
@@ -100,6 +100,8 @@ def test_document_tree(tmpdir):
     assert doc.get_renderer().targets == {'.txt', '.tex'}
 
     # Update the root document and remove a file
+    assert doc.load() is False  # no documents are not loaded yet
+    wait()  # time offset for the filesystem
     markup = """---
     include:
       sub/file2.dm
@@ -107,7 +109,8 @@ def test_document_tree(tmpdir):
     ---
     """
     file1.write_text(strip_leading_space(markup))
-    doc.load()
+    assert doc.load() is True  # documents were loaded (doc changed)
+    assert doc.load() is False  # documents don't need to be reloaded
 
     # Test the paths
     assert len(doc.subdocuments) == 1
@@ -119,6 +122,14 @@ def test_document_tree(tmpdir):
     # Test the targets
     assert doc.targets.keys() == {'.txt', '.tex'}
     assert doc.get_renderer().targets == {'.txt', '.tex'}
+
+    # Now change file2 and reloading the root document, doc, should load
+    # some new files since it has doc2 (file2) as a subdocument
+    wait()
+    file2.write_text('test2')
+
+    assert doc.load() is True  # documents were loaded
+    assert doc.load() is False  # documents already loaded
 
     # Now test Example5. Example5 has a file in the root directory, a file in
     # the 'sub1', 'sub2' and 'sub3' directories and a file in the 'sub2/subsub2'
@@ -443,6 +454,8 @@ def test_render_required(tmpdir, wait):
     for doc in doc_list:
         doc.load()
 
+    # The modification time (mtime) for the body tag in the second document
+    # is now updated to the new mtime.
     assert doc_list[0].context[body_attr].mtime == mtime1
     assert doc_list[1].context[body_attr].mtime != mtime2
     assert doc_list[1].context[body_attr].mtime == src_filepath2.stat().st_mtime
@@ -455,15 +468,14 @@ def test_render_required(tmpdir, wait):
     assert doc_list[1].context[body_attr].mtime == mtime2
     assert doc_list[2].context[body_attr].mtime == mtime3
 
-    # Only the 2nd document requires a render now
+    # The doc2 requires a render now.
     for d, answer in zip(doc_list, [False, True, False]):
         target_filepath = d.targets['.html']
         assert d.render_required(target_filepath) is answer
 
-    # Render the 2nd document, and the render_required should no longer be
-    # True.
-    doc_list[1].render()
+    # Render the documents
     for d in doc_list:
+        d.render()
         target_filepath = d.targets['.html']
         assert not d.render_required(target_filepath)
 
@@ -475,22 +487,22 @@ def test_render_required(tmpdir, wait):
     @ref{ch:file3-dm-file3}
     """)
 
-    # Now the 2nd document needs to be rendered
+    # Now the 2nd document needs to be rendered.
     for d, answer in zip(doc_list, [False, True, False]):
         target_filepath = d.targets['.html']
         assert d.render_required(target_filepath) is answer
 
-    # Render the document and all three documents do not require a rendering
-    doc_list[1].render()
+    # Render the documents and the documents will not require a rendering
     for d in doc_list:
+        d.render()
         target_filepath = d.targets['.html']
         assert not d.render_required(target_filepath)
 
-    # Touch the 3rd document. Now the @ref tag in the second document has not
-    # changed, so only the 3rd document needs to be updated.
+    # Touch the 3rd document. Now the @ref tag in the second document has
+    # changed
     src_filepath3.touch()
 
-    for d, answer in zip(doc_list, [False, False, True]):
+    for d, answer in zip(doc_list, [False, True, True]):
         target_filepath = d.targets['.html']
         assert d.render_required(target_filepath) is answer
 
@@ -517,8 +529,9 @@ def test_render_required(tmpdir, wait):
     @chapter{file3}
     """)
 
-    # Documents 3 requires a render because it was just written
-    for d, answer in zip(doc_list, [False, False, True]):
+    # Doc3 requires a render because it was just written. Doc2 needs  render
+    # since it depends on doc3.
+    for d, answer in zip(doc_list, [False, True, True]):
         target_filepath = d.targets['.html']
         assert d.render_required(target_filepath) is answer
 

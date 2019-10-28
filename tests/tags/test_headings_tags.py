@@ -253,7 +253,7 @@ def test_heading_labels_tex(doc):
 
     # Generate a tag for each and compare the generated html to the answer key
     for src, tex in markups.items():
-        doc.reset_contexts()
+        doc.context.reset()
         root = Tag(name='root', content=src, attributes='', context=context)
         heading = root.content
         assert heading.tex == tex

@@ -25,18 +25,20 @@ class TocRef(Ref):
 
     html_name = "li"
 
-    def html_fmt(self, content=None, attributes=None, level=1):
+    def html_fmt(self, content=None, attributes=None, label=None, level=1):
         # Wrap the tocref item in a list item
         html = super().html_fmt(content=content, attributes=attributes,
-                                level=level)
+                                label=label, level=level)
         tag_class = ('class="toc-level-{}"'.format(self.attributes['level'])
                      if 'level' in self.attributes else '')
         return html_tag('li', formatted_content=html, attributes=tag_class)
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, label=None,
+                level=1):
         list_level = self.attributes['level']
         tex_content = super().tex_fmt(content=content, attributes=attributes,
-                                      mathmode=mathmode, level=level)
+                                      mathmode=mathmode, label=label,
+                                      level=level)
         return "§" * list_level + " " + tex_content + "\n"
 
 

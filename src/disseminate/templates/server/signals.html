@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Disseminate Processor Listing</title>
+  <meta name="description" content="Disseminate Signals Listing">
+  <meta name="author" content="Disseminate">
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato" />
+  <link rel="stylesheet" href="/media/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="/media/css/base.css">
+  <link rel="stylesheet" type="text/css" href="/media/css/listing.css">
+</head>
+<body>
+  <div class="container">
+    {% include "default/menu.html" %}
+    <h2>Signals Listings</h2>
+    <div class="listing">
+      <ol>
+        {%- for signal in signals -%}
+        <li class="level-1">
+          <span class="name">{{ signal.name }}</span>
+          {%- if signal.doc -%}<div class="sub-listing" title="Description">{{ signal.doc }}</div>{%- endif -%}
+        </li>
+          <ol>
+            {%- for receiver in signal.receivers -%}
+            <li class="level-2">
+              <span class="name">{{ receiver.name }}</span>
+              <div class="sub-listing" title="Order">{{ receiver.order }}</div>
+              {%- if receiver.doc -%}<div class="sub-listing" title="Description">{{ receiver.doc }}</div>{%- endif -%}
+            </li>
+            {%- endfor -%}
+          </ol>
+        {%- endfor -%}
+      </ol>
+    </div>
+</div>
+</body>
+</html>

@@ -117,7 +117,7 @@ def test_document_context_simple_documents(tmpdir):
     test_context_entries(doc)
 
     # Reset the context, and test again
-    doc.reset_contexts()
+    doc.context.reset()
     test_context_entries(doc)
 
     # Load example7. It has a main document (file1.dm) and 1 subdocuments
@@ -172,7 +172,7 @@ def test_document_context_simple_documents(tmpdir):
     test_context_entries(doc)
 
     # Reset the context, and test again
-    doc.reset_contexts()
+    doc.context.reset()
     test_context_entries(doc)
 
 
@@ -259,9 +259,8 @@ def test_document_context_tag_inheritance(context_cls):
 
     # Create a parent context with a toc tag
     parent = context_cls()
-    factory = TagFactory(tag_base_cls=Tag)
-    toc = factory.tag(tag_name='toc', tag_content='heading collapsed',
-                      tag_attributes='', context=parent)
+    toc = TagFactory.tag(tag_name='toc', tag_content='heading collapsed',
+                         tag_attributes='', context=parent)
     parent['toc'] = toc
 
     # Now create a child context with a toc entry that is a string. It should

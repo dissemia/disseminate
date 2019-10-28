@@ -156,6 +156,9 @@ class DocumentContext(BaseContext):
             self['target_root'] = document.target_root
         if self.get('root_document', None) is None:
             self['root_document'] = weakref.ref(document)
+            self['is_root_document'] = True
+        else:
+            self['is_root_document'] = False
 
         # Initialize the managers, if this is the root (document) context
         if self.get('label_manager', None) is None:
@@ -198,6 +201,10 @@ class DocumentContext(BaseContext):
     def root_document(self, value):
         # Create a weakref to the document
         self['root_document'] = weakref.ref(value)
+
+    @property
+    def is_root_document(self):
+        return self.get('is_root_document', False)
 
     @property
     def targets(self):
