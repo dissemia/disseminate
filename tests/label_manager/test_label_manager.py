@@ -102,7 +102,7 @@ def test_label_manager_basic_labels(doc):
     assert label4.mtime == doc.mtime
 
 
-def test_label_manager_updates(doc):
+def test_label_manager_updates(doc, wait):
     """Test updates to existing labels for the label_manager."""
 
     # Get the label manager from the document
@@ -117,6 +117,7 @@ def test_label_manager_updates(doc):
     assert label.title == 'figure 1'
 
     # Try changing the label
+    wait()  # offset time for filesystem
     doc.src_filepath.write_text("""
         @figure[id=fig:one]{@caption{figure one}}
         """)

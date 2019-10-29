@@ -500,6 +500,7 @@ def test_render_required(tmpdir, wait):
 
     # Touch the 3rd document. Now the @ref tag in the second document has
     # changed
+    wait()  # offset time for filesystem
     src_filepath3.touch()
 
     for d, answer in zip(doc_list, [False, True, True]):
