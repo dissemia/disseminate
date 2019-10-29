@@ -54,16 +54,16 @@ class Ref(Tag):
         else:
             return None
 
-    def document(self, label=None, documents_by_id=None):
+    def document(self, cache=None):
         """The document that owns the label referenced by this tag.
 
         Parameters
         ----------
-        label : Optional[:obj:`.types.Label`]
-            If specified, use the given label to render the reference.
-        documents_by_id: Optional[Dict[str, :obj:`.Document`]]
-            If specified, use the given documents_by_id dict, instead of
-            generating it for each document.
+        cache : Optional[dict]
+            If specified, the cache values will be used instead of being
+            evaluated. Possibilities:
+            - 'label': :obj:`.types.Label`
+            - 'documents_by_id': Dict[str, :obj:`document.Document`]
 
         Returns
         -------
@@ -73,8 +73,9 @@ class Ref(Tag):
             None, if a document could not be found.
         """
         assert self.context.is_valid('root_document')
-
-        label = self.label if label is None else label
+        cache = dict() if cache is None else cache
+        label = cache.setdefault('label', self.label)
+        documents_by_id = cache.get('documents_by_id', None)
 
         # Get the doc_ids for the document that owns this tag (doc_id) and
         # the document that owns the label (other_doc_id)
@@ -105,8 +106,7 @@ class Ref(Tag):
         else:
             return None
 
-    def url(self, target='.html', label=None, documents_by_id=None,
-            include_anchor=True):
+    def url(self, target='.html', include_anchor=True, cache=None):
         """The url path for the document referenced by the label for this tag.
 
         Parameters
@@ -114,14 +114,14 @@ class Ref(Tag):
         target : Optional[str]
             The target extension for the target file.
             ex: '.html' or '.tex'
-        label : Optional[:obj:`.types.Label`]
-            If specified, use the given label to render the reference.
-        documents_by_id: Optional[Dict[str, :obj:`.Document`]]
-            If specified, use the given documents_by_id dict, instead of
-            generating it for each document.
         include_anchor : Optional[bool]
             If True (default), the html link anchor will be appended to the
             url path.
+        cache : Optional[dict]
+            If specified, the cache values will be used instead of being
+            evaluated. Possibilities:
+            - 'label': :obj:`.types.Label`
+            - 'documents_by_id': Dict[str, :obj:`document.Document`]
 
         Returns
         -------
@@ -130,6 +130,7 @@ class Ref(Tag):
             tag.
         """
         context = self.context
+        cache = dict() if cache is None else cache
         assert context.is_valid('doc_id')
 
         # Format the target string
@@ -138,7 +139,7 @@ class Ref(Tag):
         # Get the doc_ids for the document that owns this tag (doc_id) and
         # the document that owns the label (other_doc_id). See if they're the
         # same document, in which case an internal link is returned.
-        label = self.label if label is None else label
+        label = cache.setdefault('label', self.label)
         doc_id = self.context.get('doc_id', None)
         other_doc_id = label.doc_id if label is not None else None
 
@@ -151,7 +152,7 @@ class Ref(Tag):
 
         # In this case, the label and tag documents are different. Return a
         # link to the label's document.
-        document = self.document(label=label, documents_by_id=documents_by_id)
+        document = self.document(cache=cache)
         target_filepath = document.target_filepath(target)
         link = target_filepath.get_url(context=self.context)
 
@@ -165,7 +166,7 @@ class Ref(Tag):
         label = self.label
         return label.mtime if label is not None else None
 
-    def default_fmt(self, content=None, attributes=None, label=None):
+    def default_fmt(self, content=None, attributes=None, cache=None):
         """Convert the tag to a text string.
 
         Parameters
@@ -177,10 +178,11 @@ class Ref(Tag):
         attributes : Optional[Union[str, :obj:`Attributes <.Attributes>`]]
             Specify an alternative attributes dict from the tag's attributes.
             It can either be a string or an attributes dict.
-        label : :obj:`.types.label.Label`
-            A different label to use in rendering this tag then the label
-            defined by this tag's content.
-
+        cache : Optional[dict]
+            If specified, the cache values will be used instead of being
+            evaluated. Possibilities:
+            - 'label': :obj:`.types.Label`
+            - 'documents_by_id': Dict[str, :obj:`document.Document`]
 
         Returns
         -------
@@ -190,7 +192,8 @@ class Ref(Tag):
         # Get the label tag format
         label_manager = self.context.get('label_manager')
         context = self.context
-        label = self.label if label is None else label
+        cache = dict() if cache is None else cache
+        label = cache.setdefault('label', self.label)
 
         if all(i is not None for i in (label_manager, label, context)):
             # Format the format string keys for a ref
@@ -203,8 +206,8 @@ class Ref(Tag):
         else:
             return ''
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, label=None,
-                documents_by_id=None, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False,
+                cache=None, level=1):
         """Format the tag in LaTeX format.
 
         Parameters
@@ -219,12 +222,11 @@ class Ref(Tag):
         mathmode : Optional[bool]
             If True, the tag will be rendered in math mode. Otherwise (default)
             latex text mode is assumed.
-        label : :obj:`.types.label.Label`
-            A different label to use in rendering this tag then the label
-            defined by this tag's content.
-        documents_by_id: Optional[Dict[str, :obj:`.Document`]]
-            If specified, use the given documents_by_id dict, instead of
-            generating it for each document.
+        cache : Optional[dict]
+            If specified, the cache values will be used instead of being
+            evaluated. Possibilities:
+            - 'label': :obj:`.types.Label`
+            - 'documents_by_id': Dict[str, :obj:`document.Document`]
         level : Optional[int]
             The level of the tag.
 
@@ -234,8 +236,9 @@ class Ref(Tag):
             The formatted tex string.
         """
         label_manager = self.context.get('label_manager')
-        label = self.label if label is None else label
         context = self.context
+        cache = dict() if cache is None else cache
+        label = cache.setdefault('label', self.label)
 
         if all(i is not None for i in (label_manager, label, context)):
             # Retrieve the format string for the reference
@@ -256,8 +259,8 @@ class Ref(Tag):
             # Tex formats will only work with pdf links
             include_anchor = not isinstance(label, DocumentLabel)
             try:
-                url = self.url(include_anchor=include_anchor, label=label,
-                               documents_by_id=documents_by_id, target='.pdf')
+                url = self.url(target='.pdf', include_anchor=include_anchor,
+                               cache=cache)
 
                 # Add a target-specific attribute to the url so that it's
                 # properly
@@ -275,8 +278,7 @@ class Ref(Tag):
         else:
             return ''
 
-    def html_fmt(self, content=None, attributes=None, label=None,
-                 documents_by_id=None, level=1):
+    def html_fmt(self, content=None, attributes=None, cache=None, level=1):
         """Convert the tag to an html string or html element.
 
         Parameters
@@ -288,12 +290,12 @@ class Ref(Tag):
         attributes : Optional[Union[str, :obj:`Attributes <.Attributes>`]]
             Specify an alternative attributes dict from the tag's attributes.
             It can either be a string or an attributes dict.
-        label : :obj:`.types.label.Label`
-            A different label to use in rendering this tag then the label
-            defined by this tag's content
-        documents_by_id: Optional[Dict[str, :obj:`.Document`]]
-            If specified, use the given documents_by_id dict, instead of
-            generating it for each document.
+        cache : Optional[dict]
+            If specified, the cache values will be used instead of being
+            evaluated. Possibilities:
+            - 'label': :obj:`.types.Label`
+            - 'documents_by_id': Dict[str, :obj:`document.Document`]
+            - 'format_str': str
         level : Optional[int]
             The level of the tag.
 
@@ -303,7 +305,8 @@ class Ref(Tag):
             A string in HTML format or an HTML element (:obj:`lxml.builder.E`).
         """
         label_manager = self.context.get('label_manager')
-        label = label if label is not None else self.label
+        cache = dict() if cache is None else cache
+        label = cache.setdefault('label', self.label)
         context = self.context
 
         if all(i is not None for i in (label_manager, label, context)):
@@ -327,9 +330,7 @@ class Ref(Tag):
             # for a DocumentLabel. DocumentLabels should just point to the
             # file itself.
             include_anchor = not isinstance(label, DocumentLabel)
-            attrs['href'] = self.url(label=label,
-                                     include_anchor=include_anchor,
-                                     documents_by_id=documents_by_id)
+            attrs['href'] = self.url(cache=cache, include_anchor=include_anchor)
 
             # wrap content in 'a' tag
             return html_tag('a', attributes=attrs, formatted_content=content,

@@ -102,24 +102,32 @@ class Next(Ref):
         # The next reference is designed for html only
         return ""
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, label=None,
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, cache=None,
                 level=1):
         context = self.context
-        label = context.get('next_html', None)
-        if label:
-            label = label()
-            return super(Next, self).html_fmt(content=content, label=label,
+        cache = dict() if cache is None else cache
+
+        if 'label' not in cache and 'next_tex' in context:
+            label = context['next_tex']
+            cache['label'] = label()  # Dereference. See above.
+
+        if 'label' in cache:
+            return super(Next, self).html_fmt(content=content, cache=cache,
                                               level=level)
         else:
             return ""
 
-    def html_fmt(self, content=None, attributes=None, label=None, level=1):
+    def html_fmt(self, content=None, attributes=None, label=None, cache=None,
+                 level=1):
         context = self.context
-        # Get the label for the next document
-        label = context.get('next_html', None)
-        if label:
-            label = label()
-            return super(Next, self).html_fmt(content=content, label=label,
+        cache = dict() if cache is None else cache
+
+        if 'label' not in cache and 'next_html' in context:
+            label = context['next_html']
+            cache['label'] = label()  # Dereference. See above.
+
+        if 'label' in cache:
+            return super(Next, self).html_fmt(content=content, cache=cache,
                                               level=level)
         else:
             return ""
@@ -151,24 +159,32 @@ class Prev(Ref):
         # The next reference is designed for html only
         return ""
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, label=None,
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, cache=None,
                 level=1):
         context = self.context
-        label = context.get('prev_html', None)
-        if label:
-            label = label()
-            return super(Prev, self).html_fmt(content=content, label=label,
+        cache = dict() if cache is None else cache
+
+        if 'label' not in cache and 'prev_tex' in context:
+            label = context['prev_tex']
+            cache['label'] = label()  # Dereference. See above.
+
+        if 'label' in cache:
+            return super(Prev, self).html_fmt(content=content, cache=cache,
                                               level=level)
         else:
             return ""
 
-    def html_fmt(self, content=None, attributes=None, label=None, level=1):
+    def html_fmt(self, content=None, attributes=None, label=None, cache=None,
+                 level=1):
         context = self.context
-        # Get the label for the next document
-        label = context.get('prev_html', None)
-        if label:
-            label = label()
-            return super(Prev, self).html_fmt(content=content, label=label,
+        cache = dict() if cache is None else cache
+
+        if 'label' not in cache and 'prev_html' in context:
+            label = context['prev_html']
+            cache['label'] = label()  # Dereference. See above.
+
+        if 'label' in cache:
+            return super(Prev, self).html_fmt(content=content, cache=cache,
                                               level=level)
         else:
             return ""
@@ -191,16 +207,16 @@ class Pdflink(Ref):
         content = ''
         Tag.__init__(self, name, content, attributes, context)
 
-    def default_fmt(self, content=None, attributes=None, label=None):
+    def default_fmt(self, content=None, attributes=None, cache=None):
         # The next reference is designed for html only
         return ""
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, label=None,
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, cache=None,
                 level=1):
         # The next reference is designed for html only
         return ""
 
-    def html_fmt(self, content=None, attributes=None, label=None, level=1):
+    def html_fmt(self, content=None, attributes=None, cache=None, level=1):
         context = self.context
         
         # Only works if the document that owns this tag will be rendered to
