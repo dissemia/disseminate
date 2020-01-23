@@ -233,6 +233,12 @@ class Converter(object):
         ------
         ConverterError
             Raised if the command failed and raise_error is True.
+
+        Returns
+        -------
+        returncode, output, error : int, str, str
+            The returncode, the command output and the command error from
+            running the command.
         """
         if __debug__:
             msg = "Running conversion: {}".format(" ".join(map(str, args)))
@@ -254,6 +260,8 @@ class Converter(object):
 
         # Check that it was succesfully converted
         out, err = p.communicate()
+        out = out.decode('latin1')
+        err = err.decode('latin1')
         returncode = p.returncode
 
         if returncode != 0:
@@ -264,13 +272,15 @@ class Converter(object):
             if raise_error:
                 e = ConverterError(error_msg)
                 e.cmd = " ".join(args)
-                e.returncode = None
-                e.shell_out = out.decode('utf-8')
-                e.shell_err = err.decode('utf-8')
+                e.returncode = returncode
+                e.shell_out = out
+                e.shell_err = err
                 raise e
             else:
                 logging.warning(error_msg)
-                logging.debug(err.decode('utf-8'))
+                logging.debug(err)
+
+        return returncode, out, err
 
     @classmethod
     def get_converter(cls, src_filepath, target_basefilepath, targets,

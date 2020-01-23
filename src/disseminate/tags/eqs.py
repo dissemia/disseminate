@@ -3,8 +3,10 @@ Tags to render equations
 """
 from copy import copy
 
+from .tag import TagFactory
 from .img import RenderedImg
 from .exceptions import TagError
+from .receivers import process_content, process_macros
 from .utils import content_to_str
 from ..formats import tex_cmd, tex_env
 from ..attributes import Attributes
@@ -64,7 +66,8 @@ class Eq(RenderedImg):
         self.attributes = attributes
 
         # Replace macros and process content
-        self.process(names='process_content')
+        process_macros(tag=self)
+        process_content(tag=self, tag_factory=TagFactory)
 
         # Take the content, and convert it to latex. Save the tex_content
         # separately because the contents of this tag will be converted to
@@ -101,24 +104,28 @@ class Eq(RenderedImg):
 
         return renderer.render(context=context_cp, target='.tex', **kwargs)
 
-    def html_fmt(self, content=None, level=1):
-        if self.block_equation:
-            self.attributes['class'] = 'eq blockeq'
-        else:
-            self.attributes['class'] = 'eq'
-        return super(Eq, self).html_fmt(content=content, level=level)
+    def html_fmt(self, content=None, attributes=None, level=1):
+        attrs = attributes if attributes is not None else self.attributes.copy()
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+        if self.block_equation:
+            attrs['class'] = 'eq blockeq'
+        else:
+            attrs['class'] = 'eq'
+        return super(Eq, self).html_fmt(content=content, attributes=attrs,
+                                        level=level)
+
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         if content is None:
             content = (self.tex_content if self.tex_content is not None
                        else self.content)
 
         # Add bold and color if specified
-        if 'color' in self.attributes:
+        attributes = attributes if attributes is not None else self.attributes
+        if 'color' in attributes:
             content = tex_cmd(cmd='textcolor',
-                              attributes=self.attributes['color'],
+                              attributes=attributes['color'],
                               formatted_content=content)
-        if 'bold' in self.attributes or self.name == 'termb':
+        if 'bold' in attributes or self.name == 'termb':
             content = tex_cmd(cmd='boldsymbol', formatted_content=content)
 
         # Remove extra space around the content
@@ -128,8 +135,8 @@ class Eq(RenderedImg):
             return content
         else:
             if self.block_equation or self.paragraph_role == 'block':
-                return tex_env(env=self.tex_env, attributes=self.attributes,
+                return tex_env(env=self.tex_env, attributes=attributes,
                                formatted_content=content, min_newlines=True)
             else:
-                return tex_cmd(cmd='ensuremath', attributes=self.attributes,
+                return tex_cmd(cmd='ensuremath', attributes=attributes,
                                formatted_content=content)

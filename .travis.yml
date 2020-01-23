@@ -20,7 +20,7 @@ addons:
     - librsvg2-bin
     - asymptote
 install:
-  - pip install regex jinja2 lxml python-slugify click pdfCropMargins
+  - pip install regex jinja2 lxml python-slugify click pdfCropMargins sanic pytest-sanic
   - make install
 script:
   - pytest

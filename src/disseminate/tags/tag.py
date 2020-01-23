@@ -2,12 +2,12 @@
 Core classes and functions for tags.
 """
 from .exceptions import TagError
-from .processors import ProcessTag
+from .signals import tag_created
 from ..formats import tex_env, tex_cmd, html_tag
 from ..attributes import Attributes
 from .utils import format_content, replace_context, copy_tag
-from ..utils.string import titlelize, convert_camelcase
-from ..utils.classes import weakattr
+from ..utils.string import titlelize
+from ..utils.classes import weakattr, all_subclasses
 
 
 class Tag(object):
@@ -78,9 +78,9 @@ class Tag(object):
 
     active = False
 
+    process_macros = True
     process_content = True
     process_typography = True
-
     include_paragraphs = True
     paragraph_role = None
 
@@ -90,8 +90,8 @@ class Tag(object):
         self.content = content
         self.context = context
 
-        # Process the content
-        self.process()
+        # Emit the tag creation signal
+        tag_created.emit(tag=self, tag_base_cls=Tag, tag_factory=TagFactory)
 
     def __repr__(self):
         return "{type}{{{content}}}".format(type=self.name,
@@ -137,55 +137,22 @@ class Tag(object):
     def mtime(self):
         """The last modification time of this tag's (and subtag) document and
         for the documents of all labels referenced by this tag."""
-        # Get the latest mtime for this label and all sub-labels
-        flattened_list = self.flatten(filter_tags=True)
+        # Get mtimes for sub-tags
+        if isinstance(self.content, list):
+            mtimes = [tag.mtime for tag in self.content
+                      if hasattr(tag, 'mtime')]
+        elif isinstance(self.content, Tag):
+            mtimes = [self.content.mtime]
+        else:
+            mtimes = list()
 
-        mtimes = [tag.context.get('mtime', None)
-                  for tag in flattened_list if hasattr(tag, 'context')]
-        mtimes += [self.context.get('mtime', None)]
+        mtimes.append(self.context.get('mtime', None))
 
         # Remove None values from mtimes
         mtimes = list(filter(bool, mtimes))
 
         # The mtime is the latest mtime of all the tags and labels
         return max(mtimes)
-
-    def process(self, names=None):
-        """Process the tag's contents."""
-        # Retrieve the ProcessTag subclasses and process the tag
-        processors = self.processors(names)
-        for processor in processors:
-            processor(tag=self)
-
-    def processors(self, names=None):
-        """Retrieve a (filtered) list of tag processors.
-
-        Parameters
-        ----------
-        names : Optional[Union[str, List[str], Tuple[str]]
-            If specified, only return tag processors matching these name(s)
-        """
-        # wrap names into a list, if needed
-        names = [names] if isinstance(names, str) else None
-
-        # Get all of the tag processors, convert their class names to lower
-        # case with underscores (ex: ProcessContent bcomes 'process_content'
-        if names is not None:
-            # Filter based on the specified names
-            return [processor
-                    for processor in ProcessTag.processors(tag_base_cls=Tag)
-                    if convert_camelcase(processor.__class__.__name__) in names]
-        else:
-            # Filter based on the class's attributes. By default, return
-            # all processors unless an class attribute is set to False for the
-            # processor. ex: if the class or instance has a 'process_context'
-            # attribute set to False, then the ProcessContent processor will
-            # not be included.
-            return [processor
-                    for processor in ProcessTag.processors(tag_base_cls=Tag)
-                    if getattr(self,
-                               convert_camelcase(processor.__class__.__name__),
-                               True)]
 
     def copy(self, new_context=None):
         """Create a copy of this tag and all sub-tabs.
@@ -258,7 +225,7 @@ class Tag(object):
     def txt(self):
         return self.default_fmt()
 
-    def default_fmt(self, content=None):
+    def default_fmt(self, content=None, attributes=None):
         """Convert the tag to a text string.
 
         Strips the tag information and simply return the content of the tag.
@@ -269,6 +236,9 @@ class Tag(object):
             <.Tag>`]]]
             Specify an alternative content from the tag's content. It can
             either be a string, a tag or a list of strings, tags and lists.
+        attributes : Optional[Union[str, :obj:`Attributes <.Attributes>`]]
+            Specify an alternative attributes dict from the tag's attributes.
+            It can either be a string or an attributes dict.
 
         Returns
         -------
@@ -283,7 +253,7 @@ class Tag(object):
     def tex(self):
         return self.tex_fmt()
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         """Format the tag in LaTeX format.
 
         Parameters
@@ -292,6 +262,9 @@ class Tag(object):
             <.Tag>`]]]
             Specify an alternative content from the tag's content. It can
             either be a string, a tag or a list of strings, tags and lists.
+        attributes : Optional[Union[str, :obj:`Attributes <.Attributes>`]]
+            Specify an alternative attributes dict from the tag's attributes.
+            It can either be a string or an attributes dict.
         mathmode : Optional[bool]
             If True, the tag will be rendered in math mode. Otherwise (default)
             latex text mode is assumed.
@@ -303,18 +276,20 @@ class Tag(object):
         tex_string : str
             The formatted tex string.
         """
-        content = content if content is not None else self.content
-
         # Collect the content elements
+        content = content if content is not None else self.content
         content = format_content(content=content, format_func='tex_fmt',
                                  level=level + 1, mathmode=mathmode)
         content = ''.join(content) if isinstance(content, list) else content
 
+        # Set the attributes
+        attributes = self.attributes if attributes is None else attributes
+
         if self.tex_cmd:
-            return tex_cmd(cmd=self.tex_cmd, attributes=self.attributes,
+            return tex_cmd(cmd=self.tex_cmd, attributes=attributes,
                            formatted_content=content)
         elif self.tex_env:
-            return tex_env(env=self.tex_env, attributes=self.attributes,
+            return tex_env(env=self.tex_env, attributes=attributes,
                            formatted_content=content)
         else:
             return content
@@ -323,7 +298,7 @@ class Tag(object):
     def html(self):
         return self.html_fmt()
 
-    def html_fmt(self, content=None, level=1):
+    def html_fmt(self, content=None, attributes=None, level=1):
         """Convert the tag to an html string or html element.
 
         Parameters
@@ -332,6 +307,9 @@ class Tag(object):
             <.Tag>`]]]
             Specify an alternative content from the tag's content. It can
             either be a string, a tag or a list of strings, tags and lists.
+        attributes : Optional[Union[str, :obj:`Attributes <.Attributes>`]]
+            Specify an alternative attributes dict from the tag's attributes.
+            It can either be a string or an attributes dict.
         level : Optional[int]
             The level of the tag.
 
@@ -343,12 +321,100 @@ class Tag(object):
         name = (self.html_name if self.html_name is not None else
                 self.name.lower())
 
-        content = content if content is not None else self.content
-
         # Collect the content elements
+        content = content if content is not None else self.content
         content = format_content(content=content, format_func='html_fmt',
                                  level=level + 1)
 
+        # Set the attributes
+        attributes = self.attributes if attributes is None else attributes
+
         # Format the html tag
-        return html_tag(name=name, level=level, attributes=self.attributes,
+        return html_tag(name=name, level=level, attributes=attributes,
                         formatted_content=content)
+
+
+class TagFactory(object):
+    """Generates the appropriate tag for a given tag type.
+
+    The tag factory instantiates tags based on loaded modules and initialization
+    parameters.
+
+    Parameters
+    ----------
+    tag_base_cls : :class:`Tag <disseminate.tags.tag.Tag>`
+        The base class for Tag objects.
+    """
+
+    _tag_classes = None
+
+    @classmethod
+    def tag(cls, tag_name, tag_content, tag_attributes, context):
+        """Return the approriate tag, given a tag_name and tag_content.
+
+        A tag subclass, rather than the Tag base class, will be returned if
+
+        - A tag subclass with the tag_name (or with an alias) is available.
+        - The tag subclass has an 'active' attribute that is True
+        - The tag's name isn't listed in the 'inactive_tags' set in the context.
+
+        Parameters
+        ----------
+        tag_name : str
+            The name of the tag. ex: 'bold', 'b'
+        tag_content : Union[str, list]
+            The content of the tag. ex: 'this is bold'
+        tag_attributes : str
+            The attributes of a tag. ex: 'width=32pt'
+        context : :obj:`.document.DocumentContext`
+            The document's context.
+
+        Returns
+        -------
+        tag : :obj:`Tag <disseminate.tags.Tag>`
+            An instance of a Tag subclass.
+        """
+        tag_cls = cls.tag_class(tag_name=tag_name, context=context)
+
+        # Create the tag
+        tag = tag_cls(name=tag_name, content=tag_content,
+                      attributes=tag_attributes, context=context)
+        return tag
+
+    @classmethod
+    def tag_class(cls, tag_name, context):
+        """Retrieve the tag class for the given tag_name"""
+        tag_classes = cls.tag_classes
+        tag_name_lower = tag_name.lower()
+        tag_cls = tag_classes().get(tag_name_lower, None)
+
+        if (tag_cls is not None and
+            getattr(tag_cls, 'active', False) and
+           tag_cls.__name__.lower() not in context.get('inactive_tags', ())):
+            # First, see if the tag_name matches one of the tag subclasses (or
+            # tag aliases) in disseminate
+            return tag_cls
+        else:
+            # If all else fails, just make a generic Tag.
+            return Tag
+
+    @classmethod
+    def tag_classes(cls):
+        """A dict of all the active Tag subclasses."""
+        if cls._tag_classes is None:
+            tag_classes = dict()
+
+            for scls in all_subclasses(Tag):
+                # Collect the name and aliases (alternative names) for the tag
+                aliases = (list(scls.aliases) if scls.aliases is not None else
+                           list())
+                names = [scls.__name__.lower(), ] + aliases
+
+                for name in names:
+                    # duplicate or overwritten tag names are not allowed
+                    assert name not in tag_classes
+                    tag_classes[name] = scls
+
+            cls._tag_classes = tag_classes
+
+        return cls._tag_classes

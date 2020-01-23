@@ -6,8 +6,7 @@ import pytest
 from disseminate.tags import Tag
 from disseminate.formats import TexFormatError
 from disseminate.tags.eqs import Eq
-from disseminate.document.processors.process_context_headers import \
-    ProcessContextHeaders
+from disseminate.document.receivers import process_headers
 from disseminate import SourcePath
 
 
@@ -18,8 +17,7 @@ def context_eq(doc):
     context = doc.context
 
     # Setup the context processor
-    processor = ProcessContextHeaders()
-    processor(context)  # add the 'equation_renderer' entry
+    process_headers(context)  # add the 'equation_renderer' entry
 
     return context
 
@@ -57,6 +55,15 @@ def test_inline_equation(context_eq):
     eq7 = Eq(name='eq', content=['this is my ', eq1], attributes='bold',
              context=context_eq)
     assert eq7.tex == "\\ensuremath{\\boldsymbol{this is my y=x}}"
+
+
+def test_equation_typography(context_eq):
+    """Test the tex rendering of equations with text typography (i.e. it
+    shouldn't be replaced)."""
+
+    # Example 1 - simple equation
+    eq1 = Eq(name='eq', content='y---x', attributes='', context=context_eq)
+    assert eq1.tex == "\\ensuremath{y---x}"
 
 
 def test_block_equation(context_eq):
@@ -127,13 +134,13 @@ def test_simple_inline_equation_html(context_eq):
     # Check the paths. These are stored by the parent Img tag in the
     # 'src_filepath' attribute
     dep_manager = context_eq['dependency_manager']
-    assert eq.img_filepath == SourcePath(project_root=dep_manager.cache_path,
-                                         subpath='media/test_963ee5ea93.tex')
+    assert eq.filepath == SourcePath(project_root=dep_manager.cache_path,
+                                     subpath='media/test_963ee5ea93.tex')
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert (eq.html ==
-            '<img src="/html/media/test_963ee5ea93_crop.svg" class="eq"/>\n')
+            '<img src="/html/media/test_963ee5ea93_crop.svg" class="eq">\n')
 
     # 2. Test tag with disseminate formatting
     eq = Eq(name='eq', content='y = @termb{x}', attributes='',
@@ -141,18 +148,18 @@ def test_simple_inline_equation_html(context_eq):
 
     # Check the paths. These are stored by the parent Img tag in the
     # 'src_filepath' attribute
-    assert eq.img_filepath == SourcePath(project_root=dep_manager.cache_path,
-                                         subpath='media/test_44f6509475.tex')
+    assert eq.filepath == SourcePath(project_root=dep_manager.cache_path,
+                                     subpath='media/test_44f6509475.tex')
 
     # Make sure the @termb has been converted
-    tex_file = eq.img_filepath.read_text()
+    tex_file = eq.filepath.read_text()
     assert '@termb' not in tex_file
     assert '\\ensuremath{y = \\boldsymbol{x}}' in tex_file
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert (eq.html ==
-            '<img src="/html/media/test_44f6509475_crop.svg" class="eq"/>\n')
+            '<img src="/html/media/test_44f6509475_crop.svg" class="eq">\n')
 
     # 3. Test tag with extra attributes
     eq = Eq(name='eq', content='y = @eq[env=alignat* 1]{x}', attributes='',
@@ -160,18 +167,18 @@ def test_simple_inline_equation_html(context_eq):
 
     # Check the paths. These are stored by the parent Img tag in the
     # 'src_filepath' attribute
-    assert eq.img_filepath == SourcePath(project_root=dep_manager.cache_path,
-                                         subpath='media/test_963ee5ea93.tex')
+    assert eq.filepath == SourcePath(project_root=dep_manager.cache_path,
+                                     subpath='media/test_963ee5ea93.tex')
 
     # Make sure the tag has been converted
-    tex_file = eq.img_filepath.read_text()
+    tex_file = eq.filepath.read_text()
     assert '@termb' not in tex_file
     assert '\\ensuremath{y = x}' in tex_file
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert (eq.html ==
-            '<img src="/html/media/test_963ee5ea93_crop.svg" class="eq"/>\n')
+            '<img src="/html/media/test_963ee5ea93_crop.svg" class="eq">\n')
 
 
 def test_block_equation_html(context_eq):
@@ -202,7 +209,7 @@ def test_block_equation_html(context_eq):
     assert eq.tex == key
 
     # Check the image filepath and that the contents are in the file
-    img_filepath = eq.img_filepath
+    img_filepath = eq.filepath
     assert img_filepath.is_file()
     assert key in img_filepath.read_text()
 
@@ -230,7 +237,7 @@ def test_block_equation_html(context_eq):
     assert eq.tex == key
 
     # Check the image filepath and that the contents are in the file
-    img_filepath = eq.img_filepath
+    img_filepath = eq.filepath
     assert img_filepath.is_file()
     assert key in img_filepath.read_text()
 
@@ -317,8 +324,8 @@ def test_block_equation_multiple_targets(context_eq):
 
     # Check the html target
     eq = p.content[1]
-    assert eq.img_filepath.suffix == '.tex'
-    assert key in eq.img_filepath.read_text()
+    assert eq.filepath.suffix == '.tex'
+    assert key in eq.filepath.read_text()
 
     # 2. Test a block equation with a custom math environment
     test = """
@@ -339,12 +346,12 @@ def test_block_equation_multiple_targets(context_eq):
 
     # Check the html target
     eq = p.content[1]
-    assert eq.img_filepath.suffix == '.tex'
-    assert key in eq.img_filepath.read_text()
+    assert eq.filepath.suffix == '.tex'
+    assert key in eq.filepath.read_text()
 
     assert p.html == ('<p>\n'
                       '    <img src="/html/media/test_ab83daace9_crop.svg" '
-                      'class="eq blockeq"/>\n'
+                      'class="eq blockeq">\n'
                       '    </p>\n')
 
     # Check the tex target

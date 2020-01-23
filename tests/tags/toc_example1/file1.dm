@@ -1,5 +1,5 @@
 ---
-targets: html, tex
+targets: html, tex, pdf
 include:
   sub/file21.dm
   sub/file22.dm

@@ -1,5 +1,4 @@
 <!doctype html>
-
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -17,19 +16,26 @@
   <meta name="template" content="{{ template }}">
 {%- endif %}
 {%- block css %}
+  <link rel="stylesheet" href="/media/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <link rel="stylesheet" href="/media/css/base.css">
   <link rel="stylesheet" href="/media/css/default.css">
+  <link rel="stylesheet" href="/media/css/pygments.css">
 {% endblock %}
+{%- block extra_css %}
+{%- endblock %}
 </head>
 <body>
-  {% include "default/menu.html" %}
-  <article>
-    {%- block body %}
-    {{ body.html }}
-    {%- endblock %}
-  </article>
-  <footer>
-    {%- block footer %}
-    {%- endblock %}
-  </footer>
+  <div class="container">
+    {% include "default/menu.html" %}
+    <article>
+      {%- block body %}
+      {{ body.html }}
+      {%- endblock %}
+    </article>
+    <footer>
+      {%- block footer %}
+      {%- endblock %}
+    </footer>
+  </div>
 </body>
 </html>

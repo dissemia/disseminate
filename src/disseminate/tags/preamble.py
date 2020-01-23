@@ -2,6 +2,7 @@
 Tags for document preambles.
 """
 from .tag import Tag
+from .headings import Title
 from ..formats import html_tag
 from ..utils.string import str_to_list
 
@@ -52,11 +53,11 @@ class Authors(Tag):
             else:
                 return ', '.join(others) + ', ' + ' and '.join(last_two)
 
-    def html_fmt(self, level=1, content=None):
+    def html_fmt(self, content=None, attributes=None, level=1):
         return html_tag('div', attributes='class=authors',
                         formatted_content=self.author_string(), level=level)
 
-    def tex_fmt(self, level=1, mathmode=False, content=None):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         return self.author_string()
 
 
@@ -69,23 +70,18 @@ class Titlepage(Tag):
     def __init__(self, name, content, attributes, context):
         super(Titlepage, self).__init__(name, content, attributes, context)
 
+        # Setup the title tag
+        self.title_tag = Title(name='title', content='', attributes='',
+                               context=context)
+
         # Setup the author tag
         self.authors_tag = Authors(name='authors', content='',
                                    attributes=tuple(), context=context)
 
     @property
     def title(self):
-        """The title of the document"""
-        title = ''
-
-        if 'document' in self.context:
-            doc = self.context['document']
-            if hasattr(doc, 'title'):
-                title = doc.title
-        elif 'title' in self.context:
-            title = self.context['title']
-
-        return title
+        """The title of the project"""
+        return self.context.get('title', '')
 
     @property
     def authors(self):
@@ -97,12 +93,11 @@ class Titlepage(Tag):
         if 'author' in self.context:
             return self.context['author']
 
-    def html_fmt(self, content=None, level=1):
-        title_tag = html_tag('h1', attributes='class=title',
-                             formatted_content=self.title, level=level + 1)
+    def html_fmt(self, content=None, attributes=None, level=1):
+        title_tag = self.title_tag.html_fmt(level=level + 1)
         author_tag = self.authors_tag.html_fmt(content=content, level=level + 1)
         return html_tag('div', attributes='class=title-page',
                         formatted_content=[title_tag, author_tag], level=level)
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         return "\n\\maketitle\n\n"

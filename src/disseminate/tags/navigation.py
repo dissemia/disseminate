@@ -1,76 +1,79 @@
 """
 Navigation tags
 """
+import weakref
+from os.path import relpath
+from itertools import groupby
+
 from .tag import Tag
 from .ref import Ref
+from ..signals import signal
+from ..formats import html_tag
+
+document_tree_updated = signal('document_tree_updated')
 
 
-def relative_label(context, relative_position, kinds='heading',
-                   target=None):
-    """Find a label for a document relative to the document specified by the
-    given context.
+@document_tree_updated.connect_via(order=10000)
+def set_navigation_labels(root_document):
+    """Set the navigation labels in the context of all documents in a document
+    tree."""
+    root_context = root_document.context
+    assert root_context.is_valid('label_manager')
 
-    Parameters
-    ----------
-    context : :obj:`.DocumentContext`
-        The document context that owns this tag.
-    relative_position : int
-        The relative position of the document label to find.
-        ex: -1 is the previous document
-            0 is the current document
-            1 is the next document
-    kinds : Optional[Tuple[str], str]
-        The kind(s) of label to retrieve. The first label of this kind will be
-        retrieved.
-    target : Optional[str]
-        If specified, only documents with the given target are included in
-        the document list.
+    # Get doc_ids by target
+    doc_ids_by_target = dict()
+    documents = root_document.documents_list(only_subdocuments=False,
+                                             recursive=True)
+    for document in documents:
+        targets = document.targets
+        doc_id = document.doc_id
 
-    Returns
-    -------
-    document_label : Union[None, :obj:`.label_manager.types.Label`]
-        The relative document label, if found, or None, if the label could not
-        be found.
-    """
-    assert context.is_valid('doc_id', 'label_manager')
+        for target in targets:
+            l = doc_ids_by_target.setdefault(target, [])
+            l.append(doc_id)
 
-    # Setup and format the parameters
-    target = (target if target is None or target.startswith('.') else
-              '.' + target)
+    # Get all of the document labels
+    label_manager = root_context.get('label_manager')
+    labels = label_manager.get_labels(kinds='heading')
+    labels_by_doc_id = {doc_id: next(group) for doc_id, group in
+                        groupby(labels, lambda l: l.doc_id)}
 
-    # Get a dict of the document ids. This dict should be ordered.
-    root_document = context.root_document
-    docs_by_id = (root_document.documents_by_id()
-                  if hasattr(root_document, 'documents_by_id') else dict())
+    # Set the prev_labels and next_labels entries in the context of each
+    # document
+    for target in targets:
+        if target not in doc_ids_by_target:
+            continue
+        doc_ids = doc_ids_by_target[target]
 
-    # Filter by available target, if available, and order the doc_ids
-    if target is not None:
-        doc_ids = [doc_id for doc_id, doc in docs_by_id.items()
-                   if target in doc.target_list]
-    else:
-        doc_ids = list(docs_by_id.keys())
+        for document in documents:
+            doc_id = document.doc_id
 
-    # Find the doc_id for the current document
-    current_doc_id = context['doc_id']
-    current_doc_index = [i for i, doc_id in enumerate(doc_ids)
-                         if doc_id == current_doc_id]
-    current_doc_index = (current_doc_index[0] if len(current_doc_index) > 0
-                         else None)
+            # Find this document's doc_id in the doc_ids_by_target
+            try:
+                position = doc_ids.index(doc_id)
+            except ValueError:
+                position = None
 
-    # Find the doc_id for the other, relative document
-    other_doc_index = (current_doc_index + relative_position
-                       if current_doc_index is not None else None)
-    other_doc_id = (doc_ids[other_doc_index]
-                    if other_doc_index is not None and
-                    0 <= other_doc_index < len(doc_ids) else None)
+            # See if the prev, next, curr links are avalaiable
+            for name, rel in (('prev', - 1), ('curr', 0), ('next', 1)):
 
-    # Get the request label from the label_manager
-    label_manager = context.get('label_manager')
-    labels = (label_manager.get_labels(doc_id=other_doc_id, kinds=kinds)
-              if other_doc_id is not None else [])
+                # Don't use back-tracking indexes
+                rel_position = position + rel if position is not None else None
+                rel_position = (None if rel_position is None or
+                                rel_position < 0 else rel_position)
+                key = "_".join((name, target.strip('.')))
+                try:
+                    other_doc_id = doc_ids[rel_position]
+                    other_label = labels_by_doc_id[other_doc_id]
+                    document.context[key] = weakref.ref(other_label)
+                except (IndexError, KeyError, TypeError):
+                    # If the other document could not be found, make sure this
+                    # entry isn't in the context. This can happen if the context
+                    # contains stale information from a previous invocation of
+                    # this function.
 
-    # Return the top (first) label
-    return labels[0] if len(labels) > 0 else None
+                    if key in document.context:
+                        del document.context[key]
 
 
 class Next(Ref):
@@ -91,26 +94,41 @@ class Next(Ref):
 
     def __init__(self, name, content, attributes, context):
         # Bypass the Ref initiator, as it sets the label_id
+        # Do not use the tag contents--this tag cannot do anything with it.
+        content = ''
         Tag.__init__(self, name, content, attributes, context)
 
-    def default_fmt(self, content=None):
+    def default_fmt(self, content=None, attributes=None, label=None):
         # The next reference is designed for html only
         return ""
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
-        # The next reference is designed for html only
-        return ""
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, cache=None,
+                level=1):
+        context = self.context
+        cache = dict() if cache is None else cache
 
-    def html_fmt(self, content=None, level=1):
-        kind = self.attributes.get('kind', default='heading')
+        if 'label' not in cache and 'next_tex' in context:
+            label = context['next_tex']
+            cache['label'] = label()  # Dereference. See above.
 
-        # Get the label_id for the next document
-        next_label = relative_label(context=self.context, relative_position=1,
-                                    kinds=kind, target='.html')
+        if 'label' in cache:
+            return super(Next, self).html_fmt(content=content, cache=cache,
+                                              level=level)
+        else:
+            return ""
 
-        if next_label is not None:
-            self.label_id = next_label.id
-            return super(Next, self).html_fmt(content=content, level=level)
+    def html_fmt(self, content=None, attributes=None, label=None, cache=None,
+                 level=1):
+        context = self.context
+        cache = dict() if cache is None else cache
+
+        if 'label' not in cache and 'next_html' in context:
+            label = context['next_html']
+            cache['label'] = label()  # Dereference. See above.
+
+        if 'label' in cache:
+            return super(Next, self).html_fmt(content=content, cache=cache,
+                                              level=level)
         else:
             return ""
 
@@ -133,25 +151,95 @@ class Prev(Ref):
 
     def __init__(self, name, content, attributes, context):
         # Bypass the Ref initiator, as it sets the label_id
+        # Do not use the tag contents--this tag cannot do anything with it.
+        content = ''
         Tag.__init__(self, name, content, attributes, context)
 
-    def default_fmt(self, content=None):
+    def default_fmt(self, content=None, attributes=None, label=None):
         # The next reference is designed for html only
         return ""
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
-        # The next reference is designed for html only
-        return ""
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, cache=None,
+                level=1):
+        context = self.context
+        cache = dict() if cache is None else cache
 
-    def html_fmt(self, content=None, level=1):
-        kind = self.attributes.get('kind', default='heading')
+        if 'label' not in cache and 'prev_tex' in context:
+            label = context['prev_tex']
+            cache['label'] = label()  # Dereference. See above.
 
-        # Get the label_id for the next document
-        prev_label = relative_label(context=self.context, relative_position=-1,
-                                    kinds=kind, target='.html')
-
-        if prev_label is not None:
-            self.label_id = prev_label.id
-            return super(Prev, self).html_fmt(content=content, level=level)
+        if 'label' in cache:
+            return super(Prev, self).html_fmt(content=content, cache=cache,
+                                              level=level)
         else:
             return ""
+
+    def html_fmt(self, content=None, attributes=None, label=None, cache=None,
+                 level=1):
+        context = self.context
+        cache = dict() if cache is None else cache
+
+        if 'label' not in cache and 'prev_html' in context:
+            label = context['prev_html']
+            cache['label'] = label()  # Dereference. See above.
+
+        if 'label' in cache:
+            return super(Prev, self).html_fmt(content=content, cache=cache,
+                                              level=level)
+        else:
+            return ""
+
+
+class Pdflink(Ref):
+    """Produces a link to the pdf for this document.
+
+    Notes
+    -----
+    1. As opposed to the parent Ref tag, if a label is not found, an empty
+       string is returned by the target format functions.
+    """
+
+    active = True
+
+    def __init__(self, name, content, attributes, context):
+        # Bypass the Ref initiator, as it sets the label_id
+        # Do not use the tag contents--this tag cannot do anything with it.
+        content = ''
+        Tag.__init__(self, name, content, attributes, context)
+
+    def default_fmt(self, content=None, attributes=None, cache=None):
+        # The next reference is designed for html only
+        return ""
+
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, cache=None,
+                level=1):
+        # The next reference is designed for html only
+        return ""
+
+    def html_fmt(self, content=None, attributes=None, cache=None, level=1):
+        context = self.context
+        
+        # Only works if the document that owns this tag will be rendered to
+        # a pdf.
+        if '.pdf' not in context.targets:
+            return ""
+
+        # Get the document that owns this context and reconstruct the link to
+        # the pdf.
+        document = context.document
+        pdf_target_filepath = document.target_filepath('.pdf')
+        html_target_filepath = document.target_filepath('.html')
+
+        # Get the relative path do this html document
+        relative_path = relpath(pdf_target_filepath, html_target_filepath)
+
+        attrs = self.attributes.copy() if attributes is None else attributes
+        attrs['class'] = 'ref'
+        attrs['href'] = relative_path
+
+        # wrap content in 'a' tag
+        return html_tag('a', attributes=attrs,
+                        formatted_content='pdf',
+                        level=level,
+                        pretty_print=False)  # no line breaks
+

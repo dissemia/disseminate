@@ -9,7 +9,6 @@ from ..label_manager import LabelManager
 from ..dependency_manager import DependencyManager
 from ..paths import SourcePath, TargetPath
 from ..utils.string import str_to_list
-from ..utils.list import uniq
 from .. import settings
 
 
@@ -30,6 +29,7 @@ class DocumentContext(BaseContext):
         'src_filepath': SourcePath,
         'project_root': SourcePath,
         'target_root': TargetPath,
+        'targets': set,
         'paths': list,
         'label_manager': LabelManager,
         'dependency_manager': DependencyManager,
@@ -40,6 +40,7 @@ class DocumentContext(BaseContext):
         'process_paragraphs': set,
         'label_fmts': dict,
         'label_resets': dict,
+        'inactive_tags': set,
     }
 
     #: The keys for context entries that should not be inherited
@@ -101,7 +102,16 @@ class DocumentContext(BaseContext):
         'paths'
         }
 
-    # Preload the following entries
+    # Replace the following mutable entries.
+    # When a document or template specified these entries, their values
+    # should not be appended to the parent_context values--they should be
+    # replaced with the new values.
+    replace = {
+        'targets',
+        'inactive_tags',
+    }
+
+    # Preload the following entries.
     # The ProcessContextHeaders processor first reads the context from the
     # header of the document and loads context information from additional
     # context files in the templates before loading these values in the document
@@ -146,6 +156,9 @@ class DocumentContext(BaseContext):
             self['target_root'] = document.target_root
         if self.get('root_document', None) is None:
             self['root_document'] = weakref.ref(document)
+            self['is_root_document'] = True
+        else:
+            self['is_root_document'] = False
 
         # Initialize the managers, if this is the root (document) context
         if self.get('label_manager', None) is None:
@@ -167,6 +180,7 @@ class DocumentContext(BaseContext):
     # TODO: Convert these entries to weakattr from utils.classes
     @property
     def document(self):
+        """The document that owns this context"""
         # Retrieve and de-reference the document
         doc_ref = self.get('document', None)
         return doc_ref() if isinstance(doc_ref, weakref.ref) else None
@@ -178,6 +192,7 @@ class DocumentContext(BaseContext):
 
     @property
     def root_document(self):
+        """The root document for a project"""
         # Retrieve and de-reference the document
         doc_ref = self.get('root_document', None)
         return doc_ref() if isinstance(doc_ref, weakref.ref) else None
@@ -188,9 +203,13 @@ class DocumentContext(BaseContext):
         self['root_document'] = weakref.ref(value)
 
     @property
+    def is_root_document(self):
+        return self.get('is_root_document', False)
+
+    @property
     def targets(self):
         """Retrieve a list of targets from the 'targets' or 'target'
-        entry of the document  context.
+        entry of the document.
 
         Returns
         -------
@@ -234,8 +253,7 @@ class DocumentContext(BaseContext):
 
         # Add trailing period to extensions in target_list, and make sure
         # there are no duplicates
-        target_list = [t if t.startswith('.') else '.' + t for t in target_list]
-        return uniq(target_list)
+        return {t if t.startswith('.') else '.' + t for t in target_list}
 
     @property
     def includes(self):
@@ -275,3 +293,24 @@ class DocumentContext(BaseContext):
                                subpath=subpath / path)
                     for path in includes]
         return includes
+
+    # @property
+    # def inactive_tags(self):
+    #     """Retrieve a list of inactive tags for the document
+    #
+    #     Returns
+    #     -------
+    #     inactive_tags : List[str]
+    #         A list of the inactive tags for the document.
+    #     """
+    #     # Get the inactive tags from the context.
+    #     inactive_tags = self.get('inactive_tags', '')
+    #
+    #     # Convert to a list, if needed
+    #     inactive_tags_list = (str_to_list(inactive_tags)
+    #                           if isinstance(inactive_tags, str) else
+    #                           inactive_tags)
+    #
+    #     # Remove empty entries, and return set
+    #     return {inactive_tag for inactive_tag in inactive_tags_list
+    #             if inactive_tag}

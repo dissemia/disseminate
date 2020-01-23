@@ -9,5 +9,6 @@ Label Manager
 
    label_manager
    types
-   processors
+   receivers
+   signals
    exceptions

@@ -2,6 +2,7 @@
 .DEFAULT_GOAL := help
 
 PYTHON ?= python
+PIP ?= pip
 
 test:  ## Test the package with the current python version
 	pip install 'pytest'
@@ -19,6 +20,7 @@ coverage:  ## Test the coverage of tests
 
 develop: ## Prepare the package for active development
 	$(PYTHON) setup.py develop
+	$(PIP) install disseminate[dev,test]
 
 clean:  ## Safely clean compiled package files, docs and test files
 	find . -name '*.pyc' -exec rm -f {} +

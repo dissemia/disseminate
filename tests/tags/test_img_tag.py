@@ -1,9 +1,71 @@
 """
 Test the img tag.
 """
-from disseminate.tags import Tag
+import pathlib
+
+import pytest
+
+from disseminate.tags import Tag, TagError
 from disseminate.dependency_manager import DependencyManager
 from disseminate.paths import SourcePath, TargetPath
+
+
+def test_img_paths(tmpdir, context_cls):
+    """Test the identification of image paths."""
+    project_root = SourcePath(project_root='tests/tags/img_example1')
+    target_root = TargetPath(target_root=tmpdir)
+
+    # Setup the root context
+    paths = [pathlib.Path('.').absolute(),
+             pathlib.Path('.').absolute() / project_root]
+    context = context_cls(project_root=project_root, target_root=target_root,
+                          paths=paths)
+
+    # Setup the dependency manager in the global context. This is needed
+    # to find and convert images by the img tag.
+    dep = DependencyManager(root_context=context)
+    context['dependency_manager'] = dep
+
+    # 1. Test a relative path
+    src = "@img{sample.pdf}"
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
+    assert img.filepath.match('sample.pdf')
+
+    # 2. Test a absolute path
+    src = "@img{{{}}}".format(project_root.absolute() / 'sample.pdf')
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
+    assert img.filepath.match('sample.pdf')
+
+    # 3. Test a missing file. Raises a TagError
+    src = "@img{missing.pdf}"
+    with pytest.raises(TagError):
+        root = Tag(name='root', content=src, attributes='', context=context)
+
+
+def test_img_mtime(doc):
+    """Test the correct modification time for images referenced by
+    an @img tag."""
+    # Copy an image to the temporary directory
+    img_src = """<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+</svg"""
+    src_path = doc.src_filepath.parent
+    img_filepath = src_path / 'test.svg'
+    img_filepath.write_text(img_src)
+
+    # Create an image tag
+    src = "@img{{{}}}".format(str(img_filepath))
+
+    # Generate a tag and compare the generated tex to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    img = root.content
+
+    # Check the mtimes
+    assert img.mtime == img_filepath.stat().st_mtime
+    assert root.mtime == img.mtime  # root should be at least as late as @img
+    assert root.mtime > doc.mtime  # and the root tag is later than the src file
 
 
 def test_img_attribute(tmpdir, context_cls):
@@ -12,7 +74,10 @@ def test_img_attribute(tmpdir, context_cls):
     target_root = TargetPath(target_root=tmpdir)
 
     # Setup the root context
-    context = context_cls(project_root=project_root, target_root=target_root)
+    paths = [pathlib.Path('.').absolute(),
+             pathlib.Path('.').absolute() / project_root]
+    context = context_cls(project_root=project_root, target_root=target_root,
+                          paths=paths)
 
     # Setup the dependency manager in the global context. This is needed
     # to find and convert images by the img tag.
@@ -60,17 +125,16 @@ def test_img_html(tmpdir, context_cls):
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
 
-    assert img.html == '<img src="/html/sample.svg"/>\n'
+    assert img.html == '<img src="/html/sample.svg">\n'
 
     # Now test an html-specific attribute
     # Generate the markup
-    src = "@img[width.html=100 height.tex=20]{sample.pdf}"
+    src = "@img[width.html=100% height.tex=20%]{sample.pdf}"
 
     # Generate a tag and compare the generated tex to the answer key
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
-
-    assert img.html == '<img src="/html/sample.svg" width="100"/>\n'
+    assert img.html == '<img src="/html/sample.svg" style="width: 100.0%">\n'
 
 
 # tex targets
@@ -102,7 +166,8 @@ def test_img_tex(tmpdir, context_cls):
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
 
-    assert img.tex == "\\includegraphics{sample.pdf}"
+    img_filepath = tmpdir / 'tex' / 'sample.pdf'
+    assert img.tex == "\\includegraphics{{{}}}".format(img_filepath)
 
     # Now test an tex-specific attribute
     # Generate the markup
@@ -111,5 +176,4 @@ def test_img_tex(tmpdir, context_cls):
     # Generate a tag and compare the generated tex to the answer key
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
-
-    assert img.tex == "\\includegraphics[height=20]{sample.pdf}"
+    assert img.tex == "\\includegraphics[height=20]{{{}}}".format(img_filepath)

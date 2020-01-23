@@ -6,6 +6,7 @@
   <meta name="description" content="Disseminate Project Index">
   <meta name="author" content="Disseminate">
   <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Lato" />
+  <link rel="stylesheet" href="/media/css/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="/media/css/base.css">
   <link rel="stylesheet" type="text/css" href="/media/css/tree.css">
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script> 
@@ -28,15 +29,15 @@
         </caption>
         <tr>
           <thead>
-          <th>num</th>
-          <th>source</th>
-          <th>targets</th>
-          <th>last saved</th>
+          <th class="num">num</th>
+          <th class="src">source</th>
+          <th class="tgt">targets</th>
+          <th class="date">last saved</th>
           </thead>
         </tr>
         {%- endif %}
         <tr class="level-{{ doc.level }}">
-          <td class="num">{{ doc.number }}-{{ doc.level }}</td>
+          <td class="num">{{ doc.level }}-{{ doc.number }}</td>
           <td class="src">
             <a href="/{{ doc.src_filepath }}">{{ doc.src_filepath.subpath }}</a>
           </td>
@@ -49,7 +50,8 @@
             {%- endif %}
           </td>
           <td class="date">
-            {{ doc.date.strftime('%b %d, %Y (%I:%M%p)') }}
+            {{ doc.date.strftime('%b %d, %Y') }}
+            <div class="time">{{ doc.date.strftime('(%I:%M%p)') }}</div>
           </td>
         </tr>
       {%- if doc.subdocs -%}
@@ -61,9 +63,9 @@
     {%- endfor %}
 {%- endmacro %}
 <body>
-  {% include "menu.html" %}
-  <div class="content">
-    <h1>Document Listing</h1>
+  <div class="container">
+    {% include "default/menu.html" %}
+    <h2>Document Listing</h2>
     <div class="tableset">
         {{ recursetree(docs) }}
     </div>

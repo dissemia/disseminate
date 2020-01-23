@@ -48,7 +48,7 @@ def test_documents_list():
     assert docs[0].src_filepath == src_filepath2
 
 
-def test_document_tree(tmpdir):
+def test_document_tree(tmpdir, wait):
     """Test the loading of trees and sub-documents from a document."""
 
     # Setup the project_root in a temp directory
@@ -60,20 +60,29 @@ def test_document_tree(tmpdir):
     # Populate some files
     file1 = SourcePath(project_root=project_root,
                        subpath='main.dm')
-    markup = """---
+    markup1 = """---
     include:
       sub/file2.dm
       sub/file3.dm
     targets: txt, tex
     ---
     """
-    file1.write_text(strip_leading_space(markup))
+    markup2 = """---
+    targets: pdf
+    ---
+    """
+    markup3 = """---
+    targets: pdf
+    ---
+    """
+
+    file1.write_text(strip_leading_space(markup1))
     file2 = SourcePath(project_root=project_root, subpath='sub/file2.dm')
     file3 = SourcePath(project_root=project_root, subpath='sub/file3.dm')
 
     # Write to the subdocuments
-    file2.write_text('file2')
-    file3.write_text('file3')
+    file2.write_text(markup2)
+    file3.write_text(markup3)
 
     # Create the root document
     doc = Document(file1)
@@ -86,7 +95,13 @@ def test_document_tree(tmpdir):
     assert doc.subdocuments[keys[0]].src_filepath == file2
     assert doc.subdocuments[keys[1]].src_filepath == file3
 
+    # Test the targets
+    assert doc.targets.keys() == {'.txt', '.tex'}
+    assert doc.get_renderer().targets == {'.txt', '.tex'}
+
     # Update the root document and remove a file
+    assert doc.load() is False  # no documents are not loaded yet
+    wait()  # time offset for the filesystem
     markup = """---
     include:
       sub/file2.dm
@@ -94,7 +109,8 @@ def test_document_tree(tmpdir):
     ---
     """
     file1.write_text(strip_leading_space(markup))
-    doc.load()
+    assert doc.load() is True  # documents were loaded (doc changed)
+    assert doc.load() is False  # documents don't need to be reloaded
 
     # Test the paths
     assert len(doc.subdocuments) == 1
@@ -102,6 +118,18 @@ def test_document_tree(tmpdir):
 
     keys = list(doc.subdocuments.keys())
     assert doc.subdocuments[keys[0]].src_filepath == file2
+
+    # Test the targets
+    assert doc.targets.keys() == {'.txt', '.tex'}
+    assert doc.get_renderer().targets == {'.txt', '.tex'}
+
+    # Now change file2 and reloading the root document, doc, should load
+    # some new files since it has doc2 (file2) as a subdocument
+    wait()
+    file2.write_text('test2')
+
+    assert doc.load() is True  # documents were loaded
+    assert doc.load() is False  # documents already loaded
 
     # Now test Example5. Example5 has a file in the root directory, a file in
     # the 'sub1', 'sub2' and 'sub3' directories and a file in the 'sub2/subsub2'
@@ -144,46 +172,6 @@ def test_document_tree(tmpdir):
         target_filepath = doc.target_filepath('.html')
         assert target_filepath.suffix == '.html'
         assert target_filepath.is_file()
-
-
-def test_document_tree_load_required(doctree):
-    """Test the load_required method for document trees."""
-    # Load the 3 documents from the doctree
-    doc1, doc2, doc3 = doctree.documents_list()
-
-    # 1. Take an attribute, and it should match the default context
-    for doc in (doc1, doc2, doc3):
-        assert (doc.context['inactive_tags'] ==
-                settings.default_context['inactive_tags'])
-
-    # 2. Now add a template with a context.txt
-    src_path = doc1.src_filepath.parent
-    template_filepath = src_path / 'test.html'
-    context_filepath = src_path / 'context.txt'
-
-    template_filepath.write_text("""
-    <html>
-    </html>
-    """)
-    context_filepath.write_text("""
-    inactive_tags: chapter
-    """)
-    doc1.src_filepath.write_text("""
-    ---
-    template: test
-    include:
-      test2.dm
-      test3.dm
-    ---
-    """)
-
-    # Load the root document should reload the child documents
-    doc1.load()
-
-    assert doc1.context['template'] == 'test'
-    assert doc1.context['inactive_tags'] == {'chapter'}
-    assert doc2.context['inactive_tags'] == {'chapter'}
-    assert doc3.context['inactive_tags'] == {'chapter'}
 
 
 def test_document_garbage_collection(tmpdir):
@@ -466,6 +454,8 @@ def test_render_required(tmpdir, wait):
     for doc in doc_list:
         doc.load()
 
+    # The modification time (mtime) for the body tag in the second document
+    # is now updated to the new mtime.
     assert doc_list[0].context[body_attr].mtime == mtime1
     assert doc_list[1].context[body_attr].mtime != mtime2
     assert doc_list[1].context[body_attr].mtime == src_filepath2.stat().st_mtime
@@ -478,15 +468,14 @@ def test_render_required(tmpdir, wait):
     assert doc_list[1].context[body_attr].mtime == mtime2
     assert doc_list[2].context[body_attr].mtime == mtime3
 
-    # Only the 2nd document requires a render now
+    # The doc2 requires a render now.
     for d, answer in zip(doc_list, [False, True, False]):
         target_filepath = d.targets['.html']
         assert d.render_required(target_filepath) is answer
 
-    # Render the 2nd document, and the render_required should no longer be
-    # True.
-    doc_list[1].render()
+    # Render the documents
     for d in doc_list:
+        d.render()
         target_filepath = d.targets['.html']
         assert not d.render_required(target_filepath)
 
@@ -498,22 +487,23 @@ def test_render_required(tmpdir, wait):
     @ref{ch:file3-dm-file3}
     """)
 
-    # Now the 2nd document needs to be rendered
+    # Now the 2nd document needs to be rendered.
     for d, answer in zip(doc_list, [False, True, False]):
         target_filepath = d.targets['.html']
         assert d.render_required(target_filepath) is answer
 
-    # Render the document and all three documents do not require a rendering
-    doc_list[1].render()
+    # Render the documents and the documents will not require a rendering
     for d in doc_list:
+        d.render()
         target_filepath = d.targets['.html']
         assert not d.render_required(target_filepath)
 
-    # Touch the 3rd document. Now the @ref tag in the second document has not
-    # changed, so only the 3rd document needs to be updated.
+    # Touch the 3rd document. Now the @ref tag in the second document has
+    # changed
+    wait()  # offset time for filesystem
     src_filepath3.touch()
 
-    for d, answer in zip(doc_list, [False, False, True]):
+    for d, answer in zip(doc_list, [False, True, True]):
         target_filepath = d.targets['.html']
         assert d.render_required(target_filepath) is answer
 
@@ -540,8 +530,9 @@ def test_render_required(tmpdir, wait):
     @chapter{file3}
     """)
 
-    # Documents 3 requires a render because it was just written
-    for d, answer in zip(doc_list, [False, False, True]):
+    # Doc3 requires a render because it was just written. Doc2 needs  render
+    # since it depends on doc3.
+    for d, answer in zip(doc_list, [False, True, True]):
         target_filepath = d.targets['.html']
         assert d.render_required(target_filepath) is answer
 

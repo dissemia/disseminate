@@ -1,0 +1,9 @@
+inactive_tags: marginfig
+toc: all headings expanded
+label_fmts:
+  heading: "@label.tree_number "
+  heading_part: "Part @label.part_number "
+  heading_chapter: "Chapter @label.chapter_number "
+  ref_heading: "@label.title"
+  ref_heading_part: "Part @label.part_number"
+  ref_heading_chapter: "Chapter @label.chapter_number"

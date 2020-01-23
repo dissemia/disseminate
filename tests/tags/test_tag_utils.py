@@ -1,12 +1,17 @@
 """
 Tests for the tag utilities.
 """
+import pathlib
+from os import curdir
+
 import pytest
 
 from disseminate.tags import Tag
 from disseminate.tags.text import Italics
 from disseminate.tags.utils import (repl_tags, content_to_str, replace_context,
-                                    copy_tag)
+                                    copy_tag, find_files,
+                                    format_attribute_width)
+from disseminate.utils.types import StringPositionalValue
 
 
 def test_content_to_str(context_cls):
@@ -151,3 +156,47 @@ def test_tag_copy(context_cls):
         assert id(tag1) != id(tag2)
         assert id(tag1.context) == id(context)
         assert id(tag2.context) == id(other)
+
+
+def test_find_files(doc):
+    """Test the find_files function."""
+    context = doc.context
+
+    # The source file should be found
+    filepaths = find_files('test.dm', context)
+    assert len(filepaths) == 1
+    assert filepaths[0].name == 'test.dm'
+
+    # Invalid files are not found
+    filepaths = find_files('garbage331.py', context)
+    assert len(filepaths) == 0
+
+    # Try absolute paths
+    img_path = (pathlib.Path(curdir) / 'tests' / 'tags' / 'img_example1' /
+                'sample.pdf').absolute()
+    filepaths = find_files(img_path, context)
+    assert len(filepaths) == 1
+
+
+def test_format_attribute_width():
+    """Test the format_attribute_width function."""
+    attrs = format_attribute_width('width=30%', target='.html')
+    assert attrs['style'] == "width: 30.0%"
+
+    attrs = format_attribute_width('width=30%', target='.tex')
+    assert attrs['0.3\\textwidth.tex'] == StringPositionalValue
+
+    attrs = format_attribute_width('width.html=30 class="test"', target='.html')
+    assert attrs['style'] == "width: 3000.0%"
+    assert attrs['class'] == 'test'
+
+    attrs = format_attribute_width('width.tex=30 class="test"', target='.tex')
+    assert attrs['30.0\\textwidth.tex'] == StringPositionalValue
+    assert attrs['class'] == 'test'
+
+    # Test widths in other units
+    attrs = format_attribute_width('width.html=300px', target='.html')
+    assert attrs['style'] == "width: 300px"
+
+    attrs = format_attribute_width('width.tex=2in', target='.tex')
+    assert attrs['2in'] == StringPositionalValue

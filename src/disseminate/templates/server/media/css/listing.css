@@ -1,24 +1,30 @@
+h2 {
+  text-align: center;
+  padding-bottom: 1em;
+  font-weight: 200;
+}
 
-.content li {
+.container li {
   border-bottom: 1px solid #eee;
-  padding: 0.2rem 0;
+  padding: 0.1rem 0;
 }
 
-.content ol > ol {
+.container ol > ol {
   margin-bottom: 1rem;
 }
 
-.content ol > ol > ol{
+.container ol > ol > ol{
   margin-bottom: 1rem;
 }
 
-.content ol > ol > ol > ol{
+.container ol > ol > ol > ol{
   margin-bottom: 0;
 }
 
 .listing {
-  padding-right: 30px;
+  margin: 0 auto;
   color: #808080;
+  max-width: 48rem;
 }
 
 .level-1 {

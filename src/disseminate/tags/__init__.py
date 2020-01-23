@@ -4,9 +4,8 @@ to other elements in the rendered document, like bold text, images, figures,
 equations and tables.
 """
 
-from .tag import Tag
-from .factory import TagFactory
+from .tag import Tag, TagFactory
 from .exceptions import TagError
-from . import processors
-from . import (headings, text, img, asy, notes, figs, caption, eqs, toc,
-               preamble, collection, label, ref, navigation)
+from . import signals, receivers
+from . import (headings, text, img, asy, notes, figs, caption, code, eqs, toc,
+               list, preamble, collection, label, ref, navigation)

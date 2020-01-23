@@ -30,7 +30,7 @@ def render_template(template_name_or_list, request, **context):
     # Load the environment, if needed
     global jinja2_env
     if jinja2_env is None:
-        pl = PackageLoader('disseminate', 'templates/server')
+        pl = PackageLoader('disseminate', 'templates')
         jinja2_env = Environment(loader=pl)
 
     # Add useful functions to the context

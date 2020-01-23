@@ -18,7 +18,7 @@ def test_jinjarenderer_is_available(doc, context_cls):
     # 1. Test with a document context with targets specified in the context.
     context = doc.context
     context['targets'] = ['.html', '.pdf', '.txt']
-    assert context.targets == ['.html', '.pdf', '.txt']
+    assert context.targets == {'.html', '.pdf', '.txt'}
 
     # Setup a JinjaRenderer that accesses package templates only.
     renderer = JinjaRenderer(context=context, template='default',
@@ -60,10 +60,11 @@ def test_jinjarenderer_paths(context_cls):
     # Check the template paths
     filepaths = renderer.template_filepaths()
     assert len(filepaths) == 4
-    assert filepaths[0].match('disseminate/templates/default/template.html')
-    assert filepaths[1].match('disseminate/templates/default/menu.html')
-    assert filepaths[2].match('disseminate/templates/default/template.tex')
-    assert filepaths[3].match('disseminate/templates/default/template.txt')
+    for s in ('disseminate/templates/default/template.html',
+              'disseminate/templates/default/menu.html',
+              'disseminate/templates/default/template.tex',
+              'disseminate/templates/default/template.txt'):
+        assert any(fp.match(s) for fp in filepaths)
 
     # Check the paths
     paths = renderer.paths()
@@ -79,15 +80,17 @@ def test_jinjarenderer_paths(context_cls):
     # Check the template paths
     filepaths = renderer.template_filepaths()
     assert len(filepaths) == 3
-    assert filepaths[0].match('renderers/example1/src/default/template.html')
-    assert filepaths[1].match('disseminate/templates/default/template.tex')
-    assert filepaths[2].match('disseminate/templates/default/template.txt')
+    for s in ('renderers/example1/src/default/template.html',
+              'disseminate/templates/default/template.tex',
+              'disseminate/templates/default/template.txt'):
+        assert any(fp.match(s) for fp in filepaths)
 
     # Check the paths
     paths = renderer.paths()
     assert len(paths) == 2
-    assert paths[0].match('tests/renderers/example1/src/default')
-    assert paths[1].match('disseminate/templates/default')
+    for s in ('tests/renderers/example1/src/default',
+              'disseminate/templates/default'):
+        assert any(fp.match(s) for fp in paths)
 
     # 3. Check a template with inheritance
     renderer = JinjaRenderer(context=context, template='books/tufte',
@@ -98,12 +101,13 @@ def test_jinjarenderer_paths(context_cls):
     # '.html' targets
     filepaths = renderer.template_filepaths()
     assert len(filepaths) == 6
-    assert filepaths[0].match('disseminate/templates/books/tufte/template.html')
-    assert filepaths[1].match('disseminate/templates/default/template.html')
-    assert filepaths[2].match('disseminate/templates/default/menu.html')
-    assert filepaths[3].match('disseminate/templates/default/nav.html')
-    assert filepaths[4].match('disseminate/templates/books/tufte/template.tex')
-    assert filepaths[5].match('disseminate/templates/default/template.tex')
+    for s in ('disseminate/templates/books/tufte/template.html',
+              'disseminate/templates/default/template.html',
+              'disseminate/templates/default/menu.html',
+              'disseminate/templates/default/nav.html',
+              'disseminate/templates/books/tufte/template.tex',
+              'disseminate/templates/default/template.tex'):
+        assert any(fp.match(s) for fp in filepaths)
 
 
 def test_jinjarenderer_context_filepaths(context_cls):
@@ -121,8 +125,9 @@ def test_jinjarenderer_context_filepaths(context_cls):
 
     # Check the template paths
     filepaths = renderer.context_filepaths()
-    assert len(filepaths) == 1
+    assert len(filepaths) == 2
     assert filepaths[0].match('templates/books/tufte/context.txt')
+    assert filepaths[1].match('templates/default/context.txt')
 
 
 def test_jinjarenderer_mtime(tmpdir, context_cls, wait):
@@ -134,7 +139,11 @@ def test_jinjarenderer_mtime(tmpdir, context_cls, wait):
     renderer = JinjaRenderer(context=context, template='default',
                              module_only=True, targets=['.html'])
     filename = renderer.get_template(target='.html').filename
-    assert renderer.mtime == pathlib.Path(filename).stat().st_mtime
+
+    # The renderer mtime is at least as large, or possible larger, than
+    # the template file because the default template depends on multiple
+    # template files through inheritance.
+    assert renderer.mtime >= pathlib.Path(filename).stat().st_mtime
 
     # 2. Try a custom template
     project_root = SourcePath(project_root=tmpdir)
@@ -298,14 +307,29 @@ def test_jinjarenderer_dependencies(tmpdir, context_cls):
 
     renderer.render(context=context, target='.html')
 
-    # There should be 1 dependency now in the dep_manager for the .css file
-    # referenced by the default/template.html file.
-    assert len(dep_manager.dependencies[src_filepath]) == 1
-    dep = list(dep_manager.dependencies[src_filepath])[0]
+    # There should be 4 dependencies now in the dep_manager: bootstrap.min.css,
+    # base.css, default.css and pygments.css. These are referenced by the
+    # module's default/template.html file.
+    assert len(dep_manager.dependencies[src_filepath]) == 4
+    deps = sorted(dep_manager.dependencies[src_filepath],
+                  key=lambda d: d.dest_filepath)
 
-    assert dep.dep_filepath.match('templates/default/media/css/default.css')
-    assert dep.dest_filepath.match('html/media/css/default.css')
-    assert dep.get_url() == '/html/media/css/default.css'
+    assert deps[0].dep_filepath.match('templates/default/media/css/base.css')
+    assert deps[0].dest_filepath.match('html/media/css/base.css')
+    assert deps[0].get_url() == '/html/media/css/base.css'
+
+    assert deps[1].dep_filepath.match('templates/default/media/css/'
+                                      'bootstrap.min.css')
+    assert deps[1].dest_filepath.match('html/media/css/bootstrap.min.css')
+    assert deps[1].get_url() == '/html/media/css/bootstrap.min.css'
+
+    assert deps[2].dep_filepath.match('templates/default/media/css/default.css')
+    assert deps[2].dest_filepath.match('html/media/css/default.css')
+    assert deps[2].get_url() == '/html/media/css/default.css'
+
+    assert deps[3].dep_filepath.match('templates/default/media/css/pygments.css')
+    assert deps[3].dest_filepath.match('html/media/css/pygments.css')
+    assert deps[3].get_url() == '/html/media/css/pygments.css'
 
     # 2. books/tufte template. The books/tufte template has a template.html that
     #    references tufte.css, which in turn references default.css
@@ -314,17 +338,46 @@ def test_jinjarenderer_dependencies(tmpdir, context_cls):
                              targets=['.html', '.tex'])
     renderer.render(context=context, target='.html')
 
-    # There should be 2 dependencies now in the dep_manager for the .css file
+    # There should be 4 dependencies now in the dep_manager for the .css file
     # referenced by the default/template.html file.
-    assert len(dep_manager.dependencies[src_filepath]) == 2
-    dep1, dep2 = sorted(dep_manager.dependencies[src_filepath],
-                        key=lambda d: d.dest_filepath)
+    assert len(dep_manager.dependencies[src_filepath]) == 4
+    deps = sorted(dep_manager.dependencies[src_filepath],
+                  key=lambda d: d.dest_filepath)
 
-    # dep1 points to default.css
-    assert dep1.dep_filepath.match('templates/default/media/css/default.css')
-    assert dep1.dest_filepath.match('html/media/css/default.css')
+    # deps[0] points to base.css
+    assert deps[0].dep_filepath.match('templates/default/media/css/base.css')
+    assert deps[0].dest_filepath.match('html/media/css/base.css')
 
-    # dep2 points to tufte.css
-    assert dep2.dep_filepath.match('templates/books/tufte/media/css/'
-                                   'tufte.css')
-    assert dep2.dest_filepath.match('html/media/css/tufte.css')
+    # deps[1] points to bootstrap.min.css
+    assert deps[1].dep_filepath.match('templates/default/media/css/'
+                                      'bootstrap.min.css')
+    assert deps[1].dest_filepath.match('html/media/css/bootstrap.min.css')
+
+    # dep[2] points to tufte.css
+    assert deps[2].dep_filepath.match('templates/default/media/css/'
+                                      'default.css')
+    assert deps[2].dest_filepath.match('html/media/css/default.css')
+
+    # dep[3] points to pygments.css
+    assert deps[3].dep_filepath.match('templates/default/media/css/'
+                                      'pygments.css')
+    assert deps[3].dest_filepath.match('html/media/css/pygments.css')
+
+
+def test_jinjarenderer_other_targets(doc):
+    """Test the JinjaRenderer shows other targets are available for a given
+    template."""
+    # By default, doc has 'html' as the target
+    assert doc.context.targets == {'.html'}
+
+    # doc should have 'default/template' as its default template.
+    # Check that the renderer is available for other targets
+    renderer = doc.context['renderers']['template']
+    assert renderer.template == 'default/template'
+    assert renderer.is_available('.html')
+
+    # The other targets should be available too, as long as they're in the
+    # doc.context
+    assert not renderer.is_available('.tex')
+    doc.context['targets'] = ['.html', '.tex']
+    assert renderer.is_available('.tex')

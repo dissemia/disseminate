@@ -8,8 +8,7 @@ import logging
 import pathlib
 
 from .document_context import DocumentContext
-from .processors import ProcessContext
-from . import exceptions
+from . import exceptions, signals
 from ..convert import convert
 from ..utils.file import mkdir_p
 from ..paths import SourcePath, TargetPath
@@ -30,8 +29,11 @@ class Document(object):
         will be created. (ex: 'html' 'tex')
         By default, if not specified, the target_root will be one directory
         above the project_root.
-    context : Optional[:obj:`DocumentContext <.DocumentContext>`]
-        The context of the document.
+    parent_context : Optional[:obj:`DocumentContext <.DocumentContext>`]
+        The context of the parent document or default context.
+    level : Optional[int]
+            The level of document loaded. Sub-documents are loaded at a higher
+            level (>1) than the root document.
 
     Attributes
     ----------
@@ -52,16 +54,11 @@ class Document(object):
         documents should be made to these documents. (i.e. when the
         sub-documents dict is cleared, the memory for the document objects
         should be released)
-    processors : :class:`Type[ProcessContext] <.ProcessContext>`
-        The ProcessContext base class.
     """
 
     src_filepath = None
     context = None
     subdocuments = None
-
-    #: Context processors
-    process_context = ProcessContext
 
     #: The directory for the root document of a project (a document and its
     #: subdocuments.
@@ -80,7 +77,8 @@ class Document(object):
     #: A flag to determine whether the document was successfully loaded
     _succesfully_loaded = False
 
-    def __init__(self, src_filepath, target_root=None, parent_context=None):
+    def __init__(self, src_filepath, target_root=None, parent_context=None,
+                 level=1):
         logging.debug("Creating document: {}".format(src_filepath))
 
         # Populate attributes
@@ -124,16 +122,18 @@ class Document(object):
                                        parent_context=parent_context)
 
         # Read in the document and load sub-documents
-        self.load()
+        self.load(level=level)
+
+        # Send the 'document_created' signal
+        signals.document_created.emit(document=self)
 
     def __del__(self):
         """Clean up any temp directories no longer in use."""
+        # Send the 'document_deleted' signal
+        signals.document_deleted.emit(document=self)
+
         if self._temp_dir is not None:
             rmtree(self._temp_dir, ignore_errors=True)
-
-        # Reset the labels and dependencies for this document
-        self.reset_labels()
-        self.reset_dependencies()
 
     def __repr__(self):
         return "Document({})".format(self.src_filepath)
@@ -197,11 +197,6 @@ class Document(object):
                 self.context.get('target_root', None))
 
     @property
-    def target_list(self):
-        """The list of targets from the context."""
-        return self.context.targets
-
-    @property
     def targets(self):
         """The targets dict.
 
@@ -212,15 +207,13 @@ class Document(object):
             (ex: '.html') and the value is the target_filepath for that target.
             (ex: 'html/index.html') These paths are target paths.
         """
-        target_list = self.target_list
-
         # Create the target dict
         targets = dict()
 
         # Get the filename relative to the project root (without the ext)
         subpath = self.src_filepath.subpath
 
-        for target in target_list:
+        for target in self.context.targets:
             target_path = TargetPath(target_root=self.target_root,
                                      target=target,
                                      subpath=subpath.with_suffix(target))
@@ -253,56 +246,13 @@ class Document(object):
             msg = msg.format(target, self.doc_id)
             raise exceptions.MissingTargetException(msg)
 
-    def reset_contexts(self):
-        """Load, clear and reset the context.
-
-        The context contains one of the following for all documents in a root
-        document:
-
-          1. label_manager: Manages labels and references to labels.
-          2. dependency_manager: Manages the media dependencies (like image
-             files) for documents
-          3. project_root: the root directory for the document and
-             sub-documents. :obj:`SourcePath <.paths.SourcePath>`
-          4. target_root: the root directory for the document and
-             sub-documents. The final target path includes a sub-directory
-             for the target's extension. :obj:`TargetPath <.paths.TargetPath>`
-          5. root_document: a root document (:obj:`Document <.Document>`) for
-             the project.
-
-        Context variables that can be local to a document are:
-
-          1. include: the sub-documents to include under a document.
-          2. title: the title of a document.
-          3. short: the short title of a document.
-          4. document: a weakref to this document.
-          5. mtime: The modification time of the source document. This is
-             populated by the get_ast method.
-        """
-        self.context.reset()
-
     @property
     def dependency_manager(self):
         return self.context.get('dependency_manager', None)
 
-    def reset_dependencies(self):
-        """Clear and repopulate the dependencies for this document in the
-        dependency manager."""
-        if 'dependency_manager' in self.context:
-            dep = self.context['dependency_manager']
-            dep.reset(src_filepath=self.src_filepath)
-
     @property
     def label_manager(self):
         return self.context.get('label_manager', None)
-
-    def reset_labels(self):
-        """Reset the labels for this document in the label manager."""
-        if 'label_manager' in self.context:
-            label_manager = self.context['label_manager']
-
-            # Reset the labels for this document.
-            label_manager.reset(context=self.context)
 
     # TODO: rename to documents_by_src_filepath
     def documents_dict(self, document=None, only_subdocuments=False,
@@ -421,11 +371,15 @@ class Document(object):
         # Reload the document if:
         # 1. The document hasn't been successfully loaded.
         if not self._succesfully_loaded:
+            logging.debug("Load required for {}: The document was not "
+                          "previously loaded successfully.".format(self))
             return True
 
         # 2. The body attribute hasn't been set yet.
         body_attr = settings.body_attr
         if self.context.get(body_attr, None) is None:
+            logging.debug("Load required for {}: The '{}' tag has "
+                          "not been loaded yet.".format(self, body_attr))
             return True
 
         # 3. The mtime for the file is now later than the one stored in the
@@ -433,6 +387,9 @@ class Document(object):
         src_mtime = self.src_filepath.stat().st_mtime
         last_mtime = self.mtime
         if last_mtime is None or src_mtime > last_mtime:
+            logging.debug("Load required for {}: The '{}' source file is newer "
+                          "than the loaded "
+                          "document.".format(self, self.src_filepath.subpath))
             return True
 
         # 4. This is a subdocument whose context has a parent_context, and the
@@ -441,18 +398,29 @@ class Document(object):
         parent_mtime = (parent_context.get('mtime')
                         if parent_context is not None else None)
         if parent_mtime is not None and parent_mtime > last_mtime:
+            logging.debug("Load required for {}: The parent document is newer "
+                          "than this document.".format(self))
             return True
 
         return False
 
-    def load(self, reload=False):
+    def load(self, reload=False, level=1):
         """Load or reload the document into the context.
 
         Parameters
         ----------
         reload : Optional[bool]
             If True, force the reload of the document.
+        level : Optional[int]
+            The level of document loaded. Sub-documents are loaded at a higher
+            level (>1) than the root document.
+
+        Returns
+        -------
+        document_loaded : bool
+            True, if a sub-document was (re)loaded.
         """
+        document_loaded = False
         # Check to make sure the file exists
         if not self.src_filepath.is_file():  # file must exist
             msg = "The source document '{}' must exist."
@@ -476,47 +444,70 @@ class Document(object):
                                                    actual_filesize,
                                                    max_filesize))
 
-            # Reset the local_context. When reloading an AST, the old
-            # local_context is invalidated since some of the entries may have
-            # changed. Resetting the context also sets the updated mtime.
-            self.reset_contexts()
-
-            # Clear the dependencies for this document
-            self.reset_dependencies()
-
-            # Reset the registered labels for this document
-            self.reset_labels()
-
-            # Load the string from the src_filepath,
-            string = self.src_filepath.read_text()
-
-            # Place the text of the string in the 'body' attribute of the
-            # context (see settings.body_attr)
-            body_attr = settings.body_attr
-            self.context[body_attr] = string
-
-            # Process the context
-            for processor in self.process_context.processors():
-                processor(self.context)
-
-            # Load the sub-documents. This is done after processing the string
-            # and ast since these may include sub-files, which should be read
-            # in before being loaded.
-            self.load_subdocuments()
+            # Emit the load signal
+            signals.document_onload.emit(document=self, context=self.context)
 
             # The document has been loaded
             self._succesfully_loaded = True
+            document_loaded |= True
 
-        # Run 'load' for the sub-documents. This should be done after
-        # loading this documentsince this document's header may have includes
-        for document in self.documents_list(only_subdocuments=True):
-            document.load(reload=reload)
+        # Load the sub-documents. This is done after processing the string
+        # and ast since these may include sub-files, which should be read
+        # in before being loaded.
+        document_loaded |= self.load_subdocuments(level=level + 1)
 
-        return None
+        # Emit a signal if this is the root document and a document (or sub-
+        # document) was reloaded
+        if document_loaded and level == 1:
+            root_document = self.context.root_document
+            signals.document_tree_updated.emit(root_document=root_document)
 
-    def load_subdocuments(self):
+        return document_loaded
+
+    @staticmethod
+    def _update_mtime(document, mtime=None):
+        """Update the mtime of all subdocuments for a given document if the
+        document's mtime is later.
+
+        Parameters
+        ----------
+        document : :obj:`.Document`
+            The root document.
+        mtime : Optional[float]
+            The modification time to update, if newer
+        """
+        document_mtime = getattr(document, 'mtime')
+        mtime = document_mtime if mtime is None else mtime
+        subdocuments = getattr(document, 'subdocuments')
+
+        # Update the document's mtime
+        if (mtime is not None and document_mtime is not None and
+                mtime > document_mtime):
+            document.context['mtime'] = mtime
+
+        if subdocuments:
+            # Process the subdocuments
+            [Document._update_mtime(doc, mtime)
+             for doc in subdocuments.values()]
+
+        return mtime
+
+    def load_subdocuments(self, level=1):
         """Load the sub-documents listed in the include entries in the
-        context."""
+        context.
+
+        Parameters
+        ----------
+        level : Optional[int]
+            The level of document loaded. Sub-documents are loaded at a higher
+            level (>1) than the root document.
+
+        Returns
+        -------
+        document_loaded : bool
+            True, if a sub-document was (re)loaded.
+        """
+        document_loaded = False
 
         # Get the root document's src_filepath and the src_filepath for all of
         # its included subdocuments to make sure we do not load documents
@@ -524,11 +515,15 @@ class Document(object):
         root_document = self.context.get('root_document', None)
         root_document = root_document() if root_document is not None else None
 
-        # Get the documents dict for the root document, including all
-        # subdocuments
+        # Get a dict with all documents in a project
         root_dict = root_document.documents_dict(document=root_document,
                                                  only_subdocuments=False,
                                                  recursive=True)
+
+        # Get a dict with all documents owned by this document. This document
+        # can control those documents, but it cannot control other documents in
+        # the root_dict. This avoids recursion.
+        subs_dict = self.documents_dict(only_subdocuments=False, recursive=True)
 
         # Clear the subdocuments ordered dict and add new entries. Old entries
         # will automatically be deleted if the subdocument no longer holds a
@@ -544,22 +539,37 @@ class Document(object):
             if src_filepath == self.src_filepath:
                 continue
 
-            # If the document is already loaded, copy it to the subdocuments
-            # ordered dict
-            if src_filepath in root_dict:
-                subdoc = root_dict[src_filepath]
-                subdoc.load()  # Make sure the subdocument is loaded
+            # If the document is already loaded and controlled by this document,
+            # copy it to the subdocuments ordered dict
+            elif src_filepath in subs_dict:
+                subdoc = subs_dict[src_filepath]
+                document_loaded |= subdoc.load(level=level + 1)
 
                 if self.src_filepath not in subdoc.subdocuments:
                     self.subdocuments[src_filepath] = subdoc
+
+            # The document could not be found, at this point. Create it--as long
+            # as it's not controlled by another document--i.e. it's not already
+            # loaded in root_dict
+            elif src_filepath not in root_dict:
+                subdoc = Document(src_filepath=src_filepath,
+                                  parent_context=self.context,
+                                  level=level+1)
+                self.subdocuments[src_filepath] = subdoc
+                document_loaded |= True
+            else:
                 continue
 
-            # The document could not be found, at this point. Create it.
-            # Create the document and add it to the subdocuments ordered
-            # dict.
-            subdoc = Document(src_filepath=src_filepath,
-                              parent_context=self.context)
-            self.subdocuments[src_filepath] = subdoc
+        # Update the subdocuments mtimes to this document's mtime. The
+        # sub-document's mtime must updated so that a load_required is not
+        # triggered by a newer parent_context. Even if the subdoc's mtime is
+        # updated to a newer version, it should not cause problems in
+        # triggering a load_required for the subdoc if the src_filepath is
+        # updated because the src_filepath's mtime will be later than the
+        # current document's mtime.
+        Document._update_mtime(document=self)
+
+        return document_loaded
 
     def get_renderer(self):
         """Get the template renderer for this document.
@@ -739,12 +749,13 @@ class Document(object):
             # string
             body_attr = settings.body_attr
             body = self.context.get(body_attr, None)
-            if hasattr(body, target_name):
-                output_string = getattr(body, target_name)
-            elif hasattr(body, 'default'):
-                output_string = getattr(body, 'default')
-            else:
-                output_string = body
+
+            # Try to get the output_string from different sources
+            output_string = getattr(body, target_name, None)
+            output_string = (output_string if output_string is not None else
+                             getattr(body, 'default', None))
+            output_string = (output_string if output_string is not None else
+                             str(body))
 
         # Write the file
         with open(target_filepath, 'w') as f:

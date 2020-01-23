@@ -1,60 +1,62 @@
 <!doctype html>
-
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1" name="viewport" />
   <meta name="author" content="Justin Lorieau">
-  <link rel="stylesheet" href="media/css/default.css"/>
+  <meta name="template" content="default/template">
+  <link rel="stylesheet" href="media/css/bootstrap.min.css">
+
+  <link rel="stylesheet" href="media/css/base.css">
+
+  <link rel="stylesheet" href="media/css/default.css">
+
+  <link rel="stylesheet" href="media/css/pygments.css">
 
 
 </head>
 <body>
-  <!-- menu block for templates -->
+  <div class="container">
+    
 <input type="checkbox" id="toggle-1" class="menu-toggle">
 <label for="toggle-1" class="menu-toggle">
-  <svg version="1.1" id="menu-toggle-inactive" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-       viewBox="0 0 20 20" width="20" height="20" style="enable-background:new 0 0 20 20;" xml:space="preserve">
-    <style type="text/css">
-      .st0{fill:#FFFFFF;}
-      .st2{fill:none;stroke:#999999;stroke-width:2;stroke-linecap:round;stroke-miterlimit:10;}
-    </style>
-    <g>
-      <path class="st0" d="M1.8,19.5c-0.7,0-1.3-0.6-1.3-1.3V1.9c0-0.7,0.6-1.3,1.3-1.3h16.4c0.7,0,1.3,0.6,1.3,1.3v16.3
-                           c0,0.7-0.6,1.3-1.3,1.3H1.8z"/>
-      <line class="st2" x1="4.4" y1="4.5" x2="15.5" y2="4.5"/>
-      <line class="st2" x1="4.4" y1="10" x2="15.5" y2="10"/>
-      <line class="st2" x1="4.4" y1="15.6" x2="15.5" y2="15.6"/>
-    </g>
-  </svg>
-  <svg version="1.1" id="menu-toggle-active" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-     viewBox="0 0 20 20" width="20" height="20" style="enable-background:new 0 0 20 20;" xml:space="preserve">
-<style type="text/css">
-    .st3{fill:#444444;}
-    .st4{fill:#666666;}
-    .st5{fill:none;stroke:#BBBBBB;stroke-width:2;stroke-linecap:round;stroke-miterlimit:10;}
-</style>
-<g>
-    <path class="st3" d="M1.8,19.5c-0.7,0-1.3-0.6-1.3-1.3V1.8c0-0.7,0.6-1.3,1.3-1.3h16.4c0.7,0,1.3,0.6,1.3,1.3v16.3
-        c0,0.7-0.6,1.3-1.3,1.3H1.8z"/>
-    <path class="st4" d="M18.2,1C18.6,1,19,1.4,19,1.8v16.3c0,0.4-0.4,0.8-0.8,0.8H1.8C1.4,19,1,18.6,1,18.2V1.8C1,1.4,1.4,1,1.8,1
-        H18.2 M18.2,0H1.8C0.8,0,0,0.8,0,1.8v16.3c0,1,0.8,1.8,1.8,1.8h16.4c1,0,1.8-0.8,1.8-1.8V1.8C20,0.8,19.2,0,18.2,0L18.2,0z"/>
-    <line class="st5" x1="4.5" y1="4.5" x2="15.5" y2="4.5"/>
-    <line class="st5" x1="4.5" y1="10" x2="15.5" y2="10"/>
-    <line class="st5" x1="4.5" y1="15.5" x2="15.5" y2="15.5"/>
-</g>
-</svg>
+  <img src="/media/icons/menu_inactive.svg" id="menu-toggle-inactive">
+  <img src="/media/icons/menu_active.svg" id="menu-toggle-active">
 </label>
 <div class="menu">
-    <div class="toc">
-    </div>
+  <div id="menu-toolbar">
+    <ul class="functions list-group list-group-horizontal d-flex">
+    <li class="list-group-item mr-2">
+      <a href="/tree.html">
+        <img src="/media/icons/doctree.svg" class="icon" style="width: 18px; padding: 0 4px 4px 0;">Document Listing
+      </a>
+    </li>
+    <li class="list-group-item mr-2">
+      <a href="/system/check.html">
+        <img src="/media/icons/check.svg" style="width: 18px; padding: 0 4px 4px 0;">Check Dependencies
+      </a>
+    </li>
+    <li class="list-group-item mr-2">
+      <a href="/system/signals.html">
+        <img src="/media/icons/process.svg" style="width: 18px; padding: 0 4px 4px 0;">List Signals
+      </a>
+    </li>
+  </ul>
+  </div>
+  <div id="menu-content">
+    <ul class="docutils">
+    </ul>
+    
+  </div>
 </div>
-  <article>
-    <span class="body">
-  <h2 id="ch:inept-dm-inept-and-signal-enhancement"><span class="label">Chapter 1. </span>INEPT and Signal Enhancement</h2>
-  <p>
+
+
+    <article>
+      <span class="body"><h2 id="ch:inept-dm-inept-and-signal-enhancement">
+<span class="label">Chapter 1. </span>INEPT and Signal Enhancement</h2>
+<p>
 <div class="authors">Justin Lorieau</div></p>
-  <p>The purpose of the <span class="abrv">INEPT</span> sequence<span class="cite">Morris1979</span> is to
+<p>The purpose of the <span class="abrv">INEPT</span> sequence<span class="cite">Morris1979</span> is to
 transfer the large magnetization from high-&gamma; nuclei, like <sup>1</sup>H or
 <sup>19</sup>F, to low-&gamma; nuclei (labeled &#8216;X&#8217;), like <sup>13</sup>C and <sup>15</sup>N. This transfer
 significantly improves the signal intensity of &#8216;X&#8217; nuclei when
@@ -63,23 +65,23 @@ magnetization of <sup>1</sup>H nuclei is roughly 4 times greater than <sup>13</s
 times greater than <sup>15</sup>N. Additionally, the <sup>1</sup>H T<sub>1</sub> is typically much
 shorter than the T<sub>1</sub> for <sup>13</sup>C or <sup>15</sup>N, which allows a shorter recycle
 delay and the collection of a greater number of spectra.</p>
-  <h3 id="sec:inept-dm-theory"><span class="label">1.1. </span>Theory</h3>
-  <p>
-    <span class="marginfig">
-  <img src="media/inept_770ecdc6f9_scale1.0.svg"/>
+<h3 id="sec:inept-dm-theory">
+<span class="label">1.1. </span>Theory</h3>
+<p><span class="marginfig">
+  <img src="media/inept_770ecdc6f9_scale1.0.svg">
   <span class="caption" id="fig:inept-inept1"><span class="label"><strong>Fig. 1</strong>.</span>The basic <span class="abrv">INEPT</span> sequence between nuclei <sup>1</sup>H
     and X.</span>
-</span>
-  </p>
-  <p>The <span class="abrv">INEPT</span> sequence (<a href="#fig:inept-inept1" class="ref"><strong>Fig. 1</strong></a>) transfers
+</span></p>
+<p>The <span class="abrv">INEPT</span> sequence (<a href="#fig:inept-inept1" class="ref"><strong>Fig. 1</strong></a>) transfers
 magnetization from <sup>1</sup>H nuclei bonded the &#8216;X&#8217; nuclei. The two
 nuclei must be bonded, or at least connected through intermediary
 bonds with other atoms, because the nuclei must share a J-coupling.</p>
-  <p>The <span class="abrv">INEPT</span> sequence comprises a set of 90<sup>&#9675;</sup> pulses (thin bars),
+<p>The <span class="abrv">INEPT</span> sequence comprises a set of 90<sup>&#9675;</sup> pulses (thin bars),
 180<sup>&#9675;</sup> pulses (thick bars) and delays (&Delta;).</p>
-  <h4 id="subsec:inept-dm-methine-amide-and-the-ax-spin-systems"><span class="label">1.1.1. </span>Methine, Amide and the AX Spin Systems</h4>
-  <p>The first 90<span class="supsub">&#9675;<br/>x</span> (<sup>1</sup>H) pulse creates <img src="media/inept_dd68edb38e_crop.svg" class="eq"/> <sup>1</sup>H magnetization.
-<span class="sidenote">A 90<span class="supsub">&#9675;<br/>x</span> pulse rotates the magnetization by 90<sup>&#9675;</sup> with a phase
+<h4 id="subsec:inept-dm-methine-amide-and-the-ax-spin-systems">
+<span class="label">1.1.1. </span>Methine, Amide and the AX Spin Systems</h4>
+<p>The first 90<span class="supsub">&#9675;<br>x</span> (<sup>1</sup>H) pulse creates <img src="media/inept_dd68edb38e_crop.svg" class="eq"> <sup>1</sup>H magnetization.
+<span class="sidenote">A 90<span class="supsub">&#9675;<br>x</span> pulse rotates the magnetization by 90<sup>&#9675;</sup> with a phase
 of &#8216;x&#8217;.</span>  Thereafter, the <sup>1</sup>H 180<sup>&#9675;</sup> pulse in the middle of the two
 &Delta; delays acts as a Hahn-echo to refocus the <sup>1</sup>H chemical
 shifts. Without the accompanying 180<sup>&#9675;</sup> pulse on the &#8216;X&#8217; channel, the
@@ -87,20 +89,18 @@ J-coupling between the <sup>1</sup>H and X nucleus would be refocused as
 well&#8212;and nothing would be accomplished. The 180<sup>&#9675;</sup> pulse on the &#8216;X&#8217;
 channel acts to <i>cancel</i> the refocusing effect of the <sup>1</sup>H 180<sup>&#9675;</sup>
 pulse for the J-coupling.</p>
-  <p>During the first delta period, the <img src="media/inept_58f5696e07_crop.svg" class="eq"/> magnetization evolves
+<p>During the first delta period, the <img src="media/inept_58f5696e07_crop.svg" class="eq"> magnetization evolves
 under the <sup>1</sup>H chemical shift (&omega;<sub>H</sub>) and the <sup>1</sup>H-X
 J-coupling. Since the chemical shift and J-coupling Hamiltonians
 commute, the rotations of each can be conducted sequentially.</p>
-  <p>In the first step, the operators are propagated for the 90<span class="supsub">&#9675;<br/>x</span> (<sup>1</sup>H) pulse
+<p>In the first step, the operators are propagated for the 90<span class="supsub">&#9675;<br>x</span> (<sup>1</sup>H) pulse
 and the first '&Delta;' period. We&#8217;ll use a <sup>15</sup>N nucleus as an example
 of an &#8216;X&#8217; nucleus.</p>
-  <p>
-    <img src="media/inept_acfd7c19e2_crop.svg" class="eq blockeq"/>
-  </p>
-</span>
+<p><img src="media/inept_acfd7c19e2_crop.svg" class="eq blockeq"></p></span>
 
-  </article>
-  <footer>
-  </footer>
+    </article>
+    <footer>
+    </footer>
+  </div>
 </body>
 </html>

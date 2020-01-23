@@ -28,9 +28,6 @@ def load_renderers(context):
         template_renderer = renderer_cls(context=context,
                                          template=template)
         renderers['template'] = template_renderer
-    else:
-        # Otherwise, make sure the renderer has updated context values
-        renderers['template'].targets = context.targets
 
     # Create the equation renderer, if needed. The equation renderer only
     # works for latex, so its target is specified as '.tex'

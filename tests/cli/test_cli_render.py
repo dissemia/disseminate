@@ -19,7 +19,7 @@ def test_cli_render_simple_document(tmpdir):
     #    source file 'dummy.dm' and 2 answer key targets: 'dummy.html' and
     #    'dummy.tex'. Write the generated files an compare them to the
     #    answer keys.
-    result = runner.invoke(main, ['render',
+    result = runner.invoke(main, ['render', '-i',
                                   'tests/document/example1/dummy.dm',
                                   '-o', str(tmpdir)])
 
@@ -35,7 +35,16 @@ def test_cli_render_simple_document(tmpdir):
     assert target_tex.is_file()
     assert target_tex.stat().st_size > 0
 
-    # 2. Test the same example, without an output directory specified.
+    # 2. Trying to render multiple projects with one output directory raises
+    #    an error
+    result = runner.invoke(main, ['render', '-i',
+                                  'tests/document',
+                                  '-o', str(tmpdir)])
+
+    # Make sure the command was successfully run
+    assert result.exit_code == 2
+
+    # 3. Test the same example, without an output directory specified.
     tmpdir2 = tmpdir / 'test2'
     tmpdir2.mkdir()
     project_root = tmpdir2 / 'src'
@@ -45,7 +54,7 @@ def test_cli_render_simple_document(tmpdir):
     shutil.copy('tests/document/example1/dummy.dm', str(src_filepath))
 
     # run the command
-    result = runner.invoke(main, ['render', str(src_filepath)])
+    result = runner.invoke(main, ['render', '-i', str(src_filepath)])
 
     # Make sure the command was successfully run
     assert result.exit_code == 0

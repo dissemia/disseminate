@@ -3,8 +3,10 @@ Tests for Document classes and functions.
 """
 import pathlib
 from shutil import copy
+import logging
 
 import pytest
+from jinja2.exceptions import TemplateNotFound
 
 from disseminate.document import Document, exceptions
 from disseminate.paths import SourcePath, TargetPath
@@ -12,43 +14,7 @@ from disseminate.utils.tests import strip_leading_space
 from disseminate import settings
 
 
-# Tests for documeht methods
-
-def test_document_load_required(doc, wait):
-    """Tests the load_required method for documents."""
-
-    # Check that the doc was succesfully loaded
-    assert not doc.load_required()
-
-    # 1. Test load required when not successfully loaded
-    doc._succesfully_loaded = False
-    assert doc.load_required()
-    doc._succesfully_loaded = True
-    assert not doc.load_required()
-
-    # 2. Test load required when body attribute hasn't been set
-    del doc.context[settings.body_attr]
-    assert doc.load_required()
-    doc.load()
-    assert not doc.load_required()
-
-    # 3. Test load required when the source file is newer than the mtime in
-    #    the context
-    wait()  # needed to offset filesystem times
-    doc.src_filepath.touch()
-    assert doc.load_required()
-    doc.load()
-    assert not doc.load_required()
-
-    # 4. Test load required when the parent context's mtime is newer than the
-    #    mtime in the context
-    doc.context.parent_context['mtime'] = doc.context['mtime'] + 1.0
-    assert doc.load_required()
-    del doc.context.parent_context['mtime']
-    assert not doc.load_required()
-
-
-# Tests for other functionality
+# Tests for document methods
 
 def test_document_paths(tmpdir):
     """Tests the setting of paths for documents."""
@@ -136,6 +102,8 @@ def test_document_targets():
     # dummy.dm has the entry 'html, tex' set in the header.
     targets = doc.targets
 
+    assert targets.keys() == {'.html', '.tex'}
+
     assert '.html' in targets
     assert isinstance(targets['.html'], TargetPath)
     assert str(targets['.html']) == 'tests/document/example1/html/dummy.html'
@@ -149,17 +117,9 @@ def test_document_targets():
     assert str(targets['.tex'].target) == 'tex'
     assert str(targets['.tex'].subpath) == 'dummy.tex'
 
-
-def test_document_target_list():
-    """Test the setting of the target_list property."""
-    doc = Document("tests/document/example1/dummy.dm")
-
-    # dummy.dm has the entry 'html, tex' set in the header.
-    assert doc.target_list == ['.html', '.tex']
-
-    # Test an empty target list
-    doc.context['targets'] = ''
-    assert doc.target_list == []
+    # Test changing the targets from the context
+    doc.context['targets'] = set()
+    assert doc.targets.keys() == set()
 
 
 def test_document_target_filepath():
@@ -254,6 +214,123 @@ def test_document_target_filepath():
             "sub3/index.html")
 
 
+def test_document_load_required(doctree, wait, caplog):
+    """Tests the load_required method for documents."""
+    # Capture DEBUG logging messages
+    caplog.set_level(logging.DEBUG)
+    caplog.clear()
+
+    # Setup the documents in the doctree. The setup has 3 load_required messages
+    doc = doctree
+    doc2, doc3 = doctree.documents_list(only_subdocuments=True,
+                                        recursive=True)
+
+    # Check that the doc was succesfully loaded
+    assert not doc.load_required()
+
+    # 1. Test load required when not successfully loaded
+    doc._succesfully_loaded = False
+    assert doc.load_required()  # 1 load required logging message
+    assert len(caplog.record_tuples) == 1  # only 1 DEBUG message
+    assert ("The document was not previously loaded successfully" in
+            caplog.record_tuples[-1][2])
+
+    doc._succesfully_loaded = True
+    assert not doc.load_required()  # 1 load_required logging messages
+
+    # 2. Test load required when body attribute hasn't been set
+    del doc.context[settings.body_attr]
+    assert doc.load_required()  # 1 load_required logging messages
+    assert len(caplog.record_tuples) == 2
+    assert "tag has not been loaded yet" in caplog.record_tuples[-1][2]
+
+    # 1 load_required message
+    assert doc.load() is True  # documents were loaded
+    assert len(caplog.record_tuples) == 3
+    assert not doc.load_required()
+
+    # 3. Test load required when the source file is newer than the mtime in
+    #    the context
+    wait()  # sleep time offset needed for different mtimes
+    doc.src_filepath.touch()
+    assert doc.load_required()  # 1 load required message
+    assert len(caplog.record_tuples) == 4
+    assert ("source file is newer than the loaded document" in
+            caplog.record_tuples[-1][2])
+
+    # 3 load_required messages. The parent (test1.dm) is reloaded so the
+    # children (test2.dm, test3.dm) are reloaded because it has a later mtime.
+    assert doc.load() is True  # documents were loaded
+
+    assert len(caplog.record_tuples) == 7
+    assert ("source file is newer than the loaded document" in
+            caplog.record_tuples[-3][2])  # test1.dm
+    assert ("The parent document is newer than this document" in
+            caplog.record_tuples[-2][2])  # test2.dm
+    assert ("The parent document is newer than this document" in
+            caplog.record_tuples[-1][2])  # test3.dm
+    assert not doc.load_required()
+
+    # 4. Test load required when the parent context's mtime is newer than the
+    #    mtime in the context
+    doc.context.parent_context['mtime'] = doc.context['mtime'] + 1.0
+    assert doc.load_required()  # 1 load_required message
+    assert len(caplog.record_tuples) == 8
+    assert ("The parent document is newer than this document" in
+            caplog.record_tuples[-1][2])
+
+    del doc.context.parent_context['mtime']
+    assert not doc.load_required()
+
+    # 5. Test load required when the parent context' mtime is newer than the
+    #    context mtime for subdocuments
+    assert not doc2.load_required()
+    assert not doc3.load_required()
+    assert len(caplog.record_tuples) == 8  # same number of messages as before.
+
+    # 6. Touch a subdocument, and it should be the only one that requires an
+    #    update
+    wait()  # sleep time offset needed for different mtimes
+    doc2.src_filepath.touch()
+    assert not doc.load_required()
+    assert doc2.load_required()  # 1 load_required message
+    assert not doc3.load_required()
+    assert len(caplog.record_tuples) == 9
+    assert ("source file is newer than the loaded document" in
+            caplog.record_tuples[-1][2])
+
+    # 7. Touch the root document, and all 3 documents should need an update
+    wait()  # sleep time offset needed for different mtimes
+    doc.src_filepath.touch()
+
+    # 3 load required messages
+    assert doc.load() is True  # documents were loaded
+    assert len(caplog.record_tuples) == 12
+    assert ("source file is newer than the loaded document" in
+            caplog.record_tuples[-3][2])
+    assert ("source file is newer than the loaded document" in
+            caplog.record_tuples[-2][2])
+    assert ("The parent document is newer than this document" in
+            caplog.record_tuples[-1][2])
+
+
+def test_document_update_mtime(doctree):
+    """Test the _update_mtime method."""
+
+    # Find the maximum mtime for all documents
+    doc1 = doctree
+    doc2, doc3 = doctree.documents_list(recursive=False, only_subdocuments=True)
+    mtime = max((doc1.mtime, doc2.mtime, doc3.mtime))
+
+    # Increase the mtime and check that all documents are updated
+    mtime += 10.0
+    Document._update_mtime(doc1, mtime=mtime)
+
+    assert all([doc.mtime == mtime for doc in (doc1, doc2, doc3)])
+
+
+# Tests for other functionality
+
 def test_document_target_list_update(tmpdir):
     """Tests the proper updating of the target list."""
     tmpdir = pathlib.Path(tmpdir)
@@ -271,17 +348,17 @@ def test_document_target_list_update(tmpdir):
 
     doc = Document(src_filepath, tmpdir)
 
-    assert doc.target_list == ['.txt']
+    assert doc.targets.keys() == {'.txt'}
 
     # Update the header
     markup = """---
-        targets: tex
-        ---
-        """
+    targets: tex
+    ---
+    """
     src_filepath.write_text(strip_leading_space(markup))
     doc.load()
 
-    assert doc.target_list == ['.tex']
+    assert doc.targets.keys() == {'.tex'}
 
 
 def test_document_ast_caching(tmpdir):
@@ -396,8 +473,8 @@ def test_document_custom_template(tmpdir, wait):
     """Tests the loading of custom templates from the yaml header."""
     tmpdir = pathlib.Path(tmpdir)
 
-    # Write a temporary file. We'll use the tree.html template, which contains
-    # the text "Disseminate Project Index"
+    # 1. Write a temporary file. We'll use the tree.html template, which
+    # contains the text "Disseminate Project Index"
     project_root = tmpdir / 'src'
     project_root.mkdir()
     in_file = project_root / "index.dm"
@@ -420,7 +497,24 @@ def test_document_custom_template(tmpdir, wait):
     doc.render()
     assert "This is my template" in out_file.read_text()
 
-    # Write to the file again, but don't include the template. This time it
+    # 2. Write to the file again, but don't include the template. This time it
+    # shouldn't contain the text "This is my template"
+    wait()  # sleep time offset needed for different mtimes
+    markup = """
+    ---
+    template: mytemplate
+    targets: html
+    ---
+    New file
+    """
+    in_file.write_text(markup)
+
+    target_filepath = doc.targets['.html']
+    assert doc.render_required(target_filepath=target_filepath)
+    doc.render()
+    assert "This is my template" in out_file.read_text()
+
+    # 3. Write to the file again, but don't include the template. This time it
     # shouldn't contain the text "This is my template"
     wait()  # sleep time offset needed for different mtimes
     in_file.write_text("test")
@@ -486,7 +580,8 @@ def test_document_context_update(tmpdir):
     # for the later test.
     assert 'targets' in doc.context
     assert doc.context['targets'] != settings.default_context['targets']
-    assert doc.context['targets'] == 'html, tex'
+    assert doc.context['targets'] == {'html', 'tex'}
+    assert doc.context.targets == {'.html', '.tex'}
 
     assert '@macro' in doc.context
 
@@ -533,7 +628,7 @@ def test_document_load_on_render(doc):
     """Test the proper loading of an updated source file on render."""
 
     # The initial document has the targets listed in the settings.py
-    assert list(doc.targets.keys()) == ['.html']
+    assert doc.targets.keys() == {'.html'}
 
     # Change the source file, and run the render function. The targets should
     # be updated to the new values in the updated header.
@@ -545,14 +640,14 @@ def test_document_load_on_render(doc):
     doc.src_filepath.write_text(src)
     doc.render()
 
-    assert list(doc.targets.keys()) == ['.html', '.txt']
+    assert doc.targets.keys() == {'.html', '.txt'}
 
 
 def test_document_recursion(tmpdir):
     """Test the loading of a document with itself as the subdocument
     (recursion)."""
 
-    # Create 2 test documents. First test absolute links
+    # 1. Create a test document that references itself
     src_filepath1 = SourcePath(project_root=tmpdir, subpath='test1.dm')
     target_root = TargetPath(target_root=tmpdir)
 
@@ -564,6 +659,33 @@ def test_document_recursion(tmpdir):
     """)
 
     doc = Document(src_filepath1, target_root)
+
+    # The document should not have itself as a subdocument
+    assert len(doc.subdocuments) == 0
+
+    # 2. Create 2 test documents that reference each other
+    src_filepath1 = SourcePath(project_root=tmpdir, subpath='test-a.dm')
+    src_filepath2 = SourcePath(project_root=tmpdir, subpath='test-b.dm')
+
+    src_filepath1.write_text("""
+    ---
+    include: test-b.dm
+    ---
+    @chapter{one}
+    """)
+    src_filepath2.write_text("""
+    ---
+    include: test-a.dm
+    ---
+    @chapter{one}
+    """)
+    doc1 = Document(src_filepath1, target_root)
+    doc2 = Document(src_filepath2, target_root)
+
+    # The document should not have itself as a subdocument, but it can have
+    # the other as a root document.
+    assert len(doc1.subdocuments) == 1  # test-b as subdoc
+    assert len(doc2.subdocuments) == 1  # test-a as subdoc
 
 
 # Test targets
@@ -597,6 +719,25 @@ def test_document_render(tmpdir, target):
     # An invalid file raises an error
     with pytest.raises(exceptions.DocumentException):
         doc = Document("tests/document/missing.dm")
+
+
+def test_document_render_missing_template(tmpdir):
+    """Tests the rendering of a document when a specified templates is
+    missing."""
+    tmpdir = pathlib.Path(tmpdir)
+
+    # 1. Prepare the document with a missing template
+    src_filepath = tmpdir / 'test.dm'
+    src = ("---\n"
+           "targets: html, tex, pdf\n"
+           "template: missing\n"
+           "---\n"
+           "test\n")
+    src_filepath.write_text(src)
+
+    # Raises a template not found error
+    with pytest.raises(TemplateNotFound):
+        doc = Document(src_filepath=src_filepath, target_root=tmpdir)
 
 
 def test_document_example8(tmpdir):

@@ -1,6 +1,8 @@
 """
 Utilities for formatting html strings and text.
 """
+from itertools import groupby
+
 from lxml.builder import E
 from lxml import etree
 from lxml.etree import Entity
@@ -16,7 +18,7 @@ class HtmlFormatError(FormattingError):
     pass
 
 
-def html_tag(name, attributes='', formatted_content=None, level=1,
+def html_tag(name, attributes=None, formatted_content=None, level=1,
              pretty_print=settings.html_pretty):
     """Format an html tag string.
 
@@ -50,12 +52,20 @@ def html_tag(name, attributes='', formatted_content=None, level=1,
                    name in settings.html_tag_optionals)
 
     # Format the attributes
+    attributes = '' if attributes is None else attributes
     attributes = (Attributes(attributes) if isinstance(attributes, str) else
                   attributes)
 
     # Get the required arguments
     if name in settings.html_tag_arguments:
+        # If it's an allowed tag, get the required arguments for that tag
         reqs = attributes.filter(attrs=settings.html_tag_arguments[name],
+                                 target='html',
+                                 sort_by_attrs=True)
+    elif not allowed_tag and 'span' in settings.html_tag_arguments:
+        # If it's not an allowed tag, use a 'span' tag and its required
+        # arguments
+        reqs = attributes.filter(attrs=settings.html_tag_arguments['span'],
                                  target='html',
                                  sort_by_attrs=True)
     else:
@@ -69,7 +79,14 @@ def html_tag(name, attributes='', formatted_content=None, level=1,
 
     # Get optional arguments
     if name in settings.html_tag_optionals:
+        # If it's an allowed tag, get the optional arguments for that tag
         opts = attributes.filter(attrs=settings.html_tag_optionals[name],
+                                 target='html',
+                                 sort_by_attrs=True)
+    elif not allowed_tag and 'span' in settings.html_tag_optionals:
+        # If it's not an allowed tag, use a 'span' tag and its optional
+        # arguments
+        opts = attributes.filter(attrs=settings.html_tag_optionals['span'],
                                  target='html',
                                  sort_by_attrs=True)
     else:
@@ -78,12 +95,26 @@ def html_tag(name, attributes='', formatted_content=None, level=1,
     # Prepare other attributes
     other = Attributes()
 
-    # Wrap the formatted_content in a list and remove empty strings
+    # Wrap the formatted_content in a list
     formatted_content = ([formatted_content]
                          if not isinstance(formatted_content, list) else
                          formatted_content)
-    formatted_content = [i for i in formatted_content
-                         if i != '' and i is not None]
+    # Clean up the formatted contents
+    new_formatted_content = []
+    for element in formatted_content:
+        # Remove empty items
+        if element == '' or element is None:
+            continue
+
+        # Format safe content into an Html element
+        if isinstance(element, Markup):
+            element = etree.fromstring(element)
+
+        # Append the item to the new list
+        new_formatted_content.append(element)
+
+    formatted_content.clear()
+    formatted_content += new_formatted_content
 
     # Create the tag
     if not allowed_tag:
@@ -99,11 +130,13 @@ def html_tag(name, attributes='', formatted_content=None, level=1,
     # Add the reqs and opts attributes
     for attrs in (i for i in (reqs, opts, other) if i is not None):
         for k, v in attrs.items():
+            if v is None:
+                continue
             e.set(k, v)
 
     # Format the tag into a string, if it's the root level
     if level == 1:
-        s = (etree.tostring(e, pretty_print=pretty_print)
+        s = (etree.tostring(e, pretty_print=pretty_print, method='html')
                   .decode("utf-8"))
         return Markup(s)  # Mark string as safe, since it's escaped by lxml
     else:
@@ -147,8 +180,85 @@ def html_entity(entity, level=1, pretty_print=settings.html_pretty):
 
     e = Entity(entity.strip())
     if level == 1:
-        s = (etree.tostring(e, pretty_print=pretty_print)
+        s = (etree.tostring(e, pretty_print=pretty_print, method='html')
              .decode("utf-8"))
         return Markup(s)  # Mark string as safe, since it's escaped by lxml
     else:
         return e
+
+
+def html_list(*elements, attributes=None, listtype='ol', level=1,
+              pretty_print=settings.html_pretty,
+              inner=False):
+    """
+
+    Parameters
+    ----------
+    elements : Tuple[Tuple[int, :obj:`lxml.builder.E`]]
+        Each element is a tuple of the list element level and the 'li' lxml
+        element.
+    attributes : Optional[Union[:obj:`Attributes <.Attributes>`, str]]
+        The attributes of the tag.
+    listtype : Optional[str]
+        The type of list to create. ex: ul, ol
+    level : Optional[int]
+        The level of the tag.
+    pretty_print : Optional[bool]
+        If True, make the formatted html pretty--i.e. with newlines and spacing
+        for nested tags.
+    inner : Optional[bool]
+        If True, this function is invoked as an inner html list. This is
+        useful for adding html attributes only to the outer list.
+
+    Returns
+    -------
+    html : str
+        If level=1, a string formatted in html
+        if level>1, an html element (:obj:`lxml.build.E`)
+
+    Raises
+    ------
+    HtmlFormatError : :exc:`HtmlFormatError`
+        A TagError is raised if a non-allowed list environment is used
+    """
+    current_elements = []
+    listlevel = elements[0][0] if elements else 0
+
+    _count = 0
+
+    # Setup a counter function for list levels. When a new list item is
+    # encountered, all sub items will receive the same number so that they're
+    # grouped together.
+    def counter(item):
+        nonlocal _count
+        if item[0] == listlevel:
+            _count += 1
+        return _count
+
+    # Go by each list item and its group of sublists
+    for is_same_list, group in groupby(elements, counter):
+        group = list(group)
+
+        # Add the parent list item
+        current_elements.append(group[0][1])
+
+        # If there are sub list items, add these as well
+        if group[1:]:
+            l = html_list(*group[1:], listtype=listtype, level=level+1,
+                          pretty_print=pretty_print, inner=True)
+            current_elements.append(l)
+
+    # Wrap current_elements in a list
+    attributes = attributes if not inner else ''
+    if level == 1:
+        e = html_tag(name=listtype, formatted_content=current_elements,
+                     attributes=attributes, level=level + 1,
+                     pretty_print=pretty_print)
+        s = (etree.tostring(e, pretty_print=pretty_print, method='html')
+             .decode("utf-8"))
+        return Markup(s)  # Mark string as safe, since it's escaped by lxml
+    else:
+        return html_tag(name=listtype, formatted_content=current_elements,
+                        attributes=attributes, level=level+1,
+                        pretty_print=pretty_print)
+

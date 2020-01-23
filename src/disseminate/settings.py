@@ -81,12 +81,17 @@ context_max_depth = 6
 context_max_size = 8192  # 8kB
 
 default_context = {
-    'targets': 'html',
-    'paths': [],
+    # The default targets to render. This is a string so that documents
+    # can overwrite these values
+    'targets': {'html'},
 
-    # Entries for relative links to documents
+    'paths': [],
+    'template': 'default/template',
+
+    # Entries for navigation
     'prev': '',
     'next': '',
+    'pdflink': '',
 
     # Options related to links
     'relative_links': True,
@@ -94,7 +99,7 @@ default_context = {
 
     # Process tags for the following entries in a context
     # (see processors/process_context_tags.py)
-    'process_context_tags': {body_attr, 'toc', 'prev', 'next'},
+    'process_context_tags': {body_attr, 'toc', 'prev', 'next', 'pdflink'},
 
     # Process paragraphs for tags with the following names
     # (see tags/paragraphs.py)
@@ -153,7 +158,8 @@ default_context = {
         'subsection': {'subsubsection'},
     },
 
-    # The following tags are unavailable. See
+    # The following tags are unavailable. This is a string so that contexts
+    # from templates can replace these values. See
     # disseminate.tags.factory.TagFactory.
     'inactive_tags': set(),
 
@@ -228,15 +234,10 @@ tracked_deps = {
 #: Tags
 #: ----
 
-default_attrs = {'Toc': "bolded='chapter' "
-                        "dotted='section subsection subsubsection'"}
-
-toc_listing = 'toclist'
-toc_pageref_width = '5ex'
-toc_bolded_kinds = ('part', 'chapter')
-toc_dotted_kinds = ('section', 'subsection', 'subsubsection')
-
 empty = tuple()
+
+#: The number of spaces to identify sublist items.
+list_level_spaces = 2
 
 #: HTML targets
 #: ~~~~~~~~~~~~
@@ -272,11 +273,11 @@ html_tag_optionals = {'a': ('class', 'role'),
                       'li': ('class',),
                       'link': ('href', 'media'),
                       'i': empty,
-                      'img': ('alt', 'class', 'width', 'height'),
+                      'img': ('alt', 'class', 'style'),
                       'ol': ('class',),
                       'p': ('class',),
                       'pre': ('class',),
-                      'span': ('class', 'id'),
+                      'span': ('class', 'id', 'style'),
                       'strong': empty,
                       'sub': empty,
                       'sup': empty,
@@ -311,6 +312,8 @@ tex_env_arguments = {'enumerate': empty,  # no required arguments
                      'center': empty,
                      'verbatim': empty,
                      'toclist': empty,
+
+                     'panel': (StringPositionalValue,),
                      }
 
 tex_env_optionals = {# ex: \begin{enumerate}[I]
@@ -318,6 +321,9 @@ tex_env_optionals = {# ex: \begin{enumerate}[I]
 
                      # ex: \begin{figure}[h]
                      'figure': (StringPositionalValue,),
+                     'figure*': (StringPositionalValue,),
+
+                     'easylist': (StringPositionalValue,),
                      }
 
 tex_cmd_arguments = {'textbf': empty,
@@ -356,10 +362,10 @@ tex_cmd_arguments = {'textbf': empty,
 
                      'hfill': empty,
                      'pageref': (StringPositionalValue,),
+                     'href': (StringPositionalValue,),
                      }
 
 tex_cmd_optionals = {'includegraphics': ('width', 'height'),
-                     'hyperref': (StringPositionalValue,),
                      }
 
 

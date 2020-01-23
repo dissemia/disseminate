@@ -1,7 +1,7 @@
 """
 Converters to convert from ``.asy`` files using the ``asy`` program.
 """
-from .converter import Converter
+from .converter import Converter, ConverterError
 from .pdf import Pdf2svg
 from .arguments import SourcePathArgument
 from ..paths import SourcePath, TargetPath
@@ -23,10 +23,29 @@ class Asy2pdf(Converter):
 
         # Convert the file to pdf
         # asy -pdf infile.asy -o outfile.pdf
-        args = [asy_exec, '-f', 'pdf', str(self.src_filepath.value),
-                '-o', str(self.target_filepath())]
-        self.run(args, raise_error=True)
-        return True
+        target_filepath = self.target_filepath()
+        src_filepath = self.src_filepath.value
+        args = [asy_exec, '-f', 'pdf', str(src_filepath),
+                '-o', str(target_filepath)]
+
+        returncode, out, err = self.run(args, raise_error=True)
+
+        # Raise a convert error, if the target file wasn't created.
+        # (Unfortunately, the asymptote command-line program produces a return
+        # code of 0, regardless of errors
+        successful = (target_filepath.is_file() and
+                      target_filepath.stat().st_mtime >
+                      src_filepath.stat().st_mtime)
+        if not successful:
+            msg = ("Asymptote (asy) could not produce the target file using "
+                   "the command: '{}'".format(' '.join(args)))
+            e = ConverterError(msg)
+            e.returncode = returncode
+            e.shell_out = out
+            e.shell_err = err
+            raise e
+
+        return successful
 
 
 class Asy2svg(Pdf2svg):
@@ -56,7 +75,7 @@ class Asy2svg(Pdf2svg):
                           target_basefilepath=temp_basefilepath,
                           target='.pdf')
         success = ast2pdf.convert()
-        if success is None:
+        if not success:
             return False
 
         # Now the target of ast2pdf is the source for this file

@@ -72,17 +72,20 @@ setup(
         'regex>=2018.11.22',         # No license, replaced with re
         'jinja2>=2.10',              # 3-clause BSD
         'lxml>=4.3.0',               # BSD license
+        'blinker>=1.4',              # MIT license
         'python-slugify>=2.0.1',     # MIT license
         'pdfCropMargins>=0.1.4',     # GPL v3
         # The following are needed for the CLI
         'click>=7.0',                # 3-clause BSD license
         # The following are needed for the preview function
         'sanic>=19.0',               # MIT license
+        # The following is needed for the @code tag
+        'pygments>=2.4',             # BSD 2 license
         ],
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc',
                 'asv'],
-        'test': ['pytest', 'tox', 'coverage'],
+        'test': ['pytest', 'pytest-sanic', 'tox', 'coverage'],
         'termcolor': ['termcolor']  # MIT license
     },
     scripts=['scripts/dm', ],

@@ -186,40 +186,6 @@ def test_tag_invalid_inputs(context_cls):
         root = Tag(name='root', content=set(), attributes=None, context=context)
 
 
-def test_tag_processors(context_cls):
-    """Test the tag processor functions."""
-
-    # Create a mock tag
-    context = context_cls()
-    root = Tag(name='root', content='test', attributes='', context=context)
-
-    # Retrieve the processors
-    processors = root.processors()
-    assert len(processors) > 0
-
-    # Retrieve specific processors
-    for name, cls_name in (('process_content', 'ProcessContent'),
-                           ('process_paragraphs', 'ProcessParagraphs'),
-                           ('process_macros', 'ProcessMacros'),
-                           ('process_typography', 'ProcessTypography'),
-                           ):
-        processors = root.processors(names=name)
-        assert len(processors) == 1
-
-        processor = processors[0]
-        assert processor.__class__.__name__ == cls_name
-
-        # Try the class/instance attributes in filtering
-        setattr(root, name, False)
-        root.process_context = False
-        assert (cls_name not in
-                [p.__class__.__name__ for p in root.processors()])
-
-        setattr(root, name, True)
-        assert (cls_name in
-                [p.__class__.__name__ for p in root.processors()])
-
-
 def test_tag_copy(context_cls):
     """Test the copy method."""
 
@@ -428,7 +394,6 @@ def test_tag_html_unsafe_tag(context_cls):
                          '</span>\n')
 
 
-
 def test_tag_html_nested(context_cls):
     """Nest nested tags with html"""
 
@@ -437,8 +402,8 @@ def test_tag_html_nested(context_cls):
     # Test a basic string without additional tags
     p = P(name='p', content='paragraph', attributes=None, context=context)
     root = Tag(name='root', content=p, attributes=None, context=context)
-    assert root.html == ('<span class="root">\n'
-                         '  <p>paragraph</p>\n'
+    assert root.html == ('<span class="root">'
+                         '<p>paragraph</p>'
                          '</span>\n')
 
 

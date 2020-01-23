@@ -26,7 +26,9 @@ class JinjaRenderer(BaseRenderer):
 
     jinja_templates = None
     src_filepath = None
+
     _environment = None
+    _template_filepaths = None
 
     def __init__(self, context, template, module_only=None, targets=None):
         self.module_only = module_only  # needed by set_context_paths
@@ -37,6 +39,9 @@ class JinjaRenderer(BaseRenderer):
 
         # Set the src_filepath
         self.src_filepath = context.get('src_filepath', None)
+
+        # Prepare hidden variables
+        self._template_filepaths = dict()
 
         super().__init__(context=context, template=template,
                          module_only=module_only, targets=targets)
@@ -86,22 +91,39 @@ class JinjaRenderer(BaseRenderer):
 
         return self._environment
 
-    # TODO: use a caching decorator
     def template_filepaths(self):
-        if 'template_filepaths' not in self._cached:
+        # Get the targets and find the targets whose template_filepaths are
+        # missing
+        targets = self.targets
+        assert targets is not None
+
+        # Replace intermediary targets for compiled documents.
+        # ex: 'pdf' targets, which need to be compiled, should be replaced
+        # with their source format (.tex)
+        targets = {settings.compiled_exts[t]
+                   if t in settings.compiled_exts else t
+                   for t in targets}
+
+        missing_targets = [target for target in targets
+                           if target not in self._template_filepaths]
+
+        if missing_targets:
             # Load the templates. The templates must be loaded and individually
             # checked because some templates may inherit from other templates,
             # and these should be added to the template_filepaths
             self.load_templates()
 
-            # Get the filepaths for all templates. Sort these by the target
-            # string.
-            filepaths = []
-            for target, template in sorted(self.jinja_templates.items()):
-                filepaths += filepaths_from_template(template,
-                                                     self.environment)
-            self._cached['template_filepaths'] = filepaths
-        return self._cached['template_filepaths']
+            # Get the filepaths for all templates of the given target.
+            for target, template in self.jinja_templates.items():
+                fps = filepaths_from_template(template, self.environment)
+                self._template_filepaths[target] = fps
+
+        filepaths = []
+        for target in targets:
+            if target in self._template_filepaths:
+                filepaths += self._template_filepaths[target]
+
+        return filepaths
 
     def load_templates(self):
         """Loads all the Jinja2 template objects needed to render the targets
@@ -141,7 +163,6 @@ class JinjaRenderer(BaseRenderer):
             template_path = pathlib.Path(self.template,
                                          settings.template_basename)
             template_file2 = template_path.with_suffix(target)
-
             # Get the template environment
             env = self.environment
 

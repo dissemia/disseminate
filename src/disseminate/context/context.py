@@ -55,6 +55,9 @@ class BaseContext(dict):
     exclude_from_reset : Set[str]
         The context entries that should not be removed when the context is
         reset.
+    replace : Set[str]
+        The *muttable* context entries that should be replaced, rather than
+        appended, from the parent context.
     _initial_values : dict
         A dict containing the initial values. Since this starts with an
         underscore, it is hidden when listing keys with the keys() function.
@@ -88,6 +91,7 @@ class BaseContext(dict):
 
     do_not_inherit = set()
     exclude_from_reset = set()
+    replace = set()
 
     _do_not_inherit = None
 
@@ -388,7 +392,6 @@ class BaseContext(dict):
             #    original--whether the key is actually in the original or in
             #    the parent_context
             if key not in self.keys():
-
                 try:
                     # Try making a copy. Some objects, like tags, take a
                     # new_context parameter to set the new context in the
@@ -400,34 +403,44 @@ class BaseContext(dict):
                     # a shallow copy, but these do not accept keyword arguments
                     self[key] = change_value.copy()
                 except AttributeError:
-                    # Otherwise copy the value directly
+                    # Otherwise reference the value directly, like immutables
                     self[key] = change_value
                 continue
 
             # At this point, the key already exists in self. If overwrite is
-            # not enabled, then don't do anything else
+            # not enabled, then don't do anything else (i.e. don't overwrite)
             if not overwrite:
                 continue
 
-            # Now copy over values based on the type of the original value's
-            # type
+            # Now copy over changed values based on the type of the original
+            # value's type
             original_value = self[key]
 
-            # 2. *lists*. Create a copy from changes and append to self's list
+            # Clear the original_value if this value should be replaced
+            if key in getattr(self, 'replace', set()):
+                try:
+                    original_value.clear()
+                except AttributeError:
+                    msg = ("The context entry '{}' is of type '{}', and it "
+                           "cannot be cleared for replacement.")
+                    logging.warning(msg.format(original_value,
+                                               type(original_value)))
+
+            # 2. *lists*. Create a copy from changes
             if isinstance(original_value, list):
                 change_value = (str_to_list(change_value)
                                 if isinstance(change_value, str) else
                                 list(change_value))
                 original_value[0:0] = change_value  # prepend to top
 
-            # 3. *sets*. Create a copy from changes and append to self's set
+            # 3. *sets*. Create a copy from changes
             elif isinstance(original_value, set):
                 change_value = (str_to_list(change_value)
                                 if isinstance(change_value, str) else
                                 list(change_value))
                 original_value |= set(change_value)
 
-            # 4. *dicts*. Create a copy from changes and append to self's dict
+            # 4. *dicts*. Create a copy from changes
             elif isinstance(original_value, dict):
                 change_value = (str_to_dict(change_value)
                                 if isinstance(change_value, str) else

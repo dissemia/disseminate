@@ -438,3 +438,28 @@ def test_context_copy(context_cls):
 
     assert child.keys() == child_cp.keys()
     assert list(sorted(child.items())) == list(sorted(child_cp.items()))
+
+
+def test_context_replace(context_cls):
+    """Test that mutable entries from the parent_context are properly replaced.
+    """
+    for child_value in ('.pdf', # string
+                        ['.pdf'], # list
+                         ):
+        # 1. First, try with 'targets' in the replace set
+        context_cls.replace = {'targets'}
+
+        parent = context_cls(targets=['.html'])
+        child = context_cls(targets=child_value, parent_context=parent)
+
+        assert parent['targets'] == ['.html']
+        assert child['targets'] == ['.pdf']  # replaced
+
+        # 2. Next try an entry that is not in the 'replace' set
+        context_cls.replace = set()
+
+        parent = context_cls(targets=['.html'])
+        child = context_cls(targets=child_value, parent_context=parent)
+
+        assert parent['targets'] == ['.html']
+        assert child['targets'] == ['.pdf', '.html']  # appended by default

@@ -5,16 +5,17 @@ import logging
 
 import click
 
-from .options import file_options
-from ..document import Document
+from .options import file_options, check_out_dir
+from ..document.utils import load_root_documents
 
 
 @click.command()
 @file_options
-def render(project_filenames, out_dir=None):
+def render(in_path, out_dir=None):
     """Render a disseminate project"""
-    docs = [Document(src_filepath=project_filename, target_root=out_dir)
-            for project_filename in project_filenames]
+    docs = load_root_documents(path=in_path, target_root=out_dir)
+
+    check_out_dir(root_docs=docs, out_dir=out_dir)
 
     for doc in docs:
         logging.info("Rendering document '{}'".format(doc.src_filepath))

@@ -15,6 +15,8 @@ def tree_to_dict(docs, level=1):
     doc_list = []
 
     for number, doc in enumerate(docs, 1):
+        if level == 1:
+            number = 1
         d = dict()
 
         # Set the number and level for the doc
@@ -28,7 +30,7 @@ def tree_to_dict(docs, level=1):
 
         # Get information on the targets
         targets = list(doc.targets.keys())  # ex: ['.html', '.pdf']
-        target_links = [doc.target_filepath(target).get_url()
+        target_links = [doc.target_filepath(target)
                         for target in targets]
         d['targets'] = {target: target_link for target, target_link in
                         zip(targets, target_links)}
@@ -57,5 +59,5 @@ async def render_tree(request):
     """Render the view for the source and target document files."""
     # Load the documents
     docs = load_projects(request)
-    return render_template('tree.html', request=request,
+    return render_template('server/tree.html', request=request,
                            docs=tree_to_dict(docs))

@@ -54,12 +54,9 @@ def test_document_toc(tmpdir):
     # Make sure the 'toc' context entry is correct
     toc_tag = doc.context['toc']
     assert toc_tag.name == 'toc'
-    key = """<ul class="toc-level-1">
-  <li>
-    <a href="" class="ref">My first title</a>
-  </li>
-</ul>
-"""
+    key = ('<ul class="toc">'
+             '<li class="toc-level-1"><a href="" class="ref">My first title</a></li>'
+           '</ul>\n')
     assert toc_tag.html == key
 
 
@@ -138,16 +135,12 @@ def test_document_tag_mtime(tmpdir, wait):
     # Check that the first file was written before the second.
     assert src_filepath1.mtime() < src_filepath2.mtime()
 
-    # The labels haven't been registered yet, so the root tags should have the
-    # same modification time as the files
-    assert src_filepath1.mtime() == root1.mtime
-    assert src_filepath2.mtime() == root2.mtime
-
-    # Registering the labels with the 'get_labels' will register the labels
-    # doc1's mtime doesn't change because the @ref tag's label hasn't changed
-    # Neither has doc2.
-    labels = label_manager.get_labels()
-    assert src_filepath1.mtime() == root1.mtime
+    # The labels have been registered. The root1 depends on the second document,
+    # which is later than the first document, so it should have it's mtime
+    # instead of the mtime of the first document.
+    assert src_filepath1.mtime() < src_filepath2.mtime()
+    assert src_filepath1.mtime() < root1.mtime
+    assert src_filepath2.mtime() == root1.mtime
     assert src_filepath2.mtime() == root2.mtime
 
 
@@ -184,15 +177,11 @@ def test_document_tree_updates_document_labels(tmpdir, wait):
     assert doc_list[1].src_filepath == src_filepath2
     assert doc_list[2].src_filepath == src_filepath3
 
-    # There should be 3 labels, one for each document. However, they haven't
-    # been registered yet since this is done when we get labels
-    assert len(label_manager.collected_labels) == 3
-    assert len(label_manager.labels) == 0
+    # There should be 3 labels, one for each document
+    assert len(label_manager.labels) == 3
 
     # Get the labels, and register them
-    label_list = label_manager.get_labels()  # registers labels
-    assert len(label_manager.collected_labels) == 0
-    assert len(label_manager.labels) == 3
+    label_list = label_manager.get_labels()
 
     assert label_list[0].id == 'doc:file1-dm'
     assert label_list[1].id == 'doc:file2-dm'
@@ -212,7 +201,7 @@ def test_document_tree_updates_document_labels(tmpdir, wait):
 
     # There should be 3 labels, one for each document. Changing the root
     # document reloads all documents
-    assert len(label_manager.collected_labels) == 3
+    assert len(label_manager.labels) == 3
 
     assert doc_list[0].src_filepath == src_filepath1
     assert doc_list[1].src_filepath == src_filepath3
@@ -220,7 +209,7 @@ def test_document_tree_updates_document_labels(tmpdir, wait):
 
     # Check the ordering of labels
     label_list = label_manager.get_labels()  # register labels
-    assert len(label_manager.labels) == 3
+    assert len(label_list) == 3
     assert label_list[0].id == 'doc:file1-dm'
     assert label_list[1].id == 'doc:file3-dm'
     assert label_list[2].id == 'doc:file2-dm'
@@ -368,19 +357,20 @@ def test_document_tree_updates_with_section_labels(tmpdir, wait):
     assert title_labels[1].id == 'ch:file3-dm-file3'
     assert title_labels[2].id == 'ch:file2-dm-file2'
 
-    # A render should be required for file1.dm
+    # A render should be required for file1.dm. This will also trigger
+    # a load required for its subdocuments
     doc1, doc2, doc3 = doc.documents_list(only_subdocuments=False,
                                           recursive=True)
 
     assert doc1.render_required(target_filepath1)
-    assert not doc2.render_required(target_filepath2)
-    assert not doc3.render_required(target_filepath3)
+    assert doc2.render_required(target_filepath2)
+    assert doc3.render_required(target_filepath3)
 
     # The files have therefore been updated
     doc.render()
-    assert mtime1 != target_filepath1.stat().st_mtime
-    assert mtime2 == target_filepath2.stat().st_mtime
-    assert mtime3 == target_filepath3.stat().st_mtime
+    assert mtime1 < target_filepath1.stat().st_mtime  # reloaded
+    assert mtime2 < target_filepath2.stat().st_mtime  # reloaded
+    assert mtime3 < target_filepath3.stat().st_mtime  # reloaded
 
     # 2. Test coupled documents
 
@@ -414,9 +404,10 @@ def test_document_tree_updates_with_section_labels(tmpdir, wait):
     assert not doc_list[0].render_required(target_filepath1)
     assert not doc_list[1].render_required(target_filepath2)
 
-    # Now touch the second document.
+    # Now touch the second document. doc2 will need a new render, since it's
+    # updated, and doc1 will need a render since it depends on doc2
     wait()  # sleep time offset needed for different mtimes
     src_filepath2.touch()
 
-    assert not doc_list[0].render_required(target_filepath1)
+    assert doc_list[0].render_required(target_filepath1)
     assert doc_list[1].render_required(target_filepath2)

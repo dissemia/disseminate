@@ -3,10 +3,10 @@ Tests for tex formatting functions for tags.
 """
 import pytest
 
-from disseminate.formats import tex_env, tex_cmd, TexFormatError
+from disseminate.formats import tex_env, tex_cmd, tex_verb, TexFormatError
 
 
-def test_tag_tex_environment(attributes_cls):
+def test_tex_environment(attributes_cls):
     """Tests the formatting of tex environments."""
 
     # 1. Test a basic equation with a required argument
@@ -50,8 +50,8 @@ def test_tag_tex_environment(attributes_cls):
     assert return_str == key
 
 
-def test_tag_tex_command(attributes_cls):
-    """Tests the formatting of tex environments."""
+def test_tex_command(attributes_cls):
+    """Tests the formatting of tex commands."""
 
     # 1. Try a non-allowed command
     with pytest.raises(TexFormatError):
@@ -100,3 +100,11 @@ def test_tag_tex_command(attributes_cls):
     # 6. setcounter
     assert (tex_cmd('setcounter', attributes_cls('counter 3')) ==
             '\\setcounter{counter}{3}')
+
+
+def test_tag_verb():
+    """Test the tag_verb function"""
+
+    assert (tex_verb('test') == "\\verb|test|")
+    assert (tex_verb('te|st') == "\\verb!te|st!")
+    assert (tex_verb('te!|st') == "\\verb^te!|st^")

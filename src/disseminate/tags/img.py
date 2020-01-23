@@ -4,6 +4,7 @@ Image tags
 import pathlib
 
 from .tag import Tag, TagError
+from .utils import find_files, format_attribute_width
 from ..formats import tex_cmd
 from ..utils.string import hashtxt
 from ..paths import SourcePath
@@ -30,63 +31,89 @@ class Img(Tag):
     process_typography = False
 
     html_name = 'img'
-    img_filepath = None
+    filepath = None
 
     def __init__(self, name, content, attributes, context):
         super().__init__(name=name, content=content, attributes=attributes,
                          context=context)
 
-        # Move the contents to the src_filpath attribute
+        # Move the contents to the filepath attribute
         if isinstance(content, list):
             contents = ''.join(content).strip()
-        elif isinstance(content, SourcePath):
+        elif isinstance(content, pathlib.Path) and content.is_file():
             contents = content
+        elif isinstance(content, str):
+            # Get the filepath for the file
+            filepaths = find_files(content, context)
+            contents = (filepaths[0] if filepaths else None)
         else:
-            contents = self.content.strip()
+            contents = None
         self.content = ''
 
         if contents:
-            self.img_filepath = contents
+            self.filepath = contents
         else:
             msg = "An image path must be used with the img tag."
             raise TagError(msg)
 
-    def tex_fmt(self, content=None, mathmode=False, level=1):
+    @property
+    def mtime(self):
+        """The last modification time of this tag and dependent files."""
+        mtimes = [super().mtime]
+
+        # Get the image file's modification time
+        img_filepath = pathlib.Path(self.filepath)
+        if img_filepath.is_file():
+            mtime = img_filepath.stat().st_mtime
+            mtimes.append(mtime)
+
+        # Remove None values from mtimes
+        mtimes = list(filter(bool, mtimes))
+
+        # The mtime is the latest mtime of all the tags and labels
+        return max(mtimes)
+
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         # Get the file dependency
         assert self.context.is_valid('dependency_manager')
 
         dep_manager = self.context['dependency_manager']
 
         # Raises MissingDependency if the file is not found
-        deps = dep_manager.add_dependency(dep_filepath=self.img_filepath,
+        deps = dep_manager.add_dependency(dep_filepath=self.filepath,
                                           target='.tex',
                                           context=self.context,
                                           attributes=self.attributes)
         dep = deps.pop()
         dest_filepath = dep.dest_filepath
-        dest_subpath = dest_filepath.subpath
 
-        return tex_cmd(cmd='includegraphics', attributes=self.attributes,
-                       formatted_content=str(dest_subpath))
+        # Format the width
+        attributes = attributes if attributes is not None else self.attributes
+        attrs = format_attribute_width(attributes, target='.tex')
 
-    def html_fmt(self, content=None, level=1):
+        return tex_cmd(cmd='includegraphics', attributes=attrs,
+                       formatted_content=str(dest_filepath))
+
+    def html_fmt(self, content=None, attributes=None, level=1):
         # Add the file dependency
         assert self.context.is_valid('dependency_manager')
         dep_manager = self.context['dependency_manager']
 
         # Raises MissingDependency if the file is not found
-        deps = dep_manager.add_dependency(dep_filepath=self.img_filepath,
+        deps = dep_manager.add_dependency(dep_filepath=self.filepath,
                                           target='.html',
                                           context=self.context,
                                           attributes=self.attributes)
+
         dep = deps.pop()
         url = dep.get_url(context=self.context)
 
-        # Use the parent method to render the tag. However, the 'src' attribute
-        # should be fixed first.
+        # Format the width and attributes
+        attrs = self.attributes.copy() if attributes is None else attributes
+        attrs = format_attribute_width(attrs, target='.html')
+        attrs['src'] = url
 
-        self.attributes['src'] = url
-        return super(Img, self).html_fmt(level=level)
+        return super().html_fmt(attributes=attrs, level=level)
 
 
 class RenderedImg(Img):
@@ -112,10 +139,11 @@ class RenderedImg(Img):
             content = content.strip()
 
         # Determine if contents is a file or code
-        content_line = content.splitlines()[0]  # check filename in 1st line
-        if pathlib.Path(content_line).is_file():
+        filepaths = find_files(content, context=context)
+        if len(filepaths) == 1:
             # It's a file. Use it directly.
-            pass
+            content = filepaths[0]
+
         else:
             # Render the content, if needed.
             content = self.render_content(content=content, context=context)

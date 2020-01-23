@@ -40,26 +40,30 @@ def test_authors_tag_tex(context_cls):
         assert key == tex
 
 
-def test_titlepage_tag_html(context_cls):
+def test_titlepage_tag_html(doc):
     """Test the rendering of the authors tag in html."""
     # setup the tag
-    context = context_cls(**{'authors': 'Fred Kay, D Smith',
-                             'title': 'My Title'})
+    context = doc.context
+    context['authors'] = 'Fred Kay, D Smith'
+    context['title'] = 'My Title'
 
     tag = Titlepage(name='titlepage', content='', attributes=tuple(),
                     context=context)
+    print(tag.html)
     key = ('<div class="title-page">\n'
-           '  <h1 class="title">My Title</h1>\n'
-           '  <div class="authors">Fred Kay and D Smith</div>\n'
+           '<h1 id="title:test-dm-my-title">\n'
+           '<span class="label"></span>My Title</h1>\n'
+           '<div class="authors">Fred Kay and D Smith</div>\n'
            '</div>\n')
     assert tag.html == key
 
 
-def test_titlepage_tag_tex(context_cls):
+def test_titlepage_tag_tex(doc):
     """Test the rendering of the authors tag in tex."""
     # setup the tag
-    context = context_cls(**{'authors': 'Fred Kay, D Smith',
-                             'title': 'My Title'})
+    context = doc.context
+    context['authors'] = 'Fred Kay, D Smith'
+    context['title'] = 'My Title'
 
     tag = Titlepage(name='titlepage', content='', attributes=tuple(),
                     context=context)

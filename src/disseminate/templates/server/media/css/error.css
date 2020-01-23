@@ -1,0 +1,66 @@
+h2 {
+  text-align: center;
+  padding-bottom: 1em;
+  font-weight: 200;
+}
+
+h3 {
+  font-size: 18pt;
+  font-weight: 300;
+  padding-bottom: 1em;
+}
+
+h4 {
+  font-size: 14pt;
+  font-weight: 300;
+}
+
+div.message {
+  border: 1px solid #dddddd;
+  padding: 1rem;
+  border-radius: 5px;
+  background: #f5f5f5;
+}
+
+div.subbox {
+  background: #ffffff;
+  font-size: 9pt;
+  font-family: monospace;
+  border: 1px solid #eeeeee;
+  border-radius: 5px;
+  margin: 0.5rem;
+  padding: 0.5rem;
+}
+
+input[type='checkbox'] {
+  display: none;
+}
+
+.lbl-toggle {
+  min-width: 9rem;
+}
+
+.shell {
+  max-height: 0px;
+  overflow: hidden;
+
+  transition: max-height .25s ease-in-out;
+}
+
+.traceback {
+  max-height: 0px;
+  overflow: hidden;
+
+  transition: max-height .25s ease-in-out;
+}
+
+
+.toggle:checked + .lbl-toggle + .shell {
+  max-height: 28rem;
+  overflow: scroll;
+}
+
+.toggle:checked + .lbl-toggle + .traceback {
+  max-height: 28rem;
+  overflow: scroll;
+}

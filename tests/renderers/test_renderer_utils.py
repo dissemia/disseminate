@@ -9,7 +9,7 @@ def test_load_renderers(doc):
     """Test the load_renderers function."""
 
     context = doc.context
-
+    context['targets'] = {'.tex'}
     # Test the proper creation of renderers in the DocumentContext
     load_renderers(context)
 
@@ -20,3 +20,7 @@ def test_load_renderers(doc):
     renderer = context['renderers']['template']
     assert isinstance(renderer, BaseRenderer)
     assert issubclass(renderer.__class__, BaseRenderer)
+    assert renderer.targets == {'.tex'}
+
+    doc.load()
+    assert renderer.targets == {'.tex'}

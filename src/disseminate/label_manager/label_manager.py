@@ -3,7 +3,7 @@ The manager for labels.
 """
 from .types import ContentLabel, DocumentLabel
 from .exceptions import LabelNotFound
-from .processors import ProcessLabels
+from .signals import label_register
 from ..utils.classes import weakattr
 from ..utils.dict import find_entry
 from ..utils.string import replace_macros
@@ -49,13 +49,10 @@ class LabelManager(object):
     labels = None
     collected_labels = None
 
-    processors = None
-
     def __init__(self, root_context):
         self.labels = []
         self.collected_labels = dict()
         self.root_context = root_context
-        self.processors = ProcessLabels.processors(context=root_context)
 
     def add_label(self, id, kind, context, label_cls, *args, **kwargs):
         """Add a label.
@@ -257,9 +254,11 @@ class LabelManager(object):
             3. Sets references to the heading labels and the counts for
                heading labels.
         """
-        for processor in self.processors:
-            processor(registered_labels=self.labels,
-                      collected_labels=self.collected_labels)
+        # Only register labels if there are collected labels to register
+        if len(self.collected_labels) > 0:
+            label_register.emit(registered_labels=self.labels,
+                                collected_labels=self.collected_labels,
+                                root_context=self.root_context)
 
         return None
 

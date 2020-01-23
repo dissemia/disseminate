@@ -1,0 +1,228 @@
+/*
+ * CSS for templates/base/base.html
+ */
+
+body {
+  color: #444444;
+  background: #fcfcfc;
+  font-weight: 200;
+  margin: 0 auto 4rem auto;
+}
+
+h1 {
+  font-weight: 300;
+}
+
+h2, h3, h4, h5, h6 {
+  font-weight: 200;
+}
+
+.container {
+  padding-top: 1rem;
+  padding-left: 2rem;
+  max-width: 960px;
+}
+
+/* Menu customizations */
+
+.menu {
+  display: none;
+  z-index: 2;
+  background: #f4f4f4fa;
+}
+
+.menu h4 {
+  font-size: 1.6em;
+  font-weight: 200;
+  margin: 0 0 0 0.5rem;
+}
+
+#menu-toolbar {
+  visibility: hidden;
+  position: fixed;
+  top: 0em;
+  max-height: 2em;
+  z-index: 4;
+}
+
+#menu-content {
+  visibility: hidden;
+  position: fixed;
+  overflow: scroll;
+  top: 2.2em;
+  z-index: 2;
+  background: #f4f4f4f6;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-top: 0;
+  border-radius: 0 0 5px 5px;
+  max-height: calc(100% - 3em)
+}
+
+@media (min-width: 576px) {
+  #menu-toolbar, #menu-content {
+    width: calc(100% - 4em);
+  }
+}
+
+@media (min-width: 992px) {
+  #menu-toolbar, #menu-content {
+    width: calc(968px - 4em);
+  }
+}
+
+label.menu-toggle {
+  margin-left: -2rem;
+  position: fixed;
+  display: block;
+}
+
+label.menu-toggle img {
+  position: absolute;
+  top: 0;
+}
+
+input.menu-toggle[type=checkbox] {
+  visibility: hidden;
+  position: absolute;
+}
+
+input.menu-toggle[type=checkbox]:checked ~ .menu {
+  display: block;
+}
+
+input.menu-toggle[type=checkbox]:checked ~ .menu #menu-toolbar {
+  visibility: visible;
+}
+
+input.menu-toggle[type=checkbox]:checked ~ .menu #menu-content {
+  visibility: visible;
+}
+
+.menu-toggle #menu-toggle-inactive {
+  position: absolute;
+}
+
+.menu-toggle #menu-toggle-active {
+  visibility: hidden;
+}
+
+input.menu-toggle[type=checkbox]:checked + .menu-toggle #menu-toggle-inactive {
+  visibility: hidden;
+}
+
+input.menu-toggle[type=checkbox]:checked + .menu-toggle #menu-toggle-active {
+  visibility: visible;
+}
+
+/* Menu - Functions bar */
+
+.functions a, hr {
+  color: #444444;
+  margin: 0.5em 0;
+}
+
+ul.functions {
+  margin: 0 -0.5rem -0.25rem -0.5rem;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-top: 0;
+  border-radius: 0 0 5px 5px;
+  font-size: 1.1em;
+}
+
+.functions li.list-group-item {
+  padding: 0.25rem 0.5rem;
+  border: 0px;
+}
+
+.menu-contents {
+  display: none;
+  overflow: scroll;
+}
+
+/* Menu - submenu dropdowns */
+
+.dropdown-content {
+  position: fixed;
+  border: 1px solid #cccccc;
+  border-radius: 0 0 5px 5px;
+  border-top: 0;
+  font-size: 0.85em;
+  overflow: hidden;
+  background: #ffffff;
+  margin-left: 0;
+  padding: 0.25em;
+}
+
+.dropdown-content h5 {
+  font-size: 1.0em;
+  margin: 0.75em 0 0.25em 0.25em;
+  font-weight: 400;
+}
+
+.dropdown-content hr {
+  margin: 0.25em 0;
+}
+
+ul.dropdown-content {
+  padding-top: 0.25em;
+}
+
+.dropdown-content li.list-group-item {
+  padding: 0.15em 0.5em 0.05em 0.5em;
+  margin-right: 0;
+}
+
+.dropdown-project-content {
+  display: none;
+}
+
+.dropdown-project:hover .dropdown-project-content {
+  display: block;
+}
+
+.dropdown-account-content {
+  display: none;
+}
+
+.dropdown-account:hover .dropdown-account-content {
+  display: block;
+}
+
+
+/* Root page customizations */
+
+.features {
+  padding-top: 3rem;
+  max-width: 768px;
+  margin: 0 auto;
+}
+
+.features h5 {
+  font-weight: 300;
+}
+
+.features .card {
+  height: 11rem;
+  border: 1px solid rgba(0, 0, 0, 0.0875);
+  background: #f4f4f4;
+}
+
+.features .card-body {
+  padding: 1.0rem;
+}
+
+/* Project listing on main page */
+.project-list .card {
+  box-shadow: 2px 2px #cccccc;
+}
+
+.project-list .card img.icon {
+  height: 1em;
+  padding-right: 0.2em;
+}
+
+.project-list .card h5 a {
+  color: #000000;
+  font-weight: 300;
+}
