@@ -117,7 +117,7 @@ def test_tag_code_html(doc):
                          '<div class="highlight block">'
                             '<pre>'
                                 '<span></span>'
-                                '<span class="k">print</span>'
+                                '<span class="nb">print</span>'
                                 '<span class="p">(</span>'
                                 '<span class="s1">\'test\'</span>'
                                 '<span class="p">)</span>\n'
@@ -129,7 +129,7 @@ def test_tag_code_html(doc):
                          '<div class="highlight block">'
                             '<pre>'
                                 '<span></span>'
-                                '<span class="k">print</span>'
+                                '<span class="nb">print</span>'
                                 '<span class="p">(</span>'
                                 '<span class="s1">\'test\'</span>'
                                 '<span class="p">)</span>\n'
@@ -189,11 +189,11 @@ def test_tag_code_tex(doc):
     code = root.content
     code.paragraph_role = 'block'
     assert code.tex == ('\\begin{Verbatim}[commandchars=\\\\\\{\\}]\n'
-                        '\\PY{k}{print}\\PY{p}{(}\\PY{l+s+s1}{\\PYZsq{}}'
+                        '\\PY{n+nb}{print}\\PY{p}{(}\\PY{l+s+s1}{\\PYZsq{}}'
                         '\\PY{l+s+s1}{test}\\PY{l+s+s1}{\\PYZsq{}}\\PY{p}{)}\n'
                         '\\end{Verbatim}\n')
     assert root.tex == ('\\begin{Verbatim}[commandchars=\\\\\\{\\}]\n'
-                        '\\PY{k}{print}\\PY{p}{(}\\PY{l+s+s1}{\\PYZsq{}}'
+                        '\\PY{n+nb}{print}\\PY{p}{(}\\PY{l+s+s1}{\\PYZsq{}}'
                         '\\PY{l+s+s1}{test}\\PY{l+s+s1}{\\PYZsq{}}\\PY{p}{)}\n'
                         '\\end{Verbatim}\n')
 
