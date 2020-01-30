@@ -1,6 +1,20 @@
 Release Notes
 =============
 
+0.17
+-----
+
+Converters
+~~~~~~~~~~
+
+1. *Imagemagick*. Implemented a ``.tif``/``.tiff`` converter to ``.png``
+
+Bug Fixes
+~~~~~~~~~
+1. Wrap filenames and paths in curly braces for LaTeX ``\includegraphics``
+   command. This is needed to deal with filenames that include special
+   characters, like periods.
+
 0.16
 ----
 

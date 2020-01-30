@@ -21,4 +21,4 @@ Converters have the following responsibilities:
    targets may require different formats for media files.
 """
 from .converter import convert, ConverterError
-from . import pdf, tex, asy
+from . import pdf, tex, asy, imagemagick
