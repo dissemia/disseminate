@@ -84,8 +84,14 @@ class Img(Tag):
                                           target='.tex',
                                           context=self.context,
                                           attributes=self.attributes)
+
+        # Get the filename for the file. Wrap this filename in curly braces
+        # in case the filename includes special characters
         dep = deps.pop()
         dest_filepath = dep.dest_filepath
+        base = dest_filepath.with_suffix('')
+        suffix = dest_filepath.suffix
+        dest_filepath = "{{{base}}}{suffix}".format(base=base, suffix=suffix)
 
         # Format the width
         attributes = attributes if attributes is not None else self.attributes
