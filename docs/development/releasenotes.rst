@@ -4,6 +4,11 @@ Release Notes
 0.17
 -----
 
+Document
+~~~~~~~~
+
+1. Add local path (parent dir) to the search paths for each document
+
 Converters
 ~~~~~~~~~~
 
