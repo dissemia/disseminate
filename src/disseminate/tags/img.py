@@ -11,6 +11,11 @@ from ..paths import SourcePath
 from .. import settings
 
 
+class ImgFileNotFound(TagError):
+    """The image file was not found."""
+    pass
+
+
 class Img(Tag):
     """The img tag for inserting images.
 
@@ -53,8 +58,8 @@ class Img(Tag):
         if contents:
             self.filepath = contents
         else:
-            msg = "An image path must be used with the img tag."
-            raise TagError(msg)
+            msg = "An image path '{}' could not be found.".format(content)
+            raise ImgFileNotFound(msg)
 
     @property
     def mtime(self):
