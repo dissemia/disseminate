@@ -1,13 +1,15 @@
 Release Notes
 =============
 
-0.17
+v0.18
 -----
 
 Document
 ~~~~~~~~
 
 1. Add local path (parent dir) to the search paths for each document
+2. Files are copied both from the local path of a document or subdocument or
+   the project root path.
 
 Converters
 ~~~~~~~~~~
@@ -20,8 +22,22 @@ Bug Fixes
    command. This is needed to deal with filenames that include special
    characters, like periods.
 
-0.16
-----
+v0.17
+-----
+
+Tags
+~~~~
+1. Implementation of the ``@list`` and ``@outline`` tags.
+2. Implementation of ``@prev`` and ``@next`` tags with signals
+3. Implementation of a general ``html_list`` function for ``@list`` and ``@toc``
+   tags
+
+Document
+~~~~~~~~
+1. Implementation of signals.
+
+v0.16
+-----
 
 Backend
 ~~~~~~~
@@ -34,8 +50,8 @@ Backend
    links for the previous or next page. These are available as the ``prev`` and
    ``next`` entries in the context.
 
-0.15
-----
+v0.15
+-----
 
 Interfaces
 ~~~~~~~~~~
@@ -43,8 +59,8 @@ Interfaces
 1. *Click*. Implemented Click for the CLI
 2. *Flask*. Removed the server interface from the project
 
-0.14
-----
+v0.14
+-----
 
 Interfaces
 ~~~~~~~~~~
@@ -68,8 +84,8 @@ Backend
    templates and loading additional context headers.
 4. *Renderers*. Simplify the API.
 
-0.13 beta
----------
+v0.13 beta
+----------
 
 Backend
 ~~~~~~~
@@ -98,4 +114,3 @@ Backend
 11. *Label Manager*. Refactored to simplify the assignment of labels, the
     resetting of label counters and to minimize the dependency of labels for
     tags. Also added a set of label processors based on the ProcessorABC.
-
