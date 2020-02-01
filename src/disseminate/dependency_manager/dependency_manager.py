@@ -141,9 +141,16 @@ class DependencyManager(object):
 
         # Convert the dep_filepath, if needed
         if not isinstance(dep_filepath, SourcePath):
+            project_root = src_filepath.project_root
             dep_filepath = pathlib.Path(dep_filepath)
-            dep_filepath = SourcePath(project_root=dep_filepath.parent,
-                                      subpath=dep_filepath.name)
+            try:
+                dep_subpath = dep_filepath.relative_to(project_root)
+                dep_filepath = SourcePath(project_root=project_root,
+                                          subpath=dep_subpath)
+            except ValueError:
+                dep_filepath = SourcePath(project_root=dep_filepath.parent,
+                                          subpath=dep_filepath.name)
+
         deps = set()
 
         # Workup the dep_filepath

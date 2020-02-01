@@ -59,7 +59,8 @@ def test_document_context_basic_inheritence(context_cls, tmpdir):
         assert 'paths' in context.do_not_inherit
 
         assert 'paths' in context
-        assert context['paths'] == [SourcePath('tests/document/example1')]
+        assert context['paths'] == [SourcePath('.'),
+                                    SourcePath('tests/document/example1')]
 
         # The 'paths' list itself should not have been inherited
         assert id(parent_context['paths']) != id(context['paths'])
