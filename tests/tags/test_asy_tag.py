@@ -64,6 +64,7 @@ def test_asy_html_attribute(doc):
     assert img.html == ('<img src="media/test_cd0ec1067e_scale2.0.svg">'
                         '\n')
 
+
 # tex target
 
 def test_asy_tex(doc):
@@ -81,7 +82,12 @@ def test_asy_tex(doc):
     img = root.content
 
     # Check the rendered tag and that the asy and svg files were properly
-    # created
+    # created. The filename is wrapped in curly braces to account for filenames
+    # with periods and other special characters
     target_root = doc.target_root
     img_filepath = target_root / 'tex' / 'media' / 'test_48a82ce699.pdf'
-    assert img.tex == '\\includegraphics{{{}}}'.format(img_filepath)
+    suffix = img_filepath.suffix
+    base = img_filepath.with_suffix('')
+    filepath = "{{{base}}}{suffix}".format(base=base, suffix=suffix)
+
+    assert img.tex == '\\includegraphics{{{}}}'.format(filepath)

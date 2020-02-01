@@ -14,7 +14,7 @@ python_deps = All('python',
 
 image_deps = Optional('image external dependencies',
                       Optional('executables',
-                               'asy', 'pdf2svg', 'pdf-crop-margins',
+                               'asy', 'convert','pdf2svg', 'pdf-crop-margins',
                                'rsvg-convert'))
 
 pdf_deps = All('pdf',

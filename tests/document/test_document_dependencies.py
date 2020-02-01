@@ -75,3 +75,64 @@ def test_dependencies_img(tmpdir, wait):
     # The rendered document no longer has a dependency on the image.
     assert len(dep_manager.dependencies[src_filepath]) == 4
     assert dep_manager.dependencies[src_filepath] == set(deps[0:4])
+
+
+def test_dependencies_multiple_locations(doc_cls, tmpdir):
+    """Test the addition of dependencies from multiple locations."""
+
+    # 1. Test example10, which has an image file local to a sub-directory, one
+    #    in the root directory and template files
+    # tests/document/example10
+    # └── src
+    #     ├── chapter1
+    #     │   ├── figures
+    #     │   │   └── local_img.png
+    #     │   └── index.dm
+    #     ├── index.dm
+    #     └── media
+    #         └── ch1
+    #             └── root_img.png
+    # Load the root document and subdocument
+    project_root = 'tests/document/example10/src'
+    src_filepath = SourcePath(project_root=project_root, subpath='index.dm')
+    target_root = TargetPath(target_root=tmpdir)
+
+    doc = doc_cls(src_filepath=src_filepath, target_root=target_root)
+    subdoc = doc.documents_list(only_subdocuments=True)[0]
+
+    # Load the dependencies by rendering the root doc
+    doc.render()
+
+    dep_manager = doc.context['dependency_manager']
+
+    doc_deps = dep_manager.dependencies[doc.src_filepath]
+    subdoc_deps = dep_manager.dependencies[subdoc.src_filepath]
+
+    # make sure the local_img.png and root_img.png are loaded in the subdoc but
+    # not the doc. The local_img.png should be in the chapter1/figures directory
+    # byt the root_img.png should be in the global media/ch1 directory.
+    assert any(dep.dest_filepath.match("html/media/css/base.css")
+               for dep in doc_deps)
+    assert any(dep.dest_filepath.match("html/media/css/default.css")
+               for dep in doc_deps)
+    assert not any(dep.dest_filepath.match("tex/media/ch1/root_img.png")
+                   for dep in doc_deps)
+    assert not any(dep.dest_filepath.match("tex/chapter1/figures/local_img.png")
+                   for dep in doc_deps)
+    assert not any(dep.dest_filepath.match("html/media/ch1/root_img.png")
+                   for dep in doc_deps)
+    assert not any(dep.dest_filepath.match("html/chapter1/figures/local_img.png")
+                   for dep in doc_deps)
+
+    assert any(dep.dest_filepath.match("html/media/css/base.css")
+               for dep in subdoc_deps)
+    assert any(dep.dest_filepath.match("html/media/css/default.css")
+               for dep in subdoc_deps)
+    assert any(dep.dest_filepath.match("tex/media/ch1/root_img.png")
+               for dep in subdoc_deps)
+    assert any(dep.dest_filepath.match("tex/chapter1/figures/local_img.png")
+               for dep in subdoc_deps)
+    assert any(dep.dest_filepath.match("html/media/ch1/root_img.png")
+               for dep in subdoc_deps)
+    assert any(dep.dest_filepath.match("html/chapter1/figures/local_img.png")
+               for dep in subdoc_deps)

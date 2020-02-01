@@ -28,6 +28,9 @@ The ``html`` format may include formatting files (``.css`` and
 | ``.svg`` | :ref:`@img      | copied    |                                                   |
 |          | <tags-img>`     |           |                                                   |
 +----------+-----------------+-----------+---------------------------------------------------+
+| ``.tif`` | :ref:`@img      | converted | Converted to ``.png`` format with the             |
+|          | <tags-img>`     |           | :ref:`convert` converter.                         |
++----------+-----------------+-----------+---------------------------------------------------+
 | ``.pdf`` | :ref:`@img      | converted | Converted to ``.svg`` format with the             |
 |          | <tags-img>`     |           | :ref:`pdf2svg <pdf2svg>` converter.               |
 +----------+-----------------+-----------+---------------------------------------------------+
@@ -53,4 +56,7 @@ The ``tex`` format may include formatting files  media files (``.pdf`` and ``.pn
 +----------+-----------------+-----------+---------------------------------------------------+
 | ``.png`` | :ref:`@img      | copied    |                                                   |
 |          | <tags-img>`     |           |                                                   |
++----------+-----------------+-----------+---------------------------------------------------+
+| ``.tif`` | :ref:`@img      | converted | Converted to ``.png`` format with the             |
+|          | <tags-img>`     |           | :ref:`convert` converter.                         |
 +----------+-----------------+-----------+---------------------------------------------------+

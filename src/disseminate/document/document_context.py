@@ -136,7 +136,8 @@ class DocumentContext(BaseContext):
         super(DocumentContext, self).reset()
 
         document = self['document']()
-        self['src_filepath'] = document.src_filepath
+        src_filepath = document.src_filepath
+        self['src_filepath'] = src_filepath
 
         # set the document id
         if self.get('doc_id', None) is None:
@@ -145,8 +146,8 @@ class DocumentContext(BaseContext):
             self['doc_id'] = str(self['doc_id'])
 
         # set the document's mtime
-        if document.src_filepath.exists():
-            self['mtime'] = document.src_filepath.stat().st_mtime
+        if src_filepath.exists():
+            self['mtime'] = src_filepath.stat().st_mtime
 
         # Set the root document variables; these should only be set if this
         # is the context for the root document.
@@ -174,6 +175,13 @@ class DocumentContext(BaseContext):
         # Prepare the paths entry
         paths = self.setdefault('paths', [])
         paths.clear()
+
+        # Include the path for the src_filepath
+        local_path = src_filepath.parent
+        if local_path not in paths:
+            paths.append(local_path)
+
+        # Include the project_root path
         if self['project_root'] not in paths:
             paths.append(self['project_root'])
 
