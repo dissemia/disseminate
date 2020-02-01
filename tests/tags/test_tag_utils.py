@@ -12,6 +12,7 @@ from disseminate.tags.utils import (repl_tags, content_to_str, replace_context,
                                     copy_tag, find_files,
                                     format_attribute_width)
 from disseminate.utils.types import StringPositionalValue
+from disseminate.paths import SourcePath, TargetPath
 
 
 def test_content_to_str(context_cls):
@@ -158,8 +159,10 @@ def test_tag_copy(context_cls):
         assert id(tag2.context) == id(other)
 
 
-def test_find_files(doc):
-    """Test the find_files function."""
+def test_find_files_img_example1(doc):
+    """Test the find_files function with the img_example1"""
+    # tests/tags/img_example1/
+    # └── sample.pdf
     context = doc.context
 
     # The source file should be found
@@ -176,6 +179,50 @@ def test_find_files(doc):
                 'sample.pdf').absolute()
     filepaths = find_files(img_path, context)
     assert len(filepaths) == 1
+
+
+def test_find_files_img_example2(doc_cls, tmpdir):
+    """Test the find_files function with the img_example2"""
+    # tests/tags/img_example2
+    # └── src
+    #     ├── chapter1
+    #     │   ├── figures
+    #     │   │   └── local_img.png
+    #     │   └── index.dm
+    #     ├── index.dm
+    #     └── media
+    #         └── ch1
+    #             └── root_img.png
+    #
+    # chapter1/index.dm includes local_img.png and root_img.png
+
+    # Load the root document and subdocument
+    project_root = 'tests/tags/img_example2/src'
+    src_filepath = SourcePath(project_root=project_root, subpath='index.dm')
+    target_root = TargetPath(target_root=tmpdir)
+
+    doc = doc_cls(src_filepath=src_filepath, target_root=target_root)
+    subdoc = doc.documents_list(only_subdocuments=True)[0]
+
+    # Check the paths relative to the root document
+    filepaths = find_files('media/ch1/root_img.png', doc.context)
+    assert len(filepaths) == 1
+    assert (filepaths[0].match('tests/tags/img_example2/src/'
+                               'media/ch1/root_img.png'))
+
+    filepaths = find_files('figures/local_img.png', doc.context)  # not found
+    assert len(filepaths) == 0
+
+    # Check the paths relative to the sub document
+    filepaths = find_files('media/ch1/root_img.png', subdoc.context)
+    assert len(filepaths) == 1
+    assert (filepaths[0].match('tests/tags/img_example2/src/'
+                               'media/ch1/root_img.png'))
+
+    filepaths = find_files('figures/local_img.png', subdoc.context)
+    assert len(filepaths) == 1
+    assert (filepaths[0].match('tests/tags/img_example2/src/'
+                               'chapter1/figures/local_img.png'))
 
 
 def test_format_attribute_width():

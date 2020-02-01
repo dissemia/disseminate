@@ -141,6 +141,8 @@ def test_img_html(tmpdir, context_cls):
 
 def test_img_tex(tmpdir, context_cls):
     """Test the handling of LaTeX with the img tag."""
+    tmpdir = pathlib.Path(tmpdir)
+
     project_root = SourcePath(project_root='tests/tags/img_example1')
     target_root = TargetPath(target_root=tmpdir)
     src_filepath = SourcePath(project_root=project_root,
@@ -166,8 +168,14 @@ def test_img_tex(tmpdir, context_cls):
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
 
+    # Get the image filepath and wrap it in curly braces to avoid problems
+    # with unusual filenames, like those with periods
     img_filepath = tmpdir / 'tex' / 'sample.pdf'
-    assert img.tex == "\\includegraphics{{{}}}".format(img_filepath)
+    suffix = img_filepath.suffix
+    base = img_filepath.with_suffix('')
+    filepath = "{{{base}}}{suffix}".format(base=base, suffix=suffix)
+
+    assert img.tex == "\\includegraphics{{{}}}".format(filepath)
 
     # Now test an tex-specific attribute
     # Generate the markup
@@ -176,4 +184,5 @@ def test_img_tex(tmpdir, context_cls):
     # Generate a tag and compare the generated tex to the answer key
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
-    assert img.tex == "\\includegraphics[height=20]{{{}}}".format(img_filepath)
+
+    assert img.tex == "\\includegraphics[height=20]{{{}}}".format(filepath)
