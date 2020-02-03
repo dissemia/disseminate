@@ -17,7 +17,8 @@ def render_page(request, path):
     root_docs = load_projects(request)
 
     # Serve the page directly
-    path = pathlib.Path(path).with_suffix('.html')
+    path += '.html'
+    path = pathlib.Path(path)
     if path.is_file():
         return response.file(path)
 

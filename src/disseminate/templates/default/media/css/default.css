@@ -268,6 +268,20 @@ span.label::after {
     content: " ";
 }
 
+img.eq {
+  padding-bottom: 4px;
+}
+
+/* Special elements */
+
+span.bluebox {
+  display: block;
+  border: 2px solid #4e6bf9;
+  background: #e8ecfd;
+  border-radius: 5px;
+  padding: 1em;
+}
+
 /* Footer - navigation */
 
 footer {

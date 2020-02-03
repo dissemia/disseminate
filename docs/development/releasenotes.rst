@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v0.19
+-----
+
+Bug Fixes
+~~~~~~~~~
+1. Fixed the renaming of filenames with periods in converters. Created a new
+   path utility, ``rename``, that more intelligently renames files.
+
 v0.18
 -----
 
