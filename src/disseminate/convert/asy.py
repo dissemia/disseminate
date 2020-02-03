@@ -5,6 +5,7 @@ from .converter import Converter, ConverterError
 from .pdf import Pdf2svg
 from .arguments import SourcePathArgument
 from ..paths import SourcePath, TargetPath
+from ..paths.utils import rename
 
 
 class Asy2pdf(Converter):
@@ -65,7 +66,8 @@ class Asy2svg(Pdf2svg):
         """Convert an asy file to a pdf file."""
 
         # Setup a temporary file for the intermediary pdf
-        temp_filepath = self.temp_filepath().with_suffix('')
+        temp_filepath = self.temp_filepath()
+        temp_filepath = rename(temp_filepath, extension='')  # strip extension
         temp_basefilepath = TargetPath(target_root=temp_filepath.parent,
                                        subpath=temp_filepath.name)
         src_filepath = self.src_filepath.value

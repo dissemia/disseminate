@@ -7,6 +7,7 @@ import pathlib
 from tempfile import mkdtemp
 
 from ..paths import SourcePath, TargetPath
+from ..paths.utils import rename
 from .converter import Converter, convert
 from .arguments import SourcePathArgument
 from .pdf import Pdf2svg
@@ -29,7 +30,7 @@ class Pdflatex(Converter):
 
         # Setup temp directory and setup the path of the created pdf
         temp_dir = pathlib.Path(mkdtemp())
-        filename_pdf = src_filepath.with_suffix('.pdf').name
+        filename_pdf = rename(src_filepath, extension='.pdf').name
         temp_filepath_pdf = TargetPath(target_root=temp_dir,
                                        subpath=filename_pdf)
 

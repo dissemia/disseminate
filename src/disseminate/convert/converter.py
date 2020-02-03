@@ -391,11 +391,24 @@ class Converter(object):
     def target_filepath(self):
         """Return the full target_path (:obj:`TargetPath <.paths.TargetPath>`)
         with modifiers and an extension."""
+        # target_basefilepath is the TargetPath (path, document target and
+        # filename) for the file to create
+        # ex: tex/Chapter1_GasEquationsState/figures/Fig1_Boyle
         target_basefilepath = self.target_basefilepath.value
-        subpath = target_basefilepath.subpath.with_suffix(self.target)
+
+        # This target is the format to which the file should be converted.
+        # This is separate from the document target
+        # ex: .png
+        target = ('.' + self.target if not self.target.startswith('.') else
+                  self.target)
+
+        # Create a new target path for the target filename to create, including
+        # the document target, the target filename and path, and the target
+        # format of the new file.
+        # ex: tex/Chapter1_GasEquationsState/figures/Fig1_Boyle.png
         return TargetPath(target_root=target_basefilepath.target_root,
                           target=target_basefilepath.target,
-                          subpath=subpath)
+                          subpath=str(target_basefilepath.subpath) + target)
 
     def convert(self):
         """Convert a file and return its new path.

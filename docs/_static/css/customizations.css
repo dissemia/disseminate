@@ -173,6 +173,10 @@ span.pre {
   font-family: 'Anonymous Pro', monospace;
 }
 
+dl dt {
+  min-width: 6em;
+}
+
 dl.docutils {
   margin: 0 0 0 1rem;
 }
