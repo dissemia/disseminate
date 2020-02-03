@@ -9,6 +9,7 @@ from .converter import Converter
 from .arguments import (PositiveIntArgument, PositiveFloatArgument,
                         TupleArgument)
 from ..paths import TargetPath
+from ..paths.utils import rename
 
 
 class Pdf2svg(Converter):
@@ -79,13 +80,10 @@ class Pdf2svg(Converter):
         # Setup temp file. The returned file path is a .svg; get the .pdf and
         # intermediary .svg temp filepaths
         temp_filepath_svg = self.temp_filepath()
-        temp_filepath_svg2 = (temp_filepath_svg
-                              .with_name(temp_filepath_svg.stem + '2')
-                              .with_suffix('.svg'))
-        temp_filepath_pdf = temp_filepath_svg.with_suffix('.pdf')
-        temp_filepath_pdf2 = (temp_filepath_svg
-                              .with_name(temp_filepath_pdf.stem + '2')
-                              .with_suffix('.pdf'))
+        temp_filepath_svg2 = rename(temp_filepath_svg, append='2')
+        temp_filepath_pdf = rename(temp_filepath_svg, append='2',
+                                   extension='.pdf')
+
         current_pdf = self.src_filepath.value
         current_svg = temp_filepath_svg
 
@@ -100,13 +98,13 @@ class Pdf2svg(Converter):
             # pdf-crop-margins -p4 0 0 0 0 -o outfile.pdf infile.pdf
             args = [pdfcrop_exec,
                     *percent_retain,
-                    "-o", str(temp_filepath_pdf2),
+                    "-o", str(temp_filepath_pdf),
                     str(current_pdf)]
 
             self.run(args, raise_error=False)
 
             # Move the current pdf
-            current_pdf = temp_filepath_pdf2
+            current_pdf = temp_filepath_pdf
 
         # Convert the file to svg
         # pdf2svg infile.pdf outfile.svg [page_no]

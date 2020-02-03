@@ -740,6 +740,55 @@ def test_document_render_missing_template(tmpdir):
         doc = Document(src_filepath=src_filepath, target_root=tmpdir)
 
 
+def test_document_unusual_filenames(tmpdir):
+    """Test the rendering of projects that use unusual filenames."""
+    tmpdir = pathlib.Path(tmpdir)
+
+    # Test example 11. Example 11 has unusual filenames that need to be loaded
+    # TODO: Currently this test works for html, but not pdf/html due to an
+    # inability of pdflatex to work with unicode filenames
+    #
+    # tests/document/example11
+    # └── src
+    #     ├── ch1.1
+    #     │   ├── ch1.1.dm
+    #     │   └── ?\215ísla
+    #     │       ├── fig1.1.1.png
+    #     │       └── img.one.asy
+    #     └── root.file.dm
+
+    # Setup the paths
+    src_filepath = SourcePath(project_root='tests/document/example11/src',
+                              subpath='root.file.dm')
+
+    # Load the document and render it with no template
+    doc = Document(src_filepath=src_filepath, target_root=tmpdir)
+    doc.render()
+
+    subdocs = doc.documents_list(only_subdocuments=True)
+    assert len(subdocs) == 1
+
+    # Check that the src_filepaths are correctly set
+    assert doc.src_filepath.match('tests/document/example11/src/root.file.dm')
+    assert subdocs[0].src_filepath.match('tests/document/example11/src/'
+                                         'ch1.1/ch1.1.dm')
+
+    # Check dependencies
+    subdoc_src_filepath = subdocs[0].src_filepath
+    dep_manager = doc.context['dependency_manager']
+
+    subdoc_deps = dep_manager.dependencies[subdoc_src_filepath]
+
+    assert any(dep.dep_filepath.match('src/ch1.1/čísla/img.one.asy')
+               for dep in subdoc_deps)
+    assert any(dep.dest_filepath.match('html/ch1.1/čísla/img.one.svg')
+               for dep in subdoc_deps)
+    assert any(dep.dep_filepath.match('src/ch1.1/čísla/fig1.1.1.png')
+               for dep in subdoc_deps)
+    assert any(dep.dest_filepath.match('html/ch1.1/čísla/fig1.1.1.png')
+               for dep in subdoc_deps)
+
+
 def test_document_example8(tmpdir):
     """Test the example8 document directory."""
     tmpdir = pathlib.Path(tmpdir)
