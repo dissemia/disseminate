@@ -177,6 +177,10 @@ dl dt {
   min-width: 6em;
 }
 
+dl.field-list > dt {
+  margin-left: 1em;
+}
+
 dl.docutils {
   margin: 0 0 0 1rem;
 }
@@ -240,6 +244,8 @@ table.docutils tr.row-odd {
 td.field-body blockquote {
   margin-left: 1rem;
 }
+
+
 
 /* Markup - Macros */
 

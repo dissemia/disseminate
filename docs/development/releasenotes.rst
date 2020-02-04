@@ -9,6 +9,11 @@ Tags
 1. *Feature Boxes*. A box with a feature for a text, like an example box
    (``@examplebox``) or a general featurebox (``@featurebox``)
 
+Documentation
+~~~~~~~~~~~~~
+1. *Feature Boxes*. Add the ``@featurebox`` and ``@examplebox`` tags to the
+   language documentation.
+
 Bug Fixes
 ~~~~~~~~~
 1. Fixed the renaming of filenames with periods in converters. Created a new

@@ -54,4 +54,5 @@ stages of publication so that the targets have the final desired appearance.
    caption
    toc
    navigation
+   featurebox
    collection
