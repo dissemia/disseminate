@@ -4,6 +4,11 @@ Release Notes
 v0.19
 -----
 
+Tags
+~~~~
+1. *Feature Boxes*. A box with a feature for a text, like an example box
+   (``@examplebox``) or a general featurebox (``@featurebox``)
+
 Bug Fixes
 ~~~~~~~~~
 1. Fixed the renaming of filenames with periods in converters. Created a new

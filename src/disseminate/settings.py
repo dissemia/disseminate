@@ -103,7 +103,7 @@ default_context = {
 
     # Process paragraphs for tags with the following names
     # (see tags/paragraphs.py)
-    'process_paragraphs': {body_attr},
+    'process_paragraphs': {body_attr, "featurebox"},
 
     # The filename for additional context header files
     'additional_header_filename': 'context.txt',

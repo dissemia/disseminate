@@ -274,12 +274,15 @@ img.eq {
 
 /* Special elements */
 
-span.bluebox {
+div.featurebox {
   display: block;
-  border: 2px solid #4e6bf9;
-  background: #e8ecfd;
   border-radius: 5px;
   padding: 1em;
+}
+
+.examplebox {
+  border: 2px solid #889cfb;
+  background: #f2f4fd;
 }
 
 /* Footer - navigation */

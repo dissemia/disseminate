@@ -7,5 +7,6 @@ equations and tables.
 from .tag import Tag, TagFactory
 from .exceptions import TagError
 from . import signals, receivers
-from . import (headings, text, img, asy, notes, figs, caption, code, eqs, toc,
-               list, preamble, collection, label, ref, navigation)
+from . import (headings, text, img, asy, notes, figs, caption, code, eqs,
+               featurebox, toc, list, preamble, collection, label, ref,
+               navigation)
