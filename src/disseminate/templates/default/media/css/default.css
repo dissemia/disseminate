@@ -266,12 +266,20 @@ img.eq {
 div.featurebox {
   display: block;
   border-radius: 5px;
-  padding: 1em;
+  padding: 1em 1em 0 1em;
 }
 
-.examplebox {
+div.featurebox h4 {
+  margin-top: 0;
+}
+
+div.featurebox.examplebox {
   border: 2px solid #889cfb;
   background: #f2f4fd;
+}
+
+div.examplebox >  h2, div.examplebox >  h3, div.examplebox >  h4 {
+  color: #405ff3;
 }
 
 /* Footer - navigation */
