@@ -14,4 +14,35 @@
   {}
   {}{}
 \makeatother
+
+%\makeatletter
+%% Paragraph indentation and separation for normal text
+%\renewcommand{\@tufte@reset@par}{
+%  \setlength{\RaggedRightParindent}{0pt}
+%  \setlength{\JustifyingParindent}{1.0pc}
+%  \setlength{\parindent}{0pt}
+%  \setlength{\parskip}{\baselineskip}
+%}
+%\@tufte@reset@par
+%
+%% Paragraph indentation and separation for marginal text
+%\renewcommand{\@tufte@margin@par}{
+%  \setlength{\RaggedRightParindent}{0pt}
+%  \setlength{\JustifyingParindent}{0.5pc}
+%  \setlength{\parindent}{0pt}
+%  \setlength{\parskip}{\baselineskip}
+%}
+%\makeatother
+
+%%%
+% Format chapter headings
+\usepackage[Bjornstrup]{fncychap}
+\setcounter{secnumdepth}{0} % turn on numbering for parts and chapters
+
 {%- endblock %}
+{% block body %}
+\begin{document}
+\mainmatter  % Needed to set chapter/section numbering
+{{ body.tex }}
+\end{document}
+{% endblock %}

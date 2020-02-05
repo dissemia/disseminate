@@ -298,7 +298,6 @@ class LabelTag(Tag):
         if all(i is not None for i in (label_manager, label_id, context)):
             format_str = label_manager.format_string(id=self.label_id,
                                                      target='.html')
-
             # Process the tags and format the contents for html
             processed_tag = Tag(name='label', content=format_str, attributes='',
                                 context=context)
