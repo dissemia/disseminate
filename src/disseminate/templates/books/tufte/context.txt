@@ -10,4 +10,6 @@ label_fmts:
     ref_heading_chapter: Chapter @label.chapter_number. @label.title
     ref_heading_section: @label.tree_number. @label.title
     ref_heading_subsection: @label.tree_number. @label.title
+    caption_figure: @b{Fig. @label.chapter_number.@label.number}.
+    ref_caption_figure: @b{Fig. @label.chapter_number.@label.number}
 
