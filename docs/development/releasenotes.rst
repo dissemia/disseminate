@@ -8,6 +8,9 @@ Tags
 ~~~~
 1. *Feature Boxes*. A box with a feature for a text, like an example box
    (``@examplebox``) or a general featurebox (``@featurebox``)
+2. *Headings*. The behavior of heading tags to not list the contents of the
+   tag by default. Instead, a label tag is created, and the content of the tag
+   is included if a ``@label.title`` macro was included.
 
 Documentation
 ~~~~~~~~~~~~~
