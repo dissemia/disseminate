@@ -18,6 +18,11 @@ Tags to insert figures
       ``id=x``
 
          The margin figure's marker label
+
+      ``height_offset.tex``
+
+         **(Tufte template)** offset the margin figure by the given vertical
+         dimension. (*ex:* ``-15em.tex``)
       
    :examples:
 
@@ -26,7 +31,13 @@ Tags to insert figures
          @marginfig[id=my-graph]{
             @img{media/graph.svg}
             @caption{My first graph}
-              }
+         }
+
+        @marginfig[-15em.tex]{
+            @img{media/graph.svg}
+            @caption{My second graph}
+         }
+
 
 ``@fig{...}``
    Insert a figure in the main text.
