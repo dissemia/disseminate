@@ -124,10 +124,10 @@ default_context = {
         'ref_caption_figure': '@b{Fig. @label.number}',
 
         # Headings tags
-        'heading': '@label.tree_number. ',
-        'heading_title': '',
-        'heading_part': 'Part @label.part_number. ',
-        'heading_chapter': 'Chapter @label.chapter_number. ',
+        'heading': '@label.tree_number. @label.title',
+        'heading_title': '@label.title',
+        'heading_part': 'Part @label.part_number. @label.title',
+        'heading_chapter': 'Chapter @label.chapter_number. @label.title',
 
         'ref_heading': '@label.title',
         'ref_heading_part': 'Part @label.part_number. @label.title',

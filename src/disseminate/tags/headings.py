@@ -63,10 +63,13 @@ class Heading(Tag, LabelMixin):
     def default_fmt(self, content=None):
         # Prepare the content with the label. References for the default format
         # are not supported
-        content = ''
-        if self.label_tag is not None:
-            content += self.label_tag.default_fmt()
-        content += content_to_str(self.content)
+        label_tag = self.label_tag
+        if content is not None:
+            pass
+        elif label_tag is not None:
+            content = self.label_tag.default_fmt()
+        else:
+            content = content_to_str(self.content)
 
         return super().default_fmt(content=content)
 

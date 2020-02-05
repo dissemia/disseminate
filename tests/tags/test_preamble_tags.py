@@ -49,10 +49,9 @@ def test_titlepage_tag_html(doc):
 
     tag = Titlepage(name='titlepage', content='', attributes=tuple(),
                     context=context)
-    print(tag.html)
     key = ('<div class="title-page">\n'
-           '<h1 id="title:test-dm-my-title">\n'
-           '<span class="label"></span>My Title</h1>\n'
+           '<h1 id="title:test-dm-my-title">'
+           '<span class="label">My Title</span></h1>\n'
            '<div class="authors">Fred Kay and D Smith</div>\n'
            '</div>\n')
     assert tag.html == key
