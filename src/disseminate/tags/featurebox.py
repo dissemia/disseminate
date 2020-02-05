@@ -22,6 +22,7 @@ class FeatureBox(Tag):
 
     html_name = "div"
     html_classes = "featurebox"
+    tex_env = "featurebox"
 
     def __init__(self, name, content, attributes, context):
         super().__init__(name='featurebox', content=content,
@@ -42,3 +43,4 @@ class ExampleBox(FeatureBox):
     """A box for examples"""
 
     html_classes = "featurebox examplebox"
+    tex_env = "examplebox"
