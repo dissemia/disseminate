@@ -70,7 +70,7 @@ setup(
     include_package_data=True,  # include MANIFEST.in
     install_requires=[
         'regex>=2018.11.22',         # No license, replaced with re
-        'jinja2>=2.10',              # 3-clause BSD
+        'jinja2>=2.11',              # 3-clause BSD
         'lxml>=4.3.0',               # BSD license
         'blinker>=1.4',              # MIT license
         'python-slugify>=2.0.1',     # MIT license
