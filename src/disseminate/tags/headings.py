@@ -63,10 +63,13 @@ class Heading(Tag, LabelMixin):
     def default_fmt(self, content=None):
         # Prepare the content with the label. References for the default format
         # are not supported
-        content = ''
-        if self.label_tag is not None:
-            content += self.label_tag.default_fmt()
-        content += content_to_str(self.content)
+        label_tag = self.label_tag
+        if content is not None:
+            pass
+        elif label_tag is not None:
+            content = self.label_tag.default_fmt()
+        else:
+            content = content_to_str(self.content)
 
         return super().default_fmt(content=content)
 
@@ -79,7 +82,6 @@ class Heading(Tag, LabelMixin):
         if self.label_tag is not None:
             content += self.label_tag.tex_fmt(mathmode=mathmode,
                                               level=level + 1)
-        content += self.content
 
         # Format the heading tag. ex: \chapter{Chapter 1. My First Chapter}
         content = tex_cmd(cls_name, attributes=self.attributes,
@@ -93,6 +95,7 @@ class Heading(Tag, LabelMixin):
             label = label_manager.get_label(id=self.label_id)
 
             number = label.order[-1] if label.order else None
+            number -= 1  # Offset by -1 as the counter is increased
             attrs = ' '.join((cls_name, str(number)))
 
             content = (tex_cmd('setcounter', attributes=attrs) + '\n' +
@@ -105,14 +108,13 @@ class Heading(Tag, LabelMixin):
     def html_fmt(self, content=None, attributes=None, level=1):
         # Prepare the tag contents to include the label tag.
         # ex: 'My Title' becomes 'Chap 1. My Title'
-        content = []
-        if self.label_tag is not None:
-            content.append(self.label_tag)
-
-        if isinstance(self.content, list):
-            content += self.content
+        label_tag = self.label_tag
+        if content is not None:
+            pass
+        elif label_tag is not None:
+            content = label_tag
         else:
-            content.append(self.content)
+            content = self.content
 
         return super().html_fmt(content=content, attributes=attributes,
                                 level=level)

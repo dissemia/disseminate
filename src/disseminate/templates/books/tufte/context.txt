@@ -1,2 +1,15 @@
 toc: headings collapsed
 inactive_tags: subsubsection
+label_fmts:
+    heading_chapter_html: @prefix{@label.chapter_number} @label.title
+    heading_chapter_tex: @label.title
+    heading_section_html: @prefix{@label.tree_number}. @label.title
+    heading_section_tex: @label.tree_number. @label.title
+    heading_subsection_html: @prefix{@label.tree_number}. @label.title
+    heading_subsection_tex: @label.tree_number. @label.title
+    ref_heading_chapter: Chapter @label.chapter_number. @label.title
+    ref_heading_section: @label.tree_number. @label.title
+    ref_heading_subsection: @label.tree_number. @label.title
+    caption_figure: "@b{Fig. @label.chapter_number.@label.number}. "
+    ref_caption_figure: @b{Fig. @label.chapter_number.@label.number}
+

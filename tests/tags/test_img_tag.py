@@ -161,7 +161,7 @@ def test_img_tex(tmpdir, context_cls):
     dep = DependencyManager(root_context=context)
     context['dependency_manager'] = dep
 
-    # Generate the markup
+    # 1. Test the general tag
     src = "@img{sample.pdf}"
 
     # Generate a tag and compare the generated tex to the answer key
@@ -177,7 +177,17 @@ def test_img_tex(tmpdir, context_cls):
 
     assert img.tex == "\\includegraphics{{{}}}".format(filepath)
 
-    # Now test an tex-specific attribute
+    # 2. Test attributes
+    src = "@img[width=100%]{sample.pdf}"
+
+    # Generate a tag and compare the generated tex to the answer key
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
+
+    assert img.tex == ("\\includegraphics[width=1.0\\textwidth]"
+                       "{{{}}}".format(filepath))
+
+    # 3. Now test an tex-specific attribute
     # Generate the markup
     src = "@img[width.html=100 height.tex=20]{sample.pdf}"
 

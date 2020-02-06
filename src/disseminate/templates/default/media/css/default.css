@@ -32,14 +32,6 @@ h2 {
   margin-bottom: 0.75em;
 }
 
-h2 .label {
-  color: #b50202;
-  font-variant: small-caps;
-  display: block;
-  margin: 1rem;
-  border-bottom: 1pt solid #efc3c3;
-}
-
 h3, h4, h5 {
   font-size: 1.0em;
   margin-top: 1.0em;
@@ -249,6 +241,7 @@ span.caption {
   display: block;
   font-size: 10pt;
   line-height: 12pt;
+  margin-top: 1em;
 }
 
 span.panel {
@@ -260,10 +253,6 @@ span.panel {
 
 /* Tags */
 
-span.caption {
-  display: block;
-}
-
 span.label::after {
     content: " ";
 }
@@ -274,12 +263,23 @@ img.eq {
 
 /* Special elements */
 
-span.bluebox {
+div.featurebox {
   display: block;
-  border: 2px solid #4e6bf9;
-  background: #e8ecfd;
   border-radius: 5px;
-  padding: 1em;
+  padding: 1em 1em 0 1em;
+}
+
+div.featurebox h4 {
+  margin-top: 0;
+}
+
+div.featurebox.examplebox {
+  border: 2px solid #889cfb;
+  background: #f2f4fd;
+}
+
+div.examplebox >  h2, div.examplebox >  h3, div.examplebox >  h4 {
+  color: #405ff3;
 }
 
 /* Footer - navigation */

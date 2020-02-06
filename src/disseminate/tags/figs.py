@@ -5,6 +5,7 @@ from .tag import Tag
 from .caption import Caption
 from .utils import format_attribute_width
 from ..utils.string import strip_multi_newlines
+from ..utils.types import StringPositionalValue
 
 
 class BaseFigure(Tag):
@@ -72,6 +73,13 @@ class Panel(Tag):
 
         # Format the width
         attrs = format_attribute_width(attrs, target='.tex')
+
+        # Convert the width attribute to a StringPositional, which is needed
+        # by the panel environment
+        # ex: \begin{panel}{0.5\textwidth} \end{panel}
+        width = attrs.get('width', target='.tex')
+        if width is not None:
+            attrs[width] = StringPositionalValue
 
         # Raises an error if a width is not present. Strip multiple newlines
         # as these break up side-by-side figures

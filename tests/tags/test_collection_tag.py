@@ -95,9 +95,9 @@ def test_collection_selective_target(doctree):
     # three) should not be listed.
     body_attr = settings.body_attr
     root1 = doctree.context[body_attr]
-    assert root1.tex == ('\\setcounter{chapter}{1}\n'
+    assert root1.tex == ('\\setcounter{chapter}{0}\n'
                          '\\chapter{Chapter 1. one} \\label{ch:main-dm-one}\n'
-                         '\\setcounter{chapter}{2}\n'
+                         '\\setcounter{chapter}{1}\n'
                          '\\chapter{Chapter 2. two} \\label{ch:sub1-dm-two}')
 
 
@@ -124,11 +124,11 @@ def test_collection_tex(doctree):
     # main document
     body_attr = settings.body_attr
     root1 = doctree.context[body_attr]
-    assert root1.tex == ('\\setcounter{chapter}{1}\n'
+    assert root1.tex == ('\\setcounter{chapter}{0}\n'
                          '\\chapter{Chapter 1. one} \\label{ch:main-dm-one}\n'
-                         '\\setcounter{chapter}{2}\n'
+                         '\\setcounter{chapter}{1}\n'
                          '\\chapter{Chapter 2. two} \\label{ch:sub1-dm-two}\n'
-                         '\\setcounter{chapter}{3}\n'
+                         '\\setcounter{chapter}{2}\n'
                          '\\chapter{Chapter 3. three} '
                          '\\label{ch:sub2-dm-three}')
 
@@ -143,26 +143,41 @@ def test_collection_html(doctree):
     body_attr = settings.body_attr
     root1 = doctree.context[body_attr]
 
-    key = """<span class="body"><h2 id="ch:main-dm-one">
-<span class="label">Chapter 1. </span>one</h2>
-<span class="collection">
-<span class="body"><h2 id="ch:sub1-dm-two">
-<span class="label">Chapter 2. </span>two</h2></span>
-<span class="body"><h2 id="ch:sub2-dm-three">
-<span class="label">Chapter 3. </span>three</h2></span></span></span>
-"""
+    key = ('<span class="body">'
+             '<h2 id="ch:main-dm-one">'
+               '<span class="label">Chapter 1. one</span>'
+             '</h2>\n'
+             '<span class="collection">\n'
+               '<span class="body">'
+                 '<h2 id="ch:sub1-dm-two">'
+                   '<span class="label">Chapter 2. two</span>'
+                 '</h2>'
+               '</span>\n'
+               '<span class="body">'
+                 '<h2 id="ch:sub2-dm-three">'
+                   '<span class="label">Chapter 3. three</span>'
+                 '</h2>'
+               '</span>'
+             '</span>'
+           '</span>\n')
     assert root1.html == key
 
     # Create a collections tag and see if it includes the subdocuments
     tag = Collection(name='collection', content='', attributes=tuple(),
                      context=doctree.context)
 
-    key = """<span class="collection">
-<span class="body"><h2 id="ch:sub1-dm-two">
-<span class="label">Chapter 2. </span>two</h2></span>
-<span class="body"><h2 id="ch:sub2-dm-three">
-<span class="label">Chapter 3. </span>three</h2></span></span>
-"""
+    key = ('<span class="collection">\n'
+             '<span class="body">'
+               '<h2 id="ch:sub1-dm-two">'
+                 '<span class="label">Chapter 2. two</span>'
+               '</h2>'
+             '</span>\n'
+             '<span class="body">'
+               '<h2 id="ch:sub2-dm-three">'
+                 '<span class="label">Chapter 3. three</span>'
+               '</h2>'
+             '</span>'
+           '</span>\n')
     assert tag.html == key
 
     # Now remove the collection tag to the root document. The sub-documents
@@ -184,4 +199,9 @@ def test_collection_html(doctree):
     key = """<span class="body"><h2 id="ch:main-dm-one">
 <span class="label">Chapter 1. </span>one</h2></span>
 """
+    key = ('<span class="body">'
+             '<h2 id="ch:main-dm-one">'
+               '<span class="label">Chapter 1. one</span>'
+             '</h2>'
+           '</span>\n')
     assert root1.html == key

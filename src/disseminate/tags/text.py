@@ -30,8 +30,12 @@ class P(Tag):
         # if settings.tex_paragraph_width > 0:
         #     tex = "\n".join(wrap(tex, settings.tex_paragraph_width))
 
-        # Add newlines around headings
-        return "\n" + tex + "\n"
+        # Add newlines around paragraph if the content isn't a single tag
+        # that is also a block
+        if getattr(self.content, 'tex_paragraph_newlines', True):
+            return "\n" + tex + "\n"
+        else:
+            return tex
 
 
 class Bold(Tag):

@@ -338,9 +338,9 @@ def test_jinjarenderer_dependencies(tmpdir, context_cls):
                              targets=['.html', '.tex'])
     renderer.render(context=context, target='.html')
 
-    # There should be 4 dependencies now in the dep_manager for the .css file
+    # There should be 5 dependencies now in the dep_manager for the .css file
     # referenced by the default/template.html file.
-    assert len(dep_manager.dependencies[src_filepath]) == 4
+    assert len(dep_manager.dependencies[src_filepath]) == 5
     deps = sorted(dep_manager.dependencies[src_filepath],
                   key=lambda d: d.dest_filepath)
 
@@ -362,6 +362,11 @@ def test_jinjarenderer_dependencies(tmpdir, context_cls):
     assert deps[3].dep_filepath.match('templates/default/media/css/'
                                       'pygments.css')
     assert deps[3].dest_filepath.match('html/media/css/pygments.css')
+
+    # dep[4] points to tufte.css
+    assert deps[4].dep_filepath.match('templates/books/tufte/media/css/'
+                                      'tufte.css')
+    assert deps[4].dest_filepath.match('html/media/css/tufte.css')
 
 
 def test_jinjarenderer_other_targets(doc):
