@@ -250,6 +250,12 @@ def percentage(value):
 def format_attribute_width(attributes, target):
     """Format the width entry for an attributes dict and the given target.
 
+    .. note:: For .tex targets, the entry is added as a 'width.tex' entry
+              in the returned formatted_attributes. This is the desired effect
+              for macros like \includegraphics, but other functions, like
+              minipage, require a StringPositionalValue. In this case, a tag
+              function should reorganize the formatted_attributes accordingly.
+
     Parameters
     ----------
     attributes : :obj:`.attributes.Attributes`
@@ -271,10 +277,10 @@ def format_attribute_width(attributes, target):
 
     if target == '.tex':
         if percentage_width:
-            attr = "{}\\textwidth.tex".format(percentage_width / 100.)
+            attr = "width.tex={}\\textwidth".format(percentage_width / 100.)
             formatted_attributes.load(attr)
         elif width:
-            attr = "{}".format(width)
+            attr = "width.tex={}".format(width)
             formatted_attributes.load(attr)
     elif target == '.html':
         if percentage_width:
@@ -283,5 +289,4 @@ def format_attribute_width(attributes, target):
         elif width:
             attr = 'width: {}'.format(width)
             formatted_attributes['style'] = attr
-
     return formatted_attributes
