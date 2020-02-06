@@ -34,14 +34,9 @@ def template_paths(loader):
         # Process FileSystemLoader
         paths += [pathlib.Path(p) for p in loader.searchpath]
 
-    elif (hasattr(loader, 'provider') and
-         hasattr(loader.provider, 'module_path')):
+    elif hasattr(loader, '_template_root'):
         # Process PackageLoader
-        package_path = loader.provider.module_path  # ex: '/.../disseminate'
-        submodule_path = loader.package_path  # ex: 'templates'
-
-        # Create the final path
-        path = pathlib.Path(package_path) / submodule_path
+        path = pathlib.Path(loader._template_root)
         paths.append(path)
 
     return paths
