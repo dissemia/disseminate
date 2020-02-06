@@ -11,6 +11,13 @@ Tags
 2. *Headings*. The behavior of heading tags to not list the contents of the
    tag by default. Instead, a label tag is created, and the content of the tag
    is included if a ``@label.title`` macro was included.
+3. *Equations*
+   3.1. *tex*: Block equations (equations in their own paragraph) are written
+        without newlines before/after the environment in latex.
+
+Templates
+~~~~~~~~~
+1. *books/tufte*. Remove indentation before captions.
 
 Documentation
 ~~~~~~~~~~~~~
