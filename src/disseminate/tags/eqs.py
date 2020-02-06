@@ -42,6 +42,7 @@ class Eq(RenderedImg):
     color = None
 
     tex_content = None
+    tex_paragraph_newlines = False
 
     default_block_env = "align*"
 
