@@ -129,18 +129,20 @@ def test_heading_with_substituted_content(doc):
     title = Chapter(name='title', content='', attributes=tuple(),
                     context=context)
     assert title.txt == 'Chapter 1. My title'
-    assert title.html == ('<h2 id="ch:test-dm-my-title">\n'
-                          '<span class="label">Chapter 1. </span>'
-                          'My title</h2>\n')
+    assert title.html == ('<h2 id="ch:test-dm-my-title">'
+                          '<span class="label">Chapter 1. My title</span>'
+                          '</h2>\n')
 
     # 3. Test with a substituted content from the context with formatting
-    context['title'] = 'My @b{title}'
+    context['label_fmts']['heading_chapter'] = ('@b{Chapter} '
+                                                '@label.chapter_number. '
+                                                '@label.title')
     title = Chapter(name='title', content='', attributes=tuple(),
                     context=context)
     assert title.txt == 'Chapter 1. My title'
-    assert title.html == ('<h2 id="ch:test-dm-my-title">\n'
-                          '<span class="label">Chapter 1. </span>'
-                          'My <strong>title</strong>\n'
+    assert title.html == ('<h2 id="ch:test-dm-my-title">'
+                          '<span class="label">'
+                          '<strong>Chapter</strong> 1. My title</span>'
                           '</h2>\n')
 
 
@@ -148,7 +150,8 @@ def test_heading_labels_formatting(doc):
     """Test the formatting of labels for headings."""
 
     # 1. Test basic heading with new label format
-    doc.context['label_fmts']['heading_chapter'] = "My Chapter @label.number! "
+    doc.context['label_fmts']['heading_chapter'] = ("My Chapter @label.number! "
+                                                    "@label.title")
     root = Tag(name='root', content='@chapter{one}', attributes='',
                context=doc.context)
     chapter = root.content
@@ -217,37 +220,37 @@ def test_heading_labels_tex(doc):
 
     # 1. Test with default labels
     markups = {
-        '@part{Part 1}': '\\setcounter{part}{1}\n'
+        '@part{Part 1}': '\\setcounter{part}{0}\n'
                          '\\part{Part 1. Part 1} '
                          '\\label{part:test-dm-part-1}',
-        '@chapter{Chapter 1}': '\\setcounter{chapter}{1}\n'
+        '@chapter{Chapter 1}': '\\setcounter{chapter}{0}\n'
                                '\\chapter{Chapter 1. Chapter 1} '
                                '\\label{ch:test-dm-chapter-1}',
-        '@section{Section 1}': '\\setcounter{section}{1}\n'
+        '@section{Section 1}': '\\setcounter{section}{0}\n'
                                '\\section{1. Section 1} '
                                '\\label{sec:test-dm-section-1}',
-        '@subsection{Section 2}': '\\setcounter{subsection}{1}\n'
+        '@subsection{Section 2}': '\\setcounter{subsection}{0}\n'
                                   '\\subsection{1. Section 2} '
                                   '\\label{subsec:test-dm-section-2}',
-        '@subsubsection{Section 3}': '\\setcounter{subsubsection}{1}\n'
+        '@subsubsection{Section 3}': '\\setcounter{subsubsection}{0}\n'
                                      '\\subsubsection{1. Section 3} '
                                      '\\label{subsubsec:test-dm-section-3}',
-        '@h2{Section 2}': '\\setcounter{chapter}{1}\n'
+        '@h2{Section 2}': '\\setcounter{chapter}{0}\n'
                           '\\chapter{Chapter 1. Section 2} '
                           '\\label{ch:test-dm-section-2}',
-        '@h3{Section 3}': '\\setcounter{section}{1}\n'
+        '@h3{Section 3}': '\\setcounter{section}{0}\n'
                           '\\section{1. Section 3} '
                           '\\label{sec:test-dm-section-3}',
-        '@h4{Section 4}': '\\setcounter{subsection}{1}\n'
+        '@h4{Section 4}': '\\setcounter{subsection}{0}\n'
                           '\\subsection{1. Section 4} '
                           '\\label{subsec:test-dm-section-4}',
-        '@h5{Section 5}': '\\setcounter{subsubsection}{1}\n'
+        '@h5{Section 5}': '\\setcounter{subsubsection}{0}\n'
                           '\\subsubsection{1. Section 5} '
                           '\\label{subsubsec:test-dm-section-5}',
         '@h6{Section 6}': '\\paragraph{Section 6}',
-        '@chapter': '\\setcounter{chapter}{1}\n'
+        '@chapter': '\\setcounter{chapter}{0}\n'
                     '\\chapter{Chapter 1. } \\label{ch:test-dm-1}',
-        '@chapter{}': '\\setcounter{chapter}{1}\n'
+        '@chapter{}': '\\setcounter{chapter}{0}\n'
                       '\\chapter{Chapter 1. } \\label{ch:test-dm-1}',
                }
 
@@ -269,7 +272,7 @@ def test_heading_newline_preservation_tex(doc):
     # 1. Test without surrounding newlines
     src = '@chapter{Chapter 1}'
     root = Tag(name='root', content=src, attributes='', context=context)
-    assert root.tex == ('\\setcounter{chapter}{1}\n'
+    assert root.tex == ('\\setcounter{chapter}{0}\n'
                         '\\chapter{Chapter 1. Chapter 1} '
                         '\\label{ch:test-dm-chapter-1}')
 
@@ -277,7 +280,7 @@ def test_heading_newline_preservation_tex(doc):
     src = '\n@chapter{Chapter 1}\n'
     root = Tag(name='root', content=src, attributes='', context=context)
     assert root.tex == ('\n'
-                        '\\setcounter{chapter}{1}\n'
+                        '\\setcounter{chapter}{0}\n'
                         '\\chapter{Chapter 1. Chapter 1} '
                         '\\label{ch:test-dm-chapter-1}'
                         '\n')
@@ -286,7 +289,7 @@ def test_heading_newline_preservation_tex(doc):
     src = '\n\n@chapter{Chapter 1}\n\n'
     root = Tag(name='root', content=src, attributes='', context=context)
     assert root.tex == ('\n\n'
-                        '\\setcounter{chapter}{1}\n'
+                        '\\setcounter{chapter}{0}\n'
                         '\\chapter{Chapter 1. Chapter 1} '
                         '\\label{ch:test-dm-chapter-1}'
                         '\n\n')
@@ -303,31 +306,35 @@ def test_heading_labels_html(doc):
     # 1. Test with default labels
 
     markups = {
-        '@part{Part 1}': '<h1 id="part:test-dm-part-1">\n'
-                         '<span class="label">Part 1. </span>Part 1</h1>\n',
-        '@chapter{Chapter 1}': '<h2 id="ch:test-dm-chapter-1">\n'
-                               '<span class="label">Chapter 1. </span>'
-                               'Chapter 1</h2>\n',
-        '@section{Section 1}': '<h3 id="sec:test-dm-section-1">\n'
-                               '<span class="label">1. </span>'
-                               'Section 1</h3>\n',
-        '@subsection{Section 2}': '<h4 id="subsec:test-dm-section-2">\n'
-                                  '<span class="label">1. </span>'
-                                  'Section 2</h4>\n',
-        '@subsubsection{Section 3}': '<h5 id="subsubsec:test-dm-section-3">\n'
-                                     '<span class="label">1. </span>'
-                                     'Section 3</h5>\n',
-        '@h1{Chapter 1}': '<h1 id="title:test-dm-chapter-1">\n'
-                          '<span class="label"></span>Chapter 1</h1>\n',
-        '@h2{Chapter 2}': '<h2 id="ch:test-dm-chapter-2">\n'
-                          '<span class="label">Chapter 1. </span>'
-                          'Chapter 2</h2>\n',
-        '@h3{Section 3}': '<h3 id="sec:test-dm-section-3">\n'
-                          '<span class="label">1. </span>Section 3</h3>\n',
-        '@h4{Section 4}': '<h4 id="subsec:test-dm-section-4">\n'
-                          '<span class="label">1. </span>Section 4</h4>\n',
-        '@h5{Section 5}': '<h5 id="subsubsec:test-dm-section-5">\n'
-                          '<span class="label">1. </span>Section 5</h5>\n',
+        '@part{Part 1}': '<h1 id="part:test-dm-part-1">'
+                         '<span class="label">Part 1. Part 1</span></h1>\n',
+        '@chapter{Chapter 1}': '<h2 id="ch:test-dm-chapter-1">'
+                               '<span class="label">Chapter 1. Chapter 1</span>'
+                               '</h2>\n',
+        '@section{Section 1}': '<h3 id="sec:test-dm-section-1">'
+                               '<span class="label">1. Section 1</span></h3>\n',
+        '@subsection{Section 2}': '<h4 id="subsec:test-dm-section-2">'
+                                  '<span class="label">1. Section 2</span>'
+                                  '</h4>\n',
+        '@subsubsection{Section 3}': '<h5 id="subsubsec:test-dm-section-3">'
+                                     '<span class="label">1. Section 3</span>'
+                                     '</h5>\n',
+        # Title heading
+        '@h1{Title 1}': '<h1 id="title:test-dm-title-1">'
+                        '<span class="label">Title 1</span></h1>\n',
+        # Chapter heading
+        '@h2{Chapter 2}': '<h2 id="ch:test-dm-chapter-2">'
+                          '<span class="label">Chapter 1. Chapter 2</span>'
+                          '</h2>\n',
+        # Section heading
+        '@h3{Section 3}': '<h3 id="sec:test-dm-section-3">'
+                          '<span class="label">1. Section 3</span></h3>\n',
+        # Subsection heading
+        '@h4{Section 4}': '<h4 id="subsec:test-dm-section-4">'
+                          '<span class="label">1. Section 4</span></h4>\n',
+        # Subsubsection heading
+        '@h5{Section 5}': '<h5 id="subsubsec:test-dm-section-5">'
+                          '<span class="label">1. Section 5</span></h5>\n',
         '@chapter': '<h2 id="ch:test-dm-1">'
                     '<span class="label">Chapter 1. </span>'
                     '</h2>\n',
@@ -354,25 +361,24 @@ def test_heading_newline_preservation_html(doc):
     src = '@chapter{Chapter 1}'
     root = Tag(name='root', content=src, attributes='', context=context)
     assert root.html == ('<span class="root">'
-                         '<h2 id="ch:test-dm-chapter-1">\n'
-                         '<span class="label">Chapter 1. </span>'
-                         'Chapter 1</h2>'
-                         '</span>\n')
+                         '<h2 id="ch:test-dm-chapter-1">'
+                         '<span class="label">Chapter 1. Chapter 1</span>'
+                         '</h2></span>\n')
 
     # 2. Test with surrounding newlines
     src = '\n@chapter{Chapter 1}\n'
     root = Tag(name='root', content=src, attributes='', context=context)
     assert root.html == ('<span class="root">\n'
-                         '<h2 id="ch:test-dm-chapter-1">\n'
-                         '<span class="label">Chapter 1. </span>'
-                         'Chapter 1</h2>\n'
+                         '<h2 id="ch:test-dm-chapter-1">'
+                         '<span class="label">Chapter 1. Chapter 1</span>'
+                         '</h2>\n'
                          '</span>\n')
 
     # 3. Test with double newlines, used for paragraphs
     src = '\n\n@chapter{Chapter 1}\n\n'
     root = Tag(name='root', content=src, attributes='', context=context)
     assert root.html == ('<span class="root">\n\n'
-                         '<h2 id="ch:test-dm-chapter-1">\n'
-                         '<span class="label">Chapter 1. </span>'
-                         'Chapter 1</h2>\n\n'
+                         '<h2 id="ch:test-dm-chapter-1">'
+                         '<span class="label">Chapter 1. Chapter 1</span>'
+                         '</h2>\n\n'
                          '</span>\n')

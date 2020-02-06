@@ -103,7 +103,7 @@ default_context = {
 
     # Process paragraphs for tags with the following names
     # (see tags/paragraphs.py)
-    'process_paragraphs': {body_attr},
+    'process_paragraphs': {body_attr, "featurebox"},
 
     # The filename for additional context header files
     'additional_header_filename': 'context.txt',
@@ -124,10 +124,10 @@ default_context = {
         'ref_caption_figure': '@b{Fig. @label.number}',
 
         # Headings tags
-        'heading': '@label.tree_number. ',
-        'heading_title': '',
-        'heading_part': 'Part @label.part_number. ',
-        'heading_chapter': 'Chapter @label.chapter_number. ',
+        'heading': '@label.tree_number. @label.title',
+        'heading_title': '@label.title',
+        'heading_part': 'Part @label.part_number. @label.title',
+        'heading_chapter': 'Chapter @label.chapter_number. @label.title',
 
         'ref_heading': '@label.title',
         'ref_heading_part': 'Part @label.part_number. @label.title',
@@ -297,33 +297,26 @@ html_tag_optionals = {'a': ('class', 'role'),
 #: listed here or in the tex_env_optionals, it cannot be used.
 #: The values are tuples that indicate the order of attributes for environments
 #: and commands
-tex_env_arguments = {'enumerate': empty,  # no required arguments
-                     'itemize': empty,
-                     'marginfigure': empty,
-
-                     'align': empty,
+tex_env_arguments = {'align': empty, # no required arguments
                      'align*': empty,
-
-                     # ex: \begin{alignat}{3}
-                     'alignat': (IntPositionalValue,),
-                     # ex: \begin{alignat*}{3}
-                     'alignat*': (IntPositionalValue,),
-
+                     'alignat': (IntPositionalValue,),  # ex: \begin{alignat}{3}
+                     'alignat*': (IntPositionalValue,),  # \begin{alignat*}{3}
                      'center': empty,
-                     'verbatim': empty,
-                     'toclist': empty,
-
+                     'enumerate': empty,
+                     'examplebox': empty,
+                     'featurebox': empty,
+                     'itemize': empty,
                      'panel': (StringPositionalValue,),
+                     'toclist': empty,
+                     'verbatim': empty,
                      }
 
 tex_env_optionals = {# ex: \begin{enumerate}[I]
                      'enumerate': (StringPositionalValue, 'label'),
-
-                     # ex: \begin{figure}[h]
-                     'figure': (StringPositionalValue,),
-                     'figure*': (StringPositionalValue,),
-
                      'easylist': (StringPositionalValue,),
+                     'figure': (StringPositionalValue,),  # ex:\begin{figure}[h]
+                     'figure*': (StringPositionalValue,),
+                     'marginfigure': (StringPositionalValue,),
                      }
 
 tex_cmd_arguments = {'textbf': empty,

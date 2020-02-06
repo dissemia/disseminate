@@ -4,6 +4,26 @@ Release Notes
 v0.19
 -----
 
+Tags
+~~~~
+1. *Feature Boxes*. A box with a feature for a text, like an example box
+   (``@examplebox``) or a general featurebox (``@featurebox``)
+2. *Headings*. The behavior of heading tags to not list the contents of the
+   tag by default. Instead, a label tag is created, and the content of the tag
+   is included if a ``@label.title`` macro was included.
+3. *Equations*
+   3.1. *tex*: Block equations (equations in their own paragraph) are written
+        without newlines before/after the environment in latex.
+
+Templates
+~~~~~~~~~
+1. *books/tufte*. Remove indentation before captions.
+
+Documentation
+~~~~~~~~~~~~~
+1. *Feature Boxes*. Add the ``@featurebox`` and ``@examplebox`` tags to the
+   language documentation.
+
 Bug Fixes
 ~~~~~~~~~
 1. Fixed the renaming of filenames with periods in converters. Created a new

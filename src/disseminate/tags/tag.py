@@ -43,6 +43,9 @@ class Tag(object):
         If specified, use this name to render the tex command.
     tex_env : str
         If specified, use this name to render the tex environment.
+    tex_paragraph_newlines : bool
+        If True (default), block tags within paragraphs will be typeset with
+        a newline before and after. This is disable, for example, for equations.
     active : bool
         If True, the Tag can be used by the TagFactory.
     process_content : bool
@@ -73,8 +76,9 @@ class Tag(object):
     aliases = None
 
     html_name = None
-    tex_env = None
     tex_cmd = None
+    tex_env = None
+    tex_paragraph_newlines = True
 
     active = False
 

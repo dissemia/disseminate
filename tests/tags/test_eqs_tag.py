@@ -105,12 +105,24 @@ def test_block_equation_paragraph(context_eq):
 
     assert p.name == 'p'
     assert eq.name == 'eq'
-    assert p.tex == ('\n'
-                     '\\begin{align*} %\n'
+    assert eq.tex == ('\\begin{align*} %\n'
+                      'y=x\n'
+                      '\\end{align*}')
+    assert p.tex == ('\\begin{align*} %\n'
                      'y=x\n'
-                     '\\end{align*}\n')
+                     '\\end{align*}')
 
-    # 2. a simple inline equation
+    # 2. Two back-to-back equations
+    test1 = "\n\n@eq{a=b}\n\n@eq{x=y}\n\n"
+    root = Tag(name='root', content=test1, attributes='', context=context_eq)
+
+    assert root.tex == ('\\begin{align*} %\n'
+                        'a=b\n'
+                        '\\end{align*}\\begin{align*} %\n'
+                        'x=y\n'
+                        '\\end{align*}')
+
+    # 3. a simple inline equation
     context_eq['process_paragraphs'] = ['root']  # process paragraphs for 'root'
     test2 = "@eq{y=x}"
     root = Tag(name='root', content=test2, attributes='', context=context_eq)

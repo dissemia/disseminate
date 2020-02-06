@@ -13,8 +13,6 @@
 %%%
 % title, section labels
 \usepackage{titlesec}
-\titleformat{\chapter}[display]
-  {\normalfont\bfseries}{}{0pt}{\Large}
 
 %%%
 % Panels for figures
@@ -77,6 +75,14 @@
 %%% 
 % Symbols
 \renewcommand{\deg}{^\circ}
+
+%%%
+% Color boxes
+\usepackage{tcolorbox}
+
+% color box definitions
+\newtcolorbox{featurebox}{colback=black!5!white, colframe=black!40!white}
+\newtcolorbox{examplebox}{colback=blue!5!white, colframe=blue!40!white}
 
 {%- endblock %}
 {%- block pygmentsheader %}
@@ -182,6 +188,8 @@
 \def\PYZlb{[}
 \def\PYZrb{]}
 \makeatother
+
+
 {%- endraw %}
 {%- endblock %}
 {%- block marginheader %}
@@ -204,6 +212,8 @@
         {{ author }}
     }
 {%- endif %}
+{% block body %}
 \begin{document}
 {{ body.tex }}
 \end{document}
+{% endblock %}
