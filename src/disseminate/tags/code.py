@@ -5,8 +5,9 @@ from pygments import highlight, lexers, formatters
 from markupsafe import Markup
 
 from .tag import Tag
-from .utils import find_files, content_to_str
+from .utils import content_to_str
 from ..utils.types import StringPositionalValue
+from ..paths.utils import find_files
 from ..formats import html_tag, tex_verb
 
 
