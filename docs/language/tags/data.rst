@@ -18,6 +18,11 @@ like the ``@table`` tag.
 
       Either a path for a file with CSV data or CSV data directly.
 
+   :attributes:
+
+      ``noheader``
+
+         The ``csv`` file does not include header labels in the first line.
 
 Examples
 --------
@@ -44,3 +49,14 @@ Examples
         }
       }
 
+3. This example loads csv data without a header line into a table.
+
+   ::
+
+      @table{
+        @csv[noheader]{
+          John, Smith
+          Betty, Sue
+          Derek, Johnson
+        }
+      }
