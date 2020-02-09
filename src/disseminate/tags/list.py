@@ -101,7 +101,7 @@ def clean_string_list(parsed_list):
     return [(level, re_multiline_items.sub(" ", s))
             if isinstance(s, str) else
             (level, s)
-            for level, s in parsed_list ]
+            for level, s in parsed_list]
 
 
 def normalize_levels(parsed_list, list_level_spaces=settings.list_level_spaces):

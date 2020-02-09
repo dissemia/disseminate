@@ -9,4 +9,4 @@ from .exceptions import TagError
 from . import signals, receivers
 from . import (headings, text, img, asy, notes, figs, caption, code, eqs,
                featurebox, toc, list, preamble, collection, label, ref,
-               navigation)
+               navigation, data, table)
