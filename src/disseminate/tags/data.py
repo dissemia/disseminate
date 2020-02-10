@@ -168,10 +168,13 @@ class DelimData(Data):
                                 for cell in headers]) + "\n"
             tex += tex_cmd('midrule') + "\n"
 
+        rows = []
         for row in self.parsed_rows:
-            tex += " && ".join([format_content(cell, 'tex_fmt',
-                                               mathmode=mathmode, level=level)
-                                for cell in row[1:]]) + "\n"
+            str = " && ".join([format_content(cell, 'tex_fmt', level=level,
+                                                   mathmode=mathmode)
+                                    for cell in row[1:]])
+            rows.append(str)
+        tex += " \\\\\n".join(rows) + "\n"
 
         tex += tex_cmd('bottomrule')
         return tex

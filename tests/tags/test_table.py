@@ -7,7 +7,7 @@ from disseminate.tags.table import Table, MarginTable, FullTable
 # html targets
 
 def test_table_csv_with_header_html(csv_tag1):
-    """Test the html format for a @table tag with a CSV tag for tag, including
+    """Test the html format for a @table tag with a CSV tag for data, including
     header."""
     context = csv_tag1.context
     table = Table(name='table', content=csv_tag1, attributes='',
@@ -41,7 +41,7 @@ def test_table_csv_with_header_html(csv_tag1):
 
 
 def test_table_csv_without_header_html(csv_tag2):
-    """Test the html format for a @table tag with a CSV tag for tag, including
+    """Test the html format for a @table tag with a CSV tag for data, including
     header."""
     context = csv_tag2.context
     table = Table(name='table', content=csv_tag2, attributes='',
@@ -64,6 +64,43 @@ def test_table_csv_without_header_html(csv_tag2):
             '<td>9</td>\n'
             '</tr>\n'
             '</tbody></table>\n')
+    assert table.html == html
+
+
+def test_table_csv_with_formatted_text_html(csv_tag3):
+    """Test the html format for a @table tag with a CSV tag for data, including
+    formatted text cells."""
+    context = csv_tag3.context
+    table = Table(name='table', content=csv_tag3, attributes='',
+                  context=context)
+
+    html = ('<table>\n'
+            '<thead><tr>\n'
+            '<th>header <i>1</i>\n'
+            '</th>\n'
+            '<th>header <i>2</i>\n'
+            '</th>\n'
+            '<th>header <i>3</i>\n'
+            '</th>\n'
+            '</tr></thead>\n'
+            '<tbody>\n'
+            '<tr>\n'
+            '<td>My <strong>1-1</strong> column</td>\n'
+            '<td>My <strong>1-2</strong> column</td>\n'
+            '<td>My <strong>1-3</strong> column</td>\n'
+            '</tr>\n'
+            '<tr>\n'
+            '<td>My <strong>2-1</strong> column</td>\n'
+            '<td>My <strong>2-2</strong> column</td>\n'
+            '<td>My <strong>2-3</strong> column</td>\n'
+            '</tr>\n'
+            '<tr>\n'
+            '<td>My <strong>3-1</strong> column</td>\n'
+            '<td>My <strong>3-2</strong> column</td>\n'
+            '<td>My <strong>3-3</strong> column</td>\n'
+            '</tr>\n'
+            '</tbody>\n'
+            '</table>\n')
     assert table.html == html
 
 
@@ -192,20 +229,19 @@ def test_fulltable_csv_without_header_html(csv_tag2):
 # tex targets
 
 def test_table_csv_with_header_tex(csv_tag1):
-    """Test the tex format for a @table tag with a CSV tag for tag, including
+    """Test the tex format for a @table tag with a CSV tag for data, including
     header."""
     context = csv_tag1.context
     table = Table(name='table', content=csv_tag1, attributes='',
                   context=context)
 
-    tex = ('\n'
-           '\\begin{table}\n'
-           '\\begin{tabular}{ccc}\n'
+    tex = ('\n\\begin{table}\n'
+           '\\begin{tabular}{lll}\n'
            '\\toprule\n'
            'header 1 && header 2 && header 3\n'
            '\\midrule\n'
-           '1-1 && 1-2 && 1-3\n'
-           '2-1 && 2-2 && 2-3\n'
+           '1-1 && 1-2 && 1-3 \\\\\n'
+           '2-1 && 2-2 && 2-3 \\\\\n'
            '3-1 && 3-2 && 3-3\n'
            '\\bottomrule\n'
            '\\end{tabular}\n'
@@ -214,19 +250,41 @@ def test_table_csv_with_header_tex(csv_tag1):
 
 
 def test_table_csv_without_header_tex(csv_tag2):
-    """Test the tex format for a @table tag with a CSV tag for tag, without
+    """Test the tex format for a @table tag with a CSV tag for data, without
     header."""
     context = csv_tag2.context
     table = Table(name='table', content=csv_tag2, attributes='',
                   context=context)
 
-    tex = ('\n'
-           '\\begin{table}\n'
-           '\\begin{tabular}{ccc}\n'
-           '\\toprule\n'
-           '1 && 2 && 3\n'
-           '4 && 5 && 6\n'
+    tex = ('\n\\begin{table}\n'
+           '\\begin{tabular}{lll}\n'
+           '\\toprule\n1 && 2 && 3 \\\\\n'
+           '4 && 5 && 6 \\\\\n'
            '7 && 8 && 9\n'
+           '\\bottomrule\n'
+           '\\end{tabular}\n'
+           '\\end{table}\n')
+    assert table.tex == tex
+
+
+def test_table_csv_with_formatted_text_tex(csv_tag3):
+    """Test the html format for a @table tag with a CSV tag for data, including
+    formatted text cells."""
+    context = csv_tag3.context
+    table = Table(name='table', content=csv_tag3, attributes='',
+                  context=context)
+
+    tex = ('\n\\begin{table}\n'
+           '\\begin{tabular}{lll}\n'
+           '\\toprule\n'
+           'header \\textit{1} && header \\textit{2} && header \\textit{3}\n'
+           '\\midrule\n'
+           'My \\textbf{1-1} column && My \\textbf{1-2} column && My \\'
+           'textbf{1-3} column \\\\\n'
+           'My \\textbf{2-1} column && My \\textbf{2-2} column && My \\'
+           'textbf{2-3} column \\\\\n'
+           'My \\textbf{3-1} column && My \\textbf{3-2} column && My \\'
+           'textbf{3-3} column\n'
            '\\bottomrule\n'
            '\\end{tabular}\n'
            '\\end{table}\n')

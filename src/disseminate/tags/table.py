@@ -83,7 +83,7 @@ class BaseTable(Tag):
             elif isinstance(item, Data):
                 # Process the data in the table into a tabular environment
                 table_tex = item.tex_table(level=level + 1)
-                col_types = 'c' * item.num_cols
+                col_types = 'l' * item.num_cols
                 content_tex += tex_env('tabular', attributes=col_types,
                                        formatted_content=table_tex)
             elif isinstance(item, Tag):
