@@ -1,4 +1,4 @@
-inactive_tags: marginfig
+inactive_tags: marginfig, margintable
 toc: all headings expanded
 label_fmts:
   heading: "@label.tree_number "

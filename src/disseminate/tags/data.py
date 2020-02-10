@@ -7,9 +7,25 @@ from io import StringIO
 import pandas as pd
 
 from .tag import Tag
+from .utils import format_content
 from ..paths.utils import find_files
 from ..formats.html import html_tag
 from ..formats.tex import tex_cmd
+
+
+class Cell(Tag):
+    """A cell in a table"""
+
+    active = True
+    html_name = 'td'
+
+
+class HeaderCell(Tag):
+    """A header cell in a table"""
+
+    active = True
+    html_name = 'th'
+
 
 
 class Data(Tag):
@@ -49,14 +65,34 @@ class Data(Tag):
 
     @property
     def headers(self):
-        """The a list of the data headers"""
+        """The list of the data headers"""
         return (None if 'noheader' in self.attributes else
                 list(self.dataframe.columns))
+
+    @property
+    def parsed_headers(self):
+        """The list of the data headers in which the columns are formatted into
+        Cell tags."""
+        headers = self.headers
+        if headers is None:
+            return None
+        return [HeaderCell(name='cell', content=str(header), attributes='',
+                           context=self.context) for header in headers]
 
     @property
     def rows(self):
         """An iterator for the data rows"""
         return self.dataframe.itertuples()
+
+    @property
+    def parsed_rows(self):
+        """An iterator for data rows in which columns are formatted into Cell
+        tags."""
+        for row in self.rows:
+            parsed = [Cell(name='cell', content=str(i), attributes='',
+                           context=self.context)
+                      for i in row[1:]]
+            yield (row[0],) + tuple(parsed)
 
     @property
     def num_cols(self):
@@ -93,14 +129,14 @@ class DelimData(Data):
                                skipinitialspace=True, delimiter=delimiter)
 
     def html_table(self, content=None, attributes=None, level=1):
-        headers = self.headers
+        headers = self.parsed_headers
 
         # Prepare the header row, if a header is available
         elements = []
         if headers is not None:
-            header_row = [html_tag('th', attributes=attributes,
-                                   formatted_content=header, level=level)
-                          for header in headers]
+            header_row = [format_content(cell, 'html_fmt', level=level)
+                          for cell in headers]
+
             tr = html_tag('tr', formatted_content=header_row, level=level)
             thead = html_tag('thead', formatted_content=tr,
                              level=level)
@@ -109,9 +145,10 @@ class DelimData(Data):
         # Prepare each row individually. Each row is a named tuple with the
         # first element as the index
         rows = []
-        for row in self.rows:
-            body_row = [html_tag('td', formatted_content=str(item), level=level)
-                        for item in row[1:]]
+        for row in self.parsed_rows:
+            body_row = [format_content(cell, 'html_fmt', level=level)
+                        for cell in row[1:]]
+
             tr = html_tag('tr', formatted_content=body_row, level=level)
             rows.append(tr)
 
@@ -120,17 +157,21 @@ class DelimData(Data):
 
         return elements
 
-    def tex_table(self, content=None, attributes=None, level=1):
-        headers = self.headers
+    def tex_table(self, content=None, attributes=None, mathmode=False, level=1):
+        headers = self.parsed_headers
 
         tex = tex_cmd('toprule') + "\n"
 
         if headers is not None:
-            tex += " && ".join(map(str, headers)) + "\n"
+            tex += " && ".join([format_content(cell, 'tex_fmt',
+                                               mathmode=mathmode, level=level)
+                                for cell in headers]) + "\n"
             tex += tex_cmd('midrule') + "\n"
 
-        for row in self.rows:
-            tex += " && ".join(map(str, row[1:])) + "\n"
+        for row in self.parsed_rows:
+            tex += " && ".join([format_content(cell, 'tex_fmt',
+                                               mathmode=mathmode, level=level)
+                                for cell in row[1:]]) + "\n"
 
         tex += tex_cmd('bottomrule')
         return tex

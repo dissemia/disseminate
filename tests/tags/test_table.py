@@ -231,4 +231,3 @@ def test_table_csv_without_header_tex(csv_tag2):
            '\\end{tabular}\n'
            '\\end{table}\n')
     assert table.tex == tex
-    

@@ -97,7 +97,6 @@ class BaseTable(Tag):
                                level=level)
 
 
-
 class MarginTable(BaseTable):
     """The @margintable tag"""
 

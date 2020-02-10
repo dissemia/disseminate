@@ -29,6 +29,24 @@ def test_csv_parsing_without_header(csv_tag2):
     assert rows[2] == (2, 7, 8, 9)
 
 
+def test_csv_parsing_with_formatted_text(csv_tag3):
+    """Test the @csv (DelimData) tag for parsing csv data with formatted text
+    in disseminate format"""
+
+    # Check the data. The headers are just simple, unparsed strings
+    assert csv_tag3.headers == ['header @i{1}', 'header @i{2}', 'header @i{3}']
+
+    # The cells are just simple, unparsed strings
+    rows = list(csv_tag3.rows)
+    assert len(rows) == 3
+    assert rows[0] == (0, "My @b{1-1} column", "My @b{1-2} column",
+                       "My @b{1-3} column")
+    assert rows[1] == (1, "My @b{2-1} column", "My @b{2-2} column",
+                       "My @b{2-3} column")
+    assert rows[2] == (2, "My @b{3-1} column", "My @b{3-2} column",
+                       "My @b{3-3} column")
+
+
 # html targets
 
 def test_csv_with_header_html(csv_tag1):
@@ -47,6 +65,16 @@ def test_csv_without_header_html(csv_tag2):
     # table by the @table tag
     html = csv_tag2.html_table()
     assert len(html) == 1  # 1 body row
+
+
+def test_csv_parsing_with_formatted_text_html(csv_tag3):
+    """Test the @csv (DelimData) tag with formated text, converting in html
+    format"""
+
+    # Check the html. These are lxml elements that are rendered into an actual
+    # table by the @table tag
+    html = csv_tag3.html_table()
+    assert len(html) == 2  # 1 header row, 1 body row
 
 
 # tex targets
@@ -75,3 +103,27 @@ def test_csv_without_header_tex(csv_tag2):
            '7 && 8 && 9\n'
            '\\bottomrule')
     assert csv_tag2.tex_table() == tex
+
+
+def test_csv_parsing_with_formatted_text_tex(csv_tag3):
+    """Test the @csv (DelimData) tag with formated text, converting in tex
+    format"""
+
+    # Check the html. These are lxml elements that are rendered into an actual
+    # table by the @table tag
+    tex = ('\\toprule\n'
+           'header \\textit{1} && '
+           'header \\textit{2} && '
+           'header \\textit{3}\n'
+           '\\midrule\n'
+           'My \\textbf{1-1} column && '
+           'My \\textbf{1-2} column && '
+           'My \\textbf{1-3} column\n'
+           'My \\textbf{2-1} column && '
+           'My \\textbf{2-2} column && '
+           'My \\textbf{2-3} column\n'
+           'My \\textbf{3-1} column && '
+           'My \\textbf{3-2} column && '
+           'My \\textbf{3-3} column\n'
+           '\\bottomrule')
+    assert tex == csv_tag3.tex_table()

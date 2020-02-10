@@ -309,6 +309,8 @@ tex_env_arguments = {'align': empty, # no required arguments
                      'panel': (StringPositionalValue,),
                      'tabular': (StringPositionalValue,),
                      'table': empty,
+                     'table*': empty,
+                     'margintable': empty,
                      'toclist': empty,
                      'verbatim': empty,
                      }
