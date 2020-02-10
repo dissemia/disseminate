@@ -9,6 +9,7 @@ import pandas as pd
 from .tag import Tag
 from ..paths.utils import find_files
 from ..formats.html import html_tag
+from ..formats.tex import tex_cmd
 
 
 class Data(Tag):
@@ -56,6 +57,18 @@ class Data(Tag):
     def rows(self):
         """An iterator for the data rows"""
         return self.dataframe.itertuples()
+
+    @property
+    def num_cols(self):
+        """The number of columns in the data"""
+        columns = getattr(self.dataframe, 'columns', None)
+        return len(columns) if columns is not None else None
+
+    @property
+    def num_rows(self):
+        """The number of columns in the data"""
+        rows = getattr(self.dataframe, 'columns', None)
+        return len(rows) if rows is not None else None
 
 
 class DelimData(Data):
@@ -106,4 +119,21 @@ class DelimData(Data):
         elements.append(tbody)
 
         return elements
+
+    def tex_table(self, content=None, attributes=None, level=1):
+        headers = self.headers
+
+        tex = tex_cmd('toprule') + "\n"
+
+        if headers is not None:
+            tex += " && ".join(map(str, headers)) + "\n"
+            tex += tex_cmd('midrule') + "\n"
+
+        for row in self.rows:
+            tex += " && ".join(map(str, row[1:])) + "\n"
+
+        tex += tex_cmd('bottomrule')
+        return tex
+
+
 

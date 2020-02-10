@@ -307,6 +307,8 @@ tex_env_arguments = {'align': empty, # no required arguments
                      'featurebox': empty,
                      'itemize': empty,
                      'panel': (StringPositionalValue,),
+                     'tabular': (StringPositionalValue,),
+                     'table': empty,
                      'toclist': empty,
                      'verbatim': empty,
                      }
@@ -352,6 +354,10 @@ tex_cmd_arguments = {'textbf': empty,
                      'includegraphics': empty,
                      'textcolor': (StringPositionalValue,),
                      'boldsymbol': empty,
+
+                     'toprule': empty,
+                     'midrule': empty,
+                     'bottomrule': empty,
 
                      'hfill': empty,
                      'pageref': (StringPositionalValue,),

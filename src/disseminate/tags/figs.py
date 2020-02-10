@@ -35,9 +35,10 @@ class BaseFigure(Tag):
             caption.create_label()
 
 
-class Marginfig(BaseFigure):
+class Marginfigure(BaseFigure):
     """The @marginfig tag"""
 
+    aliases = ('marginfig',)
     html_name = 'marginfig'
     tex_env = 'marginfigure'
     active = True
