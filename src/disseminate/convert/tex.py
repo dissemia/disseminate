@@ -40,7 +40,7 @@ class Pdflatex(Converter):
         env = {'TEXINPUTS': ":" + texinputs}
 
         # Setup the command and run in
-        args = [pdflatex_exec, "-interaction=nonstopmode",
+        args = [pdflatex_exec, "-interaction=nonstopmode", "-halt-on-error",
                 "-output-directory=" + str(temp_dir),
                 str(self.src_filepath.value)]
 

@@ -84,11 +84,11 @@ def test_csv_with_header_tex(csv_tag1):
 
     # Check the tex
     tex = ('\\toprule\n'
-           'header 1 && header 2 && header 3\n'
+           'header 1 & header 2 & header 3 \\\\\n'
            '\\midrule\n'
-           '1-1 && 1-2 && 1-3 \\\\\n'
-           '2-1 && 2-2 && 2-3 \\\\\n'
-           '3-1 && 3-2 && 3-3\n'
+           '1-1 & 1-2 & 1-3 \\\\\n'
+           '2-1 & 2-2 & 2-3 \\\\\n'
+           '3-1 & 3-2 & 3-3 \\\\\n'
            '\\bottomrule')
     assert csv_tag1.tex_table() == tex
 
@@ -98,9 +98,9 @@ def test_csv_without_header_tex(csv_tag2):
 
     # Check the tex
     tex = ('\\toprule\n'
-           '1 && 2 && 3 \\\\\n'
-           '4 && 5 && 6 \\\\\n'
-           '7 && 8 && 9\n'
+           '1 & 2 & 3 \\\\\n'
+           '4 & 5 & 6 \\\\\n'
+           '7 & 8 & 9 \\\\\n'
            '\\bottomrule')
     assert csv_tag2.tex_table() == tex
 
@@ -112,18 +112,34 @@ def test_csv_parsing_with_formatted_text_tex(csv_tag3):
     # Check the html. These are lxml elements that are rendered into an actual
     # table by the @table tag
     tex = ('\\toprule\n'
-           'header \\textit{1} && '
-           'header \\textit{2} && '
-           'header \\textit{3}\n'
+           'header \\textit{1} & '
+           'header \\textit{2} & '
+           'header \\textit{3} \\\\\n'
            '\\midrule\n'
-           'My \\textbf{1-1} column && '
-           'My \\textbf{1-2} column && '
+           'My \\textbf{1-1} column & '
+           'My \\textbf{1-2} column & '
            'My \\textbf{1-3} column \\\\\n'
-           'My \\textbf{2-1} column && '
-           'My \\textbf{2-2} column && '
+           'My \\textbf{2-1} column & '
+           'My \\textbf{2-2} column & '
            'My \\textbf{2-3} column \\\\\n'
-           'My \\textbf{3-1} column && '
-           'My \\textbf{3-2} column && '
-           'My \\textbf{3-3} column\n'
+           'My \\textbf{3-1} column & '
+           'My \\textbf{3-2} column & '
+           'My \\textbf{3-3} column \\\\\n'
            '\\bottomrule')
     assert tex == csv_tag3.tex_table()
+
+
+def test_ampersand_text_tex(csv_tag4):
+    """Test the @csv (DelimData) tag including text with ampersands, converting
+    in tex format"""
+
+    # Check the html. These are lxml elements that are rendered into an actual
+    # table by the @table tag
+    tex = ('\\toprule\n'
+           'header 1 & header 2 & header 3 \\\\\n'
+           '\\midrule\n'
+           '1 & 2\\&3 & 4 \\\\\n'
+           '5 & 6\\&7 & 8 \\\\\n'
+           '9 & 10\\&11 & 12 \\\\\n'
+           '\\bottomrule')
+    assert tex == csv_tag4.tex_table()

@@ -62,3 +62,22 @@ def csv_tag3(context_cls):
                             context=context)
 
     return data
+
+
+@pytest.fixture
+def csv_tag4(context_cls):
+    """An @csv tag with ampersands, which may cause a conflict in latex tabular
+    environments"""
+    paths = [pathlib.Path('.')]
+    context = context_cls(paths=paths)
+
+    # 1. Test the parsing of text strings with header
+    text1 = ("header 1, header 2, header 3\n"
+             "1, 2&3, 4\n"
+             "5, 6&7, 8\n"
+             "9, 10&11, 12\n")
+
+    data = DelimDataFixture(name='csv', content=text1, attributes='',
+                            context=context)
+
+    return data

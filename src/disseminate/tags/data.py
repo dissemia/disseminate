@@ -19,12 +19,22 @@ class Cell(Tag):
     active = True
     html_name = 'td'
 
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+        tex = super().tex_fmt(content, attributes, mathmode, level)
+        tex = tex.replace('&', '\\&')
+        return tex
+
 
 class HeaderCell(Tag):
     """A header cell in a table"""
 
     active = True
     html_name = 'th'
+
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+        tex = super().tex_fmt(content, attributes, mathmode, level)
+        tex = tex.replace('&', '\\&')
+        return tex
 
 
 
@@ -163,18 +173,18 @@ class DelimData(Data):
         tex = tex_cmd('toprule') + "\n"
 
         if headers is not None:
-            tex += " && ".join([format_content(cell, 'tex_fmt',
+            tex += " & ".join([format_content(cell, 'tex_fmt',
                                                mathmode=mathmode, level=level)
-                                for cell in headers]) + "\n"
+                                for cell in headers]) + " \\\\\n"
             tex += tex_cmd('midrule') + "\n"
 
         rows = []
         for row in self.parsed_rows:
-            str = " && ".join([format_content(cell, 'tex_fmt', level=level,
+            str = " & ".join([format_content(cell, 'tex_fmt', level=level,
                                                    mathmode=mathmode)
-                                    for cell in row[1:]])
+                                    for cell in row[1:]]) + " \\\\\n"
             rows.append(str)
-        tex += " \\\\\n".join(rows) + "\n"
+        tex += "".join(rows)
 
         tex += tex_cmd('bottomrule')
         return tex
