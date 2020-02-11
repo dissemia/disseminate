@@ -110,6 +110,7 @@ class Table(BaseTable):
     """The @table tag"""
 
     aliases = ('tbl',)
+    html_class = 'table'
     tex_env = 'table'
     active = True
 

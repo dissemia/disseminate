@@ -83,6 +83,22 @@ ol ol ol ol {
   margin-left: 3em;
 }
 
+table {
+  border-top: 1px solid #444444;
+  border-bottom: 1px solid #444444;
+}
+
+thead {
+  border-bottom: 1px solid #a0a0a0;
+}
+
+th {
+  padding: 0.1em 0.5em;
+}
+
+td {
+  padding: 0.1em 0.5em;
+}
 
 .supsub {
     display: inline-block;
@@ -172,8 +188,8 @@ div.authors {
   margin: 14pt 0 28pt 14pt;
 }
 
-/* sidenotes and marginfigs */
-span.marginfig, span.sidenote {
+/* sidenotes, marginfigs and margin tables and caption */
+figure.marginfig, span.sidenote, figure.figure figcaption, table.table caption, table.margintable {
     clear: right;
     float: right;
     width: 40%;
@@ -182,8 +198,8 @@ span.marginfig, span.sidenote {
     margin-bottom: 0.5rem;
     vertical-align: top;
     position: relative;
-    font-size: 10pt;
-    line-height: 12pt;
+    font-size: 11pt;
+    line-height: 14pt;
     padding: 0.2rem;
     border-top: 1px solid #eee;
     border-bottom: 1px solid #eee;
@@ -191,10 +207,33 @@ span.marginfig, span.sidenote {
     overflow-x: hidden;
 }
 
+/* Tables */
+table {
+  display: block;
+  border: 0;
+}
+
+table thead {
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid #aaaaaa;
+}
+
+table tbody {
+  border-bottom: 1px solid #666666;
+}
+
+.table thead th { /* reset bootstrap values */
+  border: none;
+}
+
+.table td, .table th { /* reset bootstrap values */
+  border: none;
+  padding: 0.25em 0.5em;
+}
 
 /* figures */
 
-span.fullfigure {
+figure.fullfigure {
   padding: 0.5rem 0;
   display: flex;
   width: 145%;
@@ -202,45 +241,30 @@ span.fullfigure {
   border-bottom: 1px solid #eee;
 }
 
-span.fullfigure img {
+figure.fullfigure img {
   padding-right: 0.25rem;
   flex-grow: 1.0;
 }
 
-span.figure {
+figure.figure {
   padding: 0.5rem 0;
   display: flex;
   border-top: 1px solid #eee;
   border-bottom: 1px solid #eee;
 }
 
-span.figure img {
+figure.figure img {
   padding-right: 0.25rem;
   flex-grow: 1.0;
 }
 
-span.figure span.caption {
-  clear: right;
-  float: right;
-  width: 40%;
-  display: table;
-  margin-right: -45%;
-  margin-top: -0.5rem;
-  margin-bottom: 0.5rem;
-  vertical-align: top;
-  position: relative;
-  padding: 0.2rem;
-  border-top: 1px solid #eee;
-  border-bottom: 1px solid #eee;
-  background-color: #fcfcfc;
-  overflow-x: hidden;
-}
 
+/* captions */
 
-span.caption {
+caption, figcaption {
   display: block;
-  font-size: 10pt;
-  line-height: 12pt;
+  font-size: 11pt;
+  line-height: 13pt;
   margin-top: 1em;
 }
 
@@ -299,6 +323,7 @@ footer span.next {
   display: block;
   float: right;
   margin-right: 30%;
+  margin-top: 1em;
 }
 
 footer a.ref {

@@ -15,6 +15,10 @@ class BaseFigure(Tag):
     the label manager and reorganizing captions to the bottom of the figure.
     """
 
+    html_name = 'figure'
+    html_class = None
+    active = False
+
     def __init__(self, name, content, attributes, context):
         super().__init__(name=name, content=content, attributes=attributes,
                          context=context)
@@ -31,15 +35,31 @@ class BaseFigure(Tag):
             # Set the label kind for the caption as a figure caption
             caption.kind = ('caption', 'figure')
 
+            # Make the caption a figcaption tag for html
+            caption.html_name = 'figcaption'
+
             # Create the label in the label_manager
             caption.create_label()
+
+    def html_fmt(self, content=None, attributes=None, level=1):
+        attrs = attributes if attributes is not None else self.attributes
+
+        # Set the html class
+        if self.html_class is not None:
+            attrs = self.attributes.filter(target='.html')
+            if 'class' in attrs:
+                attrs['class'] = ' ' + self.html_class
+            else:
+                attrs['class'] = self.html_class
+
+        return super().html_fmt(content=content, attributes=attrs, level=level)
 
 
 class Marginfigure(BaseFigure):
     """The @marginfig tag"""
 
     aliases = ('marginfig',)
-    html_name = 'marginfig'
+    html_class = 'marginfig'
     tex_env = 'marginfigure'
     active = True
 
@@ -48,7 +68,7 @@ class Figure(BaseFigure):
     """The @figure/@fig tag"""
 
     aliases = ('fig',)
-    html_name = 'figure'
+    html_class = 'figure'
     tex_env = 'figure'
     active = True
 
@@ -57,7 +77,7 @@ class FullFigure(BaseFigure):
     """The @fullfigure/@ffig tag"""
 
     aliases = ('ffig', 'fullfig')
-    html_name = 'fullfigure'
+    html_class = 'fullfigure'
     tex_env = 'figure*'
     active = True
 

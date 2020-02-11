@@ -30,7 +30,7 @@ class Caption(Tag, LabelMixin):
                         }
     """
 
-    html_name = 'span'
+    html_name = 'caption'
     tex_cmd = 'caption'
 
     kind = None
