@@ -28,8 +28,8 @@ class BaseTable(Tag):
             # Transfer the 'id' to the caption (but only the first)
             caption.label_id = self.attributes.pop('id', None)
 
-            # Set the label kind for the caption as a figure caption
-            caption.kind = ('caption', 'figure')
+            # Set the label kind for the caption as a table caption
+            caption.kind = ('caption', 'table')
 
             # Create the label in the label_manager
             caption.create_label()

@@ -119,9 +119,11 @@ default_context = {
         'ref_document': '@label.title',
 
         # caption tags
-        'caption_figure': '@b{Fig. @label.number}.',
+        'caption_figure': '@b{Fig. @label.number}. ',
+        'caption_table': '@b{Table @label.number}. ',
 
         'ref_caption_figure': '@b{Fig. @label.number}',
+        'ref_caption_table': '@b{Table @label.number}',
 
         # Headings tags
         'heading': '@label.tree_number. @label.title',
