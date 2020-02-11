@@ -50,7 +50,7 @@ def test_caption_tex(context_cls):
     root = Tag(name='root', content=src, attributes='', context=context)
     caption = root.content
 
-    assert caption.tex == ('\\caption{This is \\textbf{my} caption}')
+    assert caption.tex == '\\caption{This is \\textbf{my} caption}'
 
 
 # Test html targets
@@ -70,7 +70,8 @@ def test_caption_html(context_cls):
     root = Tag(name='root', content=src, attributes='', context=context)
     caption = root.content
 
-    assert caption.html == '<span class="caption">This is my caption</span>\n'
+    assert caption.html == ('<caption class="caption">This is my caption'
+                            '</caption>\n')
 
     # 2. Test a caption with nested tags
     src = "@caption{This is @b{my} caption}"
@@ -78,8 +79,8 @@ def test_caption_html(context_cls):
     root = Tag(name='root', content=src, attributes='', context=context)
     caption = root.content
 
-    assert caption.html == ('<span class="caption">'
-                            'This is <strong>my</strong> caption</span>\n')
+    assert caption.html == ('<caption class="caption">'
+                            'This is <strong>my</strong> caption</caption>\n')
 
 
 

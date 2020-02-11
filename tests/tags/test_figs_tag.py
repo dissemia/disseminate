@@ -100,10 +100,11 @@ def test_marginfig_caption_no_id_html(doc):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     marginfig = root.content
 
-    key = ('<span class="marginfig">'
-           '<span class="caption" id="caption-92042fbb8b">'
-           '<span class="label">My Fig. 1. </span>This is my caption</span>'
-           '</span>\n')
+    key = ('<figure class="marginfig">'
+           '<figcaption id="caption-92042fbb8b" class="caption">'
+           '<span class="label">My Fig. 1. </span>'
+           'This is my caption</figcaption>'
+           '</figure>\n')
     assert marginfig.html == key
 
 
@@ -120,10 +121,11 @@ def test_marginfig_caption_with_id_html(doc):
     srcs = ("@marginfig[id=fig-1]{@caption{This is my caption}}",
             "@marginfig{@caption[id=fig-1]{This is my caption}}")
 
-    key = ('<span class="marginfig">'
-           '<span class="caption" id="fig-1">'
-           '<span class="label">My Fig. 1. </span>This is my caption</span>'
-           '</span>\n')
+    key = ('<figure class="marginfig">'
+           '<figcaption id="fig-1" class="caption">'
+           '<span class="label">My Fig. 1. </span>'
+           'This is my caption</figcaption>'
+           '</figure>\n')
 
     for count, src in enumerate(srcs):
         # Generate a tag and compare the generated tex to the answer key
@@ -147,10 +149,11 @@ def test_figure_html(doc):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     marginfig = root.content
 
-    key = ('<span class="figure">'
-           '<span class="caption" id="caption-92042fbb8b">'
-           '<span class="label">My Fig. 1. </span>This is my caption</span>'
-           '</span>\n')
+    key = ('<figure class="figure">'
+           '<figcaption id="caption-92042fbb8b" class="caption">'
+           '<span class="label">My Fig. 1. </span>'
+           'This is my caption</figcaption>'
+           '</figure>\n')
     assert marginfig.html == key
 
 
@@ -168,10 +171,11 @@ def test_fullfigure_html(doc):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     marginfig = root.content
 
-    key = ('<span class="fullfigure">'
-           '<span class="caption" id="caption-92042fbb8b">'
-           '<span class="label">My Fig. 1. </span>This is my caption</span>'
-           '</span>\n')
+    key = ('<figure class="fullfigure">'
+           '<figcaption id="caption-92042fbb8b" class="caption">'
+           '<span class="label">My Fig. 1. </span>'
+           'This is my caption</figcaption>'
+           '</figure>\n')
     assert marginfig.html == key
 
 

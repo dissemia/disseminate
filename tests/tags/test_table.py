@@ -13,7 +13,7 @@ def test_table_csv_with_header_html(csv_tag1):
     table = Table(name='table', content=csv_tag1, attributes='',
                   context=context)
 
-    html = ('<table>\n'
+    html = ('<table class="table">\n'
             '<thead><tr>\n'
             '<th>header 1</th>\n'
             '<th>header 2</th>\n'
@@ -47,7 +47,7 @@ def test_table_csv_without_header_html(csv_tag2):
     table = Table(name='table', content=csv_tag2, attributes='',
                   context=context)
 
-    html = ('<table><tbody>\n'
+    html = ('<table class="table"><tbody>\n'
             '<tr>\n'
             '<td>1</td>\n'
             '<td>2</td>\n'
@@ -74,7 +74,7 @@ def test_table_csv_with_formatted_text_html(csv_tag3):
     table = Table(name='table', content=csv_tag3, attributes='',
                   context=context)
 
-    html = ('<table>\n'
+    html = ('<table class="table">\n'
             '<thead><tr>\n'
             '<th>header <i>1</i>\n'
             '</th>\n'
