@@ -228,6 +228,48 @@ def test_fulltable_csv_without_header_html(csv_tag2):
 
 # tex targets
 
+def test_margintable_csv_with_header_tex(csv_tag1):
+    """Test the tex format for a @margintable tag with a CSV tag for data,
+    including header."""
+    context = csv_tag1.context
+    table = MarginTable(name='table', content=csv_tag1, attributes='',
+                        context=context)
+
+    tex = ('\n\\begin{margintable}\n'
+           '\\begin{tabular}{lll}\n'
+           '\\toprule\n'
+           'header 1 && header 2 && header 3\n'
+           '\\midrule\n'
+           '1-1 && 1-2 && 1-3 \\\\\n'
+           '2-1 && 2-2 && 2-3 \\\\\n'
+           '3-1 && 3-2 && 3-3\n'
+           '\\bottomrule\n'
+           '\\end{tabular}\n'
+           '\\end{margintable}\n')
+    assert table.tex == tex
+
+
+def test_fulltable_csv_with_header_tex(csv_tag1):
+    """Test the tex format for a @fulltable tag with a CSV tag for data,
+    including header."""
+    context = csv_tag1.context
+    table = FullTable(name='table', content=csv_tag1, attributes='',
+                      context=context)
+
+    tex = ('\n\\begin{table*}\n'
+           '\\begin{tabular}{lll}\n'
+           '\\toprule\n'
+           'header 1 && header 2 && header 3\n'
+           '\\midrule\n'
+           '1-1 && 1-2 && 1-3 \\\\\n'
+           '2-1 && 2-2 && 2-3 \\\\\n'
+           '3-1 && 3-2 && 3-3\n'
+           '\\bottomrule\n'
+           '\\end{tabular}\n'
+           '\\end{table*}\n')
+    assert table.tex == tex
+
+
 def test_table_csv_with_header_tex(csv_tag1):
     """Test the tex format for a @table tag with a CSV tag for data, including
     header."""
