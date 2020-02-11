@@ -84,12 +84,12 @@ ol ol ol ol {
 }
 
 table {
-  border-top: 1px solid #444444;
-  border-bottom: 1px solid #444444;
+  border: 0;
+  display: block;
 }
 
 thead {
-  border-bottom: 1px solid #a0a0a0;
+  border-bottom: 1px solid #bbbbbb;
 }
 
 th {
@@ -208,14 +208,14 @@ figure.marginfig, span.sidenote, figure.figure figcaption, table.table caption, 
 }
 
 /* Tables */
-table {
-  display: block;
-  border: 0;
-}
 
 table thead {
   border-top: 1px solid #666666;
   border-bottom: 1px solid #aaaaaa;
+}
+
+.table table {
+  margin-bottom: 1em;
 }
 
 table tbody {
@@ -291,6 +291,7 @@ div.featurebox {
   display: block;
   border-radius: 5px;
   padding: 1em 1em 0 1em;
+  margin-bottom: 1em;
 }
 
 div.featurebox h4 {
@@ -298,7 +299,7 @@ div.featurebox h4 {
 }
 
 div.featurebox.examplebox {
-  border: 2px solid #889cfb;
+  border: 2px solid #a1b0f7;
   background: #f2f4fd;
 }
 

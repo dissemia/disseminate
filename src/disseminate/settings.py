@@ -176,6 +176,7 @@ default_context = {
 
     # Macros - Symbols
     '@deg': '@sup{○}',
+    '@degC': '@sup{○}C',
 
     # Macros - Greek
     '@alpha': '@symbol{alpha}', '@beta': '@symbol{beta}',
