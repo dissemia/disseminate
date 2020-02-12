@@ -18,6 +18,8 @@ Tags
    caption
    refs
    navigation
+   data
+   table
    collection
 
 .. toctree::

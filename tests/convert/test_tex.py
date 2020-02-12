@@ -89,8 +89,7 @@ def test_pdflatex_bad_tex(tmpdir):
     assert e.match("index1.tex")  # the intermediary file should be in error
     assert e.value.returncode != 0  # unsuccessful run
 
-    assert "! Undefined control sequence." in e.value.shell_out
-    assert "This is my \\bad" in e.value.shell_out
+    assert "! LaTeX Error: Missing \\begin{document}." in e.value.shell_out
 
 
 def test_tex2svg(tmpdir):

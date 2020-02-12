@@ -201,6 +201,21 @@ The following macros add characters in Greek.
    ``@omega`` ω
 
 
+Science
+-------
+
+Units
+~~~~~
+
+.. container:: card macro-card
+
+   ``@deg`` :sup:`○`
+
+.. container:: card macro-card
+
+   ``@degC`` :sup:`○`\ C
+
+
 Chemistry
 ---------
 

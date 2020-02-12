@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+v0.20
+-----
+
+Tags
+~~~~
+1. *Tables*. Tags to render tables.
+2. *Data*. Tags to incorporate data into tables or plots.
+3. *Captions*. Captions now render in html using the ``caption`` or
+   ``figcaption`` tags.
+4. *Figures*. Figures now render in html using the ``figure`` tag.
+
 v0.19
 -----
 
@@ -12,6 +23,7 @@ Tags
    tag by default. Instead, a label tag is created, and the content of the tag
    is included if a ``@label.title`` macro was included.
 3. *Equations*
+
    3.1. *tex*: Block equations (equations in their own paragraph) are written
         without newlines before/after the environment in latex.
 
