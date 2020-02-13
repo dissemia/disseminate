@@ -198,7 +198,7 @@ class RenderedImg(Img):
 
     A rendered image saves the contents of the tag into an infile, and the
     parent tag may convert this file to an outfile in the format needed by the
-    document target format. 
+    document target format.
 
     .. note:: This class is not intended to be directly used as a tag. Rather,
               it is intended to be subclassed for other image types that need
