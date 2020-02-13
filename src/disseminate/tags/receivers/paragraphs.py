@@ -187,12 +187,17 @@ def assign_paragraph_roles(elements, tag_base_cls):
         sublist_tags = list(filter(lambda x: isinstance(x, tag_base_cls),
                                    sublist))
 
+        # Find all strings without white space
+        sublist_string = [s for s in sublist
+                          if isinstance(s, str) and s.strip() != ""]
+
         # Determine the number of tags and the number of total elements in
         # the sublist
         num_tags = len(sublist_tags)
         num_elems = len(sublist)
+        num_nonempty_strings = len(sublist_string)
 
-        if num_tags == 1 and num_elems == 1:
+        if num_tags == 1 and num_nonempty_strings == 0:
             # If the number of tags and elements is 1, then tag is in its own
             # block
             sublist_tags[0].paragraph_role = 'block'
