@@ -11,6 +11,9 @@ Tags
 3. *Captions*. Captions now render in html using the ``caption`` or
    ``figcaption`` tags.
 4. *Figures*. Figures now render in html using the ``figure`` tag.
+5. *Equations*. Refactor image, equation and paragraph tags to automatically
+   identify equations in a block paragraph, without specifying the equation
+   environment (ex: ``@eq[env=align*]{...}``)
 
 v0.19
 -----
