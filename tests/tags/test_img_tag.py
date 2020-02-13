@@ -40,20 +40,20 @@ def test_img_filepath(img_context1):
     src = "@img{sample.pdf}"
     root = Tag(name='root', content=src, attributes='', context=img_context1)
     img = root.content
-    assert img.filepath().match('sample.pdf')
+    assert img.infile_filepath().match('sample.pdf')
 
     # 2. Test a absolute path
     src = "@img{{{}}}".format(project_root.absolute() / 'sample.pdf')
     root = Tag(name='root', content=src, attributes='', context=img_context1)
     img = root.content
-    assert img.filepath().match('sample.pdf')
+    assert img.infile_filepath().match('sample.pdf')
 
     # 3. Test a missing file. Raises a TagError
     src = "@img{missing.pdf}"
     root = Tag(name='root', content=src, attributes='', context=img_context1)
     img = root.content
     with pytest.raises(TagError):
-        img.filepath()
+        img.infile_filepath()
 
 
 def test_img_mtime(doc):
@@ -138,7 +138,7 @@ def test_img_tex(img_context1):
     root = Tag(name='root', content=src, attributes='', context=img_context1)
     img = root.content
 
-    # Get the image filepath and wrap it in curly braces to avoid problems
+    # Get the image infile_filepath and wrap it in curly braces to avoid problems
     # with unusual filenames, like those with periods
     img_filepath = target_root / 'tex' / 'sample.pdf'
     suffix = img_filepath.suffix

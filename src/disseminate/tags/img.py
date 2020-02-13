@@ -20,9 +20,9 @@ class ImgFileNotFound(TagError):
 class Img(Tag):
     """The img tag for inserting images.
 
-    When rendering to a target document format, this tag may use a converter and
-    the attributes and context of this tag to convert the file to a needed
-    format.
+    When rendering to a target document format, this tag may use a converter,
+    the attributes and context of this tag to convert the infile to an outfile
+    in a needed format.
 
     Attributes
     ----------
@@ -53,7 +53,7 @@ class Img(Tag):
         mtimes = [super().mtime]
 
         # Get the modification times of files
-        img_filepath = pathlib.Path(self.filepath())
+        img_filepath = pathlib.Path(self.infile_filepath())
         if img_filepath.is_file():
             mtime = img_filepath.stat().st_mtime
             mtimes.append(mtime)
@@ -64,10 +64,10 @@ class Img(Tag):
         # The mtime is the latest mtime of all the tags and labels
         return max(mtimes)
 
-    def filepath(self, content=None, context=None):
-        """The filepath for the image for the given document target.
+    def infile_filepath(self, content=None, context=None):
+        """The infile_filepath for the image for the given document target.
 
-        This filepath may not be the same one as the one used by the target
+        The infile may be converted to an outfile for the target document
         format.
 
         Parameters
@@ -81,8 +81,8 @@ class Img(Tag):
 
         Returns
         -------
-        filepath : str
-            The filepath for the image source file.
+        infile_filepath : str
+            The infile_filepath for the image source file.
         """
         if self._filepath is not None:
             return self._filepath
@@ -91,13 +91,13 @@ class Img(Tag):
         content = content if content is not None else self.content
         context = context if context is not None else self.context
 
-        # Move the contents to the filepath attribute
+        # Move the contents to the infile_filepath attribute
         if isinstance(content, list):
             contents = ''.join(content).strip()
         elif isinstance(content, pathlib.Path) and content.is_file():
             contents = content
         elif isinstance(content, str):
-            # Get the filepath for the file
+            # Get the infile_filepath for the file
             filepaths = find_files(content, context)
             contents = (filepaths[0] if filepaths else None)
         else:
@@ -147,7 +147,7 @@ class Img(Tag):
         dep_manager = self.context['dependency_manager']
 
         # Raises MissingDependency if the file is not found
-        filepath = self.filepath(content=content)
+        filepath = self.infile_filepath(content=content)
         deps = dep_manager.add_dependency(dep_filepath=filepath,
                                           target=target,
                                           context=context,
@@ -196,9 +196,9 @@ class RenderedImg(Img):
     """An img base class for saving and caching an image that needs to be
     rendered by an external program.
 
-    A rendered image saves the contents of the tag into a cached filepath in
-    the format specified by the ``input_format`` attribute. The parent tag
-    will then convert the file to a format needed by the desired docuent target.
+    A rendered image saves the contents of the tag into an infile, and the
+    parent tag may convert this file to an outfile in the format needed by the
+    document target format. 
 
     .. note:: This class is not intended to be directly used as a tag. Rather,
               it is intended to be subclassed for other image types that need
@@ -230,8 +230,8 @@ class RenderedImg(Img):
         super().__init__(name=name, content=content, attributes=attributes,
                          context=context)
 
-    def filepath(self, content=None, context=None):
-        """The image filepath for the rendered image"""
+    def infile_filepath(self, content=None, context=None):
+        """The image infile_filepath for the rendered image"""
         if self._filepath is not None:
             return self._filepath
 
@@ -246,9 +246,9 @@ class RenderedImg(Img):
             self._filepath = filepaths[0]
 
         else:
-            # Get the cache filepath from the dependency manager
-            cache_filepath = self.write_input_file(content=content,
-                                                   context=context)
+            # Get the cache infile_filepath from the dependency manager
+            cache_filepath = self.write_infile(content=content,
+                                               context=context)
 
             # Set the tag content to the newly saved file path. This path
             # should be relative to the .cache directory
@@ -256,12 +256,12 @@ class RenderedImg(Img):
 
         return self._filepath
 
-    def write_input_file(self, content=None, context=None):
+    def write_infile(self, content=None, context=None):
         """Save the tag contents to an input file to be rendered, and
         return  a SourcePath for the input file (in the self.input_format).
 
         This function will do the following:
-        1. input_path. Generate a temporary filename and path (filepath) to
+        1. input_path. Generate a temporary filename and path (infile_filepath) to
            write to using context and self.input_format.
         2. write content. Use prepare_content to generate the content to write
            to the input_path.
@@ -279,7 +279,7 @@ class RenderedImg(Img):
         Returns
         -------
         input_filepath : :obj:`.paths.SourcePath`
-            The filepath for the saved input file to render.
+            The infile_filepath for the saved input file to render.
         """
         # Retrieve unspecified arguments
         content = content if content is not None else self.content
@@ -301,7 +301,7 @@ class RenderedImg(Img):
                     content_hash + self.input_format)
         filepath = pathlib.Path(settings.media_path, filepath)
 
-        # Construct a filepath in the cache directory. Create dirs as
+        # Construct a infile_filepath in the cache directory. Create dirs as
         # needed.
         input_filepath = SourcePath(project_root=cache_path, subpath=filepath)
 
