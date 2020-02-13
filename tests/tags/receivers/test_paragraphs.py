@@ -161,6 +161,9 @@ def test_assign_paragraph_roles(context_cls):
     tag2 = Tag(name='tag2', content='', attributes=tuple(), context=context)
     tag3 = Tag(name='tag3', content='', attributes=tuple(), context=context)
 
+    # Para 1: [tag1, tag2, 'three', 'four']
+    # Para 2: ['five', tag3, 'seven']
+    # Para 3: ['eight']
     group = group_paragraphs([tag1, tag2, 'three', 'four\n\nfive', tag3,
                               'seven\n\neight'])
     assert group[0][0].paragraph_role is None
@@ -180,7 +183,6 @@ def test_assign_paragraph_roles(context_cls):
 
     group = group_paragraphs([tag1, tag2, 'three', 'four\n\n', tag3,
                               '\n\neight'])
-    print('group:', group)
     assert group[0][0].paragraph_role is None
     assert group[0][1].paragraph_role is None
     assert group[1][0].paragraph_role is None
@@ -190,6 +192,19 @@ def test_assign_paragraph_roles(context_cls):
     assert group[0][0].paragraph_role == 'inline'
     assert group[0][1].paragraph_role == 'inline'
     assert group[1][0].paragraph_role == 'block'
+
+    # 3. Test an example with empty strings
+    tag1 = Tag(name='tag1', content='', attributes=tuple(), context=context)
+    tag2 = Tag(name='tag2', content='', attributes=tuple(), context=context)
+    tag3 = Tag(name='tag3', content='', attributes=tuple(), context=context)
+
+    group = group_paragraphs(['\n  ', tag1, '  \n  '])
+    assert len(group) == 1
+    assert group[0][1].paragraph_role is None
+
+    # Now assign the paragraph_roles
+    assign_paragraph_roles(elements=group, tag_base_cls=Tag)
+    assert group[0][1].paragraph_role == 'block'
 
 
 def test_assign_paragraph_with_tags(doc):

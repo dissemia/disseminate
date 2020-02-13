@@ -88,8 +88,8 @@ class Img(Tag):
             return self._filepath
 
         # Retrieve unspecified parameters
-        content = content if content is not None else self.content
-        context = context if context is not None else self.context
+        content = content or self.content
+        context = context or self.context
 
         # Move the contents to the infile_filepath attribute
         if isinstance(content, list):
@@ -137,13 +137,12 @@ class Img(Tag):
         """
         # Retrieve the unspecified arguments
         target = target if target.startswith('.') else '.' + target
-        content = content if content is not None else self.content
-        attributes = attributes if attributes is not None else self.attributes
-        context = context if context is not None else self.context
+        content = content or self.content
+        attributes = attributes or self.attributes
+        context = context or self.context
 
         # Retrieve the dependency manager
         assert self.context.is_valid('dependency_manager')
-
         dep_manager = self.context['dependency_manager']
 
         # Raises MissingDependency if the file is not found
@@ -156,8 +155,6 @@ class Img(Tag):
         return deps.pop()
 
     def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
-        content = content if content is not None else content
-
         # Get the file dependency
         dep = self.add_file(target='.tex', content=content,
                             attributes=attributes)
@@ -170,15 +167,13 @@ class Img(Tag):
         dest_filepath = "{{{base}}}{suffix}".format(base=base, suffix=suffix)
 
         # Format the width
-        attributes = attributes if attributes is not None else self.attributes
+        attributes = attributes or self.attributes
         attrs = format_attribute_width(attributes, target='.tex')
 
         return tex_cmd(cmd='includegraphics', attributes=attrs,
                        formatted_content=str(dest_filepath))
 
     def html_fmt(self, content=None, attributes=None, level=1):
-        content = content if content is not None else content
-
         # Add the file dependency
         dep = self.add_file(target='.html', content=content,
                             attributes=attributes)
@@ -222,9 +217,8 @@ class RenderedImg(Img):
                 self.input_format.startswith('.')), ("RenderImage needs a "
                                                      "format to save to")
 
-        if isinstance(content, list):
-            content = ''.join(content).strip()
-        else:
+        # Strip extra space on the edges so that the hash can be more consistent
+        if isinstance(content, str):
             content = content.strip()
 
         super().__init__(name=name, content=content, attributes=attributes,
@@ -236,11 +230,10 @@ class RenderedImg(Img):
             return self._filepath
 
         # Retrieve unspecified arguments and setuo
-        content = content if content is not None else self.content
-        context = context if context is not None else self.context
+        context = context or self.context
 
         # Determine if contents is a file or code
-        filepaths = find_files(content, context=context)
+        filepaths = find_files(string=content or self.content, context=context)
         if len(filepaths) == 1:
             # It's a file. Use it directly.
             self._filepath = filepaths[0]
@@ -282,8 +275,9 @@ class RenderedImg(Img):
             The infile_filepath for the saved input file to render.
         """
         # Retrieve unspecified arguments
-        content = content if content is not None else self.content
-        context = context if context is not None else self.context
+        context = context or self.context
+        content = content or self.prepare_content(content=content,
+                                                  context=context)
 
         assert context.is_valid('dependency_manager', 'src_filepath')
 
@@ -328,8 +322,7 @@ class RenderedImg(Img):
         This function should prepare content from the tag's content into a
         string in the format of self.input_format.
         """
-        content = content if content is not None else self.content
-        return content
+        return content or self.content
 
     # def template_kwargs(self):
     #     """Get the kwargs to pass to the template.

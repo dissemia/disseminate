@@ -10,7 +10,7 @@ python_deps = All('python',
                   All('packages',
                       'regex>=2018.11.22', 'jinja2>=2.10', 'lxml>=4.3.0',
                       'python-slugify>=2.0.1', 'click>=7.0',
-                      'pdfCropMargins>=0.1.4', 'sanic>=19.0', 'pandas>=1.0'))
+                      'pdfCropMargins>=0.1.4', 'sanic>=19.0', 'pandas>=0.25'))
 
 image_deps = Optional('image external dependencies',
                       Optional('executables',

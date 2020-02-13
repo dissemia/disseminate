@@ -3,13 +3,10 @@ Tags to render equations
 """
 from copy import copy
 
-from .tag import TagFactory
 from .img import RenderedImg
 from .exceptions import TagError
-from .receivers import process_content, process_macros
 from .utils import content_to_str
 from ..formats import tex_cmd, tex_env
-from ..attributes import Attributes
 
 
 class Eq(RenderedImg):
@@ -36,9 +33,8 @@ class Eq(RenderedImg):
     active = True
     input_format = '.tex'
 
-    process_content = False
+    process_content = True
 
-    block_equation = None
     bold = None
     color = None
 
@@ -47,25 +43,34 @@ class Eq(RenderedImg):
 
     default_block_env = "align*"
 
+    _block_equation = False
+
     def __init__(self, name, content, attributes, context,
                  block_equation=False):
         self.block_equation = block_equation
 
-        # Convert the content into a string
-        content = content_to_str(content, target='.tex',
-                                 mathmode=True)
-        content = content.strip(' \t\n')
-
         super().__init__(name=name, content=content, attributes=attributes,
                          context=context)
-        #
-        # # Get various properties from the attributes
-        # env = attributes.get('env', target='.tex')
-        # self.block_equation = (True if env is not None orself.block_equation else False)
-        # self.tex_env = env if env is not None else self.default_block_env
+
+        # Convert the content into a string formatted for latex
+        content = content_to_str(self.content, target='.tex',
+                                 mathmode=True)
+        self.content = content.strip(' \t\n')
+
+    @property
+    def block_equation(self):
+        return (self._block_equation or
+                'env' in self.attributes or
+                self.paragraph_role == 'block')
+
+    @block_equation.setter
+    def block_equation(self, value):
+        self._block_equation = value
 
     def prepare_content(self, content=None, context=None):
         """Render the content in LaTeX into a valid .tex file."""
+        context = context or self.context
+
         # Get the renderer for the equation
         if ('renderers' not in context or
            'equation' not in context['renderers']):
@@ -73,7 +78,8 @@ class Eq(RenderedImg):
         renderer = context['renderers']['equation']
 
         # Get the unspecified arguments
-        content = content if content is not None else self.tex
+        # FIXME: content or tex_fmt
+        content = self.tex_fmt(mathmode=False)
         context = context if context is not None else context
 
         # Make a copy of the context and add the content as the 'body' entry.
@@ -84,7 +90,7 @@ class Eq(RenderedImg):
         return renderer.render(context=context_cp, target='.tex', **kwargs)
 
     def html_fmt(self, content=None, attributes=None, level=1):
-        attrs = attributes if attributes is not None else self.attributes.copy()
+        attrs = attributes or self.attributes.copy()
 
         # Crop equation images created by the dependency manager. This removes
         # white space around the image so that the equation images.
@@ -102,12 +108,11 @@ class Eq(RenderedImg):
 
     def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         # Retrieve unspecified arguments
-        attributes = attributes if attributes is not None else self.attributes
-        content = content if content is not None else self.content
+        attributes = attributes or self.attributes
+        content = content or self.content
 
         # Determine the environment
         env = attributes.get('env', target='.tex') or self.default_block_env
-        block_equation = self.block_equation or self.paragraph_role == 'block'
 
         # Add bold and color if specified
         if 'color' in attributes:
@@ -123,7 +128,7 @@ class Eq(RenderedImg):
         if mathmode:
             return content
         else:
-            if block_equation:
+            if self.block_equation:
                 return tex_env(env=env, attributes=attributes,
                                formatted_content=content, min_newlines=True)
             else:
