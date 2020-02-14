@@ -148,13 +148,13 @@ def test_simple_inline_equation_html(context_eq):
     # 'src_filepath' attribute
     dep_manager = context_eq['dependency_manager']
     key = SourcePath(project_root=dep_manager.cache_path,
-                     subpath='media/test_963ee5ea93.tex')
+                     subpath='media/test_9d0626322a.tex')
     assert eq.infile_filepath() == key
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert (eq.html ==
-            '<img src="/html/media/test_963ee5ea93_crop.svg" '
+            '<img src="/html/media/test_9d0626322a_crop.svg" '
             'class="eq">\n')
 
     # 2. Test tag with disseminate formatting
@@ -164,7 +164,7 @@ def test_simple_inline_equation_html(context_eq):
     # Check the paths. These are stored by the parent Img tag in the
     # 'src_filepath' attribute
     key = SourcePath(project_root=dep_manager.cache_path,
-                     subpath='media/test_44f6509475.tex')
+                     subpath='media/test_6f52600261.tex')
     assert eq.infile_filepath() == key
 
     # Make sure the @termb has been converted
@@ -175,7 +175,7 @@ def test_simple_inline_equation_html(context_eq):
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert (eq.html ==
-            '<img src="/html/media/test_44f6509475_crop.svg" class="eq">\n')
+            '<img src="/html/media/test_6f52600261_crop.svg" class="eq">\n')
 
     # 3. Test tag with extra attributes
     eq = Eq(name='eq', content='y = @eq[env=alignat* 1]{x}', attributes='',
@@ -184,7 +184,7 @@ def test_simple_inline_equation_html(context_eq):
     # Check the paths. These are stored by the parent Img tag in the
     # 'src_filepath' attribute
     key = SourcePath(project_root=dep_manager.cache_path,
-                     subpath='media/test_963ee5ea93.tex')
+                     subpath='media/test_9d0626322a.tex')
     assert eq.infile_filepath() == key
 
     # Make sure the tag has been converted
@@ -195,7 +195,7 @@ def test_simple_inline_equation_html(context_eq):
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert (eq.html ==
-            '<img src="/html/media/test_963ee5ea93_crop.svg" class="eq">\n')
+            '<img src="/html/media/test_9d0626322a_crop.svg" class="eq">\n')
 
 
 def test_block_equation_html(context_eq):
@@ -227,7 +227,7 @@ def test_block_equation_html(context_eq):
 
     # Check the image infile_filepath and that the contents are in the file
     img_filepath = eq.infile_filepath()
-    assert img_filepath.match('test_2f2faf0a29.tex')
+    assert img_filepath.match('test_0ab41c1c66.tex')
     assert img_filepath.is_file()
     assert key in img_filepath.read_text()
 
@@ -256,8 +256,8 @@ def test_block_equation_html(context_eq):
 
     # Check the image infile_filepath and that the contents are in the file
     img_filepath = eq.infile_filepath()
-    assert not img_filepath.match('test_c653881760.tex')  # should be different
-    assert img_filepath.match('test_414ef96290.tex')
+    assert not img_filepath.match('test_0ab41c1c66.tex')  # should be different
+    assert img_filepath.match('test_35f95c9c65.tex')
     assert img_filepath.is_file()
     assert key in img_filepath.read_text()
 
@@ -400,7 +400,7 @@ def test_block_equation_multiple_targets(context_eq):
     assert key in eq.infile_filepath().read_text()
     print(p.html)
     assert p.html == ('<p>\n'
-                      '    <img src="/html/media/test_ab83daace9_crop.svg" '
+                      '    <img src="/html/media/test_6436975f5e_crop.svg" '
                       'class="eq blockeq">\n'
                       '    </p>\n')
     # Check the tex target
