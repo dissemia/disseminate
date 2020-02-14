@@ -2,6 +2,8 @@
 Utilities for manipulating files and paths
 """
 import os
+import shutil
+import logging
 import errno
 
 
@@ -61,3 +63,36 @@ def parents(path):
 
     return parents
 
+
+def link_or_copy(src, dst):
+    """Create a hard link, if possible, between a src filepath to a dst
+    filepath, or copy if a link is not possible.
+    """
+    logging.debug("Linking file '{}'".format(str(dst)))
+
+    # Determine whether dst exists and whether is has the same inode as src
+    src_inode = os.stat(src).st_ino
+    try:
+        dst_inode = os.stat(dst).st_ino
+        dst_exists = True  # the destination file exists exist
+    except FileNotFoundError:
+        dst_inode = None
+        dst_exists = False  # the destination file doesn't exist
+
+    dst_different = (src_inode != dst_inode)
+
+    # Remove the destination file if it exists and it's different from the
+    # source
+    if dst_exists and dst_different:
+        os.remove(dst)
+    elif dst_exists:
+        # In this case, the destination exists and the destination is the same
+        # file (by inode). The objective is already achieved and nothing else
+        # needs to be done
+        return None
+
+    # Try create a hard link, if possible
+    try:
+        return os.link(src, dst)
+    except OSError:
+        return shutil.copyfile(src, dst)
