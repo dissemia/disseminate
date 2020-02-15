@@ -305,6 +305,17 @@ div.featurebox.examplebox {
 
 div.examplebox >  h2, div.examplebox >  h3, div.examplebox >  h4 {
   color: #405ff3;
+  margin-top: 0;
+}
+
+div.featurebox.problembox {
+  border: 2px solid #a4ca9d;
+  background: #f0feef;
+}
+
+div.problembox >  h2, div.problembox >  h3, div.problembox >  h4 {
+  color: #348625;
+  margin-top: 0;
 }
 
 /* Footer - navigation */

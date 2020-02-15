@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v0.21
+-----
+
+Tags
+~~~~
+1. *Problem boxes*. Added a feature box for problems.
+
 v0.20
 -----
 

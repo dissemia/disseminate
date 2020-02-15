@@ -77,16 +77,28 @@
 \renewcommand{\deg}{^\circ}
 
 %%%
-% Color boxes
-\usepackage{tcolorbox}
-
-%%%
 % Nice tables
 \usepackage{booktabs}
 
-% color box definitions
-\newtcolorbox{featurebox}{colback=black!5!white, colframe=black!40!white}
-\newtcolorbox{examplebox}{colback=blue!5!white, colframe=blue!40!white}
+%%%
+% Color boxes
+\usepackage[breakable]{tcolorbox}
+
+\newtcolorbox{featurebox}{colback=black!5!white,
+                          colframe=black!40!white,
+                          breakable,
+                          before skip=\baselineskip,
+                          after skip=\baselineskip}
+\newtcolorbox{examplebox}{colback=blue!5!white,
+                          colframe=blue!40!white,
+                          breakable,
+                          before skip=\baselineskip,
+                          after skip=\baselineskip}
+\newtcolorbox{problembox}{colback=green!7!white,
+                          colframe=green!50!black!40!white,
+                          breakable,
+                          before skip=\baselineskip,
+                          after skip=\baselineskip}
 
 {%- endblock %}
 {%- block pygmentsheader %}

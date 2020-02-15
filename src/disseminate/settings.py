@@ -309,8 +309,11 @@ tex_env_arguments = {'align': empty, # no required arguments
                      'alignat*': (IntPositionalValue,),  # \begin{alignat*}{3}
                      'center': empty,
                      'enumerate': empty,
+
                      'examplebox': empty,
                      'featurebox': empty,
+                     'problembox': empty,
+
                      'itemize': empty,
                      'panel': (StringPositionalValue,),
                      'tabular': (StringPositionalValue,),
