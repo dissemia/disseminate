@@ -70,9 +70,17 @@ ol {/* Remove margin for all <ol>s */
   padding-left: 1em;
 }
 
+ol li {
+  margin-top: 1em;
+}
+
 ol ol {/* Add a margin nested <ol> */
   margin-left: 1em;
   list-style: lower-latin;
+}
+
+ol ol li {
+  margin-top: 0;
 }
 
 ol ol ol {

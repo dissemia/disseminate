@@ -155,7 +155,7 @@ default_context = {
         # New chapters reset the numbers on sections, subsections,
         # subsubsections
         'part': {'chapter', 'section', 'subsection', 'subsubsection'},
-        'chapter': {'section', 'subsection', 'subsubsection'},
+        'chapter': {'section', 'subsection', 'subsubsection', 'figure', 'table'},
         'section': {'subsection', 'subsubsection'},
         'subsection': {'subsubsection'},
     },
@@ -177,6 +177,7 @@ default_context = {
     # Macros - Symbols
     '@deg': '@sup{○}',
     '@degC': '@sup{○}C',
+    '@times': '@symbol{times}',
 
     # Macros - Greek
     '@alpha': '@symbol{alpha}', '@beta': '@symbol{beta}',
