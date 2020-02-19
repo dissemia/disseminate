@@ -63,13 +63,14 @@ def test_builder_build(env):
         required_execs = tuple()
         was_run = False
 
+        @property
+        def status(self):
+            return "done" if self.was_run else "ready"
+
         def build(self, complete=False):
             super().build(complete=complete)
-
             self.was_run = True
-
-            self.status = 'done'
-            return self.status
+            return "done"
 
     subbuilder = SubBuilder(env=env, infilepaths=infilepath,
                             outfilepath=targetpath)

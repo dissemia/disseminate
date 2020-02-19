@@ -7,6 +7,7 @@ from abc import ABCMeta
 from distutils.spawn import find_executable
 
 from .utils import cache_filepath
+from .exceptions import runtime_error
 from ..paths import SourcePath, TargetPath
 
 
@@ -23,6 +24,15 @@ class Builder(metaclass=ABCMeta):
         builds are completed.
 
     Parameters
+    ----------
+    infilepaths, args : Tuple[:obj:`.paths.SourcePath`]
+        The filepaths for input files in the build
+    outfilepath : Optional[:obj:`.paths.TargetPath`]
+        If specified, the path for the output file.
+    env: :obj:`.builders.Environment`
+        The build environment
+
+    Attributes
     ----------
     action : str
         The command to execute during the build.
@@ -49,7 +59,6 @@ class Builder(metaclass=ABCMeta):
     optional_execs = None
 
     _active = None
-    _status = None
     _infilepaths = None
     _outfilepath = None
 
@@ -128,26 +137,24 @@ class Builder(metaclass=ABCMeta):
         - 'building': The builder is building
         - 'done': The builder is done building
         """
-        if self._status is None:
-            active = self.active
-            has_infilepaths = len(self.infilepaths) > 0
-            if not active:
-                self._status = "inactive"
-            elif not has_infilepaths:
-                self._status = "missing"
-            elif self.popen is not None:
-                if self.popen.poll() is not None:
-                    self._status = "building"
-                else:
-                    self._status = "done"
-            else:
-                self._status = "ready"
-        return self._status
+        active = self.active
+        has_infilepaths = len(self.infilepaths) > 0
+        if not active:
+            return "inactive"
+        elif not has_infilepaths:
+            return "missing"
+        elif self.popen is not None:
+            poll = self.popen.poll()
+            if poll is None:
+                # If popen.poll() returns None, the process isn't done.
+                return "building"
+            elif poll == 0:  # exit code of 0. Successful!
+                return "done"
+            else:  # non-zero exit code. Unsuccessful. :(
+                runtime_error(popen=self.popen)
 
-    @status.setter
-    def status(self, value):
-        assert value in {'ready', 'inactive', 'missing', 'building', 'done'}
-        self._status = value
+        else:
+            return "ready"
 
     @property
     def infilepaths(self):
@@ -175,6 +182,28 @@ class Builder(metaclass=ABCMeta):
     def outfilepath(self, value):
         self._outfilepath = value
 
+    def run_cmd_args(self):
+        """Format the action, if it's a string."""
+        if isinstance(self.action, str):
+            infilepaths_str = " ".join([str(i) for i in self.infilepaths])
+            fmt_action = self.action.format(infilepaths=infilepaths_str,
+                                            outfilepath=self.outfilepath)
+            return fmt_action.split()
+        else:
+            return tuple()
+
+    def run_cmd(self, *args):
+        """If the action is a external command, run it."""
+        if self.popen is None and (isinstance(self.action, str) or args):
+            # Format the action string, if it's to be used
+            args = args if args else self.run_cmd_args()
+            logging.debug("'{}' run with: '{}'".format(self.__class__.__name__,
+                                                       args))
+
+            popen = subprocess.Popen(args=args, stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE, bufsize=4096,)
+            self.popen = popen
+
     def build(self, complete=False):
         """Run the build.
 
@@ -185,19 +214,16 @@ class Builder(metaclass=ABCMeta):
             status = 'done'
             for builder in self.subbuilders:
                 if builder.status == 'building':
-                    carry_over.append(builder)
                     status = 'building'
                 elif builder.status == 'ready':
                     builder.build()
-                    carry_over.append(builder)
                     status = 'building'
                     break
                 elif builder.status == 'done':
                     status = "done"
             return status
 
-        # Build fixed dependencies first
-        carry_over = []
+        # Build fixed dependencies first, then this builder's build
         if complete:
             status = None
             while status != "done":
@@ -205,19 +231,11 @@ class Builder(metaclass=ABCMeta):
         else:
             status = run_build(self)
 
-        # Transfer over the builders that aren't finished
-        self.subbuilders.clear()
-        self.subbuilders += carry_over
-
         # Run this builder if the subbuilders are done
         if status == "done":
-            self.run_cmd()
+            if complete:
+                while self.status != "done":
+                    self.run_cmd()
+            else:
+                self.run_cmd()
         return self.status
-
-    def run_cmd(self, *args):
-        """If the action is a external command, run it."""
-        if isinstance(self.action, str) or args:
-            args = args or self.action.split()
-            popen = subprocess.Popen(args=args, stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE, bufsize=4096,)
-            self.popen = popen
