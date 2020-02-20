@@ -83,8 +83,10 @@ class Builder(metaclass=ABCMeta):
         # Set the infilepaths and outfilepaths
         current_infilepaths = infilepaths
         for subbuilder in self.subbuilders:
-            if subbuilder._infilepaths is None:
-                subbuilder.infilepaths = current_infilepaths
+            # For the subbuilders to work together, reset their infilepaths
+            # and outfilepath
+            subbuilder.infilepaths = current_infilepaths
+            subbuilder.outfilepath = None
             current_infilepaths = [subbuilder.outfilepath]
 
         self.infilepaths = current_infilepaths
