@@ -35,6 +35,20 @@ class Builder(metaclass=ABCMeta):
         - 'priority': test that the priority attribute is an int
         - 'required_execs': tests that the required_execs attribute is specified
         - 'all_execs': tests that the required execs are available
+    infilepath_ext : str
+        The format extension for the input file (ex: '.pdf')
+    outfilepath_ext : str
+        The format extension for the output file (ex: '.svg')
+    outfilepath_append : str
+        For automatically generated outfilepaths, the following string will
+        be appended to the name of the file. ex: '_scale'
+    priority : int
+        If multiple viable builders are available, use the one with the highest
+        priority.
+    required_execs : Tuple[str]
+        A list of external executables that are needed by the builder.
+    popen : :obj:`subprocess.Popen`
+        The process for the externally run program.
     """
     env = None
     action = None
@@ -47,7 +61,6 @@ class Builder(metaclass=ABCMeta):
 
     priority = None
     required_execs = None
-    optional_execs = None
 
     _active = None
     _infilepaths = None
@@ -146,6 +159,7 @@ class Builder(metaclass=ABCMeta):
 
     @property
     def infilepaths(self):
+        """The list of input filenames and paths needed for the build"""
         return self._infilepaths
 
     @infilepaths.setter
@@ -154,6 +168,7 @@ class Builder(metaclass=ABCMeta):
 
     @property
     def outfilepath(self):
+        """The output filename and path"""
         outfilepath = self._outfilepath
         if outfilepath is not None:
             return outfilepath
