@@ -6,7 +6,7 @@ from .validators import validate_tuple
 
 
 class PdfCrop(Builder):
-    """A fixed builder to crop a pdf and form a cropped pdf.
+    """A builder to crop a pdf and form a cropped pdf.
 
     Parameters
     ----------

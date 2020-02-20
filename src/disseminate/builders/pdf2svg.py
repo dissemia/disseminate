@@ -6,7 +6,7 @@ from .pdfcrop import PdfCrop
 
 
 class Pdf2svg(Builder):
-    """A fixed builder to convert from pdf to svg."""
+    """A builder to convert from pdf to svg."""
 
     action = "pdf2svg {infilepaths} {outfilepath}"
     priority = 1000
