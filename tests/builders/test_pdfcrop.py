@@ -1,5 +1,5 @@
 """
-Test the PDFCrop builder
+Test the PdfCrop builder
 """
 import pytest
 
@@ -18,7 +18,7 @@ def test_pdfcrop(env):
     assert pdfcrop.active
     assert pdfcrop.status == "missing"
 
-    # 2. Test examples with the infilepath and outfilepath specified.
+    # 2. Test example with the infilepath and outfilepath specified.
     #    The builder should be available, but the status should be missing
     infilepath = SourcePath(project_root='tests/builders/example1',
                             subpath='sample.pdf')

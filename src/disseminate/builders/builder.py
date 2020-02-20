@@ -14,15 +14,6 @@ from ..paths import SourcePath, TargetPath
 class Builder(metaclass=ABCMeta):
     """A build for one or more dependencies.
 
-
-    .. note::
-      - Each builder is atomic
-      - When running a build, not all of the builders might be called in the
-        first build--for example, subsequent builders may rely on the results
-        of previous builds. For this reason, builders should be used
-        in conjunction with an environment to make sure a set of
-        builds are completed.
-
     Parameters
     ----------
     infilepaths, args : Tuple[:obj:`.paths.SourcePath`]
@@ -40,6 +31,14 @@ class Builder(metaclass=ABCMeta):
         The target file to create
     dependencies : Union[str, List[str], :obj:`.Dependencies`]
 
+    Notes
+    -----
+    - The build filepaths for subbuilders are set as follows, with user-supplied
+      paths in parentheses:
+      - builder - subbuilder1 (infilepaths) - outfilepath1
+                - subbuilder2 outfilepath2 - outfilepath3
+                - subbuilder3 outfilepath3 - outfilepath4
+                - outfilepath4 - (outfilepath)
     """
     action = None
     target = None
@@ -72,16 +71,23 @@ class Builder(metaclass=ABCMeta):
         self.subbuilders += list(kwargs.pop('subbuilders', []))
 
         # Load the infilepaths, which must be SourcePaths
-        self.infilepaths = [arg for arg in args if isinstance(arg, SourcePath)]
         infilepaths = kwargs.pop('infilepaths', [])
         infilepaths = (list(infilepaths) if isinstance(infilepaths, tuple) or
                        isinstance(infilepaths, list) else [infilepaths])
-        infilepaths = [arg for arg in infilepaths
-                       if isinstance(arg, SourcePath)]
-        self.infilepaths += infilepaths
+        infilepaths += args
+        infilepaths = [i for i in infilepaths if isinstance(i, SourcePath)]
 
         # Load the outfilepath
         outfilepath = kwargs.pop('outfilepath', None)
+
+        # Set the infilepaths and outfilepaths
+        current_infilepaths = infilepaths
+        for subbuilder in self.subbuilders:
+            if subbuilder._infilepaths is None:
+                subbuilder.infilepaths = current_infilepaths
+            current_infilepaths = [subbuilder.outfilepath]
+
+        self.infilepaths = current_infilepaths
         self.outfilepath = (outfilepath if isinstance(outfilepath, TargetPath)
                             else None)
 
@@ -207,8 +213,14 @@ class Builder(metaclass=ABCMeta):
     def build(self, complete=False):
         """Run the build.
 
-        .. note:: This function will run the sub-builders and this builder
-                  once.
+        .. note::
+          - This function will run the sub-builders and this builder once.
+          - Each builder is atomic
+          - When running a build, not all of the builders might be called in
+            the first build--for example, subsequent builders may rely on the
+            results of previous builds. For this reason, builders should be used
+            in conjunction with an environment to make sure a set of
+            builds are completed or the build complete=True should be used.
         """
         def run_build(self):
             status = 'done'
