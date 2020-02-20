@@ -3,6 +3,7 @@ A builder to convert from PDF to SVG
 """
 from .builder import Builder
 from .pdfcrop import PdfCrop
+from .scalesvg import ScaleSvg
 
 
 class Pdf2svg(Builder):
@@ -31,6 +32,12 @@ class Pdf2svg(Builder):
             crop = kwargs.pop('crop_percentage', crop)
             pdfcrop = PdfCrop(env=env, crop=crop, *args, **kwargs)
             args += (pdfcrop,)
+
+        if 'scale' in kwargs:
+            scale = kwargs.pop('scale')
+            scalesvg = ScaleSvg(env=env, scale=scale, *args, **kwargs)
+            args += (scalesvg,)
+
         super().__init__(env, *args, **kwargs)
 
     def run_cmd_args(self):
