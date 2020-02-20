@@ -1,10 +1,9 @@
 """
 Test the Pdf2svg builder
 """
-import pytest
-
-from disseminate.builders.pdf2svg import Pdf2svg
+from disseminate.builders.pdf2svg import Pdf2svg, Pdf2SvgCropScale
 from disseminate.builders.pdfcrop import PdfCrop
+from disseminate.builders.scalesvg import ScaleSvg
 from disseminate.paths import SourcePath, TargetPath
 
 
@@ -40,22 +39,27 @@ def test_pdf2svg_pdfcrop(env):
                             subpath='sample.pdf')
     outfilepath = TargetPath(target_root=env.context['target_root'],
                              subpath='sample.svg')
-    pdf2svg = Pdf2svg(infilepaths=infilepath, outfilepath=outfilepath, env=env,
-                      crop=20)
+    pdf2svg = Pdf2SvgCropScale(infilepaths=infilepath, outfilepath=outfilepath,
+                               env=env, crop=20)
 
     # Make sure pdfcrop is available and read
     assert pdf2svg.active
     assert pdf2svg.status == "ready"
 
     # Make sure the pdfcrop builder was added as a subbuilder
-    assert len(pdf2svg.subbuilders) == 1
+    assert len(pdf2svg.subbuilders) == 2
+    assert isinstance(pdf2svg.subbuilders[0], PdfCrop)
+    assert isinstance(pdf2svg.subbuilders[1], Pdf2svg)
     pdfcrop = pdf2svg.subbuilders[0]
-    assert isinstance(pdfcrop, PdfCrop)
+    subpdf2svg = pdf2svg.subbuilders[1]
 
     # Check the infilepaths and outfilepath
     assert pdfcrop.infilepaths == [infilepath]
     assert pdfcrop.outfilepath.match('*.pdf')
-    assert pdf2svg.infilepaths == [pdfcrop.outfilepath]
+    assert subpdf2svg.infilepaths == [pdfcrop.outfilepath]
+    assert subpdf2svg.outfilepath.match('*.svg')
+
+    assert pdf2svg.infilepaths == [infilepath]
     assert pdf2svg.outfilepath == outfilepath
 
     # Now run the build. Since this takes a bit of time, we'll catch the
@@ -73,8 +77,65 @@ def test_pdf2svg_pdfcrop(env):
 
     # 2. Test example without the outfilepath specified. The final final will
     #    be placed in a cached folder
-    cache_path = env.cache_path / 'sample_crop.svg'
-    pdf2svg = Pdf2svg(infilepaths=infilepath, env=env, crop=20)
+    cache_path = env.cache_path / 'sample.svg'
+    pdf2svg = Pdf2SvgCropScale(infilepaths=infilepath, env=env, crop=20)
+    assert not cache_path.exists()
+    status = pdf2svg.build(complete=True)
+    assert status == 'done'
+    assert cache_path.exists()
+    assert cache_path.read_text() == svg_text
+
+
+def test_pdf2svg_scalesvg(env):
+    """Test the Pdf2svg builder with a ScaleSvg subbuilder."""
+    # 1. Test example with the infilepath and outfilepath specified.
+    infilepath = SourcePath(project_root='tests/builders/example1',
+                            subpath='sample.pdf')
+    outfilepath = TargetPath(target_root=env.context['target_root'],
+                             subpath='sample.svg')
+    pdf2svg = Pdf2SvgCropScale(infilepaths=infilepath, outfilepath=outfilepath,
+                               env=env, scale=2)
+
+    # Make sure pdfcrop is available and read
+    assert pdf2svg.active
+    assert pdf2svg.status == "ready"
+
+    # Make sure the pdfcrop builder was added as a subbuilder
+    assert len(pdf2svg.subbuilders) == 2
+    assert isinstance(pdf2svg.subbuilders[0], Pdf2svg)
+    assert isinstance(pdf2svg.subbuilders[1], ScaleSvg)
+    subpdf2svg = pdf2svg.subbuilders[0]
+    scalesvg = pdf2svg.subbuilders[1]
+
+    # Check the infilepaths and outfilepath
+    assert subpdf2svg.infilepaths == [infilepath]
+    assert subpdf2svg.outfilepath.match('*.svg')
+    assert scalesvg.infilepaths == [subpdf2svg.outfilepath]
+    assert scalesvg.outfilepath.match('*_scale.svg')
+    assert pdf2svg.infilepaths == [infilepath]
+    assert pdf2svg.outfilepath == outfilepath
+
+    # Now run the build. Since this takes a bit of time, we'll catch the
+    # command building
+    assert not outfilepath.exists()
+    status = pdf2svg.build(complete=True)
+    assert status == 'done'
+    assert pdf2svg.status == 'done'
+    assert outfilepath.exists()
+
+    # Make sure the produced svg is cropped
+    svg_text = outfilepath.read_text()
+    assert 'width="82px" height="73px"' not in svg_text  # if not crop
+    assert 'width="164px" height="146px"' in svg_text
+
+    # Remove all intermediary files
+    for builder in [pdf2svg, subpdf2svg, scalesvg]:
+        builder.outfilepath.unlink()
+
+    # 2. Test example without the outfilepath specified. The final final will
+    #    be placed in a cached folder
+    cache_path = env.cache_path / 'sample.svg'
+    pdf2svg = Pdf2SvgCropScale(infilepaths=infilepath, env=env, scale=2)
 
     assert not cache_path.exists()
     status = pdf2svg.build(complete=True)

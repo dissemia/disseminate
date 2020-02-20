@@ -1,7 +1,7 @@
 """
 A builder to convert from PDF to SVG
 """
-from .builder import Builder
+from .builder import Builder, CompositeBuilder
 from .pdfcrop import PdfCrop
 from .scalesvg import ScaleSvg
 
@@ -14,7 +14,7 @@ class Pdf2svg(Builder):
     required_execs = ('pdf-crop-margins',)
 
     infilepath_ext = '.pdf'
-    outfilepath_ext = 'svg'
+    outfilepath_ext = '.svg'
 
     page_no = None
 
@@ -47,11 +47,28 @@ class Pdf2svg(Builder):
         return tuple(args)
 
 
-#
-# class ScaleSvg(Builder):
-#     """A fixed builder to scale and SVG image."""
-#
-#
-# Builder(PdfCrop(infile='infile.pdf', percentretain=(0, 0, 0, 0)),
-#         Pdf2svg(),
-#         ScaleSvg(outfile='scale.svg', scale=1.0))
+class Pdf2SvgCropScale(CompositeBuilder):
+    """Create a CompositeBuilder for Pdf2Svg that includes PdfCrop and ScaleSvg.
+    """
+
+    priority = 1000
+    infilepath_ext = '.pdf'
+    outfilepath_ext = '.svg'
+
+    def __init__(self, env, *args, **kwargs):
+        # Create the subbuilders
+        if 'crop' in kwargs or 'crop_percentage' in kwargs:
+            crop = kwargs.pop('crop', None)
+            crop = kwargs.pop('crop_percentage', crop)
+            pdfcrop = PdfCrop(env, crop=crop, *args, **kwargs)
+            args += (pdfcrop,)
+
+        pdf2svg = Pdf2svg(env, *args, **kwargs)
+        args += (pdf2svg,)
+
+        if 'scale' in kwargs:
+            scale = kwargs.pop('scale')
+            scalesvg = ScaleSvg(env, scale, *args, **kwargs)
+            args += (scalesvg,)
+
+        super().__init__(env, *args, **kwargs)

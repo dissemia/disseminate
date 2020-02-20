@@ -8,6 +8,7 @@ from distutils.spawn import find_executable
 
 from .utils import cache_filepath
 from .exceptions import runtime_error
+from ..utils.file import link_or_copy
 from ..paths import SourcePath, TargetPath
 
 
@@ -27,26 +28,17 @@ class Builder(metaclass=ABCMeta):
     ----------
     action : str
         The command to execute during the build.
-    target : Union[:obj:`pathlib.Path`, str]
-        The target file to create
-    dependencies : Union[str, List[str], :obj:`.Dependencies`]
-
-    Notes
-    -----
-    - The build filepaths for subbuilders are set as follows, with user-supplied
-      paths in parentheses:
-      - builder - subbuilder1 (infilepaths) - outfilepath1
-                - subbuilder2 outfilepath2 - outfilepath3
-                - subbuilder3 outfilepath3 - outfilepath4
-                - outfilepath4 - (outfilepath)
+    active_requirements : Union[tuple, bool]
+        If False, the builder will be inactive
+        If a tuple of strings is specified, these conditions will be tested
+        to see if the builder is active:
+        - 'priority': test that the priority attribute is an int
+        - 'required_execs': tests that the required_execs attribute is specified
+        - 'all_execs': tests that the required execs are available
     """
-    action = None
-    target = None
     env = None
-
-    subbuilders = None
-    previous_subbuilder = None
-    next_subbuilder = None
+    action = None
+    active_requirements = ('priority', 'required_execs', 'all_execs')
 
     infilepath_ext = None
     outfilepath_ext = None
@@ -66,34 +58,18 @@ class Builder(metaclass=ABCMeta):
     def __init__(self, env, *args, **kwargs):
         self.env = env
 
-        # Load the subbuilders
-        self.subbuilders = [arg for arg in args if isinstance(arg, Builder)]
-        self.subbuilders += list(kwargs.pop('subbuilders', []))
-
         # Load the infilepaths, which must be SourcePaths
         infilepaths = kwargs.pop('infilepaths', [])
         infilepaths = (list(infilepaths) if isinstance(infilepaths, tuple) or
                        isinstance(infilepaths, list) else [infilepaths])
         infilepaths += args
         infilepaths = [i for i in infilepaths if isinstance(i, SourcePath)]
+        self.infilepaths = infilepaths
 
         # Load the outfilepath
         outfilepath = kwargs.pop('outfilepath', None)
-
-        # Set the infilepaths and outfilepaths
-        current_infilepaths = infilepaths
-        for subbuilder in self.subbuilders:
-            # For the subbuilders to work together, reset their infilepaths
-            # and outfilepath
-            subbuilder.infilepaths = current_infilepaths
-            subbuilder.outfilepath = None
-            current_infilepaths = [subbuilder.outfilepath]
-
-        self.infilepaths = current_infilepaths
         self.outfilepath = (outfilepath if isinstance(outfilepath, TargetPath)
                             else None)
-
-        self.target = kwargs.get('target', None)
 
     @property
     def active(self):
@@ -104,10 +80,12 @@ class Builder(metaclass=ABCMeta):
             return cls._active
 
         active = True
+        if not isinstance(cls.active_requirements, tuple):
+            return False
 
         # 1. Make sure the priority is properly set for the concrete class
         priority = isinstance(cls.priority, int)
-        if not priority:
+        if 'priority' in self.active_requirements and not priority:
             logging.warning("Builder '{}' not available because a priority has "
                             "not been set.".format(cls.__name__))
             active = False
@@ -115,21 +93,23 @@ class Builder(metaclass=ABCMeta):
 
         # 2. Make sure the required executable tuple is properly set for the
         #    concrete class
-        if not required_execs:
+        if 'required_execs' in self.active_requirements and not required_execs:
             logging.warning("Builder '{}' not available because the required "
                             "executable tuple was not "
                             "specified.".format(cls.__name__))
             active = False
 
         # 3. Make sure the required executables can be found
-        all_execs = {exe: find_executable(exe) for exe in cls.required_execs}
-        if not all(v is not None for v in all_execs.values()):
-            missing_execs = [exe for exe, available in all_execs.items()
-                             if available is None]
-            logging.warning("Builder '{}' not available because the required "
-                            "executables could not be "
-                            "found: {}".format(cls.__name__, missing_execs))
-            active = False
+        if 'all_execs' in self.active_requirements:
+            all_execs = {exe: find_executable(exe)
+                         for exe in cls.required_execs}
+            if not all(v is not None for v in all_execs.values()):
+                missing_execs = [exe for exe, available in all_execs.items()
+                                 if available is None]
+                logging.warning("Builder '{}' not available because the "
+                                "required executables could not be "
+                                "found: {}".format(cls.__name__, missing_execs))
+                active = False
 
         cls._active = active
         return cls._active
@@ -206,7 +186,7 @@ class Builder(metaclass=ABCMeta):
             # Format the action string, if it's to be used
             args = args if args else self.run_cmd_args()
             logging.debug("'{}' run with: '{}'".format(self.__class__.__name__,
-                                                       args))
+                                                       " ".join(args)))
 
             popen = subprocess.Popen(args=args, stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE, bufsize=4096,)
@@ -224,11 +204,68 @@ class Builder(metaclass=ABCMeta):
             in conjunction with an environment to make sure a set of
             builds are completed or the build complete=True should be used.
         """
+        if complete:
+            while self.status != "done":
+                self.run_cmd()
+        else:
+            self.run_cmd()
+        return self.status
+
+
+class CompositeBuilder(Builder):
+    """A builder that integrates multiple (sub)-builders
+     Notes
+    -----
+    - The build filepaths for subbuilders are set as follows, with user-supplied
+      paths in parentheses:
+      - builder - subbuilder1 (infilepaths) - outfilepath1
+                - subbuilder2 outfilepath2 - outfilepath3
+                - subbuilder3 outfilepath3 - outfilepath4
+                - outfilepath4 - (outfilepath)
+    """
+    active_requirements = ('priority',)
+    subbuilders = None
+
+    def __init__(self, env, *args, **kwargs):
+        super().__init__(env, *args, **kwargs)
+
+        # Load the subbuilders
+        self.subbuilders = [arg for arg in args if isinstance(arg, Builder)]
+        self.subbuilders += list(kwargs.pop('subbuilders', []))
+
+        # Check that the extensions match
+        assert (self.infilepath_ext == self.subbuilders[0].infilepath_ext and
+                self.outfilepath_ext == self.subbuilders[-1].outfilepath_ext)
+
+        # Set the infilepaths and outfilepaths
+        current_infilepaths = self.infilepaths
+        for subbuilder in self.subbuilders:
+            # For the subbuilders to work together, reset their infilepaths
+            # and outfilepath
+            subbuilder.infilepaths = current_infilepaths
+            subbuilder.outfilepath = None
+            current_infilepaths = [subbuilder.outfilepath]
+
+    @property
+    def status(self):
+        sb_statuses = {sb.status for sb in self.subbuilders}
+        if 'inactive' in sb_statuses:
+            return 'inactive'
+        elif 'missing' in  sb_statuses:
+            return 'missing'
+        elif 'building' in sb_statuses:
+            return 'building'
+        elif {'done'} == sb_statuses:  # all subbuilders are done
+            return 'done'
+        return 'ready'
+
+    def build(self, complete=False):
         def run_build(self):
             status = 'done'
             for builder in self.subbuilders:
                 if builder.status == 'building':
                     status = 'building'
+                    break
                 elif builder.status == 'ready':
                     builder.build()
                     status = 'building'
@@ -237,19 +274,16 @@ class Builder(metaclass=ABCMeta):
                     status = "done"
             return status
 
-        # Build fixed dependencies first, then this builder's build
         if complete:
             status = None
-            while status != "done":
+            while status != 'done':
                 status = run_build(self)
         else:
-            status = run_build(self)
+            run_build(self)
 
-        # Run this builder if the subbuilders are done
-        if status == "done":
-            if complete:
-                while self.status != "done":
-                    self.run_cmd()
-            else:
-                self.run_cmd()
+        if self.status == 'done' and self.subbuilders:
+            # Copy the output of the last subbuilder
+            link_or_copy(self.subbuilders[-1].outfilepath,
+                         self.outfilepath)
+
         return self.status

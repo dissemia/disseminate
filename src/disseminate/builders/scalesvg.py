@@ -27,7 +27,7 @@ class ScaleSvg(Builder):
     required_execs = ('rsvg-convert',)
 
     infilepath_ext = '.svg'
-    outfilepath_ext = 'svg'
+    outfilepath_ext = '.svg'
     outfilepath_append = '_scale'
 
     scale = None
@@ -35,7 +35,7 @@ class ScaleSvg(Builder):
     def __init__(self, env, scale, *args, **kwargs):
         self.scale = int(scale)
 
-        super().__init__(env=env, *args, **kwargs)
+        super().__init__(env, *args, **kwargs)
 
     def run_cmd_args(self):
         args = list(super().run_cmd_args())

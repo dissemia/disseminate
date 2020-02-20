@@ -68,7 +68,7 @@ def link_or_copy(src, dst):
     """Create a hard link, if possible, between a src filepath to a dst
     filepath, or copy if a link is not possible.
     """
-    logging.debug("Linking file '{}'".format(str(dst)))
+    logging.debug("Linking file '{}' -> '{}'".format(str(src), str(dst)))
 
     # Determine whether dst exists and whether is has the same inode as src
     src_inode = os.stat(src).st_ino
