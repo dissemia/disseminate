@@ -1,7 +1,8 @@
 """
 A builder to convert from PDF to SVG
 """
-from .builder import Builder, CompositeBuilder
+from .builder import Builder
+from .composite_builders import SequentialBuilder
 from .pdfcrop import PdfCrop
 from .scalesvg import ScaleSvg
 
@@ -47,7 +48,7 @@ class Pdf2svg(Builder):
         return tuple(args)
 
 
-class Pdf2SvgCropScale(CompositeBuilder):
+class Pdf2SvgCropScale(SequentialBuilder):
     """Create a CompositeBuilder for Pdf2Svg that includes PdfCrop and ScaleSvg.
     """
 
