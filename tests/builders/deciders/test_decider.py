@@ -1,6 +1,8 @@
 """
 Test the base Decider
 """
+import pytest
+
 from disseminate.builders.deciders import Decider
 from disseminate.paths import SourcePath, TargetPath
 
@@ -15,6 +17,7 @@ def test_decider(env):
     outfilepath = TargetPath(target_root=tmpdir, subpath='out.txt')
     decider = Decider(env=env)
 
+    # Run the build
     kwargs = {'inputs': infilepaths, 'output': outfilepath, 'args': ()}
     with decider.decision(**kwargs) as d:
         # A build should be needed because the files don't exist
@@ -31,3 +34,14 @@ def test_decider(env):
     # But build is needed if we delete a file
     infilepaths[0].unlink()
     assert decider.decision(**kwargs).build_needed
+
+    # 2. Try an example in which the build is interrupted
+    with pytest.raises(Exception):
+        with decider.decision(**kwargs) as d:
+            assert d.build_needed
+
+            raise Exception
+
+    # A build is still needed
+    assert decider.decision(**kwargs).build_needed
+

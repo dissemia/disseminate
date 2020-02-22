@@ -13,9 +13,15 @@ class Decision(object):
     """
 
     build_needed = None
+    inputs = None
+    output = None
+    args = None
 
     def __init__(self, inputs, output, args):
         assert isinstance(inputs, list) or isinstance(inputs, tuple)
+        self.inputs = inputs
+        self.output = output
+        self.args = args
 
         # Test to make sure all of the SourcePath inputs exist
         infiles = [p for p in inputs if isinstance(p, SourcePath)]
@@ -28,12 +34,16 @@ class Decision(object):
 
     def __enter__(self):
         """Run when the build is making a decision to run the build.
+
+        Running the decision as a context will set the decision to
+        (self.build_needed) to false when exiting the context.
         """
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Run when the build is finished, or an error was encountered"""
-        self.build_needed = False
+        if exc_type is None:
+            self.build_needed = False
 
 
 class Decider(object):
