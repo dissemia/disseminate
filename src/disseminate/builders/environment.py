@@ -4,6 +4,7 @@ A build environment to determine which build to use.
 from inspect import isabstract
 
 from .builder import Builder
+from .deciders import Decider
 from ..utils.classes import all_subclasses, weakattr
 from ..paths import SourcePath
 from .. import settings
@@ -12,6 +13,7 @@ from .. import settings
 class Environment(object):
 
     context = weakattr()
+    decider = None
     target_root = None
 
     _cache_path = None
@@ -21,6 +23,14 @@ class Environment(object):
         context.is_valid('target_root')
         self.context = context
         self.target_root = context['target_root']
+
+        # Setup the decider
+        decider_cls = [cls for cls in Decider.__subclasses__()
+                       if cls.__name__ == settings.default_decider]
+        assert decider_cls, ("The decider class '{}' does not "
+                             "exist".format(settings.default_decider))
+        decider_cls = decider_cls[0]
+        self.decider = decider_cls(env=self)
 
     @property
     def cache_path(self):

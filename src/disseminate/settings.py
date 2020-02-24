@@ -235,6 +235,12 @@ tracked_deps = {
     '.css': ['.css', ]
     }
 
+#: Builder Defaults
+#: ----------------
+
+#: The default decider class
+default_decider = 'Md5Decider'
+
 #: Tags
 #: ----
 

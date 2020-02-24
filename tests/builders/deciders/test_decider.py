@@ -17,31 +17,27 @@ def test_decider(env):
     outfilepath = TargetPath(target_root=tmpdir, subpath='out.txt')
     decider = Decider(env=env)
 
-    # Run the build
-    kwargs = {'inputs': infilepaths, 'output': outfilepath, 'args': ()}
-    with decider.decision(**kwargs) as d:
-        # A build should be needed because the files don't exist
-        assert d.build_needed
+    # A build is needed
+    decision = decider.decision
+    kwargs = {'inputs': infilepaths, 'output': outfilepath}
+    assert decision.build_needed(**kwargs)
 
-        # Create the files
-        for infilepath in infilepaths:
-            infilepath.touch()
-        outfilepath.touch()
+    # Create the files and run the build
+    for infilepath in infilepaths:
+        infilepath.touch()
+    outfilepath.touch()
 
     # The decision should now be that a build_needed is False
-    assert not decider.decision(**kwargs).build_needed
+    assert not decision.build_needed(**kwargs)
 
-    # But build is needed if we delete a file
+    # But build is needed if we delete a file.
     infilepaths[0].unlink()
-    assert decider.decision(**kwargs).build_needed
+    assert decision.build_needed(**kwargs)  # cached value
 
     # 2. Try an example in which the build is interrupted
     with pytest.raises(Exception):
-        with decider.decision(**kwargs) as d:
-            assert d.build_needed
-
-            raise Exception
+        assert decision.build_needed(**kwargs)
+        raise Exception
 
     # A build is still needed
-    assert decider.decision(**kwargs).build_needed
-
+    assert decision.build_needed(**kwargs)

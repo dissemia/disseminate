@@ -17,19 +17,27 @@ def test_md5decider(env):
     outfilepath = TargetPath(target_root=tmpdir, subpath='out.txt')
     decider = Md5Decider(env=env)
 
-    # Run the build
-    kwargs = {'inputs': infilepaths, 'output': outfilepath, 'args': ()}
-    with decider.decision(**kwargs) as d:
-        # A build should be needed because the files don't exist
-        assert d.build_needed
+    # The files aren't created yet, so a build is needed
+    kwargs = {'inputs': infilepaths, 'output': outfilepath}
+    decision = decider.decision
+    assert decision.build_needed(**kwargs)
 
-        # Create the files
-        for count, infilepath in enumerate(infilepaths):
-            infilepath.write_text(str(count))
-        outfilepath.write_text('out')
+    # Run the build. Create the files
+    for count, infilepath in enumerate(infilepaths):
+        infilepath.write_text(str(count))
+    outfilepath.write_text('out')
 
-    # The decision should now be that a build_needed is False
-    assert not decider.decision(**kwargs).build_needed
+    # The decision has a cached hash, and it will still find that a build is
+    # needed
+    assert decision.build_needed(**kwargs)
+
+    # However, resetting the decision will load the current value: a build is
+    # not needed
+    assert not decision.build_needed(**kwargs, reset=True)
+
+    # And a new decision will report the same.
+    decision = decider.decision
+    assert not decision.build_needed(**kwargs)
 
     # Touch the files. Since the contents remain the same, a build should not
     # be needed
@@ -38,37 +46,37 @@ def test_md5decider(env):
     outfilepath.touch()
 
     # The decision should now be that a build_needed is False
-    assert not decider.decision(**kwargs).build_needed
+    assert not decision.build_needed(**kwargs)
 
     # Changing the arguments will change the build decision
-    old_args = kwargs['args']
-    kwargs['args'] = ('new',)
-    assert decider.decision(**kwargs).build_needed
+    kwargs['inputs'] = kwargs['inputs'] + ['new']
+    assert not decision.build_needed(**kwargs)  # Cache value
+    decision = decider.decision                 # new decision needed
+    assert decision.build_needed(**kwargs)
 
-    kwargs['args'] = old_args
-    assert not decider.decision(**kwargs).build_needed
+    kwargs['inputs'] = infilepaths
+    assert decision.build_needed(**kwargs)  # Cache value
+    decision = decider.decision             # new decision needed
+    assert not decision.build_needed(**kwargs)
 
     # Changing one of the files will change its build decision
     for count, infilepath in enumerate(infilepaths):
         infilepath.write_text(str(count + 1))
-    assert decider.decision(**kwargs).build_needed
+
+    decision = decider.decision  # new decision needed
+    assert decision.build_needed(**kwargs)
 
     # 2. Try an example in which the build is interrupted. First, change an
     #    input file so that a build is needed.
-    infilepaths[0].write_text('test2')
-    with pytest.raises(Exception):
-        with decider.decision(**kwargs) as d:
-            assert d.build_needed
+    decision = decider.decision
 
-            raise Exception
+    with pytest.raises(Exception):
+        infilepaths[0].write_text('test2')
+        raise Exception
+        decision.build_needed(**kwargs, reset=True)
 
     # A build is still needed
-    assert decider.decision(**kwargs).build_needed
+    assert decision.build_needed(**kwargs)
 
-    # But a build without an exception will work
-    with decider.decision(**kwargs) as d:
-        assert d.build_needed
-        # Exiting this context will set the build_needed to false
-
-    # A build is not needed
-    assert not decider.decision(**kwargs).build_needed
+    # But a the decision can still be reset
+    assert not decision.build_needed(**kwargs, reset=True)

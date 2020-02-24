@@ -10,40 +10,42 @@ class Decision(object):
 
     The base decision checks to see if the input files and output file
         exist.
+
+    Parameters
+    ----------
+    parent_decider : :obj:`.builders.decider.Decider`
+        The parent decider instance that created this decision.
     """
 
-    build_needed = None
-    inputs = None
-    output = None
-    args = None
+    parent_decider = weakattr()
 
-    def __init__(self, inputs, output, args):
+    def __init__(self, parent_decider):
+        self.parent_decider = parent_decider
+
+    def build_needed(self, inputs, output, reset=False):
+        """Determine whether a build is needed.
+
+        Parameters
+        ----------
+        inputs : List[str, :obj:`.paths.SourcePath`, tuple]
+            The input infilepaths, strings and arguments to use in the build.
+        output : :obj:`.paths.TargetPath`
+            The outfilepath for the built file
+        reset : Optional[bool]
+            If True, reset cached values in determining whether the build is
+            needed.
+        """
         assert isinstance(inputs, list) or isinstance(inputs, tuple)
-        self.inputs = inputs
-        self.output = output
-        self.args = args
 
         # Test to make sure all of the SourcePath inputs exist
         infiles = [p for p in inputs if isinstance(p, SourcePath)]
         if not all(p.exists() for p in infiles):
-            self.build_needed = True
-        elif not isinstance(output, TargetPath) or not output.exists():
-            self.build_needed = True
+            return True
+        elif (not isinstance(output, TargetPath) or
+              not output.exists()):
+            return True
         else:
-            self.build_needed = False
-
-    def __enter__(self):
-        """Run when the build is making a decision to run the build.
-
-        Running the decision as a context will set the decision to
-        (self.build_needed) to false when exiting the context.
-        """
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Run when the build is finished, or an error was encountered"""
-        if exc_type is None:
-            self.build_needed = False
+            return False
 
 
 class Decider(object):
@@ -58,4 +60,4 @@ class Decider(object):
     @property
     def decision(self):
         """Return the Decision class associated with this decider."""
-        return self.decision_cls
+        return self.decision_cls(parent_decider=self)

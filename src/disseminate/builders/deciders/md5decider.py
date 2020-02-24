@@ -12,41 +12,47 @@ from ...utils.string import hashtxt
 class Md5Decision(Decision):
     """A decision for the Md5Decider"""
 
-    db = None
-
     _hash = None
 
-    def __init__(self, db, inputs, output, args):
-        self.db = db
-        super().__init__(inputs, output, args)
+    def build_needed(self, inputs, output, reset=False):
+        build_needed = super().build_needed(inputs, output)
 
-        # Calculate the hashes if the parent determined that the files exist
-        if not self.build_needed:
-            # Check to see there's an existing hash
-            key = str(self.output)
-            current_hash = db.get(key, None)
-            self.build_needed = current_hash != self.hash
+        if build_needed:
+            # A build is needed if some of the files don't exist
+            return True
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is None and self.hash is not None:
-            self.build_needed = False
+        # At this stage, the files exist but we're not sure whether their
+        # md5 hashes have changed. See if there's an existing (cached) hash
+        db = self.parent_decider.db
+        assert db is not None
 
-            # Set the hash in the database
-            self.db[str(self.output)] = self.hash
+        # Check to see there's an existing hash
+        key = str(output)
+        cached_hash = db.get(key, None)
 
-    @property
-    def hash(self):
+        # Reset the cached hash, if needed
+        if reset:
+            # Recalculate the hash
+            self._hash = None
+            current_hash = self.calculate_hash(inputs=inputs, output=output)
+            db[key] = current_hash
+            return False
+        else:
+            return (cached_hash !=
+                    self.calculate_hash(inputs=inputs, output=output))
+
+    def calculate_hash(self, inputs, output):
         """Calculate the md5 hash for the inputs, output and args."""
         if self._hash is None:
-            sorted_inputs = list(sorted([i for i in self.inputs
+            sorted_inputs = list(sorted([i for i in inputs
                                          if isinstance(i, str)]))
-            input_files = list(sorted(p for p in self.inputs
+            input_files = list(sorted(p for p in inputs
                                       if isinstance(p, SourcePath)))
             sorted_inputs += [hashtxt(p.read_text())
                               for p in input_files]
-            output_file = hashtxt(self.output.read_text())
+            output_file = hashtxt(output.read_text())
 
-            hash = md5hash([sorted_inputs, output_file, self.args])
+            hash = md5hash([sorted_inputs, output_file])
 
             # Convert the hash to bytes, which will be stored in the database
             hash = bytes(hash, 'ascii')
@@ -82,9 +88,3 @@ class Md5Decider(Decider):
         if self._db is None:
             self._db = dbm.open(self.db_path, 'c')
         return self._db
-
-    @property
-    def decision(self):
-        def md5decision(db=self, *args, **kwargs):
-            return Md5Decision(db=self.db, *args, **kwargs)
-        return md5decision
