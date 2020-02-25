@@ -42,7 +42,7 @@ class PdfCrop(Builder):
                         if not isinstance(crop, int) else crop)
                 self.crop_percentage = crop
 
-        super().__init__(env=env, *args, **kwargs)
+        super().__init__(env, *args, **kwargs)
 
     def run_cmd_args(self):
         args = list(super().run_cmd_args())

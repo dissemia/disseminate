@@ -27,18 +27,6 @@ class Pdf2svg(Builder):
             page_no = int(page_no)
             self.page_no = page_no
 
-        # Get parameters related to subbuilders and add these subbuilders
-        if 'crop' in kwargs or 'crop_percentage' in kwargs:
-            crop = kwargs.pop('crop', None)
-            crop = kwargs.pop('crop_percentage', crop)
-            pdfcrop = PdfCrop(env=env, crop=crop, *args, **kwargs)
-            args += (pdfcrop,)
-
-        if 'scale' in kwargs:
-            scale = kwargs.pop('scale')
-            scalesvg = ScaleSvg(env=env, scale=scale, *args, **kwargs)
-            args += (scalesvg,)
-
         super().__init__(env, *args, **kwargs)
 
     def run_cmd_args(self):

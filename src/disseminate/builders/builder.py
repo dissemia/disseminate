@@ -149,16 +149,15 @@ class Builder(metaclass=ABCMeta):
             return "inactive"
         elif not has_infilepaths:
             return "missing"
-        elif not self.build_needed():
-            return "done"
-        elif self.popen == "done":
+        elif not self.build_needed() or self.popen == "done":
             return "done"
         elif self.popen is not None:
             poll = self.popen.poll()
-            if poll is None:
+            if poll is None or not self.outfilepath.exists():
                 # If popen.poll() returns None, the process isn't done.
                 return "building"
-            elif poll == 0:  # exit code of 0. Successful!
+            elif poll == 0:
+                # exit code of 0. Successful!
                 # Reset the popen and the build status
                 self.popen = 'done'
                 self.build_needed(reset=True)
@@ -207,7 +206,13 @@ class Builder(metaclass=ABCMeta):
         self._outfilepath = value
 
     def run_cmd_args(self):
-        """Format the action, if it's a string."""
+        """Format the action, if it's a string.
+
+        Returns
+        -------
+        run_cmd_args : Tuple[str]
+            A tuple of the arguments to run in a process.
+        """
         if isinstance(self.action, str):
             infilepaths_str = " ".join([str(i) for i in self.infilepaths])
             fmt_action = self.action.format(infilepaths=infilepaths_str,

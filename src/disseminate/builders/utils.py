@@ -1,7 +1,7 @@
 """
 Utilities for builders and environments
 """
-from ..paths import SourcePath
+from ..paths import SourcePath, TargetPath
 
 
 def cache_filepath(path, env, append=None, ext=None):
@@ -36,4 +36,10 @@ def cache_filepath(path, env, append=None, ext=None):
         ext = ext if ext.startswith('.') else '.' + ext
         subpath = subpath.with_suffix(ext)
 
-    return SourcePath(project_root=cache_path, subpath=subpath)
+    return TargetPath(target_root=cache_path, subpath=subpath)
+
+
+def targetpath_to_sourcepath(targetpath):
+    """Convert a TargetPath to a SourcePath"""
+    return SourcePath(project_root=targetpath.target_root,
+                      subpath=targetpath.subpath)

@@ -2,7 +2,8 @@
 Composite builders for multiple build commands
 """
 from .builder import Builder
-from ..utils.file import link_or_copy
+from .copy import Copy
+from .utils import targetpath_to_sourcepath
 
 
 class CompositeBuilder(Builder):
@@ -20,38 +21,18 @@ class CompositeBuilder(Builder):
     subbuilders = None
     parallel = False
 
-    def __init__(self, env, *args, **kwargs):
-        super().__init__(env, *args, **kwargs)
+    def run_cmd_args(self):
+        """Format the for all sub commands
 
-        # Load the subbuilders
-        self.subbuilders = [arg for arg in args if isinstance(arg, Builder)]
-        self.subbuilders += list(kwargs.pop('subbuilders', []))
-
-        # Check that the extensions match
-        assert (self.infilepath_ext == self.subbuilders[0].infilepath_ext and
-                self.outfilepath_ext == self.subbuilders[-1].outfilepath_ext)
-
-        # Set the infilepaths and outfilepaths
-        current_infilepaths = self.infilepaths
+        Returns
+        -------
+        run_cmd_args : Tuple[str]
+            A tuple of the arguments for all sub-builders
+        """
+        args = []
         for subbuilder in self.subbuilders:
-            # For the subbuilders to work together, reset their infilepaths
-            # and outfilepath
-            subbuilder.infilepaths = current_infilepaths
-            subbuilder.outfilepath = None
-            current_infilepaths = [subbuilder.outfilepath]
-
-    @property
-    def status(self):
-        sb_statuses = {sb.status for sb in self.subbuilders}
-        if 'inactive' in sb_statuses:
-            return 'inactive'
-        elif 'missing' in  sb_statuses:
-            return 'missing'
-        elif 'building' in sb_statuses:
-            return 'building'
-        elif {'done'} == sb_statuses:  # all subbuilders are done
-            return 'done'
-        return 'ready'
+            args += list(subbuilder.run_cmd_args())
+        return tuple(args)
 
     def build(self, complete=False):
         def run_build(self):
@@ -81,11 +62,6 @@ class CompositeBuilder(Builder):
         else:
             run_build(self)
 
-        if self.status == 'done' and self.subbuilders:
-            # Copy the output of the last subbuilder
-            link_or_copy(self.subbuilders[-1].outfilepath,
-                         self.outfilepath)
-
         return self.status
 
 
@@ -94,8 +70,76 @@ class SequentialBuilder(CompositeBuilder):
     one to finish before starting the next)"""
     parallel = False
 
+    def __init__(self, env, *args, **kwargs):
+        super().__init__(env, *args, **kwargs)
+
+        # Load the subbuilders
+        self.subbuilders = [arg for arg in args if isinstance(arg, Builder)]
+        self.subbuilders += list(kwargs.pop('subbuilders', []))
+
+        # Check that the extensions match
+        assert (self.infilepath_ext == self.subbuilders[0].infilepath_ext and
+                self.outfilepath_ext == self.subbuilders[-1].outfilepath_ext)
+
+        # Make the last subbuilder a copy builder to copy the result of the
+        # sub-builders to the final outfilepath
+        self.subbuilders.append(Copy(env))
+
+        # Set the infilepaths and outfilepaths
+        current_infilepaths = self.infilepaths
+        for subbuilder in self.subbuilders:
+            # For the subbuilders to work together, reset their infilepaths
+            # and outfilepath
+            subbuilder.infilepaths = current_infilepaths
+            subbuilder.outfilepath = None
+
+            # Convert the output of subbuilder into an infilepath for the next
+            # subbuilder
+            infilepath = targetpath_to_sourcepath(subbuilder.outfilepath)
+            current_infilepaths = [infilepath]
+
+        # Set the copy builder to point to the final outfilepath
+        self.subbuilders[-1].outfilepath = self.outfilepath
+
+    @property
+    def status(self):
+        # The composite builder's status is basically the same as the next
+        # non-done subbuilder. The reason it is implemented this way is to
+        # avoid checking the status of intermediary builders whose input files,
+        # which may be cached or temporary, may not yet exist.
+        number_subbuilders_done = 0
+        for subbuilder in self.subbuilders:
+            # Bug alert: The subbuilder's status should be retrieved and
+            # returned once. Polling the subbuilder.status multiple times may
+            # return different answers if the subbuilder changes status when
+            # polled at different points.
+            status = subbuilder.status
+            if status == 'done':
+                number_subbuilders_done += 1
+            else:
+                return status
+
+        if (number_subbuilders_done == len(self.subbuilders) and
+           self.outfilepath.exists()):
+            return 'done'
+        else:
+            return 'building'
+
 
 class ParallelBuilder(CompositeBuilder):
     """A composite builder that runs subbuilders in parallell (i.e. run the
     subbuilders together at the same time)"""
     parallel = True
+
+    @property
+    def status(self):
+        statuses = {sb.status for sb in self.subbuilders}
+        if 'inactive' in statuses:
+            return 'inactive'
+        elif 'missing' in statuses:
+            return 'missing'
+        elif 'building' in statuses:
+            return 'building'
+        elif {'done'} == statuses:  # all subbuilders are done
+            return 'done'
+        return 'ready'
