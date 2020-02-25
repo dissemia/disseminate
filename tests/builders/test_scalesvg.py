@@ -5,24 +5,28 @@ import pytest
 
 from disseminate.builders.pdf2svg import Pdf2svg
 from disseminate.builders.scalesvg import ScaleSvg
+from disseminate.builders.utils import targetpath_to_sourcepath
 from disseminate.paths import SourcePath, TargetPath
 
 
-def test_pdf2svg(env):
-    """Test the Pdf2svg builder."""
+def test_scalesvg(env):
+    """Test the ScaleSvg builder."""
     # 1. Test example with the infilepath and outfilepath specified.
     infilepath = SourcePath(project_root='tests/builders/example1',
                             subpath='sample.pdf')
     outfilepath = TargetPath(target_root=env.context['target_root'],
                              subpath='sample.svg')
     pdf2svg = Pdf2svg(infilepaths=infilepath, env=env)
-    scalesvg = ScaleSvg(infilepaths=pdf2svg.outfilepath,
-                        outfilepath=outfilepath, scale=2, env=env)
 
     # Create the example svg
     assert pdf2svg.build(complete=True) == 'done'
 
-    # Make sure pdfcrop is available and read
+    # Create the Scalesvg
+    infilepath2 = targetpath_to_sourcepath(pdf2svg.outfilepath)
+    scalesvg = ScaleSvg(infilepaths=infilepath2,
+                        outfilepath=outfilepath, scale=2, env=env)
+
+    # Make sure scalesvg is available
     assert scalesvg.active
     assert scalesvg.status == "ready"
 
@@ -39,8 +43,9 @@ def test_pdf2svg(env):
 
     # 2. Test an example without an outfilepath specified
     cache_path = env.cache_path / 'sample_scale.svg'
-    scalesvg = ScaleSvg(infilepaths=pdf2svg.outfilepath, scale=2, env=env)
+    scalesvg = ScaleSvg(infilepaths=infilepath2, scale=2, env=env)
 
+    assert scalesvg.status == "ready"
     assert not cache_path.exists()
     status = scalesvg.build(complete=True)
     assert status == 'done'

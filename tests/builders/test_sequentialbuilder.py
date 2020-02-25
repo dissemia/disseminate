@@ -53,10 +53,10 @@ def test_sequentialbuilder_md5decider(env, caplog, wait):
     assert pdf2svg.build(complete=True) == 'done'
     assert outfilepath.stat().st_mtime == mtime
 
-    # Now each commands have been run twice
-    assert len([r for r in caplog.records if 'PdfCrop' in r.msg]) == 2
-    assert len([r for r in caplog.records if 'Pdf2svg' in r.msg]) == 2
-    assert len([r for r in caplog.records if 'ScaleSvg' in r.msg]) == 2
+    # The commands have only been run once since the build wasn't re-done
+    assert len([r for r in caplog.records if 'PdfCrop' in r.msg]) == 1
+    assert len([r for r in caplog.records if 'Pdf2svg' in r.msg]) == 1
+    assert len([r for r in caplog.records if 'ScaleSvg' in r.msg]) == 1
 
     # This remains true even if the intermediary files are deleted
     pdf2svg.subbuilders[0].outfilepath.unlink()  # PdfCrop
@@ -70,7 +70,7 @@ def test_sequentialbuilder_md5decider(env, caplog, wait):
     # The intermediary commands haven't been run again
     assert len([r for r in caplog.records if 'PdfCrop' in r.msg]) == 2
     assert len([r for r in caplog.records if 'Pdf2svg' in r.msg]) == 2
-    assert len([r for r in caplog.records if 'ScaleSvg' in r.msg]) == 2
+    assert len([r for r in caplog.records if 'ScaleSvg' in r.msg]) == 1
 
     # 3. Changing the output file will trigger a new build
     correct_contents = outfilepath.read_bytes()
@@ -82,6 +82,6 @@ def test_sequentialbuilder_md5decider(env, caplog, wait):
     assert outfilepath.read_bytes() == correct_contents
 
     # Now each commands have been run again
-    assert len([r for r in caplog.records if 'PdfCrop' in r.msg]) == 3
-    assert len([r for r in caplog.records if 'Pdf2svg' in r.msg]) == 3
-    assert len([r for r in caplog.records if 'ScaleSvg' in r.msg]) == 3
+    assert len([r for r in caplog.records if 'PdfCrop' in r.msg]) == 2
+    assert len([r for r in caplog.records if 'Pdf2svg' in r.msg]) == 2
+    assert len([r for r in caplog.records if 'ScaleSvg' in r.msg]) == 1
