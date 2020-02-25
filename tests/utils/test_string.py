@@ -1,6 +1,8 @@
 """
 Test string utilities.
 """
+import pathlib
+
 from collections import namedtuple
 
 from disseminate.utils.string import (hashtxt, titlelize, strip_end_quotes,
@@ -8,12 +10,20 @@ from disseminate.utils.string import (hashtxt, titlelize, strip_end_quotes,
                                       replace_macros)
 
 
-def test_hashtxt():
+def test_hashtxt(tmpdir):
     """Test the hashtxt function."""
+    tmpdir = pathlib.Path(tmpdir)
 
+    # 1. Test a simple string
     assert 'b44117d75a' == hashtxt("My test hash")  # truncate to 10, be default
     assert ('b44117d75a6aaf964ae1f583f39dd417' ==
             hashtxt("My test hash", truncate=None))
+
+    # 2. Test a binary file
+    test = tmpdir / 'test.bin'
+    test.write_bytes(b'test')
+    assert (hashtxt(test.read_bytes(), truncate=None) ==
+            '098f6bcd4621d373cade4e832627b4f6')
 
 
 def test_titlelize():

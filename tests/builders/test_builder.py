@@ -1,8 +1,11 @@
 """
 Tests with the code Builder functionality
 """
+import pytest
+
 from disseminate.builders.builder import Builder
 from disseminate.builders.pdfcrop import PdfCrop
+from disseminate.builders.deciders.exceptions import MissingInputFiles
 from disseminate.paths import SourcePath, TargetPath
 
 
@@ -80,3 +83,59 @@ def test_builder_build(env):
     assert subbuilder.build() == 'done'
     assert subbuilder.build(complete=True) == 'done'
     assert subbuilder.was_run
+
+
+def test_builder_md5decision(env, wait):
+    """Test the Builder with the Md5Decision."""
+
+    tmpdir = env.context['target_root']
+    infilepath = SourcePath(project_root=tmpdir, subpath='in.txt')
+    targetpath = TargetPath(target_root=tmpdir, subpath='out.txt')
+
+    # 1. Test a  copy with a command run by build
+    class Copy(Builder):
+        action = 'cp {infilepaths} {outfilepath}'
+        priority = 1000
+        required_execs = ('cp',)
+
+    cp = Copy(env=env, infilepaths=infilepath, outfilepath=targetpath)
+
+    # 1. Test a build that copies the file. It'll fail first because we haven't
+    #    created the input file
+    assert not targetpath.exists()
+    with pytest.raises(MissingInputFiles):
+        status = cp.build(complete=True)
+
+    # Now create the input file
+    infilepath.write_text('infile text')
+    status = cp.build(complete=True)
+    assert status == 'done'
+
+    # Get details on the created output file
+    assert targetpath.exists()
+    assert targetpath.read_text() == 'infile text'
+    mtime = targetpath.stat().st_mtime
+
+    # Try running the build again. The output file should not be modified
+    cp = Copy(env=env, infilepaths=infilepath, outfilepath=targetpath)
+
+    assert cp.build(complete=True) == 'done'
+    assert targetpath.stat().st_mtime == mtime
+
+    # 2. Try modifying the contents of the infile
+    wait()
+    infilepath.write_text('infile text2')
+    cp = Copy(env=env, infilepaths=infilepath, outfilepath=targetpath)
+
+    assert cp.build(complete=True) == 'done'
+    assert targetpath.stat().st_mtime > mtime
+    assert targetpath.read_text() == 'infile text2'
+
+    # 3. Try modifying the contents of the outfile. Now the outfile is newer
+    #    than the infile, but its contents don't match the hash
+    targetpath.write_text('outfile')
+
+    cp = Copy(env=env, infilepaths=infilepath, outfilepath=targetpath)
+
+    assert cp.build(complete=True) == 'done'
+    assert targetpath.read_text() == 'infile text2'

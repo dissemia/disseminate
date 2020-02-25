@@ -4,6 +4,7 @@ Test the base Decider
 import pytest
 
 from disseminate.builders.deciders import Decider
+from disseminate.builders.deciders.exceptions import MissingInputFiles
 from disseminate.paths import SourcePath, TargetPath
 
 
@@ -20,18 +21,25 @@ def test_decider(env):
     # A build is needed
     decision = decider.decision
     kwargs = {'inputs': infilepaths, 'output': outfilepath}
-    assert decision.build_needed(**kwargs)
 
-    # Create the files and run the build
+    # Initially a MissingInputFiles exception is raised because the input
+    # files haven't been created yet
+    with pytest.raises(MissingInputFiles):
+        decision.build_needed(**kwargs)
+
+    # Create the input files. The output file doesn't exist, so a build is
+    # needed
     for infilepath in infilepaths:
         infilepath.touch()
-    outfilepath.touch()
 
-    # The decision should now be that a build_needed is False
+    assert decision.build_needed(**kwargs)
+
+    # Now create the output file and a build is no longer be needed
+    outfilepath.touch()
     assert not decision.build_needed(**kwargs)
 
-    # But build is needed if we delete a file.
-    infilepaths[0].unlink()
+    # But build is needed if we delete the output file
+    outfilepath.unlink()
     assert decision.build_needed(**kwargs)  # cached value
 
     # 2. Try an example in which the build is interrupted

@@ -48,13 +48,16 @@ class Builder(metaclass=ABCMeta):
         priority.
     required_execs : Tuple[str]
         A list of external executables that are needed by the builder.
-    popen : :obj:`subprocess.Popen`
+    popen : Union[:obj:`subprocess.Popen`, None, str]
         The process for the externally run program.
+        The popen can also be None, if a process hasn't been run, or "done"
+        if the process is finished.
     """
     env = None
     action = None
     available = False
     active_requirements = ('priority', 'required_execs', 'all_execs')
+    decision = None
 
     infilepath_ext = None
     outfilepath_ext = None
@@ -146,18 +149,34 @@ class Builder(metaclass=ABCMeta):
             return "inactive"
         elif not has_infilepaths:
             return "missing"
+        elif not self.build_needed():
+            return "done"
+        elif self.popen == "done":
+            return "done"
         elif self.popen is not None:
             poll = self.popen.poll()
             if poll is None:
                 # If popen.poll() returns None, the process isn't done.
                 return "building"
             elif poll == 0:  # exit code of 0. Successful!
+                # Reset the popen and the build status
+                self.popen = 'done'
+                self.build_needed(reset=True)
                 return "done"
             else:  # non-zero exit code. Unsuccessful. :(
                 runtime_error(popen=self.popen)
-
         else:
             return "ready"
+
+    def build_needed(self, reset=False):
+        """Determine whether a build is needed."""
+        if self.decision is None:
+            decider = self.env.decider
+            self.decision = decider.decision
+        inputs = self.infilepaths + list(self.run_cmd_args())
+        return self.decision.build_needed(inputs=inputs,
+                                          output=self.outfilepath,
+                                          reset=reset)
 
     @property
     def infilepaths(self):

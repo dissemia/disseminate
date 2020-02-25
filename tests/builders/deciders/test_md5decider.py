@@ -4,6 +4,7 @@ Test the Md5Decider
 import pytest
 
 from disseminate.builders.deciders import Md5Decider
+from disseminate.builders.deciders.exceptions import MissingInputFiles
 from disseminate.paths import SourcePath, TargetPath
 
 
@@ -17,10 +18,11 @@ def test_md5decider(env):
     outfilepath = TargetPath(target_root=tmpdir, subpath='out.txt')
     decider = Md5Decider(env=env)
 
-    # The files aren't created yet, so a build is needed
+    # The files aren't created yet, so a MissingInputFiles exception is raised
     kwargs = {'inputs': infilepaths, 'output': outfilepath}
     decision = decider.decision
-    assert decision.build_needed(**kwargs)
+    with pytest.raises(MissingInputFiles):
+        decision.build_needed(**kwargs)
 
     # Run the build. Create the files
     for count, infilepath in enumerate(infilepaths):

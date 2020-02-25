@@ -48,9 +48,9 @@ class Md5Decision(Decision):
                                          if isinstance(i, str)]))
             input_files = list(sorted(p for p in inputs
                                       if isinstance(p, SourcePath)))
-            sorted_inputs += [hashtxt(p.read_text())
+            sorted_inputs += [hashtxt(p.read_bytes(), truncate=None)
                               for p in input_files]
-            output_file = hashtxt(output.read_text())
+            output_file = hashtxt(output.read_bytes(), truncate=None)
 
             hash = md5hash([sorted_inputs, output_file])
 

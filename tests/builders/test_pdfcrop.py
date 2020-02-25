@@ -36,11 +36,10 @@ def test_pdfcrop(env):
     status = pdfcrop.build()
     assert status == 'building'
     assert pdfcrop.status == 'building'
-    popen = pdfcrop.popen
 
     # Now run the command to completion
     status = pdfcrop.build(complete=True)
-    assert popen == pdfcrop.popen  # A new process hasn't been spawned
+    assert pdfcrop.popen == "done"  # A new process hasn't been spawned
     assert status == 'done'
     assert pdfcrop.status == 'done'
     assert outfilepath.exists()
@@ -53,6 +52,7 @@ def test_pdfcrop(env):
     # Make sure pdfcrop is available and read
     assert pdfcrop.active
     assert pdfcrop.status == "ready"
+    assert pdfcrop.status == 'ready'
 
     # Now run the build.
     assert not cache_path.exists()
