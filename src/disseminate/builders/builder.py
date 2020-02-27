@@ -256,5 +256,6 @@ class Builder(metaclass=ABCMeta):
             while self.status in {'building', 'ready'}:
                 self.run_cmd()
         else:
-            self.run_cmd()
+            if self.status in {'building', 'ready'}:
+                self.run_cmd()
         return self.status

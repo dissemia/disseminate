@@ -56,11 +56,11 @@ class CompositeBuilder(Builder):
             return status
 
         if complete:
-            status = 'building'
-            while status == 'building':
-                status = run_build(self)
+            while self.status in {'building', 'ready'}:
+                run_build(self)
         else:
-            run_build(self)
+            if self.status in {'building', 'ready'}:
+                run_build(self)
 
         return self.status
 

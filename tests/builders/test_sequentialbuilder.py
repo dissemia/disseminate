@@ -62,16 +62,19 @@ def test_sequentialbuilder_md5decider(env, caplog, wait):
 
     # This remains true even if the intermediary files are deleted
     pdf2svg.subbuilders[0].outfilepath.unlink()  # PdfCrop
-    pdf2svg.subbuilders[1].outfilepath.unlink()  # pdf2svg
+    pdf2svg.subbuilders[1].outfilepath.unlink()  # Pdf2svg
+    pdf2svg.subbuilders[2].outfilepath.unlink()  # ScaleSvg
 
     pdf2svg = Pdf2SvgCropScale(infilepaths=infilepath, outfilepath=outfilepath,
                                env=env, crop=100, scale=2)
+
+    assert pdf2svg.status == 'done'
     assert pdf2svg.build(complete=True) == 'done'
     assert outfilepath.stat().st_mtime == mtime
 
     # The intermediary commands haven't been run again
-    assert len([r for r in caplog.records if 'PdfCrop' in r.msg]) == 2
-    assert len([r for r in caplog.records if 'Pdf2svg' in r.msg]) == 2
+    assert len([r for r in caplog.records if 'PdfCrop' in r.msg]) == 1
+    assert len([r for r in caplog.records if 'Pdf2svg' in r.msg]) == 1
     assert len([r for r in caplog.records if 'ScaleSvg' in r.msg]) == 1
 
     # 3. Changing the output file will trigger a new build
@@ -86,4 +89,4 @@ def test_sequentialbuilder_md5decider(env, caplog, wait):
     # Now each commands have been run again
     assert len([r for r in caplog.records if 'PdfCrop' in r.msg]) == 2
     assert len([r for r in caplog.records if 'Pdf2svg' in r.msg]) == 2
-    assert len([r for r in caplog.records if 'ScaleSvg' in r.msg]) == 1
+    assert len([r for r in caplog.records if 'ScaleSvg' in r.msg]) == 2
