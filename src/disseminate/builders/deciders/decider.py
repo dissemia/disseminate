@@ -1,7 +1,6 @@
 """
 Decider classes to evaluate whether a build is needed.
 """
-from .exceptions import MissingInputFiles
 from ...paths import SourcePath, TargetPath
 from ...utils.classes import weakattr
 
@@ -45,11 +44,12 @@ class Decision(object):
 
         # Test to make sure all of the SourcePath inputs exist
         infiles = [p for p in inputs if isinstance(p, SourcePath)]
+        if not infiles:
+            return True
         if not all(p.exists() for p in infiles):
-            missing_files = [str(p) for p in infiles if not p.exists()]
-            msg = ("This following input files are missing and are needed for "
-                   "a build: {}".format(", ".join(missing_files)))
-            raise MissingInputFiles(msg)
+            # This returns True because a builder may be a subbuilder whose
+            # input files aren't available yet.
+            return True
         elif (not isinstance(output, TargetPath) or
               not output.exists()):
             return True

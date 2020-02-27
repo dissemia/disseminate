@@ -38,10 +38,12 @@ def test_sequentialbuilder_md5decider(env, caplog, wait):
     assert len([r for r in caplog.records if 'Pdf2svg' in r.msg]) == 1
     assert len([r for r in caplog.records if 'ScaleSvg' in r.msg]) == 1
 
-    # Make sure the intermediate files and outfilepath are created
+    # Make sure the intermediate files, infilepaths and outfilepath are created
     for subbuilder in pdf2svg.subbuilders:
         assert subbuilder.status == 'done'
+        assert all(isinstance(i, SourcePath) for i in subbuilder.infilepaths)
         assert subbuilder.outfilepath.exists()
+        assert isinstance(subbuilder.outfilepath, TargetPath)
 
     assert outfilepath.exists()
     mtime = outfilepath.stat().st_mtime

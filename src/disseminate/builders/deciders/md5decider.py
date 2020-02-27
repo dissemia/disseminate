@@ -27,19 +27,24 @@ class Md5Decision(Decision):
         assert db is not None
 
         # Check to see there's an existing hash
-        key = str(output)
-        cached_hash = db.get(key, None)
+        input_hash, output_hash = self.calculate_hash(inputs=inputs,
+                                                      output=output)
+
+        # Check the database hash (input_hash is the key, output_hash is the
+        # value)
+        key = input_hash
+        cached_output_hash = db.get(key, None)
 
         # Reset the cached hash, if needed
         if reset:
             # Recalculate the hash
             self._hash = None
-            current_hash = self.calculate_hash(inputs=inputs, output=output)
-            db[key] = current_hash
+            input_hash, output_hash = self.calculate_hash(inputs=inputs,
+                                                          output=output)
+            db[input_hash] = output_hash
             return False
         else:
-            return (cached_hash !=
-                    self.calculate_hash(inputs=inputs, output=output))
+            return cached_output_hash != output_hash
 
     def calculate_hash(self, inputs, output):
         """Calculate the md5 hash for the inputs, output and args."""
@@ -50,13 +55,13 @@ class Md5Decision(Decision):
                                       if isinstance(p, SourcePath)))
             sorted_inputs += [hashtxt(p.read_bytes(), truncate=None)
                               for p in input_files]
-            output_file = hashtxt(output.read_bytes(), truncate=None)
+            hash_input = bytes(md5hash(sorted_inputs), 'ascii')
 
-            hash = md5hash([sorted_inputs, output_file])
+            hash_output = bytes(hashtxt(output.read_bytes(), truncate=None),
+                                'ascii')
 
             # Convert the hash to bytes, which will be stored in the database
-            hash = bytes(hash, 'ascii')
-            self._hash = hash
+            self._hash = (hash_input, hash_output)
         return self._hash
 
 

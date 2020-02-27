@@ -56,8 +56,8 @@ class CompositeBuilder(Builder):
             return status
 
         if complete:
-            status = None
-            while status != 'done':
+            status = 'building'
+            while status == 'building':
                 status = run_build(self)
         else:
             run_build(self)
@@ -103,6 +103,9 @@ class SequentialBuilder(CompositeBuilder):
 
     @property
     def status(self):
+        if not self.build_needed():
+            return 'done'
+
         # The composite builder's status is basically the same as the next
         # non-done subbuilder. The reason it is implemented this way is to
         # avoid checking the status of intermediary builders whose input files,
@@ -121,6 +124,7 @@ class SequentialBuilder(CompositeBuilder):
 
         if (number_subbuilders_done == len(self.subbuilders) and
            self.outfilepath.exists()):
+            self.build_needed(reset=True)
             return 'done'
         else:
             return 'building'

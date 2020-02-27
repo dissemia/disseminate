@@ -1,11 +1,8 @@
 """
 Tests with the code Builder functionality
 """
-import pytest
-
 from disseminate.builders.builder import Builder
 from disseminate.builders.pdfcrop import PdfCrop
-from disseminate.builders.deciders.exceptions import MissingInputFiles
 from disseminate.paths import SourcePath, TargetPath
 
 
@@ -52,6 +49,49 @@ def test_builder_filepaths(env):
     assert pdfcrop.outfilepath == targetpath
 
 
+def test_builder_status(env):
+    """Test the Builder status property"""
+
+    tmpdir = env.context['target_root']
+    infilepath = SourcePath(project_root=tmpdir,
+                            subpath='in.txt')
+    outfilepath = TargetPath(target_root=env.context['target_root'],
+                             subpath='out.txt')
+
+    class ExampleBuilder(Builder):
+        action = 'echo test'
+        priority = 1000
+        required_execs = tuple()
+
+    # 1. Test an example without an infilepath. The status should be missing
+    builder = ExampleBuilder(env)
+    assert builder.status == 'missing'
+
+    # 2. Test an example in which the infilepath doesn't exist. The status
+    #    should be missing
+    builder = ExampleBuilder(env, infilepaths=infilepath,
+                             outfilepath=outfilepath)
+    assert builder.status == 'missing'
+
+    # 3. Test an example in which the infilepath now exists
+    infilepath.write_text('infile')
+    assert builder.status == 'ready'
+
+    # 4. Now try a build
+    assert builder.build() == 'building'
+
+    # Create the outfilepath
+    outfilepath.write_text('infile')
+    assert builder.build() == 'done'
+    assert builder.status == 'done'
+
+    # 5. A new builder will report that it's done too.
+    builder = ExampleBuilder(env, infilepaths=infilepath,
+                             outfilepath=outfilepath)
+    assert not builder.build_needed()
+    assert builder.status == 'done'
+
+
 def test_builder_build(env):
     """Test the Builder build method"""
 
@@ -93,31 +133,33 @@ def test_builder_md5decision(env, wait):
     targetpath = TargetPath(target_root=tmpdir, subpath='out.txt')
 
     # 1. Test a  copy with a command run by build
-    class Copy(Builder):
+    class CopyCmd(Builder):
         action = 'cp {infilepaths} {outfilepath}'
         priority = 1000
         required_execs = ('cp',)
 
-    cp = Copy(env=env, infilepaths=infilepath, outfilepath=targetpath)
+    cp = CopyCmd(env=env, infilepaths=infilepath, outfilepath=targetpath)
 
     # 1. Test a build that copies the file. It'll fail first because we haven't
     #    created the input file
+    assert not infilepath.exists()
     assert not targetpath.exists()
-    with pytest.raises(MissingInputFiles):
-        status = cp.build(complete=True)
+    assert cp.build(complete=True) == 'missing'
 
     # Now create the input file
     infilepath.write_text('infile text')
+    assert cp.status == 'ready'
+
     status = cp.build(complete=True)
-    assert status == 'done'
 
     # Get details on the created output file
     assert targetpath.exists()
-    assert targetpath.read_text() == 'infile text'
+    assert infilepath.read_text() == targetpath.read_text()
+    assert status == 'done'
     mtime = targetpath.stat().st_mtime
 
     # Try running the build again. The output file should not be modified
-    cp = Copy(env=env, infilepaths=infilepath, outfilepath=targetpath)
+    cp = CopyCmd(env=env, infilepaths=infilepath, outfilepath=targetpath)
 
     assert cp.build(complete=True) == 'done'
     assert targetpath.stat().st_mtime == mtime
@@ -125,7 +167,7 @@ def test_builder_md5decision(env, wait):
     # 2. Try modifying the contents of the infile
     wait()
     infilepath.write_text('infile text2')
-    cp = Copy(env=env, infilepaths=infilepath, outfilepath=targetpath)
+    cp = CopyCmd(env=env, infilepaths=infilepath, outfilepath=targetpath)
 
     assert cp.build(complete=True) == 'done'
     assert targetpath.stat().st_mtime > mtime
@@ -135,7 +177,7 @@ def test_builder_md5decision(env, wait):
     #    than the infile, but its contents don't match the hash
     targetpath.write_text('outfile')
 
-    cp = Copy(env=env, infilepaths=infilepath, outfilepath=targetpath)
+    cp = CopyCmd(env=env, infilepaths=infilepath, outfilepath=targetpath)
 
     assert cp.build(complete=True) == 'done'
     assert targetpath.read_text() == 'infile text2'

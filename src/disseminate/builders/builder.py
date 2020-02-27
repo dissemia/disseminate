@@ -139,7 +139,8 @@ class Builder(metaclass=ABCMeta):
         The builder can have the following states:
         - 'ready': The builder is active and the infilepaths have been set
         - 'inactive': The builder isn't active--see the active property
-        - 'missing': The infilepaths have not been specified
+        - 'missing': The infilepaths have not been specified or the infilepaths
+          do not exist.
         - 'building': The builder is building
         - 'done': The builder is done building
         """
@@ -147,7 +148,8 @@ class Builder(metaclass=ABCMeta):
         has_infilepaths = len(self.infilepaths) > 0
         if not active:
             return "inactive"
-        elif not has_infilepaths:
+        elif (not has_infilepaths or
+              not all(i.exists() for i in self.infilepaths)):
             return "missing"
         elif not self.build_needed() or self.popen == "done":
             return "done"
@@ -172,7 +174,10 @@ class Builder(metaclass=ABCMeta):
         if self.decision is None:
             decider = self.env.decider
             self.decision = decider.decision
-        inputs = self.infilepaths + list(self.run_cmd_args())
+        inputs = list(self.infilepaths)
+        if self.action:
+            inputs.append(self.action)
+
         return self.decision.build_needed(inputs=inputs,
                                           output=self.outfilepath,
                                           reset=reset)
@@ -246,7 +251,9 @@ class Builder(metaclass=ABCMeta):
             builds are completed or the build complete=True should be used.
         """
         if complete:
-            while self.status != "done":
+            # Run while this builder is either ready to build or a build is
+            # ongoing.
+            while self.status in {'building', 'ready'}:
                 self.run_cmd()
         else:
             self.run_cmd()

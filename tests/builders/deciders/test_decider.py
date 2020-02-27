@@ -4,7 +4,6 @@ Test the base Decider
 import pytest
 
 from disseminate.builders.deciders import Decider
-from disseminate.builders.deciders.exceptions import MissingInputFiles
 from disseminate.paths import SourcePath, TargetPath
 
 
@@ -22,10 +21,8 @@ def test_decider(env):
     decision = decider.decision
     kwargs = {'inputs': infilepaths, 'output': outfilepath}
 
-    # Initially a MissingInputFiles exception is raised because the input
-    # files haven't been created yet
-    with pytest.raises(MissingInputFiles):
-        decision.build_needed(**kwargs)
+    # Initially the files are missing
+    decision.build_needed(**kwargs)
 
     # Create the input files. The output file doesn't exist, so a build is
     # needed
