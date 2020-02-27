@@ -1,9 +1,22 @@
 """
 Tests with the code Builder functionality
 """
+import pytest
+
 from disseminate.builders.builder import Builder
 from disseminate.builders.pdfcrop import PdfCrop
 from disseminate.paths import SourcePath, TargetPath
+
+
+def test_builder_creation(env):
+    """Test the creation of builders and ensure that they can take arbitrary
+    arguments"""
+    # The environment (env) is required
+    with pytest.raises(TypeError):
+        PdfCrop()
+
+    # Other options are allowed (but ignored)
+    PdfCrop(env, 'test', mykwarg=1)
 
 
 def test_builder_filepaths(env):

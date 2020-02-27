@@ -23,6 +23,7 @@ class ScaleSvg(Builder):
     """
 
     action = "rsvg-convert -f svg -o {outfilepath} {infilepaths}"
+    available = True
     priority = 1000
     required_execs = ('rsvg-convert',)
 

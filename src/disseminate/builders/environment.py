@@ -46,8 +46,11 @@ class Environment(object):
         # See if a list of available builders is set yet
         if cls._concrete_builders is None:
             # Get a listing of concrete builder classes
-            builders = all_subclasses(Builder)
+            builder_clses = all_subclasses(Builder)
 
-            # Remove those that are abstract
-            builders = [builder for builder in builders
-                        if not isabstract(builder)]
+            # Remove those that are not available
+            builder_clses = [builder_cls for builder_cls in builder_clses
+                             if builder_cls.available and builder_cls.active]
+            cls._concrete_builders = builder_clses
+        builder_clses = cls._concrete_builders
+

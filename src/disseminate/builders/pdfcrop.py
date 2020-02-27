@@ -24,6 +24,7 @@ class PdfCrop(Builder):
     """
 
     action = "pdf-crop-margins -o {outfilepath} {infilepaths}"
+    available = True
     priority = 1000
     required_execs = ('pdf-crop-margins',)
 

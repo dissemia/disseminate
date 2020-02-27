@@ -11,6 +11,7 @@ class Pdf2svg(Builder):
     """A builder to convert from pdf to svg."""
 
     action = "pdf2svg {infilepaths} {outfilepath}"
+    available = False
     priority = 1000
     required_execs = ('pdf-crop-margins',)
 
@@ -40,6 +41,7 @@ class Pdf2SvgCropScale(SequentialBuilder):
     """Create a CompositeBuilder for Pdf2Svg that includes PdfCrop and ScaleSvg.
     """
 
+    available = True
     priority = 1000
     infilepath_ext = '.pdf'
     outfilepath_ext = '.svg'
