@@ -1,68 +1,7 @@
-"""
-Composite builders for multiple build commands
-"""
-from .builder import Builder
-from .copy import Copy
-from .utils import targetpath_to_sourcepath
-
-
-class CompositeBuilder(Builder):
-    """A builder that integrates multiple (sub)-builders
-     Notes
-    -----
-    - The build filepaths for subbuilders are set as follows, with user-supplied
-      paths in parentheses:
-      - builder - subbuilder1 (infilepaths) - outfilepath1
-                - subbuilder2 outfilepath2 - outfilepath3
-                - subbuilder3 outfilepath3 - outfilepath4
-                - outfilepath4 - (outfilepath)
-    """
-    active_requirements = ('priority',)
-    subbuilders = None
-    parallel = False
-
-    def run_cmd_args(self):
-        """Format the for all sub commands
-
-        Returns
-        -------
-        run_cmd_args : Tuple[str]
-            A tuple of the arguments for all sub-builders
-        """
-        args = []
-        for subbuilder in self.subbuilders:
-            args += list(subbuilder.run_cmd_args())
-        return tuple(args)
-
-    def build(self, complete=False):
-        def run_build(self):
-            status = 'done'
-            for builder in self.subbuilders:
-                if builder.status == 'building':
-                    status = 'building'
-                    if self.parallel:
-                        continue
-                    else:
-                        break
-                elif builder.status == 'ready':
-                    builder.build()
-                    status = 'building'
-                    if self.parallel:
-                        continue
-                    else:
-                        break
-                elif builder.status == 'done':
-                    status = "done"
-            return status
-
-        if complete:
-            while self.status in {'building', 'ready'}:
-                run_build(self)
-        else:
-            if self.status in {'building', 'ready'}:
-                run_build(self)
-
-        return self.status
+from .composite_builder import CompositeBuilder
+from ..builder import Builder
+from ..copy import Copy
+from ..utils import targetpath_to_sourcepath
 
 
 class SequentialBuilder(CompositeBuilder):
@@ -128,22 +67,3 @@ class SequentialBuilder(CompositeBuilder):
             return 'done'
         else:
             return 'building'
-
-
-class ParallelBuilder(CompositeBuilder):
-    """A composite builder that runs subbuilders in parallell (i.e. run the
-    subbuilders together at the same time)"""
-    parallel = True
-
-    @property
-    def status(self):
-        statuses = {sb.status for sb in self.subbuilders}
-        if 'inactive' in statuses:
-            return 'inactive'
-        elif 'missing' in statuses:
-            return 'missing'
-        elif 'building' in statuses:
-            return 'building'
-        elif {'done'} == statuses:  # all subbuilders are done
-            return 'done'
-        return 'ready'

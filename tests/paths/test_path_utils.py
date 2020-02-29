@@ -4,7 +4,9 @@ Test path utilities
 import pathlib
 from os import curdir
 
-from disseminate.paths.utils import find_files
+import pytest
+
+from disseminate.paths.utils import find_files, search_paths
 from disseminate.paths import SourcePath, TargetPath
 
 
@@ -72,3 +74,32 @@ def test_find_files_example2(doc_cls, tmpdir):
     assert len(filepaths) == 1
     assert (filepaths[0].match('tests/paths/find_files_example2/src/'
                                'chapter1/figures/local_img.png'))
+
+
+def test_search_paths(context_cls):
+    """Test the search_paths function."""
+
+    # 1. Test the find_files_example2
+    # tests/paths/find_files_example2/
+    # └── src
+    #     ├── chapter1
+    #     │   ├── figures
+    #     │   │   └── local_img.png
+    #     │   └── index.dm
+    #     ├── index.dm
+    #     └── media
+    #         └── ch1
+    #             └── root_img.png
+
+    paths = ['tests/paths/find_files_example2/src',
+             'tests/paths/find_files_example2/src/chapter1',
+             'tests/paths/find_files_example2/src/chapter1/figures',]
+    context = context_cls(paths=paths)
+    assert search_paths('local_img.png', context).match('local_img.png')
+    assert search_paths('figures/local_img.png', context).match('local_img.png')
+    assert search_paths('media/ch1/root_img.png', context).match('root_img.png')
+
+    # Try a missing file
+    with pytest.raises(FileNotFoundError):
+        search_paths('ch1/root_img.png', context)
+        

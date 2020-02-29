@@ -114,3 +114,38 @@ def find_files(string, context):
             filepaths.append(filepath)
 
     return filepaths
+
+
+def search_paths(path, context):
+    """Search for an existing file given the path and, if needed, the 'paths'
+    entry from a context.
+
+    Returns
+    -------
+    valid_path : :obj:`pathlib.Path`
+        A path for a file that exists
+
+    Raises
+    ------
+    FileNotFoundError
+        Raised if the file could not be found.
+    """
+    assert context.is_valid('paths')
+
+    # Prepare the parameters
+    path = pathlib.Path(path) if isinstance(path, str) else path
+
+    # See if the file is itself a valid file
+    if path.is_file():
+        return path
+
+    # Otherwise see if the path can be reconstructed
+    paths = context['paths']
+    for p in paths:
+        new_path = p / path
+        if new_path.is_file():
+            return new_path
+
+    # I'm out of ideas and places to search! Raise an error
+    msg = "Could not find file '{}' in the paths: '{}'".format(path, paths)
+    raise FileNotFoundError(msg)

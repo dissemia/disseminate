@@ -3,9 +3,48 @@ Test the SequentialBuilder
 """
 import logging
 
-from disseminate.builders.composite_builders import SequentialBuilder
+import pytest
+
+from disseminate.builders.composite_builders import (CompositeBuilder,
+                                                     SequentialBuilder)
 from disseminate.builders.pdf2svg import Pdf2SvgCropScale
+from disseminate.builders.exceptions import BuildError
 from disseminate.paths import SourcePath, TargetPath
+
+
+def test_compositebuilder_find_builder_cls(tmpdir):
+    """Test the CompositeBuilder find_buider_cls method."""
+
+    # 1. Test html pdf->svg. Tracked deps: ['.css', '.svg', '.png'],
+    infilepath = SourcePath(tmpdir, 'test.pdf')
+    cls = CompositeBuilder.find_builder_cls(document_target='.html',
+                                            infilepath=infilepath)
+    assert cls.__name__ == 'Pdf2svg'
+
+    # 2. Test html svg
+    infilepath = SourcePath(tmpdir, 'test.svg')
+    cls = CompositeBuilder.find_builder_cls(document_target='.html',
+                                            infilepath=infilepath)
+    assert cls.__name__ == 'Copy'
+
+    # 3. Test invalid extension
+    infilepath = SourcePath(tmpdir, 'test.unknown')
+    with pytest.raises(BuildError):
+        CompositeBuilder.find_builder_cls(document_target='.html',
+                                          infilepath=infilepath)
+
+    # 4. Test an example with a specified outfilepath
+    infilepath = SourcePath(tmpdir, 'test.pdf')
+    outfilepath = TargetPath(tmpdir, subpath='test.svg')
+    cls = CompositeBuilder.find_builder_cls(document_target='.html',
+                                            infilepath=infilepath,
+                                            outfilepath=outfilepath)
+    assert cls.__name__ == 'Pdf2svg'
+
+
+def test_compositebuilder_add_build(env):
+    """Test the CompositeBuilder add_build method"""
+    assert False
 
 
 def test_sequentialbuilder_md5decider(env, caplog, wait):
