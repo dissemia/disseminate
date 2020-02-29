@@ -91,6 +91,7 @@ def test_search_paths(context_cls):
     #         └── ch1
     #             └── root_img.png
 
+    # 1.1. Test with simple strings
     paths = ['tests/paths/find_files_example2/src',
              'tests/paths/find_files_example2/src/chapter1',
              'tests/paths/find_files_example2/src/chapter1/figures',]
@@ -102,4 +103,24 @@ def test_search_paths(context_cls):
     # Try a missing file
     with pytest.raises(FileNotFoundError):
         search_paths('ch1/root_img.png', context)
-        
+
+    # 1.2. Test with SourcePath strings
+    paths = [SourcePath('tests/paths/find_files_example2/src'),
+             SourcePath('tests/paths/find_files_example2/src', 'chapter1'),
+             SourcePath('tests/paths/find_files_example2/src',
+                        'chapter1/figures')]
+    context = context_cls(paths=paths)
+    p1 = search_paths('local_img.png', context)
+    assert p1.match('figures/local_img.png')
+    assert isinstance(p1, SourcePath)
+    assert p1.subpath.match('chapter1/figures/local_img.png')
+
+    p2 = search_paths('figures/local_img.png', context)
+    assert p2.match('figures/local_img.png')
+    assert isinstance(p2, SourcePath)
+    assert p2.subpath.match('chapter1/figures/local_img.png')
+
+    p3 = search_paths('media/ch1/root_img.png', context)
+    assert p3.match('media/ch1/root_img.png')
+    assert isinstance(p3, SourcePath)
+    assert p3.subpath.match('media/ch1/root_img.png')

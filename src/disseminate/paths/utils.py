@@ -143,6 +143,12 @@ def search_paths(path, context):
     paths = context['paths']
     for p in paths:
         new_path = p / path
+
+        # Treat SourcePath and TargetPath in a special way to correctly set the
+        # subpath
+        if hasattr(p, 'subpath'):
+            new_path.subpath = p / path
+
         if new_path.is_file():
             return new_path
 
