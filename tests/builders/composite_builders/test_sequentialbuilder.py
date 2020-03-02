@@ -5,10 +5,8 @@ import logging
 
 import pytest
 
-from disseminate.builders.composite_builders import (CompositeBuilder,
-                                                     SequentialBuilder)
+from disseminate.builders.composite_builders import SequentialBuilder
 from disseminate.builders.pdf2svg import Pdf2SvgCropScale
-from disseminate.builders.exceptions import BuildError
 from disseminate.paths import SourcePath, TargetPath
 
 

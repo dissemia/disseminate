@@ -41,7 +41,6 @@ class CompositeBuilder(Builder):
         def run_build(self):
             status = 'done'
             for builder in self.subbuilders:
-                print(builder, builder.status, self.parallel)
                 if builder.status == 'building':
                     status = 'building'
                     if self.parallel:

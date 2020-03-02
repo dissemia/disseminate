@@ -27,6 +27,9 @@ class ParallelBuilder(CompositeBuilder):
             return 'done'
         return 'ready'
 
+    def build_needed(self, reset=False):
+        return any(sb.build_needed(reset=reset) for sb in self.subbuilders)
+
     @classmethod
     def find_builder_cls(cls, document_target, infilepath, outfilepath=None):
         """Return a builder class"""
