@@ -8,6 +8,7 @@ from distutils.spawn import find_executable
 
 from .utils import cache_filepath
 from .exceptions import runtime_error
+from ..utils.file import mkdir_p
 from ..paths import SourcePath, TargetPath
 
 
@@ -139,8 +140,8 @@ class Builder(metaclass=ABCMeta):
         The builder can have the following states:
         - 'ready': The builder is active and the infilepaths have been set
         - 'inactive': The builder isn't active--see the active property
-        - 'missing': The infilepaths have not been specified or the infilepaths
-          do not exist.
+        - 'missing': The infilepaths have not been specified, the infilepaths
+          do not exist or the outfilepath could not be created.
         - 'building': The builder is building
         - 'done': The builder is done building
         """
@@ -155,9 +156,11 @@ class Builder(metaclass=ABCMeta):
             return "done"
         elif self.popen is not None:
             poll = self.popen.poll()
-            if poll is None or not self.outfilepath.exists():
+            if poll is None:
                 # If popen.poll() returns None, the process isn't done.
                 return "building"
+            elif not self.outfilepath.exists():
+                return "missing"
             elif poll == 0:
                 # exit code of 0. Successful!
                 # Reset the popen and the build status
@@ -195,16 +198,20 @@ class Builder(metaclass=ABCMeta):
     def outfilepath(self):
         """The output filename and path"""
         outfilepath = self._outfilepath
-        if outfilepath is not None:
-            return outfilepath
-        infilepaths = self.infilepaths
-        if infilepaths:
-            outfilepath = cache_filepath(path=self.infilepaths[0],
-                                         append=self.outfilepath_append,
-                                         env=self.env,
-                                         ext=self.outfilepath_ext)
-            return outfilepath
-        return None
+
+        if outfilepath is None:
+            infilepaths = self.infilepaths
+            if infilepaths:
+                outfilepath = cache_filepath(path=self.infilepaths[0],
+                                             append=self.outfilepath_append,
+                                             env=self.env,
+                                             ext=self.outfilepath_ext)
+
+        # Make sure the outfilepath directory exists
+        if outfilepath and not outfilepath.parent.is_dir():
+            mkdir_p(outfilepath.parent)
+
+        return outfilepath
 
     @outfilepath.setter
     def outfilepath(self, value):
@@ -229,6 +236,7 @@ class Builder(metaclass=ABCMeta):
     def run_cmd(self, *args):
         """If the action is a external command, run it."""
         if self.popen is None and (isinstance(self.action, str) or args):
+
             # Format the action string, if it's to be used
             args = args if args else self.run_cmd_args()
             logging.debug("'{}' run with: '{}'".format(self.__class__.__name__,

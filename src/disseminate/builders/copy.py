@@ -11,6 +11,7 @@ class Copy(Builder):
     """A builder to copy or build a file."""
 
     action = 'copy'
+    available = True
 
     @property
     def status(self):

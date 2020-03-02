@@ -2,6 +2,7 @@
 Utilities for builders and environments
 """
 from ..paths import SourcePath, TargetPath
+from ..paths.utils import rename
 
 
 def cache_filepath(path, env, append=None, ext=None):
@@ -28,13 +29,7 @@ def cache_filepath(path, env, append=None, ext=None):
 
     # Format the subpath
     subpath = path.subpath
-
-    if isinstance(append, str):
-        subpath = subpath.with_name(subpath.stem + append + subpath.suffix)
-
-    if isinstance(ext, str):
-        ext = ext if ext.startswith('.') else '.' + ext
-        subpath = subpath.with_suffix(ext)
+    subpath = rename(path=subpath, append=append, extension=ext)
 
     return TargetPath(target_root=cache_path, subpath=subpath)
 

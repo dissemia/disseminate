@@ -12,10 +12,6 @@ class SequentialBuilder(CompositeBuilder):
     def __init__(self, env, *args, **kwargs):
         super().__init__(env, *args, **kwargs)
 
-        # Load the subbuilders
-        self.subbuilders = [arg for arg in args if isinstance(arg, Builder)]
-        self.subbuilders += list(kwargs.pop('subbuilders', []))
-
         # Check that the extensions match
         assert (self.infilepath_ext == self.subbuilders[0].infilepath_ext and
                 self.outfilepath_ext == self.subbuilders[-1].outfilepath_ext)

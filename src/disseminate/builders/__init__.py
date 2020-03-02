@@ -1,3 +1,3 @@
 from .environment import Environment
-from . import validators, exceptions, builder, composite_builders
-from . import pdfcrop, scalesvg, copy
+from . import (validators, exceptions, builder, pdf2svg, pdfcrop, scalesvg,
+               copy, composite_builders)
