@@ -1,7 +1,7 @@
 """
 A decider that uses MD5 hashes.
 """
-import dbm
+import diskcache
 
 from .decider import Decider, Decision
 from ...paths import SourcePath
@@ -91,5 +91,5 @@ class Md5Decider(Decider):
     @property
     def db(self):
         if self._db is None:
-            self._db = dbm.open(self.db_path, 'c')
+            self._db = diskcache.FanoutCache(self.db_path)
         return self._db

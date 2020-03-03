@@ -125,6 +125,43 @@ def test_parallelbuilder_add_build_missing(env):
                                    outfilepath=outfilepath)
 
 
+def test_parallelbuilder_sequential_builds(env):
+    """Test the ParallelBuilder with 2 sequential builds"""
+    tmpdir = env.context['target_root']
+
+    # Add paths to the context
+    paths = [SourcePath(project_root='tests/builders/example1')]
+    env.context['paths'] = paths
+
+    # 1. Test html pdf->svg. Tracked deps: ['.css', '.svg', '.png'],
+    infilepath = 'sample.pdf'
+    outfilepath1 = TargetPath(target_root=tmpdir, target='html',
+                              subpath='test1.svg')
+    outfilepath2 = TargetPath(target_root=tmpdir, target='html',
+                              subpath='test2.svg')
+    parallel_builder = ParallelBuilder(env)
+    parallel_builder.add_build(document_target='.html', infilepaths=infilepath,
+                               outfilepath=outfilepath1)
+    parallel_builder.add_build(document_target='.html', infilepaths=infilepath,
+                               outfilepath=outfilepath2)
+
+    # Test the builder
+    assert not outfilepath1.exists()
+    assert not outfilepath2.exists()
+    assert len(parallel_builder.subbuilders) == 2
+    assert (id(parallel_builder.subbuilders[0]) !=
+            id(parallel_builder.subbuilders[1]))
+
+    # Run the build
+    assert parallel_builder.build_needed()
+    assert parallel_builder.build(complete=True) == 'done'
+
+    assert parallel_builder.status == 'done'
+    assert not parallel_builder.build_needed()
+    assert outfilepath1.exists()
+    assert outfilepath2.exists()
+
+
 def test_parallelbuilder_md5decider(env, caplog, wait):
     """Test the ParallelBuilder with the Md5Decider."""
     tmpdir = env.context['target_root']
