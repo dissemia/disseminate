@@ -16,6 +16,7 @@ class CompositeBuilder(Builder):
 
     active_requirements = ('priority',)
     parallel = False
+    clear_done = True
 
     def __init__(self, env, *args, **kwargs):
         super().__init__(env, *args, **kwargs)
@@ -40,9 +41,16 @@ class CompositeBuilder(Builder):
     def build(self, complete=False):
         def run_build(self):
             status = 'done'
-            for builder in self.subbuilders:
-                if builder.status == 'building':
+            for builder in list(self.subbuilders):
+                if builder.status == 'done':
+                    status = "done"
+
+                    # Remove done builders
+                    if self.clear_done:
+                        self.subbuilders.remove(builder)
+                elif builder.status == 'building':
                     status = 'building'
+                    # remaining_builders.append(builder)
                     if self.parallel:
                         continue
                     else:
@@ -50,12 +58,12 @@ class CompositeBuilder(Builder):
                 elif builder.status == 'ready':
                     builder.build()
                     status = 'building'
+                    # remaining_builders.append(builder)
                     if self.parallel:
                         continue
                     else:
                         break
-                elif builder.status == 'done':
-                    status = "done"
+
             return status
 
         if complete:

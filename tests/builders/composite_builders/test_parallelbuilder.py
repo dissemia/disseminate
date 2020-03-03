@@ -221,14 +221,14 @@ def test_parallelbuilder_md5decider(env, caplog, wait):
     assert len([r for r in caplog.records if 'Copying' in r.msg]) == 2
 
     # 3. Try modifying the cached versions and a full set of builds is needed.
-    pdf2svg = parallel_builder.subbuilders[0]
-    for subbuilder in pdf2svg.subbuilders:
-        subbuilder.outfilepath.write_text('new output')
-
     parallel_builder = ParallelBuilder(env)
     parallel_builder.add_build(document_target='.html',
                                infilepaths=infilepath,
                                outfilepath=outfilepath)
+
+    pdf2svg = parallel_builder.subbuilders[0]
+    for subbuilder in pdf2svg.subbuilders:
+        subbuilder.outfilepath.write_text('new output')
 
     assert parallel_builder.build_needed()
     assert parallel_builder.build(complete=True) == 'done'
