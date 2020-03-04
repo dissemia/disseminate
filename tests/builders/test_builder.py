@@ -13,10 +13,10 @@ def test_builder_creation(env):
     arguments"""
     # The environment (env) is required
     with pytest.raises(TypeError):
-        PdfCrop()
+        Builder()
 
     # Other options are allowed (but ignored)
-    PdfCrop(env, 'test', mykwarg=1)
+    Builder(env, extra=1)
 
 
 def test_builder_filepaths(env):

@@ -17,12 +17,12 @@ class Builder(metaclass=ABCMeta):
 
     Parameters
     ----------
+    env: :obj:`.builders.Environment`
+        The build environment
     infilepaths, args : Tuple[:obj:`.paths.SourcePath`]
         The filepaths for input files in the build
     outfilepath : Optional[:obj:`.paths.TargetPath`]
         If specified, the path for the output file.
-    env: :obj:`.builders.Environment`
-        The build environment
 
     Attributes
     ----------
@@ -74,19 +74,17 @@ class Builder(metaclass=ABCMeta):
 
     popen = None
 
-    def __init__(self, env, *args, **kwargs):
+    def __init__(self, env, infilepaths=None, outfilepath=None, **kwargs):
         self.env = env
 
         # Load the infilepaths, which must be SourcePaths
-        infilepaths = kwargs.pop('infilepaths', [])
+        infilepaths = infilepaths or []
         infilepaths = (list(infilepaths) if isinstance(infilepaths, tuple) or
                        isinstance(infilepaths, list) else [infilepaths])
-        infilepaths += args
         infilepaths = [i for i in infilepaths if isinstance(i, SourcePath)]
         self.infilepaths = infilepaths
 
         # Load the outfilepath
-        outfilepath = kwargs.pop('outfilepath', None)
         self.outfilepath = (outfilepath if isinstance(outfilepath, TargetPath)
                             else None)
 

@@ -20,15 +20,14 @@ class Pdf2svg(Builder):
 
     page_no = None
 
-    def __init__(self, env, *args, **kwargs):
+    def __init__(self, env, page=None, page_no=None, **kwargs):
         # Get the page number
-        if 'page' in kwargs or 'page_no' in kwargs:
-            page_no = (kwargs.pop('page') if 'page' in kwargs else
-                       kwargs.pop('page_no'))
+        if page or page_no:
+            page_no = page or page_no
             page_no = int(page_no)
             self.page_no = page_no
 
-        super().__init__(env, *args, **kwargs)
+        super().__init__(env, **kwargs)
 
     def run_cmd_args(self):
         args = list(super().run_cmd_args())
@@ -46,20 +45,23 @@ class Pdf2SvgCropScale(SequentialBuilder):
     infilepath_ext = '.pdf'
     outfilepath_ext = '.svg'
 
-    def __init__(self, env, *args, **kwargs):
+    def __init__(self, env, crop=None, crop_percentage=None, scale=None,
+                 subbuilders=None, **kwargs):
+        # Setup parameters
+        subbuilders = (list(subbuilders) if isinstance(subbuilders, list) or
+                       isinstance(subbuilders, tuple) else [])
+
         # Create the subbuilders
-        if 'crop' in kwargs or 'crop_percentage' in kwargs:
-            crop = kwargs.pop('crop', None)
-            crop = kwargs.pop('crop_percentage', crop)
-            pdfcrop = PdfCrop(env, crop=crop, *args, **kwargs)
-            args += (pdfcrop,)
+        if crop or crop_percentage:
+            crop = crop_percentage or crop
+            pdfcrop = PdfCrop(env, crop=crop, **kwargs)
+            subbuilders.append(pdfcrop)
 
-        pdf2svg = Pdf2svg(env, *args, **kwargs)
-        args += (pdf2svg,)
+        pdf2svg = Pdf2svg(env, **kwargs)
+        subbuilders.append(pdf2svg)
 
-        if 'scale' in kwargs:
-            scale = kwargs.pop('scale')
-            scalesvg = ScaleSvg(env, scale, *args, **kwargs)
-            args += (scalesvg,)
+        if scale:
+            scalesvg = ScaleSvg(env, scale, **kwargs)
+            subbuilders.append(scalesvg)
 
-        super().__init__(env, *args, **kwargs)
+        super().__init__(env, subbuilders=subbuilders, **kwargs)

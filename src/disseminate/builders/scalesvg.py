@@ -33,10 +33,10 @@ class ScaleSvg(Builder):
 
     scale = None
 
-    def __init__(self, env, scale, *args, **kwargs):
+    def __init__(self, env, scale, **kwargs):
         self.scale = int(scale)
 
-        super().__init__(env, *args, **kwargs)
+        super().__init__(env, **kwargs)
 
     def run_cmd_args(self):
         args = list(super().run_cmd_args())

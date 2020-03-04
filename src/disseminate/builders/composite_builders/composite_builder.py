@@ -29,12 +29,14 @@ class CompositeBuilder(Builder):
     parallel = False
     clear_done = True
 
-    def __init__(self, env, *args, **kwargs):
-        super().__init__(env, *args, **kwargs)
+    def __init__(self, env, subbuilders=None, **kwargs):
+        super().__init__(env, **kwargs)
 
         # Load the subbuilders
-        self.subbuilders = [arg for arg in args if isinstance(arg, Builder)]
-        self.subbuilders += list(kwargs.pop('subbuilders', []))
+        subbuilders = (list(subbuilders) if isinstance(subbuilders, list) or
+                       isinstance(subbuilders, tuple) else [])
+        subbuilders = [sb for sb in subbuilders if isinstance(sb, Builder)]
+        self.subbuilders = subbuilders
 
     def run_cmd_args(self):
         """Format the for all sub commands

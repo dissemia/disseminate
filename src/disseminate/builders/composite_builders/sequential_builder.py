@@ -8,8 +8,8 @@ class SequentialBuilder(CompositeBuilder):
     one to finish before starting the next)"""
     parallel = False
 
-    def __init__(self, env, *args, **kwargs):
-        super().__init__(env, *args, **kwargs)
+    def __init__(self, env, **kwargs):
+        super().__init__(env, **kwargs)
 
         # Check that the extensions match
         assert (self.infilepath_ext == self.subbuilders[0].infilepath_ext and

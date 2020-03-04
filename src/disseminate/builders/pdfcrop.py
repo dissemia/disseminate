@@ -34,16 +34,19 @@ class PdfCrop(Builder):
 
     crop_percentage = None
 
-    def __init__(self, env, *args, **kwargs):
-        for item in ('crop', 'crop_percentage'):
-            if item in kwargs:
-                crop = kwargs.pop(item)
-                crop = (validate_tuple(crop, type=int, length=4,
-                                       raise_error=True)
-                        if not isinstance(crop, int) else crop)
-                self.crop_percentage = crop
+    def __init__(self, env, crop=None, crop_percentage=None, **kwargs):
 
-        super().__init__(env, *args, **kwargs)
+        # Validate the crop arguments, if specified
+        if crop or crop_percentage:
+            crop = crop_percentage or crop
+            crop = (validate_tuple(crop, type=int, length=4,
+                                   raise_error=True)
+                    if not isinstance(crop, int) else crop)
+            self.crop_percentage = crop
+        else:
+            self.crop_percentage = None
+
+        super().__init__(env, **kwargs)
 
     def run_cmd_args(self):
         args = list(super().run_cmd_args())
