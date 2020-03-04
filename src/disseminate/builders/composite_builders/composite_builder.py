@@ -3,7 +3,18 @@ from ..builder import Builder
 
 class CompositeBuilder(Builder):
     """A builder that integrates multiple (sub)-builders
-     Notes
+
+    Parameters
+    ----------
+    subbuilders : Optional[List[:obj:`.builders.Builder`]
+        The subbuilders to run as part of this composite builder.
+
+    Attributes
+    ----------
+    clear_done : bool
+        If True (default), remove 'done' subbuilders during the build.
+
+    Notes
     -----
     - The build filepaths for subbuilders are set as follows, with user-supplied
       paths in parentheses:
