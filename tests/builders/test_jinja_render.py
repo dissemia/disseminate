@@ -51,6 +51,19 @@ def test_jinja_render(env):
     assert outfilepath.exists()
     assert 'My body' in outfilepath.read_text()
 
+    # 2. A new builder will not need to build
+    render_build = JinjaRender(env, outfilepath=outfilepath, context=context)
+    assert not render_build.build_needed()
+    assert render_build.status == 'done'
+
+    # 3. But changing the contents will trigger a new build
+    context['body'] = tag(html="My new body")  # expects {{ body.html }}
+    render_build = JinjaRender(env, outfilepath=outfilepath, context=context)
+
+    assert render_build.build_needed()
+    assert render_build.build(complete=True) == 'done'
+
+
 
 
 # def test_render(env, doc):

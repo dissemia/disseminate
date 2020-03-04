@@ -56,8 +56,10 @@ class JinjaRender(Builder):
         filepaths = context_filepaths(filepaths)
         self.infilepaths += filepaths
 
-        # Render the template
+        # Render the template and add it to the infilepath (so that it can be
+        # used by the decider to decide whether a build is needed)
         self.rendered_string = template.render(**context)
+        self.infilepaths.append(self.rendered_string)
 
     def jinja_environment(self):
         """The jinja environment."""
