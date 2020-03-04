@@ -1,7 +1,8 @@
 """
 Decider classes to evaluate whether a build is needed.
 """
-from ...paths import SourcePath, TargetPath
+import pathlib
+
 from ...utils.classes import weakattr
 
 
@@ -43,14 +44,14 @@ class Decision(object):
         assert isinstance(inputs, list) or isinstance(inputs, tuple)
 
         # Test to make sure all of the SourcePath inputs exist
-        infiles = [p for p in inputs if isinstance(p, SourcePath)]
+        infiles = [p for p in inputs if isinstance(p, pathlib.Path)]
         if not infiles:
             return True
         if not all(p.exists() for p in infiles):
             # This returns True because a builder may be a subbuilder whose
             # input files aren't available yet.
             return True
-        elif (not isinstance(output, TargetPath) or
+        elif (not isinstance(output, pathlib.Path) or
               not output.exists()):
             return True
         else:
