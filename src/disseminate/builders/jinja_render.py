@@ -38,13 +38,14 @@ class JinjaRender(Builder):
         target = self.outfilepath.suffix
         template_filepath = (template or
                              context.get('template', 'default/template'))
-        template_filepath += target
+        templates = [template_filepath + '/template' + target,
+                     template_filepath + target]
 
         # Get the Jinja2 environment
         jinja_env = self.jinja_environment()
 
         # Retrieve the template
-        template = jinja_env.get_template(template_filepath)
+        template = jinja_env.get_or_select_template(templates)
 
         # Add the template filepaths to the infilepath dependencies.
         # These are added to the infilepaths so that if they are changed, the

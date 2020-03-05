@@ -21,9 +21,41 @@ def test_jinja_render_setup(env):
     render_build = JinjaRender(env, outfilepath=outfilepath, context=context)
 
     # Check the infilepaths
+    assert len(render_build.infilepaths) == 4
     assert render_build.infilepaths[0].match('templates/default/template.html')
     assert render_build.infilepaths[1].match('templates/default/menu.html')
     assert render_build.infilepaths[2].match('templates/default/context.txt')
+    assert "My body" in render_build.infilepaths[3]
+
+
+def test_jinja_render_setup_inherited(env):
+    """Test the setup of the JinjaRender builder with a template that uses
+    inheritance."""
+
+    context = env.context
+    target_root = context['target_root']
+
+    # 1. Setup the render build with a specified outfilepath. A default template
+    #    'templates/default' is used.
+    outfilepath = TargetPath(target_root=target_root, target='html',
+                             subpath='subpath.html')
+    tag = namedtuple('tag', 'html')
+    context['body'] = tag(html="My body")  # expects {{ body.html }}
+    context['template'] = 'books/tufte'
+
+    render_build = JinjaRender(env, outfilepath=outfilepath, context=context)
+
+    # Check the infilepaths
+    assert len(render_build.infilepaths) == 7
+    assert render_build.infilepaths[0].match('templates/books/'
+                                             'tufte/template.html')
+    assert render_build.infilepaths[1].match('templates/default/template.html')
+    assert render_build.infilepaths[2].match('templates/default/menu.html')
+    assert render_build.infilepaths[3].match('templates/default/nav.html')
+    assert render_build.infilepaths[4].match('templates/books/'
+                                             'tufte/context.txt')
+    assert render_build.infilepaths[5].match('templates/default/context.txt')
+    assert "My body" in render_build.infilepaths[6]
 
 
 def test_jinja_render(env):
