@@ -20,12 +20,35 @@ def test_jinja_render_setup(env):
 
     render_build = JinjaRender(env, outfilepath=outfilepath, context=context)
 
-    # Check the infilepaths
-    assert len(render_build.infilepaths) == 4
+    # Check the infilepaths. These should be SourcePaths with correctly set
+    # project_root / subpath
+    assert len(render_build.infilepaths) == 8
     assert render_build.infilepaths[0].match('templates/default/template.html')
+    assert (str(render_build.infilepaths[0].subpath) ==
+            'template.html')
     assert render_build.infilepaths[1].match('templates/default/menu.html')
+    assert (str(render_build.infilepaths[1].subpath) ==
+            'menu.html')
     assert render_build.infilepaths[2].match('templates/default/context.txt')
-    assert "My body" in render_build.infilepaths[3]
+    assert (str(render_build.infilepaths[2].subpath) ==
+            'context.txt')
+    assert render_build.infilepaths[3].match('templates/default/'
+                                             'media/css/bootstrap.min.css')
+    assert (str(render_build.infilepaths[3].subpath) ==
+            'media/css/bootstrap.min.css')
+    assert render_build.infilepaths[4].match('templates/default/'
+                                             'media/css/base.css')
+    assert (str(render_build.infilepaths[4].subpath) ==
+            'media/css/base.css')
+    assert render_build.infilepaths[5].match('templates/default/'
+                                             'media/css/default.css')
+    assert (str(render_build.infilepaths[5].subpath) ==
+            'media/css/default.css')
+    assert render_build.infilepaths[6].match('templates/default/'
+                                             'media/css/pygments.css')
+    assert (str(render_build.infilepaths[6].subpath) ==
+            'media/css/pygments.css')
+    assert "My body" in render_build.infilepaths[7]
 
 
 def test_jinja_render_setup_inherited(env):
@@ -45,17 +68,50 @@ def test_jinja_render_setup_inherited(env):
 
     render_build = JinjaRender(env, outfilepath=outfilepath, context=context)
 
-    # Check the infilepaths
-    assert len(render_build.infilepaths) == 7
-    assert render_build.infilepaths[0].match('templates/books/'
-                                             'tufte/template.html')
+    # Check the infilepaths. These should be SourcePaths with correctly set
+    # project_root / subpath
+    assert len(render_build.infilepaths) == 12
+    assert render_build.infilepaths[0].match('templates/books/tufte/'
+                                             'template.html')
+    assert (str(render_build.infilepaths[0].subpath) ==
+            'template.html')
     assert render_build.infilepaths[1].match('templates/default/template.html')
+    assert (str(render_build.infilepaths[1].subpath) ==
+            'template.html')
     assert render_build.infilepaths[2].match('templates/default/menu.html')
+    assert (str(render_build.infilepaths[2].subpath) ==
+            'menu.html')
     assert render_build.infilepaths[3].match('templates/default/nav.html')
+    assert (str(render_build.infilepaths[3].subpath) ==
+            'nav.html')
     assert render_build.infilepaths[4].match('templates/books/'
                                              'tufte/context.txt')
+    assert (str(render_build.infilepaths[4].subpath) ==
+            'context.txt')
     assert render_build.infilepaths[5].match('templates/default/context.txt')
-    assert "My body" in render_build.infilepaths[6]
+    assert (str(render_build.infilepaths[5].subpath) ==
+            'context.txt')
+    assert render_build.infilepaths[6].match('templates/books/tufte/'
+                                             'media/css/tufte.css')
+    assert (str(render_build.infilepaths[6].subpath) ==
+            'media/css/tufte.css')
+    assert render_build.infilepaths[7].match('templates/default/'
+                                             'media/css/bootstrap.min.css')
+    assert (str(render_build.infilepaths[7].subpath) ==
+            'media/css/bootstrap.min.css')
+    assert render_build.infilepaths[8].match('templates/default/'
+                                             'media/css/base.css')
+    assert (str(render_build.infilepaths[8].subpath) ==
+            'media/css/base.css')
+    assert render_build.infilepaths[9].match('templates/default/'
+                                             'media/css/default.css')
+    assert (str(render_build.infilepaths[9].subpath) ==
+            'media/css/default.css')
+    assert render_build.infilepaths[10].match('templates/default/'
+                                              'media/css/pygments.css')
+    assert (str(render_build.infilepaths[10].subpath) ==
+            'media/css/pygments.css')
+    assert "My body" in render_build.infilepaths[11]
 
 
 def test_jinja_render(env):

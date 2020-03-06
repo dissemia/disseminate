@@ -7,6 +7,7 @@ import logging
 import jinja2
 
 from .builder import Builder
+from ..paths import SourcePath
 from .. import settings
 
 
@@ -28,6 +29,7 @@ class JinjaRender(Builder):
     action = 'render'
     priority = 1000
     active_requirements = ('priority',)
+    scan_infilepaths = False  # This is done after all infilepaths are loaded
 
     rendered_string = None
 
@@ -56,6 +58,9 @@ class JinjaRender(Builder):
         # Add the context filepaths to the infilepath dependencies
         filepaths = context_filepaths(filepaths)
         self.infilepaths += filepaths
+
+        # Scan for additional dependencies
+        self.infilepaths += env.scanner.scan(infilepaths=self.infilepaths)
 
         # Render the template and add it to the infilepath (so that it can be
         # used by the decider to decide whether a build is needed)
@@ -116,7 +121,9 @@ def template_filepaths(template, environment):
     name = template.name
 
     # Get the template's filename and add it to the filenames set
-    filenames.append(pathlib.Path(template.filename))
+    template_filename = pathlib.Path(template.filename)
+    filenames.append(SourcePath(project_root=template_filename.parent,
+                                subpath=template_filename.name))
 
     # Load the source code for the template using the loader
     source = loader.get_source(environment, name)
@@ -157,12 +164,12 @@ def context_filepaths(template_filepaths):
     # Construct the context filepaths from the template_filepaths
     for filepath in template_filepaths:
         # Construct a test context filename (ex: 'templates/context.txt')
-        context_filepath = (filepath.parent /
-                            settings.template_context_filename)
+        context_fp = SourcePath(project_root=filepath.parent,
+                                subpath=settings.template_context_filename)
 
         # See if the test context filename exists and add it to the list
         # of context_filepaths if it isn't in there already.
-        if (context_filepath.is_file() and
-                context_filepath not in filepaths):
-            filepaths.append(context_filepath)
+        if (context_fp.is_file() and
+                context_fp not in filepaths):
+            filepaths.append(context_fp)
     return filepaths

@@ -1,29 +1,30 @@
 """
 A build environment to determine which build to use.
 """
-from inspect import isabstract
-
-from .builder import Builder
 from .deciders import Decider
-from ..utils.classes import all_subclasses, weakattr
+from .scanners import Scanner
+from ..document import Document
+from ..utils.classes import weakattr
 from ..paths import SourcePath
 from .. import settings
 
 
 class Environment(object):
+    """A environment owns a root document and builds and renders needed
+    files and documents."""
+
+    builders = None
+    decider = None
+    scanner = None
 
     context = weakattr()
-    decider = None
+    root_documents = None
     target_root = None
 
     _cache_path = None
     _concrete_builders = None
 
-    def __init__(self, context):
-        context.is_valid('target_root')
-        self.context = context
-        self.target_root = context['target_root']
-
+    def __init__(self, src_filepath=None, target_root=None, context=None):
         # Setup the decider
         decider_cls = [cls for cls in Decider.__subclasses__()
                        if cls.__name__ == settings.default_decider]
@@ -31,6 +32,20 @@ class Environment(object):
                              "exist".format(settings.default_decider))
         decider_cls = decider_cls[0]
         self.decider = decider_cls(env=self)
+
+        # Setup the scanner
+        self.scanner = Scanner
+
+        # Setup the root document
+        if src_filepath:
+            root_document = Document(src_filepath=src_filepath,
+                                     target_root=target_root)
+            self.root_document = root_document
+
+        # Setup the builders
+        self.context = context
+        self.builders = []
+        self.target_root = target_root or context['target_root']
 
     @property
     def cache_path(self):
@@ -41,16 +56,6 @@ class Environment(object):
             self._cache_path = cache_path
         return self._cache_path
 
-    @classmethod
-    def get_builder(cls, infilepath, document_target):
-        # See if a list of available builders is set yet
-        if cls._concrete_builders is None:
-            # Get a listing of concrete builder classes
-            builder_clses = all_subclasses(Builder)
-
-            # Remove those that are not available
-            builder_clses = [builder_cls for builder_cls in builder_clses
-                             if builder_cls.available and builder_cls.active]
-            cls._concrete_builders = builder_clses
-        builder_clses = cls._concrete_builders
+    def get_builder(self, document_target, context=None):
+        pass
 

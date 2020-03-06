@@ -37,6 +37,8 @@ class Builder(metaclass=ABCMeta):
         - 'priority': test that the priority attribute is an int
         - 'required_execs': tests that the required_execs attribute is specified
         - 'all_execs': tests that the required execs are available
+    scan_infilepaths : bool
+        If True (default), scan the infilepaths for additional dependencies.
     infilepath_ext : str
         The format extension for the input file (ex: '.pdf')
     outfilepath_ext : str
@@ -59,6 +61,7 @@ class Builder(metaclass=ABCMeta):
     available = False
     active_requirements = ('priority', 'required_execs', 'all_execs')
     decision = None
+    scan_infilepaths = True
 
     infilepath_ext = None
     outfilepath_ext = None
@@ -83,6 +86,10 @@ class Builder(metaclass=ABCMeta):
                        isinstance(infilepaths, list) else [infilepaths])
         infilepaths = [i for i in infilepaths if isinstance(i, SourcePath)]
         self.infilepaths = infilepaths
+
+        # Scan for additional infilepaths, if desired
+        if self.scan_infilepaths:
+            self.infilepaths += env.scanner.scan(infilepaths=self.infilepaths)
 
         # Load the outfilepath
         self.outfilepath = (outfilepath if isinstance(outfilepath, TargetPath)

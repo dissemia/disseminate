@@ -1,6 +1,8 @@
 """
 A scanner object to find implicit dependencies.
 """
+import pathlib
+
 from ...paths import SourcePath
 from ...utils.classes import all_subclasses
 
@@ -67,7 +69,13 @@ class Scanner(object):
 
         # Parse each filepath
         for infilepath in infilepaths:
-            if not isinstance(infilepath, SourcePath):
+            if isinstance(infilepath, SourcePath):
+                pass
+            elif isinstance(infilepath, pathlib.Path):
+                msg = ("The infilepath '{}' should be a SourcePath instead of "
+                       "a pathlib.Path".format(infilepath))
+                raise TypeError(msg)
+            else:
                 continue
 
             # Make sure this scanner can deal with this type of infilepath
