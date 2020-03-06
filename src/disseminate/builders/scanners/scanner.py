@@ -12,29 +12,36 @@ class Scanner(object):
     Works with parallel builders
     """
 
-    function = None
     extensions = tuple()
 
     _scanners = None
 
-    def __init__(self, function=None):
-        self.function = function
+    def __init__(self):
+        msg = "Scanner classes cannot be instantiated"
+        raise TypeError(msg)
+
+    @staticmethod
+    def scan_function(content):
+        """The function to scan content for new infilepaths.
+
+        Subclasses derive this function."""
+        return []
 
     @classmethod
     def get_scanner(cls, extension):
         """Get the scanner for the given extension"""
         if cls._scanners is None:
             # Get all subclasses
-            subclses = all_subclasses(Scanner)
+            scanners = all_subclasses(Scanner)
 
             # Create concrete scanners
-            scanners = [subcls() for subcls in subclses]
-            scanners_dict = {ext:scanner for scanner in scanners
+            scanners_dict = {ext: scanner for scanner in scanners
                              for ext in scanner.extensions}
             cls._scanners = scanners_dict
         return cls._scanners.get(extension, None)
 
-    def scan(self, infilepaths, raise_error=True):
+    @classmethod
+    def scan(cls, infilepaths, raise_error=True):
         """Scan infilepaths for dependencies.
 
         Parameters
@@ -64,9 +71,9 @@ class Scanner(object):
                 continue
 
             # Make sure this scanner can deal with this type of infilepath
-            if infilepath.suffix not in self.extensions:
+            if infilepath.suffix not in cls.extensions:
                 # See if an alternative scanner can be found
-                scanner = self.get_scanner(extension=infilepath.suffix)
+                scanner = cls.get_scanner(extension=infilepath.suffix)
                 if scanner is None:
                     # If not, skip this infilepath
                     continue
@@ -77,7 +84,7 @@ class Scanner(object):
                     continue
 
             # Parse the infilepath
-            stubs = self.function(infilepath.read_text())
+            stubs = cls.scan_function(infilepath.read_text())
 
             # Find the new, valid infilepaths. First, parse the source
             # infilepath.

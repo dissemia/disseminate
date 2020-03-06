@@ -2,12 +2,14 @@
 Test the html scanner
 """
 from disseminate.builders.scanners.scanner import Scanner
-from disseminate.builders.scanners.html_scanner import html_scan, HtmlScanner
+from disseminate.builders.scanners.html_scanner import HtmlScanner
 from disseminate.paths import SourcePath
 
 
 def test_html_scan():
     """Test the html scan function."""
+    html_scan = HtmlScanner.scan_function
+
     # Files work
     assert (html_scan('<link rel="stylesheet" href="/media/css/default.css">')
             == ['/media/css/default.css'])
@@ -24,7 +26,7 @@ def test_html_scanner_scan():
     project_root = 'src/disseminate/templates/default'
     template_filepath = SourcePath(project_root=project_root,
                                    subpath='template.html')
-    html_scanner = HtmlScanner()
+    html_scanner = HtmlScanner
 
     # Test the dependent files
     infilepaths = html_scanner.scan(template_filepath)
@@ -57,7 +59,7 @@ def test_html_scanner_scan():
     assert str(infilepaths[3].subpath) == 'media/css/pygments.css'
 
     # Likewise, the base scanner works to parse html
-    scanner = Scanner()
+    scanner = Scanner
     infilepaths2 = scanner.scan(template_filepath)
 
     assert infilepaths == infilepaths2
