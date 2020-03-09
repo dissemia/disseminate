@@ -11,16 +11,22 @@ class TargetBuilder(ParallelBuilder):
     """A builder for a document target, like html, tex or pdf"""
 
     active_requirements = ('priority',)
+    target = None
 
     document = weakattr()
 
-    def __init__(self, env, document, target, subbuilders=None, **kwargs):
-        assert target in document.targets
+    def __init__(self, env, context, infilepaths=None, outfilepath=None,
+                 subbuilders=None, **kwargs):
+
+        target = self.outfilepath_ext.strip('.')
+        self.target = target
 
         # Setup the paths
-        outfilepath = document.targets[target]
-        context = document.context
-        infilepaths = document.src_filepath
+        document = getattr(context, 'document', None)
+        if infilepaths is None and 'src_filepath' in context:
+            infilepaths = context['src_filepath']
+        if outfilepath is None and document is not None:
+            outfilepath = document.targets[self.outfilepath_ext]
 
         # Setup the labels
 

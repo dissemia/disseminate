@@ -14,8 +14,8 @@ class HtmlBuilder(TargetBuilder):
     infilepath_ext = '.dm'
     outfilepath_ext = '.html'
 
-    def __init__(self, env, document, **kwargs):
-        super().__init__(env, document, target='.html', **kwargs)
+    def __init__(self, env, context, **kwargs):
+        super().__init__(env, context, target='.html', **kwargs)
 
         # Add copy builders for extra dependencies
         target_root = self.outfilepath.target_root
