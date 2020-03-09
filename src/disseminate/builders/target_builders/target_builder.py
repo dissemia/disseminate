@@ -5,7 +5,6 @@ from ..builder import Builder
 from ..jinja_render import JinjaRender
 from ..composite_builders import ParallelBuilder
 from ...utils.classes import weakattr
-from ...paths import TargetPath
 
 
 class TargetBuilder(ParallelBuilder):
@@ -14,8 +13,6 @@ class TargetBuilder(ParallelBuilder):
     active_requirements = ('priority',)
 
     document = weakattr()
-    render_builder = None
-    dependencies_builder = None
 
     def __init__(self, env, document, target, subbuilders=None, **kwargs):
         assert target in document.targets
@@ -35,16 +32,6 @@ class TargetBuilder(ParallelBuilder):
         # Initialize builder
         super().__init__(env, infilepaths=infilepaths, outfilepath=outfilepath,
                          subbuilders=subbuilders, **kwargs)
-
-    def add_build(self, document_target, infilepaths, outfilepath=None,
-                  context=None, **kwargs):
-        """Add a build to the dependencies builder"""
-        self.dependencies_builder.add_build(document_target=document_target,
-                                            infilepaths=infilepaths,
-                                            outfilepath=outfilepath,
-                                            context=context,
-                                            front=True,
-                                            **kwargs)
 
     def build_needed(self, reset=False):
         """Determine whether a build is needed."""
