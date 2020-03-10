@@ -24,10 +24,6 @@ class SequentialBuilder(CompositeBuilder):
     def __init__(self, env, **kwargs):
         super().__init__(env, **kwargs)
 
-        # Check that the extensions match
-        assert (self.infilepath_ext == self.subbuilders[0].infilepath_ext and
-                self.outfilepath_ext == self.subbuilders[-1].outfilepath_ext)
-
         # Make the last subbuilder a copy builder to copy the result of the
         # sub-builders to the final outfilepath
         if self.copy:
@@ -45,7 +41,8 @@ class SequentialBuilder(CompositeBuilder):
         for subbuilder in self.subbuilders:
             # For the subbuilders to work together, reset their infilepaths
             # and outfilepath
-            subbuilder.infilepaths = current_infilepaths
+            if current_infilepaths:
+                subbuilder.infilepaths = current_infilepaths
             subbuilder.outfilepath = None
 
             # Convert the output of subbuilder into an infilepath for the

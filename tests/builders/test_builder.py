@@ -27,13 +27,7 @@ def test_builder_filepaths(env):
     assert pdfcrop.infilepaths == []
     assert pdfcrop.outfilepath is None
 
-    # 2. Try an example with specifying an infilepath. However, if it's not
-    #    a SourcePath, it won't be used
-    pdfcrop = PdfCrop(infilepaths='tests/builders/example1/sample.pdf', env=env)
-    assert pdfcrop.infilepaths == []
-    assert pdfcrop.outfilepath is None
-
-    # 3. Try an example with specifying an infilepath. This time, use a
+    # 2. Try an example with specifying an infilepath. This time, use a
     #    SourcePath
     infilepath = SourcePath(project_root='tests/builders/example1',
                             subpath='sample.pdf')
@@ -43,7 +37,7 @@ def test_builder_filepaths(env):
     assert pdfcrop.infilepaths == [infilepath]
     assert pdfcrop.outfilepath == cachepath
 
-    # 4. Try an example with specifying an outfilepath. However, if it's not
+    # 3. Try an example with specifying an outfilepath. However, if it's not
     #    a TargetPath, it won't be used. It this case
     targetpath = TargetPath(target_root=env.context['target_root'],
                             subpath='sample_crop.pdf')

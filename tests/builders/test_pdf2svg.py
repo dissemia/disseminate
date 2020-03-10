@@ -153,7 +153,7 @@ def test_pdf2svg_scalesvg(env):
     for builder in [subpdf2svg, scalesvg]:
         builder.outfilepath.unlink()
 
-    # 2. Test example without the outfilepath specified. The final final will
+    # 2. Test example without the outfilepath specified. The final file will
     #    be placed in a cached folder
     cache_path = env.cache_path / 'sample.svg'
     pdf2svg = Pdf2SvgCropScale(infilepaths=infilepath, env=env, scale=2)

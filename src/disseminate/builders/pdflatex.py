@@ -32,11 +32,25 @@ class Pdflatex(Builder):
         return self.outfilepath.stem
 
 
+class PdflatexDraft(Pdflatex):
+    """Compile a latex document using pdflatex in draft mode"""
+
+    action = ("pdflatex "
+              "-interaction=nonstopmode "  # Do not hang on error
+              "-halt-on-error "  # Do not hang on error
+              "-draftmode "  # compile in draft mode
+              "-output-directory={builder.cache_path} "  # dir for temp files
+              "-jobname={builder.jobname} "  # filename of output file
+              "{builder.infilepaths}")  # tex file to use
+
+
 class PdfRender(SequentialBuilder):
     """Render a tex file and render the pdf."""
 
-    def __init__(self, env, context=None, infilepaths=None, outfilepath=None,
-                 subbuilders=None, **kwargs):
+    available = True
+
+    def __init__(self, env, context=None, template=None, infilepaths=None,
+                 outfilepath=None, subbuilders=None, **kwargs):
 
         # Setup the arguments
         subbuilders = subbuilders or []
@@ -45,8 +59,17 @@ class PdfRender(SequentialBuilder):
         if infilepaths is None and context is not None:
             # If no infilepaths are specified, we need to render one from
             # the context
-            render_build = JinjaRender(env, context=context, **kwargs)
+            render_build = JinjaRender(env, context=context, target='.tex',
+                                       template=template, **kwargs)
             subbuilders.append(render_build)
+
+            # Set the infilepath for this builder to match the render_build, if
+            # used, so that the Md5Decision is properly calculated
+            infilepaths = render_build.infilepaths
+
+        # Setup a (draftmode) Pdflatex builder
+        # pdf_draft_build = PdflatexDraft(env, **kwargs)
+        # subbuilders.append(pdf_draft_build)
 
         # Setup a Pdflatex builder
         pdf_build = Pdflatex(env, **kwargs)

@@ -90,7 +90,6 @@ class Builder(metaclass=ABCMeta):
         infilepaths = infilepaths or []
         infilepaths = (list(infilepaths) if isinstance(infilepaths, tuple) or
                        isinstance(infilepaths, list) else [infilepaths])
-        infilepaths = [i for i in infilepaths if isinstance(i, SourcePath)]
         self.infilepaths = infilepaths
 
         # Scan for additional infilepaths, if desired
@@ -191,7 +190,6 @@ class Builder(metaclass=ABCMeta):
         inputs = list(self.infilepaths)
         if self.action:
             inputs.append(self.action)
-
         return self.decision.build_needed(inputs=inputs,
                                           output=self.outfilepath,
                                           reset=reset)
