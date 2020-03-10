@@ -7,7 +7,10 @@ import logging
 import jinja2
 
 from .builder import Builder
+from .utils import cache_filepath
 from ..paths import SourcePath
+from ..utils.string import hashtxt
+from ..utils.file import mkdir_p
 from .. import settings
 
 
@@ -33,11 +36,14 @@ class JinjaRender(Builder):
 
     rendered_string = None
 
-    def __init__(self, env, context, template=None, **kwargs):
+    def __init__(self, env, context, template=None, target=None, **kwargs):
         super().__init__(env, **kwargs)
+        # Checks
+        assert target or self.outfilepath, ("Either a target or an "
+                                            "outfilepath must be specified")
 
         # Get the template filepath to use with the renderer
-        target = self.outfilepath.suffix
+        target = target or self.outfilepath.suffix
         template_filepath = (template or
                              context.get('template', 'default/template'))
         templates = [template_filepath + '/template' + target,
@@ -91,6 +97,45 @@ class JinjaRender(Builder):
 
         self.build_needed(reset=True)  # reset build flag
         return self.status
+
+    @property
+    def outfilepath(self):
+        outfilepath = self._outfilepath
+
+        if outfilepath is None:
+            infilepaths = self.infilepaths
+
+            if infilepaths:
+                # Create an temporary infilepath from the hash of the input
+                hash = hashtxt("".join(map(hashtxt, map(str, infilepaths))),
+                               truncate=12)
+
+                # Create the new temporary infilepath with a filename from the
+                # hash
+                sourcepaths = [fp for fp in infilepaths
+                               if isinstance(fp, SourcePath)]
+                sourcepath = sourcepaths[0]
+
+                suffix = sourcepath.suffix
+                new_subpath = sourcepath.subpath.with_name(hash)
+                new_subpath = new_subpath.with_suffix(suffix)
+                sourcepath = SourcePath(project_root=sourcepath.project_root,
+                                        subpath=new_subpath)
+
+                outfilepath = cache_filepath(path=sourcepath,
+                                             append=self.outfilepath_append,
+                                             env=self.env,
+                                             ext=self.outfilepath_ext)
+
+        # Make sure the outfilepath directory exists
+        if outfilepath and not outfilepath.parent.is_dir():
+            mkdir_p(outfilepath.parent)
+
+        return outfilepath
+
+    @outfilepath.setter
+    def outfilepath(self, value):
+        self._outfilepath = value
 
 
 # Utilities

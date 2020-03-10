@@ -2,6 +2,9 @@
 Test the render builder
 """
 from collections import namedtuple
+
+import pytest
+
 from disseminate.builders.jinja_render import JinjaRender
 from disseminate.paths import TargetPath
 
@@ -49,6 +52,23 @@ def test_jinja_render_setup(env):
     assert (str(render_build.infilepaths[6].subpath) ==
             'media/css/pygments.css')
     assert "My body" in render_build.infilepaths[7]
+
+    # 2. Test an example without an outfilepath. However, a target must be
+    #    specified.
+    context['body'] = tag(html="My body")  # expects {{ body.html }}
+    render_build = JinjaRender(env, context=context, target='.html')
+    assert len(render_build.infilepaths) == 8
+    assert str(render_build.outfilepath.subpath) == 'adc34dbf71ae.html'
+
+    # A new content body produces a different hash
+    context['body'] = tag(html="My new body")  # expects {{ body.html }}
+    render_build = JinjaRender(env, context=context, target='.html')
+    assert str(render_build.outfilepath.subpath) == '7960f7a348f9.html'
+
+    # 3. Test an example without an outfilepath or target specified. An
+    #    assertion error is raised
+    with pytest.raises(AssertionError):
+        JinjaRender(env, context=context)
 
 
 def test_jinja_render_setup_inherited(env):
@@ -151,27 +171,19 @@ def test_jinja_render(env):
     assert render_build.build_needed()
     assert render_build.build(complete=True) == 'done'
 
+    # 4. Test an example without an outfilepath. However, a target must be
+    #    specified.
+    render_build = JinjaRender(env, context=context, target='.html')
 
+    assert not render_build.outfilepath.exists()
+    assert render_build.status == 'ready'
 
+    assert render_build.build_needed()
+    assert render_build.build(complete=True) == 'done'
+    assert render_build.outfilepath.exists()
+    assert str(render_build.outfilepath.subpath) == '7960f7a348f9.html'
+    assert render_build.status == 'done'
 
-# def test_render(env, doc):
-#     """Test the Render builder."""
-#     # Setup the renderer
-#     ## FIXME: renderer should not use dependency manager and the context
-#     # should hold renderer classes that can be instantiated with the contents.
-#     renderer = doc.context['renderers']['template']
-#     context = doc.context
-#     target_root = context['target_root']
-#
-#     # 1. Setup the render build with a specified outfilepath
-#     outfilepath = TargetPath(target_root=target_root, target='html',
-#                              subpath='subpath')
-#     render_build = Render(env, renderer, outfilepath=outfilepath,
-#                           target='.html', context=context)
-#
-#     # Check that the render build is correctly setup
-#     assert render_build.build()
-#     assert render_build.infilepaths == []
-#
-#     assert '<html lang="en">' in renderer.render(context=context,
-#                                                  target='.html')
+    # A new builder does not require a new build.
+    render_build = JinjaRender(env, context=context, target='.html')
+    assert render_build.status == 'done'
