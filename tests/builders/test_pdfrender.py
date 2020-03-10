@@ -40,7 +40,7 @@ def test_pdfrender_setup(env):
             pdfrender.subbuilders[1].outfilepath)
     assert pdfrender.subbuilders[2].outfilepath == outfilepath
 
-    # The rendered string should be in the infilepath
+    # The rendered string should be in the infilepaths
     assert any("My test body" in str(f) for f in pdfrender.infilepaths)
 
     # And the outfilepath should match the one given
@@ -79,5 +79,10 @@ def test_pdfrender_simple(env):
     pdfrender = PdfRender(env=env, context=context, outfilepath=outfilepath)
     assert pdfrender.status == 'ready'
 
-    # 2. Test a build without an outfilepath
+    # 2. Test a build without an outfilepath. Since we use template.tex, it
+    #    will be used for the outfilepath
+    pdfrender = PdfRender(env=env, context=context)
 
+    assert pdfrender.build(complete=True) == 'done'
+    assert pdfrender.outfilepath.match('template.pdf')
+    assert pdfrender.outfilepath.exists()

@@ -11,6 +11,8 @@ class PdfRender(SequentialBuilder):
 
     available = True
 
+    outfilepath_ext = '.pdf'
+
     def __init__(self, env, context=None, template=None, infilepaths=None,
                  outfilepath=None, subbuilders=None, **kwargs):
 
