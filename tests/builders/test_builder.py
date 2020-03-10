@@ -147,7 +147,7 @@ def test_builder_md5decision(env, wait):
 
     # 1. Test a  copy with a command run by build
     class CopyCmd(Builder):
-        action = 'cp {infilepaths} {outfilepath}'
+        action = 'cp {builder.infilepaths} {builder.outfilepath}'
         priority = 1000
         required_execs = ('cp',)
 

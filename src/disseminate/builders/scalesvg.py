@@ -22,7 +22,8 @@ class ScaleSvg(Builder):
         Same as 'crop_percentage', but 'crop_percentage' takes precendence.
     """
 
-    action = "rsvg-convert -f svg -o {outfilepath} {infilepaths}"
+    action = ("rsvg-convert -f svg -o {builder.outfilepath} "
+              "{builder.infilepaths}")
     available = False  # Used as part of sequential builders
     priority = 1000
     required_execs = ('rsvg-convert',)

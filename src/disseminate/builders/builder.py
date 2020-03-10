@@ -12,6 +12,12 @@ from ..utils.file import mkdir_p
 from ..paths import SourcePath, TargetPath
 
 
+class formatlist(list):
+    """A list that returns a string with items separated by spaces."""
+    def __format__(self, format_spec):
+        return format(" ".join(map(str, self)), format_spec)
+
+
 class Builder(metaclass=ABCMeta):
     """A build for one or more dependencies.
 
@@ -197,7 +203,7 @@ class Builder(metaclass=ABCMeta):
 
     @infilepaths.setter
     def infilepaths(self, value):
-        self._infilepaths = value
+        self._infilepaths = formatlist(value)
 
     @property
     def outfilepath(self):
@@ -231,9 +237,7 @@ class Builder(metaclass=ABCMeta):
             A tuple of the arguments to run in a process.
         """
         if isinstance(self.action, str):
-            infilepaths_str = " ".join([str(i) for i in self.infilepaths])
-            fmt_action = self.action.format(infilepaths=infilepaths_str,
-                                            outfilepath=self.outfilepath)
+            fmt_action = self.action.format(builder=self)
             return fmt_action.split()
         else:
             return tuple()

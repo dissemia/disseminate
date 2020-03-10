@@ -7,7 +7,7 @@ from .builder import Builder
 class ImageMagick(Builder):
     """An abstract base class for ImageMagick's convert."""
 
-    action = 'convert {infilepaths} {outfilepath}'
+    action = 'convert {builder.infilepaths} {builder.outfilepath}'
     available = False
     priority = 10000
     required_execs = ('convert',)

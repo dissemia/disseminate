@@ -23,7 +23,7 @@ class PdfCrop(Builder):
         Same as 'crop_percentage', but 'crop_percentage' takes precendence.
     """
 
-    action = "pdf-crop-margins -o {outfilepath} {infilepaths}"
+    action = "pdf-crop-margins -o {builder.outfilepath} {builder.infilepaths}"
     available = False  # Use as part of sequential builders
     priority = 1000
     required_execs = ('pdf-crop-margins',)

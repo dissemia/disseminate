@@ -10,10 +10,10 @@ from .scalesvg import ScaleSvg
 class Pdf2svg(Builder):
     """A builder to convert from pdf to svg."""
 
-    action = "pdf2svg {infilepaths} {outfilepath}"
+    action = "pdf2svg {builder.infilepaths} {builder.outfilepath}"
     available = False
     priority = 1000
-    required_execs = ('pdf-crop-margins',)
+    required_execs = ('pdf2svg',)
 
     infilepath_ext = '.pdf'
     outfilepath_ext = '.svg'
