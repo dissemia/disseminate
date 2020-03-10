@@ -9,16 +9,16 @@ class SequentialBuilder(CompositeBuilder):
 
     Attributes
     ----------
-    order_filepaths : bool
-        If True (default), the infilepath and outfilepath of each subbuilder
-        will be setup in a chain so that they are rendered in sequence.
+    chain_on_create : bool
+        If True (default), chain the infilepaths and outfilepath of the
+        subbuilders to follow each other.
     copy : bool
         If True (default), the last subbuilders will be a Copy build to copy
         the result to the final outfilepath
     """
     parallel = False
 
-    order_filepaths = True
+    chain_on_creation = True
     copy = True
 
     def __init__(self, env, **kwargs):
@@ -33,22 +33,28 @@ class SequentialBuilder(CompositeBuilder):
         if self.copy:
             self.subbuilders.append(Copy(env))
 
-        if self.order_filepaths:
-            # Set the infilepaths and outfilepaths
-            current_infilepaths = self.infilepaths
-            for subbuilder in self.subbuilders:
-                # For the subbuilders to work together, reset their infilepaths
-                # and outfilepath
-                subbuilder.infilepaths = current_infilepaths
-                subbuilder.outfilepath = None
+        # Order the sub
+        if self.chain_on_creation:
+            self.chain_subbuilders()
 
-                # Convert the output of subbuilder into an infilepath for the
-                # next subbuilder
-                infilepath = targetpath_to_sourcepath(subbuilder.outfilepath)
-                current_infilepaths = [infilepath]
+    def chain_subbuilders(self):
+        """Chain the infilepaths and outfilepath of the subbuilders to follow
+        each other"""
+        # Set the infilepaths and outfilepaths
+        current_infilepaths = self.infilepaths
+        for subbuilder in self.subbuilders:
+            # For the subbuilders to work together, reset their infilepaths
+            # and outfilepath
+            subbuilder.infilepaths = current_infilepaths
+            subbuilder.outfilepath = None
 
-            # Set the copy builder to point to the final outfilepath
-            self.subbuilders[-1].outfilepath = self.outfilepath
+            # Convert the output of subbuilder into an infilepath for the
+            # next subbuilder
+            infilepath = targetpath_to_sourcepath(subbuilder.outfilepath)
+            current_infilepaths = [infilepath]
+
+        # Set the copy builder to point to the final outfilepath
+        self.subbuilders[-1].outfilepath = self.outfilepath
 
     @property
     def status(self):
