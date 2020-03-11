@@ -31,10 +31,6 @@ class PdfRender(SequentialBuilder):
             # used, so that the Md5Decision is properly calculated
             infilepaths = render_build.infilepaths
 
-        # Setup a (draftmode) Pdflatex builder
-        # pdf_draft_build = PdflatexDraft(env, **kwargs)
-        # subbuilders.append(pdf_draft_build)
-
         # Setup a Pdflatex builder
         pdf_build = Pdflatex(env, **kwargs)
         subbuilders.append(pdf_build)

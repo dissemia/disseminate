@@ -31,7 +31,7 @@ def test_pdflatex_setup(env):
 
 
 def test_pdflatex_simple(env):
-    """A simple build for pdflatex."""
+    """A simple build for Pdflatex."""
     target_root = env.context['target_root']
 
     # 1. Test example with the infilepath specified.
