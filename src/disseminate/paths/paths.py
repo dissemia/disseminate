@@ -68,6 +68,39 @@ class SourcePath(object):
     def __deepcopy__(self, memo):
         return SourcePath(project_root=self.project_root, subpath=self.subpath)
 
+    def use_name(self, name):
+        """with_name(name) that returns a SourcePath.
+
+        A new method name is used since the flavor_cls method takes precedence.
+
+        Examples
+        --------
+        >>> p = SourcePath(project_root='/media', subpath='tests/fig1.png')
+        >>> p.use_name('fig2.png')
+        SourcePath('/media/tests/fig2.png')
+        >>> p.use_name('fig2.png').subpath
+        SourcePath('tests/fig2.png')
+        """
+        return SourcePath(project_root=self.project_root,
+                          subpath=self.subpath.with_name(name))
+
+    def use_suffix(self, suffix):
+        """with_suffix(suffix) that returns a SourcePath.
+
+        A new method name is used since the flavor_cls method takes
+        precedence.
+
+        Examples
+        --------
+        >>> p = SourcePath(project_root='/media', subpath='tests/fig1.png')
+        >>> p.use_suffix('.pdf')
+        SourcePath('/media/tests/fig1.pdf')
+        >>> p.use_name('fig1.pdf').subpath
+        SourcePath('tests/fig1.pdf')
+        """
+        return SourcePath(project_root=self.project_root,
+                          subpath=self.subpath.with_suffix(suffix))
+
 
 class TargetPath(object):
     """A path for a file in a target directory that keeps track of the
@@ -178,3 +211,39 @@ class TargetPath(object):
 
         return url_str.format(target_root=target_root, target=target,
                               subpath=subpath)
+
+    def use_name(self, name):
+        """with_name(name) that returns a TargetPath.
+
+        A new method name is used since the flavor_cls method takes
+        precedence.
+
+        Examples
+        --------
+        >>> p = TargetPath(target_root='/media', subpath='tests/fig1.png')
+        >>> p.use_name('fig2.png')
+        TargetPath('/media/tests/fig2.png')
+        >>> p.use_name('fig2.png').subpath
+        TargetPath('tests/fig2.png')
+        """
+        return TargetPath(target_root=self.target_root,
+                          target=self.target,
+                          subpath=self.subpath.with_name(name))
+
+    def use_suffix(self, suffix):
+        """with_suffix(suffix) that returns a TargetPath.
+
+        A new method name is used since the flavor_cls method takes
+        precedence.
+
+        Examples
+        --------
+        >>> p = TargetPath(target_root='/media', subpath='tests/fig1.png')
+        >>> p.use_suffix('.pdf')
+        TargetPath('/media/tests/fig1.pdf')
+        >>> p.use_suffix('.pdf').subpath
+        TargetPath('tests/fig1.pdf')
+        """
+        return TargetPath(target_root=self.target_root,
+                          target=self.target,
+                          subpath=self.subpath.with_suffix(suffix))
