@@ -15,14 +15,21 @@ class Copy(Builder):
 
     @property
     def status(self):
-        return "done" if not self.build_needed() else "ready"
+        return ("done" if not self.build_needed()
+                or (self.infilepaths and  # done if src and dest are the same
+                    self.infilepaths[0] == self.outfilepath)
+                else "ready")
 
     def build(self, complete=False):
         infilepath = self.infilepaths[0]
         outfilepath = self.outfilepath
 
-        logging.debug("Copying '{}' -> '{}'".format(infilepath, outfilepath))
-        copyfile(infilepath, outfilepath)
+        # Copy the file in the 2 files have different paths. If they have
+        # the same path, then a shutil.SameFileError exception is raised.
+        if infilepath != outfilepath:
+            logging.debug("Copying '{}' -> '{}'".format(infilepath,
+                                                        outfilepath))
+            copyfile(infilepath, outfilepath)
 
         self.build_needed(reset=True)  # reset build flag
         return self.status
