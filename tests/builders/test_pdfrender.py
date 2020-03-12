@@ -47,6 +47,21 @@ def test_pdfrender_setup(env):
     assert pdfrender.outfilepath == outfilepath
 
 
+def test_pdfrender_setup_without_outfilepath(env):
+    """Test the setup of the PdfRender builder without an outfilepath."""
+    context = env.context
+
+    # Create a mock tag and template
+    Tag = namedtuple("Tag", "tex")
+    context['body'] = Tag(tex='My test body')
+
+    # 1. Setup a build without an outfilepath
+    pdfrender = PdfRender(env=env, context=context)
+
+    assert len(pdfrender.infilepaths) == 3
+    assert str(pdfrender.outfilepath.subpath) == 'a635d8caba43.pdf'
+
+
 def test_pdfrender_simple(env):
     """Test a simple build with the PdfRender builder."""
     target_root = env.context['target_root']
@@ -84,5 +99,5 @@ def test_pdfrender_simple(env):
     pdfrender = PdfRender(env=env, context=context)
 
     assert pdfrender.build(complete=True) == 'done'
-    assert pdfrender.outfilepath.match('template.pdf')
+    assert pdfrender.outfilepath.match('.cache/6183ac1711e4.pdf')
     assert pdfrender.outfilepath.exists()

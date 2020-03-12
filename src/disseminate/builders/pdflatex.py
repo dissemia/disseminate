@@ -28,15 +28,3 @@ class Pdflatex(Builder):
     @property
     def jobname(self):
         return self.outfilepath.stem
-
-
-class PdflatexDraft(Pdflatex):
-    """Compile a latex document using pdflatex in draft mode"""
-
-    action = ("pdflatex "
-              "-interaction=nonstopmode "  # Do not hang on error
-              "-halt-on-error "  # Do not hang on error
-              "-draftmode "  # compile in draft mode
-              "-output-directory={builder.cache_path} "  # dir for temp files
-              "-jobname={builder.jobname} "  # filename of output file
-              "{builder.infilepaths}")  # tex file to use

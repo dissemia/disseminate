@@ -47,11 +47,19 @@ class SequentialBuilder(CompositeBuilder):
 
             # Convert the output of subbuilder into an infilepath for the
             # next subbuilder
-            infilepath = targetpath_to_sourcepath(subbuilder.outfilepath)
-            current_infilepaths = [infilepath]
+            outfilepath = subbuilder.outfilepath
+            if outfilepath:
+                infilepath = targetpath_to_sourcepath(outfilepath)
+                current_infilepaths = [infilepath]
 
         # Set the copy builder to point to the final outfilepath
         self.subbuilders[-1].outfilepath = self.outfilepath
+
+        # Chain any sequential builder subbuilders
+        for subbuilder in self.subbuilders:
+            if not hasattr(subbuilder, 'chain_subbuilders'):
+                continue
+            subbuilder.chain_subbuilders()
 
     @property
     def status(self):

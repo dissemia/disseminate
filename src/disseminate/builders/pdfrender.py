@@ -37,3 +37,21 @@ class PdfRender(SequentialBuilder):
 
         super().__init__(env, infilepaths=infilepaths, outfilepath=outfilepath,
                          subbuilders=subbuilders, **kwargs)
+
+    @property
+    def outfilepath(self):
+        # Use the render builder's outfilepath if None is specified. This is
+        # because the render builder's outfilepath is a hash of the input text,
+        # which is unique.
+        if self._outfilepath is None:
+            render_builders = [b for b in self.subbuilders
+                               if isinstance(b, JinjaRender)]
+            outfilepath = (render_builders[0].outfilepath.use_suffix('.pdf')
+                           if render_builders else
+                           SequentialBuilder.outfilepath.fget(self))
+            self._outfilepath = outfilepath
+        return self._outfilepath
+
+    @outfilepath.setter
+    def outfilepath(self, value):
+        self._outfilepath = value
