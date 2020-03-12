@@ -72,13 +72,13 @@ def test_builder_status(env):
 
     # 1. Test an example without an infilepath. The status should be missing
     builder = ExampleBuilder(env)
-    assert builder.status == 'missing'
+    assert builder.status == 'missing (infilepaths)'
 
     # 2. Test an example in which the infilepath doesn't exist. The status
     #    should be missing
     builder = ExampleBuilder(env, infilepaths=infilepath,
                              outfilepath=outfilepath)
-    assert builder.status == 'missing'
+    assert builder.status == 'missing (infilepaths)'
 
     # 3. Test an example in which the infilepath now exists
     infilepath.write_text('infile')
@@ -151,7 +151,7 @@ def test_builder_md5decision(env, wait):
     #    created the input file
     assert not infilepath.exists()
     assert not targetpath.exists()
-    assert cp.build(complete=True) == 'missing'
+    assert cp.build(complete=True) == 'missing (infilepaths)'
 
     # Now create the input file
     infilepath.write_text('infile text')

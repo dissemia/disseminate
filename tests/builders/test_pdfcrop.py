@@ -16,7 +16,7 @@ def test_pdfcrop(env):
 
     # Make sure pdfcrop is available and read
     assert pdfcrop.active
-    assert pdfcrop.status == "missing"
+    assert pdfcrop.status == "missing (infilepaths)"
 
     # 2. Test example with the infilepath and outfilepath specified.
     #    The builder should be available, but the status should be missing

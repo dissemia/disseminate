@@ -161,7 +161,7 @@ class Builder(metaclass=ABCMeta):
             return "inactive"
         elif (not has_infilepaths or
               not all(i.exists() for i in self.infilepaths)):
-            return "missing"
+            return "missing (infilepaths)"
         elif not self.build_needed() or self.popen == "done":
             return "done"
         elif self.popen is not None:
@@ -170,7 +170,7 @@ class Builder(metaclass=ABCMeta):
                 # If popen.poll() returns None, the process isn't done.
                 return "building"
             elif not self.outfilepath.exists():
-                return "missing"
+                return "missing (outfilepath)"
             elif poll == 0:
                 # exit code of 0. Successful!
                 # Reset the popen and the build status
