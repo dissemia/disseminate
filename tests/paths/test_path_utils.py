@@ -96,6 +96,7 @@ def test_search_paths(context_cls):
              'tests/paths/find_files_example2/src/chapter1',
              'tests/paths/find_files_example2/src/chapter1/figures',]
     context = context_cls(paths=paths)
+
     assert search_paths('local_img.png', context).match('local_img.png')
     assert search_paths('figures/local_img.png', context).match('local_img.png')
     assert search_paths('media/ch1/root_img.png', context).match('root_img.png')
@@ -113,14 +114,14 @@ def test_search_paths(context_cls):
     p1 = search_paths('local_img.png', context)
     assert p1.match('figures/local_img.png')
     assert isinstance(p1, SourcePath)
-    assert p1.subpath.match('chapter1/figures/local_img.png')
+    assert str(p1.subpath) == 'chapter1/figures/local_img.png'
 
     p2 = search_paths('figures/local_img.png', context)
     assert p2.match('figures/local_img.png')
     assert isinstance(p2, SourcePath)
-    assert p2.subpath.match('chapter1/figures/local_img.png')
+    assert str(p2.subpath) == 'chapter1/figures/local_img.png'
 
     p3 = search_paths('media/ch1/root_img.png', context)
     assert p3.match('media/ch1/root_img.png')
     assert isinstance(p3, SourcePath)
-    assert p3.subpath.match('media/ch1/root_img.png')
+    assert str(p3.subpath) == 'media/ch1/root_img.png'

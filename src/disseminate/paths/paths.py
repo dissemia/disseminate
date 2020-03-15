@@ -101,6 +101,21 @@ class SourcePath(object):
         return SourcePath(project_root=self.project_root,
                           subpath=self.subpath.with_suffix(suffix))
 
+    def use_subpath(self, subpath):
+        """Returns a SourcePath with the subpath replaced with the given string
+        or path.
+
+        Examples
+        --------
+        >>> p = SourcePath(project_root='/media', subpath='tests/fig1.png')
+        >>> p.use_subpath('text.txt')
+        SourcePath('/media/text.txt')
+        >>> p.use_subpath('text.txt').subpath
+        SourcePath('text.txt')
+        """
+        return SourcePath(project_root=self.project_root,
+                          subpath=subpath)
+
 
 class TargetPath(object):
     """A path for a file in a target directory that keeps track of the
@@ -247,3 +262,19 @@ class TargetPath(object):
         return TargetPath(target_root=self.target_root,
                           target=self.target,
                           subpath=self.subpath.with_suffix(suffix))
+
+    def use_subpath(self, subpath):
+        """Returns a TargetPath with the subpath replaced with the given string
+        or path.
+
+        Examples
+        --------
+        >>> p = TargetPath(target_root='/media', subpath='tests/fig1.png')
+        >>> p.use_subpath('text.txt')
+        TargetPath('/media/text.txt')
+        >>> p.use_subpath('text.txt').subpath
+        TargetPath('text.txt')
+        """
+        return TargetPath(target_root=self.target_root,
+                          target=self.target,
+                          subpath=subpath)

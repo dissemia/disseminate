@@ -142,12 +142,13 @@ def search_paths(path, context):
     # Otherwise see if the path can be reconstructed
     paths = context['paths']
     for p in paths:
-        new_path = p / path
-
         # Treat SourcePath and TargetPath in a special way to correctly set the
         # subpath
-        if hasattr(p, 'subpath'):
-            new_path.subpath = p / path
+        if hasattr(p, 'use_subpath'):
+            subpath = p.subpath / path if p.subpath is not None else path
+            new_path = p.use_subpath(subpath)
+        else:
+            new_path = p / path
 
         if new_path.is_file():
             return new_path
