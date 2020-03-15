@@ -177,7 +177,8 @@ class DocumentContext(BaseContext):
         paths.clear()
 
         # Include the path for the src_filepath
-        local_path = src_filepath.parent
+        local_path = SourcePath(project_root=src_filepath.project_root,
+                                subpath=src_filepath.subpath.parent)
         if local_path not in paths:
             paths.append(local_path)
 
