@@ -92,3 +92,11 @@ def test_sequentialbuilder_md5decider(env, caplog, wait):
     assert len([r for r in caplog.records if 'PdfCrop' in r.msg]) == 2
     assert len([r for r in caplog.records if 'Pdf2svg' in r.msg]) == 2
     assert len([r for r in caplog.records if 'ScaleSvg' in r.msg]) == 2
+
+
+def test_sequentialbuilder_empty(env):
+    """Test a SequentialBuilder without subbuilders"""
+    sequential_builder = SequentialBuilder(env)
+    assert sequential_builder.status == 'done'  # no builders
+
+    assert sequential_builder.build(complete=True) == 'done'

@@ -25,12 +25,13 @@ class SequentialBuilder(CompositeBuilder):
         super().__init__(env, **kwargs)
 
         # Make the last subbuilder a copy builder to copy the result of the
-        # sub-builders to the final outfilepath
-        if self.copy:
+        # sub-builders to the final outfilepath.
+        # This only applies if other subbuilders are present
+        if self.copy and self.subbuilders:
             self.subbuilders.append(Copy(env))
 
-        # Order the sub
-        if self.chain_on_creation:
+        # Order the subbuilders, if subbuilders are present
+        if self.chain_on_creation and self.subbuilders:
             self.chain_subbuilders()
 
     def chain_subbuilders(self):
@@ -82,8 +83,7 @@ class SequentialBuilder(CompositeBuilder):
             else:
                 return status
 
-        if (number_subbuilders_done == len(self.subbuilders) and
-           self.outfilepath.exists()):
+        if number_subbuilders_done == len(self.subbuilders):
             self.build_needed(reset=True)
             return 'done'
         else:
