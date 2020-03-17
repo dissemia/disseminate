@@ -6,10 +6,10 @@ import subprocess
 from abc import ABCMeta
 from distutils.spawn import find_executable
 
-from .utils import cache_filepath
+from .utils import generate_outfilepath
 from .exceptions import runtime_error
 from ..utils.file import mkdir_p
-from ..paths import SourcePath, TargetPath
+from ..paths import TargetPath
 
 
 class formatlist(list):
@@ -209,12 +209,11 @@ class Builder(metaclass=ABCMeta):
         outfilepath = self._outfilepath
 
         if outfilepath is None:
-            infilepaths = self.infilepaths
-            if infilepaths:
-                outfilepath = cache_filepath(path=self.infilepaths[0],
-                                             append=self.outfilepath_append,
-                                             env=self.env,
-                                             ext=self.outfilepath_ext)
+            outfilepath = generate_outfilepath(env=self.env,
+                                               infilepaths=self.infilepaths,
+                                               append=self.outfilepath_append,
+                                               ext=self.outfilepath_ext,
+                                               cache=True)
 
         # Make sure the outfilepath directory exists
         if outfilepath and not outfilepath.parent.is_dir():

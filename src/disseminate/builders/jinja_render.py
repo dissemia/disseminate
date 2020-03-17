@@ -7,7 +7,7 @@ import logging
 import jinja2
 
 from .builder import Builder
-from .utils import cache_filepath
+from .utils import generate_outfilepath
 from ..paths import SourcePath
 from ..utils.string import hashtxt
 from ..utils.file import mkdir_p
@@ -122,10 +122,11 @@ class JinjaRender(Builder):
                 sourcepath = SourcePath(project_root=sourcepath.project_root,
                                         subpath=new_subpath)
 
-                outfilepath = cache_filepath(path=sourcepath,
-                                             append=self.outfilepath_append,
-                                             env=self.env,
-                                             ext=self.outfilepath_ext)
+                outfilepath = generate_outfilepath(env=self.env,
+                                                   infilepaths=sourcepath,
+                                                   append=self.outfilepath_ext,
+                                                   ext=self.outfilepath_ext,
+                                                   cache=True)
 
         # Make sure the outfilepath directory exists
         if outfilepath and not outfilepath.parent.is_dir():
