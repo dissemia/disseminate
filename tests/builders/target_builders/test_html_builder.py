@@ -5,7 +5,7 @@ import pathlib
 from collections import namedtuple
 
 from disseminate.builders.target_builders.html_builder import HtmlBuilder
-from disseminate.paths import TargetPath
+from disseminate.paths import SourcePath, TargetPath
 
 
 def test_html_builder_setup(env):
@@ -90,7 +90,7 @@ def test_html_builder_simple_doc(setup_example):
     # 1. example 1: tests/builders/target_builders/example1
     env, doc = setup_example('tests/builders/target_builders/example1',
                              'dummy.dm')
-    target_root =doc.context['target_root']
+    target_root = doc.context['target_root']
 
     # Setup the builder
     builder = HtmlBuilder(env, context=doc.context)
@@ -203,3 +203,48 @@ def test_html_builder_inherited_doc(setup_example):
     # New builders don't need to rebuild.
     builder = HtmlBuilder(env, context=doc.context)
     assert builder.status == 'done'
+
+
+def test_html_builder_add_build(setup_example):
+    """Test the HtmlBuilder with an added dependency through add_build."""
+
+    # 1. Example 3 includes a media file that must be converted from pdf->svg
+    #    for html
+    #    tests/builders/target_builders/example3/
+    #     └── src
+    #         ├── index.dm
+    #         └── media
+    #             └── images
+    #                 └── NMR
+    #                     └── hsqc_bw.pdf
+    env, doc = setup_example('tests/builders/target_builders/example3/src',
+                             'index.dm')
+    target_root = doc.context['target_root']
+
+    # Setup the builder
+    html_builder = HtmlBuilder(env, context=doc.context)
+
+    # Add a dependency for the media file
+    build = html_builder.add_build(infilepaths='media/images/NMR/hsqc_bw.pdf',
+                                   context=doc.context)
+
+    sp = SourcePath(project_root='tests/builders/target_builders/example3/src',
+                    subpath='media/images/NMR/hsqc_bw.pdf')
+    tp = TargetPath(target_root=target_root, target='html',
+                    subpath='media/images/NMR/hsqc_bw.svg')
+    assert build.infilepaths[0] == sp
+    assert build.infilepaths[0].subpath == sp.subpath
+    assert build.outfilepath == tp
+    assert build.outfilepath.subpath == tp.subpath
+
+    assert build.status == 'ready'
+    assert html_builder.status == 'ready'
+
+    # Now run the build
+    assert html_builder.build(complete=True) == 'done'
+    assert html_builder.status == 'done'
+    assert build.status == 'done'
+
+    # Check that the files were created
+    assert tp.is_file()
+    assert "<svg xmlns" in tp.read_text()  # make sure it's an svg

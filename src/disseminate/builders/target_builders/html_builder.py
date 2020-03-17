@@ -17,7 +17,7 @@ class HtmlBuilder(TargetBuilder):
     def __init__(self, env, context, **kwargs):
         super().__init__(env, context, target='.html', **kwargs)
 
-        # Add copy builders for extra dependencies
+        # Add copy builders for extra dependencies, like css files
         target_root = self.outfilepath.target_root
         target = self.outfilepath.target
         for ext in ('*.css',):
@@ -36,6 +36,9 @@ class HtmlBuilder(TargetBuilder):
                     copy_subbuilders.append(copy)
             self.subbuilders += copy_subbuilders
 
-    def add_build(self, *args, **kwargs):
-        super().add_build(document_target='.html', *args, **kwargs)
+    def add_build(self, infilepaths, outfilepath=None, context=None, **kwargs):
+        return super().add_build(document_target='.html',
+                                 infilepaths=infilepaths,
+                                 outfilepath=outfilepath, context=context,
+                                 **kwargs)
 

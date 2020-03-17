@@ -2,6 +2,7 @@ from .composite_builder import CompositeBuilder
 from ..builder import Builder
 from ..copy import Copy
 from ..exceptions import BuildError
+from ...paths import TargetPath
 from ...paths.utils import search_paths
 from ...utils.classes import all_subclasses
 from ... import settings
@@ -24,6 +25,8 @@ class ParallelBuilder(CompositeBuilder):
         elif 'building' in statuses:
             return 'building'
         elif {'done'} == statuses:  # all subbuilders are done
+            return 'done'
+        elif len(statuses) == 0:  # no subbuilders
             return 'done'
         return 'ready'
 
@@ -74,7 +77,7 @@ class ParallelBuilder(CompositeBuilder):
 
     def add_build(self, document_target, infilepaths, outfilepath=None,
                   context=None, **kwargs):
-        """Create and add a sub-builder to the composite builder.
+        """Create and add a sub-builder to the parallel builder.
 
         Parameters
         ----------
@@ -107,4 +110,19 @@ class ParallelBuilder(CompositeBuilder):
         builder = builder_cls(self.env, infilepaths=infilepaths,
                               outfilepath=outfilepath, **kwargs)
         self.subbuilders.append(builder)
+
+        # Make sure the target is in the target_root instead of a cache path
+        if outfilepath is None:
+            target_root = (context['target_root'] if 'target_root' in context
+                           else self.env.context['target_root'])
+            target = document_target.strip('.')
+            outfilepath = builder.outfilepath
+            outfilepath = TargetPath(target_root=target_root, target=target,
+                                     subpath=outfilepath.subpath)
+            builder.outfilepath = outfilepath
+
+            # Reorganize the filepaths if it's a sequential builder
+            if hasattr(builder, 'chain_subbuilders'):
+                builder.chain_subbuilders()
+
         return builder

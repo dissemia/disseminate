@@ -43,6 +43,7 @@ def test_parallelbuilder_find_builder_cls(tmpdir):
 def test_parallelbuilder_add_build(env):
     """Test the ParallelBuilder add_build method"""
     tmpdir = env.context['target_root']
+    target_root = tmpdir
 
     # Add paths to the context
     paths = [SourcePath(project_root='tests/builders/example1')]
@@ -61,6 +62,15 @@ def test_parallelbuilder_add_build(env):
     assert len(parallel_builder.subbuilders) == 1  # a Pdf2svgCropScale
     assert all(i.exists() for i in build.infilepaths)
     assert not outfilepath.exists()
+
+    # Check that the SourcePath and TargetPath were properly formatted
+    sp = SourcePath(project_root='tests/builders/example1',
+                    subpath='sample.pdf')
+    tp = TargetPath(target_root=target_root, target='html', subpath='test.svg')
+    assert build.infilepaths[0] == sp
+    assert build.infilepaths[0].subpath == sp.subpath
+    assert build.outfilepath == tp
+    assert build.outfilepath.subpath == tp.subpath
 
     assert build.build_needed()
     assert parallel_builder.build_needed()
@@ -82,13 +92,15 @@ def test_parallelbuilder_add_build(env):
     assert not parallel_builder.build_needed()
     assert parallel_builder.status == 'done'
 
-    # 2. Test an example without an outfilepath. This build is not needed
-    #    because the cached outfilepath has already been created
+    # 2. Test an example without an outfilepath. This should be created in the
+    #    target directory as sample.svg (from the infilepath)
+    cached_outfilepath = TargetPath(target_root=target_root, target='html',
+                                    subpath='sample.svg')
     parallel_builder = ParallelBuilder(env)
     parallel_builder.add_build(document_target='.html', infilepaths=infilepath)
 
-    assert parallel_builder.subbuilders[-1].outfilepath.exists()
-    assert not parallel_builder.build_needed()
+    assert parallel_builder.subbuilders[-1].outfilepath == cached_outfilepath
+    assert parallel_builder.build_needed()  # file doesn't exist
 
     # 3. Test an example with a new outfilepath. This build will be needed,
     infilepath = 'sample.pdf'
@@ -123,6 +135,14 @@ def test_parallelbuilder_add_build_missing(env):
         parallel_builder.add_build(document_target='.html',
                                    infilepaths=infilepath,
                                    outfilepath=outfilepath)
+
+
+def test_parallelbuilder_empty(env):
+    """Test the build of a parallel builder that is empty."""
+    parallel_builder = ParallelBuilder(env)
+    assert parallel_builder.status == 'done'  # no builders
+
+    assert parallel_builder.build(complete=True) == 'done'
 
 
 def test_parallelbuilder_sequential_builds(env):
