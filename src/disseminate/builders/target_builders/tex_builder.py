@@ -12,9 +12,8 @@ class TexBuilder(TargetBuilder):
     infilepath_ext = '.dm'
     outfilepath_ext = '.tex'
 
-    def __init__(self, env, document, **kwargs):
-        super().__init__(env, document, target='.tex', **kwargs)
-
-    def add_build(self, *args, **kwargs):
-        super().add_build(document_target='.tex', *args, **kwargs)
-
+    def add_build(self, infilepaths, outfilepath=None, context=None, **kwargs):
+        return super().add_build(document_target='.tex',
+                                 infilepaths=infilepaths,
+                                 outfilepath=outfilepath, context=context,
+                                 **kwargs)
