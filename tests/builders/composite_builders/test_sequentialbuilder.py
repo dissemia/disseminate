@@ -6,12 +6,22 @@ import logging
 import pytest
 
 from disseminate.builders.composite_builders import SequentialBuilder
+from disseminate.builders.copy import Copy
 from disseminate.builders.pdf2svg import Pdf2SvgCropScale
 from disseminate.paths import SourcePath, TargetPath
 
 
-def test_sequentialbuilder_md5decider(env, caplog, wait):
-    """Test the SequentialBuilder with the Md5Decider."""
+def test_sequentialbuilder_empty(env):
+    """Test a SequentialBuilder without subbuilders"""
+    sequential_builder = SequentialBuilder(env)
+    assert sequential_builder.status == 'done'  # no builders
+
+    assert sequential_builder.build(complete=True) == 'done'
+
+
+def test_sequentialbuilder_basic_decider(env, caplog, wait):
+    """Test the SequentialBuilder with the basic Decider to test whether files
+    exist."""
     # Track logging of DEBUG events
     caplog.set_level(logging.DEBUG)
 
@@ -94,9 +104,56 @@ def test_sequentialbuilder_md5decider(env, caplog, wait):
     assert len([r for r in caplog.records if 'ScaleSvg' in r.msg]) == 2
 
 
-def test_sequentialbuilder_empty(env):
-    """Test a SequentialBuilder without subbuilders"""
-    sequential_builder = SequentialBuilder(env)
-    assert sequential_builder.status == 'done'  # no builders
+def test_sequentialbuilder_md5decider(env, caplog, wait):
+    """Test the SequentialBuilder with the Md5Decider to test whether files
+    change."""
+    tmpdir = env.context['target_root']
 
-    assert sequential_builder.build(complete=True) == 'done'
+    # Track logging of DEBUG events
+    caplog.set_level(logging.DEBUG)
+
+    # 1. Test example with an infilepath that is copied.
+    infilepath = SourcePath(project_root=tmpdir, subpath='text.txt')
+    outfilepath = TargetPath(target_root=tmpdir, subpath='copy.svg')
+    infilepath.write_text('test 1')
+
+    builder = SequentialBuilder(env=env, infilepaths=infilepath,
+                                outfilepath=outfilepath)
+
+    # Add a copy subbuilder
+    builder.subbuilders.append(Copy(env=env))
+    builder.chain_subbuilders()
+
+    # Check the status of the builder before the build
+    assert len(builder.subbuilders) == 1
+    assert builder.status == 'ready'
+    assert not outfilepath.is_file()
+
+    # Run the build
+    assert builder.build(complete=True) == 'done'
+    assert builder.status == 'done'
+    assert outfilepath.is_file()
+    assert outfilepath.read_text() == 'test 1'
+
+    # Now modify the file
+    infilepath.write_text('test 2')
+
+    # Check the status of current builder--it has not change
+    assert builder.status == 'done'
+
+    # But a new builder will need a rebuild
+    builder = SequentialBuilder(env=env, infilepaths=infilepath,
+                                outfilepath=outfilepath)
+    builder.subbuilders.append(Copy(env=env))
+    builder.chain_subbuilders()
+
+    # Check the status of the builder before the build
+    assert len(builder.subbuilders) == 1
+    assert builder.status == 'ready'
+
+    # Run the build
+    assert builder.build(complete=True) == 'done'
+    assert builder.status == 'done'
+    assert outfilepath.is_file()
+    assert outfilepath.read_text() == 'test 2'
+
