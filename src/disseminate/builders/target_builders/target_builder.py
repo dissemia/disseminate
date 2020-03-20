@@ -3,6 +3,7 @@ A builder for document targets.
 """
 from ..jinja_render import JinjaRender
 from ..composite_builders import SequentialBuilder, ParallelBuilder
+from ...utils.classes import weakattr
 
 
 class TargetBuilder(SequentialBuilder):
@@ -10,6 +11,7 @@ class TargetBuilder(SequentialBuilder):
 
     active_requirements = ('priority',)
     target = None
+    context = weakattr()
 
     chain_on_creation = False
     copy = False
@@ -22,6 +24,7 @@ class TargetBuilder(SequentialBuilder):
 
         target = self.outfilepath_ext.strip('.')
         self.target = target
+        self.context = context
 
         # Add the target_builder to the context
         builders = context.setdefault('builders', dict())
@@ -76,3 +79,12 @@ class TargetBuilder(SequentialBuilder):
         return self.decision.build_needed(inputs=inputs,
                                           output=self.outfilepath,
                                           reset=reset)
+
+    def build(self, complete=False):
+        # Reload the document
+        context = self.context
+        document = getattr(context, 'document', None)
+        if document is not None:
+            document.load()
+
+        return super().build(complete=complete)
