@@ -13,6 +13,8 @@ def test_target_builder_setup(env):
     """Test the setup of target builders """
     context = env.context
     tmpdir = context['target_root']
+    root_document = env.root_document
+    src_filepath = root_document.src_filepath
 
     for targer_builder_cls, target_subpath in ((HtmlBuilder, 'test.html'),
                                                (TexBuilder, 'test.tex'),):
@@ -26,7 +28,8 @@ def test_target_builder_setup(env):
 
         # Check the infilepaths. These should be SourcePaths with correctly set
         # project_root / subpath
-        assert len(builder.infilepaths) == 0
+        assert len(builder.infilepaths) == 1
+        assert builder.infilepaths == [src_filepath]
         assert builder.outfilepath == target_filepath
 
 

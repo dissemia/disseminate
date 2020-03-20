@@ -58,12 +58,12 @@ def test_jinja_render_setup(env):
     context['body'] = tag(html="My body")  # expects {{ body.html }}
     render_build = JinjaRender(env, context=context, target='.html')
     assert len(render_build.infilepaths) == 8
-    assert str(render_build.outfilepath.subpath) == 'adc34dbf71ae.html'
+    assert str(render_build.outfilepath.subpath) == '8542405607fd.html'
 
     # A new content body produces a different hash
     context['body'] = tag(html="My new body")  # expects {{ body.html }}
     render_build = JinjaRender(env, context=context, target='.html')
-    assert str(render_build.outfilepath.subpath) == '7960f7a348f9.html'
+    assert str(render_build.outfilepath.subpath) == 'bce375a982d5.html'
 
     # 3. Test an example without an outfilepath or target specified. An
     #    assertion error is raised
@@ -181,7 +181,7 @@ def test_jinja_render(env):
     assert render_build.build_needed()
     assert render_build.build(complete=True) == 'done'
     assert render_build.outfilepath.exists()
-    assert str(render_build.outfilepath.subpath) == '7960f7a348f9.html'
+    assert str(render_build.outfilepath.subpath) == 'bce375a982d5.html'
     assert render_build.status == 'done'
 
     # A new builder does not require a new build.
