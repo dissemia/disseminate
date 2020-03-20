@@ -59,6 +59,7 @@ def test_parallelbuilder_add_build(env):
                                        outfilepath=outfilepath)
 
     # Check the builder
+    assert len(parallel_builder) == 3
     assert len(parallel_builder.subbuilders) == 1  # a Pdf2svgCropScale
     assert all(i.exists() for i in build.infilepaths)
     assert not outfilepath.exists()

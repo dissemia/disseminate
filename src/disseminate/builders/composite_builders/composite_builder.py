@@ -38,6 +38,14 @@ class CompositeBuilder(Builder):
         subbuilders = [sb for sb in subbuilders if isinstance(sb, Builder)]
         self.subbuilders = subbuilders
 
+    def __len__(self):
+        number_subbuilders = 0
+        for subbuilder in self.subbuilders:
+            number_subbuilders += 1
+            if hasattr(subbuilder, 'subbuilders'):
+                number_subbuilders += len(subbuilder.subbuilders)
+        return number_subbuilders
+
     def run_cmd_args(self):
         """Format the for all sub commands
 
