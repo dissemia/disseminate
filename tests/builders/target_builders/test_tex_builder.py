@@ -8,6 +8,76 @@ from disseminate.builders.target_builders.tex_builder import TexBuilder
 from disseminate.paths import SourcePath, TargetPath
 
 
+def test_tex_builder_setup(env):
+    """Test the setup of a TexBuilder"""
+    context = env.context
+    src_filepath = context['src_filepath']
+    target_root = context['target_root']
+
+    # 1. Setup the builder without an outfilepath.  In this case, 'tex' is
+    #    listed in the targets, so the outfilepath will *not* be in the
+    #    cache directory
+    context['targets'].add('tex')
+    target_filepath = TargetPath(target_root=target_root, target='tex',
+                                 subpath='test.tex')
+    builder = TexBuilder(env, context=context)
+
+    # check the build
+    assert not target_filepath.exists()
+    assert len(builder.subbuilders) == 2
+
+    assert builder.subbuilders[0].__class__.__name__ == 'ParallelBuilder'
+    assert builder.subbuilders[0].infilepaths == []
+    assert builder.subbuilders[1].__class__.__name__ == 'JinjaRender'
+    assert len(builder.subbuilders[1].infilepaths) > 0
+    assert builder.infilepaths == [src_filepath]
+    assert builder.outfilepath == target_filepath
+
+    assert builder.build_needed()
+    assert builder.status == 'ready'
+
+    # 2. Setup the builder with an outfilepath
+    target_filepath = TargetPath(target_root=target_root, target='other',
+                                 subpath='final.tex')
+    builder = TexBuilder(env, context=context, outfilepath=target_filepath)
+
+    # check the build
+    assert not target_filepath.exists()
+    assert len(builder.subbuilders) == 2
+
+    assert builder.subbuilders[0].__class__.__name__ == 'ParallelBuilder'
+    assert builder.subbuilders[0].infilepaths == []
+    assert builder.subbuilders[1].__class__.__name__ == 'JinjaRender'
+    assert len(builder.subbuilders[1].infilepaths) > 0
+    assert builder.infilepaths == [src_filepath]
+    assert builder.outfilepath == target_filepath
+
+    assert builder.build_needed()
+    assert builder.status == 'ready'
+
+    # 3. Setup the builder without an outfilepath.  In this case, 'tex' is *not*
+    #    listed in the targets, so the outfilepath will be in the
+    #    cache directory
+    context['targets'].remove('tex')
+    target_filepath = TargetPath(target_root=target_root / '.cache',
+                                 target='tex', subpath='test.tex')
+    builder = TexBuilder(env, context=context)
+
+    # check the build
+    assert not target_filepath.exists()
+    assert len(builder.subbuilders) == 2
+
+    assert builder.subbuilders[0].__class__.__name__ == 'ParallelBuilder'
+    assert builder.subbuilders[0].infilepaths == []
+    assert builder.subbuilders[1].__class__.__name__ == 'JinjaRender'
+    assert len(builder.subbuilders[1].infilepaths) > 0
+    assert builder.infilepaths == [src_filepath]
+    assert builder.outfilepath == target_filepath
+
+    assert builder.build_needed()
+    assert builder.status == 'ready'
+
+
 def test_tex_builder_simple(env):
     """Test a simple build with the TexBuilder """
     context = env.context

@@ -10,33 +10,32 @@ from disseminate.builders.exceptions import BuildError
 from disseminate.paths import SourcePath, TargetPath
 
 
-def test_parallelbuilder_find_builder_cls(tmpdir):
+def test_parallelbuilder_find_builder_cls(env):
     """Test the ParallelBuilder find_buider_cls method."""
+    tmpdir = env.context['target_root']
 
-    # 1. Test html pdf->svg. Tracked deps: ['.css', '.svg', '.png'],
+    # 1. Test a parallel builder for an html target
+    html_builder = ParallelBuilder(env=env, target='html')
+
     infilepath = SourcePath(tmpdir, 'test.pdf')
-    cls = ParallelBuilder.find_builder_cls(document_target='.html',
-                                           infilepath=infilepath)
+    cls = html_builder.find_builder_cls(infilepath=infilepath)
     assert cls.__name__ == 'Pdf2SvgCropScale'
 
     # 2. Test html svg
     infilepath = SourcePath(tmpdir, 'test.svg')
-    cls = ParallelBuilder.find_builder_cls(document_target='.html',
-                                           infilepath=infilepath)
+    cls = html_builder.find_builder_cls(infilepath=infilepath)
     assert cls.__name__ == 'Copy'
 
     # 3. Test invalid extension
     infilepath = SourcePath(tmpdir, 'test.unknown')
     with pytest.raises(BuildError):
-        ParallelBuilder.find_builder_cls(document_target='.html',
-                                         infilepath=infilepath)
+        html_builder.find_builder_cls(infilepath=infilepath)
 
     # 4. Test an example with a specified outfilepath
     infilepath = SourcePath(tmpdir, 'test.pdf')
     outfilepath = TargetPath(tmpdir, subpath='test.svg')
-    cls = ParallelBuilder.find_builder_cls(document_target='.html',
-                                           infilepath=infilepath,
-                                           outfilepath=outfilepath)
+    cls = html_builder.find_builder_cls(infilepath=infilepath,
+                                        outfilepath=outfilepath)
     assert cls.__name__ == 'Pdf2SvgCropScale'
 
 
@@ -49,13 +48,13 @@ def test_parallelbuilder_add_build(env):
     paths = [SourcePath(project_root='tests/builders/example1')]
     env.context['paths'] = paths
 
-    # 1. Test html pdf->svg. Tracked deps: ['.css', '.svg', '.png'],
+    # 1. Test a parallel builder for an html target.
+    #    Test html pdf->svg. Tracked deps: ['.css', '.svg', '.png'],
     infilepath = 'sample.pdf'
     outfilepath = TargetPath(target_root=tmpdir, target='html',
                              subpath='test.svg')
-    parallel_builder = ParallelBuilder(env)
-    build = parallel_builder.add_build(document_target='.html',
-                                       infilepaths=infilepath,
+    parallel_builder = ParallelBuilder(env, target='html')
+    build = parallel_builder.add_build(infilepaths=infilepath,
                                        outfilepath=outfilepath)
 
     # Check the builder
@@ -86,9 +85,8 @@ def test_parallelbuilder_add_build(env):
 
     # Try a new parallel builder, and its status should be 'done'--i.e. no
     # build is needed
-    parallel_builder = ParallelBuilder(env)
-    parallel_builder.add_build(document_target='.html', infilepaths=infilepath,
-                               outfilepath=outfilepath)
+    parallel_builder = ParallelBuilder(env, target='html')
+    parallel_builder.add_build(infilepaths=infilepath, outfilepath=outfilepath)
 
     assert not parallel_builder.build_needed()
     assert parallel_builder.status == 'done'
@@ -97,8 +95,8 @@ def test_parallelbuilder_add_build(env):
     #    target directory as sample.svg (from the infilepath)
     cached_outfilepath = TargetPath(target_root=target_root, target='html',
                                     subpath='sample.svg')
-    parallel_builder = ParallelBuilder(env)
-    parallel_builder.add_build(document_target='.html', infilepaths=infilepath)
+    parallel_builder = ParallelBuilder(env, target='html')
+    parallel_builder.add_build(infilepaths=infilepath)
 
     assert parallel_builder.subbuilders[-1].outfilepath == cached_outfilepath
     assert parallel_builder.build_needed()  # file doesn't exist
@@ -107,9 +105,8 @@ def test_parallelbuilder_add_build(env):
     infilepath = 'sample.pdf'
     outfilepath = TargetPath(target_root=tmpdir, target='html',
                              subpath='test2.svg')
-    parallel_builder = ParallelBuilder(env)
-    parallel_builder.add_build(document_target='.html', infilepaths=infilepath,
-                               outfilepath=outfilepath)
+    parallel_builder = ParallelBuilder(env, target='html')
+    parallel_builder.add_build(infilepaths=infilepath, outfilepath=outfilepath)
 
     assert parallel_builder.build_needed()
     assert parallel_builder.status == 'ready'
@@ -129,20 +126,24 @@ def test_parallelbuilder_add_build_missing(env):
     infilepath = 'sample.pdf'
     outfilepath = TargetPath(target_root=tmpdir, target='html',
                              subpath='test.unkown')
-    parallel_builder = ParallelBuilder(env)
+    parallel_builder = ParallelBuilder(env, target='.html')
 
     # A builder cannot be found; a BuildError is raised
     with pytest.raises(BuildError):
-        parallel_builder.add_build(document_target='.html',
-                                   infilepaths=infilepath,
+        parallel_builder.add_build(infilepaths=infilepath,
                                    outfilepath=outfilepath)
 
 
 def test_parallelbuilder_empty(env):
     """Test the build of a parallel builder that is empty."""
+    # 1. One with a document target specified
+    parallel_builder = ParallelBuilder(env, target='html')
+    assert parallel_builder.status == 'done'  # no builders
+    assert parallel_builder.build(complete=True) == 'done'
+
+    # 2. One without a document target specified
     parallel_builder = ParallelBuilder(env)
     assert parallel_builder.status == 'done'  # no builders
-
     assert parallel_builder.build(complete=True) == 'done'
 
 
@@ -154,17 +155,16 @@ def test_parallelbuilder_sequential_builds(env):
     paths = [SourcePath(project_root='tests/builders/example1')]
     env.context['paths'] = paths
 
-    # 1. Test html pdf->svg. Tracked deps: ['.css', '.svg', '.png'],
+    # 1. Test a parallel builder for an html target.
+    #    Test html pdf->svg. Tracked deps: ['.css', '.svg', '.png'],
     infilepath = 'sample.pdf'
     outfilepath1 = TargetPath(target_root=tmpdir, target='html',
                               subpath='test1.svg')
     outfilepath2 = TargetPath(target_root=tmpdir, target='html',
                               subpath='test2.svg')
-    parallel_builder = ParallelBuilder(env)
-    parallel_builder.add_build(document_target='.html', infilepaths=infilepath,
-                               outfilepath=outfilepath1)
-    parallel_builder.add_build(document_target='.html', infilepaths=infilepath,
-                               outfilepath=outfilepath2)
+    parallel_builder = ParallelBuilder(env, target='html')
+    parallel_builder.add_build(infilepaths=infilepath, outfilepath=outfilepath1)
+    parallel_builder.add_build(infilepaths=infilepath, outfilepath=outfilepath2)
 
     # Test the builder
     assert not outfilepath1.exists()
@@ -183,7 +183,7 @@ def test_parallelbuilder_sequential_builds(env):
     assert outfilepath2.exists()
 
 
-def test_parallelbuilder_md5decider(env, caplog, wait):
+def test_parallelbuilder_md5decider(env, caplog):
     """Test the ParallelBuilder with the Md5Decider."""
     tmpdir = env.context['target_root']
 
@@ -194,15 +194,14 @@ def test_parallelbuilder_md5decider(env, caplog, wait):
     paths = [SourcePath(project_root='tests/builders/example1')]
     env.context['paths'] = paths
 
-    # 1. Test example with the infilepath and outfilepath specified that uses
+    # 1. Test a parallel builder for an html target.
+    #    Test example with the infilepath and outfilepath specified that uses
     #    the PdfCrop and ScaleSvg subbuilders
     infilepath = 'sample.pdf'
     outfilepath = TargetPath(target_root=tmpdir, target='html',
                              subpath='test.svg')
-    parallel_builder = ParallelBuilder(env)
-    parallel_builder.add_build(document_target='.html',
-                               infilepaths=infilepath,
-                               outfilepath=outfilepath)
+    parallel_builder = ParallelBuilder(env, target='html')
+    parallel_builder.add_build(infilepaths=infilepath, outfilepath=outfilepath)
 
     assert not outfilepath.exists()  # target file not created yet
 
@@ -226,10 +225,8 @@ def test_parallelbuilder_md5decider(env, caplog, wait):
     assert len([r for r in caplog.records if 'Copying' in r.msg]) == 1
 
     # 2. Try modifying the outfilepath and a new build should be needed
-    parallel_builder = ParallelBuilder(env)
-    parallel_builder.add_build(document_target='.html',
-                               infilepaths=infilepath,
-                               outfilepath=outfilepath)
+    parallel_builder = ParallelBuilder(env, target='html')
+    parallel_builder.add_build(infilepaths=infilepath, outfilepath=outfilepath)
 
     # Change the output file; a new build should be needed
     outfilepath.write_text('new output!')
@@ -242,10 +239,8 @@ def test_parallelbuilder_md5decider(env, caplog, wait):
     assert len([r for r in caplog.records if 'Copying' in r.msg]) == 2
 
     # 3. Try modifying the cached versions and a full set of builds is needed.
-    parallel_builder = ParallelBuilder(env)
-    parallel_builder.add_build(document_target='.html',
-                               infilepaths=infilepath,
-                               outfilepath=outfilepath)
+    parallel_builder = ParallelBuilder(env, target='html')
+    parallel_builder.add_build(infilepaths=infilepath, outfilepath=outfilepath)
 
     pdf2svg = parallel_builder.subbuilders[0]
     for subbuilder in pdf2svg.subbuilders:

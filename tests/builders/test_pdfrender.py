@@ -101,3 +101,10 @@ def test_pdfrender_simple(env):
     assert pdfrender.build(complete=True) == 'done'
     assert pdfrender.outfilepath.match('.cache/6183ac1711e4.pdf')
     assert pdfrender.outfilepath.exists()
+
+    # 3. Test a build without an outfilepath but a document target specified.
+    pdfrender = PdfRender(env=env, target='.pdf', context=context)
+
+    assert pdfrender.build(complete=True) == 'done'
+    assert pdfrender.outfilepath.match('.cache/pdf/6183ac1711e4.pdf')
+    assert pdfrender.outfilepath.exists()

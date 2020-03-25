@@ -1,6 +1,5 @@
 from .composite_builder import CompositeBuilder
 from ..copy import Copy
-from ..utils import targetpath_to_sourcepath
 
 
 class SequentialBuilder(CompositeBuilder):
@@ -50,7 +49,7 @@ class SequentialBuilder(CompositeBuilder):
             # next subbuilder
             outfilepath = subbuilder.outfilepath
             if outfilepath:
-                infilepath = targetpath_to_sourcepath(outfilepath)
+                infilepath = outfilepath
                 current_infilepaths = [infilepath]
 
         # Set the copy builder to point to the final outfilepath

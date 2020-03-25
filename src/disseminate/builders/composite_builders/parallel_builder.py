@@ -33,14 +33,31 @@ class ParallelBuilder(CompositeBuilder):
     def build_needed(self, reset=False):
         return any(sb.build_needed(reset=reset) for sb in self.subbuilders)
 
-    @classmethod
-    def find_builder_cls(cls, document_target, infilepath, outfilepath=None):
-        """Return a builder class"""
-        assert document_target in settings.tracked_deps
-        tracked_deps = settings.tracked_deps[document_target]
+    def find_builder_cls(self, infilepath, outfilepath=None):
+        """Return a builder class
+
+        Parameters
+        ----------
+        infilepaths, args : Tuple[:obj:`.paths.SourcePath`]
+            The filepaths for input files in the build
+        outfilepath : Optional[:obj:`.paths.TargetPath`]
+            If specified, the path for the output file.
+        """
+        assert isinstance(self.target, str), ("A document target must be "
+                                              "specified to find the "
+                                              "appropriate sub-builder.")
+        target = ('.' + self.target if not self.target.startswith('.') else
+                  self.target)
+
+        assert target in settings.tracked_deps, ("The document target is not "
+                                                 "listed in the "
+                                                 "settings.tracked_deps")
+        tracked_deps = settings.tracked_deps[target]
+
+        # Retrieve the ParallelBuilder class
 
         # Cache the available builders
-        if cls._available_builders is None:
+        if ParallelBuilder._available_builders is None:
             subclses = dict()
 
             for builder in all_subclasses(Builder):
@@ -49,21 +66,21 @@ class ParallelBuilder(CompositeBuilder):
 
                 key = (builder.infilepath_ext, builder.outfilepath_ext)
                 subclses[key] = builder
-            cls._available_builders = subclses
+            ParallelBuilder._available_builders = subclses
 
         # Otherwise see if there's a valid outfilepath
         infilepath_suffix = infilepath.suffix
         outfilepath_suffix = outfilepath.suffix if outfilepath else None
         if outfilepath_suffix:
             key = (infilepath_suffix, outfilepath_suffix)
-            if key in cls._available_builders:
-                return cls._available_builders[key]
+            if key in ParallelBuilder._available_builders:
+                return ParallelBuilder._available_builders[key]
         else:
             # Otherwise see if there's a builder we can use
             for dep in tracked_deps:
                 key = (infilepath_suffix, dep)
-                if key in cls._available_builders:
-                    return cls._available_builders[key]
+                if key in ParallelBuilder._available_builders:
+                    return ParallelBuilder._available_builders[key]
 
         # if the infilepath is a tracked dependency, then just use a
         # copy builder
@@ -75,15 +92,12 @@ class ParallelBuilder(CompositeBuilder):
                "are: {}".format(infilepath, tracked_deps))
         raise BuildError(msg)
 
-    def add_build(self, document_target, infilepaths, outfilepath=None,
+    def add_build(self, infilepaths, outfilepath=None,
                   context=None, **kwargs):
         """Create and add a sub-builder to the parallel builder.
 
         Parameters
         ----------
-        document_target : str
-            Find a builder that can build and convert the file
-            to a format needed by the document_target. ex: '.html', '.pdf'
         infilepaths, args : Tuple[:obj:`.paths.SourcePath`]
             The filepaths for input files in the build
         outfilepath : Optional[:obj:`.paths.TargetPath`]
@@ -102,8 +116,7 @@ class ParallelBuilder(CompositeBuilder):
         infilepaths = [search_paths(i, context) for i in infilepaths]
 
         # Find correct builder class to use
-        builder_cls = self.find_builder_cls(document_target=document_target,
-                                            infilepath=infilepaths[0],
+        builder_cls = self.find_builder_cls(infilepath=infilepaths[0],
                                             outfilepath=outfilepath)
 
         # Create the subbuilder and add it to the list of subbuilders
@@ -115,7 +128,7 @@ class ParallelBuilder(CompositeBuilder):
         if outfilepath is None:
             target_root = (context['target_root'] if 'target_root' in context
                            else self.env.context['target_root'])
-            target = document_target.strip('.')
+            target = self.target.strip('.')
             outfilepath = builder.outfilepath
             outfilepath = TargetPath(target_root=target_root, target=target,
                                      subpath=outfilepath.subpath)

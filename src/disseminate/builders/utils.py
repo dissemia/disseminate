@@ -1,7 +1,7 @@
 """
 Utilities for builders and environments
 """
-from ..paths import SourcePath, TargetPath
+from ..paths import TargetPath
 from ..paths.utils import rename
 
 
@@ -33,7 +33,7 @@ def generate_outfilepath(env, infilepaths, target=None, append=None, ext=None,
     # Find the first valid infilepath
     infilepaths = (infilepaths if isinstance(infilepaths, list) or
                    isinstance(infilepaths, tuple) else [infilepaths])
-    infilepath = [fp for fp in infilepaths if isinstance(fp, SourcePath)]
+    infilepath = [fp for fp in infilepaths if hasattr(fp, 'subpath')]
     if len(infilepaths) == 0:
         return None
     infilepath = infilepath[0]
@@ -42,7 +42,12 @@ def generate_outfilepath(env, infilepaths, target=None, append=None, ext=None,
     target_root = env.cache_path if cache else env.context['target_root']
 
     # Formulate the target
-    target = target.strip('.') if isinstance(target, str) else None
+    if isinstance(target, str):
+        target = target.strip('.')
+    elif hasattr(infilepath, 'target'):
+        target = infilepath.target
+    else:
+        target= None
 
     # Formulate the subpath
     subpath = infilepath.subpath
@@ -52,9 +57,3 @@ def generate_outfilepath(env, infilepaths, target=None, append=None, ext=None,
     return (TargetPath(target_root=target_root, target=target, subpath=subpath)
             if target else
             TargetPath(target_root=target_root, subpath=subpath))
-
-
-def targetpath_to_sourcepath(targetpath):
-    """Convert a TargetPath to a SourcePath"""
-    return SourcePath(project_root=targetpath.target_root,
-                      subpath=targetpath.subpath)

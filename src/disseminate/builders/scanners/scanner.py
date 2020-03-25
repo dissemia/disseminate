@@ -71,10 +71,6 @@ class Scanner(object):
         for infilepath in infilepaths:
             if isinstance(infilepath, SourcePath):
                 pass
-            elif isinstance(infilepath, pathlib.Path):
-                msg = ("The infilepath '{}' should be a SourcePath instead of "
-                       "a pathlib.Path".format(infilepath))
-                raise TypeError(msg)
             else:
                 continue
 

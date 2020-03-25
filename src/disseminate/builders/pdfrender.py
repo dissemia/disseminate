@@ -4,6 +4,7 @@ A builder to render a tex file to pdf.
 from .composite_builders import SequentialBuilder
 from .pdflatex import Pdflatex
 from .jinja_render import JinjaRender
+from ..paths import TargetPath
 
 
 class PdfRender(SequentialBuilder):
@@ -23,7 +24,7 @@ class PdfRender(SequentialBuilder):
         if infilepaths is None and context is not None:
             # If no infilepaths are specified, we need to render one from
             # the context
-            render_build = JinjaRender(env, context=context, target='.tex',
+            render_build = JinjaRender(env, context=context, render_ext='.tex',
                                        template=template, **kwargs)
             subbuilders.append(render_build)
 
@@ -49,6 +50,7 @@ class PdfRender(SequentialBuilder):
             outfilepath = (render_builders[0].outfilepath.use_suffix('.pdf')
                            if render_builders else
                            SequentialBuilder.outfilepath.fget(self))
+
             self._outfilepath = outfilepath
         return self._outfilepath
 

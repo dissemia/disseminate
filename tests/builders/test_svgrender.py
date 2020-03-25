@@ -130,3 +130,15 @@ def test_svgrender_simple_without_outfilepath(env):
     # A new build should not be needed
     svgrender = SvgRender(env=env, context=context)
     assert svgrender.status == 'done'
+
+    # 3. Adding a document target places files in that subdirectory
+    svgrender = SvgRender(env=env, target='html', context=context)
+
+    assert svgrender.status == 'ready'
+    assert svgrender.build(complete=True) == 'done'
+    assert svgrender.outfilepath.match('.cache/html/6183ac1711e4.svg')
+    assert svgrender.outfilepath.exists()
+
+    # A new build should not be needed
+    svgrender = SvgRender(env=env, context=context)
+    assert svgrender.status == 'done'

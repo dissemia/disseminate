@@ -2,8 +2,7 @@
 Test the SequentialBuilder
 """
 import logging
-
-import pytest
+import pathlib
 
 from disseminate.builders.composite_builders import SequentialBuilder
 from disseminate.builders.copy import Copy
@@ -53,9 +52,8 @@ def test_sequentialbuilder_basic_decider(env, caplog, wait):
     # Make sure the intermediate files, infilepaths and outfilepath are created
     for subbuilder in pdf2svg.subbuilders:
         assert subbuilder.status == 'done'
-        assert all(isinstance(i, SourcePath) for i in subbuilder.infilepaths)
+        assert all(i.exists() for i in subbuilder.infilepaths)
         assert subbuilder.outfilepath.exists()
-        assert isinstance(subbuilder.outfilepath, TargetPath)
 
     assert outfilepath.exists()
     mtime = outfilepath.stat().st_mtime

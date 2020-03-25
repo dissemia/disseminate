@@ -11,9 +11,3 @@ class TexBuilder(TargetBuilder):
     priority = 1000
     infilepath_ext = '.dm'
     outfilepath_ext = '.tex'
-
-    def add_build(self, infilepaths, outfilepath=None, context=None, **kwargs):
-        return super().add_build(document_target='.tex',
-                                 infilepaths=infilepaths,
-                                 outfilepath=outfilepath, context=context,
-                                 **kwargs)

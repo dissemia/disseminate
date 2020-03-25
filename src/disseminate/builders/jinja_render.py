@@ -27,6 +27,10 @@ class JinjaRender(Builder):
         If specified, the path for the output file.
     context : dict
         A context to use with the renderer.
+    template : str
+        If specified, use the given template in rendering the file
+    render_ext : str
+        The extension for the rendered file.
     """
 
     action = 'render'
@@ -36,14 +40,14 @@ class JinjaRender(Builder):
 
     rendered_string = None
 
-    def __init__(self, env, context, template=None, target=None, **kwargs):
+    def __init__(self, env, context, template=None, render_ext=None, **kwargs):
         super().__init__(env, **kwargs)
         # Checks
-        assert target or self.outfilepath, ("Either a target or an "
-                                            "outfilepath must be specified")
+        assert render_ext or self.outfilepath, ("Either a target or an "
+                                                "outfilepath must be specified")
 
         # Get the template filepath to use with the renderer
-        target = target or self.outfilepath.suffix
+        target = render_ext or self.outfilepath.suffix
         template_filepath = (template or
                              context.get('template', 'default/template'))
         templates = [template_filepath + '/template' + target,
@@ -126,6 +130,7 @@ class JinjaRender(Builder):
                                                    infilepaths=sourcepath,
                                                    append=self.outfilepath_ext,
                                                    ext=self.outfilepath_ext,
+                                                   target=self.target,
                                                    cache=True)
 
         # Make sure the outfilepath directory exists

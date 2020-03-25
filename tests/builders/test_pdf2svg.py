@@ -1,6 +1,8 @@
 """
 Test the Pdf2svg builder
 """
+import pathlib
+
 from disseminate.builders.pdf2svg import Pdf2svg, Pdf2SvgCropScale
 from disseminate.builders.pdfcrop import PdfCrop
 from disseminate.builders.scalesvg import ScaleSvg
@@ -71,8 +73,8 @@ def test_pdf2svg_pdfcrop(env):
 
     # Check path types for the builders
     for builder in (pdfcrop, subpdf2svg, copy, pdf2svg):
-        assert all(isinstance(i, SourcePath) for i in builder.infilepaths)
-        assert isinstance(builder.outfilepath, TargetPath)
+        assert all(isinstance(i, pathlib.Path) for i in builder.infilepaths)
+        assert isinstance(builder.outfilepath, pathlib.Path)
 
     # Now run the build
     assert not outfilepath.exists()
@@ -133,8 +135,8 @@ def test_pdf2svg_scalesvg(env):
 
     # Check path types for the builders
     for builder in (scalesvg, subpdf2svg, copy, pdf2svg):
-        assert all(isinstance(i, SourcePath) for i in builder.infilepaths)
-        assert isinstance(builder.outfilepath, TargetPath)
+        assert all(isinstance(i, pathlib.Path) for i in builder.infilepaths)
+        assert isinstance(builder.outfilepath, pathlib.Path)
 
     # Now run the build. Since this takes a bit of time, we'll catch the
     # command building

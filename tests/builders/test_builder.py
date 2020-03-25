@@ -27,27 +27,27 @@ def test_builder_filepaths(env):
     assert pdfcrop.infilepaths == []
     assert pdfcrop.outfilepath is None
 
-    # 2. Try an example with specifying an infilepath. This time, use a
-    #    SourcePath
+    # 2. Try an example with specifying an infilepath but no outfilepath.
     infilepath = SourcePath(project_root='tests/builders/example1',
                             subpath='sample.pdf')
-    cachepath = SourcePath(project_root=env.cache_path,
+    cachepath = TargetPath(target_root=env.cache_path,
                            subpath='sample_crop.pdf')
     pdfcrop= PdfCrop(infilepaths=infilepath, env=env)
     assert pdfcrop.infilepaths == [infilepath]
     assert pdfcrop.outfilepath == cachepath
 
-    # 3. Try an example with specifying an outfilepath. However, if it's not
-    #    a TargetPath, it won't be used. It this case
-    targetpath = TargetPath(target_root=env.context['target_root'],
-                            subpath='sample_crop.pdf')
-    pdfcrop = PdfCrop(infilepaths=infilepath, outfilepath=str(targetpath),
-                      env=env)
+    # 3. Try an example with specifying an infilepath but no outfilepath.
+    #    This time, use a document target
+    infilepath = SourcePath(project_root='tests/builders/example1',
+                            subpath='sample.pdf')
+    cachepath = TargetPath(target_root=env.cache_path,
+                           target='html',
+                           subpath='sample_crop.pdf')
+    pdfcrop = PdfCrop(infilepaths=infilepath, target='html', env=env)
     assert pdfcrop.infilepaths == [infilepath]
     assert pdfcrop.outfilepath == cachepath
 
-    # 4. Try an example with specifying an outfilepath. This time use a
-    #    TargetPath
+    # 5. Try an example with specifying an outfilepath
     targetpath = TargetPath(target_root=env.context['target_root'],
                             subpath='sample_crop.pdf')
     pdfcrop = PdfCrop(infilepaths=infilepath, outfilepath=targetpath,

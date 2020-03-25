@@ -25,9 +25,9 @@ class Builder(metaclass=ABCMeta):
     ----------
     env: :obj:`.builders.Environment`
         The build environment
-    infilepaths, args : Tuple[:obj:`.paths.SourcePath`]
+    infilepaths, args : Tuple[:obj:`pathlib.Path`]
         The filepaths for input files in the build
-    outfilepath : Optional[:obj:`.paths.TargetPath`]
+    outfilepath : Optional[:obj:`pathlib.Path`]
         If specified, the path for the output file.
 
     Attributes
@@ -45,6 +45,11 @@ class Builder(metaclass=ABCMeta):
         - 'all_execs': tests that the required execs are available
     scan_infilepaths : bool
         If True (default), scan the infilepaths for additional dependencies.
+    priority : int
+        If multiple viable builders are available, use the one with the highest
+        priority.
+    required_execs : Tuple[str]
+        A list of external executables that are needed by the builder.
     infilepath_ext : str
         The format extension for the input file (ex: '.pdf')
     outfilepath_ext : str
@@ -52,11 +57,10 @@ class Builder(metaclass=ABCMeta):
     outfilepath_append : str
         For automatically generated outfilepaths, the following string will
         be appended to the name of the file. ex: '_scale'
-    priority : int
-        If multiple viable builders are available, use the one with the highest
-        priority.
-    required_execs : Tuple[str]
-        A list of external executables that are needed by the builder.
+    target : Optional[str]
+        If specified, use the given target for creating the target file.
+        This is used in formatting the TargetPath.
+        ex: 'html' target will store built files in the 'html/' subdirectory.
     popen : Union[:obj:`subprocess.Popen`, None, str]
         The process for the externally run program.
         The popen can also be None, if a process hasn't been run, or "done"
@@ -69,13 +73,15 @@ class Builder(metaclass=ABCMeta):
     decision = None
     scan_infilepaths = True
 
+    priority = None
+    required_execs = None
+
     infilepath_ext = None
     outfilepath_ext = None
 
+    # Options that impact how the outfilepath is formatted
     outfilepath_append = None
-
-    priority = None
-    required_execs = None
+    target = None
 
     _active = None
     _infilepaths = None
@@ -83,10 +89,12 @@ class Builder(metaclass=ABCMeta):
 
     popen = None
 
-    def __init__(self, env, infilepaths=None, outfilepath=None, **kwargs):
+    def __init__(self, env, target=None, infilepaths=None, outfilepath=None,
+                 **kwargs):
         self.env = env
+        self.target = target.strip('.') if isinstance(target, str) else None
 
-        # Load the infilepaths, which must be SourcePaths
+        # Load the infilepaths, which must be pathlib.Path objects
         infilepaths = infilepaths or []
         infilepaths = (list(infilepaths) if isinstance(infilepaths, tuple) or
                        isinstance(infilepaths, list) else [infilepaths])
@@ -211,6 +219,7 @@ class Builder(metaclass=ABCMeta):
         if outfilepath is None:
             outfilepath = generate_outfilepath(env=self.env,
                                                infilepaths=self.infilepaths,
+                                               target=self.target,
                                                append=self.outfilepath_append,
                                                ext=self.outfilepath_ext,
                                                cache=True)

@@ -5,7 +5,6 @@ import pytest
 
 from disseminate.builders.pdf2svg import Pdf2svg
 from disseminate.builders.scalesvg import ScaleSvg
-from disseminate.builders.utils import targetpath_to_sourcepath
 from disseminate.paths import SourcePath, TargetPath
 
 
@@ -22,7 +21,7 @@ def test_scalesvg(env):
     assert pdf2svg.build(complete=True) == 'done'
 
     # Create the Scalesvg
-    infilepath2 = targetpath_to_sourcepath(pdf2svg.outfilepath)
+    infilepath2 = pdf2svg.outfilepath
     scalesvg = ScaleSvg(infilepaths=infilepath2,
                         outfilepath=outfilepath, scale=2, env=env)
 
