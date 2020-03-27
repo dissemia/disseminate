@@ -8,8 +8,9 @@ from disseminate.builders.target_builders.tex_builder import TexBuilder
 from disseminate.paths import SourcePath, TargetPath
 
 
-def test_tex_builder_setup(env):
-    """Test the setup of a TexBuilder"""
+def test_tex_builder_setup_in_targets(env):
+    """Test the setup of a TexBuilder when 'tex' is listed as a target
+    in the context['targets']"""
     context = env.context
     src_filepath = context['src_filepath']
     target_root = context['target_root']
@@ -17,7 +18,7 @@ def test_tex_builder_setup(env):
     # 1. Setup the builder without an outfilepath.  In this case, 'tex' is
     #    listed in the targets, so the outfilepath will *not* be in the
     #    cache directory
-    context['targets'].add('tex')
+    context['targets'] |= {'tex'}
     target_filepath = TargetPath(target_root=target_root, target='tex',
                                  subpath='test.tex')
     builder = TexBuilder(env, context=context)
@@ -30,6 +31,7 @@ def test_tex_builder_setup(env):
     assert builder.subbuilders[0].infilepaths == []
     assert builder.subbuilders[1].__class__.__name__ == 'JinjaRender'
     assert len(builder.subbuilders[1].infilepaths) > 0
+    assert builder.subbuilders[1].outfilepath == target_filepath
     assert builder.infilepaths == [src_filepath]
     assert builder.outfilepath == target_filepath
 
@@ -55,10 +57,18 @@ def test_tex_builder_setup(env):
     assert builder.build_needed()
     assert builder.status == 'ready'
 
-    # 3. Setup the builder without an outfilepath.  In this case, 'tex' is *not*
+
+def test_tex_builder_setup_not_in_targets(env):
+    """Test the setup of a TexBuilder when 'tex' is not listed as a target
+    in the context['targets']"""
+    context = env.context
+    src_filepath = context['src_filepath']
+    target_root = context['target_root']
+
+    # 1. Setup the builder without an outfilepath.  In this case, 'tex' is *not*
     #    listed in the targets, so the outfilepath will be in the
     #    cache directory
-    context['targets'].remove('tex')
+    context['targets'] -= {'tex'}
     target_filepath = TargetPath(target_root=target_root / '.cache',
                                  target='tex', subpath='test.tex')
     builder = TexBuilder(env, context=context)
@@ -96,6 +106,9 @@ def test_tex_builder_simple(env):
     assert builder.build_needed()
     assert builder.status == 'ready'
     assert not target_filepath.exists()
+
+    # Rechaining the build should change the builder
+    builder.chain_subbuilders()
 
     # Try the build
     assert builder.build(complete=True) == 'done'

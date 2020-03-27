@@ -8,8 +8,8 @@ import jinja2
 
 from .builder import Builder
 from .utils import generate_outfilepath
-from ..paths import SourcePath
 from ..utils.string import hashtxt
+from ..paths import SourcePath
 from ..utils.file import mkdir_p
 from .. import settings
 
@@ -117,14 +117,10 @@ class JinjaRender(Builder):
                 # Create the new temporary infilepath with a filename from the
                 # hash
                 sourcepaths = [fp for fp in infilepaths
-                               if isinstance(fp, SourcePath)]
+                               if hasattr(fp, 'use_name')]
                 sourcepath = sourcepaths[0]
-
                 suffix = sourcepath.suffix
-                new_subpath = sourcepath.subpath.with_name(hash)
-                new_subpath = new_subpath.with_suffix(suffix)
-                sourcepath = SourcePath(project_root=sourcepath.project_root,
-                                        subpath=new_subpath)
+                sourcepath = sourcepath.use_name(hash + suffix)
 
                 outfilepath = generate_outfilepath(env=self.env,
                                                    infilepaths=sourcepath,

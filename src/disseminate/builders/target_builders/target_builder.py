@@ -4,7 +4,6 @@ A builder for document targets.
 from ..jinja_render import JinjaRender
 from ..composite_builders import SequentialBuilder, ParallelBuilder
 from ..utils import generate_outfilepath
-from ...utils.file import mkdir_p
 from ...utils.classes import weakattr
 
 
@@ -23,6 +22,14 @@ class TargetBuilder(SequentialBuilder):
         If specified, the path for the output file.
     subbuilders : List[:obj:`.builders.Builder`]
         A list of subbuilders to add to this TargetBuilder.
+
+    Attributes
+    ----------
+    add_parallel_builder : Optional[bool]
+        If True (default), create a parallel builder for adding dependencies for
+        a target.
+    add_render_builder : Optional[bool]
+        If True (default), create a render builder to render the target.
     """
 
     active_requirements = ('priority',)
@@ -30,6 +37,9 @@ class TargetBuilder(SequentialBuilder):
 
     chain_on_creation = False
     copy = False
+
+    add_parallel_builder = True
+    add_render_builder = True
 
     _parallel_builder = None
     _render_builder = None
@@ -40,7 +50,9 @@ class TargetBuilder(SequentialBuilder):
         self.context = context
 
         # Determine the target for the TargetBuilder
-        if 'target' not in kwargs and self.target is not None:
+        if 'target' in kwargs:
+            pass
+        elif 'target' not in kwargs and self.target is not None:
             kwargs['target'] = self.target
         elif 'target' not in kwargs and self.outfilepath_ext is not None:
                 kwargs['target'] = self.outfilepath_ext
@@ -57,9 +69,20 @@ class TargetBuilder(SequentialBuilder):
         document = getattr(context, 'document', None)
         if infilepaths is None and 'src_filepath' in context:
             infilepaths = context['src_filepath']
-        if (outfilepath is None and document is not None and
-           self.outfilepath_ext in document.targets):
-            outfilepath = document.targets[self.outfilepath_ext]
+
+        if outfilepath is None:
+            if (document is not None and
+               self.outfilepath_ext in document.targets):
+                # Use the document target as the outfilepath, if this target is
+                # listed in the document targets
+                outfilepath = document.targets[self.outfilepath_ext]
+            else:
+                # Otherwise create one from the src_filepath
+                outfilepath = generate_outfilepath(env=env,
+                                                   infilepaths=infilepaths,
+                                                   target=self.outfilepath_ext,
+                                                   ext=self.outfilepath_ext,
+                                                   cache=True)
 
         # Setup the labels
 
@@ -67,20 +90,22 @@ class TargetBuilder(SequentialBuilder):
         subbuilders = subbuilders or []
 
         # Add a parallel builder for dependencies
-        parallel_builder = ParallelBuilder(env=env, **kwargs)
-        subbuilders.append(parallel_builder)
-        self._parallel_builder = parallel_builder
+        if self.add_parallel_builder:
+            parallel_builder = ParallelBuilder(env=env, **kwargs)
+            subbuilders.append(parallel_builder)
+            self._parallel_builder = parallel_builder
 
         # Add a render builder for the final jinja file
-        render_builder = JinjaRender(env, context, outfilepath=outfilepath,
-                                     render_ext=self.outfilepath_ext, **kwargs)
-        subbuilders.append(render_builder)
-        self._render_builder = render_builder
+        if self.add_render_builder:
+            render_builder = JinjaRender(env, context, outfilepath=outfilepath,
+                                         render_ext=self.outfilepath_ext,
+                                         **kwargs)
+            subbuilders.append(render_builder)
+            self._render_builder = render_builder
 
         # Initialize builder
         super().__init__(env, infilepaths=infilepaths, outfilepath=outfilepath,
                          subbuilders=subbuilders, **kwargs)
-
 
     def build_needed(self, reset=False):
         """Determine whether a build is needed."""
@@ -99,28 +124,18 @@ class TargetBuilder(SequentialBuilder):
 
     @property
     def outfilepath(self):
-        """The output filename and path"""
-        # This property is different from the parent by adding the 'target'
-        # to the outfilepath
-        outfilepath = self._outfilepath
-
-        if outfilepath is None:
-            outfilepath = generate_outfilepath(env=self.env,
-                                               infilepaths=self.infilepaths,
-                                               target=self.target,
-                                               append=self.outfilepath_append,
-                                               ext=self.outfilepath_ext,
-                                               cache=True)
-
-        # Make sure the outfilepath directory exists
-        if outfilepath and not outfilepath.parent.is_dir():
-            mkdir_p(outfilepath.parent)
-
-        return outfilepath
+        if self._render_builder is not None:
+            return self._render_builder.outfilepath
+        else:
+            return SequentialBuilder.outfilepath.fget(self)
 
     @outfilepath.setter
     def outfilepath(self, value):
-        self._outfilepath = value
+        if self._render_builder is not None:
+            self._render_builder.outfilepath = value
+        else:
+            SequentialBuilder.outfilepath.fset(self, value)
+
 
     def add_build(self, infilepaths, outfilepath=None,
                   context=None, **kwargs):
@@ -137,3 +152,6 @@ class TargetBuilder(SequentialBuilder):
             document.load()
 
         return super().build(complete=complete)
+
+    def chain_subbuilders(self):
+        return None

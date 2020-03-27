@@ -8,8 +8,9 @@ from disseminate.builders.target_builders.html_builder import HtmlBuilder
 from disseminate.paths import SourcePath, TargetPath
 
 
-def test_html_builder_setup(env):
-    """Test the setup of a HtmlBuilder"""
+def test_html_builder_setup_in_targets(env):
+    """Test the setup of a HtmlBuilder when 'html' is listed as a target
+    in the context['targets']"""
     context = env.context
     src_filepath = context['src_filepath']
     target_root = context['target_root']
@@ -17,7 +18,7 @@ def test_html_builder_setup(env):
     # 1. Setup the builder without an outfilepath. In this case, 'html' is
     #    listed in the targets, so the outfilepath will *not* be in the cache
     #    directory
-    assert 'html' in context['targets']
+    context['targets'] |= {'html'}
     target_filepath = TargetPath(target_root=target_root, target='html',
                                  subpath='test.html')
     builder = HtmlBuilder(env, context=context)
@@ -55,10 +56,18 @@ def test_html_builder_setup(env):
     assert builder.build_needed()
     assert builder.status == 'ready'
 
-    # 3. Setup the builder without an outfilepath. In this case, 'html' is *not*
+
+def test_html_builder_setup_not_in_targets(env):
+    """Test the setup of a HtmlBuilder when 'html' is not listed as a target
+    in the context['targets']"""
+    context = env.context
+    src_filepath = context['src_filepath']
+    target_root = context['target_root']
+
+    # 1. Setup the builder without an outfilepath. In this case, 'html' is *not*
     #    listed in the targets, so the outfilepath will be in the cache
     #    directory
-    context['targets'].remove('html')
+    context['targets'] -= {'html'}
     target_filepath = TargetPath(target_root=target_root / '.cache',
                                  target='html', subpath='test.html')
     builder = HtmlBuilder(env, context=context)
