@@ -22,13 +22,15 @@ def test_pdf_builder_setup_pdf_in_targets(env):
     context['targets'] |= {'pdf'}
     target_tex_filepath = TargetPath(target_root=target_root / '.cache',
                                      target='tex', subpath='test.tex')
+    target_cache_pdf_filepath = TargetPath(target_root=target_root / '.cache',
+                                           target='pdf', subpath='test.pdf')
     target_pdf_filepath = TargetPath(target_root=target_root,
                                      target='pdf', subpath='test.pdf')
     builder = PdfBuilder(env, context=context)
 
     # check the build
     assert not target_pdf_filepath.exists()
-    assert len(builder.subbuilders) == 2
+    assert len(builder.subbuilders) == 3
 
     tex_builder = builder.subbuilders[0]
     assert tex_builder.__class__.__name__ == 'TexBuilder'
@@ -42,7 +44,13 @@ def test_pdf_builder_setup_pdf_in_targets(env):
     assert pdf_builder.__class__.__name__ == 'Pdflatex'
     assert pdf_builder.target == 'pdf'
     assert pdf_builder.infilepaths == [target_tex_filepath]
-    assert pdf_builder.outfilepath == target_pdf_filepath
+    assert pdf_builder.outfilepath == target_cache_pdf_filepath
+
+    copy_builder = builder.subbuilders[2]
+    assert copy_builder.__class__.__name__ == 'Copy'
+    assert copy_builder.target == 'pdf'
+    assert copy_builder.infilepaths == [target_cache_pdf_filepath]
+    assert copy_builder.outfilepath == target_pdf_filepath
 
     assert builder.outfilepath == target_pdf_filepath
 
@@ -65,13 +73,15 @@ def test_pdf_builder_setup_pdf_tex_in_targets(env):
 
     target_tex_filepath = TargetPath(target_root=target_root,
                                      target='tex', subpath='test.tex')
+    target_cache_pdf_filepath = TargetPath(target_root=target_root / '.cache',
+                                           target='pdf', subpath='test.pdf')
     target_pdf_filepath = TargetPath(target_root=target_root,
                                      target='pdf', subpath='test.pdf')
     builder = PdfBuilder(env, context=context)
 
     # check the build
     assert not target_pdf_filepath.exists()
-    assert len(builder.subbuilders) == 2
+    assert len(builder.subbuilders) == 3
 
     assert builder.subbuilders[0].__class__.__name__ == 'TexBuilder'
     assert builder.subbuilders[0].target == 'tex'
@@ -81,7 +91,13 @@ def test_pdf_builder_setup_pdf_tex_in_targets(env):
     assert builder.subbuilders[1].__class__.__name__ == 'Pdflatex'
     assert builder.subbuilders[1].target == 'pdf'
     assert builder.subbuilders[1].infilepaths == [target_tex_filepath]
-    assert builder.subbuilders[1].outfilepath == target_pdf_filepath
+    assert builder.subbuilders[1].outfilepath == target_cache_pdf_filepath
+
+    copy_builder = builder.subbuilders[2]
+    assert copy_builder.__class__.__name__ == 'Copy'
+    assert copy_builder.target == 'pdf'
+    assert copy_builder.infilepaths == [target_cache_pdf_filepath]
+    assert copy_builder.outfilepath == target_pdf_filepath
 
     assert builder.outfilepath == target_pdf_filepath
 
@@ -95,7 +111,7 @@ def test_pdf_builder_setup_pdf_tex_in_targets(env):
 
     # check the build
     assert not target_pdf_filepath.exists()
-    assert len(builder.subbuilders) == 2
+    assert len(builder.subbuilders) == 3
 
     assert builder.subbuilders[0].__class__.__name__ == 'TexBuilder'
     assert builder.subbuilders[0].target == 'tex'
@@ -105,7 +121,13 @@ def test_pdf_builder_setup_pdf_tex_in_targets(env):
     assert builder.subbuilders[1].__class__.__name__ == 'Pdflatex'
     assert builder.subbuilders[1].target == 'pdf'
     assert builder.subbuilders[1].infilepaths == [target_tex_filepath]
-    assert builder.subbuilders[1].outfilepath == target_pdf_filepath
+    assert builder.subbuilders[1].outfilepath == target_cache_pdf_filepath
+
+    copy_builder = builder.subbuilders[2]
+    assert copy_builder.__class__.__name__ == 'Copy'
+    assert copy_builder.target == 'pdf'
+    assert copy_builder.infilepaths == [target_cache_pdf_filepath]
+    assert copy_builder.outfilepath == target_pdf_filepath
 
     assert builder.outfilepath == target_pdf_filepath
 
@@ -124,13 +146,15 @@ def test_pdf_builder_setup_not_in_targets(env):
     context['targets'] -= {'pdf'}
     target_tex_filepath = TargetPath(target_root=target_root / '.cache',
                                      target='tex', subpath='test.tex')
+    target_cache_pdf_filepath = TargetPath(target_root=target_root / '.cache',
+                                           target='pdf', subpath='test.pdf')
     target_pdf_filepath = TargetPath(target_root=target_root / '.cache',
                                      target='pdf', subpath='test.pdf')
     builder = PdfBuilder(env, context=context)
 
     # check the build
     assert not target_pdf_filepath.exists()
-    assert len(builder.subbuilders) == 2
+    assert len(builder.subbuilders) == 3
 
     assert builder.subbuilders[0].__class__.__name__ == 'TexBuilder'
     assert builder.subbuilders[0].target == 'tex'
@@ -140,7 +164,13 @@ def test_pdf_builder_setup_not_in_targets(env):
     assert builder.subbuilders[1].__class__.__name__ == 'Pdflatex'
     assert builder.subbuilders[1].target == 'pdf'
     assert builder.subbuilders[1].infilepaths == [target_tex_filepath]
-    assert builder.subbuilders[1].outfilepath == target_pdf_filepath
+    assert builder.subbuilders[1].outfilepath == target_cache_pdf_filepath
+
+    copy_builder = builder.subbuilders[2]
+    assert copy_builder.__class__.__name__ == 'Copy'
+    assert copy_builder.target == 'pdf'
+    assert copy_builder.infilepaths == [target_cache_pdf_filepath]
+    assert copy_builder.outfilepath == target_pdf_filepath
 
     assert builder.outfilepath == target_pdf_filepath
 
@@ -165,7 +195,6 @@ def test_pdf_builder_simple(env):
     assert builder.build_needed()
     assert builder.status == 'ready'
     assert not target_filepath.exists()
-    assert len(builder.subbuilders) == 2
 
     # Try the build
     assert builder.build(complete=True) == 'done'
@@ -174,4 +203,38 @@ def test_pdf_builder_simple(env):
 
     # New builders don't need to rebuild.
     builder = PdfBuilder(env, context=context)
+    assert builder.status == 'done'
+
+
+def test_pdf_builder_simple_doc(setup_example):
+    """Test a simple build with the PdfBuilder."""
+    # 1. example 1: tests/builders/target_builders/example1
+    env, doc = setup_example('tests/builders/target_builders/example1',
+                             'dummy.dm')
+
+    # Setup the builder
+    doc.context['targets'] |= {'pdf'}
+    builder = PdfBuilder(env, context=doc.context)
+
+    # check the build
+    assert builder.build_needed()
+    assert builder.status == 'ready'
+    assert not doc.targets['.pdf'].exists()
+
+    # Try the build
+    assert builder.build(complete=True) == 'done'
+    assert builder.status == 'done'
+
+    target_filepath = doc.targets['.pdf']
+    assert doc.targets['.pdf'].exists()
+
+    # Make sure meta files aren't preset
+    assert not target_filepath.with_name('dummy.log').exists()
+    assert not target_filepath.with_name('dummy.out').exists()
+
+    # Check that the file is a pdf
+    assert b'%PDF' in target_filepath.read_bytes()
+
+    # New builders don't need to rebuild.
+    builder = PdfBuilder(env, context=doc.context)
     assert builder.status == 'done'

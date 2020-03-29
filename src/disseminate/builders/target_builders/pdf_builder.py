@@ -2,8 +2,8 @@
 A CompositeBuilder for pdf files.
 """
 from .target_builder import TargetBuilder
-from ..composite_builders import SequentialBuilder
 from .tex_builder import TexBuilder
+from ..copy import Copy
 from ..pdflatex import Pdflatex
 
 
@@ -40,13 +40,19 @@ class PdfBuilder(TargetBuilder):
         self._pdf_builder = pdf_builder
         subbuilders.append(pdf_builder)
 
+        # And a copy builder
+        copy_builder = Copy(env=env, target='pdf', **kwargs)
+        subbuilders.append(copy_builder)
+
         super().__init__(env=env, context=context, infilepaths=infilepaths,
                          outfilepath=outfilepath, subbuilders=subbuilders,
                          **kwargs)
 
         # Setup the paths
         pdf_builder.infilepaths = [tex_builder.outfilepath]
-        pdf_builder.outfilepath = self.outfilepath
+
+        copy_builder.infilepaths = [pdf_builder.outfilepath]
+        copy_builder.outfilepath = self.outfilepath
 
     def add_build(self, infilepaths, outfilepath=None, context=None, **kwargs):
         return self._tex_builder.add_build(infilepaths=infilepaths,
