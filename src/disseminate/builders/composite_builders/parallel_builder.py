@@ -65,7 +65,11 @@ class ParallelBuilder(CompositeBuilder):
                     continue
 
                 key = (builder.infilepath_ext, builder.outfilepath_ext)
-                subclses[key] = builder
+
+                # Only replace an existing builder if it's higher property
+                if (key not in subclses or
+                   subclses[key].priority < builder.priority):
+                    subclses[key] = builder
             ParallelBuilder._available_builders = subclses
 
         # Otherwise see if there's a valid outfilepath
