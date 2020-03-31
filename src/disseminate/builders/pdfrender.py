@@ -2,7 +2,6 @@
 A builder to render a tex file to pdf.
 """
 from .composite_builders import SequentialBuilder
-from .builder import Builder
 
 
 class PdfRender(SequentialBuilder):
@@ -26,7 +25,7 @@ class PdfRender(SequentialBuilder):
         if infilepaths is None and context is not None:
             # If no infilepaths are specified, we need to render one from
             # the context
-            render_cls = Builder.find_builder_cls(in_ext='.render')
+            render_cls = self.find_builder_cls(in_ext='.render')
             render_build = render_cls(env, context=context, render_ext='.tex',
                                       template=template, **kwargs)
             subbuilders.append(render_build)
@@ -37,7 +36,7 @@ class PdfRender(SequentialBuilder):
             infilepaths = render_build.infilepaths
 
         # Setup a pdf builder
-        pdf_build_cls = Builder.find_builder_cls(in_ext='.tex', out_ext='.pdf')
+        pdf_build_cls = self.find_builder_cls(in_ext='.tex', out_ext='.pdf')
         pdf_build = pdf_build_cls(env, **kwargs)
         subbuilders.append(pdf_build)
 

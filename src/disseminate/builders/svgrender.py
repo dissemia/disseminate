@@ -2,7 +2,6 @@
 A builder to render a tex file and convert it to an svg.
 """
 from .composite_builders import SequentialBuilder
-from .builder import Builder
 
 
 class SvgRender(SequentialBuilder):
@@ -23,7 +22,7 @@ class SvgRender(SequentialBuilder):
         subbuilders = subbuilders or []
 
         # Setup a PdfRender if no infilepath is specified
-        builder_cls = Builder.find_builder_cls(in_ext='.render', out_ext='.pdf')
+        builder_cls = self.find_builder_cls(in_ext='.render', out_ext='.pdf')
         pdfrender = builder_cls(env, context=context, template=template,
                                 **kwargs)
         subbuilders.append(pdfrender)
@@ -33,7 +32,7 @@ class SvgRender(SequentialBuilder):
         infilepaths = infilepaths or pdfrender.infilepaths
 
         # Setup a pdf->svg converter
-        builder_cls = Builder.find_builder_cls(in_ext='.pdf', out_ext='.svg')
+        builder_cls = self.find_builder_cls(in_ext='.pdf', out_ext='.svg')
         pdf2svg = builder_cls(env, **kwargs)
         subbuilders.append(pdf2svg)
 
