@@ -2,8 +2,7 @@
 A builder to render a tex file and convert it to an svg.
 """
 from .composite_builders import SequentialBuilder
-from .pdfrender import PdfRender
-from .pdf2svg import Pdf2SvgCropScale
+from .builder import Builder
 
 
 class SvgRender(SequentialBuilder):
@@ -15,6 +14,8 @@ class SvgRender(SequentialBuilder):
     infilepath_ext = '.render'
     outfilepath_ext = '.svg'
 
+    _render_builder = None
+
     def __init__(self, env, infilepaths=None, outfilepath=None, context=None,
                  template=None, subbuilders=None, **kwargs):
 
@@ -22,14 +23,18 @@ class SvgRender(SequentialBuilder):
         subbuilders = subbuilders or []
 
         # Setup a PdfRender if no infilepath is specified
-        pdfrender = PdfRender(env, context=context, template=template, **kwargs)
+        builder_cls = Builder.find_builder_cls(in_ext='.render', out_ext='.pdf')
+        pdfrender = builder_cls(env, context=context, template=template,
+                                **kwargs)
         subbuilders.append(pdfrender)
+        self._render_builder = pdfrender
 
         # Use the infilepath from the pdfrender.
         infilepaths = infilepaths or pdfrender.infilepaths
 
         # Setup a pdf->svg converter
-        pdf2svg = Pdf2SvgCropScale(env, **kwargs)
+        builder_cls = Builder.find_builder_cls(in_ext='.pdf', out_ext='.svg')
+        pdf2svg = builder_cls(env, **kwargs)
         subbuilders.append(pdf2svg)
 
         super().__init__(env, infilepaths=infilepaths, outfilepath=outfilepath,
@@ -41,10 +46,9 @@ class SvgRender(SequentialBuilder):
         # because the render builder's outfilepath is a hash of the input text,
         # which is unique.
         if self._outfilepath is None:
-            render_builders = [b for b in self.subbuilders
-                               if isinstance(b, PdfRender)]
-            outfilepath = (render_builders[0].outfilepath.use_suffix('.svg')
-                           if render_builders else
+            render_builder = self._render_builder
+            outfilepath = (render_builder.outfilepath.use_suffix('.svg')
+                           if render_builder else
                            SequentialBuilder.outfilepath.fget(self))
             self._outfilepath = outfilepath
         return self._outfilepath
