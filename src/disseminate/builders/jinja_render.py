@@ -33,10 +33,13 @@ class JinjaRender(Builder):
         The extension for the rendered file.
     """
 
+    available = True
     action = 'render'
     priority = 1000
     active_requirements = ('priority',)
     scan_infilepaths = False  # This is done after all infilepaths are loaded
+
+    infilepath_ext = '.render'  # dummy extension for find_builder_cls
 
     rendered_string = None
 

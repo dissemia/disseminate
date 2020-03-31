@@ -10,8 +10,9 @@ class SvgRender(SequentialBuilder):
     """Render a tex file and render the svg."""
 
     available = True
+    priority = 1000
 
-    infilepath_ext = '.tex'
+    infilepath_ext = '.render'
     outfilepath_ext = '.svg'
 
     def __init__(self, env, infilepaths=None, outfilepath=None, context=None,

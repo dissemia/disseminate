@@ -29,7 +29,7 @@ def test_pdfrender_setup(env):
     assert (str(pdfrender.subbuilders[0].outfilepath.subpath) ==
             'a635d8caba43.tex')
 
-    assert pdfrender.subbuilders[1].__class__.__name__ == 'Pdflatex'
+    assert pdfrender.subbuilders[1].__class__.__name__ == 'Latexmk'
     assert (pdfrender.subbuilders[1].infilepaths[0] ==
             pdfrender.subbuilders[0].outfilepath)
     assert (str(pdfrender.subbuilders[1].outfilepath.subpath) ==

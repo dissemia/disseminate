@@ -12,6 +12,10 @@ class Copy(Builder):
 
     action = 'copy'
     available = True
+    active_requirements = ('priority',)
+    priority = 1000
+    infilepath_ext = '.*'
+    outfilepath_ext = '.*'
 
     @property
     def status(self):

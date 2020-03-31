@@ -7,9 +7,11 @@ from abc import ABCMeta
 from distutils.spawn import find_executable
 
 from .utils import generate_outfilepath
-from .exceptions import runtime_error
+from .exceptions import runtime_error, BuildError
 from ..utils.file import mkdir_p
+from ..utils.classes import all_subclasses
 from ..paths import TargetPath
+from .. import settings
 
 
 class formatlist(list):
@@ -83,7 +85,8 @@ class Builder(metaclass=ABCMeta):
     outfilepath_append = None
     target = None
 
-    _active = None
+    _active = dict()
+    _available_builders = dict()
     _infilepaths = None
     _outfilepath = None
 
@@ -108,48 +111,50 @@ class Builder(metaclass=ABCMeta):
         self.outfilepath = (outfilepath if isinstance(outfilepath, TargetPath)
                             else None)
 
-    @property
-    def active(self):
-        """True if a builder is available"""
-        cls = self.__class__
+    @classmethod
+    def active(cls):
+        """True if a builder is active"""
+        cls_name = cls.__name__
 
-        if cls._active is not None:
-            return cls._active
+        if cls_name in Builder._active:
+            return Builder._active[cls_name]
 
         active = True
-        if not isinstance(cls.active_requirements, tuple):
-            return False
 
         # 1. Make sure the priority is properly set for the concrete class
-        priority = isinstance(cls.priority, int)
-        if 'priority' in self.active_requirements and not priority:
-            logging.warning("Builder '{}' not available because a priority has "
+        if (cls.active_requirements and
+            'priority' in cls.active_requirements and
+           not isinstance(cls.priority, int)):
+            logging.warning("Builder '{}' not active because a priority has "
                             "not been set.".format(cls.__name__))
             active = False
-        required_execs = isinstance(cls.required_execs, tuple)
 
         # 2. Make sure the required executable tuple is properly set for the
         #    concrete class
-        if 'required_execs' in self.active_requirements and not required_execs:
-            logging.warning("Builder '{}' not available because the required "
+        required_execs = isinstance(cls.required_execs, tuple)
+        if (cls.active_requirements and
+            'required_execs' in cls.active_requirements and
+           not required_execs):
+            logging.warning("Builder '{}' not active because the required "
                             "executable tuple was not "
                             "specified.".format(cls.__name__))
             active = False
 
         # 3. Make sure the required executables can be found
-        if 'all_execs' in self.active_requirements:
+        if (cls.active_requirements and
+            'all_execs' in cls.active_requirements and
+           cls.required_execs):
             all_execs = {exe: find_executable(exe)
                          for exe in cls.required_execs}
             if not all(v is not None for v in all_execs.values()):
                 missing_execs = [exe for exe, available in all_execs.items()
                                  if available is None]
-                logging.warning("Builder '{}' not available because the "
+                logging.warning("Builder '{}' not active because the "
                                 "required executables could not be "
                                 "found: {}".format(cls.__name__, missing_execs))
                 active = False
 
-        cls._active = active
-        return cls._active
+        return Builder._active.setdefault(cls_name, active)
 
     @property
     def status(self):
@@ -282,3 +287,74 @@ class Builder(metaclass=ABCMeta):
             if self.status in {'building', 'ready'}:
                 self.run_cmd()
         return self.status
+
+    @classmethod
+    def find_builder_cls(cls, in_ext, out_ext=None, target=None,
+                         raise_error=True):
+        """Return a builder class
+
+        Parameters
+        ----------
+        in_ext: str
+            The extension for the input file.
+        out_ext : str
+            The extension for the output file.
+        target : Optional[str]
+            The document target. ex: '.html' or '.pdf'
+        raise_error : Optional[bool]
+            If True (default), raise an exception if a builder class couldn't
+            be found.
+        """
+        # Cache the available builders
+        if not Builder._available_builders:
+            subclses = Builder._available_builders
+
+            for builder in all_subclasses(Builder):
+                logging.debug("Builder {:<30}: active={}, available={}"
+                              "".format(builder.__name__, builder.active(),
+                                        builder.available))
+
+                if not builder.available or not builder.active():
+                    continue
+
+                key = (builder.infilepath_ext, builder.outfilepath_ext)
+
+                # Only replace an existing builder if it's higher property
+                if (key not in subclses or
+                   subclses[key].priority < builder.priority):
+                    subclses[key] = builder
+
+        # See if there's a valid builder from the given out_ext
+        key = (in_ext, out_ext)
+        if target is None and key in Builder._available_builders:
+            return Builder._available_builders[key]
+
+        # Otherwise see if there's a tracked target
+        target = (target if not isinstance(target, str) or
+                  target.startswith('.') else '.' + target)
+
+        msg = ("The document target must be specified and listed in the "
+               "settings.tracked_deps.")
+        assert target and target in settings.tracked_deps, msg
+
+        if target in settings.tracked_deps:
+            # If the in_ext is an allowed format, just use a copy builder
+            # defined as the builder with a '.*' infilepath_ext and
+            # outfilepath_ext
+            if in_ext in settings.tracked_deps[target]:
+                copy_builder = Builder._available_builders[('.*', '.*')]
+                return copy_builder
+
+            # Otherwise find a converter
+            for out_ext in settings.tracked_deps[target]:
+                key = (in_ext, out_ext)
+                if key in Builder._available_builders:
+                    return Builder._available_builders[key]
+
+        # No builder class could be found
+        if raise_error:
+            msg = ("A builder cannot be found for '{}'. Available formats "
+                   "are: {}".format(in_ext, settings.tracked_deps))
+            raise BuildError(msg)
+        else:
+            return None

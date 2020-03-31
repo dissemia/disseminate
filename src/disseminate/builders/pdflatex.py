@@ -14,7 +14,7 @@ class Pdflatex(Builder):
               "-jobname={builder.jobname} "  # filename of output file
               "{builder.infilepaths}")  # tex file to use
 
-    available = False
+    available = True
     priority = 1000
     required_execs = ('pdflatex',)
 

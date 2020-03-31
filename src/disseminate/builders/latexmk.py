@@ -15,7 +15,7 @@ class Latexmk(Builder):
               "-output-directory={builder.cache_path} "  # dir for temp files
               "{builder.infilepaths}")  # tex file to use
 
-    available = False
+    available = True
     priority = 5000
     required_execs = ('latexmk', 'pdflatex')
 
