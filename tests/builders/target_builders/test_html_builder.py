@@ -24,6 +24,7 @@ def test_html_builder_setup_in_targets(env):
     builder = HtmlBuilder(env, context=context)
 
     # check the build
+    assert context['builders']['.html'] == builder  # builder in context
     assert not target_filepath.exists()
     assert len(builder.subbuilders) == 6
 
@@ -73,6 +74,7 @@ def test_html_builder_setup_not_in_targets(env):
     builder = HtmlBuilder(env, context=context)
 
     # check the build
+    assert context['builders']['.html'] == builder  # builder in context
     assert not target_filepath.exists()
     assert len(builder.subbuilders) == 6
 

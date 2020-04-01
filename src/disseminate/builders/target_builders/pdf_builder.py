@@ -3,8 +3,6 @@ A CompositeBuilder for pdf files.
 """
 from .target_builder import TargetBuilder
 from .tex_builder import TexBuilder
-from ..copy import Copy
-from ..pdflatex import Pdflatex
 
 
 class PdfBuilder(TargetBuilder):
@@ -36,12 +34,14 @@ class PdfBuilder(TargetBuilder):
         subbuilders.append(tex_builder)
 
         # Now add a Pdf converter
-        pdf_builder = Pdflatex(env=env, target='pdf', **kwargs)
+        pdf_builder_cls = self.find_builder_cls(in_ext='.tex', out_ext='.pdf')
+        pdf_builder = pdf_builder_cls(env=env, target='pdf', **kwargs)
         self._pdf_builder = pdf_builder
         subbuilders.append(pdf_builder)
 
         # And a copy builder
-        copy_builder = Copy(env=env, target='pdf', **kwargs)
+        copy_builder_cls = self.find_builder_cls(in_ext='.*', out_ext='.*')
+        copy_builder = copy_builder_cls(env=env, target='pdf', **kwargs)
         subbuilders.append(copy_builder)
 
         super().__init__(env=env, context=context, infilepaths=infilepaths,
