@@ -116,7 +116,7 @@ def find_files(string, context):
     return filepaths
 
 
-def search_paths(path, context):
+def search_paths(path, context, raise_error=True):
     """Search for an existing file given the path and, if needed, the 'paths'
     entry from a context.
 
@@ -124,6 +124,10 @@ def search_paths(path, context):
     -------
     valid_path : :obj:`pathlib.Path`
         A path for a file that exists
+    context : :obj:`.context.Context`
+        The document's context with an entry of 'paths' to search.
+    raise_error : Optional[bool]
+        If True (default), raise error if a file isn't found.
 
     Raises
     ------
@@ -154,5 +158,7 @@ def search_paths(path, context):
             return new_path
 
     # I'm out of ideas and places to search! Raise an error
-    msg = "Could not find file '{}' in the paths: '{}'".format(path, paths)
-    raise FileNotFoundError(msg)
+    if raise_error:
+        msg = "Could not find file '{}' in the paths: '{}'".format(path, paths)
+        raise FileNotFoundError(msg)
+    return None

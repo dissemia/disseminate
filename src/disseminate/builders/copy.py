@@ -17,6 +17,14 @@ class Copy(Builder):
     infilepath_ext = '.*'
     outfilepath_ext = '.*'
 
+    def __init__(self, env, infilepaths=None, outfilepath=None, **kwargs):
+        # reset outfilepath_ext so that '.*' isn't used in automatically
+        # generating the outfilepath (generate_outfilepath)
+        self.outfilepath_ext = None
+
+        super().__init__(env=env, infilepaths=infilepaths,
+                         outfilepath=outfilepath, **kwargs)
+
     @property
     def status(self):
         return ("done" if not self.build_needed()
@@ -37,3 +45,4 @@ class Copy(Builder):
 
         self.build_needed(reset=True)  # reset build flag
         return self.status
+

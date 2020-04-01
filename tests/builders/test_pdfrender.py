@@ -47,6 +47,38 @@ def test_pdfrender_setup(env):
     assert pdfrender.outfilepath == outfilepath
 
 
+def test_pdfrender_chain_subbuilders(env):
+    """Test the chain_subbuilders method for the PdfRender builder."""
+    target_root = env.context['target_root']
+    context = env.context
+
+    # Create a mock tag and template
+    Tag = namedtuple("Tag", "tex")
+    context['body'] = Tag(tex='My test body')
+
+    # 1. Setup a build with an outfilepath
+    outfilepath = TargetPath(target_root=target_root,
+                             subpath='final.pdf')
+    pdfrender = PdfRender(env=env, context=context)
+    pdfrender.outfilepath = outfilepath
+    pdfrender.chain_subbuilders()
+
+    # Check the paths
+    assert len(pdfrender.subbuilders[0].infilepaths) == 3
+    assert (str(pdfrender.subbuilders[0].outfilepath.subpath) ==
+            'a635d8caba43.tex')
+    assert (pdfrender.subbuilders[1].infilepaths[0] ==
+            pdfrender.subbuilders[0].outfilepath)
+    assert (str(pdfrender.subbuilders[1].outfilepath.subpath) ==
+            'a635d8caba43.pdf')
+    assert (pdfrender.subbuilders[2].infilepaths[0] ==
+            pdfrender.subbuilders[1].outfilepath)
+    assert pdfrender.subbuilders[2].outfilepath == outfilepath
+
+    assert any("My test body" in str(f) for f in pdfrender.infilepaths)
+    assert pdfrender.outfilepath == outfilepath
+
+
 def test_pdfrender_setup_without_outfilepath(env):
     """Test the setup of the PdfRender builder without an outfilepath."""
     context = env.context

@@ -66,19 +66,19 @@ class JinjaRender(Builder):
         # These are added to the infilepaths so that if they are changed, the
         # decider can trigger a new build.
         filepaths = template_filepaths(template=template, environment=jinja_env)
-        self.infilepaths += filepaths
+        self._infilepaths = filepaths
 
         # Add the context filepaths to the infilepath dependencies
         filepaths = context_filepaths(filepaths)
-        self.infilepaths += filepaths
+        self._infilepaths += filepaths
 
         # Scan for additional dependencies
-        self.infilepaths += env.scanner.scan(infilepaths=self.infilepaths)
+        self._infilepaths += env.scanner.scan(infilepaths=self.infilepaths)
 
         # Render the template and add it to the infilepath (so that it can be
         # used by the decider to decide whether a build is needed)
         self.rendered_string = template.render(**context)
-        self.infilepaths.append(self.rendered_string)
+        self._infilepaths.append(self.rendered_string)
 
     def jinja_environment(self):
         """The jinja environment."""
@@ -104,6 +104,16 @@ class JinjaRender(Builder):
 
         self.build_needed(reset=True)  # reset build flag
         return self.status
+
+    @property
+    def infilepaths(self):
+        return self._infilepaths
+
+    @infilepaths.setter
+    def infilepaths(self, value):
+        pass  # Do nothing. Only the __init__ should set the render infilepaths
+              # This prevents the SequentialBuilder.chain_subbuilders from
+              # putting in the wrong values in the infilepaths
 
     @property
     def outfilepath(self):

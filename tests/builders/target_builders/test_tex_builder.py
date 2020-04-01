@@ -206,6 +206,7 @@ def test_tex_builder_add_build(setup_example):
                     subpath='media/images/NMR/hsqc_bw.pdf')
     tp = TargetPath(target_root=target_root, target='tex',
                     subpath='media/images/NMR/hsqc_bw.pdf')
+    assert build.__class__.__name__ == 'Copy'
     assert build.infilepaths[0] == sp
     assert build.infilepaths[0].subpath == sp.subpath
     assert build.outfilepath == tp

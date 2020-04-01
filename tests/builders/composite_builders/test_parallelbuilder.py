@@ -2,6 +2,7 @@
 Tests for the ParallelBuilder
 """
 import logging
+from collections import namedtuple
 
 import pytest
 
@@ -10,37 +11,8 @@ from disseminate.builders.exceptions import BuildError
 from disseminate.paths import SourcePath, TargetPath
 
 
-def test_parallelbuilder_find_builder_cls(env):
-    """Test the ParallelBuilder find_buider_cls method."""
-    tmpdir = env.context['target_root']
-
-    # 1. Test a parallel builder for an html target
-    html_builder = ParallelBuilder(env=env, target='html')
-
-    infilepath = SourcePath(tmpdir, 'test.pdf')
-    cls = html_builder.find_builder_cls(infilepath=infilepath)
-    assert cls.__name__ == 'Pdf2SvgCropScale'
-
-    # 2. Test html svg
-    infilepath = SourcePath(tmpdir, 'test.svg')
-    cls = html_builder.find_builder_cls(infilepath=infilepath)
-    assert cls.__name__ == 'Copy'
-
-    # 3. Test invalid extension
-    infilepath = SourcePath(tmpdir, 'test.unknown')
-    with pytest.raises(BuildError):
-        html_builder.find_builder_cls(infilepath=infilepath)
-
-    # 4. Test an example with a specified outfilepath
-    infilepath = SourcePath(tmpdir, 'test.pdf')
-    outfilepath = TargetPath(tmpdir, subpath='test.svg')
-    cls = html_builder.find_builder_cls(infilepath=infilepath,
-                                        outfilepath=outfilepath)
-    assert cls.__name__ == 'Pdf2SvgCropScale'
-
-
-def test_parallelbuilder_add_build(env):
-    """Test the ParallelBuilder add_build method"""
+def test_parallelbuilder_add_build_file(env):
+    """Test the ParallelBuilder add_build method with a specific file"""
     tmpdir = env.context['target_root']
     target_root = tmpdir
 
@@ -114,6 +86,41 @@ def test_parallelbuilder_add_build(env):
     assert parallel_builder.status == 'done'
 
 
+def test_parallelbuilder_add_build_render(env):
+    """Test the ParallelBuilder add_build method with render builder"""
+    tmpdir = env.context['target_root']
+    target_root = tmpdir
+
+    # Add paths to the context
+    paths = [SourcePath(project_root='tests/builders/example1')]
+    env.context['paths'] = paths
+
+    # Add the render fields into the context
+    Tag = namedtuple('Tag', 'tex')
+    env.context['body'] = Tag(tex='my body')
+
+    # 1. Test a parallel builder with a Svgrender builder
+    outfilepath = TargetPath(target_root=tmpdir, target='html',
+                             subpath='test.svg')
+    parallel_builder = ParallelBuilder(env, target='html')
+    builder = parallel_builder.add_build(infilepaths='.render',
+                                         outfilepath=outfilepath,
+                                         context=env.context)
+
+    assert parallel_builder.build_needed()
+    assert builder.build_needed()
+
+    # Run the build
+    assert parallel_builder.build(complete=True) == 'done'
+    assert not parallel_builder.build_needed()
+    assert not builder.build_needed()
+
+    # Make sure the the rendered file is created
+    assert builder.outfilepath == outfilepath
+    assert outfilepath.exists()
+    assert '<svg' in outfilepath.read_text()
+
+
 def test_parallelbuilder_add_build_missing(env):
     """Test the ParallelBuilder add_build method with missing file types"""
     tmpdir = env.context['target_root']
@@ -122,13 +129,21 @@ def test_parallelbuilder_add_build_missing(env):
     paths = [SourcePath(project_root='tests/builders/example1')]
     env.context['paths'] = paths
 
-    # 1. Test html pdf->unknown. Tracked deps: ['.css', '.svg', '.png'],
+    # 1. Test html pdf->unknown. The Pdf2svg converter will be returned
     infilepath = 'sample.pdf'
     outfilepath = TargetPath(target_root=tmpdir, target='html',
-                             subpath='test.unkown')
+                             subpath='test.unknown')
     parallel_builder = ParallelBuilder(env, target='.html')
 
     # A builder cannot be found; a BuildError is raised
+    build = parallel_builder.add_build(infilepaths=infilepath,
+                                       outfilepath=outfilepath)
+    assert build.__class__.__name__ == 'Pdf2SvgCropScale'
+
+    # 2. Test html unknown->pdf. This raises an error because a builder
+    #    cannot be found.
+    infilepath = 'sample.unknown'
+
     with pytest.raises(BuildError):
         parallel_builder.add_build(infilepaths=infilepath,
                                    outfilepath=outfilepath)

@@ -62,6 +62,38 @@ def test_svgrender_setup_without_outfilepath(env):
     assert str(svgrender.outfilepath.subpath) == 'a635d8caba43.svg'
 
 
+def test_svgrender_chain_subbuilders(env):
+    """Test the chain_subbuilders method for the SvgRender builder."""
+    target_root = env.context['target_root']
+    context = env.context
+
+    # Create a mock tag and template
+    Tag = namedtuple("Tag", "tex")
+    context['body'] = Tag(tex='My test body')
+
+    # 1. Setup a build with an outfilepath
+    outfilepath = TargetPath(target_root=target_root,
+                             subpath='final.svg')
+    svgrender = SvgRender(env=env, context=context)
+    svgrender.outfilepath = outfilepath
+    svgrender.chain_subbuilders()
+
+    # Test the paths
+    assert len(svgrender.subbuilders[0].infilepaths) == 3
+    assert (str(svgrender.subbuilders[0].outfilepath.subpath) ==
+            'a635d8caba43.pdf')
+    assert (svgrender.subbuilders[1].infilepaths[0] ==
+            svgrender.subbuilders[0].outfilepath)
+    assert (str(svgrender.subbuilders[1].outfilepath.subpath) ==
+            'a635d8caba43.svg')
+    assert (svgrender.subbuilders[2].infilepaths[0] ==
+            svgrender.subbuilders[1].outfilepath)
+    assert svgrender.subbuilders[2].outfilepath == outfilepath
+
+    assert any(["My test body" in str(f) for f in svgrender.infilepaths])
+    assert svgrender.outfilepath == outfilepath
+
+
 def test_svgrender_simple(env):
     """Test a simple build with the SvgRender builder."""
     target_root = env.context['target_root']
