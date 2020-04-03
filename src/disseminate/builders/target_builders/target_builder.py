@@ -136,7 +136,6 @@ class TargetBuilder(SequentialBuilder):
         else:
             SequentialBuilder.outfilepath.fset(self, value)
 
-
     def add_build(self, infilepaths, outfilepath=None,
                   context=None, **kwargs):
         """Create and add a sub-builder to the composite builder."""

@@ -12,7 +12,7 @@ def setup_example(env, doc_cls):
         src_filepath = SourcePath(project_root=project_root,
                                   subpath=subpath)
 
-        doc = doc_cls(src_filepath=src_filepath, target_root=tmpdir)
+        doc = doc_cls(src_filepath=src_filepath, environment=env)
         env.context = doc.context
         return env, doc
     return example

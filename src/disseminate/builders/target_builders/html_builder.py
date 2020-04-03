@@ -18,7 +18,7 @@ class HtmlBuilder(TargetBuilder):
         super().__init__(env=env, context=context, **kwargs)
 
         # Add copy builders for extra dependencies, like css files
-        target_root = env.context['target_root']
+        target_root = env.target_root
         target = self.outfilepath_ext
         for ext in ('*.css',):
             copy_subbuilders = []
