@@ -17,7 +17,7 @@ def test_parallelbuilder_add_build_file(env):
     target_root = tmpdir
 
     # Add paths to the context
-    paths = [SourcePath(project_root='tests/builders/example1')]
+    paths = [SourcePath(project_root='tests/builders/examples/ex1')]
     env.context['paths'] = paths
 
     # 1. Test a parallel builder for an html target.
@@ -36,7 +36,7 @@ def test_parallelbuilder_add_build_file(env):
     assert not outfilepath.exists()
 
     # Check that the SourcePath and TargetPath were properly formatted
-    sp = SourcePath(project_root='tests/builders/example1',
+    sp = SourcePath(project_root='tests/builders/examples/ex1',
                     subpath='sample.pdf')
     tp = TargetPath(target_root=target_root, target='html', subpath='test.svg')
     assert build.infilepaths[0] == sp
@@ -92,7 +92,7 @@ def test_parallelbuilder_add_build_render(env):
     target_root = tmpdir
 
     # Add paths to the context
-    paths = [SourcePath(project_root='tests/builders/example1')]
+    paths = [SourcePath(project_root='tests/builders/examples/ex1')]
     env.context['paths'] = paths
 
     # Add the render fields into the context
@@ -126,7 +126,7 @@ def test_parallelbuilder_add_build_missing(env):
     tmpdir = env.context['target_root']
 
     # Add paths to the context
-    paths = [SourcePath(project_root='tests/builders/example1')]
+    paths = [SourcePath(project_root='tests/builders/examples/ex1')]
     env.context['paths'] = paths
 
     # 1. Test html pdf->unknown. The Pdf2svg converter will be returned
@@ -167,7 +167,7 @@ def test_parallelbuilder_sequential_builds(env):
     tmpdir = env.context['target_root']
 
     # Add paths to the context
-    paths = [SourcePath(project_root='tests/builders/example1')]
+    paths = [SourcePath(project_root='tests/builders/examples/ex1')]
     env.context['paths'] = paths
 
     # 1. Test a parallel builder for an html target.
@@ -206,7 +206,7 @@ def test_parallelbuilder_md5decider(env, caplog):
     caplog.set_level(logging.DEBUG)
 
     # Add paths to the context
-    paths = [SourcePath(project_root='tests/builders/example1')]
+    paths = [SourcePath(project_root='tests/builders/examples/ex1')]
     env.context['paths'] = paths
 
     # 1. Test a parallel builder for an html target.

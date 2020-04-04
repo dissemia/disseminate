@@ -13,7 +13,7 @@ from disseminate.paths import SourcePath, TargetPath
 def test_pdf2svg(env):
     """Test the Pdf2svg builder."""
     # 1. Test example with the infilepath and outfilepath specified.
-    infilepath = SourcePath(project_root='tests/builders/example1',
+    infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
     outfilepath = TargetPath(target_root=env.context['target_root'],
                              subpath='sample.svg')
@@ -40,7 +40,7 @@ def test_pdf2svg(env):
 def test_pdf2svg_pdfcrop(env):
     """Test the Pdf2svg builder with a PdfCrop subbuilder."""
     # 1. Test example with the infilepath and outfilepath specified.
-    infilepath = SourcePath(project_root='tests/builders/example1',
+    infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
     outfilepath = TargetPath(target_root=env.context['target_root'],
                              subpath='sample.svg')
@@ -103,7 +103,7 @@ def test_pdf2svg_pdfcrop(env):
 def test_pdf2svg_scalesvg(env):
     """Test the Pdf2svg builder with a ScaleSvg subbuilder."""
     # 1. Test example with the infilepath and outfilepath specified.
-    infilepath = SourcePath(project_root='tests/builders/example1',
+    infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
     outfilepath = TargetPath(target_root=env.context['target_root'],
                              subpath='sample.svg')

@@ -211,9 +211,8 @@ def test_pdf_builder_simple(env):
 
 def test_pdf_builder_simple_doc(setup_example):
     """Test a simple build with the PdfBuilder."""
-    # 1. example 1: tests/builders/target_builders/example1
-    env, doc = setup_example('tests/builders/target_builders/example1',
-                             'dummy.dm')
+    # 1. example 1: tests/builders/examples/ex3
+    env, doc = setup_example('tests/builders/examples/ex3', 'dummy.dm')
 
     # Setup the builder
     doc.context['targets'] |= {'pdf'}

@@ -129,9 +129,8 @@ def test_tex_builder_simple(env):
 
 def test_tex_builder_simple_doc(setup_example):
     """Test a simple build with the TexBuilder."""
-    # 1. example 1: tests/builders/target_builders/example1
-    env, doc = setup_example('tests/builders/target_builders/example1',
-                             'dummy.dm')
+    # 1. example 1: tests/builders/examples/ex3
+    env, doc = setup_example('tests/builders/examples/ex3', 'dummy.dm')
 
     # Setup the builder
     builder = TexBuilder(env, context=doc.context)
@@ -147,7 +146,7 @@ def test_tex_builder_simple_doc(setup_example):
     assert doc.targets['.tex'].exists()
 
     # Check the answer key
-    key = pathlib.Path('tests/builders/target_builders/example1/dummy.tex')
+    key = pathlib.Path('tests/builders/examples/ex3/dummy.tex')
     assert doc.targets['.tex'].read_text() == key.read_text()
 
     # New builders don't need to rebuild.
@@ -157,9 +156,8 @@ def test_tex_builder_simple_doc(setup_example):
 
 def test_tex_builder_inherited_doc(setup_example):
     """Test a build with the TexBuilder using an inherited template."""
-    # 1. example 1: tests/builders/target_builders/example1
-    env, doc = setup_example('tests/builders/target_builders/example2',
-                             'dummy.dm')
+    # 1. example 1: tests/builders/examples/ex4
+    env, doc = setup_example('tests/builders/examples/ex4', 'dummy.dm')
 
     # Setup the builder
     builder = TexBuilder(env, context=doc.context)
@@ -174,7 +172,7 @@ def test_tex_builder_inherited_doc(setup_example):
     assert builder.status == 'done'
     assert doc.targets['.tex'].exists()
     # Check the answer key
-    key = pathlib.Path('tests/builders/target_builders/example2/dummy.tex')
+    key = pathlib.Path('tests/builders/examples/ex4/dummy.tex')
     assert doc.targets['.tex'].read_text() == key.read_text()
 
     # New builders don't need to rebuild.
@@ -186,14 +184,14 @@ def test_tex_builder_add_build(setup_example):
     """Test the TexBuilder with an added dependency through add_build."""
 
     # 1. Example 3 includes a media file that can be included in tex
-    #    tests/builders/target_builders/example3/
+    #    tests/builders/examples/ex5/
     #     └── src
     #         ├── index.dm
     #         └── media
     #             └── images
     #                 └── NMR
     #                     └── hsqc_bw.pdf
-    env, doc = setup_example('tests/builders/target_builders/example3/src',
+    env, doc = setup_example('tests/builders/examples/ex5/src',
                              'index.dm')
     target_root = doc.context['target_root']
 
@@ -204,7 +202,7 @@ def test_tex_builder_add_build(setup_example):
     build = tex_builder.add_build(infilepaths='media/images/NMR/hsqc_bw.pdf',
                                   context=doc.context)
 
-    sp = SourcePath(project_root='tests/builders/target_builders/example3/src',
+    sp = SourcePath(project_root='tests/builders/examples/ex5/src',
                     subpath='media/images/NMR/hsqc_bw.pdf')
     tp = TargetPath(target_root=target_root, target='tex',
                     subpath='media/images/NMR/hsqc_bw.pdf')

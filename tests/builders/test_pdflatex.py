@@ -10,17 +10,17 @@ def test_pdflatex_setup(env):
     target_root = env.context['target_root']
 
     # 1. Test example with the infilepath specified and a subpath
-    infilepath = SourcePath(project_root='tests/builders',
-                            subpath='tex_example1/example1.tex')
+    infilepath = SourcePath(project_root='tests/builders/examples',
+                            subpath='ex3/dummy.tex')
     pdflatex = Pdflatex(infilepaths=infilepath, env=env)
 
-    assert str(pdflatex.infilepaths[0].subpath) == 'tex_example1/example1.tex'
-    assert str(pdflatex.outfilepath.subpath) == 'tex_example1/example1.pdf'
+    assert str(pdflatex.infilepaths[0].subpath) == 'ex3/dummy.tex'
+    assert str(pdflatex.outfilepath.subpath) == 'ex3/dummy.pdf'
     assert str(target_root) in str(pdflatex.outfilepath)
 
     # 2. Test example with the infilepath and outfilepath specified
-    infilepath = SourcePath(project_root='tests/builders',
-                            subpath='tex_example1/example1.tex')
+    infilepath = SourcePath(project_root='tests/builders/examples',
+                            subpath='ex3/dummy.tex')
     outfilepath = TargetPath(target_root=target_root,
                              subpath='mytest.pdf')
     pdflatex = Pdflatex(infilepaths=infilepath, outfilepath=outfilepath,
@@ -35,8 +35,8 @@ def test_pdflatex_simple(env):
     target_root = env.context['target_root']
 
     # 1. Test example with the infilepath specified.
-    infilepath = SourcePath(project_root='tests/builders',
-                            subpath='tex_example1/example1.tex')
+    infilepath = SourcePath(project_root='tests/builders/examples',
+                            subpath='ex3/dummy.tex')
     pdflatex = Pdflatex(infilepaths=infilepath, env=env)
     cache_path = pdflatex.cache_path
 
@@ -56,8 +56,8 @@ def test_pdflatex_simple(env):
     assert pdflatex.status == 'done'
 
     # 2. Test example with the infilepath and outfilepath specified
-    infilepath = SourcePath(project_root='tests/builders',
-                            subpath='tex_example1/example1.tex')
+    infilepath = SourcePath(project_root='tests/builders/examples',
+                            subpath='ex3/dummy.tex')
     outfilepath = TargetPath(target_root=target_root,
                              subpath='myfile.pdf')
     pdflatex = Pdflatex(infilepaths=infilepath, outfilepath=outfilepath,

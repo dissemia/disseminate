@@ -29,7 +29,7 @@ def test_sequentialbuilder_basic_decider(env, caplog, wait):
 
     # 1. Test example with the infilepath and outfilepath specified that uses
     #    the PdfCrop and ScaleSvg subbuilders
-    infilepath = SourcePath(project_root='tests/builders/example1',
+    infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
     outfilepath = TargetPath(target_root=env.context['target_root'],
                              subpath='sample.svg')

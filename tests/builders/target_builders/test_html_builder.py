@@ -130,8 +130,8 @@ def test_html_builder_simple(env):
 
 def test_html_builder_simple_doc(setup_example):
     """Test a simple build with the HtmlBuilder and a simple document."""
-    # 1. example 1: tests/builders/target_builders/example1
-    env, doc = setup_example('tests/builders/target_builders/example1',
+    # 1. example 1: tests/builders/examples/example3
+    env, doc = setup_example('tests/builders/examples/ex3',
                              'dummy.dm')
     target_root = doc.context['target_root']
 
@@ -149,7 +149,7 @@ def test_html_builder_simple_doc(setup_example):
     assert doc.targets['.html'].exists()
 
     # Check the answer key
-    key = pathlib.Path('tests/builders/target_builders/example1/dummy.html')
+    key = pathlib.Path('tests/builders/examples/ex3/dummy.html')
     assert doc.targets['.html'].read_text() == key.read_text()
 
     # Check the copied files
@@ -211,9 +211,8 @@ def test_html_builder_inherited(env):
 def test_html_builder_inherited_doc(setup_example):
     """Test a build with the HtmlBuilder using an inherited template and a
     simple doc."""
-    # 1. example 1: tests/builders/target_builders/example1
-    env, doc = setup_example('tests/builders/target_builders/example2',
-                             'dummy.dm')
+    # 1. example 1: tests/builders/examples/ex4
+    env, doc = setup_example('tests/builders/examples/ex4', 'dummy.dm')
     target_root = doc.context['target_root']
 
     # Setup the builder
@@ -230,7 +229,7 @@ def test_html_builder_inherited_doc(setup_example):
     assert doc.targets['.html'].exists()
 
     # Check the answer key
-    key = pathlib.Path('tests/builders/target_builders/example2/dummy.html')
+    key = pathlib.Path('tests/builders/examples/ex4/dummy.html')
     assert doc.targets['.html'].read_text() == key.read_text()
 
     # Check the copied files
@@ -253,14 +252,14 @@ def test_html_builder_add_build(setup_example):
 
     # 1. Example 3 includes a media file that must be converted from pdf->svg
     #    for html
-    #    tests/builders/target_builders/example3/
+    #    tests/builders/examples/ex5/
     #     └── src
     #         ├── index.dm
     #         └── media
     #             └── images
     #                 └── NMR
     #                     └── hsqc_bw.pdf
-    env, doc = setup_example('tests/builders/target_builders/example3/src',
+    env, doc = setup_example('tests/builders/examples/ex5/src',
                              'index.dm')
     target_root = doc.context['target_root']
 
@@ -271,7 +270,7 @@ def test_html_builder_add_build(setup_example):
     build = html_builder.add_build(infilepaths='media/images/NMR/hsqc_bw.pdf',
                                    context=doc.context)
 
-    sp = SourcePath(project_root='tests/builders/target_builders/example3/src',
+    sp = SourcePath(project_root='tests/builders/examples/ex5/src',
                     subpath='media/images/NMR/hsqc_bw.pdf')
     tp = TargetPath(target_root=target_root, target='html',
                     subpath='media/images/NMR/hsqc_bw.svg')

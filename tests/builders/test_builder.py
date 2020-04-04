@@ -28,7 +28,7 @@ def test_builder_filepaths(env):
     assert pdfcrop.outfilepath is None
 
     # 2. Try an example with specifying an infilepath but no outfilepath.
-    infilepath = SourcePath(project_root='tests/builders/example1',
+    infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
     cachepath = TargetPath(target_root=env.cache_path,
                            subpath='sample_crop.pdf')
@@ -38,7 +38,7 @@ def test_builder_filepaths(env):
 
     # 3. Try an example with specifying an infilepath but no outfilepath.
     #    This time, use a document target
-    infilepath = SourcePath(project_root='tests/builders/example1',
+    infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
     cachepath = TargetPath(target_root=env.cache_path,
                            target='html',
@@ -102,7 +102,7 @@ def test_builder_status(env):
 def test_builder_build(env):
     """Test the Builder build method"""
 
-    infilepath = SourcePath(project_root='tests/builders/example1',
+    infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
     targetpath = TargetPath(target_root=env.context['target_root'],
                             subpath='sample_crop.pdf')

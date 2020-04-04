@@ -13,7 +13,7 @@ def test_tif2png(env):
 
     # 1. Try a conversions (.tif -> .png)
     tmpdir = env.context['target_root']
-    infilepath = SourcePath('tests/builders/example2', 'example-1.tif')
+    infilepath = SourcePath('tests/builders/examples/ex2', 'example-1.tif')
     cache_path = TargetPath(tmpdir / '.cache', 'example-1.png')
 
     tif2png = Tif2png(env, infilepaths=infilepath)
@@ -30,7 +30,7 @@ def test_tif2png(env):
     # 2. Try a conversion. (.tiff -> .png)
     #    This build won't be needed because the source file and target files
     #    are the same.
-    infilepath = SourcePath('tests/builders/example2', 'example-1.tiff')
+    infilepath = SourcePath('tests/builders/examples/ex2', 'example-1.tiff')
     tiff2png = Tiff2png(env, infilepaths=infilepath)
 
     assert tiff2png.status == 'done'

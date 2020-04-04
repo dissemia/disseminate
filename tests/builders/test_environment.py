@@ -7,12 +7,11 @@ from disseminate.paths import SourcePath, TargetPath
 
 def test_environment_setup1(tmpdir):
     """Test the setup of an environment using example1"""
-    # 1. tests/builders/target_builders/example1/
+    # 1. tests/builders/examples/ex3/
     # ├── dummy.dm
     # ├── dummy.html
     # └── dummy.tex
-    src_filepath = SourcePath(project_root='tests/builders/target_builders/'
-                                           'example1/',
+    src_filepath = SourcePath(project_root='tests/builders/examples/ex3',
                               subpath='dummy.dm')
     env = Environment(src_filepath=src_filepath, target_root=tmpdir)
 
@@ -47,12 +46,11 @@ def test_environment_setup1(tmpdir):
 
 def test_environment_simple_build1(tmpdir):
     """Test an environment simple build from example 1"""
-    # 1. tests/builders/target_builders/example1/
+    # 1. tests/builders/examples/ex3/
     # ├── dummy.dm
     # ├── dummy.html
     # └── dummy.tex
-    src_filepath = SourcePath(project_root='tests/builders/target_builders/'
-                                           'example1/',
+    src_filepath = SourcePath(project_root='tests/builders/examples/ex3',
                               subpath='dummy.dm')
     env = Environment(src_filepath=src_filepath, target_root=tmpdir)
 
@@ -61,13 +59,13 @@ def test_environment_simple_build1(tmpdir):
 
     tp_html = TargetPath(target_root=tmpdir, target='html',
                          subpath='dummy.html')
-    tp_key = TargetPath(target_root='tests/builders/target_builders/example1',
+    tp_key = TargetPath(target_root='tests/builders/examples/ex3',
                         subpath='dummy.html')
     assert tp_html.is_file()
     assert tp_html.read_text() == tp_key.read_text()
 
     tp_tex = TargetPath(target_root=tmpdir, target='tex', subpath='dummy.tex')
-    tp_key = TargetPath(target_root='tests/builders/target_builders/example1',
+    tp_key = TargetPath(target_root='tests/builders/examples/ex3',
                         subpath='dummy.tex')
     assert tp_tex.is_file()
     assert tp_tex.read_text() == tp_key.read_text()

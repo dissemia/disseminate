@@ -20,7 +20,7 @@ def test_pdfcrop(env):
 
     # 2. Test example with the infilepath and outfilepath specified.
     #    The builder should be available, but the status should be missing
-    infilepath = SourcePath(project_root='tests/builders/example1',
+    infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
     outfilepath = TargetPath(target_root=env.context['target_root'],
                              subpath='sample_crop.pdf')
@@ -65,7 +65,7 @@ def test_pdfcrop(env):
 def test_pdf_crop_percentage(env):
     """Test the PdfCrop builder with a specified crop_percentage."""
     # Create a reference build
-    infilepath = SourcePath(project_root='tests/builders/example1',
+    infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
     ref_outfilepath = TargetPath(target_root=env.context['target_root'],
                              subpath='sample_ref.pdf')
@@ -75,7 +75,7 @@ def test_pdf_crop_percentage(env):
     assert ref_outfilepath.exists()
 
     # 1. Test example with crop_percentage and 4 numbers
-    infilepath = SourcePath(project_root='tests/builders/example1',
+    infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
     outfilepath = TargetPath(target_root=env.context['target_root'],
                              subpath='sample_crop.pdf')

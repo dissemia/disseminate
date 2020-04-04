@@ -10,21 +10,21 @@ def test_latexmk_setup(env):
     target_root = env.context['target_root']
 
     # 1. Test example with the infilepath specified and a subpath
-    infilepath = SourcePath(project_root='tests/builders',
-                            subpath='tex_example1/example1.tex')
+    infilepath = SourcePath(project_root='tests/builders/examples',
+                            subpath='ex3/dummy.tex')
     latexmk = Latexmk(infilepaths=infilepath, env=env)
 
-    assert str(latexmk.infilepaths[0].subpath) == 'tex_example1/example1.tex'
-    assert str(latexmk.outfilepath.subpath) == 'tex_example1/example1.pdf'
+    assert str(latexmk.infilepaths[0].subpath) == 'ex3/dummy.tex'
+    assert str(latexmk.outfilepath.subpath) == 'ex3/dummy.pdf'
     assert str(target_root) in str(latexmk.outfilepath)
 
     # 2. Test example with the infilepath and outfilepath specified
     infilepath = SourcePath(project_root='tests/builders',
-                            subpath='tex_example1/example1.tex')
+                            subpath='ex3/dummy.tex')
     outfilepath = TargetPath(target_root=target_root,
                              subpath='mytest.pdf')
     latexmk = Latexmk(infilepaths=infilepath, outfilepath=outfilepath,
-                       env=env)
+                      env=env)
 
     assert latexmk.infilepaths[0] == infilepath
     assert latexmk.outfilepath == outfilepath
@@ -35,8 +35,8 @@ def test_latexmk_simple(env):
     target_root = env.context['target_root']
 
     # 1. Test example with the infilepath specified.
-    infilepath = SourcePath(project_root='tests/builders',
-                            subpath='tex_example1/example1.tex')
+    infilepath = SourcePath(project_root='tests/builders/examples',
+                            subpath='ex3/dummy.tex')
     latexmk = Latexmk(infilepaths=infilepath, env=env)
     cache_path = latexmk.cache_path
 
@@ -56,8 +56,8 @@ def test_latexmk_simple(env):
     assert latexmk.status == 'done'
 
     # 2. Test example with the infilepath and outfilepath specified
-    infilepath = SourcePath(project_root='tests/builders',
-                            subpath='tex_example1/example1.tex')
+    infilepath = SourcePath(project_root='tests/builders/examples',
+                            subpath='ex3/dummy.tex')
     outfilepath = TargetPath(target_root=target_root,
                              subpath='myfile.pdf')
     latexmk = Latexmk(infilepaths=infilepath, outfilepath=outfilepath, env=env)

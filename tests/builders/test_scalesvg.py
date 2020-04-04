@@ -11,7 +11,7 @@ from disseminate.paths import SourcePath, TargetPath
 def test_scalesvg(env):
     """Test the ScaleSvg builder."""
     # 1. Test example with the infilepath and outfilepath specified.
-    infilepath = SourcePath(project_root='tests/builders/example1',
+    infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
     outfilepath = TargetPath(target_root=env.context['target_root'],
                              subpath='sample.svg')
