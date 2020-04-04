@@ -20,16 +20,19 @@ class PdfBuilder(TargetBuilder):
     _pdf_builder = None
 
     def __init__(self, env, context, infilepaths=None, outfilepath=None,
-                 subbuilders=None, **kwargs):
+                 target=None, subbuilders=None, **kwargs):
         # Setup the subbuilders
         subbuilders = subbuilders or []
 
         # Find the tex_builder or create one.
         builders = context.setdefault('builders', dict())
-        tex_builder = builders.setdefault('.tex',
-                                          TexBuilder(env=env, context=context,
-                                                     target='tex',
-                                                     **kwargs))
+        if '.tex' not in builders:
+            tex_builder = TexBuilder(env=env, context=context, target='tex',
+                                     **kwargs)
+            builders['.tex'] = tex_builder
+        else:
+            tex_builder = builders['.tex']
+
         self._tex_builder = tex_builder
         subbuilders.append(tex_builder)
 

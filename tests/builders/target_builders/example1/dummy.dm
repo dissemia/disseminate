@@ -1,5 +1,5 @@
 ---
-targets: html, tex
+targets: html, tex, pdf
 ---
 @i{This is my example}
 
