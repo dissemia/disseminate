@@ -60,65 +60,35 @@ class Document(object):
     context = None
     subdocuments = None
 
-    #: The directory for the root document of a project (a document and its
-    #: subdocuments.
-    _project_root = None
-
-    #: The calculated target_root, based on the value specified or a value
-    #: evaluated from the project_root
-    _target_root = None
-
     #: The path of a temporary directory created for this document, if needed.
     _temp_dir = None
-
-    #: Cached template objects for this document.
-    _templates = None
 
     #: A flag to determine whether the document was successfully loaded
     _succesfully_loaded = False
 
-    def __init__(self, src_filepath, target_root=None, parent_context=None,
-                 level=1):
+    def __init__(self, src_filepath, environment, parent_context=None, level=1):
         logging.debug("Creating document: {}".format(src_filepath))
 
         # Populate attributes
         self.subdocuments = OrderedDict()
-        self._templates = dict()
+        self._templates = dict()  # FIXME: Remove
 
-        # Process the src_filepath
+        # Process the paths
+        project_root = environment.project_root
+        target_root = environment.target_root
         if isinstance(src_filepath, SourcePath):
-            project_root = src_filepath.project_root
             self.src_filepath = src_filepath
         else:
             src_filepath = pathlib.Path(src_filepath)
-            project_root = SourcePath(project_root=src_filepath.parent)
+            subpath = src_filepath.relative_to(project_root)
             self.src_filepath = SourcePath(project_root=project_root,
-                                           subpath=src_filepath.name)
-
-        # Set the project_root, if needed.
-        if parent_context is None or 'project_root' not in parent_context:
-            self._project_root = project_root
-
-        # Set the target_root, if needed.
-        if target_root is not None:
-            # Use the specified value, if available, but convert to a
-            # TargetPath, whether it's a string, pathlib.Path or TargetPath
-            self._target_root = TargetPath(target_root=target_root)
-        elif parent_context is not None and 'target_root' in parent_context:
-            # Otherwise use the one in the parent context, if available.
-            self._target_root = parent_context['target_root']
-        # In these situations, there is no 'target_root' in the parent context,
-        # and None was specified, so we have to figure one out.
-        elif project_root.match(settings.document_src_directory):
-            # If the project_root is in a src directory, use the directory above
-            # this directory
-            self._target_root = TargetPath(target_root=project_root.parent)
-        else:
-            # Otherwise just use the same directory as the src directory
-            self._target_root = TargetPath(target_root=project_root)
+                                           subpath=subpath)
 
         # Create the context
         self.context = DocumentContext(document=self,
+                                       project_root=project_root,
+                                       target_root=target_root,
+                                       environment=environment,
                                        parent_context=parent_context)
 
         # Read in the document and load sub-documents
@@ -188,13 +158,11 @@ class Document(object):
 
     @property
     def project_root(self):
-        return (self._project_root if self._project_root is not None else
-                self.context.get('project_root', None))
+        return self.context.get('project_root', None)
 
     @property
     def target_root(self):
-        return (self._target_root if self._target_root is not None else
-                self.context.get('target_root', None))
+        return self.context.get('target_root', None)
 
     @property
     def targets(self):
@@ -515,6 +483,9 @@ class Document(object):
         root_document = self.context.get('root_document', None)
         root_document = root_document() if root_document is not None else None
 
+        # Get the build environment for the project
+        environment = self.context['environment']
+
         # Get a dict with all documents in a project
         root_dict = root_document.documents_dict(document=root_document,
                                                  only_subdocuments=False,
@@ -553,6 +524,7 @@ class Document(object):
             # loaded in root_dict
             elif src_filepath not in root_dict:
                 subdoc = Document(src_filepath=src_filepath,
+                                  environment=environment,
                                   parent_context=self.context,
                                   level=level+1)
                 self.subdocuments[src_filepath] = subdoc

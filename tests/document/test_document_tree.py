@@ -14,7 +14,7 @@ def touch(fname, times=None):
         os.utime(fname, times)
 
 
-def test_documents_list():
+def test_documents_list(env_cls):
     """Test the documents_list function."""
 
     # 1. Load documents from example7. Example7 has one target ('.html')
@@ -27,7 +27,8 @@ def test_documents_list():
                                subpath='sub1/file11.dm')
     src_filepath3 = SourcePath(project_root='tests/document/example7/src',
                                subpath='sub1/subsub1/file111.dm')
-    doc = Document(src_filepath1)
+    env = env_cls(src_filepath1)
+    doc = env.root_document
 
     # Get all files recursively, including the root document
     docs = doc.documents_list(only_subdocuments=False, recursive=True)
@@ -48,23 +49,22 @@ def test_documents_list():
     assert docs[0].src_filepath == src_filepath2
 
 
-def test_document_tree(tmpdir, wait):
+def test_document_tree1(doc, wait):
     """Test the loading of trees and sub-documents from a document."""
 
     # Setup the project_root in a temp directory
-    project_root = SourcePath(tmpdir, 'src')
-    project_root.mkdir()
-    subdir = SourcePath(project_root=project_root, subpath='sub')
+    env = doc.context['environment']
+    project_root = env.project_root
+    subdir = project_root / 'sub'
     subdir.mkdir()
 
     # Populate some files
-    file1 = SourcePath(project_root=project_root,
-                       subpath='main.dm')
+    file1 = doc.src_filepath
     markup1 = """---
     include:
       sub/file2.dm
       sub/file3.dm
-    targets: txt, tex
+    targets: txt, html
     ---
     """
     markup2 = """---
@@ -84,8 +84,8 @@ def test_document_tree(tmpdir, wait):
     file2.write_text(markup2)
     file3.write_text(markup3)
 
-    # Create the root document
-    doc = Document(file1)
+    # Reload root document
+    doc.load()
 
     # Test the paths
     assert len(doc.subdocuments) == 2
@@ -96,8 +96,8 @@ def test_document_tree(tmpdir, wait):
     assert doc.subdocuments[keys[1]].src_filepath == file3
 
     # Test the targets
-    assert doc.targets.keys() == {'.txt', '.tex'}
-    assert doc.get_renderer().targets == {'.txt', '.tex'}
+    assert doc.targets.keys() == {'.html', '.txt'}
+    assert doc.get_renderer().targets == {'.html', '.txt'}
 
     # Update the root document and remove a file
     assert doc.load() is False  # no documents are not loaded yet
@@ -131,13 +131,17 @@ def test_document_tree(tmpdir, wait):
     assert doc.load() is True  # documents were loaded
     assert doc.load() is False  # documents already loaded
 
+
+def test_document_tree2(env_cls, tmpdir):
+    """Test the loading of trees and sub-documents from a document."""
+
     # Now test Example5. Example5 has a file in the root directory, a file in
     # the 'sub1', 'sub2' and 'sub3' directories and a file in the 'sub2/subsub2'
     # directory
-    project_root = SourcePath(project_root='tests/document/example5')
-    src_filepath = SourcePath(project_root=project_root, subpath='index.dm')
-    target_root = TargetPath(tmpdir)
-    doc = Document(src_filepath, target_root)
+    env = env_cls("tests/document/example5/index.dm", target_root=tmpdir)
+    project_root = env.project_root
+    target_root = env.target_root
+    doc = env.root_document
 
     # Setup paths of subdocuments
     src_filepath1 = SourcePath(project_root=project_root,
@@ -159,7 +163,7 @@ def test_document_tree(tmpdir, wait):
 
     all_docs = doc.documents_list(recursive=True)
     assert len(all_docs) == 5
-    assert all_docs[0].src_filepath == src_filepath
+    assert all_docs[0].src_filepath == doc.src_filepath
     assert all_docs[1].src_filepath == src_filepath1
     assert all_docs[2].src_filepath == src_filepath2
     assert all_docs[3].src_filepath == src_filepath22
@@ -174,15 +178,15 @@ def test_document_tree(tmpdir, wait):
         assert target_filepath.is_file()
 
 
-def test_document_garbage_collection(tmpdir):
+def test_document_garbage_collection(doc):
     """Test the garbage collection of document trees."""
 
     # Setup the project_root in a temp directory
-    project_root = SourcePath(project_root=tmpdir, subpath='src')
-    project_root.mkdir()
+    env = doc.context['environment']
+    project_root = env.project_root
 
     # Populate some files
-    file1 = SourcePath(project_root=project_root, subpath='main.dm')
+    file1 = doc.src_filepath
     markup = """---
     include:
       sub/file2.dm
@@ -201,8 +205,8 @@ def test_document_garbage_collection(tmpdir):
     file2.write_text('file2')
     file3.write_text('file3')
 
-    # Create the root document
-    doc = Document(src_filepath=file1, target_root=tmpdir)
+    # Reload the document
+    doc.load()
 
     # We can create weakrefs to the sub-documents
     doc2, doc3 = doc.documents_list(only_subdocuments=True)
@@ -222,15 +226,15 @@ def test_document_garbage_collection(tmpdir):
     assert doc3_ref() is None
 
 
-def test_document_tree_matching_filenames(tmpdir):
+def test_document_tree_matching_filenames(doc):
     """Test the loading of trees with matching filenames in sub-directories."""
 
     # Setup the project_root in a temp directory
-    project_root = SourcePath(project_root=tmpdir, subpath='src')
-    project_root.mkdir()
+    env = doc.context['environment']
+    project_root = env.project_root
 
     # Populate some files
-    file1 = SourcePath(project_root=project_root, subpath='file1.dm')
+    file1 = doc.src_filepath
     markup = """---
     include:
       sub/file1.dm
@@ -246,12 +250,12 @@ def test_document_tree_matching_filenames(tmpdir):
     markup = """test"""
     file2.write_text(strip_leading_space(markup))
 
-    # Create the root document
-    doc = Document(src_filepath=str(file1))
+    # Reload root document
+    doc.load()
     doc.render()
 
 
-def test_document_tree_updates(tmpdir, wait):
+def test_document_tree_updates(doc, wait):
     """Test the updates to the document tree and labels.
 
     Note that this test was previously conducted by checking the python 'id' of
@@ -262,10 +266,10 @@ def test_document_tree_updates(tmpdir, wait):
     a new object is created.
     """
     # Create a document tree.
-    project_root = SourcePath(project_root=tmpdir, subpath='src')
-    project_root.mkdir()
+    env = doc.context['environment']
+    project_root = env.project_root
+    src_filepath1 = doc.src_filepath
 
-    src_filepath1 = SourcePath(project_root=project_root, subpath='file1.dm')
     src_filepath2 = SourcePath(project_root=project_root, subpath='file2.dm')
     src_filepath3 = SourcePath(project_root=project_root, subpath='file3.dm')
 
@@ -277,8 +281,8 @@ def test_document_tree_updates(tmpdir, wait):
     src_filepath2.touch()
     src_filepath3.touch()
 
-    # 1. Load the root document
-    doc = Document(src_filepath=src_filepath1, target_root=tmpdir)
+    # 1. Reload the root document
+    doc.load()
 
     # There should now be 3 total documents and 3 sets of labels, one for each
     # document. Check the ordering of documents
@@ -368,13 +372,13 @@ def test_document_tree_updates(tmpdir, wait):
     assert not hasattr(doc_list[2], 'test_object')
 
 
-def test_render_required(tmpdir, wait):
+def test_render_required(doc, wait):
     """Tests the render_required method with multiple files."""
     # Create a document tree.
-    project_root = SourcePath(project_root=tmpdir, subpath='src')
-    project_root.mkdir()
+    env = doc.context['environment']
+    project_root = env.project_root
+    src_filepath1 = doc.src_filepath
 
-    src_filepath1 = SourcePath(project_root=project_root, subpath='file1.dm')
     src_filepath2 = SourcePath(project_root=project_root, subpath='file2.dm')
     src_filepath3 = SourcePath(project_root=project_root, subpath='file3.dm')
 
@@ -399,10 +403,8 @@ def test_render_required(tmpdir, wait):
     """)
     wait()  # sleep time offset needed for different mtimes
 
-    # Load the root document. This will load the AST for all documents,
-    # but not render (and therefore create) the target files, so a render is
-    # required.
-    doc = Document(src_filepath=src_filepath1, target_root=tmpdir)
+    # Load the root document.
+    doc.load()
 
     # 1. Test that a render is required when the target file hasn't been
     #    created
@@ -512,62 +514,3 @@ def test_render_required(tmpdir, wait):
         d.render()
         target_filepath = d.targets['.html']
         assert not d.render_required(target_filepath)
-
-    # 4. A render is required if the document depends on a template that has
-    #    been updated. We'll make document3 dependent on a template and update
-    #    that template.
-    template_filepath = project_root / 'test.html'
-
-    template_filepath.write_text("""
-    <html></html>
-    """)
-    wait()  # sleep time offset needed for different mtimes
-
-    src_filepath3.write_text("""
-    ---
-    template: test
-    ---
-    @chapter{file3}
-    """)
-
-    # Doc3 requires a render because it was just written. Doc2 needs  render
-    # since it depends on doc3.
-    for d, answer in zip(doc_list, [False, True, True]):
-        target_filepath = d.targets['.html']
-        assert d.render_required(target_filepath) is answer
-
-    # Render all documents
-    for d in doc_list:
-        d.render()
-        target_filepath = d.targets['.html']
-        assert not d.render_required(target_filepath)
-
-    # Make sure the right template file was loaded
-    renderer = doc_list[2].get_renderer()
-    template = renderer.get_template(target='.html')
-    assert template.filename == str(template_filepath)
-    assert template.is_up_to_date
-
-    # Now update the template, and the 3rd document will require a render.
-    # However, since the source file itself hasn't changed, the 2nd document
-    # doesn't require a render.
-
-    wait()  # sleep time offset needed for different mtimes
-    template_filepath.write_text("""
-    <html><body></body></html>
-    """)
-    assert not template.is_up_to_date
-
-    for d, answer in zip(doc_list, [False, False, True]):
-        target_filepath = d.targets['.html']
-        assert d.render_required(target_filepath) is answer
-
-
-def test_extended_document_tree(tmpdir):
-    """Test a document tree with multiple levels."""
-
-    # 1. Test example8, which has 3 layers of documents, starting from the
-    #    main.dm document.
-    doc = Document('tests/document/example8/src/main.dm', tmpdir)
-
-    # Test the contexts

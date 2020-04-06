@@ -9,7 +9,7 @@ from disseminate.utils.tests import strip_leading_space
 
 # Tests for methods
 
-def test_toc_get_labels(tmpdir):
+def test_toc_get_labels(env):
     """Test the get_labels method."""
 
     # 1. The 'tests/tags/toc_example2' directory contains three markup
@@ -17,10 +17,9 @@ def test_toc_get_labels(tmpdir):
     #     file1.dm, file2.dm and file3.dm. The 'file1.dm' includes
     #     'file2.dm' and 'file3.dm'. Each file has 1 section, and file2.dm
     #     also has a subsection.
-    target_root = TargetPath(target_root=tmpdir)
     src_filepath = SourcePath(project_root='tests/tags/toc_example2',
                               subpath='file1.dm')
-    doc = Document(src_filepath, target_root)
+    doc = Document(src_filepath, environment=env)
 
     # 1.a. Test a full listing of headings
     toc = Toc(name='toc', content='all headings', attributes='',
@@ -55,7 +54,7 @@ def test_toc_get_labels(tmpdir):
     assert labels[2].order == (4, 3)
 
 
-def test_toc_reference_tags(tmpdir):
+def test_toc_reference_tags(env):
     """Test the get_labels method."""
 
     # 1. The 'tests/tags/toc_example2' directory contains three markup
@@ -63,10 +62,9 @@ def test_toc_reference_tags(tmpdir):
     #     file1.dm, file2.dm and file3.dm. The 'file1.dm' includes
     #     'file2.dm' and 'file3.dm'. Each file has 1 section, and file2.dm
     #     also has a subsection.
-    target_root = TargetPath(target_root=tmpdir)
     src_filepath = SourcePath(project_root='tests/tags/toc_example2',
                               subpath='file1.dm')
-    doc = Document(src_filepath, target_root)
+    doc = Document(src_filepath, environment=env)
 
     # 1.a. Test a full listing of headings
     toc = Toc(name='toc', content='all headings', attributes='',
@@ -85,7 +83,7 @@ def test_toc_reference_tags(tmpdir):
     assert tags[3].attributes['level'] == 3  # section
 
 
-def test_toc_mtime(tmpdir):
+def test_toc_mtime(env):
     """Test the correct mtime for tocs."""
 
     # 1. The 'tests/tags/toc_example2' directory contains three markup
@@ -93,10 +91,9 @@ def test_toc_mtime(tmpdir):
     #     file1.dm, file2.dm and file3.dm. The 'file1.dm' includes
     #     'file2.dm'
     #     and 'file3.dm'. All 3 files have headings
-    target_root = TargetPath(target_root=tmpdir)
     src_filepath = SourcePath(project_root='tests/tags/toc_example2',
                               subpath='file1.dm')
-    doc1 = Document(src_filepath, target_root)
+    doc1 = Document(src_filepath, environment=env)
     doc2, doc3 = doc1.documents_list(only_subdocuments=True)
 
     # Create a toc tag for all 3 documents. The mtime of the toc should
@@ -169,13 +166,15 @@ def test_toc_changes(doc):
     assert toc.html == key
 
 
-def test_toc_absolute_and_relative_links(tmpdir):
+def test_toc_absolute_and_relative_links(doctree):
     """Test the generation of TOCs with absolute and relative links."""
+    env = doctree.context['environment']
 
     # 1. Create 2 test documents. First test absolute links
-    src_filepath1 = SourcePath(project_root=tmpdir, subpath='test1.dm')
-    src_filepath2 = SourcePath(project_root=tmpdir, subpath='test2.dm')
-    target_root = TargetPath(target_root=tmpdir)
+    doc1 = doctree
+    doc2, doc3 = doc1.documents_list(only_subdocuments=True)
+    src_filepath1 = doc1.src_filepath
+    src_filepath2 =doc2.src_filepath
 
     src_filepath2.write_text("""
     @chapter{two}
@@ -188,11 +187,11 @@ def test_toc_absolute_and_relative_links(tmpdir):
     @chapter{one}
     """)
 
-    doc = Document(src_filepath1, target_root)
+    doc1.load()
     toc = Toc(name='toc', content='all headings abbreviated',
-              attributes='', context=doc.context)
+              attributes='', context=doc1.context)
     key = ('<ul class="toc">\n'
-             '<li class="toc-level-2"><a href="#ch:test1-dm-one" class="ref">Chapter 1. one</a></li>\n'
+             '<li class="toc-level-2"><a href="#ch:test-dm-one" class="ref">Chapter 1. one</a></li>\n'
              '<li class="toc-level-2"><a href="/html/test2.html#ch:test2-dm-two" class="ref">Chapter 2. two</a></li>\n'
            '</ul>\n')
     assert toc.html == key
@@ -205,12 +204,12 @@ def test_toc_absolute_and_relative_links(tmpdir):
     ---
     @chapter{one}
     """)
-    doc.render()
+    doc1.render()
 
     toc = Toc(name='toc', content='all headings abbreviated',
-              attributes='', context=doc.context)
+              attributes='', context=doc1.context)
     key = ('<ul class="toc">\n'
-             '<li class="toc-level-2"><a href="#ch:test1-dm-one" class="ref">Chapter 1. one</a></li>\n'
+             '<li class="toc-level-2"><a href="#ch:test-dm-one" class="ref">Chapter 1. one</a></li>\n'
              '<li class="toc-level-2"><a href="test2.html#ch:test2-dm-two" class="ref">Chapter 2. two</a></li>\n'
            '</ul>\n')
     assert toc.html == key
@@ -222,8 +221,7 @@ def test_toc_absolute_and_relative_links(tmpdir):
     #    First test with absolute links
     src_filepath = SourcePath(project_root='tests/tags/toc_example1',
                               subpath='file1.dm')
-    target_root = TargetPath(tmpdir)
-    doc = Document(src_filepath, target_root)
+    doc = Document(src_filepath, environment=env)
 
     # 4. Next, test with relative links
     doc.context['base_url'] = '/{target}/{subpath}'
@@ -306,7 +304,7 @@ def test_toc_levels_html(doc):
 
 # html tests
 
-def test_toc_heading_html(tmpdir):
+def test_toc_heading_html(env):
     """Test the generation of tocs from headings for html"""
 
     # 1. The 'tests/tags/toc_example1' directory contains one markup in the
@@ -315,9 +313,7 @@ def test_toc_heading_html(tmpdir):
     # Setup paths
     src_filepath = SourcePath(project_root='tests/tags/toc_example1',
                               subpath='file1.dm')
-    target_root = TargetPath(tmpdir)
-
-    doc = Document(src_filepath, target_root)
+    doc = Document(src_filepath, environment=env)
 
     # Make sure the 'base_url' entry matches a basic format.
     doc.context['base_url'] = '/{target}/{subpath}'
@@ -352,7 +348,7 @@ def test_toc_heading_html(tmpdir):
     #     This test has headers with id anchors specified.
     src_filepath = SourcePath(project_root='tests/tags/toc_example2',
                               subpath='file1.dm')
-    doc = Document(src_filepath, target_root)
+    doc = Document(src_filepath, environment=env)
     doc2, doc3 = doc.documents_list(only_subdocuments=True)
 
     # Make sure the 'base_url' entry matches a basic format.
@@ -432,7 +428,7 @@ def test_toc_heading_html(tmpdir):
 
 # tex tests
 
-def test_toc_heading_tex(tmpdir):
+def test_toc_heading_tex(env):
     """Test the generation of tocs from headings for tex"""
     # The 'tests/tags/toc_example1' directory contains one markup in the root
     # directory, file1.dm, and two files, file21.dm and file22.dm, in the
@@ -441,8 +437,7 @@ def test_toc_heading_tex(tmpdir):
     # Setup paths
     src_filepaths = SourcePath(project_root='tests/tags/toc_example1',
                                subpath='file1.dm')
-    target_root = TargetPath(tmpdir)
-    doc = Document(src_filepaths, target_root)
+    doc = Document(src_filepaths, environment=env)
 
     # Create a toc for all headings
     toc = Toc(name='toc', content='all headings', attributes='',
@@ -471,7 +466,7 @@ def test_toc_heading_tex(tmpdir):
     # Setup paths
     src_filepaths = SourcePath(project_root='tests/tags/toc_example2',
                                subpath='file1.dm')
-    doc = Document(src_filepaths, target_root)
+    doc = Document(src_filepaths, environment=env)
 
     # Create a toc for all headings
     toc = Toc(name='toc', content='all headings', attributes='',
@@ -501,7 +496,7 @@ def test_toc_heading_tex(tmpdir):
     assert key == toc.tex
 
 
-def test_toc_document_tex(tmpdir):
+def test_toc_document_tex(env):
     """Test the generation of tocs for documents in latex."""
     # The 'tests/tags/toc_example1' directory contains three markup files:
     # file1.dm, in the root folder, and file21.dm and file2.dm in the 'sub'
@@ -509,8 +504,7 @@ def test_toc_document_tex(tmpdir):
     # Setup paths
     src_filepath = SourcePath(project_root='tests/tags/toc_example1',
                               subpath='file1.dm')
-    target_root = TargetPath(tmpdir)
-    doc = Document(src_filepath, target_root)
+    doc = Document(src_filepath, environment=env)
 
     # Create the tag for document2
     toc = Toc(name='toc', content='all documents', attributes='',

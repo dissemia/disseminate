@@ -32,7 +32,7 @@ def test_find_files_example1(doc):
     assert len(filepaths) == 1
 
 
-def test_find_files_example2(doc_cls, tmpdir):
+def test_find_files_example2(doc_cls, env, tmpdir):
     """Test the find_files function with the find_files_example2"""
     # tests/paths/find_files_example2/
     # └── src
@@ -48,11 +48,12 @@ def test_find_files_example2(doc_cls, tmpdir):
     # chapter1/index.dm includes local_img.png and root_img.png
 
     # Load the root document and subdocument
-    project_root = 'tests/paths/find_files_example2/src'
-    src_filepath = SourcePath(project_root=project_root, subpath='index.dm')
-    target_root = TargetPath(target_root=tmpdir)
+    env.project_root = SourcePath(project_root='tests/paths/'
+                                               'find_files_example2/src')
+    src_filepath = SourcePath(project_root=env.project_root, subpath='index.dm')
+    target_root = TargetPath(target_root=env.target_root)
 
-    doc = doc_cls(src_filepath=src_filepath, target_root=target_root)
+    doc = doc_cls(src_filepath=src_filepath, environment=env)
     subdoc = doc.documents_list(only_subdocuments=True)[0]
 
     # Check the paths relative to the root document

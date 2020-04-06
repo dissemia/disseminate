@@ -3,7 +3,7 @@ Tests the DocumentContext class.
 """
 from disseminate import SourcePath, TargetPath
 from disseminate.document import DocumentContext, Document
-from disseminate.tags import Tag, TagFactory
+from disseminate.tags import TagFactory
 
 
 # A DummyDocument class

@@ -180,19 +180,18 @@ def test_label_manager_get_labels(doctree):
     assert len(labels) == 0
 
 
-def test_label_manager_label_reordering(tmpdir):
+def test_label_manager_label_reordering(env):
     """Tests the reordering of labels when labels are registered."""
 
     # Create a document tree. A document tree is created here, rather than
     # use the doctree fixture, because this function needs to own the document
     # tree to properly call the __del__ function of all created documents.
-    target_root = pathlib.Path(tmpdir)
-    src_dir = pathlib.Path(tmpdir) / 'src'
-    src_dir.mkdir()
+    doc1 = env.root_document
+    project_root = env.project_root
+    src_filepath1 = doc1.src_filepath
 
-    src_filepath1 = src_dir / 'test1.dm'
-    src_filepath2 = src_dir / 'test2.dm'
-    src_filepath3 = src_dir / 'test3.dm'
+    src_filepath2 = src_filepath1.use_subpath('test2.dm')
+    src_filepath3 = src_filepath1.use_subpath('test3.dm')
 
     src_filepath1.write_text("""
     ---
@@ -204,9 +203,9 @@ def test_label_manager_label_reordering(tmpdir):
     src_filepath2.touch()
     src_filepath3.touch()
 
-    doc1 = Document(src_filepath1, target_root=target_root)
-
     # Get the label manager from the document and the documents in the tree
+    doc1 = Document(src_filepath=src_filepath1, environment=env)
+    doc1.load()
     doc2, doc3 = doc1.documents_list(only_subdocuments=True)
     label_man = doc1.context['label_manager']
 

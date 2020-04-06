@@ -7,7 +7,7 @@ from ..signals import document_onload, document_deleted
 @document_onload.connect_via(order=100)
 def reset_document(document, **kwargs):
     """Reset the context and managers for a document on load."""
-    context = getattr(document, 'context', dict())
+    context = document.context or dict()
     src_filepath = context.get('src_filepath', None)
 
     # Reset the dependency manager
@@ -31,7 +31,7 @@ def reset_document(document, **kwargs):
 @document_deleted.connect_via(order=100)
 def delete_document(document, **kwargs):
     """Reset the context and managers for a document on document deletion."""
-    context = getattr(document, 'context', dict())
+    context = document.context or dict()
     src_filepath = context.get('src_filepath', None)
 
     # Reset the dependency manager
@@ -48,6 +48,7 @@ def delete_document(document, **kwargs):
 
     # Reset the context
     del context
-    delattr(document, 'context')
+    if document.context is not None:
+        delattr(document, 'context')
 
     return document

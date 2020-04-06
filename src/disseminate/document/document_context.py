@@ -20,12 +20,9 @@ class DocumentContext(BaseContext):
 
     #: Required entries in the document context dict to be a valid document
     #: context--as well as their matching type to be checked.
-    #:
-    #: - targets aren't listed as a list or set entry because mutables,
-    #:   like lists, are appended to, instead of replaced. Targets should
-    #:   by replaced by values in the header.
     validation_types = {
         'document': None,
+        'environment': None,
         'src_filepath': SourcePath,
         'project_root': SourcePath,
         'target_root': TargetPath,
@@ -76,6 +73,9 @@ class DocumentContext(BaseContext):
         # template, the renderer will correctly populate the paths for each.
         'paths',
 
+        # Do not inherit builders. Each document and context has its own
+        'builders',
+
         #: The contents of the body (specified by body_attr) doesn't carry over
         #: because each body has its own body.
         settings.body_attr,
@@ -94,6 +94,7 @@ class DocumentContext(BaseContext):
         'label_manager',
         'dependency_manager',
         'renderers',
+        'environment',
 
         # Keep the same list for paths when resetting. Note that will place
         # the entry here to prevent the lists path from being reset by the
