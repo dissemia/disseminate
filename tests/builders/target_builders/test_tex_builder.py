@@ -127,10 +127,11 @@ def test_tex_builder_simple(env):
     assert builder.status == 'done'
 
 
-def test_tex_builder_simple_doc(setup_example):
+def test_tex_builder_simple_doc(load_example):
     """Test a simple build with the TexBuilder."""
     # 1. example 1: tests/builders/examples/ex3
-    env, doc = setup_example('tests/builders/examples/ex3', 'dummy.dm')
+    doc = load_example('tests/builders/examples/ex3/dummy.dm')
+    env = doc.context['environment']
 
     # Setup the builder
     builder = TexBuilder(env, context=doc.context)
@@ -154,10 +155,11 @@ def test_tex_builder_simple_doc(setup_example):
     assert builder.status == 'done'
 
 
-def test_tex_builder_inherited_doc(setup_example):
+def test_tex_builder_inherited_doc(load_example):
     """Test a build with the TexBuilder using an inherited template."""
     # 1. example 1: tests/builders/examples/ex4
-    env, doc = setup_example('tests/builders/examples/ex4', 'dummy.dm')
+    doc = load_example('tests/builders/examples/ex4/dummy.dm')
+    env = doc.context['environment']
 
     # Setup the builder
     builder = TexBuilder(env, context=doc.context)
@@ -180,7 +182,7 @@ def test_tex_builder_inherited_doc(setup_example):
     assert builder.status == 'done'
 
 
-def test_tex_builder_add_build(setup_example):
+def test_tex_builder_add_build(load_example):
     """Test the TexBuilder with an added dependency through add_build."""
 
     # 1. Example 3 includes a media file that can be included in tex
@@ -191,8 +193,8 @@ def test_tex_builder_add_build(setup_example):
     #             └── images
     #                 └── NMR
     #                     └── hsqc_bw.pdf
-    env, doc = setup_example('tests/builders/examples/ex5/src',
-                             'index.dm')
+    doc = load_example('tests/builders/examples/ex5/src/index.dm')
+    env = doc.context['environment']
     target_root = doc.context['target_root']
 
     # Setup the builder

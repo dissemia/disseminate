@@ -128,11 +128,11 @@ def test_html_builder_simple(env):
     assert builder.status == 'done'
 
 
-def test_html_builder_simple_doc(setup_example):
+def test_html_builder_simple_doc(load_example):
     """Test a simple build with the HtmlBuilder and a simple document."""
     # 1. example 1: tests/builders/examples/example3
-    env, doc = setup_example('tests/builders/examples/ex3',
-                             'dummy.dm')
+    doc = load_example('tests/builders/examples/ex3/dummy.dm')
+    env = doc.context['environment']
     target_root = doc.context['target_root']
 
     # Setup the builder
@@ -208,11 +208,12 @@ def test_html_builder_inherited(env):
     assert builder.status == 'done'
 
 
-def test_html_builder_inherited_doc(setup_example):
+def test_html_builder_inherited_doc(load_example):
     """Test a build with the HtmlBuilder using an inherited template and a
     simple doc."""
     # 1. example 1: tests/builders/examples/ex4
-    env, doc = setup_example('tests/builders/examples/ex4', 'dummy.dm')
+    doc = load_example('tests/builders/examples/ex4/dummy.dm')
+    env = doc.context['environment']
     target_root = doc.context['target_root']
 
     # Setup the builder
@@ -247,7 +248,7 @@ def test_html_builder_inherited_doc(setup_example):
     assert builder.status == 'done'
 
 
-def test_html_builder_add_build(setup_example):
+def test_html_builder_add_build(load_example):
     """Test the HtmlBuilder with an added dependency through add_build."""
 
     # 1. Example 3 includes a media file that must be converted from pdf->svg
@@ -259,8 +260,8 @@ def test_html_builder_add_build(setup_example):
     #             └── images
     #                 └── NMR
     #                     └── hsqc_bw.pdf
-    env, doc = setup_example('tests/builders/examples/ex5/src',
-                             'index.dm')
+    doc = load_example('tests/builders/examples/ex5/src/index.dm')
+    env = doc.context['environment']
     target_root = doc.context['target_root']
 
     # Setup the builder

@@ -16,30 +16,6 @@ from disseminate.builders import Environment
 from disseminate.server.server import create_app
 
 
-@pytest.fixture
-def env_cls():
-    """The build environment class"""
-    return Environment
-
-
-@pytest.fixture
-def env(tmpdir):
-    """A build environment"""
-    # Setup the paths
-    tmpdir = pathlib.Path(tmpdir)
-    target_root = TargetPath(target_root=tmpdir)
-    src_filepath = SourcePath(project_root=tmpdir, subpath='test.dm')
-    src_filepath.touch()
-
-    # Create a new environment so that context is stored on the env instead as
-    # weakref (default)
-    class TestEnvironment(Environment):
-        context = None
-
-    env = TestEnvironment(src_filepath=src_filepath, target_root=target_root)
-    return env
-
-
 def pytest_collection_modifyitems(config, items):
     """Run environment tests first.
 
@@ -134,6 +110,43 @@ def doctree(env):
 @pytest.fixture(scope='function')
 def doc_cls():
     return Document
+
+
+@pytest.fixture
+def env_cls():
+    """The build environment class"""
+    return Environment
+
+
+@pytest.fixture
+def env(tmpdir):
+    """A build environment"""
+    # Setup the paths
+    tmpdir = pathlib.Path(tmpdir)
+    target_root = TargetPath(target_root=tmpdir)
+    src_filepath = SourcePath(project_root=tmpdir, subpath='test.dm')
+    src_filepath.touch()
+
+    # Create a new environment so that context is stored on the env instead as
+    # weakref (default)
+    class TestEnvironment(Environment):
+        context = None
+
+    env = TestEnvironment(src_filepath=src_filepath, target_root=target_root)
+    return env
+
+
+@pytest.fixture
+def load_example(env_cls, tmpdir):
+    """Return a function that returns a document from an example path"""
+    # Setup the paths
+    tmpdir = pathlib.Path(tmpdir)
+    target_root = TargetPath(target_root=tmpdir)
+
+    def _load_example(example_path):
+        env = env_cls(example_path, target_root=target_root)
+        return env.root_document
+    return _load_example
 
 
 @pytest.fixture

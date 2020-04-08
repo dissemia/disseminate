@@ -33,10 +33,11 @@ def test_target_builder_setup(env):
         assert builder.outfilepath == target_filepath
 
 
-def test_target_builder_setup_doc(setup_example):
+def test_target_builder_setup_doc(load_example):
     """Test the setup of the target builders with a Document"""
     # 1. example 1: tests/builders/examples/ex3
-    env, doc = setup_example('tests/builders/examples/ex3', 'dummy.dm')
+    doc = load_example('tests/builders/examples/ex3/dummy.dm')
+    env = doc.context['environment']
 
     for targer_builder_cls, ext in ((HtmlBuilder, 'html'),
                                     (TexBuilder, 'tex'),):

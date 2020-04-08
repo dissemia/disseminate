@@ -127,10 +127,11 @@ def test_txt_builder_simple(env):
     assert builder.status == 'done'
 
 
-def test_txt_builder_simple_doc(setup_example):
+def test_txt_builder_simple_doc(load_example):
     """Test a simple build with the TxtBuilder."""
     # 1. example 1: tests/builders/examples/ex3
-    env, doc = setup_example('tests/builders/examples/ex3', 'dummy.dm')
+    doc = load_example('tests/builders/examples/ex3/dummy.dm')
+    env = doc.context['environment']
 
     # Setup the builder
     builder = TxtBuilder(env, context=doc.context)
@@ -147,7 +148,6 @@ def test_txt_builder_simple_doc(setup_example):
 
     # Check the answer key
     key = pathlib.Path('tests/builders/examples/ex3/dummy.txt')
-    print(doc.targets['.txt'])
     assert doc.targets['.txt'].read_text() == key.read_text()
 
     # New builders don't need to rebuild.

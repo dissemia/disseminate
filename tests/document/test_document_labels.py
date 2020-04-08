@@ -6,18 +6,18 @@ from disseminate import SourcePath, TargetPath
 from disseminate import settings
 
 
-def test_document_labels(tmpdir):
+def test_document_labels(env):
     """Test the correct assignment of labels for a document."""
     # Setup the paths
+    tmpdir = env.project_root
     project_root = SourcePath(project_root=tmpdir, subpath='src')
-    target_root = TargetPath(target_root=tmpdir)
     src_filepath = SourcePath(project_root=project_root,
                               subpath='test.dm')
     project_root.mkdir()
     src_filepath.touch()
 
     # Create a document
-    doc = Document(src_filepath, target_root)
+    doc = Document(src_filepath, environment=env)
 
     # 1. Test the label when the '_project_root' value is not assigned in the
     #    global_context. In this case, the label is identified by the document's
@@ -31,16 +31,17 @@ def test_document_labels(tmpdir):
     assert label.kind == ('document', 'document-level-1')
 
 
-def test_document_toc(tmpdir):
+def test_document_toc(env):
     """Test the generation of a toc from the header of a document."""
     # Setup the paths
+    tmpdir = env.project_root
     src_filepath = SourcePath(project_root='tests/document/example4/src',
                               subpath='file.dm')
     target_root = TargetPath(target_root=tmpdir)
 
     # Load example4, which has a file.dm with a 'toc' entry in the heading
     # for documents.
-    doc = Document(src_filepath, target_root)
+    doc = Document(src_filepath, environment=env)
 
     # Setup the settings in the context
     context = doc.context
@@ -60,15 +61,17 @@ def test_document_toc(tmpdir):
     assert toc_tag.html == key
 
 
-def test_document_tag_mtime(tmpdir, wait):
+def test_document_tag_mtime(env, wait):
     """Test the calculation of mtimes for labels from tags."""
     # Prepare two files
-    tmpdir.mkdir('src')
-    src_filepath1 = tmpdir / 'src' / 'main.dm'
-    src_filepath2 = tmpdir / 'src' / 'sub.dm'
+    tmpdir = env.project_root
+    project_root = tmpdir / 'src'
+    project_root.mkdir()
+    src_filepath1 = SourcePath(project_root=project_root, subpath='main.dm')
+    src_filepath2 = SourcePath(project_root=project_root, subpath='sub.dm')
 
     # Write to the files
-    src_filepath1.write("""
+    src_filepath1.write_text("""
     ---
     target: html
     include:
@@ -78,7 +81,7 @@ def test_document_tag_mtime(tmpdir, wait):
     """)
     wait()  # sleep time offset needed for different mtimes
 
-    src_filepath2.write("""
+    src_filepath2.write_text("""
     ---
     target: html
     ---
@@ -86,7 +89,7 @@ def test_document_tag_mtime(tmpdir, wait):
     """)
     wait()  # sleep time offset needed for different mtimes
 
-    doc = Document(str(src_filepath1), tmpdir)  # main.dm
+    doc = Document(src_filepath1, environment=env)  # main.dm
     label_manager = doc.context['label_manager']
 
     # Get the two documents
@@ -100,12 +103,12 @@ def test_document_tag_mtime(tmpdir, wait):
     root2 = doc2.context[body_attr]
 
     # Check that the mtimes match the file modification times
-    assert src_filepath1.mtime() == root1.mtime
-    assert src_filepath2.mtime() == root2.mtime
+    assert src_filepath1.stat().st_mtime == root1.mtime
+    assert src_filepath2.stat().st_mtime == root2.mtime
 
     # Now change the two src files. Add a reference to the 2nd file in the
     # first.
-    src_filepath1.write("""
+    src_filepath1.write_text("""
     ---
     target: html
     include:
@@ -116,7 +119,7 @@ def test_document_tag_mtime(tmpdir, wait):
     """)
     wait()  # sleep time offset needed for different mtimes
 
-    src_filepath2.write("""
+    src_filepath2.write_text("""
     ---
     target: html
     ---
@@ -133,27 +136,28 @@ def test_document_tag_mtime(tmpdir, wait):
     root2 = doc2.context[body_attr]
 
     # Check that the first file was written before the second.
-    assert src_filepath1.mtime() < src_filepath2.mtime()
+    assert src_filepath1.stat().st_mtime < src_filepath2.stat().st_mtime
 
     # The labels have been registered. The root1 depends on the second document,
     # which is later than the first document, so it should have it's mtime
     # instead of the mtime of the first document.
-    assert src_filepath1.mtime() < src_filepath2.mtime()
-    assert src_filepath1.mtime() < root1.mtime
-    assert src_filepath2.mtime() == root1.mtime
-    assert src_filepath2.mtime() == root2.mtime
+    assert src_filepath1.stat().st_mtime < src_filepath2.stat().st_mtime
+    assert src_filepath1.stat().st_mtime < root1.mtime
+    assert src_filepath2.stat().st_mtime == root1.mtime
+    assert src_filepath2.stat().st_mtime == root2.mtime
 
 
-def test_document_tree_updates_document_labels(tmpdir, wait):
+def test_document_tree_updates_document_labels(env, wait):
     """Test the updates to the document tree and labels."""
     # Create a document tree.
-    src_path = SourcePath(tmpdir, 'src')
-    src_path.mkdir()
+    tmpdir = env.project_root
+    project_root = tmpdir / 'src'
+    project_root.mkdir()
     target_root = TargetPath(tmpdir)
 
-    src_filepath1 = SourcePath(src_path, 'file1.dm')
-    src_filepath2 = SourcePath(src_path, 'file2.dm')
-    src_filepath3 = SourcePath(src_path, 'file3.dm')
+    src_filepath1 = SourcePath(project_root=project_root, subpath='file1.dm')
+    src_filepath2 = SourcePath(project_root=project_root, subpath='file2.dm')
+    src_filepath3 = SourcePath(project_root=project_root, subpath='file3.dm')
 
     src_filepath1.write_text("""---
     include:
@@ -166,7 +170,7 @@ def test_document_tree_updates_document_labels(tmpdir, wait):
     src_filepath3.touch()
 
     # 1. Load the root document
-    doc = Document(src_filepath=src_filepath1, target_root=target_root)
+    doc = Document(src_filepath=src_filepath1, environment=env)
     label_manager = doc.context['label_manager']
 
     # There should now be 3 total documents and 3 sets of labels, one for each
@@ -265,19 +269,20 @@ def test_document_tree_updates_document_labels(tmpdir, wait):
     assert label_list[2].id == 'doc:file3-dm'
 
 
-def test_document_tree_updates_with_section_labels(tmpdir, wait):
+def test_document_tree_updates_with_section_labels(env, wait):
     """Test how updating the document tree impacts the numbering of labels."""
 
     # 1. First, test decoupled documents
 
     # Create a document tree.
-    src_path = SourcePath(tmpdir, 'src')
-    src_path.mkdir()
+    tmpdir = env.project_root
+    project_root = tmpdir / 'src'
+    project_root.mkdir()
     target_root = TargetPath(tmpdir)
 
-    src_filepath1 = SourcePath(src_path, 'file1.dm')
-    src_filepath2 = SourcePath(src_path, 'file2.dm')
-    src_filepath3 = SourcePath(src_path, 'file3.dm')
+    src_filepath1 = SourcePath(project_root=project_root, subpath='file1.dm')
+    src_filepath2 = SourcePath(project_root=project_root, subpath='file2.dm')
+    src_filepath3 = SourcePath(project_root=project_root, subpath='file3.dm')
 
     src_filepath1.write_text("""
     ---
@@ -301,7 +306,7 @@ def test_document_tree_updates_with_section_labels(tmpdir, wait):
     wait()  # sleep time offset needed for different mtimes
 
     # Load the root document
-    doc = Document(src_filepath=src_filepath1, target_root=target_root)
+    doc = Document(src_filepath=src_filepath1, environment=env)
 
     # Check the order of the documents
     doc_list = doc.documents_list(only_subdocuments=False, recursive=True)
@@ -392,7 +397,7 @@ def test_document_tree_updates_with_section_labels(tmpdir, wait):
         """)
 
     # 1. Load the root document
-    doc = Document(src_filepath=src_filepath1, target_root=target_root)
+    doc = Document(src_filepath=src_filepath1, environment=env)
 
     # Check the order of the documents
     doc_list = doc.documents_list(only_subdocuments=False, recursive=True)

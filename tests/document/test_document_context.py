@@ -74,14 +74,10 @@ def test_document_context_basic_inheritence(context_cls, tmpdir):
     test_context_entries(context)
 
 
-def test_document_context_simple_documents(tmpdir):
+def test_document_context_simple_documents(load_example):
     """Test the preservation of the parent context with subdocuments."""
-    src_filepath = SourcePath(project_root='tests/document/example4/src',
-                              subpath='file.dm')
-    target_root = TargetPath(target_root=tmpdir)
-
     # Load example4. It has a main document (file.dm)
-    doc = Document(src_filepath, target_root)
+    doc = load_example('tests/document/example4/src/file.dm')
     label_manager = doc.label_manager
     dependency_manager = doc.dependency_manager
 
@@ -91,9 +87,9 @@ def test_document_context_simple_documents(tmpdir):
     def test_context_entries(doc):
         context = doc.context
         # Check the entries that should be inherited by the parent
-        assert context['src_filepath'] == src_filepath
-        assert context['project_root'] == src_filepath.project_root
-        assert context['target_root'] == target_root
+        assert context['src_filepath'] == doc.src_filepath
+        assert context['project_root'] == doc.src_filepath.project_root
+        assert context['target_root'] == doc.target_root
         assert context['document']() == doc  # dereference weakref
         assert context['root_document']() == doc  # dereference weakref
         assert context['doc_id'] == doc.doc_id
@@ -112,7 +108,7 @@ def test_document_context_simple_documents(tmpdir):
         assert 'paths' in context.do_not_inherit
 
         assert 'paths' in context
-        assert src_filepath.project_root in context['paths']
+        assert doc.src_filepath.project_root in context['paths']
 
     # Test the context
     test_context_entries(doc)
@@ -123,10 +119,7 @@ def test_document_context_simple_documents(tmpdir):
 
     # Load example7. It has a main document (file1.dm) and 1 subdocuments
     # (sub1/file11.dm), which has its own subdocument (subsub1/file111.dm)
-    src_filepath = SourcePath(project_root='tests/document/example7/src',
-                              subpath='file1.dm')
-    target_root = TargetPath(tmpdir)
-    doc = Document(src_filepath, target_root)
+    doc = load_example('tests/document/example7/src/file1.dm')
     label_manager = doc.label_manager
     dependency_manager = doc.dependency_manager
 
@@ -136,9 +129,9 @@ def test_document_context_simple_documents(tmpdir):
     def test_context_entries(doc):
         context = doc.context
         # Check the entries that should be inherited by the parent
-        assert context['src_filepath'] == src_filepath
-        assert context['project_root'] == src_filepath.project_root
-        assert context['target_root'] == target_root
+        assert context['src_filepath'] == doc.src_filepath
+        assert context['project_root'] == doc.src_filepath.project_root
+        assert context['target_root'] == doc.target_root
         assert context['document']() == doc  # dereference weakref
         assert context['root_document']() == doc  # dereference weakref
 
@@ -156,7 +149,7 @@ def test_document_context_simple_documents(tmpdir):
         assert 'paths' in context.do_not_inherit
 
         assert 'paths' in context
-        assert src_filepath.project_root in context['paths']
+        assert doc.src_filepath.project_root in context['paths']
 
         # Test the subdocuments
         subdocs = doc.documents_list(only_subdocuments=True, recursive=True)
@@ -193,14 +186,11 @@ def test_document_context_nested_load(doc):
     assert doc.context['label_fmts']['heading'] == "My heading @label.title "
 
 
-def test_document_context_is_valid(tmpdir):
+def test_document_context_is_valid(load_example):
     """Test the is_valid method for document contexts."""
-    src_filepath = SourcePath(project_root='tests/document/example4/src',
-                              subpath='file.dm')
-    target_root = TargetPath(target_root=tmpdir)
 
     # Load example4. It has a main document (file.dm)
-    doc = Document(src_filepath, target_root)
+    doc = load_example('tests/document/example4/src/file.dm')
     context = doc.context
 
     # The initial context is valid.

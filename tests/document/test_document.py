@@ -2,7 +2,6 @@
 Tests for Document classes and functions.
 """
 import pathlib
-from shutil import copy
 import logging
 
 import pytest
@@ -46,12 +45,11 @@ def test_document_paths(doc):
     assert str(doc.target_root.target_root) == str(target_root)
 
 
-def test_document_src_filepaths(env_cls, tmpdir):
+def test_document_src_filepaths(load_example):
     """Test the src_filepaths of documents."""
     # 1. Example1 does not have markup source files in a src
     #    directory.
-    env = env_cls("tests/document/example1/dummy.dm", target_root=tmpdir)
-    doc = env.root_document
+    doc = load_example("tests/document/example1/dummy.dm")
 
     assert isinstance(doc.src_filepath, SourcePath)
     assert str(doc.src_filepath) == "tests/document/example1/dummy.dm"
@@ -61,16 +59,14 @@ def test_document_src_filepaths(env_cls, tmpdir):
     # 2. Example4 has a markup source file in a source directory,
     #    'src'. Target files will be saved in the parent directory of the 'src'
     #    directory
-    env = env_cls("tests/document/example4/src/file.dm", target_root=tmpdir)
-    doc = env.root_document
+    doc = load_example("tests/document/example4/src/file.dm")
     assert str(doc.src_filepath) == "tests/document/example4/src/file.dm"
     assert str(doc.src_filepath.project_root) == "tests/document/example4/src"
     assert str(doc.src_filepath.subpath) == "file.dm"
 
     # 3. Example5 has markup source files in the root project directory, and
     #    in the sub1, sub2 and sub3 directories.
-    env = env_cls("tests/document/example5/index.dm", target_root=tmpdir)
-    doc = env.root_document
+    doc = load_example("tests/document/example5/index.dm")
 
     assert isinstance(doc.src_filepath, SourcePath)
     assert str(doc.src_filepath) == "tests/document/example5/index.dm"
@@ -98,10 +94,10 @@ def test_document_src_filepaths(env_cls, tmpdir):
     assert str(subdoc.src_filepath.subpath) == "sub3/index.dm"
 
 
-def test_document_targets(env_cls, tmpdir):
+def test_document_targets(load_example):
     """Test the document targets method."""
-    env = env_cls("tests/document/example1/dummy.dm", target_root=tmpdir)
-    doc = env.root_document
+    doc = load_example("tests/document/example1/dummy.dm")
+    target_root = doc.target_root
 
     # dummy.dm has the entry 'html, tex' set in the header.
     targets = doc.targets
@@ -110,12 +106,12 @@ def test_document_targets(env_cls, tmpdir):
 
     assert '.html' in targets
     assert isinstance(targets['.html'], TargetPath)
-    assert str(targets['.html'].target_root) == str(tmpdir)
+    assert str(targets['.html'].target_root) == str(target_root)
     assert str(targets['.html'].target) == 'html'
     assert str(targets['.html'].subpath) == 'dummy.html'
 
     assert '.tex' in targets
-    assert str(targets['.tex'].target_root) == str(tmpdir)
+    assert str(targets['.tex'].target_root) == str(target_root)
     assert str(targets['.tex'].target) == 'tex'
     assert str(targets['.tex'].subpath) == 'dummy.tex'
 
@@ -124,19 +120,17 @@ def test_document_targets(env_cls, tmpdir):
     assert doc.targets.keys() == set()
 
 
-def test_document_target_filepath(env_cls):
+def test_document_target_filepath(load_example):
     """Test the target_filepath method."""
 
     # 1. Example1 does not have markup source files in a source
     #    directory. Target files will be saved in the project directory
-    env = env_cls("tests/document/example1/dummy.dm")
-    doc = env.root_document
+    doc = load_example("tests/document/example1/dummy.dm")
+    target_root = doc.target_root
 
     assert isinstance(doc.target_filepath('.html'), TargetPath)
-    assert (str(doc.target_filepath('.html')) ==
-            "tests/document/example1/html/dummy.html")
     assert (str(doc.target_filepath('.html').target_root) ==
-            "tests/document/example1")
+            str(target_root))
     assert (str(doc.target_filepath('.html').target) ==
             "html")
     assert (str(doc.target_filepath('.html').subpath) ==
@@ -145,12 +139,11 @@ def test_document_target_filepath(env_cls):
     # 2. Example4 has a markup source file in a source directory,
     #    'src'. Target files will be saved in the parent directory of the 'src'
     #    directory
-    env = env_cls("tests/document/example4/src/file.dm")
-    doc = env.root_document
-    assert (str(doc.target_filepath('.html')) ==
-            "tests/document/example4/html/file.html")
+    doc = load_example("tests/document/example4/src/file.dm")
+    target_root = doc.target_root
+
     assert (str(doc.target_filepath('.html').target_root) ==
-            "tests/document/example4")
+            str(target_root))
     assert (str(doc.target_filepath('.html').target) ==
             "html")
     assert (str(doc.target_filepath('.html').subpath) ==
@@ -158,12 +151,11 @@ def test_document_target_filepath(env_cls):
 
     # 3. Example5 has markup source files in the root project directory, and
     #    in the sub1, sub2 and sub3 directories.
-    env = env_cls("tests/document/example5/index.dm")
-    doc = env.root_document
-    assert (str(doc.target_filepath('.html')) ==
-            "tests/document/example5/html/index.html")
+    doc = load_example("tests/document/example5/index.dm")
+    target_root = doc.target_root
+
     assert (str(doc.target_filepath('.html').target_root) ==
-            "tests/document/example5")
+            str(target_root))
     assert (str(doc.target_filepath('.html').target) ==
             "html")
     assert (str(doc.target_filepath('.html').subpath) ==
@@ -172,11 +164,9 @@ def test_document_target_filepath(env_cls):
     # Check the subdocuments
     subdoc = list(doc.subdocuments.values())[0]
     assert isinstance(subdoc.target_root, TargetPath)
-    assert str(subdoc.target_root) == 'tests/document/example5'
-    assert (str(subdoc.target_filepath('.html')) ==
-            "tests/document/example5/html/sub1/index.html")
+    assert str(subdoc.target_root) == str(target_root)
     assert (str(subdoc.target_filepath('.html').target_root) ==
-            "tests/document/example5")
+            str(target_root))
     assert (str(subdoc.target_filepath('.html').target) ==
             "html")
     assert (str(subdoc.target_filepath('.html').subpath) ==
@@ -184,11 +174,9 @@ def test_document_target_filepath(env_cls):
 
     subdoc = list(doc.subdocuments.values())[1]
     assert isinstance(subdoc.target_root, TargetPath)
-    assert str(subdoc.target_root) == 'tests/document/example5'
-    assert (str(subdoc.target_filepath('.html')) ==
-            "tests/document/example5/html/sub2/index.html")
+    assert str(subdoc.target_root) == str(target_root)
     assert (str(subdoc.target_filepath('.html').target_root) ==
-            "tests/document/example5")
+            str(target_root))
     assert (str(subdoc.target_filepath('.html').target) ==
             "html")
     assert (str(subdoc.target_filepath('.html').subpath) ==
@@ -196,11 +184,9 @@ def test_document_target_filepath(env_cls):
 
     subdoc = list(subdoc.subdocuments.values())[0]
     assert isinstance(subdoc.target_root, TargetPath)
-    assert str(subdoc.target_root) == 'tests/document/example5'
-    assert (str(subdoc.target_filepath('.html')) ==
-            "tests/document/example5/html/sub2/subsub2/index.html")
+    assert str(subdoc.target_root) == str(target_root)
     assert (str(subdoc.target_filepath('.html').target_root) ==
-            "tests/document/example5")
+            str(target_root))
     assert (str(subdoc.target_filepath('.html').target) ==
             "html")
     assert (str(subdoc.target_filepath('.html').subpath) ==
@@ -208,11 +194,9 @@ def test_document_target_filepath(env_cls):
 
     subdoc = list(doc.subdocuments.values())[2]
     assert isinstance(subdoc.target_root, TargetPath)
-    assert str(subdoc.target_root) == 'tests/document/example5'
-    assert (str(subdoc.target_filepath('.html')) ==
-            "tests/document/example5/html/sub3/index.html")
+    assert str(subdoc.target_root) == str(target_root)
     assert (str(subdoc.target_filepath('.html').target_root) ==
-            "tests/document/example5")
+            str(target_root))
     assert (str(subdoc.target_filepath('.html').target) ==
             "html")
     assert (str(subdoc.target_filepath('.html').subpath) ==
@@ -442,11 +426,10 @@ def test_document_label_mtime(doc):
     assert label_manager.labels[3].mtime == new_doc_mtime  # chapter 3 label
 
 
-def test_document_context_update(env_cls, tmpdir):
+def test_document_context_update(load_example):
     """Tests that the context is properly updated in subsequent renders."""
     # First load a file with a header
-    env = env_cls("tests/document/example2/withheader.dm", target_root=tmpdir)
-    doc = env.root_document
+    doc = load_example("tests/document/example2/withheader.dm")
 
     # Check the contents of the context.
     # The title entry is converted to a tag.
@@ -486,13 +469,12 @@ def test_document_context_update(env_cls, tmpdir):
     assert id(doc.context) == context_id
 
 
-def test_document_macros(env_cls, tmpdir):
+def test_document_macros(load_example):
     """Tests that macros defined in the header of a document are properly
     processed."""
 
     # First load a file with a header
-    env = env_cls("tests/document/example2/withheader.dm", target_root=tmpdir)
-    doc = env.root_document
+    doc = load_example("tests/document/example2/withheader.dm")
 
     doc.render()
     # See if the macro was properly replaced
@@ -575,15 +557,14 @@ def target(request):
     return request.param
 
 
-def test_document_render(env_cls, tmpdir, target):
+def test_document_render(load_example, target):
     """Tests the conversion of a basic html file."""
 
     ext = target
     stripped_ext = ext.strip('.')
 
     # Load the document and render it with no template
-    env = env_cls("tests/document/example1/dummy.dm", target_root=tmpdir)
-    doc = env.root_document
+    doc = load_example("tests/document/example1/dummy.dm")
 
     targets = {k: v for k, v in doc.targets.items() if k == ext}
     doc.render(targets=targets)
@@ -596,7 +577,7 @@ def test_document_render(env_cls, tmpdir, target):
 
     # An invalid file raises an error
     with pytest.raises(exceptions.DocumentException):
-        env = env_cls("tests/document/missing.dm")
+        doc = load_example("tests/document/missing.dm")
 
 
 def test_document_render_missing_template(doc):
@@ -616,7 +597,7 @@ def test_document_render_missing_template(doc):
         doc.load()
 
 
-def test_document_unusual_filenames(env_cls, tmpdir):
+def test_document_unusual_filenames(load_example):
     """Test the rendering of projects that use unusual filenames."""
 
     # Test example 11. Example 11 has unusual filenames that need to be loaded
@@ -631,14 +612,7 @@ def test_document_unusual_filenames(env_cls, tmpdir):
     #     │       ├── fig1.1.1.png
     #     │       └── img.one.asy
     #     └── root.file.dm
-
-    # Setup the paths
-    src_filepath = SourcePath(project_root='tests/document/example11/src',
-                              subpath='root.file.dm')
-
-    # Load the document and render it with no template
-    env = env_cls(src_filepath, target_root=tmpdir)
-    doc = env.root_document
+    doc = load_example('tests/document/example11/src/root.file.dm')
     doc.render()
 
     subdocs = doc.documents_list(only_subdocuments=True)
@@ -665,19 +639,11 @@ def test_document_unusual_filenames(env_cls, tmpdir):
                for dep in subdoc_deps)
 
 
-def test_document_example8(env_cls, tmpdir):
+def test_document_example8(load_example):
     """Test the example8 document directory."""
-    tmpdir = pathlib.Path(tmpdir)
-
-    # Setup the paths
-    src_path = tmpdir / 'src'
-    src_path.mkdir()
-    src_filepath = src_path / 'inept.dm'
-
     # Load the document and render it with no template
-    env = env_cls("tests/document/example8/src/fundamental_solnNMR/"
-                  "inept/inept.dm", target_root=tmpdir)
-    doc = env.root_document
+    doc = load_example("tests/document/example8/src/fundamental_solnNMR/"
+                       "inept/inept.dm")
 
     targets = {'.html': doc.target_filepath(target='.html'),
                '.tex': doc.target_filepath(target='.tex')}

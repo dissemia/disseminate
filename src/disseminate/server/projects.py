@@ -2,7 +2,7 @@
 Functions to load projects in a session.
 """
 from .store import store
-from ..document.utils import load_root_documents
+from ..builders.environment import Environment
 
 
 def load_projects(request):
@@ -23,7 +23,8 @@ def load_projects(request):
         out_dir = config.get('out_dir', None)
 
         # Fetch the root documents
-        docs = load_root_documents(path=in_path, target_root=out_dir)
+        envs = Environment.create_environments(root_path=in_path)
+        docs = [env.root_document for env in envs]
         store['root_documents'] = docs
 
     # See if any of the docs need to be rendered

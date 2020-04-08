@@ -5,11 +5,12 @@ import pathlib
 
 from disseminate.document import Document
 from disseminate.signals import signal
+from disseminate.paths import SourcePath
 
 
-def test_document_creation_deletion_signals(tmpdir):
+def test_document_creation_deletion_signals(env):
     """Test document creation and deletion signals"""
-    tmpdir = pathlib.Path(tmpdir)
+    tmpdir = env.project_root
 
     # 1. Try the delete document signal
     #   Get the signals and register some subscribers
@@ -21,10 +22,10 @@ def test_document_creation_deletion_signals(tmpdir):
         signals_dict['delete'] = True
 
     # Create a test document
-    src_filepath = tmpdir / 'test.dm'
+    src_filepath = SourcePath(project_root=tmpdir, subpath='test.dm')
     src_filepath.touch()
 
-    doc = Document(src_filepath=src_filepath, target_root=tmpdir)
+    doc = Document(src_filepath=src_filepath, environment=env)
 
     assert 'delete' not in signals_dict
     del doc
@@ -38,7 +39,7 @@ def test_document_creation_deletion_signals(tmpdir):
         signals_dict['created'] = True
 
     assert 'created' not in signals_dict
-    doc = Document(src_filepath=src_filepath, target_root=tmpdir)
+    doc = Document(src_filepath=src_filepath, environment=env)
     assert 'created' in signals_dict
 
     # Disconnect the signals
@@ -46,9 +47,9 @@ def test_document_creation_deletion_signals(tmpdir):
     del document_created.receivers[-1]
 
 
-def test_document_tree_update_signal(tmpdir, wait):
+def test_document_tree_update_signal(env, wait):
     """Test the document_tree_update signal"""
-    tmpdir = pathlib.Path(tmpdir)
+    tmpdir = env.project_root
     src_dir = tmpdir / 'src'
     src_dir.mkdir()
 
@@ -60,15 +61,15 @@ def test_document_tree_update_signal(tmpdir, wait):
       file3.dm
     ---
     """
-    file1 = src_dir / 'file1.dm'
+    file1 = SourcePath(project_root=src_dir, subpath='file1.dm')
     file1.write_text(markup1)
 
     markup2 = "test2"
-    file2 = src_dir / 'file2.dm'
+    file2 = SourcePath(project_root=src_dir, subpath='file2.dm')
     file2.write_text(markup2)
 
     markup3 = "test3"
-    file3 = src_dir / 'file3.dm'
+    file3 = SourcePath(project_root=src_dir, subpath='file3.dm')
     file3.write_text(markup3)
 
     # Setup a receiver for the document_tree_update
@@ -81,7 +82,7 @@ def test_document_tree_update_signal(tmpdir, wait):
     document_tree_updated.connect(mark_document, order=-1)
 
     # Create the root document and check that it was marked
-    root_doc = Document(src_filepath=file1, target_root=tmpdir)
+    root_doc = Document(src_filepath=file1, environment=env)
     doc2, doc3 = root_doc.documents_list(only_subdocuments=True)
 
     assert root_doc.marked == 1  # run once

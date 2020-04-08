@@ -1,17 +1,13 @@
 """
 Test the compilation of documents with specific tags.
 """
-import os
 
-from disseminate.document import Document
-
-
-def test_compiled_document_marginfig(tmpdir):
+def test_compiled_document_marginfig(env):
     """Test the marginfig tag in compiled documents"""
 
     # Create the paths in the temporary directory
-    src_path = tmpdir
-    src_filepath = src_path.join('main.dm')
+    doc = env.root_document
+    src_filepath = doc.src_filepath
 
     # Create the source for the template
     src = """
@@ -25,13 +21,11 @@ def test_compiled_document_marginfig(tmpdir):
     # For each template type try rendering the field
     for template in ('default', 'books/tufte',):
         # Write the source
-        src_filepath.write(src.format(template=template))
+        src_filepath.write_text(src.format(template=template))
 
-        # Create the compiled document
-        doc = Document(src_filepath=str(src_filepath),
-                       target_root=str(tmpdir))
+        # Reload and render the document
         doc.render()
 
-        assert os.path.exists(str(tmpdir) + '/tex/main.tex')
-        assert os.path.exists(str(tmpdir) + '/html/main.html')
-        assert os.path.exists(str(tmpdir) + '/pdf/main.pdf')
+        assert doc.targets['.tex'].is_file()
+        assert doc.targets['.html'].is_file()
+        assert doc.targets['.pdf'].is_file()

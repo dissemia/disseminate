@@ -14,7 +14,7 @@ def touch(fname, times=None):
         os.utime(fname, times)
 
 
-def test_documents_list(env_cls):
+def test_documents_list(load_example):
     """Test the documents_list function."""
 
     # 1. Load documents from example7. Example7 has one target ('.html')
@@ -27,8 +27,7 @@ def test_documents_list(env_cls):
                                subpath='sub1/file11.dm')
     src_filepath3 = SourcePath(project_root='tests/document/example7/src',
                                subpath='sub1/subsub1/file111.dm')
-    env = env_cls(src_filepath1)
-    doc = env.root_document
+    doc = load_example(src_filepath1)
 
     # Get all files recursively, including the root document
     docs = doc.documents_list(only_subdocuments=False, recursive=True)
@@ -132,16 +131,15 @@ def test_document_tree1(doc, wait):
     assert doc.load() is False  # documents already loaded
 
 
-def test_document_tree2(env_cls, tmpdir):
+def test_document_tree2(load_example):
     """Test the loading of trees and sub-documents from a document."""
 
     # Now test Example5. Example5 has a file in the root directory, a file in
     # the 'sub1', 'sub2' and 'sub3' directories and a file in the 'sub2/subsub2'
     # directory
-    env = env_cls("tests/document/example5/index.dm", target_root=tmpdir)
-    project_root = env.project_root
-    target_root = env.target_root
-    doc = env.root_document
+    doc = load_example("tests/document/example5/index.dm")
+    project_root = doc.project_root
+    target_root = doc.target_root
 
     # Setup paths of subdocuments
     src_filepath1 = SourcePath(project_root=project_root,

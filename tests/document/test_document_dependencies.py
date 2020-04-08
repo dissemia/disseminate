@@ -9,13 +9,11 @@ from disseminate.utils.tests import strip_leading_space
 from disseminate import SourcePath, TargetPath
 
 
-def test_dependencies_img(tmpdir, wait):
+def test_dependencies_img(env, wait):
     """Tests that the image dependencies are correctly reset when the AST is
     reprocessed."""
     # Setup the project_root in a temp directory
-    project_root = SourcePath(project_root=tmpdir / 'src')
-    project_root.mkdir()
-    target_root = TargetPath(target_root=tmpdir)
+    project_root = env.project_root
 
     # Copy a dependency image file to this directory
     img_path = project_root / 'sample.png'
@@ -34,19 +32,19 @@ def test_dependencies_img(tmpdir, wait):
                               subpath='test.dm')
     src_filepath.write_text(strip_leading_space(markup))
 
-    # Create a document
-    doc = Document(src_filepath, tmpdir)
+    # Reload a document
+    doc = env.root_document
 
     # Get the template renderer
     renderer = doc.context['renderers']['template']
 
     # Check that the document and dependency manager paths are correct
     assert doc.project_root == project_root
-    assert doc.target_root == target_root
+    assert doc.target_root == env.target_root
 
     dep_manager = doc.context['dependency_manager']
     assert dep_manager.project_root == project_root
-    assert dep_manager.target_root == target_root
+    assert dep_manager.target_root == env.target_root
 
     # Render the document
     doc.render()
@@ -77,7 +75,7 @@ def test_dependencies_img(tmpdir, wait):
     assert dep_manager.dependencies[src_filepath] == set(deps[0:4])
 
 
-def test_dependencies_multiple_locations(doc_cls, tmpdir):
+def test_dependencies_multiple_locations(load_example):
     """Test the addition of dependencies from multiple locations."""
 
     # 1. Test example10, which has an image file local to a sub-directory, one
@@ -93,11 +91,7 @@ def test_dependencies_multiple_locations(doc_cls, tmpdir):
     #         └── ch1
     #             └── root_img.png
     # Load the root document and subdocument
-    project_root = 'tests/document/example10/src'
-    src_filepath = SourcePath(project_root=project_root, subpath='index.dm')
-    target_root = TargetPath(target_root=tmpdir)
-
-    doc = doc_cls(src_filepath=src_filepath, target_root=target_root)
+    doc = load_example('tests/document/example10/src/index.dm')
     subdoc = doc.documents_list(only_subdocuments=True)[0]
 
     # Load the dependencies by rendering the root doc

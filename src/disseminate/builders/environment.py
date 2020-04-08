@@ -1,7 +1,6 @@
 """
 A build environment to determine which build to use.
 """
-from copy import deepcopy
 from itertools import chain
 import pathlib
 
@@ -13,8 +12,14 @@ from .. import settings
 
 
 class Environment(object):
-    """A environment owns a root document and builds and renders needed
-    files and documents."""
+    """A project environment for rendering documents using builders.
+
+    The build project environment has the following tasks:
+        1. Setup the project_root and target_root
+        2. Setup the default decider for builders
+        3. Setup the default scanner for builders
+        4. Setup the root document.
+    """
 
     decider = None
     scanner = None
@@ -39,8 +44,6 @@ class Environment(object):
         # Setup the scanner
         self.scanner = Scanner
 
-        # Setup the parent_context for the root_document
-
         # Setup the paths for the parent_context
         if not isinstance(src_filepath, pathlib.Path):
             # Make sure the src_filepath is a Source path
@@ -63,6 +66,9 @@ class Environment(object):
                                  environment=self)
         self.context = root_document.context
         self.root_document = root_document
+
+    def __repr__(self):
+        return "Environment({})".format(self.project_root)
 
     @staticmethod
     def get_target_root(project_root):
@@ -97,3 +103,76 @@ class Environment(object):
         for target_builder in target_builders:
             target_builder.build(complete=True)
 
+    @staticmethod
+    def _get_src_filepaths(root_path='',
+                           document_extension=settings.document_extension):
+        """Find the root src_filepaths from a given root_path"""
+        # Create a glob pattern to get all of the disseminate files in the path
+        # and remove the filenames to retain the unique paths. Convert the paths
+        # to strings so that they can be sorted more easily.
+        glob_pattern = pathlib.Path('**', '*' + document_extension)
+        paths = {p.parent for p in root_path.glob(str(glob_pattern))}
+
+        # Only keep entries that are basepaths
+        basepaths = set()
+
+        for path in paths:
+            # See if its a base path based on whether any of its parent is
+            # already located in the paths
+            parents = path.parents
+            if any(parent in paths for parent in parents):
+                continue
+
+            # The basepath is unique; add it to basepaths
+            basepaths.add(path)
+
+        # Generate the unique root paths as pathlib.Path objects.
+        project_paths = [SourcePath(project_root=basepath)
+                         for basepath in basepaths]
+
+        src_filepaths = []
+
+        for project_path in project_paths:
+            # Find the src_filepaths for the root documents (non-recursive)
+            glob_pattern = pathlib.Path('*' + document_extension)
+            glob = list(project_path.glob(str(glob_pattern)))
+            subpaths = [filepath.relative_to(project_path) for filepath in glob]
+            src_filepaths += [SourcePath(project_root=project_path,
+                                         subpath=subpath)
+                              for subpath in subpaths]
+        return src_filepaths
+
+    @staticmethod
+    def create_environments(root_path='',
+                            document_extension=settings.document_extension):
+        """Create environments from root documents found in the given root_path.
+
+        Parameters
+        ----------
+        root_path : Optional[Union[str, :obj:`pathlib.Path`]]
+            The path to search for root documents. By default, it is the
+            current directory.
+        document_extension : Optional[str]
+            The file extension for disseminate documents. ex: '.dm'
+
+        Returns
+        -------
+        environments : List[:obj:`.builders.Environment`]
+        """
+        # expand the user for the subpath directory
+        path = pathlib.Path(root_path).expanduser()
+
+        # Get the src_filepaths for the root documents
+        if path.is_file():
+            # src_filepaths from the file directly
+            src_filepaths = [SourcePath(project_root=path.parent,
+                                        subpath=path.name)]
+        else:
+            # or through the directory with glob patterns (_get_src_filepaths)
+            get_fps = Environment._get_src_filepaths
+            fps = get_fps(root_path=path,
+                          document_extension=document_extension)
+            src_filepaths = fps
+
+        return [Environment(src_filepath=src_filepath)
+                for src_filepath in src_filepaths]
