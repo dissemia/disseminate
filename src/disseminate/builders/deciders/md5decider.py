@@ -96,5 +96,5 @@ class Md5Decider(Decider):
     @property
     def db(self):
         if self._db is None:
-            self._db = diskcache.FanoutCache(self.db_path)
+            self._db = diskcache.Cache(self.db_path)
         return self._db
