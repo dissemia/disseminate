@@ -19,6 +19,17 @@ class Environment(object):
         2. Setup the default decider for builders
         3. Setup the default scanner for builders
         4. Setup the root document.
+
+    Parameters
+    ----------
+    src_filepath : Union[str, :obj:`pathlib.Path`]
+        The path for the disseminate source file of the root document.
+    target_root : Optional[Union[str, :obj:`pathlib.Path`]]
+        The (optional) path for the output root directory.
+    parent_context : Optional[:obj:`.context.BaseContext`]
+        The document context to use as the parent_context for the root document.
+        Typically, the default_context from the settings is used as the parent
+        context.
     """
 
     decider = None
@@ -83,6 +94,7 @@ class Environment(object):
 
     @property
     def cache_path(self):
+        """The path to the directory for storing cached files."""
         if self._cache_path is None:
             cache_path = SourcePath(project_root=self.target_root,
                                     subpath=settings.cache_path)
@@ -143,7 +155,7 @@ class Environment(object):
         return src_filepaths
 
     @staticmethod
-    def create_environments(root_path='',
+    def create_environments(root_path='', target_root=None,
                             document_extension=settings.document_extension):
         """Create environments from root documents found in the given root_path.
 
@@ -152,6 +164,8 @@ class Environment(object):
         root_path : Optional[Union[str, :obj:`pathlib.Path`]]
             The path to search for root documents. By default, it is the
             current directory.
+        target_root : Optional[Union[str, :obj:`pathlib.Path`]]
+            The (optional) path for the output root directory.
         document_extension : Optional[str]
             The file extension for disseminate documents. ex: '.dm'
 
@@ -174,5 +188,5 @@ class Environment(object):
                           document_extension=document_extension)
             src_filepaths = fps
 
-        return [Environment(src_filepath=src_filepath)
+        return [Environment(src_filepath=src_filepath, target_root=target_root)
                 for src_filepath in src_filepaths]
