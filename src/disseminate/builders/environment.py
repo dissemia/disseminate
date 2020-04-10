@@ -114,6 +114,7 @@ class Environment(object):
         target_builders = self.collect_target_builders()
         for target_builder in target_builders:
             target_builder.build(complete=True)
+        return 'done'
 
     @staticmethod
     def _get_src_filepaths(root_path='',

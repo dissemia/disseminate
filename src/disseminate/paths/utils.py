@@ -71,6 +71,7 @@ def find_files(string, context):
         A document context that contains paths to search.
 
     Returns
+    -------
     filepaths : List[:obj:`pathlib.Path`]
         List of found paths
     """
@@ -80,7 +81,6 @@ def find_files(string, context):
     # First remove extra spaces and newlines on the ends.
     string = str(string).strip()
     filepaths = list()
-    paths = ['.'] + context['paths']
 
     # Go line-by-line and find valid files. Stop when no more lines can
     # be found
@@ -89,34 +89,14 @@ def find_files(string, context):
         if line == "":
             continue
 
-        # Try an absolute path
-        filepath = pathlib.Path(line)
-
-        # If the filepath isn't an absolute path, try constructing the
-        # filepath from different paths
-        if not filepath.is_file():
-            filepath = None
-            for path in paths:
-                filepath = pathlib.Path(path) / line
-                if filepath.is_file():
-                    # A valid file was found! Use it.
-                    break
-                else:
-                    filepath = None
-
-        if filepath is None:
-            # No valid filepath was found. We'll assume the following strings
-            # do not contain valid files
-            break
-        else:
-            # A valid file and filepath was found. Add it to the list of
-            # filepaths and continue looking for files.
+        filepath = find_file(line, context=context, raise_error=False)
+        if filepath is not None:
             filepaths.append(filepath)
 
     return filepaths
 
 
-def search_paths(path, context, raise_error=True):
+def find_file(path, context, raise_error=True):
     """Search for an existing file given the path and, if needed, the 'paths'
     entry from a context.
 
@@ -144,7 +124,7 @@ def search_paths(path, context, raise_error=True):
         return path
 
     # Otherwise see if the path can be reconstructed
-    paths = context['paths']
+    paths = ['.'] + context['paths']
     for p in paths:
         # Treat SourcePath and TargetPath in a special way to correctly set the
         # subpath

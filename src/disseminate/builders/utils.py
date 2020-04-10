@@ -33,10 +33,10 @@ def generate_outfilepath(env, infilepaths, target=None, append=None, ext=None,
     # Find the first valid infilepath
     infilepaths = (infilepaths if isinstance(infilepaths, list) or
                    isinstance(infilepaths, tuple) else [infilepaths])
-    infilepath = [fp for fp in infilepaths if hasattr(fp, 'subpath')]
+    infilepaths = [fp for fp in infilepaths if hasattr(fp, 'subpath')]
     if len(infilepaths) == 0:
         return None
-    infilepath = infilepath[0]
+    infilepath = infilepaths[0]
 
     # Formulate the target_root
     target_root = env.cache_path if cache else env.context['target_root']
@@ -47,7 +47,7 @@ def generate_outfilepath(env, infilepaths, target=None, append=None, ext=None,
     elif hasattr(infilepath, 'target'):
         target = infilepath.target
     else:
-        target= None
+        target = None
 
     # Formulate the subpath
     subpath = infilepath.subpath

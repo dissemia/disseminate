@@ -6,7 +6,7 @@ from os import curdir
 
 import pytest
 
-from disseminate.paths.utils import find_files, search_paths
+from disseminate.paths.utils import find_files, find_file
 from disseminate.paths import SourcePath, TargetPath
 
 
@@ -77,8 +77,8 @@ def test_find_files_example2(doc_cls, env, tmpdir):
                                'chapter1/figures/local_img.png'))
 
 
-def test_search_paths(context_cls):
-    """Test the search_paths function."""
+def test_find_file(context_cls):
+    """Test the find_file function."""
 
     # 1. Test the find_files_example2
     # tests/paths/find_files_example2/
@@ -98,13 +98,13 @@ def test_search_paths(context_cls):
              'tests/paths/find_files_example2/src/chapter1/figures',]
     context = context_cls(paths=paths)
 
-    assert search_paths('local_img.png', context).match('local_img.png')
-    assert search_paths('figures/local_img.png', context).match('local_img.png')
-    assert search_paths('media/ch1/root_img.png', context).match('root_img.png')
+    assert find_file('local_img.png', context).match('local_img.png')
+    assert find_file('figures/local_img.png', context).match('local_img.png')
+    assert find_file('media/ch1/root_img.png', context).match('root_img.png')
 
     # Try a missing file
     with pytest.raises(FileNotFoundError):
-        search_paths('ch1/root_img.png', context)
+        find_file('ch1/root_img.png', context)
 
     # 1.2. Test with SourcePath strings
     paths = [SourcePath('tests/paths/find_files_example2/src'),
@@ -112,17 +112,17 @@ def test_search_paths(context_cls):
              SourcePath('tests/paths/find_files_example2/src',
                         'chapter1/figures')]
     context = context_cls(paths=paths)
-    p1 = search_paths('local_img.png', context)
+    p1 = find_file('local_img.png', context)
     assert p1.match('figures/local_img.png')
     assert isinstance(p1, SourcePath)
     assert str(p1.subpath) == 'chapter1/figures/local_img.png'
 
-    p2 = search_paths('figures/local_img.png', context)
+    p2 = find_file('figures/local_img.png', context)
     assert p2.match('figures/local_img.png')
     assert isinstance(p2, SourcePath)
     assert str(p2.subpath) == 'chapter1/figures/local_img.png'
 
-    p3 = search_paths('media/ch1/root_img.png', context)
+    p3 = find_file('media/ch1/root_img.png', context)
     assert p3.match('media/ch1/root_img.png')
     assert isinstance(p3, SourcePath)
     assert str(p3.subpath) == 'media/ch1/root_img.png'

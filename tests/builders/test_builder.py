@@ -99,6 +99,29 @@ def test_builder_status(env):
     assert builder.status == 'done'
 
 
+def test_run_cmd_args(env):
+    """Test the run_cmd_args method"""
+
+    # 1. Test a basic example
+    infilepath = SourcePath(project_root='', subpath='sample.pdf')
+    targetpath = TargetPath(target_root='', subpath='out.pdf')
+    builder = Builder(env=env, infilepaths=infilepath, outfilepath=targetpath)
+    builder.action = ("My test with {builder.infilepaths} and "
+                      "{builder.outfilepath}")
+    assert builder.run_cmd_args() == ('My', 'test', 'with', 'sample.pdf', 'and',
+                                      'out.pdf')
+
+    # 2. Test an unsafe example with options and an unsafe option input as
+    #    a filename
+    infilepath = SourcePath(project_root='', subpath='-unsafe')
+    targetpath = TargetPath(target_root='', subpath='out.pdf')
+    builder = Builder(env=env, infilepaths=infilepath, outfilepath=targetpath)
+    builder.action = ("test -safe {builder.infilepaths} and "
+                      "-outputfile={builder.outfilepath}")
+    assert builder.run_cmd_args() == ('test', '-safe', 'unsafe', 'and',
+                                      '-outputfile=out.pdf')
+
+
 def test_builder_build(env):
     """Test the Builder build method"""
 

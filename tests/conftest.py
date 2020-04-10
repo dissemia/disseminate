@@ -53,13 +53,6 @@ def wait():
 
 
 @pytest.fixture(scope='function')
-def context_cls():
-    """Returns a copy of the context class."""
-    CopyContext = copy.deepcopy(BaseContext)
-    return CopyContext
-
-
-@pytest.fixture(scope='function')
 def attributes_cls():
     """Returns a copy of the attributes class."""
     CopyAttributes = copy.deepcopy(Attributes)
@@ -72,6 +65,30 @@ def mocktag_cls():
     # Create a mock tag class
     MockTag = namedtuple('MockTag', 'name attributes content context')
     return MockTag
+
+
+@pytest.fixture
+def env_cls():
+    """The build environment class"""
+    return Environment
+
+
+@pytest.fixture
+def env(tmpdir):
+    """A build environment"""
+    # Setup the paths
+    tmpdir = pathlib.Path(tmpdir)
+    target_root = TargetPath(target_root=tmpdir)
+    src_filepath = SourcePath(project_root=tmpdir, subpath='test.dm')
+    src_filepath.touch()
+
+    # Create a new environment so that context is stored on the env instead as
+    # weakref (default)
+    class TestEnvironment(Environment):
+        context = None
+
+    env = TestEnvironment(src_filepath=src_filepath, target_root=target_root)
+    return env
 
 
 @pytest.fixture(scope='function')
@@ -112,28 +129,16 @@ def doc_cls():
     return Document
 
 
-@pytest.fixture
-def env_cls():
-    """The build environment class"""
-    return Environment
+@pytest.fixture(scope='function')
+def context(doc):
+    return doc.context
 
 
-@pytest.fixture
-def env(tmpdir):
-    """A build environment"""
-    # Setup the paths
-    tmpdir = pathlib.Path(tmpdir)
-    target_root = TargetPath(target_root=tmpdir)
-    src_filepath = SourcePath(project_root=tmpdir, subpath='test.dm')
-    src_filepath.touch()
-
-    # Create a new environment so that context is stored on the env instead as
-    # weakref (default)
-    class TestEnvironment(Environment):
-        context = None
-
-    env = TestEnvironment(src_filepath=src_filepath, target_root=target_root)
-    return env
+@pytest.fixture(scope='function')
+def context_cls():
+    """Returns a copy of the context class."""
+    CopyContext = copy.deepcopy(BaseContext)
+    return CopyContext
 
 
 @pytest.fixture

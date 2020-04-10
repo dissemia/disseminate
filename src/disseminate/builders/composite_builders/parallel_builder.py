@@ -1,6 +1,6 @@
 from .composite_builder import CompositeBuilder
 from ...paths import TargetPath
-from ...paths.utils import search_paths
+from ...paths.utils import find_file
 
 
 class ParallelBuilder(CompositeBuilder):
@@ -34,7 +34,7 @@ class ParallelBuilder(CompositeBuilder):
         infilepaths = infilepaths or []
         infilepaths = (infilepaths if isinstance(infilepaths, list) or
                        isinstance(infilepaths, tuple) else [infilepaths])
-        infilepaths = [search_paths(i, context, raise_error=False) or i
+        infilepaths = [find_file(i, context, raise_error=False) or i
                        for i in infilepaths]
 
         target = target or self.target
