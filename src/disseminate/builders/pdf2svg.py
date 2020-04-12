@@ -37,7 +37,8 @@ class Pdf2svg(Builder):
 
 
 class Pdf2SvgCropScale(SequentialBuilder):
-    """Create a CompositeBuilder for Pdf2Svg that includes PdfCrop and ScaleSvg.
+    """A SequentialBuilder for Pdf2Svg that includes PdfCrop and ScaleSvg
+    builders.
     """
 
     available = True

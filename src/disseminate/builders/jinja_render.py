@@ -50,7 +50,7 @@ class JinjaRender(Builder):
     def __init__(self, env, context, render_ext=None, **kwargs):
         super().__init__(env, **kwargs)
         # Checks
-        assert render_ext or self.outfilepath, ("Either a target or an "
+        assert render_ext or self.outfilepath, ("Either a render_ext or an "
                                                 "outfilepath must be specified")
         self.render_ext = render_ext or self.outfilepath.suffix
         self.context = context

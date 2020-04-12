@@ -4,7 +4,7 @@ Tests for the SvgRender builder.
 from collections import namedtuple
 
 from disseminate.builders.svgrender import SvgRender
-from disseminate.paths import SourcePath, TargetPath
+from disseminate.paths import TargetPath
 
 
 def test_svgrender_setup(env):
