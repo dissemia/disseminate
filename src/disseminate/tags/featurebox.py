@@ -44,3 +44,10 @@ class ExampleBox(FeatureBox):
 
     html_classes = "featurebox examplebox"
     tex_env = "examplebox"
+
+
+class ProblemBox(FeatureBox):
+    """A box for problems"""
+
+    html_classes = "featurebox problembox"
+    tex_env = "problembox"

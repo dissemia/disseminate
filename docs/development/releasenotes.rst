@@ -1,6 +1,27 @@
 Release Notes
 =============
 
+v0.21
+-----
+
+Tags
+~~~~
+1. *Problem boxes*. Added a feature box for problems.
+
+v0.20
+-----
+
+Tags
+~~~~
+1. *Tables*. Tags to render tables.
+2. *Data*. Tags to incorporate data into tables or plots.
+3. *Captions*. Captions now render in html using the ``caption`` or
+   ``figcaption`` tags.
+4. *Figures*. Figures now render in html using the ``figure`` tag.
+5. *Equations*. Refactor image, equation and paragraph tags to automatically
+   identify equations in a block paragraph, without specifying the equation
+   environment (ex: ``@eq[env=align*]{...}``)
+
 v0.19
 -----
 
@@ -12,6 +33,7 @@ Tags
    tag by default. Instead, a label tag is created, and the content of the tag
    is included if a ``@label.title`` macro was included.
 3. *Equations*
+
    3.1. *tex*: Block equations (equations in their own paragraph) are written
         without newlines before/after the environment in latex.
 

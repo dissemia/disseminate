@@ -15,6 +15,7 @@ from ..convert import convert
 from ..attributes import Attributes
 from ..paths import SourcePath, TargetPath
 from ..utils.classes import weakattr
+from ..utils.file import link_or_copy
 from .. import settings
 
 
@@ -315,17 +316,8 @@ class DependencyManager(object):
             target_parent.mkdir(parents=True, exist_ok=True)
 
         # The link or copy the file
-        logging.debug("Linking file '{}'".format(str(dep_filepath)))
-        try:
-            os.link(dep_filepath, dest_filepath)
-        except FileExistsError:
-            # If the file exists, the link will fail. Remove it first.
-            os.remove(dest_filepath)
-            os.link(dep_filepath, dest_filepath)
-        except OSError:
-            # In Linux, you can't create a hard link to a temp directory
-            shutil.copyfile(dep_filepath, dest_filepath)
-
+        link_or_copy(src=dep_filepath, dst=dest_filepath)
+        
     def _convert_file(self, dep_filepath, target, attributes=None):
         target_root = self.target_root
 

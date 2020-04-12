@@ -22,7 +22,7 @@
 
 %%%
 % Load UTF-8 characters
-\usepackage[T1]{fontenc}
+% \usepackage[T1]{fontenc}  % introduces grainy bitmap fonts
 \usepackage[utf8]{inputenc}
 \DeclareUnicodeCharacter{26AC}{\circ}  % used for degrees
 \DeclareUnicodeCharacter{25CB}{\ensuremath{\circ}}  % used for degrees
@@ -77,12 +77,28 @@
 \renewcommand{\deg}{^\circ}
 
 %%%
-% Color boxes
-\usepackage{tcolorbox}
+% Nice tables
+\usepackage{booktabs}
 
-% color box definitions
-\newtcolorbox{featurebox}{colback=black!5!white, colframe=black!40!white}
-\newtcolorbox{examplebox}{colback=blue!5!white, colframe=blue!40!white}
+%%%
+% Color boxes
+\usepackage[breakable]{tcolorbox}
+
+\newtcolorbox{featurebox}{colback=black!5!white,
+                          colframe=black!40!white,
+                          breakable,
+                          before skip=\baselineskip,
+                          after skip=\baselineskip}
+\newtcolorbox{examplebox}{colback=blue!5!white,
+                          colframe=blue!40!white,
+                          breakable,
+                          before skip=\baselineskip,
+                          after skip=\baselineskip}
+\newtcolorbox{problembox}{colback=green!7!white,
+                          colframe=green!50!black!40!white,
+                          breakable,
+                          before skip=\baselineskip,
+                          after skip=\baselineskip}
 
 {%- endblock %}
 {%- block pygmentsheader %}
@@ -196,6 +212,7 @@
 %%%
 % Extra shim environments for marginfig, figure, ... environments.
 \newenvironment{marginfigure}[1][]{\begin{figure}}{\end{figure}}
+\newenvironment{margintable}[1][]{\begin{table}}{\end{table}}
 {%- endblock %}
 {%- block extraheader %}
 {%- endblock %}

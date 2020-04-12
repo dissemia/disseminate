@@ -57,3 +57,60 @@ def rename(path, filename=None, append=None, extension=None):
 
     # Return the renamed path
     return parent / (filename + extension)
+
+
+def find_files(string, context):
+    """Determine if filenames for valid files are present in the given
+    string.
+
+    Parameters
+    ----------
+    string : str
+        The string that may contain filenames
+    context : :obj:`.DocumentContext`
+        A document context that contains paths to search.
+
+    Returns
+    filepaths : List[:obj:`pathlib.Path`]
+        List of found paths
+    """
+    assert context.is_valid('paths')
+
+    # Setup arguments and return values
+    # First remove extra spaces and newlines on the ends.
+    string = str(string).strip()
+    filepaths = list()
+    paths = ['.'] + context['paths']
+
+    # Go line-by-line and find valid files. Stop when no more lines can
+    # be found
+    for line in string.splitlines():
+        # Skip empty lines
+        if line == "":
+            continue
+
+        # Try an absolute path
+        filepath = pathlib.Path(line)
+
+        # If the filepath isn't an absolute path, try constructing the
+        # filepath from different paths
+        if not filepath.is_file():
+            filepath = None
+            for path in paths:
+                filepath = pathlib.Path(path) / line
+                if filepath.is_file():
+                    # A valid file was found! Use it.
+                    break
+                else:
+                    filepath = None
+
+        if filepath is None:
+            # No valid filepath was found. We'll assume the following strings
+            # do not contain valid files
+            break
+        else:
+            # A valid file and filepath was found. Add it to the list of
+            # filepaths and continue looking for files.
+            filepaths.append(filepath)
+
+    return filepaths

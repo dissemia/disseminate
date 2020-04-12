@@ -8,6 +8,7 @@ from tempfile import mkdtemp
 
 from ..paths import SourcePath, TargetPath
 from ..paths.utils import rename
+from ..utils.file import link_or_copy
 from .converter import Converter, convert
 from .arguments import SourcePathArgument
 from .pdf import Pdf2svg
@@ -40,7 +41,7 @@ class Pdflatex(Converter):
         env = {'TEXINPUTS': ":" + texinputs}
 
         # Setup the command and run in
-        args = [pdflatex_exec, "-interaction=nonstopmode",
+        args = [pdflatex_exec, "-interaction=nonstopmode", "-halt-on-error",
                 "-output-directory=" + str(temp_dir),
                 str(self.src_filepath.value)]
 
@@ -53,13 +54,7 @@ class Pdflatex(Converter):
             raise e
 
         # Copy the processed file to the target
-        try:
-            os.link(temp_filepath_pdf, self.target_filepath())
-        except FileExistsError:
-            os.remove(self.target_filepath())
-            os.link(temp_filepath_pdf, self.target_filepath())
-        except OSError:
-            shutil.copy2(temp_filepath_pdf, self.target_filepath())
+        link_or_copy(src=temp_filepath_pdf, dst=self.target_filepath())
         return True
 
     @staticmethod

@@ -10,6 +10,7 @@ from .arguments import (PositiveIntArgument, PositiveFloatArgument,
                         TupleArgument)
 from ..paths import TargetPath
 from ..paths.utils import rename
+from ..utils.file import link_or_copy
 
 
 class Pdf2svg(Converter):
@@ -123,11 +124,5 @@ class Pdf2svg(Converter):
             current_svg = temp_filepath_svg2
 
         # Copy the processed file to the target
-        try:
-            os.link(current_svg, self.target_filepath())
-        except FileExistsError:
-            os.remove(self.target_filepath())
-            os.link(current_svg, self.target_filepath())
-        except OSError:
-            shutil.copy2(current_svg, self.target_filepath())
+        link_or_copy(src=current_svg, dst=self.target_filepath())
         return True

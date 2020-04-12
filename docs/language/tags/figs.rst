@@ -9,6 +9,8 @@ Tags to insert figures
    .. index::
       single: tags; @marginfig
 
+   :aliases: ``@marginfigure``
+
    :contents:
 
       An ``@img`` tag and, optionally, a ``@caption`` tag

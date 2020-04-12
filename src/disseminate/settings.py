@@ -119,9 +119,11 @@ default_context = {
         'ref_document': '@label.title',
 
         # caption tags
-        'caption_figure': '@b{Fig. @label.number}.',
+        'caption_figure': '@b{Fig. @label.number}. ',
+        'caption_table': '@b{Table @label.number}. ',
 
         'ref_caption_figure': '@b{Fig. @label.number}',
+        'ref_caption_table': '@b{Table @label.number}',
 
         # Headings tags
         'heading': '@label.tree_number. @label.title',
@@ -153,7 +155,7 @@ default_context = {
         # New chapters reset the numbers on sections, subsections,
         # subsubsections
         'part': {'chapter', 'section', 'subsection', 'subsubsection'},
-        'chapter': {'section', 'subsection', 'subsubsection'},
+        'chapter': {'section', 'subsection', 'subsubsection', 'figure', 'table'},
         'section': {'subsection', 'subsubsection'},
         'subsection': {'subsubsection'},
     },
@@ -174,6 +176,8 @@ default_context = {
 
     # Macros - Symbols
     '@deg': '@sup{○}',
+    '@degC': '@sup{○}C',
+    '@times': '@symbol{times}',
 
     # Macros - Greek
     '@alpha': '@symbol{alpha}', '@beta': '@symbol{beta}',
@@ -259,11 +263,14 @@ html_tag_optionals = {'a': ('class', 'role'),
                       'blockquote': empty,
                       'br': empty,
                       'code': empty,
+                      'caption': ('class', 'id'),
                       'dd': empty,
                       'div': ('class', 'id'),
                       'dl': empty,
                       'dt': empty,
                       'em': empty,
+                      'figure': ('id', 'class'),
+                      'figcaption': ('id', 'class'),
                       'h1': ('id', 'class'),
                       'h2': ('id', 'class'),
                       'h3': ('id', 'class'),
@@ -303,10 +310,17 @@ tex_env_arguments = {'align': empty, # no required arguments
                      'alignat*': (IntPositionalValue,),  # \begin{alignat*}{3}
                      'center': empty,
                      'enumerate': empty,
+
                      'examplebox': empty,
                      'featurebox': empty,
+                     'problembox': empty,
+
                      'itemize': empty,
                      'panel': (StringPositionalValue,),
+                     'tabular': (StringPositionalValue,),
+                     'table': empty,
+                     'table*': empty,
+                     'margintable': empty,
                      'toclist': empty,
                      'verbatim': empty,
                      }
@@ -352,6 +366,10 @@ tex_cmd_arguments = {'textbf': empty,
                      'includegraphics': empty,
                      'textcolor': (StringPositionalValue,),
                      'boldsymbol': empty,
+
+                     'toprule': empty,
+                     'midrule': empty,
+                     'bottomrule': empty,
 
                      'hfill': empty,
                      'pageref': (StringPositionalValue,),
