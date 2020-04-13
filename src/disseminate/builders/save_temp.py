@@ -2,14 +2,11 @@
 Builder to save temporary files
 """
 import logging
-import pathlib
 
 from .builder import Builder, BuildError
-from .utils import generate_outfilepath
+from .utils import generate_mock_infilepath, generate_outfilepath
 from ..utils.classes import weakattr
 from ..utils.file import mkdir_p
-from ..utils.string import hashtxt
-from ..paths import SourcePath
 
 
 class SaveTempFile(Builder):
@@ -63,21 +60,16 @@ class SaveTempFile(Builder):
 
             if infilepaths:
                 # Create an temporary infilepath from the hash of the input
-                hash = hashtxt("".join(map(hashtxt, map(str, infilepaths))),
-                               truncate=12)
-                ext = self.save_ext or self.outfilepath_ext
-                project_root = src_filepath.project_root
-                subpath = pathlib.Path(src_filepath.subpath.parent if
-                                       src_filepath.subpath else '.')
-                filename = hash + ext
-
-                sourcepath = SourcePath(project_root=project_root,
-                                        subpath=subpath / filename)
+                sourcepath = generate_mock_infilepath(env=self.env,
+                                                      context=self.context,
+                                                      infilepaths=infilepaths,
+                                                      ext='.save')
 
                 outfilepath = generate_outfilepath(env=self.env,
                                                    infilepaths=sourcepath,
                                                    append=self.outfilepath_ext,
-                                                   ext=ext, target=self.target,
+                                                   ext=self.save_ext,
+                                                   target=self.target,
                                                    cache=True)
 
         # Make sure the outfilepath directory exists

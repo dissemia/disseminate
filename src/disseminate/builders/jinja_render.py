@@ -7,7 +7,7 @@ import logging
 import jinja2
 
 from .builder import Builder
-from .utils import generate_outfilepath
+from .utils import generate_mock_infilepath, generate_outfilepath
 from ..utils.string import hashtxt
 from ..paths import SourcePath
 from ..utils.file import mkdir_p
@@ -136,21 +136,16 @@ class JinjaRender(Builder):
 
             if infilepaths:
                 # Create an temporary infilepath from the hash of the input
-                hash = hashtxt("".join(map(hashtxt, map(str, infilepaths))),
-                               truncate=12)
+                sourcepath = generate_mock_infilepath(env=self.env,
+                                                      context=self.context,
+                                                      infilepaths=infilepaths,
+                                                      ext='.render')
 
-                # Create the new temporary infilepath with a filename from the
-                # hash
-                sourcepaths = [fp for fp in infilepaths
-                               if hasattr(fp, 'use_name')]
-                sourcepath = sourcepaths[0]
-                suffix = sourcepath.suffix
-                sourcepath = sourcepath.use_name(hash + suffix)
-
+                # Generate an outfilepath from the mock infilepaths
                 outfilepath = generate_outfilepath(env=self.env,
                                                    infilepaths=sourcepath,
                                                    append=self.outfilepath_ext,
-                                                   ext=self.outfilepath_ext,
+                                                   ext=self.render_ext,
                                                    target=self.target,
                                                    cache=True)
 
