@@ -186,7 +186,8 @@ class Builder(metaclass=ABCMeta):
         if not active:
             return "inactive"
         elif (not has_infilepaths or
-              not all(i.exists() for i in self.infilepaths)):
+              not all(i.exists() for i in self.infilepaths
+                      if hasattr(i, 'exists'))):
             return "missing (infilepaths)"
         elif not self.build_needed() or self.popen == "done":
             return "done"

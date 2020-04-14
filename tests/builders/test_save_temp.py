@@ -12,8 +12,7 @@ def test_save_temp_file_setup(env):
     context = env.context
     target_root = context['target_root']
 
-    # 1. Setup the render build with a specified outfilepath. A default template
-    #    'templates/default' is used.
+    # 1. Setup the render build with a specified outfilepath.
     outfilepath = TargetPath(target_root=target_root, target='test',
                              subpath='subpath.test')
     save_build = SaveTempFile(env, infilepaths='my test',
@@ -60,3 +59,18 @@ def test_save_temp_file_setup(env):
 
 def test_save_temp_file_build(env):
     """Test the a simple build with the SaveTempFile builder."""
+    context = env.context
+    target_root = context['target_root']
+
+    # 1. Setup the render build with a specified outfilepath.
+    outfilepath = TargetPath(target_root=target_root, target='test',
+                             subpath='subpath.test')
+    save_build = SaveTempFile(env, infilepaths='my test',
+                              outfilepath=outfilepath, context=context)
+
+    # Check the build
+    assert save_build.status == 'ready'
+    assert save_build.build() == 'done'
+    assert save_build.status == 'done'
+
+    assert save_build.outfilepath.exists()

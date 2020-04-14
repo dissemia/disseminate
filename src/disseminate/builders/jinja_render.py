@@ -8,7 +8,6 @@ import jinja2
 
 from .builder import Builder
 from .utils import generate_mock_infilepath, generate_outfilepath
-from ..utils.string import hashtxt
 from ..paths import SourcePath
 from ..utils.file import mkdir_p
 from ..utils.classes import weakattr
