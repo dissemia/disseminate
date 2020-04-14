@@ -1,7 +1,8 @@
 """
 Test the Asy builder
 """
-from disseminate.builders.asy_builders import Asy2pdf, Asy2svg
+from disseminate.builders.asy_builders import (Asy2pdf, Asy2svg, SaveAsyPdf,
+                                               SaveAsySvg)
 from disseminate.paths import SourcePath, TargetPath
 
 
@@ -77,3 +78,46 @@ def test_asy2svg_file(env):
 
     # Make sure we created an svg
     assert '<svg' in outfilepath.read_text()
+
+
+def test_saveasypdf_build(env):
+    """Test the SaveAsyPdf builder."""
+    target_root = env.target_root
+
+    # 1. Test an example with asymptote string
+    asystring = ("size(200);\n"
+                 "draw(unitcircle);")
+    outfilepath = TargetPath(target_root=target_root,
+                             subpath='diagram.pdf')
+    asy2pdf = SaveAsyPdf(infilepaths=asystring, outfilepath=outfilepath,
+                         context=env.context, env=env)
+
+    # Check the build
+    assert asy2pdf.status == 'ready'
+    assert asy2pdf.build(complete=True) == 'done'
+    assert asy2pdf.status == 'done'
+
+    assert asy2pdf.outfilepath.exists()
+    assert b'%PDF' in asy2pdf.outfilepath.read_bytes()
+
+
+def test_saveasysvg_build(env):
+    """Test the SaveAsySvg builder."""
+    target_root = env.target_root
+
+    # 1. Test an example with asymptote string
+    asystring = ("size(200);\n"
+                 "draw(unitcircle);")
+    outfilepath = TargetPath(target_root=target_root,
+                             subpath='diagram.svg')
+    asy2svg = SaveAsySvg(infilepaths=asystring, outfilepath=outfilepath,
+                         context=env.context, env=env)
+
+    # Check the build
+    assert asy2svg.status == 'ready'
+    assert asy2svg.build(complete=True) == 'done'
+    assert asy2svg.status == 'done'
+
+    assert asy2svg.outfilepath.exists()
+    assert '<svg' in asy2svg.outfilepath.read_text()
+    

@@ -2,6 +2,7 @@
 Builder for asymptote (.asy) files
 """
 from .builder import Builder
+from .save_temp import SaveTempFile
 from .composite_builders import SequentialBuilder
 
 
@@ -22,6 +23,20 @@ class SaveAsyPdf(SequentialBuilder):
 
     infilepath_ext = '.asy_save'
     outfilepath_ext = '.pdf'
+
+    def __init__(cls, env, subbuilders=None, **kwargs):
+        # setup the subbuilders
+        subbuilders = subbuilders if subbuilders is not None else []
+
+        # Setup a SaveTempFile file to save the Asy file
+        save_temp = SaveTempFile(env=env, save_ext='.asy', **kwargs)
+        subbuilders.append(save_temp)
+
+        # Setup a Asy2pdf builder
+        asy2pdf = Asy2pdf(env=env, **kwargs)
+        subbuilders.append(asy2pdf)
+
+        super().__init__(env=env, subbuilders=subbuilders, **kwargs)
 
 
 class Asy2svg(SequentialBuilder):
@@ -50,3 +65,23 @@ class Asy2svg(SequentialBuilder):
 
         super().__init__(env, subbuilders=subbuilders, **kwargs)
 
+
+class SaveAsySvg(SequentialBuilder):
+    """A builder that renders text to an asy file and converts it to svg."""
+
+    infilepath_ext = '.asy_save'
+    outfilepath_ext = '.svg'
+
+    def __init__(cls, env, subbuilders=None, **kwargs):
+        # setup the subbuilders
+        subbuilders = subbuilders if subbuilders is not None else []
+
+        # Setup a SaveTempFile file to save the Asy file
+        save_temp = SaveTempFile(env=env, save_ext='.asy', **kwargs)
+        subbuilders.append(save_temp)
+
+        # Setup a Asy2pdf builder
+        asy2pdf = Asy2svg(env=env, **kwargs)
+        subbuilders.append(asy2pdf)
+
+        super().__init__(env=env, subbuilders=subbuilders, **kwargs)
