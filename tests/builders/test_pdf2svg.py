@@ -10,6 +10,14 @@ from disseminate.builders.copy import Copy
 from disseminate.paths import SourcePath, TargetPath
 
 
+def test_pdf2svg_with_find_builder_cls():
+    """Test the Pdf2SvgCropScale builder access with the find_builder_cls."""
+
+    builder_cls = Pdf2SvgCropScale.find_builder_cls(in_ext='.pdf',
+                                                    out_ext='.svg')
+    assert builder_cls.__name__ == "Pdf2SvgCropScale"
+
+
 def test_pdf2svg(env):
     """Test the Pdf2svg builder."""
     # 1. Test example with the infilepath and outfilepath specified.
@@ -165,3 +173,5 @@ def test_pdf2svg_scalesvg(env):
     assert status == 'done'
     assert cache_path.exists()
     assert cache_path.read_text() == svg_text
+
+

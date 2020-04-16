@@ -5,6 +5,16 @@ from disseminate.builders.imagemagick import Tif2png, Tiff2png
 from disseminate.paths import SourcePath, TargetPath
 
 
+def test_tif2png_with_find_builder_cls():
+    """Test the Tif2png builder access with the find_builder_cls."""
+
+    builder_cls = Tif2png.find_builder_cls(in_ext='.tif', out_ext='.png')
+    assert builder_cls.__name__ == "Tif2png"
+
+    builder_cls = Tif2png.find_builder_cls(in_ext='.tiff', out_ext='.png')
+    assert builder_cls.__name__ == "Tiff2png"
+
+
 def test_tif2png(env):
     """Test the Tif2Png and Tiff2Png builders."""
     # Make sure these builders are active

@@ -5,6 +5,13 @@ from disseminate.builders.copy import Copy
 from disseminate.paths import SourcePath, TargetPath
 
 
+def test_copy_with_find_builder_cls():
+    """Test the Copy builder access with the find_builder_cls."""
+
+    builder_cls = Copy.find_builder_cls(in_ext='.*', out_ext='.*')
+    assert builder_cls.__name__ == "Copy"
+
+
 def test_copy(env):
     """Test the copy builder"""
     tmpdir = env.context['target_root']

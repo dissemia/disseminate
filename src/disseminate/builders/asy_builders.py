@@ -23,7 +23,7 @@ class SaveAsyPdf(SequentialBuilder):
 
     available = True
     priority = 1000
-    infilepath_ext = '.asy_save'
+    infilepath_ext = '.save'
     outfilepath_ext = '.pdf'
 
     def __init__(cls, env, subbuilders=None, **kwargs):
@@ -48,7 +48,7 @@ class Asy2svg(SequentialBuilder):
 
     available = True
     priority = 1000
-    infilepath_ext = '.pdf'
+    infilepath_ext = '.asy'
     outfilepath_ext = '.svg'
 
     def __init__(self, env, subbuilders=None, target=None, **kwargs):
@@ -73,7 +73,7 @@ class SaveAsySvg(SequentialBuilder):
 
     available = True
     priority = 1000
-    infilepath_ext = '.asy_save'
+    infilepath_ext = '.save'
     outfilepath_ext = '.svg'
 
     def __init__(cls, env, subbuilders=None, **kwargs):

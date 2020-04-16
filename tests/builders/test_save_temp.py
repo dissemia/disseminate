@@ -7,6 +7,13 @@ from disseminate.builders.save_temp import SaveTempFile
 from disseminate.paths import SourcePath, TargetPath
 
 
+def test_save_temp_file_with_find_builder_cls():
+    """Test the SaveTempFile builder access with the find_builder_cls."""
+
+    builder_cls = SaveTempFile.find_builder_cls(in_ext='.save')
+    assert builder_cls.__name__ == "SaveTempFile"
+
+
 def test_save_temp_file_setup(env):
     """Test the setup of the SaveTempFile builder."""
     context = env.context

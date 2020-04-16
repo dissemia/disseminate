@@ -9,6 +9,13 @@ from disseminate.builders.jinja_render import JinjaRender
 from disseminate.paths import TargetPath
 
 
+def test_jinja_render_with_find_builder_cls():
+    """Test the JinjaRender builder access with the find_builder_cls."""
+
+    builder_cls = JinjaRender.find_builder_cls(in_ext='.render')
+    assert builder_cls.__name__ == "JinjaRender"
+
+
 def test_jinja_render_setup(env):
     """Test the setup of the JinjaRender builder."""
     context = env.context

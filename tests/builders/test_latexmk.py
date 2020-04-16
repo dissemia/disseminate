@@ -1,8 +1,38 @@
 """
 Test the Latexmk builder.
 """
+from disseminate.builders.builder import Builder
 from disseminate.builders.latexmk import Latexmk
 from disseminate.paths import SourcePath, TargetPath
+
+
+def test_latexmk_with_find_builder_cls():
+    """Test the Latexmk builder access with the find_builder_cls."""
+
+    builder_cls = Latexmk.find_builder_cls(in_ext='.tex', out_ext='.pdf')
+    assert builder_cls.__name__ == "Latexmk"
+
+
+def test_latexmk_find_builder_cls_backup():
+    """Test the find_builder_cls method Pdflatex as a backup builders"""
+
+    # Setup a test function
+    def test_find(in_ext, out_ext, cls_name):
+        builder_cls = Builder.find_builder_cls(in_ext=in_ext, out_ext=out_ext)
+        assert builder_cls.__name__ == cls_name
+        return builder_cls
+
+    # 1. Test Latexmk > Pdflatex
+    latexmk = test_find('.tex', '.pdf', 'Latexmk')
+    latexmk.available = False
+    Builder._active.clear()
+    Builder._available_builders.clear()
+
+    test_find('.tex', '.pdf', 'Pdflatex')
+    latexmk.available = True
+    Builder._active.clear()
+    Builder._available_builders.clear()
+
 
 
 def test_latexmk_setup(env):

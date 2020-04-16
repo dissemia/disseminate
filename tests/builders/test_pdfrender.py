@@ -7,6 +7,13 @@ from disseminate.builders.pdfrender import PdfRender
 from disseminate.paths import TargetPath
 
 
+def test_pdfrender_with_find_builder_cls():
+    """Test the PdfRender builder access with the find_builder_cls."""
+
+    builder_cls = PdfRender.find_builder_cls(in_ext='.render', out_ext='.pdf')
+    assert builder_cls.__name__ == "PdfRender"
+
+
 def test_pdfrender_setup(env):
     """Test the setup of the PdfRender builder."""
     target_root = env.context['target_root']

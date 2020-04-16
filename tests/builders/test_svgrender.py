@@ -7,6 +7,13 @@ from disseminate.builders.svgrender import SvgRender
 from disseminate.paths import TargetPath
 
 
+def test_svgrender_with_find_builder_cls():
+    """Test the SvgRender builder access with the find_builder_cls."""
+
+    builder_cls = SvgRender.find_builder_cls(in_ext='.render', out_ext='.svg')
+    assert builder_cls.__name__ == "SvgRender"
+
+
 def test_svgrender_setup(env):
     """Test the setup of the SvgRender builder."""
     target_root = env.context['target_root']

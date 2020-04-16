@@ -6,6 +6,34 @@ from disseminate.builders.asy_builders import (Asy2pdf, Asy2svg, SaveAsyPdf,
 from disseminate.paths import SourcePath, TargetPath
 
 
+def test_asy2pdf_with_find_builder_cls():
+    """Test the Asy2pdf builder access with the find_builder_cls."""
+
+    builder_cls = Asy2pdf.find_builder_cls(in_ext='.asy', out_ext='.pdf')
+    assert builder_cls.__name__ == "Asy2pdf"
+
+
+def test_saveasy2pdf_with_find_builder_cls():
+    """Test the SaveAsyPdf builder access with the find_builder_cls."""
+
+    builder_cls = Asy2pdf.find_builder_cls(in_ext='.save', out_ext='.pdf')
+    assert builder_cls.__name__ == "SaveAsyPdf"
+
+
+def test_asy2svg_with_find_builder_cls():
+    """Test the Asy2pdf builder access with the find_builder_cls."""
+
+    builder_cls = Asy2svg.find_builder_cls(in_ext='.asy', out_ext='.svg')
+    assert builder_cls.__name__ == "Asy2svg"
+
+
+def test_saveasy2svg_with_find_builder_cls():
+    """Test the SaveAsySvg builder access with the find_builder_cls."""
+
+    builder_cls = Asy2svg.find_builder_cls(in_ext='.save', out_ext='.svg')
+    assert builder_cls.__name__ == "SaveAsySvg"
+
+
 def test_asy2pdf_setup(env):
     """Test the setup of the Asy2pdf builder."""
     target_root = env.context['target_root']
