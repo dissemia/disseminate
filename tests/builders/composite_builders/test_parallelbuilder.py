@@ -11,8 +11,9 @@ from disseminate.builders.exceptions import BuildError
 from disseminate.paths import SourcePath, TargetPath
 
 
-def test_parallelbuilder_add_build_file(env):
-    """Test the ParallelBuilder add_build method with a specific file"""
+def test_parallelbuilder_add_build_file_with_outfilepath(env):
+    """Test the ParallelBuilder add_build method with an outfilepath
+    specified"""
     tmpdir = env.context['target_root']
     target_root = tmpdir
 
@@ -63,9 +64,21 @@ def test_parallelbuilder_add_build_file(env):
     assert not parallel_builder.build_needed()
     assert parallel_builder.status == 'done'
 
+
+def test_parallelbuilder_add_build_file_without_outfilepath(env):
+    """Test the ParallelBuilder add_build method without an outfilepath
+    specified"""
+    tmpdir = env.context['target_root']
+    target_root = tmpdir
+
+    # Add paths to the context
+    paths = [SourcePath(project_root='tests/builders/examples/ex1')]
+    infilepath = 'sample.pdf'
+    env.context['paths'] = paths
+
     # 2. Test an example without an outfilepath. This should be created in the
-    #    target directory as sample.svg (from the infilepath)
-    cached_outfilepath = TargetPath(target_root=target_root, target='html',
+    #    cache directory as sample.svg (from the infilepath)
+    cached_outfilepath = TargetPath(target_root=env.cache_path, target='html',
                                     subpath='sample.svg')
     parallel_builder = ParallelBuilder(env, target='html')
     parallel_builder.add_build(infilepaths=infilepath)
@@ -82,7 +95,7 @@ def test_parallelbuilder_add_build_file(env):
 
     assert parallel_builder.build_needed()
     assert parallel_builder.status == 'ready'
-    assert parallel_builder.build() == 'done'
+    assert parallel_builder.build(complete=True) == 'done'
     assert parallel_builder.status == 'done'
 
 

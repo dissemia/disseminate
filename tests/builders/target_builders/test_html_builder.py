@@ -24,6 +24,7 @@ def test_html_builder_setup_in_targets(env):
     builder = HtmlBuilder(env, context=context)
 
     # check the build
+    assert not builder.cache  # don't use a cache path, use actual target path
     assert context['builders']['.html'] == builder  # builder in context
     assert not target_filepath.exists()
     assert len(builder.subbuilders) == 6
@@ -57,6 +58,16 @@ def test_html_builder_setup_in_targets(env):
     assert builder.build_needed()
     assert builder.status == 'ready'
 
+    # 3. Test an add build
+    img_filepath = SourcePath(project_root='tests/builders//examples/',
+                              subpath='ex1/sample.pdf')
+    target_filepath = TargetPath(target_root=target_root,
+                                 target='html', subpath='ex1/sample.svg')
+    pdf2svg = builder.add_build(infilepaths=img_filepath)
+    assert not pdf2svg.cache
+    assert pdf2svg.infilepaths == [img_filepath]
+    assert pdf2svg.outfilepath == target_filepath
+
 
 def test_html_builder_setup_not_in_targets(env):
     """Test the setup of a HtmlBuilder when 'html' is not listed as a target
@@ -74,6 +85,7 @@ def test_html_builder_setup_not_in_targets(env):
     builder = HtmlBuilder(env, context=context)
 
     # check the build
+    assert builder.cache  # use a cache path, use actual target path
     assert context['builders']['.html'] == builder  # builder in context
     assert not target_filepath.exists()
     assert len(builder.subbuilders) == 6
@@ -87,6 +99,17 @@ def test_html_builder_setup_not_in_targets(env):
 
     assert builder.build_needed()
     assert builder.status == 'ready'
+
+    # 2. Test an add build
+    img_filepath = SourcePath(project_root='tests/builders//examples/',
+                                subpath='ex1/sample.pdf')
+    target_filepath = TargetPath(target_root=env.cache_path,
+                                 target='html', subpath='ex1/sample.svg')
+    pdf2svg = builder.add_build(infilepaths=img_filepath)
+
+    assert pdf2svg.cache is True
+    assert pdf2svg.infilepaths == [img_filepath]
+    assert pdf2svg.outfilepath == target_filepath
 
 
 def test_html_builder_simple(env):
@@ -220,6 +243,7 @@ def test_html_builder_inherited_doc(load_example):
     builder = HtmlBuilder(env, context=doc.context)
 
     # check the build
+    assert not builder.cache  # don't use the cache path
     assert builder.build_needed()
     assert builder.status == 'ready'
     assert not doc.targets['.html'].exists()
@@ -267,6 +291,9 @@ def test_html_builder_add_build(load_example):
     # Setup the builder
     html_builder = HtmlBuilder(env, context=doc.context)
 
+    # Check the builder
+    assert not html_builder.cache  # don't use the cache path
+
     # Add a dependency for the media file
     build = html_builder.add_build(infilepaths='media/images/NMR/hsqc_bw.pdf',
                                    context=doc.context)
@@ -275,14 +302,18 @@ def test_html_builder_add_build(load_example):
                     subpath='media/images/NMR/hsqc_bw.pdf')
     tp = TargetPath(target_root=target_root, target='html',
                     subpath='media/images/NMR/hsqc_bw.svg')
+
+    # Check the subbuilder
+    assert not build.cache  # don't use the cache path
     assert build.infilepaths[0] == sp
     assert build.infilepaths[0].subpath == sp.subpath
     assert build.outfilepath == tp
     assert build.outfilepath.subpath == tp.subpath
-
     assert build.status == 'ready'
     assert html_builder.status == 'ready'
-
+    print(build)
+    for sb in build.subbuilders:
+        print(sb, sb.infilepaths, sb.outfilepath)
     # Now run the build
     assert html_builder.build(complete=True) == 'done'
     assert html_builder.status == 'done'

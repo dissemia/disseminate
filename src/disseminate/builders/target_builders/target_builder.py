@@ -55,7 +55,7 @@ class TargetBuilder(SequentialBuilder):
         elif 'target' not in kwargs and self.target is not None:
             kwargs['target'] = self.target
         elif 'target' not in kwargs and self.outfilepath_ext is not None:
-                kwargs['target'] = self.outfilepath_ext
+            kwargs['target'] = self.outfilepath_ext
         else:
             msg = ("A target or outfilepath_ext attribute must be specified "
                    "for a TargetBuilder.")
@@ -70,9 +70,16 @@ class TargetBuilder(SequentialBuilder):
         if infilepaths is None and 'src_filepath' in context:
             infilepaths = context['src_filepath']
 
+        # Determine if this target builder matches a document target
+        is_document_target = (document is not None and
+                              self.outfilepath_ext in document.targets)
+
+        # Only use cache for outfilepaths if this is not a document target
+        cache = False if is_document_target else True
+
+        # Setup the outfilepath, if one isn't specified.
         if outfilepath is None:
-            if (document is not None and
-               self.outfilepath_ext in document.targets):
+            if is_document_target:
                 # Use the document target as the outfilepath, if this target is
                 # listed in the document targets
                 outfilepath = document.targets[self.outfilepath_ext]
@@ -82,8 +89,7 @@ class TargetBuilder(SequentialBuilder):
                                                    infilepaths=infilepaths,
                                                    target=self.outfilepath_ext,
                                                    ext=self.outfilepath_ext,
-                                                   cache=True)
-
+                                                   cache=cache)
         # Setup the labels
 
         # Setup the subbuilders
@@ -105,7 +111,7 @@ class TargetBuilder(SequentialBuilder):
 
         # Initialize builder
         super().__init__(env, infilepaths=infilepaths, outfilepath=outfilepath,
-                         subbuilders=subbuilders, **kwargs)
+                         subbuilders=subbuilders, cache=cache, **kwargs)
 
     def build_needed(self, reset=False):
         """Determine whether a build is needed."""
@@ -136,12 +142,20 @@ class TargetBuilder(SequentialBuilder):
         else:
             SequentialBuilder.outfilepath.fset(self, value)
 
-    def add_build(self, infilepaths, outfilepath=None,
-                  context=None, **kwargs):
+    def add_build(self, infilepaths, outfilepath=None, context=None,
+                  **kwargs):
         """Create and add a sub-builder to the composite builder."""
-        return self._parallel_builder.add_build(infilepaths=infilepaths,
-                                                outfilepath=outfilepath,
-                                                context=context, **kwargs)
+
+        par_builder = self._parallel_builder
+        builder = par_builder.add_build(infilepaths=infilepaths,
+                                        outfilepath=outfilepath,
+                                        context=context,
+                                        cache=self.cache,
+                                        **kwargs)
+
+        # Make sure the newly created builder has the same cache settings as
+        # This target builder
+        return builder
 
     def build(self, complete=False):
         # Reload the document

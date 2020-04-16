@@ -27,7 +27,8 @@ class SequentialBuilder(CompositeBuilder):
         # sub-builders to the final outfilepath.
         # This only applies if other subbuilders are present
         if self.copy and self.subbuilders:
-            self.subbuilders.append(Copy(env))
+            cp_builder = Copy(env, cache=self.cache)
+            self.subbuilders.append(cp_builder)
 
         # Order the subbuilders, if subbuilders are present
         if self.chain_on_creation and self.subbuilders:

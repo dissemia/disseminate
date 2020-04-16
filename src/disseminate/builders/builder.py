@@ -90,6 +90,7 @@ class Builder(metaclass=ABCMeta):
 
     priority = None
     required_execs = None
+    cache = True
 
     infilepath_ext = None
     outfilepath_ext = None
@@ -106,9 +107,10 @@ class Builder(metaclass=ABCMeta):
     popen = None
 
     def __init__(self, env, target=None, infilepaths=None, outfilepath=None,
-                 **kwargs):
+                 cache=None, **kwargs):
         self.env = env
         self.target = target.strip('.') if isinstance(target, str) else None
+        self.cache = cache if cache is not None else self.cache
 
         # Load the infilepaths, which must be pathlib.Path objects
         infilepaths = infilepaths or []
@@ -123,6 +125,9 @@ class Builder(metaclass=ABCMeta):
         # Load the outfilepath
         self.outfilepath = (outfilepath if isinstance(outfilepath, TargetPath)
                             else None)
+
+    def __repr__(self):
+        return "<{}>".format(self.__class__.__name__)
 
     @classmethod
     def active(cls):
@@ -241,7 +246,7 @@ class Builder(metaclass=ABCMeta):
                                                target=self.target,
                                                append=self.outfilepath_append,
                                                ext=self.outfilepath_ext,
-                                               cache=True)
+                                               cache=self.cache)
 
         # Make sure the outfilepath directory exists
         if outfilepath and not outfilepath.parent.is_dir():

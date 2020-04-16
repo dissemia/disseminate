@@ -2,7 +2,6 @@
 Test the SequentialBuilder
 """
 import logging
-import pathlib
 
 from disseminate.builders.composite_builders import SequentialBuilder
 from disseminate.builders.copy import Copy
@@ -16,6 +15,75 @@ def test_sequentialbuilder_empty(env):
     assert sequential_builder.status == 'done'  # no builders
 
     assert sequential_builder.build(complete=True) == 'done'
+
+
+def test_sequentialbuilder_outfilepath(env):
+    """Test a SequentialBuilder with the outfilepath specified"""
+    # The default SequentialBuilder has only a copy builder
+    # Create a test file
+    src_filepath = env.context['src_filepath']
+
+    # 1. Create a test builder with the outfilepath
+    outfilepath = TargetPath(target_root=env.target_root, subpath='out.dm')
+    builder = SequentialBuilder(env=env, infilepaths=src_filepath,
+                                outfilepath=outfilepath)
+
+    # Add a subbuilder
+    cp_builder = Copy(env=env, infilepaths=src_filepath,
+                      outfilepath=outfilepath)
+    builder.subbuilders.append(cp_builder)
+
+    # Check the build
+    assert builder.cache  # By default, use the cache directory
+    assert builder.build_needed()  # The target file hasn't been created yet
+    assert builder.infilepaths == [src_filepath]
+    assert builder.outfilepath == outfilepath
+    assert not outfilepath.exists()
+
+    # Check the subbuilder
+    assert len(builder.subbuilders) == 1
+    copy_builder = builder.subbuilders[0]
+    assert copy_builder.infilepaths == [src_filepath]
+    assert copy_builder.outfilepath == outfilepath
+
+    # Run the build
+    assert builder.build(complete=True) == 'done'
+    assert outfilepath.exists()
+
+
+def test_sequentialbuilder_without_outfilepath(env):
+    """Test a SequentialBuilder without the outfilepath specified"""
+    # The default SequentialBuilder has only a copy builder
+    # Create a test file
+    src_filepath = env.context['src_filepath']
+
+    # 1. Create a test builder without the outfilepath
+    outfilepath = TargetPath(target_root=env.target_root, subpath='out.dm')
+    cachepath = TargetPath(target_root=env.cache_path, subpath='test.dm')
+    builder = SequentialBuilder(env=env, infilepaths=src_filepath)
+
+    # Add a subbuilder
+    cp_builder = Copy(env=env, infilepaths=src_filepath,
+                      outfilepath=outfilepath)
+    builder.subbuilders.append(cp_builder)
+    builder.chain_subbuilders()
+
+    # Check the build
+    assert builder.cache  # By default, use the cache directory
+    assert builder.build_needed()  # The target file hasn't been created yet
+    assert builder.infilepaths == [src_filepath]
+    assert builder.outfilepath == cachepath
+    assert not outfilepath.exists()
+
+    # Check the subbuilder
+    assert len(builder.subbuilders) == 1
+    copy_builder = builder.subbuilders[0]
+    assert copy_builder.infilepaths == [src_filepath]
+    assert copy_builder.outfilepath == cachepath
+
+    # Run the build
+    assert builder.build(complete=True) == 'done'
+    assert cachepath.exists()
 
 
 def test_sequentialbuilder_basic_decider(env, caplog, wait):

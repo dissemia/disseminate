@@ -64,21 +64,7 @@ class ParallelBuilder(CompositeBuilder):
         # Create the builder
         builder = builder_cls(env=self.env, infilepaths=infilepaths,
                               outfilepath=outfilepath, context=context,
-                              **kwargs)
+                              target=target, **kwargs)
         self.subbuilders.append(builder)
-
-        # Make sure the target is in the target_root instead of a cache path
-        if outfilepath is None:
-            assert 'target_root' in context
-            target_root = context['target_root']
-            outfilepath = builder.outfilepath
-            outfilepath = TargetPath(target_root=target_root,
-                                     target=target.strip('.'),
-                                     subpath=outfilepath.subpath)
-            builder.outfilepath = outfilepath
-
-            # Reorganize the filepaths if it's a sequential builder
-            if hasattr(builder, 'chain_subbuilders'):
-                builder.chain_subbuilders()
 
         return builder

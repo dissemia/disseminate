@@ -21,6 +21,8 @@ class Asy2pdf(Builder):
 class SaveAsyPdf(SequentialBuilder):
     """A builder that renders text to an asy file and converts it to pdf."""
 
+    available = True
+    priority = 1000
     infilepath_ext = '.asy_save'
     outfilepath_ext = '.pdf'
 
@@ -69,6 +71,8 @@ class Asy2svg(SequentialBuilder):
 class SaveAsySvg(SequentialBuilder):
     """A builder that renders text to an asy file and converts it to svg."""
 
+    available = True
+    priority = 1000
     infilepath_ext = '.asy_save'
     outfilepath_ext = '.svg'
 

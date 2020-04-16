@@ -120,4 +120,3 @@ def test_saveasysvg_build(env):
 
     assert asy2svg.outfilepath.exists()
     assert '<svg' in asy2svg.outfilepath.read_text()
-    

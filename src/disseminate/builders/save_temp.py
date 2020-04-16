@@ -70,7 +70,7 @@ class SaveTempFile(Builder):
                                                    append=self.outfilepath_ext,
                                                    ext=self.save_ext,
                                                    target=self.target,
-                                                   cache=True)
+                                                   cache=self.cache)
 
         # Make sure the outfilepath directory exists
         if outfilepath and not outfilepath.parent.is_dir():
