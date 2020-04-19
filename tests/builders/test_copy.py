@@ -12,8 +12,25 @@ def test_copy_with_find_builder_cls():
     assert builder_cls.__name__ == "Copy"
 
 
-def test_copy(env):
-    """Test the copy builder"""
+def test_copy_no_outfilepath(env):
+    """Test the copy builder without an outfilepath specified"""
+
+    tmpdir = env.context['target_root']
+    infilepath = SourcePath(project_root=tmpdir, subpath='in.txt')
+
+    # If not outfilepath is specified, a file in the cache directory is created
+    targetpath = TargetPath(target_root=tmpdir / '.cache', subpath='in.txt')
+
+    # 1. Test a build that copies the file
+    infilepath.write_text('infile')
+    cp = Copy(env=env, infilepaths=infilepath)
+
+    assert cp.build(complete=True) == 'done'
+    assert cp.outfilepath == targetpath
+
+
+def test_copy_build(env):
+    """Test the Copy builder build"""
     tmpdir = env.context['target_root']
     infilepath = SourcePath(project_root=tmpdir, subpath='in.txt')
     targetpath = TargetPath(target_root=tmpdir, subpath='out.txt')
@@ -35,21 +52,18 @@ def test_copy(env):
     assert targetpath.read_text() == 'infile'
 
 
-def test_copy_no_outfilepath(env):
-    """Test the copy builder without an outfilepath specified"""
-
+def test_copy_build_infilepath_missing(env):
+    """Test the Copy builder build with a missing infilepath"""
     tmpdir = env.context['target_root']
     infilepath = SourcePath(project_root=tmpdir, subpath='in.txt')
-
-    # If not outfilepath is specified, a file in the cache directory is created
-    targetpath = TargetPath(target_root=tmpdir / '.cache', subpath='in.txt')
+    targetpath = TargetPath(target_root=tmpdir, subpath='out.txt')
 
     # 1. Test a build that copies the file
-    infilepath.write_text('infile')
-    cp = Copy(env=env, infilepaths=infilepath)
+    cp = Copy(env=env, infilepaths=infilepath, outfilepath=targetpath)
 
-    assert cp.build(complete=True) == 'done'
-    assert cp.outfilepath == targetpath
+    assert cp.status == 'missing (infilepaths)'
+    assert cp.build(complete=True) == 'missing (infilepaths)'
+    assert cp.status == 'missing (infilepaths)'
 
 
 def test_copy_samefile(env):

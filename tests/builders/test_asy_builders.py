@@ -129,6 +129,25 @@ def test_saveasypdf_build(env):
     assert b'%PDF' in asy2pdf.outfilepath.read_bytes()
 
 
+def test_saveasypdf_build_invalid(env):
+    """Test the SaveAsyPdf builder with invalid asymptote text."""
+    target_root = env.target_root
+
+    # 1. Test an example with asymptote string
+    asystring = "invalid"
+    outfilepath = TargetPath(target_root=target_root,
+                             subpath='diagram.pdf')
+    asy2pdf = SaveAsyPdf(infilepaths=asystring, outfilepath=outfilepath,
+                         context=env.context, env=env)
+
+    # Check the build -- the output file was not created
+    assert asy2pdf.status == 'ready'
+    assert asy2pdf.build(complete=True) == 'missing (outfilepath)'
+    assert asy2pdf.status == 'missing (outfilepath)'
+
+    assert not asy2pdf.outfilepath.exists()
+
+
 def test_saveasysvg_build(env):
     """Test the SaveAsySvg builder."""
     target_root = env.target_root
@@ -148,3 +167,22 @@ def test_saveasysvg_build(env):
 
     assert asy2svg.outfilepath.exists()
     assert '<svg' in asy2svg.outfilepath.read_text()
+
+
+def test_saveasysvg_build_invalid(env):
+    """Test the SaveAsySvg builder with invalid asymptote text."""
+    target_root = env.target_root
+
+    # 1. Test an example with asymptote string
+    asystring = "invalid"
+    outfilepath = TargetPath(target_root=target_root,
+                             subpath='diagram.svg')
+    asy2svg = SaveAsySvg(infilepaths=asystring, outfilepath=outfilepath,
+                         context=env.context, env=env)
+
+    # Check the build -- the output file was not created
+    assert asy2svg.status == 'ready'
+    assert asy2svg.build(complete=True) == 'missing (outfilepath)'
+    assert asy2svg.status == 'missing (outfilepath)'
+
+    assert not asy2svg.outfilepath.exists()
