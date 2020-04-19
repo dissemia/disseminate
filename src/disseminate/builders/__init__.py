@@ -1,4 +1,5 @@
 from .environment import Environment
+from .builder import Builder
 from . import receivers
 from . import target_builders
 from . import (validators, exceptions, builder, pdf2svg, pdfcrop, scalesvg,

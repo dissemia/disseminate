@@ -53,10 +53,6 @@ class SaveTempFile(Builder):
             infilepaths = self.infilepaths
             context = self.context
             env = self.env
-            src_filepath = (context['src_filepath']
-                            if context and 'src_filepath' in context else None)
-            src_filepath = (env.project_root if src_filepath is None else
-                            src_filepath)
 
             if infilepaths:
                 # Create an temporary infilepath from the hash of the input

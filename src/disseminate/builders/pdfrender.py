@@ -13,8 +13,6 @@ class PdfRender(SequentialBuilder):
     infilepath_ext = '.render'  # dummy extension for find_builder_cls
     outfilepath_ext = '.pdf'
 
-    _render_builder = None
-
     def __init__(self, env, context=None, template=None, infilepaths=None,
                  outfilepath=None, subbuilders=None, **kwargs):
 
@@ -29,7 +27,7 @@ class PdfRender(SequentialBuilder):
             render_build = render_cls(env, context=context, render_ext='.tex',
                                       template=template, **kwargs)
             subbuilders.append(render_build)
-            self._render_builder = render_build
+            self.subbuilder_for_outfilename = render_build
 
             # Set the infilepath for this builder to match the render_build, if
             # used, so that the Md5Decision is properly calculated
@@ -42,21 +40,3 @@ class PdfRender(SequentialBuilder):
 
         super().__init__(env, infilepaths=infilepaths, outfilepath=outfilepath,
                          subbuilders=subbuilders, **kwargs)
-
-    @property
-    def outfilepath(self):
-        # Use the render builder's outfilepath if None is specified. This is
-        # because the render builder's outfilepath is a hash of the input text,
-        # which is unique.
-        if self._outfilepath is None:
-            render_builder = self._render_builder
-            outfilepath = (render_builder.outfilepath.use_suffix('.pdf')
-                           if render_builder else
-                           SequentialBuilder.outfilepath.fget(self))
-
-            self._outfilepath = outfilepath
-        return self._outfilepath
-
-    @outfilepath.setter
-    def outfilepath(self, value):
-        self._outfilepath = value

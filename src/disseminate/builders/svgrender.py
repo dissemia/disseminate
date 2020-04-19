@@ -13,8 +13,6 @@ class SvgRender(SequentialBuilder):
     infilepath_ext = '.render'
     outfilepath_ext = '.svg'
 
-    _render_builder = None
-
     def __init__(self, env, infilepaths=None, outfilepath=None, context=None,
                  template=None, subbuilders=None, **kwargs):
 
@@ -26,7 +24,7 @@ class SvgRender(SequentialBuilder):
         pdfrender = builder_cls(env, context=context, template=template,
                                 **kwargs)
         subbuilders.append(pdfrender)
-        self._render_builder = pdfrender
+        self.subbuilder_for_outfilename = pdfrender
 
         # Use the infilepath from the pdfrender.
         infilepaths = infilepaths or pdfrender.infilepaths
@@ -38,20 +36,3 @@ class SvgRender(SequentialBuilder):
 
         super().__init__(env, infilepaths=infilepaths, outfilepath=outfilepath,
                          subbuilders=subbuilders, **kwargs)
-
-    @property
-    def outfilepath(self):
-        # Use the render builder's outfilepath if None is specified. This is
-        # because the render builder's outfilepath is a hash of the input text,
-        # which is unique.
-        if self._outfilepath is None:
-            render_builder = self._render_builder
-            outfilepath = (render_builder.outfilepath.use_suffix('.svg')
-                           if render_builder else
-                           SequentialBuilder.outfilepath.fget(self))
-            self._outfilepath = outfilepath
-        return self._outfilepath
-
-    @outfilepath.setter
-    def outfilepath(self, value):
-        self._outfilepath = value

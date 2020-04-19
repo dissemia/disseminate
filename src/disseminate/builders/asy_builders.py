@@ -26,13 +26,14 @@ class SaveAsyPdf(SequentialBuilder):
     infilepath_ext = '.save'
     outfilepath_ext = '.pdf'
 
-    def __init__(cls, env, subbuilders=None, **kwargs):
+    def __init__(self, env, subbuilders=None, **kwargs):
         # setup the subbuilders
         subbuilders = subbuilders if subbuilders is not None else []
 
         # Setup a SaveTempFile file to save the Asy file
         save_temp = SaveTempFile(env=env, save_ext='.asy', **kwargs)
         subbuilders.append(save_temp)
+        self.subbuilder_for_outfilename = save_temp
 
         # Setup a Asy2pdf builder
         asy2pdf = Asy2pdf(env=env, **kwargs)
@@ -76,13 +77,14 @@ class SaveAsySvg(SequentialBuilder):
     infilepath_ext = '.save'
     outfilepath_ext = '.svg'
 
-    def __init__(cls, env, subbuilders=None, **kwargs):
+    def __init__(self, env, subbuilders=None, **kwargs):
         # setup the subbuilders
         subbuilders = subbuilders if subbuilders is not None else []
 
         # Setup a SaveTempFile file to save the Asy file
         save_temp = SaveTempFile(env=env, save_ext='.asy', **kwargs)
         subbuilders.append(save_temp)
+        self.subbuilder_for_outfilename = save_temp
 
         # Setup a Asy2pdf builder
         asy2pdf = Asy2svg(env=env, **kwargs)
