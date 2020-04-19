@@ -11,15 +11,23 @@ class ParallelBuilder(CompositeBuilder):
     @property
     def status(self):
         statuses = {sb.status for sb in self.subbuilders}
-        if 'inactive' in statuses:
-            return 'inactive'
-        elif 'missing' in statuses:
-            return 'missing'
-        elif 'building' in statuses:
-            return 'building'
-        elif {'done'} == statuses:  # all subbuilders are done
+
+        if {'done'} == statuses:  # all subbuilders are done
             return 'done'
-        elif len(statuses) == 0:  # no subbuilders
+
+        inactive = {i for i in statuses if i.startswith('inactive')}
+        if inactive:
+            return inactive.pop()
+
+        missing = {i for i in statuses if i.startswith('missing')}
+        if missing:
+            return missing.pop()
+
+        building = {i for i in statuses if i.startswith('building')}
+        if building:
+            return building.pop()
+
+        if len(statuses) == 0:  # no subbuilders
             return 'done'
         return 'ready'
 

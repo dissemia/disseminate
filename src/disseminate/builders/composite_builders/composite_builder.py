@@ -65,25 +65,27 @@ class CompositeBuilder(Builder):
             for builder in list(self.subbuilders):
                 if builder.status == 'done':
                     status = "done"
-
                     # Remove done builders
                     if self.clear_done:
                         self.subbuilders.remove(builder)
+
                 elif builder.status == 'building':
                     status = 'building'
-                    # remaining_builders.append(builder)
                     if self.parallel:
                         continue
                     else:
                         break
+
                 elif builder.status == 'ready':
                     builder.build()
                     status = 'building'
-                    # remaining_builders.append(builder)
                     if self.parallel:
                         continue
                     else:
                         break
+                        
+                else:
+                    return builder.status
 
             return status
 

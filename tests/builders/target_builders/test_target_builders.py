@@ -1,7 +1,6 @@
 """
 General tests for target builders.
 """
-import pathlib
 from collections import namedtuple
 
 from disseminate.builders.target_builders.html_builder import HtmlBuilder

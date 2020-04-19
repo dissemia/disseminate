@@ -275,7 +275,7 @@ def test_html_builder_inherited_doc(load_example):
 def test_html_builder_add_build(load_example):
     """Test the HtmlBuilder with an added dependency through add_build."""
 
-    # 1. Example 3 includes a media file that must be converted from pdf->svg
+    # 1. Example 5 includes a media file that must be converted from pdf->svg
     #    for html
     #    tests/builders/examples/ex5/
     #     └── src
@@ -311,9 +311,7 @@ def test_html_builder_add_build(load_example):
     assert build.outfilepath.subpath == tp.subpath
     assert build.status == 'ready'
     assert html_builder.status == 'ready'
-    print(build)
-    for sb in build.subbuilders:
-        print(sb, sb.infilepaths, sb.outfilepath)
+
     # Now run the build
     assert html_builder.build(complete=True) == 'done'
     assert html_builder.status == 'done'
@@ -322,3 +320,39 @@ def test_html_builder_add_build(load_example):
     # Check that the files were created
     assert tp.is_file()
     assert "<svg xmlns" in tp.read_text()  # make sure it's an svg
+
+
+def test_html_builder_add_build_invalid(load_example):
+    """Test the HtmlBuilder with an invalid added dependency through
+    add_build."""
+
+    # 1. Example 7 includes a media file that must be converted from pdf->svg
+    #    for html
+    #    tests/builders/examples/ex8
+    #    ├── invalid.pdf
+    #    └── main.dm
+    doc = load_example('tests/builders/examples/ex8/main.dm')
+    env = doc.context['environment']
+    target_root = doc.context['target_root']
+
+    # Setup the builder
+    html_builder = HtmlBuilder(env, context=doc.context)
+
+    # Check the builder
+    assert not html_builder.cache  # don't use the cache path
+
+    # Add a dependency for the media (invalid) file
+    build = html_builder.add_build(infilepaths='invalid.pdf',
+                                   context=doc.context)
+
+    # Check the subbuilder
+    assert build.status == 'ready'
+    assert html_builder.status == 'ready'
+
+    # Now run the build. It won't work
+    assert html_builder.build(complete=True) == 'missing (outfilepath)'
+    assert html_builder.status == 'missing (outfilepath)'
+    assert build.status == 'missing (outfilepath)'
+
+    # Check that the files were not created
+    assert not build.outfilepath.exists()

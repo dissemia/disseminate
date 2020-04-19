@@ -164,7 +164,20 @@ class TargetBuilder(SequentialBuilder):
         if document is not None:
             document.load()
 
-        return super().build(complete=complete)
+        # Run the build
+        status = super().build(complete=complete)
+
+        # After a build, remove finished builds from the parallel builder
+        unfinished_builds = []
+        subbuilders = (self._parallel_builder.subbuilders
+                       if self._parallel_builder is not None else [])
+        for builder in subbuilders:
+            if builder.status != 'done':
+                unfinished_builds.append(builder)
+        subbuilders.clear()
+        subbuilders += unfinished_builds
+
+        return status
 
     def chain_subbuilders(self):
         return None
