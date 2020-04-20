@@ -42,7 +42,8 @@ def test_save_temp_file_setup(env):
     assert save_build.infilepaths == ['my test']
 
     assert save_build.outfilepath.target_root == env.cache_path
-    assert str(save_build.outfilepath.subpath) == 'test_1488d34f91f2.test'
+    assert str(save_build.outfilepath.subpath) == ('media/test_'
+                                                   '1488d34f91f2.test')
 
     # 3. Test an example with a src_filepath in the context
     context['src_filepath'] = SourcePath(project_root=env.project_root,
@@ -56,7 +57,8 @@ def test_save_temp_file_setup(env):
     assert save_build.infilepaths == ['my test']
 
     assert save_build.outfilepath.target_root == env.cache_path
-    assert str(save_build.outfilepath.subpath) == 'test/test_1488d34f91f2.test'
+    assert str(save_build.outfilepath.subpath) == ('media/test/test_'
+                                                   '1488d34f91f2.test')
 
     # 4. Test an example without an outfilepath or target specified. An
     #    assertion error is raised

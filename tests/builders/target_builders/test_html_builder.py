@@ -24,7 +24,9 @@ def test_html_builder_setup_in_targets(env):
     builder = HtmlBuilder(env, context=context)
 
     # check the build
-    assert not builder.cache  # don't use a cache path, use actual target path
+    # don't use a cache path or media_path, use actual target path
+    assert not builder.use_cache
+    assert not builder.use_media
     assert context['builders']['.html'] == builder  # builder in context
     assert not target_filepath.exists()
     assert len(builder.subbuilders) == 6
@@ -59,12 +61,13 @@ def test_html_builder_setup_in_targets(env):
     assert builder.status == 'ready'
 
     # 3. Test an add build
-    img_filepath = SourcePath(project_root='tests/builders//examples/',
-                              subpath='ex1/sample.pdf')
+    img_filepath = SourcePath(project_root='tests/builders//examples/ex1',
+                              subpath='sample.pdf')
     target_filepath = TargetPath(target_root=target_root,
-                                 target='html', subpath='ex1/sample.svg')
+                                 target='html', subpath='media/sample.svg')
     pdf2svg = builder.add_build(infilepaths=img_filepath)
-    assert not pdf2svg.cache
+    assert not pdf2svg.use_cache
+    assert pdf2svg.use_media
     assert pdf2svg.infilepaths == [img_filepath]
     assert pdf2svg.outfilepath == target_filepath
 
@@ -85,7 +88,9 @@ def test_html_builder_setup_not_in_targets(env):
     builder = HtmlBuilder(env, context=context)
 
     # check the build
-    assert builder.cache  # use a cache path, use actual target path
+    # use a cache path but use a media_path
+    assert builder.use_cache
+    assert not builder.use_media
     assert context['builders']['.html'] == builder  # builder in context
     assert not target_filepath.exists()
     assert len(builder.subbuilders) == 6
@@ -101,13 +106,13 @@ def test_html_builder_setup_not_in_targets(env):
     assert builder.status == 'ready'
 
     # 2. Test an add build
-    img_filepath = SourcePath(project_root='tests/builders//examples/',
-                                subpath='ex1/sample.pdf')
+    img_filepath = SourcePath(project_root='tests/builders//examples/ex1',
+                                subpath='sample.pdf')
     target_filepath = TargetPath(target_root=env.cache_path,
-                                 target='html', subpath='ex1/sample.svg')
+                                 target='html', subpath='media/sample.svg')
     pdf2svg = builder.add_build(infilepaths=img_filepath)
 
-    assert pdf2svg.cache is True
+    assert pdf2svg.use_cache is True
     assert pdf2svg.infilepaths == [img_filepath]
     assert pdf2svg.outfilepath == target_filepath
 
@@ -243,7 +248,9 @@ def test_html_builder_inherited_doc(load_example):
     builder = HtmlBuilder(env, context=doc.context)
 
     # check the build
-    assert not builder.cache  # don't use the cache path
+    # don't use a cache path or media_path, use actual target path
+    assert not builder.use_cache
+    assert not builder.use_media
     assert builder.build_needed()
     assert builder.status == 'ready'
     assert not doc.targets['.html'].exists()
@@ -292,7 +299,9 @@ def test_html_builder_add_build(load_example):
     html_builder = HtmlBuilder(env, context=doc.context)
 
     # Check the builder
-    assert not html_builder.cache  # don't use the cache path
+    # don't use a cache path or media_path, use actual target path
+    assert not html_builder.use_cache
+    assert not html_builder.use_media
 
     # Add a dependency for the media file
     build = html_builder.add_build(infilepaths='media/images/NMR/hsqc_bw.pdf',
@@ -304,7 +313,9 @@ def test_html_builder_add_build(load_example):
                     subpath='media/images/NMR/hsqc_bw.svg')
 
     # Check the subbuilder
-    assert not build.cache  # don't use the cache path
+    # don't use a cache path gut use media path
+    assert not build.use_cache
+    assert build.use_media
     assert build.infilepaths[0] == sp
     assert build.infilepaths[0].subpath == sp.subpath
     assert build.outfilepath == tp
@@ -339,7 +350,9 @@ def test_html_builder_add_build_invalid(load_example):
     html_builder = HtmlBuilder(env, context=doc.context)
 
     # Check the builder
-    assert not html_builder.cache  # don't use the cache path
+    # don't use a cache path or media_path, use actual target path
+    assert not html_builder.use_cache
+    assert not html_builder.use_media
 
     # Add a dependency for the media (invalid) file
     build = html_builder.add_build(infilepaths='invalid.pdf',

@@ -19,7 +19,7 @@ def test_copy_no_outfilepath(env):
     infilepath = SourcePath(project_root=tmpdir, subpath='in.txt')
 
     # If not outfilepath is specified, a file in the cache directory is created
-    targetpath = TargetPath(target_root=tmpdir / '.cache', subpath='in.txt')
+    targetpath = TargetPath(target_root=env.cache_path, subpath='media/in.txt')
 
     # 1. Test a build that copies the file
     infilepath.write_text('infile')

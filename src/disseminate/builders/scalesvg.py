@@ -35,7 +35,7 @@ class ScaleSvg(Builder):
     scale = None
 
     def __init__(self, env, scale, **kwargs):
-        self.scale = int(scale)
+        self.scale = float(scale)
 
         super().__init__(env, **kwargs)
 

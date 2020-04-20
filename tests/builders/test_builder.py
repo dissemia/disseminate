@@ -31,7 +31,7 @@ def test_builder_filepaths(env):
     infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
     cachepath = TargetPath(target_root=env.cache_path,
-                           subpath='sample_crop.pdf')
+                           subpath='media/sample_crop.pdf')
     pdfcrop= PdfCrop(infilepaths=infilepath, env=env)
     assert pdfcrop.infilepaths == [infilepath]
     assert pdfcrop.outfilepath == cachepath
@@ -42,7 +42,7 @@ def test_builder_filepaths(env):
                             subpath='sample.pdf')
     cachepath = TargetPath(target_root=env.cache_path,
                            target='html',
-                           subpath='sample_crop.pdf')
+                           subpath='media/sample_crop.pdf')
     pdfcrop = PdfCrop(infilepaths=infilepath, target='html', env=env)
     assert pdfcrop.infilepaths == [infilepath]
     assert pdfcrop.outfilepath == cachepath

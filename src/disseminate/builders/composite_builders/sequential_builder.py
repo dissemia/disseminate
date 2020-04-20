@@ -33,7 +33,7 @@ class SequentialBuilder(CompositeBuilder):
         # sub-builders to the final outfilepath.
         # This only applies if other subbuilders are present
         if self.copy and self.subbuilders:
-            cp_builder = Copy(env, cache=self.cache)
+            cp_builder = Copy(env, use_cache=self.use_cache)
             self.subbuilders.append(cp_builder)
 
         # Order the subbuilders, if subbuilders are present

@@ -34,13 +34,13 @@ def test_pdfrender_setup(env):
     assert pdfrender.subbuilders[0].__class__.__name__ == 'JinjaRender'
     assert len(pdfrender.subbuilders[0].infilepaths) == 3
     assert (str(pdfrender.subbuilders[0].outfilepath.subpath) ==
-            'template_b9b44d13de71.tex')
+            'media/template_b9b44d13de71.tex')
 
     assert pdfrender.subbuilders[1].__class__.__name__ == 'Latexmk'
     assert (pdfrender.subbuilders[1].infilepaths[0] ==
             pdfrender.subbuilders[0].outfilepath)
     assert (str(pdfrender.subbuilders[1].outfilepath.subpath) ==
-            'template_b9b44d13de71.pdf')
+            'media/template_b9b44d13de71.pdf')
 
     assert pdfrender.subbuilders[2].__class__.__name__ == 'Copy'
     assert (pdfrender.subbuilders[2].infilepaths[0] ==
@@ -73,11 +73,11 @@ def test_pdfrender_chain_subbuilders(env):
     # Check the paths
     assert len(pdfrender.subbuilders[0].infilepaths) == 3
     assert (str(pdfrender.subbuilders[0].outfilepath.subpath) ==
-            'template_b9b44d13de71.tex')
+            'media/template_b9b44d13de71.tex')
     assert (pdfrender.subbuilders[1].infilepaths[0] ==
             pdfrender.subbuilders[0].outfilepath)
     assert (str(pdfrender.subbuilders[1].outfilepath.subpath) ==
-            'template_b9b44d13de71.pdf')
+            'media/template_b9b44d13de71.pdf')
     assert (pdfrender.subbuilders[2].infilepaths[0] ==
             pdfrender.subbuilders[1].outfilepath)
     assert pdfrender.subbuilders[2].outfilepath == outfilepath
@@ -98,7 +98,8 @@ def test_pdfrender_setup_without_outfilepath(env):
     pdfrender = PdfRender(env=env, context=context)
 
     assert len(pdfrender.infilepaths) == 3
-    assert str(pdfrender.outfilepath.subpath) == 'template_b9b44d13de71.pdf'
+    assert str(pdfrender.outfilepath.subpath) == ('media/template_'
+                                                  'b9b44d13de71.pdf')
 
 
 def test_pdfrender_simple(env):
@@ -140,7 +141,8 @@ def test_pdfrender_simple(env):
     assert pdfrender.build(complete=True) == 'done'
     assert pdfrender.outfilepath.target_root == env.cache_path
     assert str(pdfrender.outfilepath.target) == '.'
-    assert str(pdfrender.outfilepath.subpath) == 'template_e343d4a49636.pdf'
+    assert str(pdfrender.outfilepath.subpath) == ('media/template_'
+                                                  'e343d4a49636.pdf')
     assert pdfrender.outfilepath.exists()
 
     # 3. Test a build without an outfilepath but a document target specified.
@@ -149,5 +151,6 @@ def test_pdfrender_simple(env):
     assert pdfrender.build(complete=True) == 'done'
     assert pdfrender.outfilepath.target_root == env.cache_path
     assert str(pdfrender.outfilepath.target) == 'pdf'
-    assert str(pdfrender.outfilepath.subpath) == 'template_e343d4a49636.pdf'
+    assert str(pdfrender.outfilepath.subpath) == ('media/template_'
+                                                  'e343d4a49636.pdf')
     assert pdfrender.outfilepath.exists()

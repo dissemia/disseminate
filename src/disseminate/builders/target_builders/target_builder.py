@@ -35,6 +35,7 @@ class TargetBuilder(SequentialBuilder):
     active_requirements = ('priority',)
     context = weakattr()
 
+    use_media = False
     chain_on_creation = False
     copy = False
 
@@ -75,7 +76,7 @@ class TargetBuilder(SequentialBuilder):
                               self.outfilepath_ext in document.targets)
 
         # Only use cache for outfilepaths if this is not a document target
-        cache = False if is_document_target else True
+        use_cache = False if is_document_target else True
 
         # Setup the outfilepath, if one isn't specified.
         if outfilepath is None:
@@ -89,7 +90,8 @@ class TargetBuilder(SequentialBuilder):
                                                    infilepaths=infilepaths,
                                                    target=self.outfilepath_ext,
                                                    ext=self.outfilepath_ext,
-                                                   cache=cache)
+                                                   use_cache=use_cache,
+                                                   use_media=self.use_media)
         # Setup the labels
 
         # Setup the subbuilders
@@ -111,7 +113,7 @@ class TargetBuilder(SequentialBuilder):
 
         # Initialize builder
         super().__init__(env, infilepaths=infilepaths, outfilepath=outfilepath,
-                         subbuilders=subbuilders, cache=cache, **kwargs)
+                         subbuilders=subbuilders, use_cache=use_cache, **kwargs)
 
     def build_needed(self, reset=False):
         """Determine whether a build is needed."""
@@ -150,7 +152,7 @@ class TargetBuilder(SequentialBuilder):
         builder = par_builder.add_build(infilepaths=infilepaths,
                                         outfilepath=outfilepath,
                                         context=context,
-                                        cache=self.cache,
+                                        use_cache=self.use_cache,
                                         **kwargs)
 
         # Make sure the newly created builder has the same cache settings as

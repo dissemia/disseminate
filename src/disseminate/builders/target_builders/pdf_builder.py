@@ -20,7 +20,7 @@ class PdfBuilder(TargetBuilder):
     _pdf_builder = None
 
     def __init__(self, env, context, infilepaths=None, outfilepath=None,
-                 target=None, subbuilders=None, **kwargs):
+                 subbuilders=None, **kwargs):
         # Setup the subbuilders
         subbuilders = subbuilders or []
 
@@ -29,6 +29,7 @@ class PdfBuilder(TargetBuilder):
         if '.tex' not in builders:
             tex_builder = TexBuilder(env=env, context=context, target='tex',
                                      **kwargs)
+
             builders['.tex'] = tex_builder
         else:
             tex_builder = builders['.tex']
@@ -37,10 +38,10 @@ class PdfBuilder(TargetBuilder):
         subbuilders.append(tex_builder)
 
         # Now add a Pdf converter
-        pdf_builder_cls = self.find_builder_cls(in_ext='.tex', out_ext='.pdf')
-        pdf_builder = pdf_builder_cls(env=env, target='pdf', **kwargs)
-        self._pdf_builder = pdf_builder
-        subbuilders.append(pdf_builder)
+        tex2pdf_cls = self.find_builder_cls(in_ext='.tex', out_ext='.pdf')
+        tex2pdf = tex2pdf_cls(env=env, target='pdf', use_media=False, **kwargs)
+        self._pdf_builder = tex2pdf
+        subbuilders.append(tex2pdf)
 
         # And a copy builder
         copy_builder_cls = self.find_builder_cls(in_ext='.*', out_ext='.*')
@@ -52,9 +53,9 @@ class PdfBuilder(TargetBuilder):
                          **kwargs)
 
         # Setup the paths
-        pdf_builder.infilepaths = [tex_builder.outfilepath]
+        tex2pdf.infilepaths = [tex_builder.outfilepath]
 
-        copy_builder.infilepaths = [pdf_builder.outfilepath]
+        copy_builder.infilepaths = [tex2pdf.outfilepath]
         copy_builder.outfilepath = self.outfilepath
 
     def add_build(self, infilepaths, outfilepath=None, context=None, **kwargs):

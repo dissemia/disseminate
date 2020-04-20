@@ -51,8 +51,6 @@ class SaveTempFile(Builder):
 
         if outfilepath is None:
             infilepaths = self.infilepaths
-            context = self.context
-            env = self.env
 
             if infilepaths:
                 # Create an temporary infilepath from the hash of the input
@@ -66,7 +64,8 @@ class SaveTempFile(Builder):
                                                    append=self.outfilepath_ext,
                                                    ext=self.save_ext,
                                                    target=self.target,
-                                                   cache=self.cache)
+                                                   use_cache=self.use_cache,
+                                                   use_media=self.use_media)
 
         # Make sure the outfilepath directory exists
         if outfilepath and not outfilepath.parent.is_dir():

@@ -36,6 +36,7 @@ class Environment(object):
     scanner = None
 
     root_document = None
+    context = None
     project_root = None
     target_root = None
 
@@ -101,6 +102,13 @@ class Environment(object):
             cache_path.mkdir(parents=True, exist_ok=True)
             self._cache_path = cache_path
         return self._cache_path
+
+    @property
+    def media_path(self):
+        """The path for to prepend to subpaths for media files."""
+        if self.context:
+            return self.context.get('media_path', None)
+        return None
 
     def collect_target_builders(self):
         """Return all target builders for the root_document and all

@@ -16,5 +16,4 @@ def add_target_builders(document, context):
         target = target if target.startswith('.') else '.' + target
         if target not in builders:
             builder_cls = Builder.find_builder_cls(in_ext='.dm', out_ext=target)
-            builders[target] = builder_cls(env=environment, context=context,
-                                           target=target)
+            builders[target] = builder_cls(env=environment, context=context)

@@ -41,7 +41,7 @@ def test_scalesvg(env):
     assert 'width="164px" height="146px"' in outfilepath.read_text()
 
     # 2. Test an example without an outfilepath specified
-    cache_path = env.cache_path / 'sample_scale.svg'
+    cache_path = env.cache_path / 'media' / 'sample_scale.svg'
     scalesvg = ScaleSvg(infilepaths=infilepath2, scale=2, env=env)
 
     assert scalesvg.status == "ready"

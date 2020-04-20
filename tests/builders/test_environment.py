@@ -62,7 +62,7 @@ def test_environment_simple_build1(tmpdir):
     env = Environment(src_filepath=src_filepath, target_root=tmpdir)
 
     # Try the build and check the generated files
-    env.build()
+    assert env.build() == 'done'
 
     tp_html = TargetPath(target_root=tmpdir, target='html',
                          subpath='dummy.html')
@@ -70,6 +70,12 @@ def test_environment_simple_build1(tmpdir):
                         subpath='dummy.html')
     assert tp_html.is_file()
     assert tp_html.read_text() == tp_key.read_text()
+
+    tp_txt = TargetPath(target_root=tmpdir, target='txt', subpath='dummy.txt')
+    tp_key = TargetPath(target_root='tests/builders/examples/ex3',
+                        subpath='dummy.txt')
+    assert tp_txt.is_file()
+    assert tp_txt.read_text() == tp_key.read_text()
 
     tp_tex = TargetPath(target_root=tmpdir, target='tex', subpath='dummy.tex')
     tp_key = TargetPath(target_root='tests/builders/examples/ex3',

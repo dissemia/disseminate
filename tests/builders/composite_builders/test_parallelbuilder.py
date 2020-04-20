@@ -79,7 +79,7 @@ def test_parallelbuilder_add_build_file_without_outfilepath(env):
     # 2. Test an example without an outfilepath. This should be created in the
     #    cache directory as sample.svg (from the infilepath)
     cached_outfilepath = TargetPath(target_root=env.cache_path, target='html',
-                                    subpath='sample.svg')
+                                    subpath='media/sample.svg')
     parallel_builder = ParallelBuilder(env, target='html')
     parallel_builder.add_build(infilepaths=infilepath)
 

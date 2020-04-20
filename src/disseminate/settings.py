@@ -96,6 +96,7 @@ default_context = {
     # Options related to links
     'relative_links': True,
     'base_url': '/{target}/{subpath}',
+    'media_path': 'media',
 
     # Process tags for the following entries in a context
     # (see processors/process_context_tags.py)

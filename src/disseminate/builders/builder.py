@@ -44,6 +44,12 @@ class Builder(metaclass=ABCMeta):
         The filepaths for input files in the build
     outfilepath : Optional[:obj:`pathlib.Path`]
         If specified, the path for the output file.
+    use_cache : Optional[bool]
+        If True, set the builder outfilepath into the cache_root path from the
+        builder environment.
+    use_media : Optional[bool]
+        If True, set the builder outfilepath subpath in the media_root in the
+        build environment context, if specified.
 
     Attributes
     ----------
@@ -90,7 +96,8 @@ class Builder(metaclass=ABCMeta):
 
     priority = None
     required_execs = None
-    cache = True
+    use_cache = True
+    use_media = True
 
     infilepath_ext = None
     outfilepath_ext = None
@@ -107,10 +114,11 @@ class Builder(metaclass=ABCMeta):
     popen = None
 
     def __init__(self, env, target=None, infilepaths=None, outfilepath=None,
-                 cache=None, **kwargs):
+                 use_cache=None, use_media=None, **kwargs):
         self.env = env
         self.target = target.strip('.') if isinstance(target, str) else None
-        self.cache = cache if cache is not None else self.cache
+        self.use_cache = use_cache if use_cache is not None else self.use_cache
+        self.use_media = use_media if use_media is not None else self.use_media
 
         # Load the infilepaths, which must be pathlib.Path objects
         infilepaths = infilepaths or []
@@ -246,7 +254,8 @@ class Builder(metaclass=ABCMeta):
                                                target=self.target,
                                                append=self.outfilepath_append,
                                                ext=self.outfilepath_ext,
-                                               cache=self.cache)
+                                               use_cache=self.use_cache,
+                                               use_media=self.use_media)
 
         # Make sure the outfilepath directory exists
         if outfilepath and not outfilepath.parent.is_dir():

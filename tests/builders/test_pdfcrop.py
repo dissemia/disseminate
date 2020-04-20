@@ -46,7 +46,7 @@ def test_pdfcrop(env):
 
     # 3. Test an example without specifying the outfilepath. This should
     #    automatically save it in a cache diretory from the environment
-    cache_path = env.cache_path / 'sample_crop.pdf'
+    cache_path = env.cache_path / 'media/sample_crop.pdf'
     pdfcrop = PdfCrop(infilepaths=infilepath, env=env)
 
     # Make sure pdfcrop is available and read

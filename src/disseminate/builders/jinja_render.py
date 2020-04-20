@@ -146,7 +146,8 @@ class JinjaRender(Builder):
                                                    append=self.outfilepath_ext,
                                                    ext=self.render_ext,
                                                    target=self.target,
-                                                   cache=self.cache)
+                                                   use_cache=self.use_cache,
+                                                   use_media=self.use_media)
 
         # Make sure the outfilepath directory exists
         if outfilepath and not outfilepath.parent.is_dir():

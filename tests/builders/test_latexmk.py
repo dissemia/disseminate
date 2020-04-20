@@ -34,24 +34,39 @@ def test_latexmk_find_builder_cls_backup():
     Builder._available_builders.clear()
 
 
+def test_latexmk_setup_no_outfilepath_use_media_use_cache(env):
+    """Test the setup of the Latexmk builder with the use_media and use_cache
+    options and no outfilepath specified."""
 
-def test_latexmk_setup(env):
-    """Test the setup of the Latexmk builder."""
-    target_root = env.context['target_root']
-
-    # 1. Test example with the infilepath specified and a subpath
     infilepath = SourcePath(project_root='tests/builders/examples',
                             subpath='ex3/dummy.tex')
-    latexmk = Latexmk(infilepaths=infilepath, env=env)
+    latexmk = Latexmk(infilepaths=infilepath, env=env, use_cache=True,
+                      use_media=True)
+
+    assert str(latexmk.infilepaths[0].subpath) == 'ex3/dummy.tex'
+    assert str(latexmk.outfilepath.subpath) == 'media/ex3/dummy.pdf'
+    assert latexmk.outfilepath.target_root == env.cache_path
+
+
+def test_latexmk_setup_no_outfilepath_use_cache(env):
+    """Test the setup of the Latexmk builder with the use_cache option and no
+     outfilepath specified."""
+
+    infilepath = SourcePath(project_root='tests/builders/examples',
+                            subpath='ex3/dummy.tex')
+    latexmk = Latexmk(infilepaths=infilepath, env=env, use_cache=True,
+                      use_media=False)
 
     assert str(latexmk.infilepaths[0].subpath) == 'ex3/dummy.tex'
     assert str(latexmk.outfilepath.subpath) == 'ex3/dummy.pdf'
-    assert str(target_root) in str(latexmk.outfilepath)
+    assert latexmk.outfilepath.target_root == env.cache_path
 
-    # 2. Test example with the infilepath and outfilepath specified
+
+def test_latexmk_setup_outfilepath(env):
+    """Test the setup of the Latexmk builder with outfilepath specified."""
     infilepath = SourcePath(project_root='tests/builders',
                             subpath='ex3/dummy.tex')
-    outfilepath = TargetPath(target_root=target_root,
+    outfilepath = TargetPath(target_root=env.target_root,
                              subpath='mytest.pdf')
     latexmk = Latexmk(infilepaths=infilepath, outfilepath=outfilepath,
                       env=env)

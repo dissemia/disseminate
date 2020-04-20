@@ -34,7 +34,8 @@ def test_sequentialbuilder_outfilepath(env):
     builder.subbuilders.append(cp_builder)
 
     # Check the build
-    assert builder.cache  # By default, use the cache directory
+    assert builder.use_cache  # By default, use the cache directory
+    assert builder.use_media  # By default, use the media directory
     assert builder.build_needed()  # The target file hasn't been created yet
     assert builder.infilepaths == [src_filepath]
     assert builder.outfilepath == outfilepath
@@ -59,7 +60,7 @@ def test_sequentialbuilder_without_outfilepath(env):
 
     # 1. Create a test builder without the outfilepath
     outfilepath = TargetPath(target_root=env.target_root, subpath='out.dm')
-    cachepath = TargetPath(target_root=env.cache_path, subpath='test.dm')
+    cachepath = TargetPath(target_root=env.cache_path, subpath='media/test.dm')
     builder = SequentialBuilder(env=env, infilepaths=src_filepath)
 
     # Add a subbuilder
@@ -69,7 +70,8 @@ def test_sequentialbuilder_without_outfilepath(env):
     builder.chain_subbuilders()
 
     # Check the build
-    assert builder.cache  # By default, use the cache directory
+    assert builder.use_cache  # By default, use the cache directory
+    assert builder.use_media  # By default, use the media directory
     assert builder.build_needed()  # The target file hasn't been created yet
     assert builder.infilepaths == [src_filepath]
     assert builder.outfilepath == cachepath

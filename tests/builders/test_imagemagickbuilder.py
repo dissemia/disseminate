@@ -22,9 +22,8 @@ def test_tif2png(env):
     assert Tiff2png.active
 
     # 1. Try a conversions (.tif -> .png)
-    tmpdir = env.context['target_root']
     infilepath = SourcePath('tests/builders/examples/ex2', 'example-1.tif')
-    cache_path = TargetPath(tmpdir / '.cache', 'example-1.png')
+    cache_path = TargetPath(env.cache_path, 'media/example-1.png')
 
     tif2png = Tif2png(env, infilepaths=infilepath)
 

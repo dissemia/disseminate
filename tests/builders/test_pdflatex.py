@@ -15,7 +15,7 @@ def test_pdflatex_setup(env):
     pdflatex = Pdflatex(infilepaths=infilepath, env=env)
 
     assert str(pdflatex.infilepaths[0].subpath) == 'ex3/dummy.tex'
-    assert str(pdflatex.outfilepath.subpath) == 'ex3/dummy.pdf'
+    assert str(pdflatex.outfilepath.subpath) == 'media/ex3/dummy.pdf'
     assert str(target_root) in str(pdflatex.outfilepath)
 
     # 2. Test example with the infilepath and outfilepath specified

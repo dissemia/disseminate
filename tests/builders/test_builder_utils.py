@@ -61,20 +61,40 @@ def test_generate_mock_infilepath(env):
 def test_generate_outfilepath(env):
     """Test the genereate_outfilepath function."""
 
-    # 1. Test with basic infilepaths
-    # 1.1. Try with the cache path
+    # 1. Test with basic infilepaths and a cache path
     infilepath = SourcePath(project_root='test', subpath='mytest.html')
-    fp = generate_outfilepath(env=env, infilepaths=infilepath, cache=True)
+    fp = generate_outfilepath(env=env, infilepaths=infilepath, use_cache=True,
+                              use_media=False)
     assert fp.target_root == env.cache_path
     assert str(fp.subpath) == 'mytest.html'
 
-    # 1.2. Try with the target_root (non-cached outfilepath)
-    fp = generate_outfilepath(env=env, infilepaths=infilepath, cache=False)
+    # 2. Test with basic infilepaths and  with the target_root
+    #    (non-cached outfilepath)
+    fp = generate_outfilepath(env=env, infilepaths=infilepath, use_cache=False)
     assert fp.target_root == env.target_root
     assert str(fp.subpath) == 'mytest.html'
 
-    # 1.3 Try with a different extension
+    # 3. Test with basic infilepaths and try with a different extension
     fp = generate_outfilepath(env=env, infilepaths=infilepath, ext='.tex')
     assert fp.target_root == env.target_root
     assert str(fp.subpath) == 'mytest.tex'
 
+    # 5. Test with base infilepaths and a cache and media path
+    fp = generate_outfilepath(env=env, infilepaths=infilepath, use_cache=True,
+                              use_media=True)
+    assert fp.target_root == env.cache_path
+    assert str(fp.subpath) == 'media/mytest.html'
+
+    # 6. Test with base infilepaths and a media path
+    fp = generate_outfilepath(env=env, infilepaths=infilepath, use_cache=False,
+                              use_media=True)
+    assert fp.target_root == env.target_root
+    assert str(fp.subpath) == 'media/mytest.html'
+
+    # 7. Try removing the media_path from the context. A media_path will not
+    #    be prepended to the subpath
+    del env.context['media_path']
+    fp = generate_outfilepath(env=env, infilepaths=infilepath, use_cache=False,
+                              use_media=True)
+    assert fp.target_root == env.target_root
+    assert str(fp.subpath) == 'mytest.html'

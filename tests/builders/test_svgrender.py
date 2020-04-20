@@ -34,13 +34,13 @@ def test_svgrender_setup(env):
     assert svgrender.subbuilders[0].__class__.__name__ == 'PdfRender'
     assert len(svgrender.subbuilders[0].infilepaths) == 3
     assert (str(svgrender.subbuilders[0].outfilepath.subpath) ==
-            'template_b9b44d13de71.pdf')
+            'media/template_b9b44d13de71.pdf')
 
     assert svgrender.subbuilders[1].__class__.__name__ == 'Pdf2SvgCropScale'
     assert (svgrender.subbuilders[1].infilepaths[0] ==
             svgrender.subbuilders[0].outfilepath)
     assert (str(svgrender.subbuilders[1].outfilepath.subpath) ==
-            'template_b9b44d13de71.svg')
+            'media/template_b9b44d13de71.svg')
 
     assert svgrender.subbuilders[2].__class__.__name__ == 'Copy'
     assert (svgrender.subbuilders[2].infilepaths[0] ==
@@ -66,7 +66,8 @@ def test_svgrender_setup_without_outfilepath(env):
     svgrender = SvgRender(env=env, context=context)
 
     assert len(svgrender.infilepaths) == 3
-    assert str(svgrender.outfilepath.subpath) == 'template_b9b44d13de71.svg'
+    assert str(svgrender.outfilepath.subpath) == ('media/template_'
+                                                  'b9b44d13de71.svg')
 
 
 def test_svgrender_chain_subbuilders(env):
@@ -88,11 +89,11 @@ def test_svgrender_chain_subbuilders(env):
     # Test the paths
     assert len(svgrender.subbuilders[0].infilepaths) == 3
     assert (str(svgrender.subbuilders[0].outfilepath.subpath) ==
-            'template_b9b44d13de71.pdf')
+            'media/template_b9b44d13de71.pdf')
     assert (svgrender.subbuilders[1].infilepaths[0] ==
             svgrender.subbuilders[0].outfilepath)
     assert (str(svgrender.subbuilders[1].outfilepath.subpath) ==
-            'template_b9b44d13de71.svg')
+            'media/template_b9b44d13de71.svg')
     assert (svgrender.subbuilders[2].infilepaths[0] ==
             svgrender.subbuilders[1].outfilepath)
     assert svgrender.subbuilders[2].outfilepath == outfilepath
@@ -150,7 +151,8 @@ def test_svgrender_simple_without_outfilepath(env):
     assert svgrender.status == 'ready'
     assert svgrender.build(complete=True) == 'done'
     assert svgrender.outfilepath.target_root == env.cache_path
-    assert str(svgrender.outfilepath.subpath) == 'template_b9b44d13de71.svg'
+    assert str(svgrender.outfilepath.subpath) == ('media/template_'
+                                                  'b9b44d13de71.svg')
     assert svgrender.outfilepath.exists()
 
     # A new build should not be needed
@@ -165,7 +167,8 @@ def test_svgrender_simple_without_outfilepath(env):
     assert svgrender.status == 'ready'
     assert svgrender.build(complete=True) == 'done'
     assert svgrender.outfilepath.target_root == env.cache_path
-    assert str(svgrender.outfilepath.subpath) == 'template_e343d4a49636.svg'
+    assert str(svgrender.outfilepath.subpath) == ('media/template_'
+                                                  'e343d4a49636.svg')
     assert svgrender.outfilepath.exists()
 
     # A new build should not be needed
@@ -179,7 +182,8 @@ def test_svgrender_simple_without_outfilepath(env):
     assert svgrender.build(complete=True) == 'done'
     assert svgrender.outfilepath.target_root == env.cache_path
     assert str(svgrender.outfilepath.target) == 'html'
-    assert str(svgrender.outfilepath.subpath) == 'template_e343d4a49636.svg'
+    assert str(svgrender.outfilepath.subpath) == ('media/template_'
+                                                  'e343d4a49636.svg')
     assert svgrender.outfilepath.exists()
 
     # A new build should not be needed

@@ -82,7 +82,7 @@ def generate_mock_infilepath(env, infilepaths, project_root=None, subpath=None,
 
 
 def generate_outfilepath(env, infilepaths, target=None, append=None, ext=None,
-                         cache=False):
+                         use_cache=False, use_media=False):
     """Given a set of infilepaths, generate an outfilepath.
 
     Parameters
@@ -97,8 +97,11 @@ def generate_outfilepath(env, infilepaths, target=None, append=None, ext=None,
         If specified, append the given string to the returned filename
     ext : Optional[str]
         If specified, return a cache_filepath with the given target format.
-    cache : Bool
+    use_cache : bool
         If True, return a path in the cache directory.
+    use_media : bool
+        If True, return a path with a subpath prepended with the media_path.
+        ex: 'media/'
 
     Returns
     -------
@@ -115,7 +118,8 @@ def generate_outfilepath(env, infilepaths, target=None, append=None, ext=None,
     infilepath = infilepaths[0]
 
     # Formulate the target_root
-    target_root = env.cache_path if cache else env.context['target_root']
+    target_root = env.cache_path if use_cache else env.context['target_root']
+    media_path = env.media_path if use_media else None
 
     # Formulate the target
     if isinstance(target, str):
@@ -127,7 +131,11 @@ def generate_outfilepath(env, infilepaths, target=None, append=None, ext=None,
 
     # Formulate the subpath
     subpath = infilepath.subpath
-    subpath = rename(path=subpath, append=append, extension=ext)
+    if media_path and not str(subpath).startswith(media_path):
+        subpath = rename(path=media_path / subpath, append=append,
+                         extension=ext)
+    else:
+        subpath = rename(path=subpath, append=append, extension=ext)
 
     # Return the new TargetPath
     return (TargetPath(target_root=target_root, target=target, subpath=subpath)

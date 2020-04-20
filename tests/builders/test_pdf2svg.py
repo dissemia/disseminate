@@ -98,14 +98,14 @@ def test_pdf2svg_pdfcrop(env):
 
     # 2. Test example without the outfilepath specified. The final final will
     #    be placed in a cached folder
-    cache_path = env.cache_path / 'sample.svg'
+    cache_path = env.cache_path / 'media/sample.svg'
     pdf2svg = Pdf2SvgCropScale(infilepaths=infilepath, env=env, crop=20)
     assert not cache_path.exists()
 
     status = pdf2svg.build(complete=True)
     assert status == 'done'
-    assert cache_path.exists()
-    assert cache_path.read_text() == svg_text
+    assert pdf2svg.outfilepath.exists()
+    assert pdf2svg.outfilepath.read_text() == svg_text
 
 
 def test_pdf2svg_scalesvg(env):
@@ -165,7 +165,7 @@ def test_pdf2svg_scalesvg(env):
 
     # 2. Test example without the outfilepath specified. The final file will
     #    be placed in a cached folder
-    cache_path = env.cache_path / 'sample.svg'
+    cache_path = env.cache_path / 'media/sample.svg'
     pdf2svg = Pdf2SvgCropScale(infilepaths=infilepath, env=env, scale=2)
 
     assert not cache_path.exists()
@@ -173,5 +173,3 @@ def test_pdf2svg_scalesvg(env):
     assert status == 'done'
     assert cache_path.exists()
     assert cache_path.read_text() == svg_text
-
-

@@ -69,13 +69,15 @@ def test_jinja_render_setup(env):
     render_build = JinjaRender(env, context=context, render_ext='.html')
     assert len(render_build.infilepaths) == 8
     assert render_build.outfilepath.target_root == env.cache_path
-    assert str(render_build.outfilepath.subpath) == 'template_9c695c53185d.html'
+    assert str(render_build.outfilepath.subpath) == ('media/template_'
+                                                     '9c695c53185d.html')
 
     # A new content body produces a different hash
     context['body'] = tag(html="My new body")  # expects {{ body.html }}
     render_build = JinjaRender(env, context=context, render_ext='.html')
     assert render_build.outfilepath.target_root == env.cache_path
-    assert str(render_build.outfilepath.subpath) == 'template_10d3c1460f63.html'
+    assert str(render_build.outfilepath.subpath) == ('media/template_'
+                                                     '10d3c1460f63.html')
 
     # 3. Test an example without an outfilepath or target specified. An
     #    assertion error is raised
@@ -193,7 +195,8 @@ def test_jinja_render(env):
     assert render_build.build_needed()
     assert render_build.build(complete=True) == 'done'
     assert render_build.outfilepath.exists()
-    assert str(render_build.outfilepath.subpath) == 'template_10d3c1460f63.html'
+    assert str(render_build.outfilepath.subpath) == ('media/template_'
+                                                     '10d3c1460f63.html')
     assert render_build.status == 'done'
 
     # A new builder does not require a new build.
@@ -212,7 +215,8 @@ def test_jinja_render(env):
     assert render_build.build(complete=True) == 'done'
     assert render_build.outfilepath.exists()
     assert str(render_build.outfilepath.target) == 'test'
-    assert str(render_build.outfilepath.subpath) == 'template_10d3c1460f63.html'
+    assert str(render_build.outfilepath.subpath) == ('media/template_'
+                                                     '10d3c1460f63.html')
     assert render_build.status == 'done'
 
     # A new builder does not require a new build.
