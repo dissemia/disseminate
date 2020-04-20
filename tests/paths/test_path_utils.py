@@ -126,3 +126,15 @@ def test_find_file(context_cls):
     assert p3.match('media/ch1/root_img.png')
     assert isinstance(p3, SourcePath)
     assert str(p3.subpath) == 'media/ch1/root_img.png'
+
+
+def test_find_file_missing(context_cls):
+    """Test the find_file function when files are missing."""
+    context = context_cls(paths=[])
+
+    # Test different sstring
+    for string in ('',  # empty string
+                   "one\ntwo  \n",  # multiline string
+                   ):
+        with pytest.raises(FileNotFoundError):
+            find_file(string, context)

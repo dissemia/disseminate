@@ -117,7 +117,9 @@ def find_file(path, context, raise_error=True):
     assert context.is_valid('paths')
 
     # Prepare the parameters
-    path = pathlib.Path(path) if isinstance(path, str) else path
+    if isinstance(path, str):
+        path_strs = path.strip().splitlines()  # Keep only the first line
+        path = pathlib.Path(path_strs[0] if path_strs else '')
 
     # See if the file is itself a valid file
     if path.is_file():
