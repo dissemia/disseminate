@@ -70,7 +70,7 @@ setup(
     include_package_data=True,  # include MANIFEST.in
     install_requires=[
         'regex>=2018.11.22',         # No license, replaced with re
-        'jinja2>=2.11',              # 3-clause BSD
+        'jinja2>=2.11,<3.0',         # 3-clause BSD
         'lxml>=4.3.0',               # BSD license
         'blinker>=1.4',              # MIT license
         'python-slugify>=2.0.1',     # MIT license
@@ -80,13 +80,13 @@ setup(
         # The following are needed for the preview function
         'sanic>=19.0',               # MIT license
         # The following is needed for the @code tag
-        'pygments>=2.4',             # BSD 2 license
+        'pygments >=2.6',             # BSD 2 license
         'pandas>=0.25',               # 3-clause BSD
         ],
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc',
                 'asv'],
-        'test': ['pytest', 'pytest-sanic', 'tox', 'coverage'],
+        'test': ['pytest', 'pytest-sanic>1.6', 'tox', 'coverage'],
         'termcolor': ['termcolor']  # MIT license
     },
     scripts=['scripts/dm', ],
