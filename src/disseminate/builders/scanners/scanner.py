@@ -1,8 +1,6 @@
 """
 A scanner object to find implicit dependencies.
 """
-import pathlib
-
 from ...paths import SourcePath
 from ...utils.classes import all_subclasses
 
@@ -43,8 +41,8 @@ class Scanner(object):
         return cls._scanners.get(extension, None)
 
     @classmethod
-    def scan(cls, infilepaths, raise_error=True):
-        """Scan infilepaths for dependencies.
+    def scan(cls, parameters, raise_error=True):
+        """Scan parameters for dependencies.
 
         Parameters
         ----------
@@ -62,38 +60,38 @@ class Scanner(object):
             A list of infilepath dependencies.
         """
         # Prepare the arguments
-        infilepaths = (infilepaths if isinstance(infilepaths, list)
-                       or isinstance(infilepaths, tuple) else [infilepaths])
+        parameters = (parameters if isinstance(parameters, list)
+                      or isinstance(parameters, tuple) else [parameters])
 
         new_infilepaths = []
 
         # Parse each filepath
-        for infilepath in infilepaths:
-            if isinstance(infilepath, SourcePath):
+        for parameter in parameters:
+            if isinstance(parameter, SourcePath):
                 pass
             else:
                 continue
 
             # Make sure this scanner can deal with this type of infilepath
-            if infilepath.suffix not in cls.extensions:
+            if parameter.suffix not in cls.extensions:
                 # See if an alternative scanner can be found
-                scanner = cls.get_scanner(extension=infilepath.suffix)
+                scanner = cls.get_scanner(extension=parameter.suffix)
                 if scanner is None:
                     # If not, skip this infilepath
                     continue
                 else:
                     # If so, use it instead
-                    new_infilepaths += scanner.scan(infilepath,
+                    new_infilepaths += scanner.scan(parameter,
                                                     raise_error=raise_error)
                     continue
 
             # Parse the infilepath
-            stubs = cls.scan_function(infilepath.read_text())
+            stubs = cls.scan_function(parameter.read_text())
 
             # Find the new, valid infilepaths. First, parse the source
             # infilepath.
-            project_root = infilepath.project_root
-            subpath = infilepath.subpath.parent
+            project_root = parameter.project_root
+            subpath = parameter.subpath.parent
 
             for stub in stubs:
                 # Strip leading slashes so that the stub is not an absolute path

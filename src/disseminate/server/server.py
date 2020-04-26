@@ -30,7 +30,7 @@ def create_app(in_path, out_dir=None, debug=False):
         If true, include debugging information.
     """
     # Setup the app
-    app = Sanic()
+    app = Sanic('disseminate')
 
     # Configure the app
     app.debug = debug

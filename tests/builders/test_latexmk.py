@@ -40,10 +40,10 @@ def test_latexmk_setup_no_outfilepath_use_media_use_cache(env):
 
     infilepath = SourcePath(project_root='tests/builders/examples',
                             subpath='ex3/dummy.tex')
-    latexmk = Latexmk(infilepaths=infilepath, env=env, use_cache=True,
+    latexmk = Latexmk(parameters=infilepath, env=env, use_cache=True,
                       use_media=True)
 
-    assert str(latexmk.infilepaths[0].subpath) == 'ex3/dummy.tex'
+    assert str(latexmk.parameters[0].subpath) == 'ex3/dummy.tex'
     assert str(latexmk.outfilepath.subpath) == 'media/ex3/dummy.pdf'
     assert latexmk.outfilepath.target_root == env.cache_path
 
@@ -54,10 +54,10 @@ def test_latexmk_setup_no_outfilepath_use_cache(env):
 
     infilepath = SourcePath(project_root='tests/builders/examples',
                             subpath='ex3/dummy.tex')
-    latexmk = Latexmk(infilepaths=infilepath, env=env, use_cache=True,
+    latexmk = Latexmk(parameters=infilepath, env=env, use_cache=True,
                       use_media=False)
 
-    assert str(latexmk.infilepaths[0].subpath) == 'ex3/dummy.tex'
+    assert str(latexmk.parameters[0].subpath) == 'ex3/dummy.tex'
     assert str(latexmk.outfilepath.subpath) == 'ex3/dummy.pdf'
     assert latexmk.outfilepath.target_root == env.cache_path
 
@@ -68,10 +68,10 @@ def test_latexmk_setup_outfilepath(env):
                             subpath='ex3/dummy.tex')
     outfilepath = TargetPath(target_root=env.target_root,
                              subpath='mytest.pdf')
-    latexmk = Latexmk(infilepaths=infilepath, outfilepath=outfilepath,
+    latexmk = Latexmk(parameters=infilepath, outfilepath=outfilepath,
                       env=env)
 
-    assert latexmk.infilepaths[0] == infilepath
+    assert latexmk.parameters[0] == infilepath
     assert latexmk.outfilepath == outfilepath
 
 
@@ -82,7 +82,7 @@ def test_latexmk_simple(env):
     # 1. Test example with the infilepath specified.
     infilepath = SourcePath(project_root='tests/builders/examples',
                             subpath='ex3/dummy.tex')
-    latexmk = Latexmk(infilepaths=infilepath, env=env)
+    latexmk = Latexmk(parameters=infilepath, env=env)
     cache_path = latexmk.cache_path
 
     # Check the status of the build
@@ -97,7 +97,7 @@ def test_latexmk_simple(env):
     assert latexmk.outfilepath.exists()
 
     # A new builder doesn't need to be run
-    latexmk = Latexmk(infilepaths=infilepath, env=env)
+    latexmk = Latexmk(parameters=infilepath, env=env)
     assert latexmk.status == 'done'
 
     # 2. Test example with the infilepath and outfilepath specified
@@ -105,7 +105,7 @@ def test_latexmk_simple(env):
                             subpath='ex3/dummy.tex')
     outfilepath = TargetPath(target_root=target_root,
                              subpath='myfile.pdf')
-    latexmk = Latexmk(infilepaths=infilepath, outfilepath=outfilepath, env=env)
+    latexmk = Latexmk(parameters=infilepath, outfilepath=outfilepath, env=env)
 
     # Check the status of the build
     assert latexmk.status == 'ready'

@@ -32,23 +32,23 @@ def test_pdfrender_setup(env):
     assert len(pdfrender.subbuilders) == 3
 
     assert pdfrender.subbuilders[0].__class__.__name__ == 'JinjaRender'
-    assert len(pdfrender.subbuilders[0].infilepaths) == 3
+    assert len(pdfrender.subbuilders[0].parameters) == 3
     assert (str(pdfrender.subbuilders[0].outfilepath.subpath) ==
             'media/template_b9b44d13de71.tex')
 
     assert pdfrender.subbuilders[1].__class__.__name__ == 'Latexmk'
-    assert (pdfrender.subbuilders[1].infilepaths[0] ==
+    assert (pdfrender.subbuilders[1].parameters[0] ==
             pdfrender.subbuilders[0].outfilepath)
     assert (str(pdfrender.subbuilders[1].outfilepath.subpath) ==
             'media/template_b9b44d13de71.pdf')
 
     assert pdfrender.subbuilders[2].__class__.__name__ == 'Copy'
-    assert (pdfrender.subbuilders[2].infilepaths[0] ==
+    assert (pdfrender.subbuilders[2].parameters[0] ==
             pdfrender.subbuilders[1].outfilepath)
     assert pdfrender.subbuilders[2].outfilepath == outfilepath
 
-    # The rendered string should be in the infilepaths
-    assert any("My test body" in str(f) for f in pdfrender.infilepaths)
+    # The rendered string should be in the parameters
+    assert any("My test body" in str(f) for f in pdfrender.parameters)
 
     # And the outfilepath should match the one given
     assert pdfrender.outfilepath == outfilepath
@@ -71,18 +71,18 @@ def test_pdfrender_chain_subbuilders(env):
     pdfrender.chain_subbuilders()
 
     # Check the paths
-    assert len(pdfrender.subbuilders[0].infilepaths) == 3
+    assert len(pdfrender.subbuilders[0].parameters) == 3
     assert (str(pdfrender.subbuilders[0].outfilepath.subpath) ==
             'media/template_b9b44d13de71.tex')
-    assert (pdfrender.subbuilders[1].infilepaths[0] ==
+    assert (pdfrender.subbuilders[1].parameters[0] ==
             pdfrender.subbuilders[0].outfilepath)
     assert (str(pdfrender.subbuilders[1].outfilepath.subpath) ==
             'media/template_b9b44d13de71.pdf')
-    assert (pdfrender.subbuilders[2].infilepaths[0] ==
+    assert (pdfrender.subbuilders[2].parameters[0] ==
             pdfrender.subbuilders[1].outfilepath)
     assert pdfrender.subbuilders[2].outfilepath == outfilepath
 
-    assert any("My test body" in str(f) for f in pdfrender.infilepaths)
+    assert any("My test body" in str(f) for f in pdfrender.parameters)
     assert pdfrender.outfilepath == outfilepath
 
 
@@ -97,7 +97,7 @@ def test_pdfrender_setup_without_outfilepath(env):
     # 1. Setup a build without an outfilepath
     pdfrender = PdfRender(env=env, context=context)
 
-    assert len(pdfrender.infilepaths) == 3
+    assert len(pdfrender.parameters) == 3
     assert str(pdfrender.outfilepath.subpath) == ('media/template_'
                                                   'b9b44d13de71.pdf')
 

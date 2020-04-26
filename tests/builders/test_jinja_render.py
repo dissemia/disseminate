@@ -30,9 +30,10 @@ def test_jinja_render_setup(env):
 
     render_build = JinjaRender(env, outfilepath=outfilepath, context=context)
 
-    # Check the infilepaths. These should be SourcePaths with correctly set
-    # project_root / subpath
-    assert len(render_build.infilepaths) == 8
+    # Check the parameters and infilepaths. These should be SourcePaths with
+    # correctly set project_root / subpath
+    assert len(render_build.parameters) == 8
+    assert len(render_build.infilepaths) == 7
     assert render_build.infilepaths[0].match('templates/default/template.html')
     assert (str(render_build.infilepaths[0].subpath) ==
             'template.html')
@@ -58,7 +59,7 @@ def test_jinja_render_setup(env):
                                              'media/css/pygments.css')
     assert (str(render_build.infilepaths[6].subpath) ==
             'media/css/pygments.css')
-    assert "My body" in render_build.infilepaths[7]
+    assert "My body" in render_build.parameters[7]
 
     # Check the outfilepath
     assert render_build.outfilepath == outfilepath
@@ -67,7 +68,8 @@ def test_jinja_render_setup(env):
     #    specified.
     context['body'] = tag(html="My body")  # expects {{ body.html }}
     render_build = JinjaRender(env, context=context, render_ext='.html')
-    assert len(render_build.infilepaths) == 8
+    assert len(render_build.parameters) == 8
+    assert len(render_build.infilepaths) == 7
     assert render_build.outfilepath.target_root == env.cache_path
     assert str(render_build.outfilepath.subpath) == ('media/template_'
                                                      '9c695c53185d.html')
@@ -102,9 +104,10 @@ def test_jinja_render_setup_inherited(env):
 
     render_build = JinjaRender(env, outfilepath=outfilepath, context=context)
 
-    # Check the infilepaths. These should be SourcePaths with correctly set
-    # project_root / subpath
-    assert len(render_build.infilepaths) == 12
+    # Check the parameters and infilepaths. These should be SourcePaths with
+    # correctly set project_root / subpath
+    assert len(render_build.parameters) == 12
+    assert len(render_build.infilepaths) == 11
     assert render_build.infilepaths[0].match('templates/books/tufte/'
                                              'template.html')
     assert (str(render_build.infilepaths[0].subpath) ==
@@ -145,7 +148,7 @@ def test_jinja_render_setup_inherited(env):
                                               'media/css/pygments.css')
     assert (str(render_build.infilepaths[10].subpath) ==
             'media/css/pygments.css')
-    assert "My body" in render_build.infilepaths[11]
+    assert "My body" in render_build.parameters[11]
 
 
 def test_jinja_render(env):

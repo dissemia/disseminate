@@ -23,7 +23,7 @@ def test_copy_no_outfilepath(env):
 
     # 1. Test a build that copies the file
     infilepath.write_text('infile')
-    cp = Copy(env=env, infilepaths=infilepath)
+    cp = Copy(env=env, parameters=infilepath)
 
     assert cp.build(complete=True) == 'done'
     assert cp.outfilepath == targetpath
@@ -37,7 +37,7 @@ def test_copy_build(env):
 
     # 1. Test a build that copies the file
     infilepath.write_text('infile')
-    cp = Copy(env=env, infilepaths=infilepath, outfilepath=targetpath)
+    cp = Copy(env=env, parameters=infilepath, outfilepath=targetpath)
 
     assert cp.build(complete=True) == 'done'
     assert targetpath.read_text() == 'infile'
@@ -46,7 +46,7 @@ def test_copy_build(env):
     #    than the infile, but its contents don't match the hash
     targetpath.write_text('outfile')
 
-    cp = Copy(env=env, infilepaths=infilepath, outfilepath=targetpath)
+    cp = Copy(env=env, parameters=infilepath, outfilepath=targetpath)
 
     assert cp.build() == 'done'
     assert targetpath.read_text() == 'infile'
@@ -59,11 +59,11 @@ def test_copy_build_infilepath_missing(env):
     targetpath = TargetPath(target_root=tmpdir, subpath='out.txt')
 
     # 1. Test a build that copies the file
-    cp = Copy(env=env, infilepaths=infilepath, outfilepath=targetpath)
+    cp = Copy(env=env, parameters=infilepath, outfilepath=targetpath)
 
-    assert cp.status == 'missing (infilepaths)'
-    assert cp.build(complete=True) == 'missing (infilepaths)'
-    assert cp.status == 'missing (infilepaths)'
+    assert cp.status == 'missing (parameters)'
+    assert cp.build(complete=True) == 'missing (parameters)'
+    assert cp.status == 'missing (parameters)'
 
 
 def test_copy_samefile(env):
@@ -74,7 +74,7 @@ def test_copy_samefile(env):
 
     # 1. Test a build that copies the file
     infilepath.write_text('infile')
-    cp = Copy(env=env, infilepaths=infilepath, outfilepath=targetpath)
+    cp = Copy(env=env, parameters=infilepath, outfilepath=targetpath)
 
     assert cp.status == 'done'
     assert cp.build(complete=True) == 'done'

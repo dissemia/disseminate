@@ -25,10 +25,10 @@ def test_target_builder_setup(env):
         builder = targer_builder_cls(env, context=context,
                                      outfilepath=target_filepath)
 
-        # Check the infilepaths. These should be SourcePaths with correctly set
+        # Check the parameters. These should be SourcePaths with correctly set
         # project_root / subpath
-        assert len(builder.infilepaths) == 1
-        assert builder.infilepaths == [src_filepath]
+        assert len(builder.parameters) == 1
+        assert builder.parameters == [src_filepath]
         assert builder.outfilepath == target_filepath
 
 
@@ -43,11 +43,11 @@ def test_target_builder_setup_doc(load_example):
         # Setup the builder
         builder = targer_builder_cls(env, context=doc.context)
 
-        # Check the infilepaths. These should be SourcePaths with correctly set
+        # Check the parameters. These should be SourcePaths with correctly set
         # project_root / subpath
-        assert len(builder.infilepaths) == 1
-        assert builder.infilepaths[0].match('dummy.dm')
-        assert (str(builder.infilepaths[0].subpath) ==
+        assert len(builder.parameters) == 1
+        assert builder.parameters[0].match('dummy.dm')
+        assert (str(builder.parameters[0].subpath) ==
                 'dummy.dm')
         assert builder.outfilepath.match('{ext}/dummy.{ext}'.format(ext=ext))
         assert str(builder.outfilepath.subpath) == 'dummy.{ext}'.format(ext=ext)
@@ -75,12 +75,12 @@ def test_target_builder_decision(env):
         context['body'] = tag
 
         builder = targer_builder_cls(env, context=context,
-                                     infilepaths=src_filepath,
+                                     parameters=src_filepath,
                                      outfilepath=target_filepath)
 
         # Check the build and run the build
         assert len(builder.subbuilders) > 0
-        assert src_filepath in builder.infilepaths
+        assert src_filepath in builder.parameters
         assert builder.outfilepath == target_filepath
         assert builder.status == 'ready'
         assert builder.build(complete=True) == 'done'
@@ -88,7 +88,7 @@ def test_target_builder_decision(env):
 
         # A new builder will not need a build
         builder = targer_builder_cls(env, context=context,
-                                     infilepaths=src_filepath,
+                                     parameters=src_filepath,
                                      outfilepath=target_filepath)
         assert builder.status == 'done'
 
@@ -96,7 +96,7 @@ def test_target_builder_decision(env):
         src_filepath.write_text('test 2')
 
         builder = targer_builder_cls(env, context=context,
-                                     infilepaths=src_filepath,
+                                     parameters=src_filepath,
                                      outfilepath=target_filepath)
 
         assert builder.build_needed()

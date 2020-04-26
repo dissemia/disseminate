@@ -29,11 +29,11 @@ def test_tex_builder_setup_in_targets(env):
     assert len(builder.subbuilders) == 2
 
     assert builder.subbuilders[0].__class__.__name__ == 'ParallelBuilder'
-    assert builder.subbuilders[0].infilepaths == []
+    assert builder.subbuilders[0].parameters == []
     assert builder.subbuilders[1].__class__.__name__ == 'JinjaRender'
-    assert len(builder.subbuilders[1].infilepaths) > 0
+    assert len(builder.subbuilders[1].parameters) > 0
     assert builder.subbuilders[1].outfilepath == target_filepath
-    assert builder.infilepaths == [src_filepath]
+    assert builder.parameters == [src_filepath]
     assert builder.outfilepath == target_filepath
 
     assert builder.build_needed()
@@ -49,10 +49,10 @@ def test_tex_builder_setup_in_targets(env):
     assert len(builder.subbuilders) == 2
 
     assert builder.subbuilders[0].__class__.__name__ == 'ParallelBuilder'
-    assert builder.subbuilders[0].infilepaths == []
+    assert builder.subbuilders[0].parameters == []
     assert builder.subbuilders[1].__class__.__name__ == 'JinjaRender'
-    assert len(builder.subbuilders[1].infilepaths) > 0
-    assert builder.infilepaths == [src_filepath]
+    assert len(builder.subbuilders[1].parameters) > 0
+    assert builder.parameters == [src_filepath]
     assert builder.outfilepath == target_filepath
 
     assert builder.build_needed()
@@ -80,10 +80,10 @@ def test_tex_builder_setup_not_in_targets(env):
     assert len(builder.subbuilders) == 2
 
     assert builder.subbuilders[0].__class__.__name__ == 'ParallelBuilder'
-    assert builder.subbuilders[0].infilepaths == []
+    assert builder.subbuilders[0].parameters == []
     assert builder.subbuilders[1].__class__.__name__ == 'JinjaRender'
-    assert len(builder.subbuilders[1].infilepaths) > 0
-    assert builder.infilepaths == [src_filepath]
+    assert len(builder.subbuilders[1].parameters) > 0
+    assert builder.parameters == [src_filepath]
     assert builder.outfilepath == target_filepath
 
     assert builder.build_needed()
@@ -201,7 +201,7 @@ def test_tex_builder_add_build(load_example):
     tex_builder = TexBuilder(env, context=doc.context)
 
     # Add a dependency for the media file
-    build = tex_builder.add_build(infilepaths='media/images/NMR/hsqc_bw.pdf',
+    build = tex_builder.add_build(parameters='media/images/NMR/hsqc_bw.pdf',
                                   context=doc.context)
 
     sp = SourcePath(project_root='tests/builders/examples/ex5/src',
@@ -209,8 +209,8 @@ def test_tex_builder_add_build(load_example):
     tp = TargetPath(target_root=target_root, target='tex',
                     subpath='media/images/NMR/hsqc_bw.pdf')
     assert build.__class__.__name__ == 'Copy'
-    assert build.infilepaths[0] == sp
-    assert build.infilepaths[0].subpath == sp.subpath
+    assert build.parameters[0] == sp
+    assert build.parameters[0].subpath == sp.subpath
     assert build.outfilepath == tp
     assert build.outfilepath.subpath == tp.subpath
 

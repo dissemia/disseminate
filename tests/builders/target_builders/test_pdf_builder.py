@@ -36,21 +36,21 @@ def test_pdf_builder_setup_pdf_in_targets(env):
     tex_builder = builder.subbuilders[0]
     assert tex_builder.__class__.__name__ == 'TexBuilder'
     assert tex_builder.target == 'tex'
-    assert len(tex_builder.subbuilders[1].infilepaths) > 0
+    assert len(tex_builder.subbuilders[1].parameters) > 0
     assert tex_builder.subbuilders[1].outfilepath == target_tex_filepath
-    assert tex_builder.infilepaths == [src_filepath]
+    assert tex_builder.parameters == [src_filepath]
     assert tex_builder.outfilepath == target_tex_filepath
 
     pdf_builder = builder.subbuilders[1]
     assert pdf_builder.__class__.__name__ == 'Latexmk'
     assert pdf_builder.target == 'pdf'
-    assert pdf_builder.infilepaths == [target_tex_filepath]
+    assert pdf_builder.parameters == [target_tex_filepath]
     assert pdf_builder.outfilepath == target_cache_pdf_filepath
 
     copy_builder = builder.subbuilders[2]
     assert copy_builder.__class__.__name__ == 'Copy'
     assert copy_builder.target == 'pdf'
-    assert copy_builder.infilepaths == [target_cache_pdf_filepath]
+    assert copy_builder.parameters == [target_cache_pdf_filepath]
     assert copy_builder.outfilepath == target_pdf_filepath
 
     assert builder.outfilepath == target_pdf_filepath
@@ -87,18 +87,18 @@ def test_pdf_builder_setup_pdf_tex_in_targets(env):
 
     assert builder.subbuilders[0].__class__.__name__ == 'TexBuilder'
     assert builder.subbuilders[0].target == 'tex'
-    assert builder.subbuilders[0].infilepaths == [src_filepath]
+    assert builder.subbuilders[0].parameters == [src_filepath]
     assert builder.subbuilders[0].outfilepath == target_tex_filepath
 
     assert builder.subbuilders[1].__class__.__name__ == 'Latexmk'
     assert builder.subbuilders[1].target == 'pdf'
-    assert builder.subbuilders[1].infilepaths == [target_tex_filepath]
+    assert builder.subbuilders[1].parameters == [target_tex_filepath]
     assert builder.subbuilders[1].outfilepath == target_cache_pdf_filepath
 
     copy_builder = builder.subbuilders[2]
     assert copy_builder.__class__.__name__ == 'Copy'
     assert copy_builder.target == 'pdf'
-    assert copy_builder.infilepaths == [target_cache_pdf_filepath]
+    assert copy_builder.parameters == [target_cache_pdf_filepath]
     assert copy_builder.outfilepath == target_pdf_filepath
 
     assert builder.outfilepath == target_pdf_filepath
@@ -117,18 +117,18 @@ def test_pdf_builder_setup_pdf_tex_in_targets(env):
 
     assert builder.subbuilders[0].__class__.__name__ == 'TexBuilder'
     assert builder.subbuilders[0].target == 'tex'
-    assert builder.subbuilders[0].infilepaths == [src_filepath]
+    assert builder.subbuilders[0].parameters == [src_filepath]
     assert builder.subbuilders[0].outfilepath == target_tex_filepath
 
     assert builder.subbuilders[1].__class__.__name__ == 'Latexmk'
     assert builder.subbuilders[1].target == 'pdf'
-    assert builder.subbuilders[1].infilepaths == [target_tex_filepath]
+    assert builder.subbuilders[1].parameters == [target_tex_filepath]
     assert builder.subbuilders[1].outfilepath == target_cache_pdf_filepath
 
     copy_builder = builder.subbuilders[2]
     assert copy_builder.__class__.__name__ == 'Copy'
     assert copy_builder.target == 'pdf'
-    assert copy_builder.infilepaths == [target_cache_pdf_filepath]
+    assert copy_builder.parameters == [target_cache_pdf_filepath]
     assert copy_builder.outfilepath == target_pdf_filepath
 
     assert builder.outfilepath == target_pdf_filepath
@@ -161,18 +161,18 @@ def test_pdf_builder_setup_not_in_targets(env):
 
     assert builder.subbuilders[0].__class__.__name__ == 'TexBuilder'
     assert builder.subbuilders[0].target == 'tex'
-    assert builder.subbuilders[0].infilepaths == [src_filepath]
+    assert builder.subbuilders[0].parameters == [src_filepath]
     assert builder.subbuilders[0].outfilepath == target_tex_filepath
 
     assert builder.subbuilders[1].__class__.__name__ == 'Latexmk'
     assert builder.subbuilders[1].target == 'pdf'
-    assert builder.subbuilders[1].infilepaths == [target_tex_filepath]
+    assert builder.subbuilders[1].parameters == [target_tex_filepath]
     assert builder.subbuilders[1].outfilepath == target_cache_pdf_filepath
 
     copy_builder = builder.subbuilders[2]
     assert copy_builder.__class__.__name__ == 'Copy'
     assert copy_builder.target == 'pdf'
-    assert copy_builder.infilepaths == [target_cache_pdf_filepath]
+    assert copy_builder.parameters == [target_cache_pdf_filepath]
     assert copy_builder.outfilepath == target_pdf_filepath
 
     assert builder.outfilepath == target_pdf_filepath

@@ -12,9 +12,9 @@ def test_pdflatex_setup(env):
     # 1. Test example with the infilepath specified and a subpath
     infilepath = SourcePath(project_root='tests/builders/examples',
                             subpath='ex3/dummy.tex')
-    pdflatex = Pdflatex(infilepaths=infilepath, env=env)
+    pdflatex = Pdflatex(parameters=infilepath, env=env)
 
-    assert str(pdflatex.infilepaths[0].subpath) == 'ex3/dummy.tex'
+    assert str(pdflatex.parameters[0].subpath) == 'ex3/dummy.tex'
     assert str(pdflatex.outfilepath.subpath) == 'media/ex3/dummy.pdf'
     assert str(target_root) in str(pdflatex.outfilepath)
 
@@ -23,10 +23,10 @@ def test_pdflatex_setup(env):
                             subpath='ex3/dummy.tex')
     outfilepath = TargetPath(target_root=target_root,
                              subpath='mytest.pdf')
-    pdflatex = Pdflatex(infilepaths=infilepath, outfilepath=outfilepath,
+    pdflatex = Pdflatex(parameters=infilepath, outfilepath=outfilepath,
                         env=env)
 
-    assert pdflatex.infilepaths[0] == infilepath
+    assert pdflatex.parameters[0] == infilepath
     assert pdflatex.outfilepath == outfilepath
 
 
@@ -37,7 +37,7 @@ def test_pdflatex_simple(env):
     # 1. Test example with the infilepath specified.
     infilepath = SourcePath(project_root='tests/builders/examples',
                             subpath='ex3/dummy.tex')
-    pdflatex = Pdflatex(infilepaths=infilepath, env=env)
+    pdflatex = Pdflatex(parameters=infilepath, env=env)
     cache_path = pdflatex.cache_path
 
     # Check the status of the build
@@ -52,7 +52,7 @@ def test_pdflatex_simple(env):
     assert pdflatex.outfilepath.exists()
 
     # A new builder doesn't need to be run
-    pdflatex = Pdflatex(infilepaths=infilepath, env=env)
+    pdflatex = Pdflatex(parameters=infilepath, env=env)
     assert pdflatex.status == 'done'
 
     # 2. Test example with the infilepath and outfilepath specified
@@ -60,7 +60,7 @@ def test_pdflatex_simple(env):
                             subpath='ex3/dummy.tex')
     outfilepath = TargetPath(target_root=target_root,
                              subpath='myfile.pdf')
-    pdflatex = Pdflatex(infilepaths=infilepath, outfilepath=outfilepath,
+    pdflatex = Pdflatex(parameters=infilepath, outfilepath=outfilepath,
                         env=env)
 
     # Check the status of the build

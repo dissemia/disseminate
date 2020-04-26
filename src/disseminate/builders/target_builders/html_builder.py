@@ -24,14 +24,13 @@ class HtmlBuilder(TargetBuilder):
             copy_subbuilders = []
             for subbuilder in self.subbuilders:
                 filepaths = [filepath for filepath in subbuilder.infilepaths
-                             if isinstance(filepath, SourcePath) and
-                             filepath.match(ext)]
+                             if filepath.match(ext)]
                 for filepath in filepaths:
                     subpath = filepath.subpath
                     target_filepath = TargetPath(target_root=target_root,
                                                  target=target,
                                                  subpath=subpath)
-                    copy = Copy(env, infilepaths=filepath,
+                    copy = Copy(env, parameters=filepath,
                                 outfilepath=target_filepath)
                     copy_subbuilders.append(copy)
             self.subbuilders += copy_subbuilders

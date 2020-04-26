@@ -16,8 +16,8 @@ class TargetBuilder(SequentialBuilder):
         The build environment
     context: :obj:`.context.Context`
         The context dict for the document being rendered.
-    infilepaths, args : Tuple[:obj:`pathlib.Path`]
-        The filepaths for input files in the build
+    iparameters, args : Tuple[:obj:`pathlib.Path`, str, tuple, list]
+        The input parameters (dependencies), including filepaths, for the build
     outfilepath : Optional[:obj:`pathlib.Path`]
         If specified, the path for the output file.
     subbuilders : List[:obj:`.builders.Builder`]
@@ -45,7 +45,7 @@ class TargetBuilder(SequentialBuilder):
     _parallel_builder = None
     _render_builder = None
 
-    def __init__(self, env, context, infilepaths=None, outfilepath=None,
+    def __init__(self, env, context, parameters=None, outfilepath=None,
                  subbuilders=None, **kwargs):
         # Configure the parameters
         self.context = context
@@ -68,8 +68,8 @@ class TargetBuilder(SequentialBuilder):
 
         # Setup the paths
         document = getattr(context, 'document', None)
-        if infilepaths is None and 'src_filepath' in context:
-            infilepaths = context['src_filepath']
+        if parameters is None and 'src_filepath' in context:
+            parameters = context['src_filepath']
 
         # Determine if this target builder matches a document target
         is_document_target = (document is not None and
@@ -87,7 +87,7 @@ class TargetBuilder(SequentialBuilder):
             else:
                 # Otherwise create one from the src_filepath
                 outfilepath = generate_outfilepath(env=env,
-                                                   infilepaths=infilepaths,
+                                                   parameters=parameters,
                                                    target=self.outfilepath_ext,
                                                    ext=self.outfilepath_ext,
                                                    use_cache=use_cache,
@@ -112,7 +112,7 @@ class TargetBuilder(SequentialBuilder):
             self._render_builder = render_builder
 
         # Initialize builder
-        super().__init__(env, infilepaths=infilepaths, outfilepath=outfilepath,
+        super().__init__(env, parameters=parameters, outfilepath=outfilepath,
                          subbuilders=subbuilders, use_cache=use_cache, **kwargs)
 
     def build_needed(self, reset=False):
@@ -122,7 +122,7 @@ class TargetBuilder(SequentialBuilder):
             self.decision = decider.decision
 
         # Get the src_filepath for the document
-        inputs = list(self.infilepaths)
+        inputs = list(self.parameters)
 
         # Get the (sorted) labels for the document
 
@@ -144,12 +144,12 @@ class TargetBuilder(SequentialBuilder):
         else:
             SequentialBuilder.outfilepath.fset(self, value)
 
-    def add_build(self, infilepaths, outfilepath=None, context=None,
+    def add_build(self, parameters, outfilepath=None, context=None,
                   **kwargs):
         """Create and add a sub-builder to the composite builder."""
 
         par_builder = self._parallel_builder
-        builder = par_builder.add_build(infilepaths=infilepaths,
+        builder = par_builder.add_build(parameters=parameters,
                                         outfilepath=outfilepath,
                                         context=context,
                                         use_cache=self.use_cache,

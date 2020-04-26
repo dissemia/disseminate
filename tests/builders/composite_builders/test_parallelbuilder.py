@@ -27,7 +27,7 @@ def test_parallelbuilder_add_build_file_with_outfilepath(env):
     outfilepath = TargetPath(target_root=tmpdir, target='html',
                              subpath='test.svg')
     parallel_builder = ParallelBuilder(env, target='html')
-    build = parallel_builder.add_build(infilepaths=infilepath,
+    build = parallel_builder.add_build(parameters=infilepath,
                                        outfilepath=outfilepath)
 
     # Check the builder
@@ -59,7 +59,7 @@ def test_parallelbuilder_add_build_file_with_outfilepath(env):
     # Try a new parallel builder, and its status should be 'done'--i.e. no
     # build is needed
     parallel_builder = ParallelBuilder(env, target='html')
-    parallel_builder.add_build(infilepaths=infilepath, outfilepath=outfilepath)
+    parallel_builder.add_build(parameters=infilepath, outfilepath=outfilepath)
 
     assert not parallel_builder.build_needed()
     assert parallel_builder.status == 'done'
@@ -81,7 +81,7 @@ def test_parallelbuilder_add_build_file_without_outfilepath(env):
     cached_outfilepath = TargetPath(target_root=env.cache_path, target='html',
                                     subpath='media/sample.svg')
     parallel_builder = ParallelBuilder(env, target='html')
-    parallel_builder.add_build(infilepaths=infilepath)
+    parallel_builder.add_build(parameters=infilepath)
 
     assert parallel_builder.subbuilders[-1].outfilepath == cached_outfilepath
     assert parallel_builder.build_needed()  # file doesn't exist
@@ -91,7 +91,7 @@ def test_parallelbuilder_add_build_file_without_outfilepath(env):
     outfilepath = TargetPath(target_root=tmpdir, target='html',
                              subpath='test2.svg')
     parallel_builder = ParallelBuilder(env, target='html')
-    parallel_builder.add_build(infilepaths=infilepath, outfilepath=outfilepath)
+    parallel_builder.add_build(parameters=infilepath, outfilepath=outfilepath)
 
     assert parallel_builder.build_needed()
     assert parallel_builder.status == 'ready'
@@ -116,7 +116,7 @@ def test_parallelbuilder_add_build_render(env):
     outfilepath = TargetPath(target_root=tmpdir, target='html',
                              subpath='test.svg')
     parallel_builder = ParallelBuilder(env, target='html')
-    builder = parallel_builder.add_build(infilepaths='.render',
+    builder = parallel_builder.add_build(parameters='.render',
                                          outfilepath=outfilepath,
                                          context=env.context)
 
@@ -149,7 +149,7 @@ def test_parallelbuilder_add_build_missing(env):
     parallel_builder = ParallelBuilder(env, target='.html')
 
     # A builder cannot be found; a BuildError is raised
-    build = parallel_builder.add_build(infilepaths=infilepath,
+    build = parallel_builder.add_build(parameters=infilepath,
                                        outfilepath=outfilepath)
     assert build.__class__.__name__ == 'Pdf2SvgCropScale'
 
@@ -158,7 +158,7 @@ def test_parallelbuilder_add_build_missing(env):
     infilepath = 'sample.unknown'
 
     with pytest.raises(BuildError):
-        parallel_builder.add_build(infilepaths=infilepath,
+        parallel_builder.add_build(parameters=infilepath,
                                    outfilepath=outfilepath)
 
 
@@ -191,8 +191,8 @@ def test_parallelbuilder_sequential_builds(env):
     outfilepath2 = TargetPath(target_root=tmpdir, target='html',
                               subpath='test2.svg')
     parallel_builder = ParallelBuilder(env, target='html')
-    parallel_builder.add_build(infilepaths=infilepath, outfilepath=outfilepath1)
-    parallel_builder.add_build(infilepaths=infilepath, outfilepath=outfilepath2)
+    parallel_builder.add_build(parameters=infilepath, outfilepath=outfilepath1)
+    parallel_builder.add_build(parameters=infilepath, outfilepath=outfilepath2)
 
     # Test the builder
     assert not outfilepath1.exists()
@@ -229,7 +229,7 @@ def test_parallelbuilder_md5decider(env, caplog):
     outfilepath = TargetPath(target_root=tmpdir, target='html',
                              subpath='test.svg')
     parallel_builder = ParallelBuilder(env, target='html')
-    parallel_builder.add_build(infilepaths=infilepath, outfilepath=outfilepath)
+    parallel_builder.add_build(parameters=infilepath, outfilepath=outfilepath)
 
     assert not outfilepath.exists()  # target file not created yet
 
@@ -254,7 +254,7 @@ def test_parallelbuilder_md5decider(env, caplog):
 
     # 2. Try modifying the outfilepath and a new build should be needed
     parallel_builder = ParallelBuilder(env, target='html')
-    parallel_builder.add_build(infilepaths=infilepath, outfilepath=outfilepath)
+    parallel_builder.add_build(parameters=infilepath, outfilepath=outfilepath)
 
     # Change the output file; a new build should be needed
     outfilepath.write_text('new output!')
@@ -268,7 +268,7 @@ def test_parallelbuilder_md5decider(env, caplog):
 
     # 3. Try modifying the cached versions and a full set of builds is needed.
     parallel_builder = ParallelBuilder(env, target='html')
-    parallel_builder.add_build(infilepaths=infilepath, outfilepath=outfilepath)
+    parallel_builder.add_build(parameters=infilepath, outfilepath=outfilepath)
 
     pdf2svg = parallel_builder.subbuilders[0]
     for subbuilder in pdf2svg.subbuilders:

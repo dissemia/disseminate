@@ -18,7 +18,7 @@ class CompositeBuilder(Builder):
     -----
     - The build filepaths for subbuilders are set as follows, with user-supplied
       paths in parentheses:
-      - builder - subbuilder1 (infilepaths) - outfilepath1
+      - builder - subbuilder1 (parameters) - outfilepath1
                 - subbuilder2 outfilepath2 - outfilepath3
                 - subbuilder3 outfilepath3 - outfilepath4
                 - outfilepath4 - (outfilepath)

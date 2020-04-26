@@ -3,6 +3,7 @@ Objects to manage builds
 """
 import logging
 import subprocess
+import pathlib
 from abc import ABCMeta
 from string import Formatter
 from distutils.spawn import find_executable
@@ -40,8 +41,8 @@ class Builder(metaclass=ABCMeta):
     ----------
     env: :obj:`.builders.Environment`
         The build environment
-    infilepaths, args : Tuple[:obj:`pathlib.Path`]
-        The filepaths for input files in the build
+    parameters, args : Tuple[:obj:`pathlib.Path`, str, tuple, list]
+        The input parameters (dependencies), including filepaths, for the build
     outfilepath : Optional[:obj:`pathlib.Path`]
         If specified, the path for the output file.
     use_cache : Optional[bool]
@@ -64,8 +65,8 @@ class Builder(metaclass=ABCMeta):
         - 'priority': test that the priority attribute is an int
         - 'required_execs': tests that the required_execs attribute is specified
         - 'all_execs': tests that the required execs are available
-    scan_infilepaths : bool
-        If True (default), scan the infilepaths for additional dependencies.
+    scan_parameters : bool
+        If True (default), scan the parameters for additional dependencies.
     priority : int
         If multiple viable builders are available, use the one with the highest
         priority.
@@ -92,7 +93,7 @@ class Builder(metaclass=ABCMeta):
     available = False
     active_requirements = ('priority', 'required_execs', 'all_execs')
     decision = None
-    scan_infilepaths = True
+    scan_parameters = True
 
     priority = None
     required_execs = None
@@ -108,27 +109,27 @@ class Builder(metaclass=ABCMeta):
 
     _active = dict()
     _available_builders = dict()
-    _infilepaths = None
+    _parameters = None
     _outfilepath = None
 
     popen = None
 
-    def __init__(self, env, target=None, infilepaths=None, outfilepath=None,
+    def __init__(self, env, target=None, parameters=None, outfilepath=None,
                  use_cache=None, use_media=None, **kwargs):
         self.env = env
         self.target = target.strip('.') if isinstance(target, str) else None
         self.use_cache = use_cache if use_cache is not None else self.use_cache
         self.use_media = use_media if use_media is not None else self.use_media
 
-        # Load the infilepaths, which must be pathlib.Path objects
-        infilepaths = infilepaths or []
-        infilepaths = (list(infilepaths) if isinstance(infilepaths, tuple) or
-                       isinstance(infilepaths, list) else [infilepaths])
-        self.infilepaths = infilepaths
+        # Load the parameters
+        parameters = parameters or []
+        parameters = (list(parameters) if isinstance(parameters, tuple) or
+                      isinstance(parameters, list) else [parameters])
+        self.parameters = parameters
 
-        # Scan for additional infilepaths, if desired
-        if self.scan_infilepaths:
-            self.infilepaths += env.scanner.scan(infilepaths=self.infilepaths)
+        # Scan for additional parameters, if desired
+        if self.scan_parameters:
+            self.parameters += env.scanner.scan(parameters=self.parameters)
 
         # Load the outfilepath
         self.outfilepath = (outfilepath if isinstance(outfilepath, TargetPath)
@@ -187,21 +188,23 @@ class Builder(metaclass=ABCMeta):
         """The status of the builder.
 
         The builder can have the following states:
-        - 'ready': The builder is active and the infilepaths have been set
+        - 'ready': The builder is active and the parameters have been set
         - 'inactive': The builder isn't active--see the active property
-        - 'missing': The infilepaths have not been specified, the infilepaths
-          do not exist or the outfilepath could not be created.
+        - 'missing (parameters)': All the required parameters have not been
+          specified or files for paths in the parameters do not exist
+        - 'missing (outfilepath)': The outfilepath could not be or was not
+           created
         - 'building': The builder is building
         - 'done': The builder is done building
         """
         active = self.active
-        has_infilepaths = len(self.infilepaths) > 0
+        has_parameters = len(self.parameters) > 0
         if not active:
             return "inactive"
-        elif (not has_infilepaths or
-              not all(i.exists() for i in self.infilepaths
+        elif (not has_parameters or
+              not all(i.exists() for i in self.parameters
                       if hasattr(i, 'exists'))):
-            return "missing (infilepaths)"
+            return "missing (parameters)"
         elif not self.build_needed() or self.popen == "done":
             return "done"
         elif self.popen is not None:
@@ -227,7 +230,7 @@ class Builder(metaclass=ABCMeta):
         if self.decision is None:
             decider = self.env.decider
             self.decision = decider.decision
-        inputs = list(self.infilepaths)
+        inputs = list(self.parameters)
         if self.action:
             inputs.append(self.action)
         return self.decision.build_needed(inputs=inputs,
@@ -235,13 +238,24 @@ class Builder(metaclass=ABCMeta):
                                           reset=reset)
 
     @property
-    def infilepaths(self):
+    def parameters(self):
         """The list of input filenames and paths needed for the build"""
-        return self._infilepaths
+        return self._parameters
 
-    @infilepaths.setter
-    def infilepaths(self, value):
-        self._infilepaths = value
+    @parameters.setter
+    def parameters(self, value):
+        self._parameters = value
+
+    @property
+    def infilepaths(self):
+        """Retrieve the parameters that are filepaths (:obj:`pathlib.Path`)."""
+        return [p for p in self.parameters if isinstance(p, pathlib.Path)]
+
+    @property
+    def not_infilepaths(self):
+        """Retrieve the parameters that are not filepaths (:obj:`pathlib.Path`)
+        """
+        return [p for p in self.parameters if not isinstance(p, pathlib.Path)]
 
     @property
     def outfilepath(self):
@@ -250,7 +264,7 @@ class Builder(metaclass=ABCMeta):
 
         if outfilepath is None:
             outfilepath = generate_outfilepath(env=self.env,
-                                               infilepaths=self.infilepaths,
+                                               parameters=self.parameters,
                                                target=self.target,
                                                append=self.outfilepath_append,
                                                ext=self.outfilepath_ext,

@@ -19,7 +19,7 @@ class PdfBuilder(TargetBuilder):
     _tex_builder = None
     _pdf_builder = None
 
-    def __init__(self, env, context, infilepaths=None, outfilepath=None,
+    def __init__(self, env, context, parameters=None, outfilepath=None,
                  subbuilders=None, **kwargs):
         # Setup the subbuilders
         subbuilders = subbuilders or []
@@ -48,17 +48,17 @@ class PdfBuilder(TargetBuilder):
         copy_builder = copy_builder_cls(env=env, target='pdf', **kwargs)
         subbuilders.append(copy_builder)
 
-        super().__init__(env=env, context=context, infilepaths=infilepaths,
+        super().__init__(env=env, context=context, parameters=parameters,
                          outfilepath=outfilepath, subbuilders=subbuilders,
                          **kwargs)
 
         # Setup the paths
-        tex2pdf.infilepaths = [tex_builder.outfilepath]
+        tex2pdf.parameters = [tex_builder.outfilepath]
 
-        copy_builder.infilepaths = [tex2pdf.outfilepath]
+        copy_builder.parameters = [tex2pdf.outfilepath]
         copy_builder.outfilepath = self.outfilepath
 
-    def add_build(self, infilepaths, outfilepath=None, context=None, **kwargs):
-        return self._tex_builder.add_build(infilepaths=infilepaths,
+    def add_build(self, parameters, outfilepath=None, context=None, **kwargs):
+        return self._tex_builder.add_build(parameters=parameters,
                                            outfilepath=outfilepath,
                                            context=context, **kwargs)

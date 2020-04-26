@@ -9,7 +9,7 @@ class SequentialBuilder(CompositeBuilder):
     Attributes
     ----------
     chain_on_create : bool
-        If True (default), chain the infilepaths and outfilepath of the
+        If True (default), chain the parameters and outfilepath of the
         subbuilders to follow each other.
     copy : bool
         If True (default), the last subbuilders will be a Copy build to copy
@@ -41,23 +41,23 @@ class SequentialBuilder(CompositeBuilder):
             self.chain_subbuilders()
 
     def chain_subbuilders(self):
-        """Chain the infilepaths and outfilepath of the subbuilders to follow
+        """Chain the parameters and outfilepath of the subbuilders to follow
         each other"""
-        # Set the infilepaths and outfilepaths
-        current_infilepaths = self.infilepaths
+        # Set the parameters and outfilepaths
+        current_parameters = self.infilepaths
         for subbuilder in self.subbuilders:
-            # For the subbuilders to work together, reset their infilepaths
+            # For the subbuilders to work together, reset their parameters
             # and outfilepath
-            if current_infilepaths:
-                subbuilder.infilepaths = current_infilepaths
+            if current_parameters:
+                subbuilder.parameters = current_parameters
             subbuilder.outfilepath = None
 
             # Convert the output of subbuilder into an infilepath for the
-            # next subbuilder
+            # next subbuilder. Include the other parameters in the input
+            # parameters
             outfilepath = subbuilder.outfilepath
             if outfilepath:
-                infilepath = outfilepath
-                current_infilepaths = [infilepath]
+                current_parameters = [outfilepath] + subbuilder.not_infilepaths
 
         # Set the copy builder to point to the final outfilepath
         self.subbuilders[-1].outfilepath = self.outfilepath

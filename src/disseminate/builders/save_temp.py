@@ -4,7 +4,7 @@ Builder to save temporary files
 import logging
 
 from .builder import Builder, BuildError
-from .utils import generate_mock_infilepath, generate_outfilepath
+from .utils import generate_mock_parameters, generate_outfilepath
 from ..utils.classes import weakattr
 from ..utils.file import mkdir_p
 
@@ -16,8 +16,8 @@ class SaveTempFile(Builder):
     ----------
     env: :obj:`.builders.Environment`
         The build environment
-    infilepaths, args : Tuple[:obj:`.paths.SourcePath`]
-        The input for the saved temp file. This function expects a string.
+    parameters, args : Tuple[:obj:`pathlib.Path`, str, tuple, list]
+        The input parameters (dependencies), including filepaths, for the build
     outfilepath : Optional[:obj:`.paths.TargetPath`]
         If specified, the path for the output file.
     save_ext : str
@@ -28,7 +28,7 @@ class SaveTempFile(Builder):
     action = 'save'
     priority = 1000
     active_requirements = ('priority',)
-    scan_infilepaths = False  # This is done after all infilepaths are loaded
+    scan_parameters = False  # This is done after all parameters are loaded
 
     context = weakattr()
 
@@ -50,17 +50,17 @@ class SaveTempFile(Builder):
         outfilepath = self._outfilepath
 
         if outfilepath is None:
-            infilepaths = self.infilepaths
+            parameters = self.parameters
 
-            if infilepaths:
+            if parameters:
                 # Create an temporary infilepath from the hash of the input
-                sourcepath = generate_mock_infilepath(env=self.env,
+                sourcepath = generate_mock_parameters(env=self.env,
                                                       context=self.context,
-                                                      infilepaths=infilepaths,
+                                                      parameters=parameters,
                                                       ext='.save')
 
                 outfilepath = generate_outfilepath(env=self.env,
-                                                   infilepaths=sourcepath,
+                                                   parameters=sourcepath,
                                                    append=self.outfilepath_ext,
                                                    ext=self.save_ext,
                                                    target=self.target,
@@ -78,8 +78,8 @@ class SaveTempFile(Builder):
         self._outfilepath = value
 
     def build(self, complete=False):
-        # Check that the string to write is in the infilepaths
-        strings = [f for f in self.infilepaths if isinstance(f, str)]
+        # Check that the string to write is in the parameters
+        strings = [f for f in self.parameters if isinstance(f, str)]
         if len(strings) == 0:
             msg = ("The '{}' builder expects a single string as the infilepath "
                    "to save the temporary file.")

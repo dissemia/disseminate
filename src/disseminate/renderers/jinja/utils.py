@@ -39,6 +39,12 @@ def template_paths(loader):
         path = pathlib.Path(loader._template_root)
         paths.append(path)
 
+    elif (hasattr(loader, 'package_path') and hasattr(loader, 'provider') and
+          hasattr(loader.provider, 'module_path')):
+        # Process PackageLoader (older Jinja versions)
+        path = pathlib.Path(loader.provider.module_path) / loader.package_path
+        paths.append(path)
+
     return paths
 
 

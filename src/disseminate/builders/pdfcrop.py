@@ -10,8 +10,8 @@ class PdfCrop(Builder):
 
     Parameters
     ----------
-    infilepaths, args : Tuple[:obj:`.paths.SourcePath`]
-        The filepaths for input files in the build
+    parameters, args : Tuple[:obj:`pathlib.Path`, str, tuple, list]
+        The input parameters (dependencies), including filepaths, for the build
     outfilepath : Optional[:obj:`.paths.TargetPath`]
         If specified, the path for the output file.
     env: :obj:`.builders.Environment`

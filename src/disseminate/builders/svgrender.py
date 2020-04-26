@@ -13,7 +13,7 @@ class SvgRender(SequentialBuilder):
     infilepath_ext = '.render'
     outfilepath_ext = '.svg'
 
-    def __init__(self, env, infilepaths=None, outfilepath=None, context=None,
+    def __init__(self, env, parameters=None, outfilepath=None, context=None,
                  template=None, subbuilders=None, **kwargs):
 
         # Setup the arguments
@@ -26,13 +26,13 @@ class SvgRender(SequentialBuilder):
         subbuilders.append(pdfrender)
         self.subbuilder_for_outfilename = pdfrender
 
-        # Use the infilepath from the pdfrender.
-        infilepaths = infilepaths or pdfrender.infilepaths
+        # Use the parameter from the pdfrender.
+        parameters = parameters or pdfrender.parameters
 
         # Setup a pdf->svg converter
         builder_cls = self.find_builder_cls(in_ext='.pdf', out_ext='.svg')
         pdf2svg = builder_cls(env, **kwargs)
         subbuilders.append(pdf2svg)
 
-        super().__init__(env, infilepaths=infilepaths, outfilepath=outfilepath,
+        super().__init__(env, parameters=parameters, outfilepath=outfilepath,
                          subbuilders=subbuilders, **kwargs)

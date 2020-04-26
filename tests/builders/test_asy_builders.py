@@ -44,7 +44,7 @@ def test_asy2pdf_setup(env):
                             subpath='diagram.asy')
     outfilepath = TargetPath(target_root=target_root,
                              subpath='final.svg')
-    asy2pdf = Asy2pdf(env=env, infilepaths=infilepath, outfilepath=outfilepath)
+    asy2pdf = Asy2pdf(env=env, parameters=infilepath, outfilepath=outfilepath)
 
     assert asy2pdf.infilepaths == [infilepath]
     assert asy2pdf.outfilepath == outfilepath
@@ -59,7 +59,7 @@ def test_asy2pdf_file(env):
                             subpath='diagram.asy')
     outfilepath = TargetPath(target_root=target_root,
                              subpath='diagram.pdf')
-    asy2pdf = Asy2pdf(infilepaths=infilepath, outfilepath=outfilepath, env=env)
+    asy2pdf = Asy2pdf(parameters=infilepath, outfilepath=outfilepath, env=env)
 
     # Make sure pdfcrop is available and read
     assert asy2pdf.active
@@ -88,7 +88,7 @@ def test_asy2svg_file(env):
                             subpath='diagram.asy')
     outfilepath = TargetPath(target_root=target_root,
                              subpath='diagram.svg')
-    asy2svg = Asy2svg(infilepaths=infilepath, outfilepath=outfilepath, env=env)
+    asy2svg = Asy2svg(parameters=infilepath, outfilepath=outfilepath, env=env)
 
     # Make sure pdfcrop is available and read
     assert asy2svg.active
@@ -117,7 +117,7 @@ def test_saveasypdf_build(env):
                  "draw(unitcircle);")
     outfilepath = TargetPath(target_root=target_root,
                              subpath='diagram.pdf')
-    asy2pdf = SaveAsyPdf(infilepaths=asystring, outfilepath=outfilepath,
+    asy2pdf = SaveAsyPdf(parameters=asystring, outfilepath=outfilepath,
                          context=env.context, env=env)
 
     # Check the build
@@ -137,7 +137,7 @@ def test_saveasypdf_build_invalid(env):
     asystring = "invalid"
     outfilepath = TargetPath(target_root=target_root,
                              subpath='diagram.pdf')
-    asy2pdf = SaveAsyPdf(infilepaths=asystring, outfilepath=outfilepath,
+    asy2pdf = SaveAsyPdf(parameters=asystring, outfilepath=outfilepath,
                          context=env.context, env=env)
 
     # Check the build -- the output file was not created
@@ -157,7 +157,7 @@ def test_saveasysvg_build(env):
                  "draw(unitcircle);")
     outfilepath = TargetPath(target_root=target_root,
                              subpath='diagram.svg')
-    asy2svg = SaveAsySvg(infilepaths=asystring, outfilepath=outfilepath,
+    asy2svg = SaveAsySvg(parameters=asystring, outfilepath=outfilepath,
                          context=env.context, env=env)
 
     # Check the build
@@ -177,7 +177,7 @@ def test_saveasysvg_build_invalid(env):
     asystring = "invalid"
     outfilepath = TargetPath(target_root=target_root,
                              subpath='diagram.svg')
-    asy2svg = SaveAsySvg(infilepaths=asystring, outfilepath=outfilepath,
+    asy2svg = SaveAsySvg(parameters=asystring, outfilepath=outfilepath,
                          context=env.context, env=env)
 
     # Check the build -- the output file was not created

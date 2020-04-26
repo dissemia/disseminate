@@ -34,7 +34,7 @@ class ParallelBuilder(CompositeBuilder):
     def build_needed(self, reset=False):
         return any(sb.build_needed(reset=reset) for sb in self.subbuilders)
 
-    def add_build(self, infilepaths, outfilepath=None, target=None,
+    def add_build(self, parameters, outfilepath=None, target=None,
                   context=None, in_ext=None, out_ext=None, builder_cls=None,
                   **kwargs):
         """
@@ -42,8 +42,9 @@ class ParallelBuilder(CompositeBuilder):
 
         Parameters
         ----------
-        infilepaths : Optional[str, :obj:`pathlib.Path`, List]
-            The filepaths for input files in the build
+        parameters, args : Tuple[:obj:`pathlib.Path`, str, tuple, list]
+            The input parameters (dependencies), including filepaths, for the
+            build
         outfilepath : Optional[str, :obj:`pathlib.Path]
             The path for the output file.
         target : Optional[str]
@@ -53,7 +54,7 @@ class ParallelBuilder(CompositeBuilder):
         in_ext : Optional[str]
             The extension for the input file. This is used to find the correct
             builder with the find_builder_cls method. If this is not specified,
-            the infilepaths should be specified.
+            an filepath in the parameters should be specified.
         out_ext : Optional[str]
             The extension for the input file. This is used to find the correct
             builder with the find_builder_cls method. If this is not specified,
@@ -71,11 +72,11 @@ class ParallelBuilder(CompositeBuilder):
         # Setup the arguments
         context = context or self.env.context
 
-        infilepaths = infilepaths or []
-        infilepaths = (infilepaths if isinstance(infilepaths, list) or
-                       isinstance(infilepaths, tuple) else [infilepaths])
-        infilepaths = [find_file(i, context, raise_error=False) or i
-                       for i in infilepaths]
+        parameters = parameters or []
+        parameters = (parameters if isinstance(parameters, list) or
+                      isinstance(parameters, tuple) else [parameters])
+        parameters = [find_file(i, context, raise_error=False) or i
+                      for i in parameters]
 
         target = target or self.target
 
@@ -83,10 +84,10 @@ class ParallelBuilder(CompositeBuilder):
         if builder_cls is None:
             # Get the input extensions for the builder in_ext
             if in_ext is None:
-                in_exts = [infilepath for infilepath in infilepaths
+                in_exts = [infilepath for infilepath in parameters
                            if isinstance(infilepath, str) and
                            infilepath.startswith('.')]
-                in_exts += [infilepath.suffix for infilepath in infilepaths
+                in_exts += [infilepath.suffix for infilepath in parameters
                             if hasattr(infilepath, 'suffix')]
 
                 in_ext = in_exts[0] if in_exts else None
@@ -104,7 +105,7 @@ class ParallelBuilder(CompositeBuilder):
                                                 target=target)
 
         # Create the builder
-        builder = builder_cls(env=self.env, infilepaths=infilepaths,
+        builder = builder_cls(env=self.env, parameters=parameters,
                               outfilepath=outfilepath, context=context,
                               target=target, **kwargs)
         self.subbuilders.append(builder)

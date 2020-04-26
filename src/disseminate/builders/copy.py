@@ -18,17 +18,17 @@ class Copy(Builder):
     infilepath_ext = '.*'
     outfilepath_ext = '.*'
 
-    def __init__(self, env, infilepaths=None, outfilepath=None, **kwargs):
+    def __init__(self, env, parameters=None, outfilepath=None, **kwargs):
         # reset outfilepath_ext so that '.*' isn't used in automatically
         # generating the outfilepath (generate_outfilepath)
         self.outfilepath_ext = None
 
-        super().__init__(env=env, infilepaths=infilepaths,
+        super().__init__(env=env, parameters=parameters,
                          outfilepath=outfilepath, **kwargs)
 
-        # Make sure the infilepaths are pathlib.Path objects
-        self.infilepaths = [i if isinstance(i, pathlib.Path)
-                            else pathlib.Path(i) for i in self.infilepaths]
+        # Make sure the parameters are pathlib.Path objects
+        self.parameters = [i if isinstance(i, pathlib.Path)
+                           else pathlib.Path(i) for i in self.parameters]
 
     @property
     def status(self):
@@ -37,16 +37,15 @@ class Copy(Builder):
             # Done if the build is not needed or the src and dest are the
             # same file
             return "done"
-        elif not all(i.exists() for i in self.infilepaths
-                     if hasattr(i, 'exists')):
-            # Missing if one or more of the infilepaths are missing
-            return "missing (infilepaths)"
+        elif not all(i.exists() for i in self.infilepaths):
+            # Missing if one or more of the parameters are missing
+            return "missing (parameters)"
         else:
             return "ready"
 
     def build(self, complete=False):
         if self.status == 'ready':
-            infilepath = self.infilepaths[0]
+            infilepath = self.parameters[0]
             outfilepath = self.outfilepath
 
             # Copy the file in the 2 files have different paths. If they have

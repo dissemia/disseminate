@@ -7,7 +7,7 @@ import logging
 import jinja2
 
 from .builder import Builder
-from .utils import generate_mock_infilepath, generate_outfilepath
+from .utils import generate_mock_parameters, generate_outfilepath
 from ..paths import SourcePath
 from ..utils.file import mkdir_p
 from ..utils.classes import weakattr
@@ -21,8 +21,8 @@ class JinjaRender(Builder):
     ----------
     env: :obj:`.builders.Environment`
         The build environment
-    infilepaths, args : Tuple[:obj:`.paths.SourcePath`]
-        The filepaths for input files in the build
+    parameters, args : Tuple[:obj:`.paths.SourcePath`, str, tuple, list]
+        The input parameters (dependencies), including filepaths, for the build
     outfilepath : Optional[:obj:`.paths.TargetPath`]
         If specified, the path for the output file.
     context : dict
@@ -37,7 +37,7 @@ class JinjaRender(Builder):
     action = 'render'
     priority = 1000
     active_requirements = ('priority',)
-    scan_infilepaths = False  # This is done after all infilepaths are loaded
+    scan_parameters = False  # This is done after all parameters are loaded
 
     context = weakattr()
 
@@ -48,6 +48,7 @@ class JinjaRender(Builder):
 
     def __init__(self, env, context, render_ext=None, **kwargs):
         super().__init__(env, **kwargs)
+
         # Checks
         assert render_ext or self.outfilepath, ("Either a render_ext or an "
                                                 "outfilepath must be specified")
@@ -72,8 +73,8 @@ class JinjaRender(Builder):
         return "done" if not self.build_needed() else "ready"
 
     @property
-    def infilepaths(self):
-        infilepaths = []
+    def parameters(self):
+        parameters = []
         context = self.context
 
         # Render the string
@@ -92,31 +93,31 @@ class JinjaRender(Builder):
             template = jinja_env.get_or_select_template(templates)
 
             # Add the template filepaths to the infilepath dependencies.
-            # These are added to the infilepaths so that if they are changed,
+            # These are added to the parameters so that if they are changed,
             # the decider can trigger a new build.
             filepaths = template_filepaths(template=template,
                                            environment=jinja_env)
-            infilepaths += filepaths
+            parameters += filepaths
 
             # Add the context filepaths to the infilepath dependencies
             filepaths = context_filepaths(filepaths)
-            infilepaths += filepaths
+            parameters += filepaths
 
             # Scan for additional dependencies
-            infilepaths += self.env.scanner.scan(infilepaths=infilepaths)
+            parameters += self.env.scanner.scan(parameters=parameters)
 
             # Render the template and add it to the infilepath (so that it can
             # be used by the decider to decide whether a build is needed)
             self.rendered_string = template.render(**context)
-            infilepaths.append(self.rendered_string)
+            parameters.append(self.rendered_string)
 
-        return infilepaths
+        return parameters
 
-    @infilepaths.setter
-    def infilepaths(self, value):
-        pass  # Do nothing. Only the __init__ should set the render infilepaths
+    @parameters.setter
+    def parameters(self, value):
+        pass  # Do nothing. Only the __init__ should set the render parameters
         # This prevents the SequentialBuilder.chain_subbuilders from
-        # putting in the wrong values in the infilepaths
+        # putting in the wrong values in the parameters
 
     def build(self, complete=False):
         outfilepath = self.outfilepath
@@ -131,18 +132,18 @@ class JinjaRender(Builder):
         outfilepath = self._outfilepath
 
         if outfilepath is None:
-            infilepaths = self.infilepaths
+            parameters = self.parameters
 
-            if infilepaths:
+            if parameters:
                 # Create an temporary infilepath from the hash of the input
-                sourcepath = generate_mock_infilepath(env=self.env,
+                sourcepath = generate_mock_parameters(env=self.env,
                                                       context=self.context,
-                                                      infilepaths=infilepaths,
+                                                      parameters=parameters,
                                                       ext='.render')
 
-                # Generate an outfilepath from the mock infilepaths
+                # Generate an outfilepath from the mock parameters
                 outfilepath = generate_outfilepath(env=self.env,
-                                                   infilepaths=sourcepath,
+                                                   parameters=sourcepath,
                                                    append=self.outfilepath_ext,
                                                    ext=self.render_ext,
                                                    target=self.target,

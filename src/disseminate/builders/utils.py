@@ -8,9 +8,19 @@ from ..paths.utils import rename
 from ..utils.string import hashtxt
 
 
-def generate_mock_infilepath(env, infilepaths, project_root=None, subpath=None,
+def sort_key(parameter):
+    """Sort key function for a series of parameters to give a consisting
+    ordering."""
+    if (isinstance(parameter, tuple) or isinstance(parameter, list)
+       and parameter):
+        return str(parameter[0])
+    else:
+        return str(parameter)
+
+
+def generate_mock_parameters(env, parameters, project_root=None, subpath=None,
                              ext=None, context=None, gen_hash=True):
-    """Generate a mock infilepath.
+    """Generate a mock set of parameters.
 
     This function is used by builders, like JinjaRender and SaveTempFile, that
     do not use an input file but need to save to an output file. It includes
@@ -20,8 +30,8 @@ def generate_mock_infilepath(env, infilepaths, project_root=None, subpath=None,
     ----------
     env : :obj:`.builders.Environment`
         The build environment.
-    infilepaths : List[:obj:`.paths.SourcePath`]
-        The infilepaths for the builder.
+    parameters : Tuple[:obj:`.paths.SourcePath`, str, tuple, list]
+        The parameters for the builder.
     project_root : Optional[Union[:obj:`paths.SourcePath`, str]]
         If given, use the specified project root for the mock infilepath.
     subpath : Optional[Union[:obj:`paths.SourcePath`, str]]
@@ -29,12 +39,12 @@ def generate_mock_infilepath(env, infilepaths, project_root=None, subpath=None,
     ext : Optional[str]
         If given, use the specified extension for the mock infilepath.
     gen_hash : Optional[bool]
-        If True, append the hash from the given infilepaths to append to the
+        If True, append the hash from the given parameters to append to the
         infilepath filename.
     """
     # Setup the parameters
-    infilepaths = (infilepaths if isinstance(infilepaths, list)
-                   or isinstance(infilepaths, tuple) else [infilepaths])
+    parameters = (parameters if isinstance(parameters, list)
+                  or isinstance(parameters, tuple) else [parameters])
     subpath = pathlib.Path(subpath) if subpath is not None else None
 
     # First get the project root
@@ -42,12 +52,11 @@ def generate_mock_infilepath(env, infilepaths, project_root=None, subpath=None,
 
     # Next get the subpath
     if subpath is None:
-        filepaths_with_subpaths = [i for i in infilepaths
-                                   if hasattr(i, 'subpath')]
+        filepaths = [i for i in parameters if hasattr(i, 'subpath')]
 
-        if filepaths_with_subpaths:
-            # First check to see if any of the passed infilepaths have a subpath
-            subpath = filepaths_with_subpaths[0].subpath.with_suffix('')
+        if filepaths:
+            # First check to see if any of the passed parameters have a subpath
+            subpath = filepaths[0].subpath.with_suffix('')
         elif context is not None and 'src_filepath' in context:
             # Otherwise construct the filepath from the context's src_filepath
             src_filepath = context['src_filepath']
@@ -60,9 +69,9 @@ def generate_mock_infilepath(env, infilepaths, project_root=None, subpath=None,
 
     # Generate a hash
     if gen_hash:
-        # The hash is constructed from the infilepaths parameters.
+        # The hash is constructed from the parameters.
         hash_value = hashtxt("".join(map(hashtxt,
-                                         sorted(map(str, infilepaths)))),
+                                         sorted(map(str, parameters)))),
                              truncate=12)
     else:
         hash_value = None
@@ -81,16 +90,16 @@ def generate_mock_infilepath(env, infilepaths, project_root=None, subpath=None,
         return SourcePath(project_root=project_root, subpath=filename)
 
 
-def generate_outfilepath(env, infilepaths, target=None, append=None, ext=None,
+def generate_outfilepath(env, parameters, target=None, append=None, ext=None,
                          use_cache=False, use_media=False):
-    """Given a set of infilepaths, generate an outfilepath.
+    """Given a set of parameters, generate an outfilepath.
 
     Parameters
     ----------
     env : :obj:`.builders.Environment`
         The build environment.
-    infilepaths : List[:obj:`.paths.SourcePath`]
-        The infilepaths for the builder. The first SourcePath will be used.
+    parameters : Tuple[:obj:`.paths.SourcePath`, str, tuple, list]
+        The parameters for the builder. The first SourcePath will be used.
     target : Optional[str]
         If specified, use the given target as a subdirectory in the target_root.
     append : Optional[str]
@@ -110,12 +119,12 @@ def generate_outfilepath(env, infilepaths, target=None, append=None, ext=None,
         could be generated
     """
     # Find the first valid infilepath
-    infilepaths = (infilepaths if isinstance(infilepaths, list) or
-                   isinstance(infilepaths, tuple) else [infilepaths])
-    infilepaths = [fp for fp in infilepaths if hasattr(fp, 'subpath')]
-    if len(infilepaths) == 0:
+    parameters = (parameters if isinstance(parameters, list) or
+                  isinstance(parameters, tuple) else [parameters])
+    parameters = [fp for fp in parameters if hasattr(fp, 'subpath')]
+    if len(parameters) == 0:
         return None
-    infilepath = infilepaths[0]
+    infilepath = parameters[0]
 
     # Formulate the target_root
     target_root = env.cache_path if use_cache else env.context['target_root']

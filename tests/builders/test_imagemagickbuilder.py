@@ -25,7 +25,7 @@ def test_tif2png(env):
     infilepath = SourcePath('tests/builders/examples/ex2', 'example-1.tif')
     cache_path = TargetPath(env.cache_path, 'media/example-1.png')
 
-    tif2png = Tif2png(env, infilepaths=infilepath)
+    tif2png = Tif2png(env, parameters=infilepath)
 
     assert tif2png.status == 'ready'
     assert tif2png.outfilepath == cache_path
@@ -40,6 +40,6 @@ def test_tif2png(env):
     #    This build won't be needed because the source file and target files
     #    are the same.
     infilepath = SourcePath('tests/builders/examples/ex2', 'example-1.tiff')
-    tiff2png = Tiff2png(env, infilepaths=infilepath)
+    tiff2png = Tiff2png(env, parameters=infilepath)
 
     assert tiff2png.status == 'done'

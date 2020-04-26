@@ -25,11 +25,11 @@ def test_sequentialbuilder_outfilepath(env):
 
     # 1. Create a test builder with the outfilepath
     outfilepath = TargetPath(target_root=env.target_root, subpath='out.dm')
-    builder = SequentialBuilder(env=env, infilepaths=src_filepath,
+    builder = SequentialBuilder(env=env, parameters=src_filepath,
                                 outfilepath=outfilepath)
 
     # Add a subbuilder
-    cp_builder = Copy(env=env, infilepaths=src_filepath,
+    cp_builder = Copy(env=env, parameters=src_filepath,
                       outfilepath=outfilepath)
     builder.subbuilders.append(cp_builder)
 
@@ -61,10 +61,10 @@ def test_sequentialbuilder_without_outfilepath(env):
     # 1. Create a test builder without the outfilepath
     outfilepath = TargetPath(target_root=env.target_root, subpath='out.dm')
     cachepath = TargetPath(target_root=env.cache_path, subpath='media/test.dm')
-    builder = SequentialBuilder(env=env, infilepaths=src_filepath)
+    builder = SequentialBuilder(env=env, parameters=src_filepath)
 
     # Add a subbuilder
-    cp_builder = Copy(env=env, infilepaths=src_filepath,
+    cp_builder = Copy(env=env, parameters=src_filepath,
                       outfilepath=outfilepath)
     builder.subbuilders.append(cp_builder)
     builder.chain_subbuilders()
@@ -103,7 +103,7 @@ def test_sequentialbuilder_basic_decider(env, caplog, wait):
                             subpath='sample.pdf')
     outfilepath = TargetPath(target_root=env.context['target_root'],
                              subpath='sample.svg')
-    pdf2svg = Pdf2SvgCropScale(infilepaths=infilepath, outfilepath=outfilepath,
+    pdf2svg = Pdf2SvgCropScale(parameters=infilepath, outfilepath=outfilepath,
                                env=env, crop=100, scale=2)
 
     assert not outfilepath.exists()  # target file not created yet
@@ -130,7 +130,7 @@ def test_sequentialbuilder_basic_decider(env, caplog, wait):
 
     # 2. Running the build again won't create a new outfilepath
     wait()  # a filesystem offset to make sure mtime can change.
-    pdf2svg = Pdf2SvgCropScale(infilepaths=infilepath, outfilepath=outfilepath,
+    pdf2svg = Pdf2SvgCropScale(parameters=infilepath, outfilepath=outfilepath,
                                env=env, crop=100, scale=2)
     assert pdf2svg.build(complete=True) == 'done'
     assert outfilepath.stat().st_mtime == mtime
@@ -145,7 +145,7 @@ def test_sequentialbuilder_basic_decider(env, caplog, wait):
     pdf2svg.subbuilders[1].outfilepath.unlink()  # Pdf2svg
     pdf2svg.subbuilders[2].outfilepath.unlink()  # ScaleSvg
 
-    pdf2svg = Pdf2SvgCropScale(infilepaths=infilepath, outfilepath=outfilepath,
+    pdf2svg = Pdf2SvgCropScale(parameters=infilepath, outfilepath=outfilepath,
                                env=env, crop=100, scale=2)
 
     assert pdf2svg.status == 'done'
@@ -161,7 +161,7 @@ def test_sequentialbuilder_basic_decider(env, caplog, wait):
     correct_contents = outfilepath.read_bytes()
     outfilepath.write_text('wrong!')
 
-    pdf2svg = Pdf2SvgCropScale(infilepaths=infilepath, outfilepath=outfilepath,
+    pdf2svg = Pdf2SvgCropScale(parameters=infilepath, outfilepath=outfilepath,
                                env=env, crop=100, scale=2)
     assert pdf2svg.build(complete=True) == 'done'
     assert outfilepath.read_bytes() == correct_contents
@@ -185,7 +185,7 @@ def test_sequentialbuilder_md5decider(env, caplog, wait):
     outfilepath = TargetPath(target_root=tmpdir, subpath='copy.svg')
     infilepath.write_text('test 1')
 
-    builder = SequentialBuilder(env=env, infilepaths=infilepath,
+    builder = SequentialBuilder(env=env, parameters=infilepath,
                                 outfilepath=outfilepath)
 
     # Add a copy subbuilder
@@ -210,7 +210,7 @@ def test_sequentialbuilder_md5decider(env, caplog, wait):
     assert builder.status == 'done'
 
     # But a new builder will need a rebuild
-    builder = SequentialBuilder(env=env, infilepaths=infilepath,
+    builder = SequentialBuilder(env=env, parameters=infilepath,
                                 outfilepath=outfilepath)
     builder.subbuilders.append(Copy(env=env))
     builder.chain_subbuilders()

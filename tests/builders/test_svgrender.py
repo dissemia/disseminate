@@ -32,26 +32,25 @@ def test_svgrender_setup(env):
     assert len(svgrender.subbuilders) == 3
 
     assert svgrender.subbuilders[0].__class__.__name__ == 'PdfRender'
-    assert len(svgrender.subbuilders[0].infilepaths) == 3
     assert (str(svgrender.subbuilders[0].outfilepath.subpath) ==
             'media/template_b9b44d13de71.pdf')
 
     assert svgrender.subbuilders[1].__class__.__name__ == 'Pdf2SvgCropScale'
-    assert (svgrender.subbuilders[1].infilepaths[0] ==
+    assert (svgrender.subbuilders[1].parameters[0] ==
             svgrender.subbuilders[0].outfilepath)
     assert (str(svgrender.subbuilders[1].outfilepath.subpath) ==
             'media/template_b9b44d13de71.svg')
 
     assert svgrender.subbuilders[2].__class__.__name__ == 'Copy'
-    assert (svgrender.subbuilders[2].infilepaths[0] ==
+    assert (svgrender.subbuilders[2].parameters[0] ==
             svgrender.subbuilders[1].outfilepath)
     assert svgrender.subbuilders[2].outfilepath == outfilepath
 
     # The outfilepath should match the one given
     assert svgrender.outfilepath == outfilepath
 
-    # The rendered string should be in the infilepaths
-    assert any(["My test body" in str(f) for f in svgrender.infilepaths])
+    # The rendered string should be in the parameters
+    assert any(["My test body" in str(f) for f in svgrender.parameters])
 
 
 def test_svgrender_setup_without_outfilepath(env):
@@ -65,8 +64,13 @@ def test_svgrender_setup_without_outfilepath(env):
     # 1. Setup a build without an outfilepath
     svgrender = SvgRender(env=env, context=context)
 
-    assert len(svgrender.infilepaths) == 3
     assert str(svgrender.outfilepath.subpath) == ('media/template_'
+                                                  'b9b44d13de71.svg')
+
+    # 2. Test an example with modification attributes
+    svgrender = SvgRender(env=env, context=context, scale=2.0)
+    assert svgrender.outfilepath.target_root == env.cache_path
+    assert str(svgrender.outfilepath.subpath) != ('media/template_'
                                                   'b9b44d13de71.svg')
 
 
@@ -87,18 +91,17 @@ def test_svgrender_chain_subbuilders(env):
     svgrender.chain_subbuilders()
 
     # Test the paths
-    assert len(svgrender.subbuilders[0].infilepaths) == 3
     assert (str(svgrender.subbuilders[0].outfilepath.subpath) ==
             'media/template_b9b44d13de71.pdf')
-    assert (svgrender.subbuilders[1].infilepaths[0] ==
+    assert (svgrender.subbuilders[1].parameters[0] ==
             svgrender.subbuilders[0].outfilepath)
     assert (str(svgrender.subbuilders[1].outfilepath.subpath) ==
             'media/template_b9b44d13de71.svg')
-    assert (svgrender.subbuilders[2].infilepaths[0] ==
+    assert (svgrender.subbuilders[2].parameters[0] ==
             svgrender.subbuilders[1].outfilepath)
     assert svgrender.subbuilders[2].outfilepath == outfilepath
 
-    assert any(["My test body" in str(f) for f in svgrender.infilepaths])
+    assert any(["My test body" in str(f) for f in svgrender.parameters])
     assert svgrender.outfilepath == outfilepath
 
 
@@ -175,7 +178,7 @@ def test_svgrender_simple_without_outfilepath(env):
     svgrender = SvgRender(env=env, context=context)
     assert svgrender.status == 'done'
 
-    # 3. Adding a document target places files in that subdirectory
+    # 4. Adding a document target places files in that subdirectory
     svgrender = SvgRender(env=env, target='html', context=context)
 
     assert svgrender.status == 'ready'

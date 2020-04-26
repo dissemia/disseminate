@@ -22,9 +22,9 @@ def test_builder_creation(env):
 def test_builder_filepaths(env):
     """Test the Builder filepaths using a concreate builder (PdfCrop)"""
 
-    # 1. Try an example without specifying infilepaths or outfilepath
+    # 1. Try an example without specifying parameters or outfilepath
     pdfcrop = PdfCrop(env=env)
-    assert pdfcrop.infilepaths == []
+    assert pdfcrop.parameters == []
     assert pdfcrop.outfilepath is None
 
     # 2. Try an example with specifying an infilepath but no outfilepath.
@@ -32,8 +32,8 @@ def test_builder_filepaths(env):
                             subpath='sample.pdf')
     cachepath = TargetPath(target_root=env.cache_path,
                            subpath='media/sample_crop.pdf')
-    pdfcrop= PdfCrop(infilepaths=infilepath, env=env)
-    assert pdfcrop.infilepaths == [infilepath]
+    pdfcrop= PdfCrop(parameters=infilepath, env=env)
+    assert pdfcrop.parameters == [infilepath]
     assert pdfcrop.outfilepath == cachepath
 
     # 3. Try an example with specifying an infilepath but no outfilepath.
@@ -43,16 +43,16 @@ def test_builder_filepaths(env):
     cachepath = TargetPath(target_root=env.cache_path,
                            target='html',
                            subpath='media/sample_crop.pdf')
-    pdfcrop = PdfCrop(infilepaths=infilepath, target='html', env=env)
-    assert pdfcrop.infilepaths == [infilepath]
+    pdfcrop = PdfCrop(parameters=infilepath, target='html', env=env)
+    assert pdfcrop.parameters == [infilepath]
     assert pdfcrop.outfilepath == cachepath
 
     # 5. Try an example with specifying an outfilepath
     targetpath = TargetPath(target_root=env.context['target_root'],
                             subpath='sample_crop.pdf')
-    pdfcrop = PdfCrop(infilepaths=infilepath, outfilepath=targetpath,
+    pdfcrop = PdfCrop(parameters=infilepath, outfilepath=targetpath,
                       env=env)
-    assert pdfcrop.infilepaths == [infilepath]
+    assert pdfcrop.parameters == [infilepath]
     assert pdfcrop.outfilepath == targetpath
 
 
@@ -72,13 +72,13 @@ def test_builder_status(env):
 
     # 1. Test an example without an infilepath. The status should be missing
     builder = ExampleBuilder(env)
-    assert builder.status == 'missing (infilepaths)'
+    assert builder.status == 'missing (parameters)'
 
     # 2. Test an example in which the infilepath doesn't exist. The status
     #    should be missing
-    builder = ExampleBuilder(env, infilepaths=infilepath,
+    builder = ExampleBuilder(env, parameters=infilepath,
                              outfilepath=outfilepath)
-    assert builder.status == 'missing (infilepaths)'
+    assert builder.status == 'missing (parameters)'
 
     # 3. Test an example in which the infilepath now exists
     infilepath.write_text('infile')
@@ -93,7 +93,7 @@ def test_builder_status(env):
     assert builder.status == 'done'
 
     # 5. A new builder will report that it's done too.
-    builder = ExampleBuilder(env, infilepaths=infilepath,
+    builder = ExampleBuilder(env, parameters=infilepath,
                              outfilepath=outfilepath)
     assert not builder.build_needed()
     assert builder.status == 'done'
@@ -105,7 +105,7 @@ def test_run_cmd_args(env):
     # 1. Test a basic example
     infilepath = SourcePath(project_root='', subpath='sample.pdf')
     targetpath = TargetPath(target_root='', subpath='out.pdf')
-    builder = Builder(env=env, infilepaths=infilepath, outfilepath=targetpath)
+    builder = Builder(env=env, parameters=infilepath, outfilepath=targetpath)
     builder.action = ("My test with {builder.infilepaths} and "
                       "{builder.outfilepath}")
     assert builder.run_cmd_args() == ('My', 'test', 'with', 'sample.pdf', 'and',
@@ -115,8 +115,8 @@ def test_run_cmd_args(env):
     #    a filename
     infilepath = SourcePath(project_root='', subpath='-unsafe')
     targetpath = TargetPath(target_root='', subpath='out.pdf')
-    builder = Builder(env=env, infilepaths=infilepath, outfilepath=targetpath)
-    builder.action = ("test -safe {builder.infilepaths} and "
+    builder = Builder(env=env, parameters=infilepath, outfilepath=targetpath)
+    builder.action = ("test -safe {builder.parameters} and "
                       "-outputfile={builder.outfilepath}")
     assert builder.run_cmd_args() == ('test', '-safe', 'unsafe', 'and',
                                       '-outputfile=out.pdf')
@@ -145,7 +145,7 @@ def test_builder_build(env):
             self.was_run = True
             return "done"
 
-    subbuilder = SubBuilder(env=env, infilepaths=infilepath,
+    subbuilder = SubBuilder(env=env, parameters=infilepath,
                             outfilepath=targetpath)
 
     # 1. Test a null build using the builder class should create a done build
@@ -168,13 +168,13 @@ def test_builder_md5decision(env, wait):
         priority = 1000
         required_execs = ('cp',)
 
-    cp = CopyCmd(env=env, infilepaths=infilepath, outfilepath=targetpath)
+    cp = CopyCmd(env=env, parameters=infilepath, outfilepath=targetpath)
 
     # 1. Test a build that copies the file. It'll fail first because we haven't
     #    created the input file
     assert not infilepath.exists()
     assert not targetpath.exists()
-    assert cp.build(complete=True) == 'missing (infilepaths)'
+    assert cp.build(complete=True) == 'missing (parameters)'
 
     # Now create the input file
     infilepath.write_text('infile text')
@@ -189,7 +189,7 @@ def test_builder_md5decision(env, wait):
     mtime = targetpath.stat().st_mtime
 
     # Try running the build again. The output file should not be modified
-    cp = CopyCmd(env=env, infilepaths=infilepath, outfilepath=targetpath)
+    cp = CopyCmd(env=env, parameters=infilepath, outfilepath=targetpath)
 
     assert cp.build(complete=True) == 'done'
     assert targetpath.stat().st_mtime == mtime
@@ -197,7 +197,7 @@ def test_builder_md5decision(env, wait):
     # 2. Try modifying the contents of the infile
     wait()
     infilepath.write_text('infile text2')
-    cp = CopyCmd(env=env, infilepaths=infilepath, outfilepath=targetpath)
+    cp = CopyCmd(env=env, parameters=infilepath, outfilepath=targetpath)
 
     assert cp.build(complete=True) == 'done'
     assert targetpath.stat().st_mtime > mtime
@@ -207,7 +207,7 @@ def test_builder_md5decision(env, wait):
     #    than the infile, but its contents don't match the hash
     targetpath.write_text('outfile')
 
-    cp = CopyCmd(env=env, infilepaths=infilepath, outfilepath=targetpath)
+    cp = CopyCmd(env=env, parameters=infilepath, outfilepath=targetpath)
 
     assert cp.build(complete=True) == 'done'
     assert targetpath.read_text() == 'infile text2'

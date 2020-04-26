@@ -10,13 +10,13 @@ from disseminate.paths import SourcePath, TargetPath
 def test_pdfcrop(env):
     """Test the PdfCrop builder."""
 
-    # 1. Test examples without the infilepaths specified.
+    # 1. Test examples without the parameters specified.
     #    The builder should be available, but the status should be missing
     pdfcrop = PdfCrop(env=env)
 
     # Make sure pdfcrop is available and read
     assert pdfcrop.active
-    assert pdfcrop.status == "missing (infilepaths)"
+    assert pdfcrop.status == "missing (parameters)"
 
     # 2. Test example with the infilepath and outfilepath specified.
     #    The builder should be available, but the status should be missing
@@ -24,7 +24,7 @@ def test_pdfcrop(env):
                             subpath='sample.pdf')
     outfilepath = TargetPath(target_root=env.context['target_root'],
                              subpath='sample_crop.pdf')
-    pdfcrop = PdfCrop(infilepaths=infilepath, outfilepath=outfilepath, env=env)
+    pdfcrop = PdfCrop(parameters=infilepath, outfilepath=outfilepath, env=env)
 
     # Make sure pdfcrop is available and read
     assert pdfcrop.active
@@ -47,7 +47,7 @@ def test_pdfcrop(env):
     # 3. Test an example without specifying the outfilepath. This should
     #    automatically save it in a cache diretory from the environment
     cache_path = env.cache_path / 'media/sample_crop.pdf'
-    pdfcrop = PdfCrop(infilepaths=infilepath, env=env)
+    pdfcrop = PdfCrop(parameters=infilepath, env=env)
 
     # Make sure pdfcrop is available and read
     assert pdfcrop.active
@@ -69,7 +69,7 @@ def test_pdf_crop_percentage(env):
                             subpath='sample.pdf')
     ref_outfilepath = TargetPath(target_root=env.context['target_root'],
                              subpath='sample_ref.pdf')
-    pdfcrop = PdfCrop(infilepaths=infilepath, outfilepath=ref_outfilepath,
+    pdfcrop = PdfCrop(parameters=infilepath, outfilepath=ref_outfilepath,
                       env=env)
     pdfcrop.build(complete=True)
     assert ref_outfilepath.exists()
@@ -79,7 +79,7 @@ def test_pdf_crop_percentage(env):
                             subpath='sample.pdf')
     outfilepath = TargetPath(target_root=env.context['target_root'],
                              subpath='sample_crop.pdf')
-    pdfcrop = PdfCrop(infilepaths=infilepath, outfilepath=outfilepath, env=env,
+    pdfcrop = PdfCrop(parameters=infilepath, outfilepath=outfilepath, env=env,
                       crop_percentage=(20, 20, 20, 20))
 
     status = pdfcrop.build(complete=True)
@@ -92,7 +92,7 @@ def test_pdf_crop_percentage(env):
     # 2. Test example with crop_percentage and 1 number
     outfilepath2 = TargetPath(target_root=env.context['target_root'],
                               subpath='sample_crop2.pdf')
-    pdfcrop = PdfCrop(infilepaths=infilepath, outfilepath=outfilepath2, env=env,
+    pdfcrop = PdfCrop(parameters=infilepath, outfilepath=outfilepath2, env=env,
                       crop=20)
 
     status = pdfcrop.build(complete=True)
@@ -107,5 +107,5 @@ def test_pdf_crop_percentage(env):
 
     # 3. Try an invalid crop number
     with pytest.raises(ValueError):
-        pdfcrop = PdfCrop(infilepaths=infilepath, outfilepath=outfilepath,
+        pdfcrop = PdfCrop(parameters=infilepath, outfilepath=outfilepath,
                           env=env, crop_percentage=(20, 'a', 20, 20))
