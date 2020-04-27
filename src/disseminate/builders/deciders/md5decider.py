@@ -1,14 +1,10 @@
 """
 A decider that uses MD5 hashes.
 """
-import pathlib
-
 import diskcache
 
 from .decider import Decider, Decision
-from ...paths import SourcePath
-from ...utils.list import md5hash
-from ...utils.string import hashtxt
+from .utils_hash import hash_items
 
 
 class Md5Decision(Decision):
@@ -51,20 +47,10 @@ class Md5Decision(Decision):
     def calculate_hash(self, inputs, output):
         """Calculate the md5 hash for the inputs, output and args."""
         if self._hash is None:
-            sorted_inputs = list(sorted([i for i in inputs
-                                         if isinstance(i, str)]))
-            input_files = list(sorted(p for p in inputs
-                                      if isinstance(p, SourcePath)))
-            sorted_inputs += [hashtxt(p.read_bytes(), truncate=None)
-                              for p in input_files]
-            hash_input = bytes(md5hash(sorted_inputs), 'ascii')
+            sorted_inputs = sorted(inputs, key=str)
+            hash_input = hash_items(*sorted_inputs)
+            hash_output = hash_items(output)
 
-            if isinstance(output, pathlib.Path) and output.exists():
-                hash_output = bytes(hashtxt(output.read_bytes(), truncate=None),
-                                    'ascii')
-            else:
-                hash_output = bytes(hashtxt(str(output), truncate=None),
-                                    'ascii')
             # Convert the hash to bytes, which will be stored in the database
             self._hash = (hash_input, hash_output)
         return self._hash
