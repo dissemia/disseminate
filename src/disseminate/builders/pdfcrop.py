@@ -12,13 +12,16 @@ class PdfCrop(Builder):
     ----------
     parameters, args : Tuple[:obj:`pathlib.Path`, str, tuple, list]
         The input parameters (dependencies), including filepaths, for the build
+        This tuple may have the 'crop' tuple value or 'crop_percentage' value
+        specified. If specified the borders by the given single percentage
+        or the 4 percentages for the left, bottom, right, and top margins.
+        ex: ('crop', 10) or ('crop', (10, 20, 10,20) or ('crop_percentage', 10)
     outfilepath : Optional[:obj:`.paths.TargetPath`]
         If specified, the path for the output file.
     env: :obj:`.builders.Environment`
         The build environment
     crop_percentage : Optional[int, Tuple[int, int, int, int]]
-        If specified crop the borders by the given single percentage or the 4
-        percentages for the left, bottom, right, and top margins.
+
     crop : Optional[int, Tuple[int, int, int, int]]
         Same as 'crop_percentage', but 'crop_percentage' takes precendence.
     """
@@ -34,19 +37,19 @@ class PdfCrop(Builder):
 
     crop_percentage = None
 
-    def __init__(self, env, crop=None, crop_percentage=None, **kwargs):
+    def __init__(self, env, **kwargs):
 
-        # Validate the crop arguments, if specified
-        if crop or crop_percentage:
-            crop = crop_percentage or crop
+        super().__init__(env, **kwargs)
+
+        # Set the crop for the image
+        crop = (self.get_parameter('crop') or
+                self.get_parameter('crop_percentage'))
+        if crop:
+            # Validate the crop arguments, if specified
             crop = (validate_tuple(crop, type=int, length=4,
                                    raise_error=True)
                     if not isinstance(crop, int) else crop)
             self.crop_percentage = crop
-        else:
-            self.crop_percentage = None
-
-        super().__init__(env, **kwargs)
 
     def run_cmd_args(self):
         args = list(super().run_cmd_args())

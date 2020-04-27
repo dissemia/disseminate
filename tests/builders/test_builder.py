@@ -20,7 +20,7 @@ def test_builder_creation(env):
 
 
 def test_builder_filepaths(env):
-    """Test the Builder filepaths using a concreate builder (PdfCrop)"""
+    """Test the Builder filepaths using a concrete builder (PdfCrop)"""
 
     # 1. Try an example without specifying parameters or outfilepath
     pdfcrop = PdfCrop(env=env)
@@ -54,6 +54,14 @@ def test_builder_filepaths(env):
                       env=env)
     assert pdfcrop.parameters == [infilepath]
     assert pdfcrop.outfilepath == targetpath
+
+
+def test_builder_get_parameter(env):
+    """Test the Builder get_parameter method."""
+    builder = Builder(env=env, parameters=[('test', 'value'), 1])
+
+    assert builder.get_parameter('test') == 'value'
+    assert builder.get_parameter(1) is None
 
 
 def test_builder_status(env):

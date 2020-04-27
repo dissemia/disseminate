@@ -44,7 +44,7 @@ class SequentialBuilder(CompositeBuilder):
         """Chain the parameters and outfilepath of the subbuilders to follow
         each other"""
         # Set the parameters and outfilepaths
-        current_parameters = self.infilepaths
+        current_parameters = self.parameters
         for subbuilder in self.subbuilders:
             # For the subbuilders to work together, reset their parameters
             # and outfilepath
@@ -70,7 +70,7 @@ class SequentialBuilder(CompositeBuilder):
 
     @property
     def status(self):
-        if not self.build_needed():
+        if len(self.subbuilders) == 0 or not self.build_needed():
             return 'done'
 
         # The composite builder's status is basically the same as the next

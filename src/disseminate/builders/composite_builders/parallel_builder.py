@@ -1,5 +1,4 @@
 from .composite_builder import CompositeBuilder
-from ...paths import TargetPath
 from ...paths.utils import find_file
 
 

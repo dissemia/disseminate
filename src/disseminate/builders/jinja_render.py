@@ -10,6 +10,7 @@ from .builder import Builder
 from .utils import generate_mock_parameters, generate_outfilepath
 from ..paths import SourcePath
 from ..utils.file import mkdir_p
+from ..utils.list import uniq
 from ..utils.classes import weakattr
 from .. import settings
 
@@ -74,7 +75,7 @@ class JinjaRender(Builder):
 
     @property
     def parameters(self):
-        parameters = []
+        parameters = list(self._parameters) if self._parameters else []
         context = self.context
 
         # Render the string
@@ -111,13 +112,11 @@ class JinjaRender(Builder):
             self.rendered_string = template.render(**context)
             parameters.append(self.rendered_string)
 
-        return parameters
+        return uniq(parameters)
 
     @parameters.setter
     def parameters(self, value):
-        pass  # Do nothing. Only the __init__ should set the render parameters
-        # This prevents the SequentialBuilder.chain_subbuilders from
-        # putting in the wrong values in the parameters
+        self._parameters = value
 
     def build(self, complete=False):
         outfilepath = self.outfilepath

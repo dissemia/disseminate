@@ -67,11 +67,14 @@ def test_svgrender_setup_without_outfilepath(env):
     assert str(svgrender.outfilepath.subpath) == ('media/template_'
                                                   'b9b44d13de71.svg')
 
-    # 2. Test an example with modification attributes
-    svgrender = SvgRender(env=env, context=context, scale=2.0)
+    # 2. Test an example with modification attributes. The final filename should
+    #    change.
+    svgrender = SvgRender(parameters=[('scale', 2.0)], env=env, context=context)
     assert svgrender.outfilepath.target_root == env.cache_path
     assert str(svgrender.outfilepath.subpath) != ('media/template_'
                                                   'b9b44d13de71.svg')
+    assert str(svgrender.outfilepath.subpath) == ('media/template_'
+                                                  '1b0167b8955c.svg')
 
 
 def test_svgrender_chain_subbuilders(env):

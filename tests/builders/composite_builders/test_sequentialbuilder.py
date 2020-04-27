@@ -103,8 +103,9 @@ def test_sequentialbuilder_basic_decider(env, caplog, wait):
                             subpath='sample.pdf')
     outfilepath = TargetPath(target_root=env.context['target_root'],
                              subpath='sample.svg')
-    pdf2svg = Pdf2SvgCropScale(parameters=infilepath, outfilepath=outfilepath,
-                               env=env, crop=100, scale=2)
+    parameters = [infilepath, ('crop', 100), ('scale', 2)]
+    pdf2svg = Pdf2SvgCropScale(parameters=parameters, outfilepath=outfilepath,
+                               env=env)
 
     assert not outfilepath.exists()  # target file not created yet
 
@@ -130,8 +131,8 @@ def test_sequentialbuilder_basic_decider(env, caplog, wait):
 
     # 2. Running the build again won't create a new outfilepath
     wait()  # a filesystem offset to make sure mtime can change.
-    pdf2svg = Pdf2SvgCropScale(parameters=infilepath, outfilepath=outfilepath,
-                               env=env, crop=100, scale=2)
+    pdf2svg = Pdf2SvgCropScale(parameters=parameters, outfilepath=outfilepath,
+                               env=env)
     assert pdf2svg.build(complete=True) == 'done'
     assert outfilepath.stat().st_mtime == mtime
 
@@ -145,8 +146,8 @@ def test_sequentialbuilder_basic_decider(env, caplog, wait):
     pdf2svg.subbuilders[1].outfilepath.unlink()  # Pdf2svg
     pdf2svg.subbuilders[2].outfilepath.unlink()  # ScaleSvg
 
-    pdf2svg = Pdf2SvgCropScale(parameters=infilepath, outfilepath=outfilepath,
-                               env=env, crop=100, scale=2)
+    pdf2svg = Pdf2SvgCropScale(parameters=parameters, outfilepath=outfilepath,
+                               env=env)
 
     assert pdf2svg.status == 'done'
     assert pdf2svg.build(complete=True) == 'done'
@@ -161,8 +162,8 @@ def test_sequentialbuilder_basic_decider(env, caplog, wait):
     correct_contents = outfilepath.read_bytes()
     outfilepath.write_text('wrong!')
 
-    pdf2svg = Pdf2SvgCropScale(parameters=infilepath, outfilepath=outfilepath,
-                               env=env, crop=100, scale=2)
+    pdf2svg = Pdf2SvgCropScale(parameters=parameters, outfilepath=outfilepath,
+                               env=env)
     assert pdf2svg.build(complete=True) == 'done'
     assert outfilepath.read_bytes() == correct_contents
 

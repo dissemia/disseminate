@@ -41,7 +41,9 @@ class Decision(object):
         MissingInputFiles
             Raise if one or more of the input files are missing.
         """
-        assert isinstance(inputs, list) or isinstance(inputs, tuple)
+        # inputs should be a list or tuple with some items in the inputs
+        assert ((isinstance(inputs, list) or isinstance(inputs, tuple)) and
+                len(inputs) > 0)
 
         # Test to make sure all of the SourcePath inputs exist
         infiles = [p for p in inputs if isinstance(p, pathlib.Path)]

@@ -9,17 +9,15 @@ class ScaleSvg(Builder):
 
     Parameters
     ----------
-    infilepaths, args : Tuple[:obj:`.paths.SourcePath`]
-        The filepaths for input files in the build
+    parameters, args : Tuple[:obj:`pathlib.Path`, str, tuple, list]
+        The input parameters (dependencies), including filepaths, for the build
+        This tuple should have the 'scale' tuple value specified, which is the
+        scale to increase or decrease the image.
+        ex: ('scale', 2.0) will double the image size.
     outfilepath : Optional[:obj:`.paths.TargetPath`]
         If specified, the path for the output file.
     env: :obj:`.builders.Environment`
         The build environment
-    crop_percentage : Optional[int, Tuple[int, int, int, int]]
-        If specified crop the borders by the given single percentage or the 4
-        percentages for the left, bottom, right, and top margins.
-    crop : Optional[int, Tuple[int, int, int, int]]
-        Same as 'crop_percentage', but 'crop_percentage' takes precendence.
     """
 
     action = ("rsvg-convert -f svg -o {builder.outfilepath} "
@@ -34,13 +32,19 @@ class ScaleSvg(Builder):
 
     scale = None
 
-    def __init__(self, env, scale, **kwargs):
-        self.scale = float(scale)
-
+    def __init__(self, env, **kwargs):
         super().__init__(env, **kwargs)
+
+        # Set the scale of the svg image
+        scale = self.get_parameter('scale')
+        try:
+            self.scale = float(scale)
+        except (ValueError, TypeError):
+            msg = ("A scale parameter (float) should be specified for the '{}' "
+                   "Builder")
+            raise ValueError(msg.format(self.__class__.__name__))
 
     def run_cmd_args(self):
         args = list(super().run_cmd_args())
-        if isinstance(self.scale, int):
-            args = [args[0]] + ["-z", str(self.scale)] + args[1:]
+        args = [args[0]] + ["-z", str(self.scale)] + args[1:]
         return tuple(args)

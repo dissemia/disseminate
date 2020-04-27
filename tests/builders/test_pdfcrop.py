@@ -79,8 +79,8 @@ def test_pdf_crop_percentage(env):
                             subpath='sample.pdf')
     outfilepath = TargetPath(target_root=env.context['target_root'],
                              subpath='sample_crop.pdf')
-    pdfcrop = PdfCrop(parameters=infilepath, outfilepath=outfilepath, env=env,
-                      crop_percentage=(20, 20, 20, 20))
+    parameters = [infilepath, ('crop_percentage', (20, 20, 20, 20))]
+    pdfcrop = PdfCrop(parameters=parameters, outfilepath=outfilepath, env=env)
 
     status = pdfcrop.build(complete=True)
     assert status == 'done'
@@ -92,8 +92,8 @@ def test_pdf_crop_percentage(env):
     # 2. Test example with crop_percentage and 1 number
     outfilepath2 = TargetPath(target_root=env.context['target_root'],
                               subpath='sample_crop2.pdf')
-    pdfcrop = PdfCrop(parameters=infilepath, outfilepath=outfilepath2, env=env,
-                      crop=20)
+    pdfcrop = PdfCrop(parameters=[infilepath, ('crop', 20)],
+                      outfilepath=outfilepath2, env=env)
 
     status = pdfcrop.build(complete=True)
     assert status == 'done'
@@ -107,5 +107,6 @@ def test_pdf_crop_percentage(env):
 
     # 3. Try an invalid crop number
     with pytest.raises(ValueError):
-        pdfcrop = PdfCrop(parameters=infilepath, outfilepath=outfilepath,
-                          env=env, crop_percentage=(20, 'a', 20, 20))
+        parameters = [infilepath, ('crop_percentage', (20, 'a', 20, 20))]
+        pdfcrop = PdfCrop(parameters=parameters, outfilepath=outfilepath,
+                          env=env)

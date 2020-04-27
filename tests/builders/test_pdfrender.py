@@ -47,9 +47,6 @@ def test_pdfrender_setup(env):
             pdfrender.subbuilders[1].outfilepath)
     assert pdfrender.subbuilders[2].outfilepath == outfilepath
 
-    # The rendered string should be in the parameters
-    assert any("My test body" in str(f) for f in pdfrender.parameters)
-
     # And the outfilepath should match the one given
     assert pdfrender.outfilepath == outfilepath
 

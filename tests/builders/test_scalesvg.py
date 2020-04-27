@@ -22,8 +22,8 @@ def test_scalesvg(env):
 
     # Create the Scalesvg
     infilepath2 = pdf2svg.outfilepath
-    scalesvg = ScaleSvg(parameters=infilepath2,
-                        outfilepath=outfilepath, scale=2, env=env)
+    scalesvg = ScaleSvg(parameters=[infilepath2, ('scale', 2)],
+                        outfilepath=outfilepath, env=env)
 
     # Make sure scalesvg is available
     assert scalesvg.active
@@ -42,7 +42,7 @@ def test_scalesvg(env):
 
     # 2. Test an example without an outfilepath specified
     cache_path = env.cache_path / 'media' / 'sample_scale.svg'
-    scalesvg = ScaleSvg(parameters=infilepath2, scale=2, env=env)
+    scalesvg = ScaleSvg(parameters=[infilepath2, ('scale', 2)], env=env)
 
     assert scalesvg.status == "ready"
     assert not cache_path.exists()
@@ -53,5 +53,9 @@ def test_scalesvg(env):
     assert cache_path.read_text() == outfilepath.read_text()
 
     # 3. Test an example with an invalid scale value
-    with pytest.raises(ValueError):
-        scalesvg = ScaleSvg(parameters=pdf2svg.outfilepath, scale='a', env=env)
+    with pytest.raises(ValueError):  # no scale provided
+        scalesvg = ScaleSvg(parameters=pdf2svg.outfilepath, env=env)
+
+    with pytest.raises(ValueError):  # wrong type specified
+        scalesvg = ScaleSvg(parameters=[pdf2svg.outfilepath, ('scale', 'a')],
+                            env=env)

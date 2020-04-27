@@ -43,6 +43,7 @@ def generate_mock_parameters(env, parameters, project_root=None, subpath=None,
         infilepath filename.
     """
     # Setup the parameters
+    parameters = parameters or []
     parameters = (parameters if isinstance(parameters, list)
                   or isinstance(parameters, tuple) else [parameters])
     subpath = pathlib.Path(subpath) if subpath is not None else None

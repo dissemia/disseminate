@@ -46,3 +46,19 @@ def test_decider(env):
 
     # A build is still needed
     assert decision.build_needed(**kwargs)
+
+
+def test_decider_wrong_inputs(env):
+    """Test the base decider with the wrong inputs specified."""
+    decider = Decider(env=env)
+    decision = decider.decision
+
+    # 1. An example using inputs that aren't a list or tuple should raise
+    #    an assertion error
+    with pytest.raises(AssertionError):
+        decision.build_needed(inputs='test', output='test')
+
+    # 2. An example using an empty list or tuple for the inputs should raise
+    #    an assertion error
+    with pytest.raises(AssertionError):
+        decision.build_needed(inputs=[], output='test')

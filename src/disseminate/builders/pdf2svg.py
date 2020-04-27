@@ -20,14 +20,15 @@ class Pdf2svg(Builder):
 
     page_no = None
 
-    def __init__(self, env, page=None, page_no=None, **kwargs):
-        # Get the page number
-        if page or page_no:
-            page_no = page or page_no
-            page_no = int(page_no)
-            self.page_no = page_no
-
+    def __init__(self, env, **kwargs):
         super().__init__(env, **kwargs)
+
+        # Get the page number
+        page_no = self.get_parameter('page') or self.get_parameter('page_no')
+        try:
+            self.page_no = int(page_no)
+        except TypeError:
+            pass
 
     def run_cmd_args(self):
         args = list(super().run_cmd_args())
@@ -46,23 +47,28 @@ class Pdf2SvgCropScale(SequentialBuilder):
     infilepath_ext = '.pdf'
     outfilepath_ext = '.svg'
 
-    def __init__(self, env, crop=None, crop_percentage=None, scale=None,
-                 subbuilders=None, **kwargs):
+    def __init__(self, env, parameters=None, subbuilders=None, **kwargs):
         # Setup parameters
-        subbuilders = (list(subbuilders) if isinstance(subbuilders, list) or
-                       isinstance(subbuilders, tuple) else [])
+        subbuilders = (list(subbuilders) if (isinstance(subbuilders, list) or
+                       isinstance(subbuilders, tuple)) else [])
+        parameters = parameters or []
+        parameters = (list(parameters) if isinstance(parameters, tuple) or
+                      isinstance(parameters, list) else [parameters])
 
         # Create the subbuilders
-        if crop or crop_percentage:
-            crop = crop_percentage or crop
-            pdfcrop = PdfCrop(env, crop=crop, **kwargs)
+        crop = (self.get_parameter('crop', *parameters) or
+                self.get_parameter('crop_percentage', *parameters))
+        if crop:
+            pdfcrop = PdfCrop(env, parameters=parameters, **kwargs)
             subbuilders.append(pdfcrop)
 
         pdf2svg = Pdf2svg(env, **kwargs)
         subbuilders.append(pdf2svg)
 
+        scale = self.get_parameter('scale', *parameters)
         if scale:
-            scalesvg = ScaleSvg(env, scale, **kwargs)
+            scalesvg = ScaleSvg(env, parameters=parameters, **kwargs)
             subbuilders.append(scalesvg)
 
-        super().__init__(env, subbuilders=subbuilders, **kwargs)
+        super().__init__(env, parameters=parameters, subbuilders=subbuilders,
+                         **kwargs)

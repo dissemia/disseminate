@@ -240,11 +240,33 @@ class Builder(metaclass=ABCMeta):
     @property
     def parameters(self):
         """The list of input filenames and paths needed for the build"""
-        return self._parameters
+        return getattr(self, '_parameters', [])
 
     @parameters.setter
     def parameters(self, value):
         self._parameters = value
+
+    def get_parameter(self, name, *parameters):
+        """Return parameters inserted as 2-ples of name/value.
+
+        Parameters
+        ----------
+        name
+            The name of the 2-ple parameter (the 1st 2-ple item)
+        *parameters
+            If specified, use these parameters to get the specified parameter.
+            Otherwise, the builder's parameters will be used.
+
+        Returns
+        -------
+        value
+            The corresponding 2-ple value (the 2nd 2-ple item)
+        """
+        parameters = parameters or self.parameters or []
+        filtered_parameters = [p[1] for p in parameters
+                               if isinstance(p, tuple) and len(p) > 1 and
+                               p[0] == name]
+        return filtered_parameters[0] if filtered_parameters else None
 
     @property
     def infilepaths(self):
