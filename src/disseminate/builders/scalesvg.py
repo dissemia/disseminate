@@ -14,8 +14,6 @@ class ScaleSvg(Builder):
         This tuple should have the 'scale' tuple value specified, which is the
         scale to increase or decrease the image.
         ex: ('scale', 2.0) will double the image size.
-    outfilepath : Optional[:obj:`.paths.TargetPath`]
-        If specified, the path for the output file.
     env: :obj:`.builders.Environment`
         The build environment
     """

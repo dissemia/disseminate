@@ -17,7 +17,8 @@ class SaveTempFile(Builder):
     env: :obj:`.builders.Environment`
         The build environment
     parameters, args : Tuple[:obj:`pathlib.Path`, str, tuple, list]
-        The input parameters (dependencies), including filepaths, for the build
+        The input parameters (dependencies), including the string to save to
+        the temporary outfilepath, for the build
     outfilepath : Optional[:obj:`.paths.TargetPath`]
         If specified, the path for the output file.
     save_ext : str

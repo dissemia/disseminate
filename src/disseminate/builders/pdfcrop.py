@@ -10,20 +10,12 @@ class PdfCrop(Builder):
 
     Parameters
     ----------
-    parameters, args : Tuple[:obj:`pathlib.Path`, str, tuple, list]
+    parameters : Tuple[:obj:`pathlib.Path`, str, tuple, list]
         The input parameters (dependencies), including filepaths, for the build
         This tuple may have the 'crop' tuple value or 'crop_percentage' value
         specified. If specified the borders by the given single percentage
         or the 4 percentages for the left, bottom, right, and top margins.
         ex: ('crop', 10) or ('crop', (10, 20, 10,20) or ('crop_percentage', 10)
-    outfilepath : Optional[:obj:`.paths.TargetPath`]
-        If specified, the path for the output file.
-    env: :obj:`.builders.Environment`
-        The build environment
-    crop_percentage : Optional[int, Tuple[int, int, int, int]]
-
-    crop : Optional[int, Tuple[int, int, int, int]]
-        Same as 'crop_percentage', but 'crop_percentage' takes precendence.
     """
 
     action = "pdf-crop-margins -o {builder.outfilepath} {builder.infilepaths}"
@@ -57,6 +49,6 @@ class PdfCrop(Builder):
             args = [args[0]] + ["-p", str(self.crop_percentage)] + args[1:]
         elif isinstance(self.crop_percentage, tuple):
             args = ([args[0]] +
-                     ["-p4", *[str(i) for i in self.crop_percentage]] +
-                     args[1:])
+                    ["-p4", *[str(i) for i in self.crop_percentage]] +
+                    args[1:])
         return tuple(args)

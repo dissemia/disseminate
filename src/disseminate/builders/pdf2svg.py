@@ -48,10 +48,10 @@ class Pdf2SvgCropScale(SequentialBuilder):
     outfilepath_ext = '.svg'
 
     def __init__(self, env, parameters=None, subbuilders=None, **kwargs):
-        # Setup parameters
+        # Setup parameters. The parameters list should be a copy.
         subbuilders = (list(subbuilders) if (isinstance(subbuilders, list) or
                        isinstance(subbuilders, tuple)) else [])
-        parameters = parameters or []
+        parameters = parameters if parameters is not None else []
         parameters = (list(parameters) if isinstance(parameters, tuple) or
                       isinstance(parameters, list) else [parameters])
 
