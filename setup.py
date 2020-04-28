@@ -83,6 +83,7 @@ setup(
         'pygments >=2.6',             # BSD 2 license
         'pandas>=0.25',               # 3-clause BSD
         'diskcache>=4.1',
+        'pathvalidate>=2.2',
         ],
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc',

@@ -8,6 +8,8 @@ from abc import ABCMeta
 from string import Formatter
 from distutils.spawn import find_executable
 
+import pathvalidate
+
 from .utils import generate_outfilepath
 from .exceptions import runtime_error, BuildError
 from ..utils.file import mkdir_p
@@ -24,14 +26,16 @@ class CustomFormatter(Formatter):
         field_value, field_name = super().get_field(field_name, args, kwargs)
         if isinstance(field_value, list) or isinstance(field_value, tuple):
             # Make lists/tuples into space-separated strings
-            field_value = " ".join(self.clean_string(s) for s in field_value)
+            field_value = " ".join(self.clean_field(f) for f in field_value)
             return field_value, field_name
-        return self.clean_string(field_value), field_name
+        return self.clean_field(field_value), field_name
 
     @staticmethod
-    def clean_string(s):
-        """Clean strings used for command-line processes"""
-        return str(s).strip('-*')
+    def clean_field(f):
+        """Clean fields used for command-line processes"""
+        if isinstance(f, pathlib.Path):
+            f = pathvalidate.sanitize_filepath(f, platform='auto')
+        return str(f).strip('-*`')
 
 
 class Builder(metaclass=ABCMeta):
