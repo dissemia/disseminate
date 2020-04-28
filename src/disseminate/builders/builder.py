@@ -14,6 +14,7 @@ from .utils import generate_outfilepath
 from .exceptions import runtime_error, BuildError
 from ..utils.file import mkdir_p
 from ..utils.classes import all_subclasses
+from ..utils.list import uniq
 from ..paths import TargetPath
 from .. import settings
 
@@ -39,7 +40,7 @@ class CustomFormatter(Formatter):
 
 
 class Builder(metaclass=ABCMeta):
-    """A build for one or more dependencies.
+    """A build for an output file.
 
     Parameters
     ----------
@@ -48,12 +49,13 @@ class Builder(metaclass=ABCMeta):
     parameters, args : Tuple[:obj:`pathlib.Path`, str, tuple, list]
         The input parameters (dependencies), including filepaths, for the build
     outfilepath : Optional[:obj:`pathlib.Path`]
-        If specified, the path for the output file.
+        If specified, the path for the output file. If not specified, an
+        outfilepath will be automatically generated.
     use_cache : Optional[bool]
-        If True, set the builder outfilepath into the cache_root path from the
+        If True, set the builder outfilepath into the cache_path from the
         builder environment.
     use_media : Optional[bool]
-        If True, set the builder outfilepath subpath in the media_root in the
+        If True, set the builder outfilepath subpath in the media_path in the
         build environment context, if specified.
 
     Attributes
@@ -61,7 +63,7 @@ class Builder(metaclass=ABCMeta):
     action : str
         The command to execute during the build.
     available : bool
-        Whether this builder is available to factory methods
+        Whether this builder is available to factory methods (find_builder_cls)
     active_requirements : Union[tuple, bool]
         If False, the builder will be inactive
         If a tuple of strings is specified, these conditions will be tested
@@ -69,6 +71,9 @@ class Builder(metaclass=ABCMeta):
         - 'priority': test that the priority attribute is an int
         - 'required_execs': tests that the required_execs attribute is specified
         - 'all_execs': tests that the required execs are available
+    decision : :obj:`.builders.deciders.decider.decision`
+        The decision object for the build, instantiate from environment's
+        decider, to evaluate whether a build is needed.
     scan_parameters : bool
         If True (default), scan the parameters for additional dependencies.
     priority : int
@@ -77,15 +82,15 @@ class Builder(metaclass=ABCMeta):
     required_execs : Tuple[str]
         A list of external executables that are needed by the builder.
     infilepath_ext : str
-        The format extension for the input file (ex: '.pdf')
+        The format extension for the input parameters (ex: '.pdf', '.render')
     outfilepath_ext : str
         The format extension for the output file (ex: '.svg')
     outfilepath_append : str
         For automatically generated outfilepaths, the following string will
         be appended to the name of the file. ex: '_scale'
     target : Optional[str]
-        If specified, use the given target for creating the target file.
-        This is used in formatting the TargetPath.
+        If specified, use the given document target for the build. This is used
+        in formatting the TargetPath.
         ex: 'html' target will store built files in the 'html/' subdirectory.
     popen : Union[:obj:`subprocess.Popen`, None, str]
         The process for the externally run program.
@@ -111,12 +116,12 @@ class Builder(metaclass=ABCMeta):
     outfilepath_append = None
     target = None
 
+    popen = None
+
     _active = dict()
     _available_builders = dict()
     _parameters = None
     _outfilepath = None
-
-    popen = None
 
     def __init__(self, env, target=None, parameters=None, outfilepath=None,
                  use_cache=None, use_media=None, **kwargs):
@@ -125,8 +130,9 @@ class Builder(metaclass=ABCMeta):
         self.use_cache = use_cache if use_cache is not None else self.use_cache
         self.use_media = use_media if use_media is not None else self.use_media
 
-        # Load the parameters
-        parameters = parameters or []
+        # Load the parameters. The parameters should be a list, and if a
+        # parameters list was passed, make a copy of this list.
+        parameters = parameters if parameters is not None else []
         parameters = (list(parameters) if isinstance(parameters, tuple) or
                       isinstance(parameters, list) else [parameters])
         self.parameters = parameters
@@ -147,6 +153,8 @@ class Builder(metaclass=ABCMeta):
         """True if a builder is active"""
         cls_name = cls.__name__
 
+        # See if the specified class has already been evaluated to be active or
+        # not
         if cls_name in Builder._active:
             return Builder._active[cls_name]
 
@@ -196,8 +204,7 @@ class Builder(metaclass=ABCMeta):
         - 'inactive': The builder isn't active--see the active property
         - 'missing (parameters)': All the required parameters have not been
           specified or files for paths in the parameters do not exist
-        - 'missing (outfilepath)': The outfilepath could not be or was not
-           created
+        - 'missing (outfilepath)': The outfilepath was not created
         - 'building': The builder is building
         - 'done': The builder is done building
         """
@@ -205,18 +212,29 @@ class Builder(metaclass=ABCMeta):
         has_parameters = len(self.parameters) > 0
         if not active:
             return "inactive"
+
+        # The build needs parameters to do anythting, and the filepath
+        # parameters should point to valid files
         elif (not has_parameters or
               not all(i.exists() for i in self.parameters
                       if hasattr(i, 'exists'))):
             return "missing (parameters)"
+
+        # If a build is not needed or the process is done, then the build is
+        # done
         elif not self.build_needed() or self.popen == "done":
             return "done"
+
+        # If a process is open (self.open is not None), then a build is
+        # currently in process
         elif self.popen is not None:
             poll = self.popen.poll()
             if poll is None:
                 # If popen.poll() returns None, the process isn't done.
                 return "building"
             elif not self.outfilepath.exists():
+                # An output file should have been created. If it wasn't then
+                # the build was not successful
                 return "missing (outfilepath)"
             elif poll == 0:
                 # exit code of 0. Successful!
@@ -226,11 +244,12 @@ class Builder(metaclass=ABCMeta):
                 return "done"
             else:  # non-zero exit code. Unsuccessful. :(
                 runtime_error(popen=self.popen)
+
         else:
             return "ready"
 
     def build_needed(self, reset=False):
-        """Determine whether a build is needed."""
+        """Decide whether a build is needed"""
         if self.decision is None:
             decider = self.env.decider
             self.decision = decider.decision
@@ -243,8 +262,10 @@ class Builder(metaclass=ABCMeta):
 
     @property
     def parameters(self):
-        """The list of input filenames and paths needed for the build"""
-        return getattr(self, '_parameters', [])
+        """The list of input parameters, including filepaths, needed for the
+        build"""
+        # Input parameters should only be listed once.
+        return uniq(getattr(self, '_parameters', []))
 
     @parameters.setter
     def parameters(self, value):
@@ -338,8 +359,19 @@ class Builder(metaclass=ABCMeta):
     def build(self, complete=False):
         """Run the build.
 
+        Parameters
+        ----------
+        complete : Optional[bool]
+            If True, run the build until it has completed
+            If False, start the build in the background.
+
+        Returns
+        -------
+        status : str
+            The current status of the build.
+
         .. note::
-          - This function will run the sub-builders and this builder once.
+          - This function will run the sub-builders.
           - Each builder is atomic
           - When running a build, not all of the builders might be called in
             the first build--for example, subsequent builders may rely on the
@@ -360,7 +392,7 @@ class Builder(metaclass=ABCMeta):
     @classmethod
     def find_builder_cls(cls, in_ext, out_ext=None, target=None,
                          raise_error=True):
-        """Return a builder class
+        """Factory method to return a builder class
 
         Parameters
         ----------

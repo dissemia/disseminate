@@ -3,10 +3,22 @@ Test the render builder
 """
 from collections import namedtuple
 
+import jinja2
 import pytest
 
-from disseminate.builders.jinja_render import JinjaRender
+from disseminate.builders.jinja_render import (JinjaRender, template_filepaths,
+                                               context_filepaths)
 from disseminate.paths import TargetPath
+
+
+@pytest.fixture
+def jinja2_env():
+    """Setup a jinja2 environment"""
+    # Setup environments and loaders
+    pl = jinja2.loaders.PackageLoader('disseminate', 'templates')
+
+    env = jinja2.environment.Environment(loader=pl)
+    return env
 
 
 def test_jinja_render_with_find_builder_cls():
@@ -225,3 +237,44 @@ def test_jinja_render(env):
     # A new builder does not require a new build.
     render_build = JinjaRender(env, context=context, render_ext='.html')
     assert render_build.status == 'done'
+
+
+def test_template_filepaths(jinja2_env):
+    """Test the template_filepaths function."""
+
+    # 1. Test the package loader path. It should only have 1 path for the
+    #    disseminate package
+    template = jinja2_env.get_or_select_template('default/template.tex')
+    pl_path = template_filepaths(template, environment=jinja2_env)
+    assert len(pl_path) == 1
+    assert pl_path[0].match('disseminate/templates/default/template.tex')
+
+    # 2. Test an example with template inheritance
+    template = jinja2_env.get_or_select_template('books/tufte/template.tex')
+    pl_path = template_filepaths(template, environment=jinja2_env)
+    assert len(pl_path) == 2
+    assert pl_path[0].match('disseminate/templates/books/tufte/template.tex')
+    assert pl_path[1].match('disseminate/templates/default/template.tex')
+
+
+def test_context_filepaths(jinja2_env):
+    """Test the context_filepaths function."""
+
+    # 1. Test a basic package template
+    template = jinja2_env.get_or_select_template('default/template.tex')
+    template_fps = template_filepaths(template, environment=jinja2_env)
+
+    # Get the context filepath for this template
+    fps = context_filepaths(template_fps)
+    assert len(fps) == 1
+    assert fps[0].match('disseminate/templates/default/context.txt')
+
+    # 2. Test a package template with inheritance
+    template = jinja2_env.get_or_select_template('books/tufte/template.tex')
+    template_fps = template_filepaths(template, environment=jinja2_env)
+
+    # Get the context filepath for this template
+    fps = context_filepaths(template_fps)
+    assert len(fps) == 2
+    assert fps[0].match('disseminate/templates/books/tufte/context.txt')
+    assert fps[1].match('disseminate/templates/default/context.txt')

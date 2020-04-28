@@ -16,7 +16,7 @@ from .. import settings
 
 
 class JinjaRender(Builder):
-    """A builder that renders a file using a (Jinja2) renderer.
+    """A builder that renders a file using Jinja2.
 
     Parameters
     ----------
@@ -28,10 +28,9 @@ class JinjaRender(Builder):
         If specified, the path for the output file.
     context : dict
         A context to use with the renderer.
-    template : str
-        If specified, use the given template in rendering the file
     render_ext : str
-        The extension for the rendered file.
+        The extension for the rendered file. Either this or the outfilepath
+        must be specified. ex: '.tex'
     """
 
     available = True
@@ -78,7 +77,8 @@ class JinjaRender(Builder):
         parameters = list(self._parameters) if self._parameters else []
         context = self.context
 
-        # Render the string
+        # Render the string and add it (as well as dependent template files)
+        # to the list of returned input parameters
         if context is not None:
             # Get the template filepath to use with the renderer
             target = self.render_ext
@@ -134,7 +134,7 @@ class JinjaRender(Builder):
             parameters = self.parameters
 
             if parameters:
-                # Create an temporary infilepath from the hash of the input
+                # Create an a mock infilepath with hash from the parameters
                 sourcepath = generate_mock_parameters(env=self.env,
                                                       context=self.context,
                                                       parameters=parameters,
