@@ -11,7 +11,7 @@ document_onload = signal('document_onload')
 def add_target_builders(document, context):
     """Add target builders to a document context"""
     builders = context.setdefault('builders', dict())
-    builders.clear()  # Reset builders
+    builders.clear()  # Reset builders if the targets for the doc have changed
 
     environment = context['environment']
     for target in context['targets']:
