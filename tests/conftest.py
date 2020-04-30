@@ -80,7 +80,11 @@ def env(tmpdir):
     tmpdir = pathlib.Path(tmpdir)
     target_root = TargetPath(target_root=tmpdir)
     src_filepath = SourcePath(project_root=tmpdir, subpath='test.dm')
-    src_filepath.touch()
+    src_filepath.write_text("""
+    ---
+    targets: html, tex, pdf
+    ---
+    """)
 
     # Create a new environment so that context is stored on the env instead as
     # weakref (default)

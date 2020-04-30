@@ -68,6 +68,7 @@ class TargetBuilder(SequentialBuilder):
 
         # Setup the paths
         document = getattr(context, 'document', None)
+
         if parameters is None and 'src_filepath' in context:
             parameters = context['src_filepath']
 

@@ -9,8 +9,8 @@ from disseminate.paths import TargetPath
 
 
 def test_pdf_builder_setup_pdf_in_targets(env):
-    """Test the setup of a PdfBuilder when 'pdf' is listed as a target
-    in the context['targets']"""
+    """Test the setup of a PdfBuilder when 'pdf' (but not 'tex') is listed as
+    a target in the context['targets']"""
     context = env.context
     src_filepath = context['src_filepath']
     target_root = context['target_root']
@@ -20,6 +20,8 @@ def test_pdf_builder_setup_pdf_in_targets(env):
     #    be in the cache directory
     context['targets'] -= {'tex'}
     context['targets'] |= {'pdf'}
+    context['builders'].clear()  # Reset the builders
+
     target_tex_filepath = TargetPath(target_root=target_root / '.cache',
                                      target='tex', subpath='test.tex')
     target_cache_pdf_filepath = TargetPath(target_root=target_root / '.cache',
@@ -36,6 +38,7 @@ def test_pdf_builder_setup_pdf_in_targets(env):
     tex_builder = builder.subbuilders[0]
     assert tex_builder.__class__.__name__ == 'TexBuilder'
     assert tex_builder.target == 'tex'
+    assert tex_builder.use_cache
     assert len(tex_builder.subbuilders[1].parameters) > 0
     assert tex_builder.subbuilders[1].outfilepath == target_tex_filepath
     assert tex_builder.parameters == [src_filepath]
@@ -71,6 +74,7 @@ def test_pdf_builder_setup_pdf_tex_in_targets(env):
     #    be in the cache directory
     context['targets'] |= {'tex'}
     context['targets'] |= {'pdf'}
+    context['builders'].clear()  # Reset the builders
 
     target_tex_filepath = TargetPath(target_root=target_root,
                                      target='tex', subpath='test.tex')
@@ -87,6 +91,7 @@ def test_pdf_builder_setup_pdf_tex_in_targets(env):
 
     assert builder.subbuilders[0].__class__.__name__ == 'TexBuilder'
     assert builder.subbuilders[0].target == 'tex'
+    assert not builder.subbuilders[0].use_cache
     assert builder.subbuilders[0].parameters == [src_filepath]
     assert builder.subbuilders[0].outfilepath == target_tex_filepath
 
@@ -117,6 +122,7 @@ def test_pdf_builder_setup_pdf_tex_in_targets(env):
 
     assert builder.subbuilders[0].__class__.__name__ == 'TexBuilder'
     assert builder.subbuilders[0].target == 'tex'
+    assert not builder.subbuilders[0].use_cache
     assert builder.subbuilders[0].parameters == [src_filepath]
     assert builder.subbuilders[0].outfilepath == target_tex_filepath
 
@@ -145,7 +151,10 @@ def test_pdf_builder_setup_not_in_targets(env):
     target_root = context['target_root']
 
     # 1. Setup the builder without an outfilepath
+    context['targets'] -= {'tex'}
     context['targets'] -= {'pdf'}
+    context['builders'].clear()  # Reset the builders
+
     target_tex_filepath = TargetPath(target_root=target_root / '.cache',
                                      target='tex', subpath='test.tex')
     target_cache_pdf_filepath = TargetPath(target_root=target_root / '.cache',
@@ -161,6 +170,7 @@ def test_pdf_builder_setup_not_in_targets(env):
 
     assert builder.subbuilders[0].__class__.__name__ == 'TexBuilder'
     assert builder.subbuilders[0].target == 'tex'
+    assert builder.subbuilders[0].use_cache
     assert builder.subbuilders[0].parameters == [src_filepath]
     assert builder.subbuilders[0].outfilepath == target_tex_filepath
 
