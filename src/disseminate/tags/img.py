@@ -41,12 +41,13 @@ class Img(Tag):
     process_typography = False
 
     html_name = 'img'
-    _filepath = None
-    
+    _infilepath = None
+    _outfilepaths = None
 
     def __init__(self, name, content, attributes, context):
         super().__init__(name=name, content=content, attributes=attributes,
                          context=context)
+        self._outfilepaths = dict()
 
     @property
     def mtime(self):
@@ -91,8 +92,8 @@ class Img(Tag):
             Raises an ImgFileNotFound exception if a filepath couldn't be
             found in the tag contents.
         """
-        if self._filepath is not None:
-            return self._filepath
+        if self._infilepath is not None:
+            return self._infilepath
 
         # Retrieve unspecified parameters
         content = content or self.content
@@ -115,9 +116,9 @@ class Img(Tag):
             raise ImgFileNotFound(msg)
 
         # Convert the file to the format needed by target
-        self._filepath = contents
+        self._infilepath = contents
 
-        return self._filepath
+        return self._infilepath
 
     def add_file(self, target, content=None, attributes=None, context=None):
         """Convert and add the file dependency for the specified document
@@ -139,8 +140,8 @@ class Img(Tag):
 
         Returns
         -------
-        :obj:`builders.builder.Builder`
-            The builder created to the file dependency.
+        outfilepath : :obj:`.paths.TargetPath`
+            The filepath for the file in the target document directory.
 
         Raises
         ------
@@ -150,12 +151,17 @@ class Img(Tag):
         BuildError
             If a builder could not be found for the builder
         """
+        # See if a cached version is available
+        if target in self._outfilepaths:
+            return self._outfilepaths[target]
+
+        # If not get the outfilepath for the given document target
         assert self.context.is_valid('builders')
 
         # Retrieve the unspecified arguments
         target = target if target.startswith('.') else '.' + target
         content = content or self.content
-        attributes = attributes or self.attributes
+        attrs = attributes or self.attributes
         context = context or self.context
 
         # Retrieve builder
@@ -164,28 +170,36 @@ class Img(Tag):
                                 "document context")
 
         # Raises ImgNotFound if the file is not found
-        filepath = self.infilepath(content=content)
-        return target_builder.add_build(parameters=filepath, context=context,
-                                        **attributes)
+        parameters = ([self.infilepath(content=content)] +
+                      list(attrs.filter(target=target).totuple()))
+        build = target_builder.add_build(parameters=parameters, context=context)
+
+        self._outfilepaths[target] = build.outfilepath
+        return self._outfilepaths[target]
 
     def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         # Add the file dependency
-        build = self.add_file(target='.tex', content=content,
-                              attributes=attributes)
-        filepath = build.outfilepath.with_suffix('').name
+        outfilepath = self.add_file(target='.tex', content=content,
+                                    attributes=attributes)
 
         # Format the width
         attributes = attributes or self.attributes
         attrs = format_attribute_width(attributes, target='.tex')
 
+        # Get the filename for the file. Wrap this filename in curly braces
+        # in case the filename includes special characters
+        base = outfilepath.with_suffix('')
+        suffix = outfilepath.suffix
+        dest_filepath = "{{{base}}}{suffix}".format(base=base, suffix=suffix)
+
         return tex_cmd(cmd='includegraphics', attributes=attrs,
-                       formatted_content=str(filepath))
+                       formatted_content=str(dest_filepath))
 
     def html_fmt(self, content=None, attributes=None, level=1):
         # Add the file dependency
-        build = self.add_file(target='.html', content=content,
-                              attributes=attributes)
-        url = build.outfilepath.get_url(context=self.context)
+        outfilepath = self.add_file(target='.html', content=content,
+                                    attributes=attributes)
+        url = outfilepath.get_url(context=self.context)
 
         # Format the width and attributes
         attrs = self.attributes.copy() if attributes is None else attributes
@@ -200,6 +214,10 @@ class RenderedImg(Img):
     in_ext = None
 
     def add_file(self, target, content=None, attributes=None, context=None):
+        # Return a cached version, if available
+        if self._infilepath is not None:
+            return self._infilepath
+
         # First, try to see if there are filepaths in the content
         try:
             return super().add_file(target=target, content=content,
@@ -207,7 +225,8 @@ class RenderedImg(Img):
         except ImgFileNotFound:
             pass
 
-        # Check that the in_ext and out_ext are set
+        # At this stage, a file couldn't be found in the contents. Try saving
+        # them. Check that the in_ext and out_ext are set
         assert isinstance(self.in_ext, str)
 
         # Otherwise, try saving the contents to a temp file. Retrieve builder
@@ -218,14 +237,15 @@ class RenderedImg(Img):
         # Setup the builder
         content = content or self.content
         attrs = attributes or self.attributes
+        parameters = [content] + list(attrs.filter(target=target).totuple())
 
-        builder = target_builder.add_build(parameters=content,
+        builder = target_builder.add_build(parameters=parameters,
                                            in_ext=self.in_ext,
-                                           target=target, **attrs)
+                                           target=target)
 
         # Set the produced file to the infilepath of this tag
-        self._filepath = builder.outfilepath
-        return builder
+        self._infilepath = builder.outfilepath
+        return self._infilepath
 
 # class RenderedImg(Img):
 #     """An img base class for saving and caching an image that needs to be

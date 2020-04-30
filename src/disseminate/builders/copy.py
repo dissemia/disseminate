@@ -31,7 +31,7 @@ class Copy(Builder):
         for parameter in self.parameters:
             if isinstance(parameter, str):
                 parameter = pathlib.Path(parameter)
-                
+
             if isinstance(parameter, pathlib.Path):
                 filtered_parameters.append(parameter)
             else:

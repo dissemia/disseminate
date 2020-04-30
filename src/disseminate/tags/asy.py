@@ -1,3 +1,4 @@
+
 """
 Tags to render asymptote (asy) figures and diagrams
 """
@@ -10,7 +11,7 @@ class Asy(RenderedImg):
     src_filepath = None
     active = True
     process_content = False
-    input_format = '.asy'
+    in_ext = '.save'
 
     def __init__(self, name, content, attributes, context):
         super().__init__(name=name, content=content, attributes=attributes,
