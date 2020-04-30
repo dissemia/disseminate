@@ -27,8 +27,16 @@ class Copy(Builder):
                          outfilepath=outfilepath, **kwargs)
 
         # Make sure the parameters are pathlib.Path objects
-        self.parameters = [i if isinstance(i, pathlib.Path)
-                           else pathlib.Path(i) for i in self.parameters]
+        filtered_parameters = []
+        for parameter in self.parameters:
+            if isinstance(parameter, str):
+                parameter = pathlib.Path(parameter)
+                
+            if isinstance(parameter, pathlib.Path):
+                filtered_parameters.append(parameter)
+            else:
+                filtered_parameters.append(parameter)
+        self.parameters = filtered_parameters
 
     @property
     def status(self):
