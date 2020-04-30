@@ -98,6 +98,18 @@ class Attributes(dict):
     def copy(self):
         return Attributes(**self)
 
+    def totuple(self):
+        """Return a tuple for an attributes dict
+
+        Examples
+        --------
+        >>> attrs = Attributes("key1=val1 val2")
+        >>> attrs.totuple()
+        (('key1', 'val1'), 'val2')
+        """
+        return tuple(k if ispositional(v) else (k, v)
+                     for k, v in self.items())
+
     def load(self, s):
         """Parses an attribute string into key/values for the Attributes dict.
 
@@ -108,6 +120,13 @@ class Attributes(dict):
             positional attributes and keyword attributes (kwargs), and
             attributes strings have the following form:
             "key1=value1 key2=value2 value3"
+
+        Examples
+        --------
+        >>> attrs = Attributes()
+        >>> attrs.load("key1=val1 val2")
+        >>> attrs
+        Attributes{'key1': 'val1', 'val2': <class '...StringPositionalValue'>}
         """
         attrs = []
 
