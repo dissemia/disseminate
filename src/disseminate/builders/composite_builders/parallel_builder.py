@@ -74,6 +74,8 @@ class ParallelBuilder(CompositeBuilder):
         parameters = parameters or []
         parameters = (parameters if isinstance(parameters, list) or
                       isinstance(parameters, tuple) else [parameters])
+
+        # Find the files in the parameters
         parameters = [find_file(i, context, raise_error=False) or i
                       for i in parameters]
 

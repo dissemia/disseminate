@@ -121,6 +121,13 @@ def find_file(path, context, raise_error=True):
         path_strs = path.strip().splitlines()  # Keep only the first line
         path = pathlib.Path(path_strs[0] if path_strs else '')
 
+    # If it not a path at this stage, return None--no path can be found
+    if not isinstance(path, pathlib.Path):
+        if raise_error:
+            msg = "Could not find file '{}'".format(path)
+            raise FileNotFoundError(msg)
+        return None
+
     # See if the file is itself a valid file
     if path.is_file():
         return path

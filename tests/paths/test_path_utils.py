@@ -92,7 +92,7 @@ def test_find_file(context_cls):
     #         └── ch1
     #             └── root_img.png
 
-    # 1.1. Test with simple strings
+    # 1. Test with simple strings
     paths = ['tests/paths/find_files_example2/src',
              'tests/paths/find_files_example2/src/chapter1',
              'tests/paths/find_files_example2/src/chapter1/figures',]
@@ -106,7 +106,7 @@ def test_find_file(context_cls):
     with pytest.raises(FileNotFoundError):
         find_file('ch1/root_img.png', context)
 
-    # 1.2. Test with SourcePath strings
+    # 2. Test with SourcePath strings
     paths = [SourcePath('tests/paths/find_files_example2/src'),
              SourcePath('tests/paths/find_files_example2/src', 'chapter1'),
              SourcePath('tests/paths/find_files_example2/src',
@@ -126,6 +126,10 @@ def test_find_file(context_cls):
     assert p3.match('media/ch1/root_img.png')
     assert isinstance(p3, SourcePath)
     assert str(p3.subpath) == 'media/ch1/root_img.png'
+
+    # 3. Test an example with an invalid type
+    with pytest.raises(FileNotFoundError):
+        find_file(['invalid'], context)
 
 
 def test_find_file_missing(context_cls):
