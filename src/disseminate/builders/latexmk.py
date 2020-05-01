@@ -7,7 +7,7 @@ from .builder import Builder
 class Latexmk(Builder):
     """Compile a latex document into pdf using latexmk"""
 
-    action = ("pdflatex "
+    action = ("latexmk "
               "-pdf "  # output pdf
               "-norc "  # do not use latexmkrc config
               "-f "  # continue past errors
