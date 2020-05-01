@@ -38,6 +38,7 @@ class TargetBuilder(SequentialBuilder):
     use_media = False
     chain_on_creation = False
     copy = False
+    clear_done = False
 
     add_parallel_builder = True
     add_render_builder = True
@@ -169,16 +170,6 @@ class TargetBuilder(SequentialBuilder):
 
         # Run the build
         status = super().build(complete=complete)
-
-        # After a build, remove finished builds from the parallel builder
-        unfinished_builds = []
-        subbuilders = (self._parallel_builder.subbuilders
-                       if self._parallel_builder is not None else [])
-        for builder in subbuilders:
-            if builder.status != 'done':
-                unfinished_builds.append(builder)
-        subbuilders.clear()
-        subbuilders += unfinished_builds
 
         return status
 

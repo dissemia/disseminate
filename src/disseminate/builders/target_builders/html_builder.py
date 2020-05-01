@@ -33,4 +33,6 @@ class HtmlBuilder(TargetBuilder):
                     copy = Copy(env, parameters=filepath,
                                 outfilepath=target_filepath)
                     copy_subbuilders.append(copy)
-            self.subbuilders += copy_subbuilders
+
+            # Add these copy builders to the parallel builders
+            self._parallel_builder.subbuilders += copy_subbuilders

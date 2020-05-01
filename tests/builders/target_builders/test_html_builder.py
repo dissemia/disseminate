@@ -29,7 +29,7 @@ def test_html_builder_setup_in_targets(env):
     assert not builder.use_media
     assert context['builders']['.html'] == builder  # builder in context
     assert not target_filepath.exists()
-    assert len(builder.subbuilders) == 6
+    assert len(builder.subbuilders) == 2
 
     assert builder.subbuilders[0].__class__.__name__ == 'ParallelBuilder'
     assert builder.subbuilders[0].parameters == []
@@ -48,7 +48,7 @@ def test_html_builder_setup_in_targets(env):
 
     # check the build
     assert not target_filepath.exists()
-    assert len(builder.subbuilders) == 6
+    assert len(builder.subbuilders) == 2
 
     assert builder.subbuilders[0].__class__.__name__ == 'ParallelBuilder'
     assert builder.subbuilders[0].parameters == []
@@ -93,7 +93,7 @@ def test_html_builder_setup_not_in_targets(env):
     assert not builder.use_media
     assert context['builders']['.html'] == builder  # builder in context
     assert not target_filepath.exists()
-    assert len(builder.subbuilders) == 6
+    assert len(builder.subbuilders) == 2
 
     assert builder.subbuilders[0].__class__.__name__ == 'ParallelBuilder'
     assert builder.subbuilders[0].parameters == []
