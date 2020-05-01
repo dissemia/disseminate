@@ -148,7 +148,7 @@ def test_parallelbuilder_add_build_missing(env):
                              subpath='test.unknown')
     parallel_builder = ParallelBuilder(env, target='.html')
 
-    # A builder cannot be found; a BuildError is raised
+    # Add the subbuilder and and make sure it's of the correct type
     build = parallel_builder.add_build(parameters=infilepath,
                                        outfilepath=outfilepath)
     assert build.__class__.__name__ == 'Pdf2SvgCropScale'
@@ -160,6 +160,43 @@ def test_parallelbuilder_add_build_missing(env):
     with pytest.raises(BuildError):
         parallel_builder.add_build(parameters=infilepath,
                                    outfilepath=outfilepath)
+
+
+def test_parallelbuilder_add_build_multiple(env):
+    """Test the ParallelBuilder add_build method with multiple sequential
+    builds added."""
+    tmpdir = env.context['target_root']
+
+    # Add paths to the context
+    paths = [SourcePath(project_root='tests/builders/examples/ex1')]
+    env.context['paths'] = paths
+
+    # 1. Test tex with adding a pdf file
+    infilepath = 'sample.pdf'
+    outfilepath1 = TargetPath(target_root=tmpdir, target='tex',
+                              subpath='test1.pdf')
+    parallel_builder = ParallelBuilder(env, target='.tex')
+
+    # Add a subbbuilder
+    build1 = parallel_builder.add_build(parameters=infilepath,
+                                        outfilepath=outfilepath1)
+
+    # Run the build
+    assert parallel_builder.build(complete=True) == 'done'
+    assert parallel_builder.status == 'done'
+    assert build1.status == 'done'
+
+    # Now add a second build
+    outfilepath2 = TargetPath(target_root=tmpdir, target='tex',
+                              subpath='test2.pdf')
+    build2 = parallel_builder.add_build(parameters=infilepath,
+                                        outfilepath=outfilepath2)
+
+    # The parallel builder should now need to be rebuilt
+    assert parallel_builder.status == 'ready'
+    assert parallel_builder.build(complete=True) == 'done'
+    assert parallel_builder.status == 'done'
+    assert build2.status == 'done'
 
 
 def test_parallelbuilder_empty(env):

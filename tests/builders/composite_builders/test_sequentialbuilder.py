@@ -226,3 +226,36 @@ def test_sequentialbuilder_md5decider(env, caplog, wait):
     assert outfilepath.is_file()
     assert outfilepath.read_text() == 'test 2'
 
+
+def test_sequentialbuilder_change_status(env):
+    """Test the SequentialBuilder build status when a subbuilder status
+    changes."""
+    # The default SequentialBuilder has only a copy builder
+    # Create a test file
+    src_filepath = env.context['src_filepath']
+
+    # 1. Create sequential builder
+    sequential_builder = SequentialBuilder(env=env, parameters=src_filepath)
+
+    # Add a subbuilder
+    outfilepath = TargetPath(target_root=env.target_root, subpath='out.dm')
+    cp_builder = Copy(env=env, parameters=src_filepath,
+                      outfilepath=outfilepath)
+    sequential_builder.subbuilders.append(cp_builder)
+
+    # Check the build
+    assert sequential_builder.status == 'ready'
+    assert sequential_builder.build(complete=True) == 'done'
+    assert cp_builder.status == 'done'
+    assert outfilepath.exists()
+
+    # Nor reset the copy builder
+    outfilepath.unlink()
+
+    # The sequential and copy builders should be reset too
+    assert cp_builder.status == 'ready'
+    assert sequential_builder.status == 'ready'
+    assert sequential_builder.build(complete=True) == 'done'
+    assert cp_builder.status == 'done'
+    assert sequential_builder.status == 'done'
+    assert outfilepath.exists()
