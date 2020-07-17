@@ -146,7 +146,8 @@ class Builder(metaclass=ABCMeta):
                             else None)
 
     def __repr__(self):
-        return "<{}>".format(self.__class__.__name__)
+        return "<{} status='{}'>".format(self.__class__.__name__,
+                                         self.status)
 
     @classmethod
     def active(cls):

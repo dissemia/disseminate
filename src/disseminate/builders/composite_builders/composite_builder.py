@@ -62,21 +62,19 @@ class CompositeBuilder(Builder):
     def build(self, complete=False):
         def run_build(self):
             status = 'done'
-            for builder in list(self.subbuilders):
-                if builder.status == 'done':
-                    status = "done"
-                    # Remove done builders
-                    if self.clear_done:
-                        self.subbuilders.remove(builder)
 
-                elif builder.status == 'building':
-                    status = 'building'
+            for builder in self.subbuilders:
+                status = builder.status
+                if status == 'done':
+                    continue
+
+                elif status == 'building':
                     if self.parallel:
                         continue
                     else:
                         break
 
-                elif builder.status == 'ready':
+                elif status == 'ready':
                     builder.build()
                     status = 'building'
                     if self.parallel:
@@ -85,7 +83,7 @@ class CompositeBuilder(Builder):
                         break
                         
                 else:
-                    return builder.status
+                    return status
 
             return status
 
@@ -96,4 +94,32 @@ class CompositeBuilder(Builder):
             if self.status in {'building', 'ready'}:
                 run_build(self)
 
+        # Remove finished builders, if specified by 'clear_done'
+        if self.clear_done:
+            for subbuilder in list(self.subbuilders):
+                if subbuilder.status == 'done':
+                    self.subbuilders.remove(subbuilder)
+
         return self.status
+
+    def print(self, level=1):
+        """Print the builder and subbuilders"""
+        def print_builder(b, level, num_spaces=2):
+            msg = "  " * num_spaces * level
+            msg += str(b)  # the __repr__ of the builder
+
+            # Get builder attributes that are useful to print out
+            attrs = ["{}={}".format(attr, getattr(b, attr, None))
+                     for attr in ('clear_done',)
+                     if getattr(b, attr, None) is not None]
+
+            if attrs:
+                msg += ": " + ", ".join(attrs)
+            print(msg)
+
+        print_builder(self, level=level - 1)
+        for subbuilder in self.subbuilders:
+            if isinstance(subbuilder, CompositeBuilder):
+                subbuilder.print(level=level + 1)
+            else:
+                print_builder(subbuilder, level=level)

@@ -141,22 +141,22 @@ def test_sequentialbuilder_basic_decider(env, caplog, wait):
     assert len([r for r in caplog.records if 'Pdf2svg' in r.msg]) == 1
     assert len([r for r in caplog.records if 'ScaleSvg' in r.msg]) == 1
 
-    # This remains true even if the intermediary files are deleted
+    # If the intermediary files are deleted, the build needs to be redone
+    pdf2svg = Pdf2SvgCropScale(parameters=parameters, outfilepath=outfilepath,
+                               env=env)
+
     pdf2svg.subbuilders[0].outfilepath.unlink()  # PdfCrop
     pdf2svg.subbuilders[1].outfilepath.unlink()  # Pdf2svg
     pdf2svg.subbuilders[2].outfilepath.unlink()  # ScaleSvg
 
-    pdf2svg = Pdf2SvgCropScale(parameters=parameters, outfilepath=outfilepath,
-                               env=env)
-
-    assert pdf2svg.status == 'done'
+    assert pdf2svg.status == 'ready'
     assert pdf2svg.build(complete=True) == 'done'
     assert outfilepath.stat().st_mtime == mtime
 
     # The intermediary commands haven't been run again
-    assert len([r for r in caplog.records if 'PdfCrop' in r.msg]) == 1
-    assert len([r for r in caplog.records if 'Pdf2svg' in r.msg]) == 1
-    assert len([r for r in caplog.records if 'ScaleSvg' in r.msg]) == 1
+    assert len([r for r in caplog.records if 'PdfCrop' in r.msg]) == 2
+    assert len([r for r in caplog.records if 'Pdf2svg' in r.msg]) == 2
+    assert len([r for r in caplog.records if 'ScaleSvg' in r.msg]) == 2
 
     # 3. Changing the output file will trigger a new build
     correct_contents = outfilepath.read_bytes()
@@ -167,7 +167,7 @@ def test_sequentialbuilder_basic_decider(env, caplog, wait):
     assert pdf2svg.build(complete=True) == 'done'
     assert outfilepath.read_bytes() == correct_contents
 
-    # Now each commands have been run again
+    # The intermediary files do not need to be re-build
     assert len([r for r in caplog.records if 'PdfCrop' in r.msg]) == 2
     assert len([r for r in caplog.records if 'Pdf2svg' in r.msg]) == 2
     assert len([r for r in caplog.records if 'ScaleSvg' in r.msg]) == 2
@@ -254,8 +254,7 @@ def test_sequentialbuilder_change_status(env):
 
     # The sequential and copy builders should be reset too
     assert cp_builder.status == 'ready'
-    assert sequential_builder.status == 'ready'
-    assert sequential_builder.build(complete=True) == 'done'
-    assert cp_builder.status == 'done'
+
+    assert len(sequential_builder.subbuilders) == 0
     assert sequential_builder.status == 'done'
-    assert outfilepath.exists()
+    assert sequential_builder.build(complete=True) == 'done'

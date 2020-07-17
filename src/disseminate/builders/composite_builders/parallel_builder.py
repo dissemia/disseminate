@@ -5,6 +5,8 @@ from ...paths.utils import find_file
 class ParallelBuilder(CompositeBuilder):
     """A composite builder that runs subbuilders in parallell (i.e. run the
     subbuilders together at the same time)"""
+
+    action = 'parallel build'
     parallel = True
 
     @property
@@ -12,6 +14,7 @@ class ParallelBuilder(CompositeBuilder):
         statuses = {sb.status for sb in self.subbuilders}
 
         if {'done'} == statuses or len(statuses) == 0:  # subbuilders are done
+            self.build_needed(reset=True)
             return 'done'
 
         inactive = {i for i in statuses if i.startswith('inactive')}

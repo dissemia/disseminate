@@ -29,6 +29,7 @@ def test_parallelbuilder_add_build_file_with_outfilepath(env):
     parallel_builder = ParallelBuilder(env, target='html')
     build = parallel_builder.add_build(parameters=infilepath,
                                        outfilepath=outfilepath)
+    pdf2svg = parallel_builder.subbuilders[0]
 
     # Check the builder
     assert len(parallel_builder) == 3
@@ -55,14 +56,17 @@ def test_parallelbuilder_add_build_file_with_outfilepath(env):
     assert parallel_builder.status == 'done'
     assert not parallel_builder.build_needed()
     assert outfilepath.exists()
+    assert pdf2svg.status == 'done'
 
     # Try a new parallel builder, and its status should be 'done'--i.e. no
     # build is needed
     parallel_builder = ParallelBuilder(env, target='html')
     parallel_builder.add_build(parameters=infilepath, outfilepath=outfilepath)
+    pdf2svg = parallel_builder.subbuilders[0]
 
     assert not parallel_builder.build_needed()
     assert parallel_builder.status == 'done'
+    assert pdf2svg.status == 'done'
 
 
 def test_parallelbuilder_add_build_file_without_outfilepath(env):
@@ -210,6 +214,32 @@ def test_parallelbuilder_empty(env):
     parallel_builder = ParallelBuilder(env)
     assert parallel_builder.status == 'done'  # no builders
     assert parallel_builder.build(complete=True) == 'done'
+
+
+def test_parallelbuilder_clear_done(env):
+    """Test the clearing of done subbuilders with the parallelbuilder"""
+    tmpdir = env.context['target_root']
+
+    # Add paths to the context
+    paths = [SourcePath(project_root='tests/builders/examples/ex1')]
+    env.context['paths'] = paths
+
+    # 1. Test a parallel builder for an html target.
+    #    Test html pdf->svg. Tracked deps: ['.css', '.svg', '.png'],
+    infilepath = 'sample.pdf'
+    outfilepath = TargetPath(target_root=tmpdir, target='html',
+                             subpath='test.svg')
+    parallel_builder = ParallelBuilder(env, target='html')
+    assert parallel_builder.clear_done
+    assert len(parallel_builder.subbuilders) == 0
+
+    # Now add a build
+    parallel_builder.add_build(parameters=infilepath, outfilepath=outfilepath)
+    assert len(parallel_builder.subbuilders) == 1
+
+    # Now run the build. The subbuilder completes so it should be removed
+    assert parallel_builder.build(complete=True) == 'done'
+    assert len(parallel_builder.subbuilders) == 0
 
 
 def test_parallelbuilder_sequential_builds(env):
