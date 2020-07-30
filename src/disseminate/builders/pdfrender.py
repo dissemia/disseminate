@@ -14,7 +14,8 @@ class PdfRender(SequentialBuilder):
     outfilepath_ext = '.pdf'
 
     def __init__(self, env, context=None, template=None, parameters=None,
-                 outfilepath=None, subbuilders=None, **kwargs):
+                 outfilepath=None, subbuilders=None, use_cache=None,
+                 **kwargs):
 
         # Setup the arguments
         parameters = parameters or []
@@ -25,7 +26,7 @@ class PdfRender(SequentialBuilder):
             render_cls = self.find_builder_cls(in_ext='.render')
             render_build = render_cls(env, context=context, render_ext='.tex',
                                       template=template, parameters=parameters,
-                                      **kwargs)
+                                      use_cache=True, **kwargs)
 
             # Set the parameters for this builder to match the render_build, if
             # used, so that the Md5Decision is properly calculated
@@ -36,7 +37,7 @@ class PdfRender(SequentialBuilder):
 
         # Setup a pdf builder
         pdf_build_cls = self.find_builder_cls(in_ext='.tex', out_ext='.pdf')
-        pdf_build = pdf_build_cls(env, **kwargs)
+        pdf_build = pdf_build_cls(env, use_cache=True, **kwargs)
         subbuilders.append(pdf_build)
         super().__init__(env, parameters=parameters, outfilepath=outfilepath,
-                         subbuilders=subbuilders, **kwargs)
+                         subbuilders=subbuilders, use_cache=use_cache, **kwargs)

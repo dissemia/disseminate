@@ -128,7 +128,7 @@ def generate_outfilepath(env, parameters, target=None, append=None, ext=None,
     infilepath = parameters[0]
 
     # Formulate the target_root
-    target_root = env.cache_path if use_cache else env.context['target_root']
+    target_root = env.cache_path if use_cache else env.target_root
     media_path = env.media_path if use_media else None
 
     # Formulate the target

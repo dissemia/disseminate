@@ -47,7 +47,8 @@ class Pdf2SvgCropScale(SequentialBuilder):
     infilepath_ext = '.pdf'
     outfilepath_ext = '.svg'
 
-    def __init__(self, env, parameters=None, subbuilders=None, **kwargs):
+    def __init__(self, env, parameters=None, subbuilders=None, use_cache=None,
+                 **kwargs):
         # Setup parameters. The parameters list should be a copy.
         subbuilders = (list(subbuilders) if (isinstance(subbuilders, list) or
                        isinstance(subbuilders, tuple)) else [])
@@ -59,16 +60,18 @@ class Pdf2SvgCropScale(SequentialBuilder):
         crop = (self.get_parameter('crop', *parameters) or
                 self.get_parameter('crop_percentage', *parameters))
         if crop:
-            pdfcrop = PdfCrop(env, parameters=parameters, **kwargs)
+            pdfcrop = PdfCrop(env, parameters=parameters, use_cache=True,
+                              **kwargs)
             subbuilders.append(pdfcrop)
 
-        pdf2svg = Pdf2svg(env, **kwargs)
+        pdf2svg = Pdf2svg(env, use_cache=True, **kwargs)
         subbuilders.append(pdf2svg)
 
         scale = self.get_parameter('scale', *parameters)
         if scale:
-            scalesvg = ScaleSvg(env, parameters=parameters, **kwargs)
+            scalesvg = ScaleSvg(env, parameters=parameters, use_cache=True,
+                                **kwargs)
             subbuilders.append(scalesvg)
 
         super().__init__(env, parameters=parameters, subbuilders=subbuilders,
-                         **kwargs)
+                         use_cache=use_cache, **kwargs)

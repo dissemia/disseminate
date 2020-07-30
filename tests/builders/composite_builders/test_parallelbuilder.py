@@ -80,14 +80,14 @@ def test_parallelbuilder_add_build_file_without_outfilepath(env):
     infilepath = 'sample.pdf'
     env.context['paths'] = paths
 
-    # 2. Test an example without an outfilepath. This should be created in the
-    #    cache directory as sample.svg (from the infilepath)
-    cached_outfilepath = TargetPath(target_root=env.cache_path, target='html',
-                                    subpath='media/sample.svg')
+    # 2. Test an example without an outfilepath. This should not be created in
+    #    the cache directory since use_cache is False by default
+    outfilepath = TargetPath(target_root=env.target_root, target='html',
+                             subpath='media/sample.svg')
     parallel_builder = ParallelBuilder(env, target='html')
     parallel_builder.add_build(parameters=infilepath)
 
-    assert parallel_builder.subbuilders[-1].outfilepath == cached_outfilepath
+    assert parallel_builder.subbuilders[-1].outfilepath == outfilepath
     assert parallel_builder.build_needed()  # file doesn't exist
 
     # 3. Test an example with a new outfilepath. This build will be needed,

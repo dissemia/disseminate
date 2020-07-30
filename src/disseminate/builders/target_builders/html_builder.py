@@ -30,7 +30,7 @@ class HtmlBuilder(TargetBuilder):
                     target_filepath = TargetPath(target_root=target_root,
                                                  target=target,
                                                  subpath=subpath)
-                    copy = Copy(env, parameters=filepath,
+                    copy = Copy(env, parameters=filepath, use_cache=False,
                                 outfilepath=target_filepath)
                     copy_subbuilders.append(copy)
 

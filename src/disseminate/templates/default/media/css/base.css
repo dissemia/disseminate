@@ -4,7 +4,7 @@
 
 body {
   color: #444444;
-  background: #fcfcfc;
+  background: #efefef;
   font-weight: 200;
   margin: 0 auto 4rem auto;
 }
@@ -21,6 +21,10 @@ h2, h3, h4, h5, h6 {
   padding-top: 1rem;
   padding-left: 2rem;
   max-width: 960px;
+  background: #fcfcfc;
+  border: 1px solid #CCCCCC;
+  border-top: 0px;
+  border-bottom: 0px;
 }
 
 /* Menu customizations */
@@ -71,7 +75,7 @@ h2, h3, h4, h5, h6 {
 }
 
 label.menu-toggle {
-  margin-left: -2rem;
+  margin-left: -1.8rem;
   position: fixed;
   display: block;
 }

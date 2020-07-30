@@ -37,6 +37,7 @@ def test_pdf_builder_setup_pdf_in_targets(env):
 
     tex_builder = builder.subbuilders[0]
     assert tex_builder.__class__.__name__ == 'TexBuilder'
+    assert tex_builder.use_cache
     assert tex_builder.target == 'tex'
     assert tex_builder.use_cache
     assert len(tex_builder.subbuilders[1].parameters) > 0
@@ -46,17 +47,20 @@ def test_pdf_builder_setup_pdf_in_targets(env):
 
     pdf_builder = builder.subbuilders[1]
     assert pdf_builder.__class__.__name__ == 'Latexmk'
+    assert pdf_builder.use_cache
     assert pdf_builder.target == 'pdf'
     assert pdf_builder.parameters == [target_tex_filepath]
     assert pdf_builder.outfilepath == target_cache_pdf_filepath
 
     copy_builder = builder.subbuilders[2]
     assert copy_builder.__class__.__name__ == 'Copy'
+    assert not copy_builder.use_cache
     assert copy_builder.target == 'pdf'
     assert copy_builder.parameters == [target_cache_pdf_filepath]
     assert copy_builder.outfilepath == target_pdf_filepath
-
+    
     assert builder.outfilepath == target_pdf_filepath
+    assert not builder.use_cache
 
     assert builder.build_needed()
     assert builder.status == 'ready'

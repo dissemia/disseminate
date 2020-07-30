@@ -31,7 +31,7 @@ class Eq(RenderedImg):
 
     aliases = ('term', 'termb')
     active = True
-    input_format = '.tex'
+    in_ext = '.render'
 
     process_content = True
 
@@ -67,29 +67,7 @@ class Eq(RenderedImg):
     def block_equation(self, value):
         self._block_equation = value
 
-    def prepare_content(self, content=None, context=None):
-        """Render the content in LaTeX into a valid .tex file."""
-        context = context or self.context
-
-        # Get the renderer for the equation
-        if ('renderers' not in context or
-           'equation' not in context['renderers']):
-            raise TagError("Missing equation renderer in the document context")
-        renderer = context['renderers']['equation']
-
-        # Get the unspecified arguments
-        # FIXME: content or tex_fmt
-        content = self.tex_fmt(mathmode=False)
-        context = context if context is not None else context
-
-        # Make a copy of the context and add the content as the 'body' entry.
-        context_cp = copy(context)
-        context_cp['body'] = content
-        kwargs = dict()
-
-        return renderer.render(context=context_cp, target='.tex', **kwargs)
-
-    def html_fmt(self, content=None, attributes=None, level=1):
+    def html_fmt(self, content=None, attributes=None, context=None, level=1):
         attrs = attributes or self.attributes.copy()
 
         # Crop equation images created by the dependency manager. This removes
@@ -103,10 +81,18 @@ class Eq(RenderedImg):
             attrs['class'] = 'eq blockeq'
         else:
             attrs['class'] = 'eq'
-        return super(Eq, self).html_fmt(content=content, attributes=attrs,
-                                        level=level)
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+        # Create a special context for this tag specifically
+        if context is None:
+            context = self.context.filter(['paths'])
+            context['eq'] = self
+            context['template'] = 'default/eq'
+
+        return super(Eq, self).html_fmt(content=content, attributes=attrs,
+                                        context=context, level=level)
+
+    def tex_fmt(self, content=None, attributes=None, mathmode=False,
+                context=None, level=1):
         # Retrieve unspecified arguments
         attributes = attributes or self.attributes
         content = content or self.content

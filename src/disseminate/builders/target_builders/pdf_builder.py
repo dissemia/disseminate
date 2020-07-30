@@ -39,13 +39,15 @@ class PdfBuilder(TargetBuilder):
 
         # Now add a Pdf converter
         tex2pdf_cls = self.find_builder_cls(in_ext='.tex', out_ext='.pdf')
-        tex2pdf = tex2pdf_cls(env=env, target='pdf', use_media=False, **kwargs)
+        tex2pdf = tex2pdf_cls(env=env, target='pdf', use_media=False,
+                              use_cache=True, **kwargs)
         self._pdf_builder = tex2pdf
         subbuilders.append(tex2pdf)
 
         # And a copy builder
         copy_builder_cls = self.find_builder_cls(in_ext='.*', out_ext='.*')
-        copy_builder = copy_builder_cls(env=env, target='pdf', **kwargs)
+        copy_builder = copy_builder_cls(env=env, target='pdf', use_cache=False,
+                                        **kwargs)
         subbuilders.append(copy_builder)
 
         super().__init__(env=env, context=context, parameters=parameters,

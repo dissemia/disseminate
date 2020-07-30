@@ -8,8 +8,9 @@ from disseminate.builders.scalesvg import ScaleSvg
 from disseminate.paths import SourcePath, TargetPath
 
 
-def test_scalesvg(env):
-    """Test the ScaleSvg builder."""
+def test_scalesvg_build_with_outfilepath(env):
+    """Test the ScaleSvg builder with the outfilepath specified."""
+
     # 1. Test example with the infilepath and outfilepath specified.
     infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
@@ -40,17 +41,30 @@ def test_scalesvg(env):
     # Make sure we created a scaled svg
     assert 'width="164px" height="146px"' in outfilepath.read_text()
 
-    # 2. Test an example without an outfilepath specified
-    cache_path = env.cache_path / 'media' / 'sample_scale.svg'
+
+def test_scalesvg_build_without_outfilepath(env):
+    """Test the ScaleSvg builder without the outfilepath specified."""
+
+    # 2. Test an example without an outfilepath specified. The use_cache is
+    #    False so the outfilepath will be stored in the target_root
+    infilepath = SourcePath(project_root='tests/builders/examples/ex1',
+                           subpath='sample.pdf')
+    pdf2svg = Pdf2svg(parameters=infilepath, env=env)
+
+    # Create the example svg
+    assert pdf2svg.build(complete=True) == 'done'
+
+    # Create the Scalesvg
+    infilepath2 = pdf2svg.outfilepath
+    outfilepath = env.target_root / 'media' / 'sample_scale.svg'
     scalesvg = ScaleSvg(parameters=[infilepath2, ('scale', 2)], env=env)
 
     assert scalesvg.status == "ready"
-    assert not cache_path.exists()
+    assert not outfilepath.exists()
     status = scalesvg.build(complete=True)
     assert status == 'done'
     assert scalesvg.status == 'done'
-    assert cache_path.exists()
-    assert cache_path.read_text() == outfilepath.read_text()
+    assert outfilepath.exists()
 
     # 3. Test an example with an invalid scale value
     with pytest.raises(ValueError):  # no scale provided

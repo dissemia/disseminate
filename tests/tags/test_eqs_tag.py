@@ -10,67 +10,55 @@ from disseminate.document.receivers import process_headers
 from disseminate import SourcePath
 
 
-@pytest.fixture
-def context_eq(doc):
-    """A fixture to create a context dict suitable for rendering equations."""
-    # Setup of the DocumentContext from a document
-    context = doc.context
-
-    # Setup the context processor
-    process_headers(context)  # add the 'equation_renderer' entry
-
-    return context
-
-
-def test_inline_equation(context_eq):
+def test_inline_equation(context):
     """Test the tex rendering of simple inline equations."""
 
     # Example 1 - simple inline equation
-    eq1 = Eq(name='eq', content='y=x', attributes='', context=context_eq)
+    eq1 = Eq(name='eq', content='y=x', attributes='', context=context)
     assert eq1.tex == "\\ensuremath{y=x}"
 
     # Example 2 - nested inline equation with subtag as content
-    eq2 = Eq(name='eq', content=eq1, attributes='', context=context_eq)
+    eq2 = Eq(name='eq', content=eq1, attributes='', context=context)
     assert eq2.tex == "\\ensuremath{y=x}"
 
     # Example 3 - nested inline equation with subtag as list
     eq3 = Eq(name='eq', content=['test is my ', eq2], attributes='',
-             context=context_eq)
+             context=context)
     assert eq3.tex == "\\ensuremath{test is my y=x}"
 
     # Example 4 - a bold equation
-    eq4 = Eq(name='eq', content="y=x", attributes='bold', context=context_eq)
+    eq4 = Eq(name='eq', content="y=x", attributes='bold', context=context)
     assert eq4.tex == "\\ensuremath{\\boldsymbol{y=x}}"
 
     # Example 5 - an equation with a bold equation subtag
-    eq5 = Eq(name='eq', content=eq4, attributes='', context=context_eq)
+    eq5 = Eq(name='eq', content=eq4, attributes='', context=context)
     assert eq5.tex == "\\ensuremath{\\boldsymbol{y=x}}"
 
     # Example 6 - an equation with a  bold equation subtag in a list
     eq6 = Eq(name='eq', content=['this is my ', eq4], attributes='',
-             context=context_eq)
+             context=context)
     assert eq6.tex == "\\ensuremath{this is my \\boldsymbol{y=x}}"
 
     # Example 7 - a bold equation with an equation subtag in a list
     eq7 = Eq(name='eq', content=['this is my ', eq1], attributes='bold',
-             context=context_eq)
+             context=context)
     assert eq7.tex == "\\ensuremath{\\boldsymbol{this is my y=x}}"
 
 
-def test_equation_typography(context_eq):
+def test_equation_typography(context):
     """Test the tex rendering of equations with text typography (i.e. it
     shouldn't be replaced)."""
 
     # Example 1 - simple equation
-    eq1 = Eq(name='eq', content='y---x', attributes='', context=context_eq)
+    eq1 = Eq(name='eq', content='y---x', attributes='', context=context)
     assert eq1.tex == "\\ensuremath{y---x}"
 
 
-def test_block_equation(context_eq):
+def test_block_equation(context):
     """Test the tex rendering of a simple block equations."""
 
     # 1. simple block equation
-    eq1 = Eq(name='eq', content='y=x', attributes='', context=context_eq,
+    eq1 = Eq(name='eq', content='y=x', attributes='', context=context,
              block_equation=True)
 
     assert eq1.tex == '\\begin{align*} %\ny=x\n\\end{align*}'
@@ -79,26 +67,26 @@ def test_block_equation(context_eq):
     #    requires an integer parameter for the number of columns, so this
     #    show raise a TagError
     eq2 = Eq(name='eq', content='y=x', attributes='env=alignat*',
-             context=context_eq, block_equation=True)
+             context=context, block_equation=True)
     with pytest.raises(TexFormatError):
         eq2.tex
 
     # 3. simple block equation with alternative environment and
     #    positional arguments
     eq3 = Eq(name='eq', content='y=x', attributes='env=alignat* 3',
-             context=context_eq, block_equation=True)
+             context=context, block_equation=True)
     assert eq3.tex == '\\begin{alignat*}{3} %\ny=x\n\\end{alignat*}'
 
 
-def test_block_equation_paragraph(context_eq):
+def test_block_equation_paragraph(context):
     """Test the tex rendering of a simple block equations that are identified
     from paragraphs."""
 
     # 1. a simple block equation.
-    context_eq['process_paragraphs'] = ['root']  # process paragraphs for 'root'
+    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
 
     test1 = "\n\n@eq{y=x}\n\n"
-    root = Tag(name='root', content=test1, attributes='', context=context_eq)
+    root = Tag(name='root', content=test1, attributes='', context=context)
 
     # The tag should be a 'root' wrapping a 'p', wrapping an 'eq'
     p = root.content
@@ -115,7 +103,7 @@ def test_block_equation_paragraph(context_eq):
 
     # 2. Two back-to-back equations
     test1 = "\n\n@eq{a=b}\n\n@eq{x=y}\n\n"
-    root = Tag(name='root', content=test1, attributes='', context=context_eq)
+    root = Tag(name='root', content=test1, attributes='', context=context)
 
     assert root.tex == ('\\begin{align*} %\n'
                         'a=b\n'
@@ -124,9 +112,9 @@ def test_block_equation_paragraph(context_eq):
                         '\\end{align*}')
 
     # 3. a simple inline equation
-    context_eq['process_paragraphs'] = ['root']  # process paragraphs for 'root'
+    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
     test2 = "@eq{y=x}"
-    root = Tag(name='root', content=test2, attributes='', context=context_eq)
+    root = Tag(name='root', content=test2, attributes='', context=context)
     eq = root.content
 
     assert eq.name == 'eq'
@@ -135,60 +123,66 @@ def test_block_equation_paragraph(context_eq):
 
 # html targets
 
-def test_simple_inline_equation_html(context_eq):
+def test_simple_inline_equation_html(context):
     """Test the rendering of simple inline equations for html."""
 
     # setup the context
-    context_eq['relative_links'] = False  # report absolute links
+    context['relative_links'] = False  # report absolute links
 
     # 1. Setup a basic equation tag
-    eq = Eq(name='eq', content='y = x', attributes='', context=context_eq)
-
-    # Check the paths. These are stored by the parent Img tag in the
-    # 'src_filepath' attribute
-    dep_manager = context_eq['dependency_manager']
-    key = SourcePath(project_root=dep_manager.cache_path,
-                     subpath='media/test_9d0626322a.tex')
-    assert eq.infile_filepath() == key
+    eq = Eq(name='eq', content='y = x', attributes='', context=context)
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert (eq.html ==
-            '<img src="/html/media/test_9d0626322a_crop.svg" '
-            'class="eq">\n')
+    html = eq.html
+    assert html == '<img src="/html/media/eq_2df78554597f.svg" class="eq">\n'
+    assert eq.html == html  # running twice should give same answer
 
+    # Check the build
+    build_env = context['environment']
+    html_builder = context['builders']['.html']
+    html_builder.print()
+    svg_builder = html_builder._parallel_builder.subbuilders[4]
+    print(svg_builder, svg_builder.use_cache, svg_builder.use_media,
+          svg_builder.infilepaths, svg_builder.outfilepath)
+    assert html_builder.build(complete=True) == 'done'
+
+    target_filepath = (build_env.target_root / 'html' / 'media' /
+                       'eq_2df78554597f.svg')
+    assert target_filepath.exists()
+
+    assert False
     # 2. Test tag with disseminate formatting
     eq = Eq(name='eq', content='y = @termb{x}', attributes='',
-            context=context_eq)
-
-    # Check the paths. These are stored by the parent Img tag in the
-    # 'src_filepath' attribute
-    key = SourcePath(project_root=dep_manager.cache_path,
-                     subpath='media/test_6f52600261.tex')
-    assert eq.infile_filepath() == key
-
-    # Make sure the @termb has been converted
-    tex_file = eq.infile_filepath().read_text()
-    assert '@termb' not in tex_file
-    assert '\\ensuremath{y = \\boldsymbol{x}}' in tex_file
+            context=context)
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert (eq.html ==
-            '<img src="/html/media/test_6f52600261_crop.svg" class="eq">\n')
+            '<img src="/html/media/eq_9a3b5b06c002.svg" class="eq">\n')
+
+    # Check the build
+    assert html_builder.build(complete=True) == 'done'
+
+    target_filepath = (build_env.target_root / 'html' / 'media' /
+                       'eq_9a3b5b06c002.svg')
+    assert target_filepath.exists()
+    print(target_filepath)
+    # Make sure the @termb has been converted
+    tex = eq.content
+    assert '@termb' not in tex
+    assert '\\ensuremath{y = \\boldsymbol{x}}' in tex
 
     # 3. Test tag with extra attributes
     eq = Eq(name='eq', content='y = @eq[env=alignat* 1]{x}', attributes='',
-            context=context_eq)
+            context=context)
 
     # Check the paths. These are stored by the parent Img tag in the
     # 'src_filepath' attribute
-    key = SourcePath(project_root=dep_manager.cache_path,
-                     subpath='media/test_9d0626322a.tex')
-    assert eq.infile_filepath() == key
+    assert eq.infilepath() == ''
 
     # Make sure the tag has been converted
-    tex_file = eq.infile_filepath().read_text()
+    tex_file = eq.infilepath().read_text()
     assert '@termb' not in tex_file
     assert '\\ensuremath{y = x}' in tex_file
 
@@ -225,8 +219,8 @@ def test_block_equation_html(context_eq):
            '\\end{align*}')
     assert eq.tex == key
 
-    # Check the image infile_filepath and that the contents are in the file
-    img_filepath = eq.infile_filepath()
+    # Check the image infilepath and that the contents are in the file
+    img_filepath = eq.infilepath()
     assert img_filepath.match('test_0ab41c1c66.tex')
     assert img_filepath.is_file()
     assert key in img_filepath.read_text()
@@ -254,8 +248,8 @@ def test_block_equation_html(context_eq):
            '\\end{alignat*}')
     assert eq.tex == key
 
-    # Check the image infile_filepath and that the contents are in the file
-    img_filepath = eq.infile_filepath()
+    # Check the image infilepath and that the contents are in the file
+    img_filepath = eq.infilepath()
     assert not img_filepath.match('test_0ab41c1c66.tex')  # should be different
     assert img_filepath.match('test_35f95c9c65.tex')
     assert img_filepath.is_file()
@@ -286,8 +280,8 @@ def test_block_equation_html(context_eq):
            '\\end{align*}')
     assert eq.tex == key
 
-    # Check the image infile_filepath and that the contents are in the file
-    img_filepath = eq.infile_filepath()
+    # Check the image infilepath and that the contents are in the file
+    img_filepath = eq.infilepath()
     assert img_filepath.is_file()
     assert key in img_filepath.read_text()
 
@@ -374,8 +368,8 @@ def test_block_equation_multiple_targets(context_eq):
 
     # Check the html target
     eq = p.content[1]
-    assert eq.infile_filepath().suffix == '.tex'
-    assert key in eq.infile_filepath().read_text()
+    assert eq.infilepath().suffix == '.tex'
+    assert key in eq.infilepath().read_text()
 
     # 2. Test a block equation with a custom math environment
     test = """
@@ -396,8 +390,8 @@ def test_block_equation_multiple_targets(context_eq):
 
     # Check the html target
     eq = p.content[1]
-    assert eq.infile_filepath().suffix == '.tex'
-    assert key in eq.infile_filepath().read_text()
+    assert eq.infilepath().suffix == '.tex'
+    assert key in eq.infilepath().read_text()
     print(p.html)
     assert p.html == ('<p>\n'
                       '    <img src="/html/media/test_6436975f5e_crop.svg" '

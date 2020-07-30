@@ -8,7 +8,6 @@ from .img import RenderedImg
 class Asy(RenderedImg):
     """The asy tag for inserting asymptote images."""
 
-    src_filepath = None
     active = True
     process_content = False
     in_ext = '.save'

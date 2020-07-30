@@ -13,7 +13,9 @@ class SequentialBuilder(CompositeBuilder):
         subbuilders to follow each other.
     copy : bool
         If True (default), the last subbuilders will be a Copy build to copy
-        the result to the final outfilepath
+        the result to the final outfilepath. This only applies if use_cache is
+        False, in which case the final generated file is copied from the
+        cache directory to the target directory.
     subbuilder_for_outfilename : Optional[:obj:`.builders.Builder`]
         The subbuilder instance to use for generating the outfilepath
         of the SequentialBuilder. Specifying this class name is useful for
@@ -24,6 +26,7 @@ class SequentialBuilder(CompositeBuilder):
     action = 'sequential build'
     parallel = False
 
+    use_cache = False
     chain_on_creation = True
     copy = True
     subbuilder_for_outfilename = None
@@ -33,9 +36,11 @@ class SequentialBuilder(CompositeBuilder):
 
         # Make the last subbuilder a copy builder to copy the result of the
         # sub-builders to the final outfilepath.
-        # This only applies if other subbuilders are present
-        if self.copy and self.subbuilders:
-            cp_builder = Copy(env, use_cache=self.use_cache)
+        # This only applies if other subbuilders are present and the final
+        # result needs to be copied to a non-cache directory--i.e. use_cache
+        # is False.
+        if self.copy and self.subbuilders and not self.use_cache:
+            cp_builder = Copy(env, use_cache=False)
             self.subbuilders.append(cp_builder)
 
         # Order the subbuilders, if subbuilders are present
@@ -62,7 +67,8 @@ class SequentialBuilder(CompositeBuilder):
                 current_parameters = [outfilepath] + subbuilder.not_infilepaths
 
         # Set the copy builder to point to the final outfilepath
-        self.subbuilders[-1].outfilepath = self.outfilepath
+        if isinstance(self.subbuilders[-1], Copy):
+            self.subbuilders[-1].outfilepath = self.outfilepath
 
         # Chain any sequential builder subbuilders
         for subbuilder in self.subbuilders:
@@ -103,20 +109,20 @@ class SequentialBuilder(CompositeBuilder):
         if self._outfilepath is None:
             # By default, use the parent's outfilepath, if no
             # subbuilder_for_outfilename attribute was specified
-            if self.subbuilder_for_outfilename is None:
-                return CompositeBuilder.outfilepath.fget(self)
+            outfilepath = CompositeBuilder.outfilepath.fget(self)
 
             # Otherwise use one from the subbuilders
-            subbuilders = [sb for sb in self.subbuilders
-                           if sb == self.subbuilder_for_outfilename]
-            subbuilder = subbuilders[0] if subbuilders else None
+            subbuilder = self.subbuilder_for_outfilename
 
-            # Get the extension for the outfilepath
+            # Replace the outfilepath's filename
+            if subbuilder is not None:
+                sb_outfilepath = subbuilder.outfilepath
+                outfilepath = outfilepath.use_name(sb_outfilepath.name)
+
+            # Replace the extension
             out_ext = self.outfilepath_ext
-
-            outfilepath = (subbuilder.outfilepath.use_suffix(out_ext)
-                           if subbuilder else
-                           CompositeBuilder.outfilepath.fget(self))
+            if out_ext is not None:
+                outfilepath = outfilepath.use_suffix(out_ext)
 
             self._outfilepath = outfilepath
         return self._outfilepath

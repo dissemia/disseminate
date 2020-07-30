@@ -15,7 +15,7 @@ def test_tif2png_with_find_builder_cls():
     assert builder_cls.__name__ == "Tiff2png"
 
 
-def test_tif2png(env):
+def test_tif2png_without_outfilepath(env):
     """Test the Tif2Png and Tiff2Png builders."""
     # Make sure these builders are active
     assert Tif2png.active
@@ -23,12 +23,12 @@ def test_tif2png(env):
 
     # 1. Try a conversions (.tif -> .png)
     infilepath = SourcePath('tests/builders/examples/ex2', 'example-1.tif')
-    cache_path = TargetPath(env.cache_path, 'media/example-1.png')
+    outfilepath = TargetPath(env.target_root, 'media/example-1.png')
 
     tif2png = Tif2png(env, parameters=infilepath)
 
     assert tif2png.status == 'ready'
-    assert tif2png.outfilepath == cache_path
+    assert tif2png.outfilepath == outfilepath
     assert not tif2png.outfilepath.exists()
 
     # Build

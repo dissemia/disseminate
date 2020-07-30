@@ -18,7 +18,7 @@ def test_pdf2svg_with_find_builder_cls():
     assert builder_cls.__name__ == "Pdf2SvgCropScale"
 
 
-def test_pdf2svg(env):
+def test_pdf2svg_build_with_outfilepath(env):
     """Test the Pdf2svg builder."""
     # 1. Test example with the infilepath and outfilepath specified.
     infilepath = SourcePath(project_root='tests/builders/examples/ex1',
@@ -45,8 +45,9 @@ def test_pdf2svg(env):
     assert '<?xml version="1.0" encoding="UTF-8"?>' in outfilepath.read_text()
 
 
-def test_pdf2svg_pdfcrop(env):
+def test_pdf2svg_pdfcrop_with_outfilepath(env):
     """Test the Pdf2svg builder with a PdfCrop subbuilder."""
+
     # 1. Test example with the infilepath and outfilepath specified.
     infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
@@ -72,17 +73,23 @@ def test_pdf2svg_pdfcrop(env):
     assert pdfcrop.parameters == [infilepath, ('crop', 20)]
     assert pdfcrop.infilepaths == [infilepath]
     assert pdfcrop.outfilepath.match('*.pdf')
+    assert pdfcrop.use_cache
+
     assert subpdf2svg.parameters == [pdfcrop.outfilepath, ('crop', 20)]
     assert subpdf2svg.infilepaths == [pdfcrop.outfilepath]
     assert subpdf2svg.outfilepath.match('*.svg')
+    assert subpdf2svg.use_cache
+
     assert copy.parameters == [subpdf2svg.outfilepath, ('crop', 20)]
     assert copy.infilepaths == [subpdf2svg.outfilepath]
     assert copy.outfilepath == outfilepath
+    assert not copy.use_cache
 
     # Check the parameters and outfilepath for the pdf2svg builder
     assert pdf2svg.parameters == [infilepath, ('crop', 20)]
     assert pdf2svg.infilepaths == [infilepath]
     assert pdf2svg.outfilepath == outfilepath
+    assert not pdf2svg.use_cache
 
     # Check path types for the builders
     for builder in (pdfcrop, subpdf2svg, copy, pdf2svg):
@@ -101,21 +108,44 @@ def test_pdf2svg_pdfcrop(env):
     assert 'width="65.5156pt" height="58.2628pt"' not in svg_text  # if not crop
     assert 'width="30.70147pt" height="29.60897pt"' in svg_text
 
-    # 2. Test example without the outfilepath specified. The final final will
-    #    be placed in a cached folder
-    cache_path = env.cache_path / 'media/sample.svg'
+
+def test_pdf2svg_pdfcrop_without_outfilepath(env):
+    """Test the Pdf2svg builder with a PdfCrop subbuilder."""
+
+    # 2. Test example without the outfilepath specified. Since use_cache is
+    #    False, the product will be placed in the target root, but the
+    #    intermediate files will not be
+    infilepath = SourcePath(project_root='tests/builders/examples/ex1',
+                            subpath='sample.pdf')
+    outfilepath = env.target_root / 'media' / 'sample.svg'
     pdf2svg = Pdf2SvgCropScale(parameters=[infilepath, ('crop', 20)],
                                env=env)
-    assert not cache_path.exists()
+    assert not outfilepath.exists()
+    assert not pdf2svg.use_cache
+
+    # Check that the intermediate sub-builders use_caches
+    pdfcrop = pdf2svg.subbuilders[0]
+    assert pdfcrop.use_cache
+
+    subpdf2svg = pdf2svg.subbuilders[1]
+    assert subpdf2svg.use_cache
+
+    copy = pdf2svg.subbuilders[2]
+    assert not copy.use_cache
 
     status = pdf2svg.build(complete=True)
     assert status == 'done'
+
+    # Check the product
     assert pdf2svg.outfilepath.exists()
-    assert pdf2svg.outfilepath.read_text() == svg_text
+    svg_text = outfilepath.read_text()
+    assert 'width="65.5156pt" height="58.2628pt"' not in svg_text  # if not crop
+    assert 'width="30.70147pt" height="29.60897pt"' in svg_text
 
 
-def test_pdf2svg_scalesvg(env):
+def test_pdf2svg_scalesvg_with_outfilepath(env):
     """Test the Pdf2svg builder with a ScaleSvg subbuilder."""
+
     # 1. Test example with the infilepath and outfilepath specified.
     infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
@@ -138,18 +168,22 @@ def test_pdf2svg_scalesvg(env):
     copy = pdf2svg.subbuilders[2]
 
     # Check the parameters and outfilepath
+    assert subpdf2svg.use_cache
     assert subpdf2svg.parameters == [infilepath, ('scale', 2)]
     assert subpdf2svg.infilepaths == [infilepath]
     assert subpdf2svg.outfilepath.match('*.svg')
 
+    assert scalesvg.use_cache
     assert scalesvg.parameters == [subpdf2svg.outfilepath, ('scale', 2)]
     assert scalesvg.infilepaths == [subpdf2svg.outfilepath]
     assert scalesvg.outfilepath.match('*.svg')
 
+    assert not copy.use_cache
     assert copy.parameters == [scalesvg.outfilepath, ('scale', 2)]
     assert copy.infilepaths == [scalesvg.outfilepath]
     assert copy.outfilepath == outfilepath
 
+    assert not pdf2svg.use_cache
     assert pdf2svg.parameters == [infilepath, ('scale', 2)]
     assert pdf2svg.infilepaths == [infilepath]
     assert pdf2svg.outfilepath == outfilepath
@@ -169,20 +203,42 @@ def test_pdf2svg_scalesvg(env):
 
     # Make sure the produced svg is cropped
     svg_text = outfilepath.read_text()
-    assert 'width="82px" height="73px"' not in svg_text  # if not crop
+    assert 'width="82px" height="73px"' not in svg_text  # if not scaled
     assert 'width="164px" height="146px"' in svg_text
 
     # Remove all intermediary files
     for builder in [subpdf2svg, scalesvg]:
         builder.outfilepath.unlink()
 
+
+def test_pdf2svg_scalesvg_without_outfilepath(env):
+    """Test the Pdf2svg builder with a ScaleSvg subbuilder."""
+
     # 2. Test example without the outfilepath specified. The final file will
     #    be placed in a cached folder
-    cache_path = env.cache_path / 'media/sample.svg'
+    infilepath = SourcePath(project_root='tests/builders/examples/ex1',
+                            subpath='sample.pdf')
+    outfilepath = env.target_root / 'media' / 'sample.svg'
     pdf2svg = Pdf2SvgCropScale(parameters=[infilepath, ('scale', 2)], env=env)
 
-    assert not cache_path.exists()
+    assert not outfilepath.exists()
+    assert not pdf2svg.use_cache
+
+    # Check that the sub-builders use caches
+    subpdf2svg = pdf2svg.subbuilders[0]
+    assert subpdf2svg.use_cache
+
+    scalesvg = pdf2svg.subbuilders[1]
+    assert scalesvg.use_cache
+
+    copy = pdf2svg.subbuilders[2]
+    assert not copy.use_cache
+
+    # Check the build and the product
     status = pdf2svg.build(complete=True)
     assert status == 'done'
-    assert cache_path.exists()
-    assert cache_path.read_text() == svg_text
+    assert outfilepath.exists()
+
+    svg_text = outfilepath.read_text()
+    assert 'width="82px" height="73px"' not in svg_text  # if not scaled
+    assert 'width="164px" height="146px"' in svg_text

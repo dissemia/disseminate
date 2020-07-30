@@ -7,9 +7,6 @@ from .tag import Tag, TagError
 from .utils import format_attribute_width
 from ..paths.utils import find_files
 from ..formats import tex_cmd
-from ..utils.string import hashtxt
-from ..paths import SourcePath
-from .. import settings
 
 
 class ImgFileNotFound(TagError):
@@ -177,10 +174,11 @@ class Img(Tag):
         self._outfilepaths[target] = build.outfilepath
         return self._outfilepaths[target]
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, context=None,
+                mathmode=False, level=1):
         # Add the file dependency
         outfilepath = self.add_file(target='.tex', content=content,
-                                    attributes=attributes)
+                                    context=context, attributes=attributes)
 
         # Format the width
         attributes = attributes or self.attributes
@@ -195,10 +193,10 @@ class Img(Tag):
         return tex_cmd(cmd='includegraphics', attributes=attrs,
                        formatted_content=str(dest_filepath))
 
-    def html_fmt(self, content=None, attributes=None, level=1):
+    def html_fmt(self, content=None, attributes=None, context=None, level=1):
         # Add the file dependency
         outfilepath = self.add_file(target='.html', content=content,
-                                    attributes=attributes)
+                                    context=context, attributes=attributes)
         url = outfilepath.get_url(context=self.context)
 
         # Format the width and attributes
@@ -241,7 +239,9 @@ class RenderedImg(Img):
 
         builder = target_builder.add_build(parameters=parameters,
                                            in_ext=self.in_ext,
-                                           target=target)
+                                           context=context,
+                                           target=target,
+                                           use_cache=True)
 
         # Set the produced file to the infilepath of this tag
         self._infilepath = builder.outfilepath

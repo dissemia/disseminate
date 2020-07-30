@@ -10,7 +10,7 @@ from distutils.spawn import find_executable
 
 import pathvalidate
 
-from .utils import generate_outfilepath
+from .utils import generate_outfilepath, generate_mock_parameters
 from .exceptions import runtime_error, BuildError
 from ..utils.file import mkdir_p
 from ..utils.classes import all_subclasses
@@ -53,7 +53,8 @@ class Builder(metaclass=ABCMeta):
         outfilepath will be automatically generated.
     use_cache : Optional[bool]
         If True, set the builder outfilepath into the cache_path from the
-        builder environment.
+        builder environment. Note that this will also place temporary files
+        created by the builder in the same directory.
     use_media : Optional[bool]
         If True, set the builder outfilepath subpath in the media_path in the
         build environment context, if specified.
@@ -106,7 +107,7 @@ class Builder(metaclass=ABCMeta):
 
     priority = None
     required_execs = None
-    use_cache = True
+    use_cache = False
     use_media = True
 
     infilepath_ext = None
@@ -311,8 +312,23 @@ class Builder(metaclass=ABCMeta):
         outfilepath = self._outfilepath
 
         if outfilepath is None:
+            # Generate the parameters for the generate_outfilepath
+            infilepaths = self.infilepaths
+            if infilepaths:
+                # Use the filepaths for the input files, if available
+                parms = infilepaths
+            else:
+                # Otherwise generate mock filepath parameters
+                context = getattr(self, 'context', None)
+                parms = generate_mock_parameters(env=self.env,
+                                                 context=context,
+                                                 parameters=self.parameters,
+                                                 ext=self.infilepath_ext)
+
+            # Use the given parameters to generate a filepath for the output
+            # file
             outfilepath = generate_outfilepath(env=self.env,
-                                               parameters=self.parameters,
+                                               parameters=parms,
                                                target=self.target,
                                                append=self.outfilepath_append,
                                                ext=self.outfilepath_ext,

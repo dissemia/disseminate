@@ -22,38 +22,41 @@ def test_builder_creation(env):
 def test_builder_filepaths(env):
     """Test the Builder filepaths using a concrete builder (PdfCrop)"""
 
-    # 1. Try an example without specifying parameters or outfilepath
+    # 1. Try an example without specifying parameters or outfilepath.
     pdfcrop = PdfCrop(env=env)
     assert pdfcrop.parameters == []
-    assert pdfcrop.outfilepath is None
+    assert (pdfcrop.outfilepath ==
+            env.target_root / 'media' / 'd41d8cd98f00_crop.pdf')
 
-    # 2. Try an example with specifying an infilepath but no outfilepath.
+    # 2. Try an example with specifying an infilepath but no outfilepath. By
+    #    default, use_cache is False so the product is placed in the
+    #     arget_root
     infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
-    cachepath = TargetPath(target_root=env.cache_path,
+    outfilepath = TargetPath(target_root=env.target_root,
                            subpath='media/sample_crop.pdf')
-    pdfcrop= PdfCrop(parameters=infilepath, env=env)
+    pdfcrop = PdfCrop(parameters=infilepath, env=env)
     assert pdfcrop.parameters == [infilepath]
-    assert pdfcrop.outfilepath == cachepath
+    assert pdfcrop.outfilepath == outfilepath
 
     # 3. Try an example with specifying an infilepath but no outfilepath.
     #    This time, use a document target
     infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
-    cachepath = TargetPath(target_root=env.cache_path,
-                           target='html',
-                           subpath='media/sample_crop.pdf')
+    outfilepath = TargetPath(target_root=env.target_root,
+                            target='html',
+                            subpath='media/sample_crop.pdf')
     pdfcrop = PdfCrop(parameters=infilepath, target='html', env=env)
     assert pdfcrop.parameters == [infilepath]
-    assert pdfcrop.outfilepath == cachepath
+    assert pdfcrop.outfilepath == outfilepath
 
     # 5. Try an example with specifying an outfilepath
-    targetpath = TargetPath(target_root=env.context['target_root'],
-                            subpath='sample_crop.pdf')
-    pdfcrop = PdfCrop(parameters=infilepath, outfilepath=targetpath,
+    outfilepath = TargetPath(target_root=env.context['target_root'],
+                             subpath='sample_crop.pdf')
+    pdfcrop = PdfCrop(parameters=infilepath, outfilepath=outfilepath,
                       env=env)
     assert pdfcrop.parameters == [infilepath]
-    assert pdfcrop.outfilepath == targetpath
+    assert pdfcrop.outfilepath == outfilepath
 
 
 def test_builder_get_parameter(env):

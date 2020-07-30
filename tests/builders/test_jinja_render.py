@@ -28,8 +28,10 @@ def test_jinja_render_with_find_builder_cls():
     assert builder_cls.__name__ == "JinjaRender"
 
 
-def test_jinja_render_setup(env):
-    """Test the setup of the JinjaRender builder."""
+def test_jinja_render_setup_with_outfilepath(env):
+    """Test the setup of the JinjaRender builder with an outfilepath
+    specified."""
+
     context = env.context
     target_root = context['target_root']
 
@@ -76,22 +78,30 @@ def test_jinja_render_setup(env):
     # Check the outfilepath
     assert render_build.outfilepath == outfilepath
 
+
+def test_jinja_render_setup_without_outfilepath(env):
+    """Test the setup of the JinjaRender builder with an outfilepath
+    specified."""
+
+    context = env.context
+    target_root = context['target_root']
+
     # 2. Test an example without an outfilepath. However, a target must be
     #    specified.
+    tag = namedtuple('tag', 'html')
     context['body'] = tag(html="My body")  # expects {{ body.html }}
+
     render_build = JinjaRender(env, context=context, render_ext='.html')
     assert len(render_build.parameters) == 8
     assert len(render_build.infilepaths) == 7
-    assert render_build.outfilepath.target_root == env.cache_path
-    assert str(render_build.outfilepath.subpath) == ('media/template_'
-                                                     '9c695c53185d.html')
+    assert (render_build.outfilepath ==
+            env.target_root / 'media' / 'template_9c695c53185d.html')
 
     # A new content body produces a different hash
     context['body'] = tag(html="My new body")  # expects {{ body.html }}
     render_build = JinjaRender(env, context=context, render_ext='.html')
-    assert render_build.outfilepath.target_root == env.cache_path
-    assert str(render_build.outfilepath.subpath) == ('media/template_'
-                                                     '10d3c1460f63.html')
+    assert (render_build.outfilepath ==
+            env.target_root / 'media' / 'template_10d3c1460f63.html')
 
     # 3. Test an example without an outfilepath or target specified. An
     #    assertion error is raised

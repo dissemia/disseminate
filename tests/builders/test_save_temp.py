@@ -14,8 +14,9 @@ def test_save_temp_file_with_find_builder_cls():
     assert builder_cls.__name__ == "SaveTempFile"
 
 
-def test_save_temp_file_setup(env):
-    """Test the setup of the SaveTempFile builder."""
+def test_save_temp_file_setup_with_outfilepath(env):
+    """Test the setup of the SaveTempFile builder with an outfilepath
+    specified."""
     context = env.context
     target_root = context['target_root']
 
@@ -27,9 +28,16 @@ def test_save_temp_file_setup(env):
 
     # Check the paths
     assert len(save_build.parameters) == 1
-    assert save_build.save_ext == '.test'
+    assert save_build.infilepath_ext == '.test'
     assert save_build.parameters == ['my test']
     assert save_build.outfilepath == outfilepath
+
+
+def test_save_temp_file_setup_without_outfilepath(env):
+    """Test the setup of the SaveTempFile builder without an outfilepath
+    specified."""
+    context = env.context
+    target_root = context['target_root']
 
     # 2. Test an example without an outfilepath. However, a target must be
     #    specified.
@@ -38,12 +46,11 @@ def test_save_temp_file_setup(env):
 
     # Check the paths
     assert len(save_build.parameters) == 1
-    assert save_build.save_ext == '.test'
+    assert save_build.infilepath_ext == '.test'
     assert save_build.parameters == ['my test']
 
-    assert save_build.outfilepath.target_root == env.cache_path
-    assert str(save_build.outfilepath.subpath) == ('media/test_'
-                                                   '1488d34f91f2.test')
+    assert (save_build.outfilepath ==
+            env.target_root / 'media' / 'test_1488d34f91f2.test')
 
     # 3. Test an example with a src_filepath in the context
     context['src_filepath'] = SourcePath(project_root=env.project_root,
@@ -53,17 +60,11 @@ def test_save_temp_file_setup(env):
 
     # Check the paths
     assert len(save_build.parameters) == 1
-    assert save_build.save_ext == '.test'
+    assert save_build.infilepath_ext == '.test'
     assert save_build.parameters == ['my test']
 
-    assert save_build.outfilepath.target_root == env.cache_path
-    assert str(save_build.outfilepath.subpath) == ('media/test/test_'
-                                                   '1488d34f91f2.test')
-
-    # 4. Test an example without an outfilepath or target specified. An
-    #    assertion error is raised
-    with pytest.raises(AssertionError):
-        SaveTempFile(env=env, context=context)
+    assert (save_build.outfilepath ==
+            env.target_root / 'media' / 'test/test_1488d34f91f2.test')
 
 
 def test_save_temp_file_build(env):

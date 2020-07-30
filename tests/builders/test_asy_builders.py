@@ -34,8 +34,8 @@ def test_saveasy2svg_with_find_builder_cls():
     assert builder_cls.__name__ == "SaveAsySvg"
 
 
-def test_asy2pdf_setup(env):
-    """Test the setup of the Asy2pdf builder."""
+def test_asy2pdf_setup_with_outfilepath(env):
+    """Test the setup of the Asy2pdf builder with an outfilepath."""
     target_root = env.context['target_root']
     context = env.context
 
@@ -50,7 +50,115 @@ def test_asy2pdf_setup(env):
     assert asy2pdf.outfilepath == outfilepath
 
 
-def test_asy2pdf_file(env):
+def test_asy2pdf_setup_without_outfilepath(env):
+    """Test the setup of the Asy2pdf builder without outfilepath."""
+    target_root = env.context['target_root']
+    context = env.context
+
+    # 1. Setup a build with an outfilepath
+    infilepath = SourcePath(project_root='tests/builders/examples/ex7',
+                            subpath='diagram.asy')
+    outfilepath = TargetPath(target_root=target_root,
+                             subpath='media/diagram.pdf')
+    asy2pdf = Asy2pdf(env=env, parameters=infilepath)
+
+    assert asy2pdf.infilepaths == [infilepath]
+    assert asy2pdf.outfilepath == outfilepath
+
+
+def test_saveaspdf_setup_with_outfilepath(env):
+    """Test the setup of the SaveAsyPdf Builder without outfilepath."""
+    target_root = env.context['target_root']
+    context = env.context
+
+    # 1. Setup a build with an outfilepath
+    asystring = ("size(200);\n"
+                 "draw(unitcircle);")
+    outfilepath = TargetPath(target_root=target_root,
+                             subpath='final.pdf')
+    asy2pdf = SaveAsyPdf(env=env, parameters=asystring, outfilepath=outfilepath,
+                         context=context)
+
+    assert asy2pdf.outfilepath == outfilepath
+
+
+def test_saveaspdf_setup_without_outfilepath(env):
+    """Test the setup of the SaveAsyPdf Builder without outfilepath."""
+    target_root = env.context['target_root']
+    context = env.context
+
+    # 1. Setup a build with an outfilepath
+    asystring = ("size(200);\n"
+                 "draw(unitcircle);")
+    asy2pdf = SaveAsyPdf(env=env, parameters=asystring, context=context)
+
+    assert (asy2pdf.outfilepath ==
+            env.target_root / 'media' / 'test_64dffc6ac7c2.pdf')
+
+
+def test_asy2svg_setup_with_outfilepath(env):
+    """Test the setup of the Asy2svg builder with an outfilepath."""
+    target_root = env.context['target_root']
+    context = env.context
+
+    # 1. Setup a build with an outfilepath
+    infilepath = SourcePath(project_root='tests/builders/examples/ex7',
+                            subpath='diagram.asy')
+    outfilepath = TargetPath(target_root=target_root,
+                             subpath='final.svg')
+    asy2svg = Asy2svg(env=env, parameters=infilepath, outfilepath=outfilepath)
+
+    assert asy2svg.infilepaths == [infilepath]
+    assert asy2svg.outfilepath == outfilepath
+
+
+def test_asy2svg_setup_without_outfilepath(env):
+    """Test the setup of the Asy2svg builder without outfilepath."""
+    target_root = env.context['target_root']
+    context = env.context
+
+    # 1. Setup a build with an outfilepath
+    infilepath = SourcePath(project_root='tests/builders/examples/ex7',
+                            subpath='diagram.asy')
+    outfilepath = TargetPath(target_root=target_root,
+                             subpath='media/diagram.svg')
+    asy2svg = Asy2svg(env=env, parameters=infilepath)
+
+    assert asy2svg.infilepaths == [infilepath]
+    assert asy2svg.outfilepath == outfilepath
+
+
+def test_saveassvg_setup_with_outfilepath(env):
+    """Test the setup of the SaveAsySvg Builder without outfilepath."""
+    target_root = env.context['target_root']
+    context = env.context
+
+    # 1. Setup a build with an outfilepath
+    asystring = ("size(200);\n"
+                 "draw(unitcircle);")
+    outfilepath = TargetPath(target_root=target_root,
+                             subpath='final.svg')
+    asy2svg = SaveAsySvg(env=env, parameters=asystring, outfilepath=outfilepath,
+                         context=context)
+
+    assert asy2svg.outfilepath == outfilepath
+
+
+def test_saveassvg_setup_without_outfilepath(env):
+    """Test the setup of the SaveAsySvg Builder without outfilepath."""
+    target_root = env.context['target_root']
+    context = env.context
+
+    # 1. Setup a build with an outfilepath
+    asystring = ("size(200);\n"
+                 "draw(unitcircle);")
+    asy2svg = SaveAsySvg(env=env, parameters=asystring, context=context)
+
+    assert (asy2svg.outfilepath ==
+            env.target_root / 'media' / 'test_64dffc6ac7c2.svg')
+
+
+def test_asy2pdf_build(env):
     """Test the Asy2pdf builder with an .asy file."""
     target_root = env.target_root
 
@@ -79,7 +187,7 @@ def test_asy2pdf_file(env):
     assert b'%PDF' in outfilepath.read_bytes()
 
 
-def test_asy2svg_file(env):
+def test_asy2svg_build(env):
     """Test the Asy2svg builder with an .asy file."""
     target_root = env.target_root
 

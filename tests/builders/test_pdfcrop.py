@@ -7,16 +7,21 @@ from disseminate.builders.pdfcrop import PdfCrop
 from disseminate.paths import SourcePath, TargetPath
 
 
-def test_pdfcrop(env):
+def test_pdfcrop_build_missing_parameters(env):
     """Test the PdfCrop builder."""
 
     # 1. Test examples without the parameters specified.
-    #    The builder should be available, but the status should be missing
+    #    The builder should be available, but the status should be missing.
+    #    The use_cache is False
     pdfcrop = PdfCrop(env=env)
 
     # Make sure pdfcrop is available and read
     assert pdfcrop.active
     assert pdfcrop.status == "missing (parameters)"
+
+
+def test_pdfcrop_build_with_outfilepath(env):
+    """Test the PdfCrop builder with the outfilepath specified."""
 
     # 2. Test example with the infilepath and outfilepath specified.
     #    The builder should be available, but the status should be missing
@@ -44,9 +49,15 @@ def test_pdfcrop(env):
     assert pdfcrop.status == 'done'
     assert outfilepath.exists()
 
-    # 3. Test an example without specifying the outfilepath. This should
-    #    automatically save it in a cache diretory from the environment
-    cache_path = env.cache_path / 'media/sample_crop.pdf'
+
+def test_pdfcrop_build_without_outfilepath(env):
+    """Test the PdfCrop builder without the outfilepath specified."""
+
+    # 3. Test an example without specifying the outfilepath. Since use_cache is
+    #    False, it'll store it in the target_root directory.
+    infilepath = SourcePath(project_root='tests/builders/examples/ex1',
+                            subpath='sample.pdf')
+    outfilepath = env.target_root / 'media' / 'sample_crop.pdf'
     pdfcrop = PdfCrop(parameters=infilepath, env=env)
 
     # Make sure pdfcrop is available and read
@@ -55,11 +66,11 @@ def test_pdfcrop(env):
     assert pdfcrop.status == 'ready'
 
     # Now run the build.
-    assert not cache_path.exists()
+    assert not outfilepath.exists()
     status = pdfcrop.build(complete=True)
     assert status == 'done'
     assert pdfcrop.status == 'done'
-    assert cache_path.exists()
+    assert outfilepath.exists()
 
 
 def test_pdf_crop_percentage(env):

@@ -26,20 +26,22 @@ class SaveAsyPdf(SequentialBuilder):
     infilepath_ext = '.save'
     outfilepath_ext = '.pdf'
 
-    def __init__(self, env, subbuilders=None, **kwargs):
+    def __init__(self, env, subbuilders=None, use_cache=None, **kwargs):
         # setup the subbuilders
         subbuilders = subbuilders if subbuilders is not None else []
 
         # Setup a SaveTempFile file to save the Asy file
-        save_temp = SaveTempFile(env=env, save_ext='.asy', **kwargs)
+        save_temp = SaveTempFile(env=env, save_ext='.asy', use_cache=True,
+                                 **kwargs)
         subbuilders.append(save_temp)
         self.subbuilder_for_outfilename = save_temp
 
         # Setup a Asy2pdf builder
-        asy2pdf = Asy2pdf(env=env, **kwargs)
+        asy2pdf = Asy2pdf(env=env, use_cache=True, **kwargs)
         subbuilders.append(asy2pdf)
 
-        super().__init__(env=env, subbuilders=subbuilders, **kwargs)
+        super().__init__(env=env, subbuilders=subbuilders, use_cache=use_cache,
+                         **kwargs)
 
 
 class Asy2svg(SequentialBuilder):
@@ -52,21 +54,23 @@ class Asy2svg(SequentialBuilder):
     infilepath_ext = '.asy'
     outfilepath_ext = '.svg'
 
-    def __init__(self, env, subbuilders=None, target=None, **kwargs):
+    def __init__(self, env, subbuilders=None, target=None, use_cache=None,
+                 **kwargs):
         # Setup parameters
         subbuilders = (list(subbuilders) if isinstance(subbuilders, list) or
                        isinstance(subbuilders, tuple) else [])
 
         # Create the subbuilders
-        asy2pdf = Asy2pdf(env=env, target=target, **kwargs)
+        asy2pdf = Asy2pdf(env=env, target=target, use_cache=True, **kwargs)
         subbuilders.append(asy2pdf)
 
         pdf2svg_cls = self.find_builder_cls(in_ext='.pdf', out_ext='.svg',
                                             target=target)
-        pdf2svg = pdf2svg_cls(env=env, target=target, **kwargs)
+        pdf2svg = pdf2svg_cls(env=env, target=target, use_cache=True, **kwargs)
         subbuilders.append(pdf2svg)
 
-        super().__init__(env, subbuilders=subbuilders, **kwargs)
+        super().__init__(env, subbuilders=subbuilders, use_cache=use_cache,
+                         **kwargs)
 
 
 class SaveAsySvg(SequentialBuilder):
@@ -77,17 +81,19 @@ class SaveAsySvg(SequentialBuilder):
     infilepath_ext = '.save'
     outfilepath_ext = '.svg'
 
-    def __init__(self, env, subbuilders=None, **kwargs):
+    def __init__(self, env, subbuilders=None, use_cache=None, **kwargs):
         # setup the subbuilders
         subbuilders = subbuilders if subbuilders is not None else []
 
         # Setup a SaveTempFile file to save the Asy file
-        save_temp = SaveTempFile(env=env, save_ext='.asy', **kwargs)
+        save_temp = SaveTempFile(env=env, save_ext='.asy', use_cache=True,
+                                 **kwargs)
         subbuilders.append(save_temp)
         self.subbuilder_for_outfilename = save_temp
 
         # Setup a Asy2pdf builder
-        asy2pdf = Asy2svg(env=env, **kwargs)
+        asy2pdf = Asy2svg(env=env, use_cache=True, **kwargs)
         subbuilders.append(asy2pdf)
 
-        super().__init__(env=env, subbuilders=subbuilders, **kwargs)
+        super().__init__(env=env, subbuilders=subbuilders, use_cache=use_cache,
+                         **kwargs)

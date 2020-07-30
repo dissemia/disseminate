@@ -36,6 +36,7 @@ class TargetBuilder(SequentialBuilder):
     context = weakattr()
 
     use_media = False
+    use_cache = False
     chain_on_creation = False
     copy = False
     clear_done = False
@@ -147,14 +148,15 @@ class TargetBuilder(SequentialBuilder):
             SequentialBuilder.outfilepath.fset(self, value)
 
     def add_build(self, parameters, outfilepath=None, context=None,
-                  **kwargs):
+                  use_cache=None, **kwargs):
         """Create and add a sub-builder to the composite builder."""
+        use_cache = use_cache or self.use_cache
 
         par_builder = self._parallel_builder
         builder = par_builder.add_build(parameters=parameters,
                                         outfilepath=outfilepath,
                                         context=context,
-                                        use_cache=self.use_cache,
+                                        use_cache=use_cache,
                                         **kwargs)
 
         # Make sure the newly created builder has the same cache settings as
