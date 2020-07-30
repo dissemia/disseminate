@@ -58,7 +58,7 @@ def test_pdf_builder_setup_pdf_in_targets(env):
     assert copy_builder.target == 'pdf'
     assert copy_builder.parameters == [target_cache_pdf_filepath]
     assert copy_builder.outfilepath == target_pdf_filepath
-    
+
     assert builder.outfilepath == target_pdf_filepath
     assert not builder.use_cache
 
@@ -195,14 +195,19 @@ def test_pdf_builder_setup_not_in_targets(env):
     assert builder.status == 'ready'
 
 
-def test_pdf_builder_simple(env):
-    """Test a simple build with the PdfBuilder """
+def test_pdf_builder_simple_pdf(env):
+    """Test a simple build with the PdfBuilder with pdf target"""
     context = env.context
-    tmpdir = context['target_root']
+    target_root = env.target_root
+    context['targets'] |= {'pdf'}
+    context['targets'] -= {'tex'}
+    context['builders'].clear()  # Reset the builders
 
     # 1. Setup the builder without an outfilepath
-    target_filepath = TargetPath(target_root=tmpdir / '.cache', target='pdf',
-                                 subpath='test.pdf')
+    pdf_filepath = TargetPath(target_root=target_root, target='pdf',
+                              subpath='test.pdf')
+    tex_filepath = TargetPath(target_root=target_root, target='tex',
+                              subpath='test.tex')
     tag = namedtuple('tag', 'tex')
     context['body'] = tag(tex="My body")  # expects {{ body.tex }}
 
@@ -211,12 +216,57 @@ def test_pdf_builder_simple(env):
     # check the build
     assert builder.build_needed()
     assert builder.status == 'ready'
-    assert not target_filepath.exists()
+    assert not pdf_filepath.exists()
+    assert not tex_filepath.exists()
 
     # Try the build
     assert builder.build(complete=True) == 'done'
     assert builder.status == 'done'
-    assert target_filepath.exists()
+
+    # Check to make sure the target directory has the final file and nothing
+    # else
+    assert pdf_filepath.exists()
+    assert not tex_filepath.exists()
+    assert len(list(pdf_filepath.parent.glob('*'))) == 1  # only test.pdf
+    assert len(list(tex_filepath.parent.glob('*'))) == 0  # only test.tex
+
+    # New builders don't need to rebuild.
+    builder = PdfBuilder(env, context=context)
+    assert builder.status == 'done'
+
+
+def test_pdf_builder_simple_tex_pdf(env):
+    """Test a simple build with the PdfBuilder with tex and pdf targets"""
+    context = env.context
+    target_root = env.target_root
+    context['targets'] |= {'tex', 'pdf'}
+
+    # 1. Setup the builder without an outfilepath
+    pdf_filepath = TargetPath(target_root=target_root, target='pdf',
+                              subpath='test.pdf')
+    tex_filepath = TargetPath(target_root=target_root, target='tex',
+                              subpath='test.tex')
+    tag = namedtuple('tag', 'tex')
+    context['body'] = tag(tex="My body")  # expects {{ body.tex }}
+
+    builder = PdfBuilder(env, context=context)
+
+    # check the build
+    assert builder.build_needed()
+    assert builder.status == 'ready'
+    assert not pdf_filepath.exists()
+    assert not tex_filepath.exists()
+
+    # Try the build
+    assert builder.build(complete=True) == 'done'
+    assert builder.status == 'done'
+
+    # Check to make sure the target directory has the final file and nothing
+    # else
+    assert pdf_filepath.exists()
+    assert tex_filepath.exists()
+    assert len(list(pdf_filepath.parent.glob('*'))) == 1  # only test.pdf
+    assert len(list(tex_filepath.parent.glob('*'))) == 1  # only test.tex
 
     # New builders don't need to rebuild.
     builder = PdfBuilder(env, context=context)
