@@ -8,7 +8,7 @@ from disseminate.builders.target_builders.html_builder import HtmlBuilder
 from disseminate.paths import SourcePath, TargetPath
 
 
-def test_html_builder_setup_in_targets(env):
+def test_html_builder_setup_html(env):
     """Test the setup of a HtmlBuilder when 'html' is listed as a target
     in the context['targets']"""
     context = env.context
@@ -72,7 +72,7 @@ def test_html_builder_setup_in_targets(env):
     assert pdf2svg.outfilepath == target_filepath
 
 
-def test_html_builder_setup_not_in_targets(env):
+def test_html_builder_setup(env):
     """Test the setup of a HtmlBuilder when 'html' is not listed as a target
     in the context['targets']"""
     context = env.context
@@ -279,8 +279,9 @@ def test_html_builder_inherited_doc(load_example):
     assert builder.status == 'done'
 
 
-def test_html_builder_add_build(load_example):
-    """Test the HtmlBuilder with an added dependency through add_build."""
+def test_html_builder_add_build_pdf2svg(load_example):
+    """Test the HtmlBuilder with an added dependency through add_build
+     (Pdf2SvgCropScale)."""
 
     # 1. Example 5 includes a media file that must be converted from pdf->svg
     #    for html
@@ -313,7 +314,7 @@ def test_html_builder_add_build(load_example):
                     subpath='media/images/NMR/hsqc_bw.svg')
 
     # Check the subbuilder
-    # don't use a cache path gut use media path
+    # don't use a cache path but use media path
     assert not build.use_cache
     assert build.use_media
     assert build.parameters[0] == sp
@@ -330,7 +331,80 @@ def test_html_builder_add_build(load_example):
 
     # Check that the files were created
     assert tp.is_file()
-    assert "<svg xmlns" in tp.read_text()  # make sure it's an svg
+    svg = tp.read_text()
+    assert "<svg xmlns" in svg  # make sure it's an svg
+    assert 'width="227.409pt"' in svg # check dimensions
+
+
+def test_html_builder_add_build_pdf2svgcropscale(load_example):
+    """Test the HtmlBuilder with an added dependency through add_build
+     (Pdf2SvgCropScale)."""
+
+    # 1. Example 5 includes a media file that must be converted from pdf->svg
+    #    for html
+    #    tests/builders/examples/ex5/
+    #     └── src
+    #         ├── index.dm
+    #         └── media
+    #             └── images
+    #                 └── NMR
+    #                     └── hsqc_bw.pdf
+    doc = load_example('tests/builders/examples/ex5/src/index.dm')
+    env = doc.context['environment']
+    target_root = doc.context['target_root']
+
+    # Setup the builder
+    html_builder = HtmlBuilder(env, context=doc.context)
+
+    # Add a dependency for the media file (with crop)
+    crop_params = ('crop', 0)
+    build = html_builder.add_build(parameters=['media/images/NMR/hsqc_bw.pdf',
+                                               crop_params],
+                                   context=doc.context)
+
+    tp = TargetPath(target_root=target_root, target='html',
+                    subpath='media/images/NMR/hsqc_bw.svg')
+
+    # Check the subbuilder
+    # don't use a cache path but use media path
+    assert build.outfilepath == tp
+
+    # Now run the build
+    assert html_builder.build(complete=True) == 'done'
+    assert html_builder.status == 'done'
+    assert build.status == 'done'
+
+    # Check that the files were created
+    assert tp.is_file()
+    svg = tp.read_text()
+    assert "<svg xmlns" in svg  # make sure it's an svg
+    assert 'width="133.27895pt"' in svg  # check dimensions
+
+    # Add a dependency for the media file (with scale and crop)
+    scale_params = ('scale', 1.2)
+    build = html_builder.add_build(parameters=['media/images/NMR/hsqc_bw.pdf',
+                                               crop_params,
+                                               scale_params],
+                                   context=doc.context)
+
+    tp = TargetPath(target_root=target_root, target='html',
+                    subpath='media/images/NMR/hsqc_bw.svg')
+
+    # Check the subbuilder
+    # don't use a cache path but use media path
+    assert build.outfilepath == tp
+
+    # Now run the build
+    assert html_builder.build(complete=True) == 'done'
+    assert html_builder.status == 'done'
+    assert build.status == 'done'
+
+    # Check that the files were created
+    assert tp.is_file()
+    svg = tp.read_text()
+
+    assert "<svg xmlns" in svg  # make sure it's an svg
+    assert 'width="200px"' in svg  # check dimensions
 
 
 def test_html_builder_add_build_invalid(load_example):

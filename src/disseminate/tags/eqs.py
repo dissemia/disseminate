@@ -1,10 +1,7 @@
 """
 Tags to render equations
 """
-from copy import copy
-
 from .img import RenderedImg
-from .exceptions import TagError
 from .utils import content_to_str
 from ..formats import tex_cmd, tex_env
 

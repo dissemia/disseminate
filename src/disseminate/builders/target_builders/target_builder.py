@@ -158,9 +158,6 @@ class TargetBuilder(SequentialBuilder):
                                         context=context,
                                         use_cache=use_cache,
                                         **kwargs)
-
-        # Make sure the newly created builder has the same cache settings as
-        # This target builder
         return builder
 
     def build(self, complete=False):

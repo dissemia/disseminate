@@ -241,7 +241,7 @@ class RenderedImg(Img):
                                            in_ext=self.in_ext,
                                            context=context,
                                            target=target,
-                                           use_cache=True)
+                                           use_cache=False)
 
         # Set the produced file to the infilepath of this tag
         self._infilepath = builder.outfilepath

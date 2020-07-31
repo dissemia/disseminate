@@ -126,7 +126,7 @@ def test_pdfrender_setup_without_outfilepath_use_cache(env):
             cache_path / 'media' / 'template_b9b44d13de71.pdf')
 
     # Test the paths for the subbuilders. There is no copy builder.
-    assert len(pdfrender.subbuilders) == 2
+    assert len(pdfrender.subbuilders) == 3
 
     assert pdfrender.subbuilders[0].__class__.__name__ == 'JinjaRender'
     assert pdfrender.subbuilders[0].use_cache
@@ -135,10 +135,17 @@ def test_pdfrender_setup_without_outfilepath_use_cache(env):
             cache_path / 'media' / 'template_b9b44d13de71.tex')
 
     assert pdfrender.subbuilders[1].__class__.__name__ == 'Latexmk'
-    assert pdfrender.subbuilders[0].use_cache
+    assert pdfrender.subbuilders[1].use_cache
     assert (pdfrender.subbuilders[1].parameters[0] ==
             pdfrender.subbuilders[0].outfilepath)
     assert (pdfrender.subbuilders[1].outfilepath ==
+            cache_path / 'media' / 'template_b9b44d13de71.pdf')
+
+    assert pdfrender.subbuilders[2].__class__.__name__ == 'Copy'
+    assert pdfrender.subbuilders[2].use_cache
+    assert (pdfrender.subbuilders[2].parameters[0] ==
+            pdfrender.subbuilders[1].outfilepath)
+    assert (pdfrender.subbuilders[2].outfilepath ==
             cache_path / 'media' / 'template_b9b44d13de71.pdf')
 
     # 2. Test an example with modification attributes. The final filename should

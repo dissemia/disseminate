@@ -293,6 +293,7 @@ class Builder(metaclass=ABCMeta):
         filtered_parameters = [p[1] for p in parameters
                                if isinstance(p, tuple) and len(p) > 1 and
                                p[0] == name]
+
         return filtered_parameters[0] if filtered_parameters else None
 
     @property

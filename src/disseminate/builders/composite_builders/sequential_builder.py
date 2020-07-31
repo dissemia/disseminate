@@ -39,8 +39,8 @@ class SequentialBuilder(CompositeBuilder):
         # This only applies if other subbuilders are present and the final
         # result needs to be copied to a non-cache directory--i.e. use_cache
         # is False.
-        if self.copy and self.subbuilders and not self.use_cache:
-            cp_builder = Copy(env, use_cache=False)
+        if self.copy and self.subbuilders:  # and not self.use_cache:
+            cp_builder = Copy(env, use_cache=self.use_cache)
             self.subbuilders.append(cp_builder)
 
         # Order the subbuilders, if subbuilders are present

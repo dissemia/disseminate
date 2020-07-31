@@ -57,9 +57,11 @@ class Pdf2SvgCropScale(SequentialBuilder):
                       isinstance(parameters, list) else [parameters])
 
         # Create the subbuilders
-        crop = (self.get_parameter('crop', *parameters) or
+        crop = self.get_parameter('crop', *parameters)
+        crop = (crop if crop is not None else
                 self.get_parameter('crop_percentage', *parameters))
-        if crop:
+
+        if crop is not None:
             pdfcrop = PdfCrop(env, parameters=parameters, use_cache=True,
                               **kwargs)
             subbuilders.append(pdfcrop)
@@ -68,7 +70,7 @@ class Pdf2SvgCropScale(SequentialBuilder):
         subbuilders.append(pdf2svg)
 
         scale = self.get_parameter('scale', *parameters)
-        if scale:
+        if scale is not None:
             scalesvg = ScaleSvg(env, parameters=parameters, use_cache=True,
                                 **kwargs)
             subbuilders.append(scalesvg)

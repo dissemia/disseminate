@@ -141,17 +141,14 @@ def test_simple_inline_equation_html(context):
     # Check the build
     build_env = context['environment']
     html_builder = context['builders']['.html']
-    html_builder.print()
     svg_builder = html_builder._parallel_builder.subbuilders[4]
-    print(svg_builder, svg_builder.use_cache, svg_builder.use_media,
-          svg_builder.infilepaths, svg_builder.outfilepath)
-    assert html_builder.build(complete=True) == 'done'
+    copy_builder = svg_builder.subbuilders[2]
 
+    assert html_builder.build(complete=True) == 'done'
     target_filepath = (build_env.target_root / 'html' / 'media' /
                        'eq_2df78554597f.svg')
     assert target_filepath.exists()
 
-    assert False
     # 2. Test tag with disseminate formatting
     eq = Eq(name='eq', content='y = @termb{x}', attributes='',
             context=context)
@@ -167,9 +164,9 @@ def test_simple_inline_equation_html(context):
     target_filepath = (build_env.target_root / 'html' / 'media' /
                        'eq_9a3b5b06c002.svg')
     assert target_filepath.exists()
-    print(target_filepath)
+
     # Make sure the @termb has been converted
-    tex = eq.content
+    tex = eq.tex
     assert '@termb' not in tex
     assert '\\ensuremath{y = \\boldsymbol{x}}' in tex
 
@@ -177,25 +174,23 @@ def test_simple_inline_equation_html(context):
     eq = Eq(name='eq', content='y = @eq[env=alignat* 1]{x}', attributes='',
             context=context)
 
-    # Check the paths. These are stored by the parent Img tag in the
-    # 'src_filepath' attribute
-    assert eq.infilepath() == ''
-
     # Make sure the tag has been converted
-    tex_file = eq.infilepath().read_text()
-    assert '@termb' not in tex_file
-    assert '\\ensuremath{y = x}' in tex_file
+    tex = eq.tex
+    assert '@termb' not in tex
+    assert '\\ensuremath{y = x}' in tex
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert (eq.html ==
-            '<img src="/html/media/test_9d0626322a_crop.svg" class="eq">\n')
+            '<img src="/html/media/eq_2df78554597f.svg" class="eq">\n')
 
 
-def test_block_equation_html(context_eq):
+def test_block_equation_html(context):
     """Test the rendering of block equations for tex to ensure that the tex
     text is well-formed."""
-    #
+    env = context['environment']
+    target_root = env.target_root
+
     # # 1. Test a simple markup example
     test = """
     @eq[env=align*]{
@@ -203,8 +198,8 @@ def test_block_equation_html(context_eq):
     &= x + a
     }
     """
-    context_eq['process_paragraphs'] = ['root']  # process paragraphs for 'root'
-    root = Tag(name='root', content=test, attributes='', context=context_eq)
+    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
+    root = Tag(name='root', content=test, attributes='', context=context)
     p = root.content
     eq = p.content[1]
 
@@ -220,10 +215,14 @@ def test_block_equation_html(context_eq):
     assert eq.tex == key
 
     # Check the image infilepath and that the contents are in the file
-    img_filepath = eq.infilepath()
-    assert img_filepath.match('test_0ab41c1c66.tex')
-    assert img_filepath.is_file()
-    assert key in img_filepath.read_text()
+    assert (eq.html ==
+            '<img src="media/eq_77ef2ee610b5.svg" class="eq blockeq">\n')
+
+    # Check the build
+    build_env = context['environment']
+    html_builder = context['builders']['.html']
+    assert html_builder.build(complete=True) == 'done'
+    assert (target_root / 'html' / 'media' / 'eq_77ef2ee610b5.svg').exists()
 
     # 2. Test a markup example with a more complicated environment
     test = """
@@ -232,8 +231,8 @@ def test_block_equation_html(context_eq):
     &= x + a
     }
     """
-    context_eq['process_paragraphs'] = ['root']  # process paragraphs for 'root'
-    root = Tag(name='root', content=test, attributes='', context=context_eq)
+    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
+    root = Tag(name='root', content=test, attributes='', context=context)
     p = root.content
     eq = p.content[1]
 
@@ -249,11 +248,12 @@ def test_block_equation_html(context_eq):
     assert eq.tex == key
 
     # Check the image infilepath and that the contents are in the file
-    img_filepath = eq.infilepath()
-    assert not img_filepath.match('test_0ab41c1c66.tex')  # should be different
-    assert img_filepath.match('test_35f95c9c65.tex')
-    assert img_filepath.is_file()
-    assert key in img_filepath.read_text()
+    assert (eq.html ==
+            '<img src="media/eq_205c2f7bc8a1.svg" class="eq blockeq">\n')
+
+    # Check the build
+    assert html_builder.build(complete=True) == 'done'
+    assert (target_root / 'html' / 'media' / 'eq_205c2f7bc8a1.svg').exists()
 
     # 3. Test an block equation in a paragraph in which the block equation
     #    hasn't been specified.
@@ -263,8 +263,8 @@ def test_block_equation_html(context_eq):
     &= x + a
     }
     """
-    context_eq['process_paragraphs'] = ['root']  # process paragraphs for 'root'
-    root = Tag(name='root', content=test, attributes='', context=context_eq)
+    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
+    root = Tag(name='root', content=test, attributes='', context=context)
     p = root.content
     eq = p.content[1]
 
@@ -281,23 +281,26 @@ def test_block_equation_html(context_eq):
     assert eq.tex == key
 
     # Check the image infilepath and that the contents are in the file
-    img_filepath = eq.infilepath()
-    assert img_filepath.is_file()
-    assert key in img_filepath.read_text()
+    assert (eq.html ==
+            '<img src="media/eq_005f59fdeca8.svg" class="eq blockeq">\n')
+
+    # Check the build
+    assert html_builder.build(complete=True) == 'done'
+    assert (target_root / 'html' / 'media' / 'eq_005f59fdeca8.svg').exists()
 
 
 # tex targets
 
-def test_simple_inline_equation_tex(context_eq):
+def test_simple_inline_equation_tex(context):
     """Test the rendering of simple inline equations for tex."""
 
     # Setup the equation tag
-    eq = Eq(name='eq', content='y = x', attributes=tuple(), context=context_eq)
+    eq = Eq(name='eq', content='y = x', attributes=tuple(), context=context)
 
     assert eq.tex == "\\ensuremath{y = x}"
 
 
-def test_block_equation_tex(context_eq):
+def test_block_equation_tex(context):
     """Test the rendering of block equations for tex to ensure that the tex
     text is well-formed."""
 
@@ -308,8 +311,8 @@ def test_block_equation_tex(context_eq):
     &= x + a
     }
     """
-    context_eq['process_paragraphs'] = ['root']  # process paragraphs for 'root'
-    root = Tag(name='root', content=test, attributes='', context=context_eq)
+    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
+    root = Tag(name='root', content=test, attributes='', context=context)
     p = root.content
 
     assert p.name == 'p'
@@ -325,8 +328,8 @@ def test_block_equation_tex(context_eq):
     &= x + a
     }
     """
-    context_eq['process_paragraphs'] = ['root']  # process paragraphs for 'root'
-    root = Tag(name='root', content=test, attributes='', context=context_eq)
+    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
+    root = Tag(name='root', content=test, attributes='', context=context)
     p = root.content
 
     assert p.name == 'p'
@@ -338,13 +341,13 @@ def test_block_equation_tex(context_eq):
 
 # Multiple targets
 
-def test_block_equation_multiple_targets(context_eq):
+def test_block_equation_multiple_targets(context):
     """Test the rendering of block equations with multiple targets"""
 
     # Setup the context
-    context_eq['relative_links'] = False  # report absolute links
-    context_eq['process_paragraphs'] = ['root']  # process paragraphs for 'root'
-    context_eq['targets'] = ['html', 'tex']
+    context['relative_links'] = False  # report absolute links
+    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
+    context['targets'] = ['html', 'tex']
 
     # 1. A basic block equation
     test = """
@@ -354,7 +357,7 @@ def test_block_equation_multiple_targets(context_eq):
     }
     """
 
-    root = Tag(name='root', content=test, attributes='', context=context_eq)
+    root = Tag(name='root', content=test, attributes='', context=context)
     p = root.content
 
     key = ('\\begin{align*} %\n'
@@ -368,8 +371,8 @@ def test_block_equation_multiple_targets(context_eq):
 
     # Check the html target
     eq = p.content[1]
-    assert eq.infilepath().suffix == '.tex'
-    assert key in eq.infilepath().read_text()
+    assert (eq.html ==
+            '<img src="/html/media/eq_77ef2ee610b5.svg" class="eq blockeq">\n')
 
     # 2. Test a block equation with a custom math environment
     test = """
@@ -379,7 +382,7 @@ def test_block_equation_multiple_targets(context_eq):
     }
     """
 
-    root = Tag(name='root', content=test, attributes='', context=context_eq)
+    root = Tag(name='root', content=test, attributes='', context=context)
     p = root.content
 
     key = ('\\begin{alignat*}{2} %\n'
@@ -390,14 +393,9 @@ def test_block_equation_multiple_targets(context_eq):
 
     # Check the html target
     eq = p.content[1]
-    assert eq.infilepath().suffix == '.tex'
-    assert key in eq.infilepath().read_text()
-    print(p.html)
     assert p.html == ('<p>\n'
-                      '    <img src="/html/media/test_6436975f5e_crop.svg" '
+                      '    <img src="/html/media/eq_2d57a64d69a5.svg" '
                       'class="eq blockeq">\n'
                       '    </p>\n')
     # Check the tex target
     assert p.tex == ('\n\n    ' + key + '\n    \n')
-
-
