@@ -487,8 +487,9 @@ def test_document_macros(load_example):
 def test_document_load_on_render(doc):
     """Test the proper loading of an updated source file on render."""
 
-    # The initial document has the targets listed in the settings.py
-    assert doc.targets.keys() == {'.html'}
+    # The initial document has the targets listed in the example document
+    # created from the 'doc' fixture (conftest.py)
+    assert doc.targets.keys() == {'.html', '.tex', '.pdf'}
 
     # Change the source file, and run the render function. The targets should
     # be updated to the new values in the updated header.
