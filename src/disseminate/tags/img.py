@@ -208,6 +208,24 @@ class Img(Tag):
 
 
 class RenderedImg(Img):
+    """An img base class for saving and caching an image that needs to be
+    rendered by an external program.
+
+    A rendered image saves the contents of the tag into an infile, and the
+    parent tag may convert this file to an outfile in the format needed
+    by the document target format.
+
+    .. note:: This class is not intended to be directly used as a tag. Rather,
+              it is intended to be subclassed for other image types
+              that need to be rendered first.
+
+    Attributes
+    ----------
+    active : bool
+        If True, the Tag can be used by the TagFactory.
+    input_format : str
+        The source format for the file to render. (ex: '.tex' or '.asy')
+    """
 
     in_ext = None
 
@@ -246,165 +264,3 @@ class RenderedImg(Img):
         # Set the produced file to the infilepath of this tag
         self._infilepath = builder.outfilepath
         return self._infilepath
-
-# class RenderedImg(Img):
-#     """An img base class for saving and caching an image that needs to be
-#     rendered by an external program.
-#
-#     A rendered image saves the contents of the tag into an infile, and the
-#     parent tag may convert this file to an outfile in the format needed by the
-#     document target format.
-#
-#     .. note:: This class is not intended to be directly used as a tag. Rather,
-#               it is intended to be subclassed for other image types that need
-#               to be rendered first.
-#
-#     Attributes
-#     ----------
-#     active : bool
-#         If True, the Tag can be used by the TagFactory.
-#     input_format : str
-#         The source format for the file to render. (ex: '.tex' or '.asy')
-#     """
-#
-#     active = False
-#     input_format = None
-#
-#     def __init__(self, name, content, attributes, context):
-#         # Make sure a format is specified to save to so that the final image
-#         # can be rendered.
-#         assert (self.input_format is not None and
-#                 self.input_format.startswith('.')), ("RenderImage needs a "
-#                                                      "format to save to")
-#
-#         # Strip extra space on the edges so that the hash can be more consistent
-#         if isinstance(content, str):
-#             content = content.strip()
-#
-#         super().__init__(name=name, content=content, attributes=attributes,
-#                          context=context)
-#
-#     def infilepath(self, content=None, context=None):
-#         """The image infilepath for the rendered image"""
-#         if self._filepath is not None:
-#             return self._filepath
-#
-#         # Retrieve unspecified arguments and setuo
-#         context = context or self.context
-#
-#         # Determine if contents is a file or code
-#         filepaths = find_files(string=content or self.content,
-#                                context=context)
-#         if len(filepaths) == 1:
-#             # It's a file. Use it directly.
-#             self._filepath = filepaths[0]
-#
-#         else:
-#             # Get the cache infilepath from the dependency manager
-#             cache_filepath = self.write_infile(content=content,
-#                                                context=context)
-#
-#             # Set the tag content to the newly saved file path. This path
-#             # should be relative to the .cache directory
-#             self._filepath = cache_filepath
-#
-#         return self._filepath
-#
-#     def write_infile(self, content=None, context=None):
-#         """Save the tag contents to an input file to be rendered, and
-#         return  a SourcePath for the input file (in the self.input_format).
-#
-#         This function will do the following:
-#         1. input_path. Generate a temporary filename and path (infilepath) to
-#            write to using context and self.input_format.
-#         2. write content. Use prepare_content to generate the content to write
-#            to the input_path.
-#         3. Return the written input_path.
-#
-#         Parameters
-#         ----------
-#         content : Optional[Union[str, List[Union[str, list, :obj:`Tag \
-#         <disseminate.tags.tag.Tag>`], :obj:`Tag <disseminate.tags.tag.Tag>`]]
-#             The contents of the tag. It can either be a string, a tag or a list
-#             of strings, tags and lists.
-#         context : Optional[:obj:`Type[BaseContext] <.BaseContext>`]
-#             The context with values for the document.
-#
-#         Returns
-#         -------
-#         input_filepath : :obj:`.paths.SourcePath`
-#             The infilepath for the saved input file to render.
-#         """
-#         # Retrieve unspecified arguments
-#         context = context or self.context
-#         content = content or self.prepare_content(content=content,
-#                                                   context=context)
-#
-#         assert context.is_valid('dependency_manager', 'src_filepath')
-#
-#         dep_manager = context['dependency_manager']
-#         src_filepath = context['src_filepath']
-#
-#         # Get the cache path. ex: cache_path = {target_root}/'.cache'
-#         cache_path = dep_manager.cache_path
-#
-#         # Construct the filename for the rendered image, including the
-#         # subpath.
-#         # ex: filename = 'chapter1/intro_231aef342.asy'
-#         content_hash = hashtxt(content)
-#         filepath = (str(src_filepath.subpath.with_suffix('')) + '_' +
-#                     content_hash + self.input_format)
-#         filepath = pathlib.Path(settings.media_path, filepath)
-#
-#         # Construct a infilepath in the cache directory. Create dirs as
-#         # needed.
-#         input_filepath = SourcePath(project_root=cache_path, subpath=filepath)
-#
-#         # Save the contents of this tag to that file
-#         # Write the contents, if the cached file hasn't been written
-#         # already. Modification times do not need to be checked since the
-#         # hash guarantees that if the contents to render have changed, the
-#         # hash changes
-#         # Render the content, if needed.
-#         content = self.prepare_content(content=content, context=context)
-#
-#         if not input_filepath.is_file():
-#             # Create the needed directories
-#             input_filepath.parent.mkdir(parents=True, exist_ok=True)
-#
-#             # Write the file using
-#             input_filepath.write_text(content)
-#
-#         return input_filepath
-#
-#     def prepare_content(self, content=None, context=None):
-#         """Prepare the content to save in the input file to be rendered.
-#
-#         This function should prepare content from the tag's content into a
-#         string in the format of self.input_format.
-#         """
-#         return content or self.content
-#
-#     # def template_kwargs(self):
-#     #     """Get the kwargs to pass to the template.
-#     #
-#     #     Returns
-#     #     -------
-#     #     Union[None, dict]
-#     #         A dict or keyword arguments to pass to the template.
-#     #     """
-#     #     return dict()
-#     #
-#     # def template_args(self):
-#     #     """Get the args to pass to the template
-#     #
-#     #     The args will be passed to the template as 'args', which can be iterated
-#     #     over.
-#     #
-#     #     Returns
-#     #     -------
-#     #     Union[None, tuple]
-#     #         A tuple of arguments to pass to the template as the 'args'
-#     #         parameter/variable.
-#     #     """
-#     #     return tuple()
