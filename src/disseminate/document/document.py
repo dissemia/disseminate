@@ -10,7 +10,6 @@ import pathlib
 from .document_context import DocumentContext
 from . import exceptions, signals
 from ..convert import convert
-from ..utils.file import mkdir_p
 from ..paths import SourcePath, TargetPath
 from .. import settings
 
@@ -652,39 +651,8 @@ class Document(object):
                 doc.render(targets=targets, create_dirs=create_dirs,
                            update_only=update_only)
 
-        # Workup the targets into a dict, like self.targets
-        if targets is None:
-            targets = self.targets
-        elif isinstance(targets, dict):
-            pass
-        else:
-            msg = "Specified targets '{}' must be a dict"
-            raise exceptions.DocumentException(msg.format(targets))
-
-        # Check to see if the target directories need to be created
-        if create_dirs:
-            for target_filepath in targets.values():
-                mkdir_p(target_filepath)
-
-        # Process each specified target
-        for target, target_filepath in targets.items():
-            target = target if target.startswith('.') else '.' + target
-
-            # Skip if we should update_only and the src_filepath is older
-            # than the target_filepath, if target_filepath exists.
-            # The 'render_required' also reloads the document.
-            if not self.render_required(target_filepath) and update_only:
-                continue
-
-            # Determine whether it's a compiled target or uncompiled target
-            if target in settings.compiled_exts:
-                self._render_compiled(target=target,
-                                      target_filepath=target_filepath,
-                                      targets=targets)
-            else:
-                self._render_uncompiled(target=target,
-                                        target_filepath=target_filepath)
-
+        # Send the 'document_created' signal
+        signals.document_render.emit(document=self)
         return True
 
     def _render_uncompiled(self, target, target_filepath):

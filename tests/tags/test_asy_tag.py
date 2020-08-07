@@ -25,7 +25,6 @@ def test_asy_invalid_html(doc):
     context['targets'] |= {'html'}
     html_builder = doc.context['builders']['.html']
     assert html_builder.build(complete=True) == 'missing (outfilepath)'
-    assert not img.infilepath().exists()
 
 
 # html targets
@@ -50,11 +49,12 @@ def test_asy_html(doc):
 
     # Check the build
     html_builder = doc.context['builders']['.html']
-    assert html_builder.build(complete=True) == 'done'
-    assert img.infilepath().exists()
+    assert html_builder.build(complete=True) == 'done'  # build successful
+    outfilepath = img._outfilepaths['.html']
+    assert outfilepath.exists()  # file was created
 
-    assert '<svg' in img.infilepath().read_text()
-    assert 'width="200pt" height="200pt"' in img.infilepath().read_text()
+    assert '<svg' in outfilepath.read_text()
+    assert 'width="200pt" height="200pt"' in outfilepath.read_text()
 
 
 def test_asy_html_attribute(doc):
@@ -81,13 +81,14 @@ def test_asy_html_attribute(doc):
 
     # Check the build
     html_builder = doc.context['builders']['.html']
-    assert html_builder.build(complete=True) == 'done'
-    assert img.infilepath().exists()
+    assert html_builder.build(complete=True) == 'done'  # build successful
+    outfilepath = img._outfilepaths['.html']
+    assert outfilepath.exists()  # file was created
 
     # The svg file should have different dimensions
-    assert '<svg' in img.infilepath().read_text()
-    assert 'width="200pt" height="200pt"' not in img.infilepath().read_text()
-    assert 'width="500px" height="500px"' in img.infilepath().read_text()
+    assert '<svg' in outfilepath.read_text()
+    assert 'width="200pt" height="200pt"' not in outfilepath.read_text()
+    assert 'width="500px" height="500px"' in outfilepath.read_text()
 
 
 # tex target
@@ -115,4 +116,38 @@ def test_asy_tex(doc):
     base = img_filepath.with_suffix('')
     filepath = "{{{base}}}{suffix}".format(base=base, suffix=suffix)
 
+    assert img.tex == '\\includegraphics{{{}}}'.format(filepath)
+
+
+def test_asy_target_order(doc):
+    """Test the behavior of the asy tag with different orders of target
+    renderings. This can find bugs in path caching"""
+    context = doc.context
+    target_root = doc.target_root
+
+    # Generate the markup
+    src = """@asy[scale=2.0]{
+            size(200);                                                    
+                                                                                                     
+
+            draw(unitcircle);  }"""
+
+    # 1. Test tex then html.
+    #    Generate a tag and compare the generated tex to the answer key
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
+
+    tex_filepath = target_root / 'tex' / 'media' / 'test_35795736a89a.pdf'
+    suffix = tex_filepath.suffix
+    base = tex_filepath.with_suffix('')
+    filepath = "{{{base}}}{suffix}".format(base=base, suffix=suffix)
+
+    assert img.tex == '\\includegraphics{{{}}}'.format(filepath)
+    assert img.html == '<img src="media/test_35795736a89a.svg">\n'
+
+    # 2. Test html then tex
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
+
+    assert img.html == '<img src="media/test_35795736a89a.svg">\n'
     assert img.tex == '\\includegraphics{{{}}}'.format(filepath)

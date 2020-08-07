@@ -2,10 +2,10 @@
 """
 Tags to render asymptote (asy) figures and diagrams
 """
-from .img import RenderedImg
+from .img import Img
 
 
-class Asy(RenderedImg):
+class Asy(Img):
     """The asy tag for inserting asymptote images."""
 
     active = True

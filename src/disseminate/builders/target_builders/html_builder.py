@@ -3,7 +3,7 @@ A CompositeBuilder for html files.
 """
 from .target_builder import TargetBuilder
 from ..copy import Copy
-from ...paths import SourcePath, TargetPath
+from ...paths import TargetPath
 
 
 class HtmlBuilder(TargetBuilder):

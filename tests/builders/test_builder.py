@@ -34,7 +34,7 @@ def test_builder_filepaths(env):
     infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
     outfilepath = TargetPath(target_root=env.target_root,
-                           subpath='media/sample_crop.pdf')
+                            subpath='media/sample_crop.pdf')
     pdfcrop = PdfCrop(parameters=infilepath, env=env)
     assert pdfcrop.parameters == [infilepath]
     assert pdfcrop.outfilepath == outfilepath
@@ -44,8 +44,8 @@ def test_builder_filepaths(env):
     infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
     outfilepath = TargetPath(target_root=env.target_root,
-                            target='html',
-                            subpath='media/sample_crop.pdf')
+                             target='html',
+                             subpath='media/sample_crop.pdf')
     pdfcrop = PdfCrop(parameters=infilepath, target='html', env=env)
     assert pdfcrop.parameters == [infilepath]
     assert pdfcrop.outfilepath == outfilepath
@@ -57,6 +57,29 @@ def test_builder_filepaths(env):
                       env=env)
     assert pdfcrop.parameters == [infilepath]
     assert pdfcrop.outfilepath == outfilepath
+
+
+def test_builder_filepaths_unusual_filenames(env):
+    """Test the builder filepaths with unusual filenames."""
+    project_root = 'tests/builders/examples/ex10'
+
+    # 1. Start with a usual filename
+    usual_filepath = SourcePath(project_root=project_root, subpath='usual.txt')
+    builder = Builder(env=env, parameters=[usual_filepath])
+    assert builder.infilepaths == [usual_filepath]
+
+    # 2. Try a filename with extra dots
+    usual_filepath = SourcePath(project_root=project_root,
+                                subpath='unusual.2.txt')
+    builder = Builder(env=env, parameters=[usual_filepath])
+    assert builder.infilepaths == [usual_filepath]
+
+    # 3. Try a filename with unicode characters
+    usual_filepath = SourcePath(project_root=project_root,
+                                subpath='unusual_čísla.txt')
+    builder = Builder(env=env, parameters=[usual_filepath])
+    assert builder.infilepaths == [usual_filepath]
+
 
 
 def test_builder_get_parameter(env):

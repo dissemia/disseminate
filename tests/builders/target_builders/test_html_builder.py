@@ -193,6 +193,28 @@ def test_html_builder_simple_doc(load_example):
     assert builder.status == 'done'
 
 
+def test_html_builder_simple_doc_render(load_example):
+    """Test a render build for a simple document."""
+    # 1. example 1: tests/builders/examples/example3
+    doc = load_example('tests/builders/examples/ex3/dummy.dm')
+    target_root = doc.context['target_root']
+
+    doc.render()
+
+    # Check the copied and rendered files
+    tgt_filepath = TargetPath(target_root=target_root, target='html',
+                              subpath='dummy.html')
+    assert tgt_filepath.exists()
+    assert TargetPath(target_root=target_root, target='html',
+                      subpath='media/css/bootstrap.min.css').exists()
+    assert TargetPath(target_root=target_root, target='html',
+                      subpath='media/css/base.css').exists()
+    assert TargetPath(target_root=target_root, target='html',
+                      subpath='media/css/pygments.css').exists()
+    assert ("<p>Here is <strong>my</strong> example file.</p>" in
+            tgt_filepath.read_text())
+
+
 def test_html_builder_inherited(env):
     """Test a build with the HtmlBuilder using an inherited template."""
     context = env.context

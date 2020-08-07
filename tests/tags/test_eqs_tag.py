@@ -289,6 +289,25 @@ def test_block_equation_html(context):
     assert (target_root / 'html' / 'media' / 'eq_005f59fdeca8.svg').exists()
 
 
+def test_equation_relative_absolute_links(context):
+    """Test rendered equation images with absolute and relative links."""
+
+    # setup the context
+    context['relative_links'] = False  # report absolute links
+
+    # 1. Setup a basic equation tag
+    eq = Eq(name='eq', content='y = x', attributes='', context=context)
+
+    # Check that the returned html uses absolute links
+    assert (eq.html ==
+            '<img src="/html/media/eq_2df78554597f.svg" class="eq">\n')
+
+    # Switch to relative links
+    context['relative_links'] = True
+    assert (eq.html ==
+            '<img src="media/eq_2df78554597f.svg" class="eq">\n')
+
+
 # tex targets
 
 def test_simple_inline_equation_tex(context):

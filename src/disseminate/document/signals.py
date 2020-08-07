@@ -15,6 +15,11 @@ document_onload = signal('document_onload',
                          "Receivers take a document or document context "
                          "parameter.")
 
+document_render = signal('document_render',
+                         doc="Signal sent when a document's targets are "
+                         "being rendered to their final target files. "
+                         "Receivers take a document parameter.")
+
 document_tree_updated = signal('document_tree_updated',
                                doc="Signal sent when a root document or one "
                                "of its sub-documents was re-loaded. Takes a "

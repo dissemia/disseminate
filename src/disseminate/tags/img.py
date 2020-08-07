@@ -28,6 +28,9 @@ class Img(Tag):
     html_name : str
         If specified, use this name when rendering the tag to html. Otherwise,
         use name.
+    in_ext : Optional[str]
+        Used to correctly identify the builder to add if the contents need
+        to be rendered first.
     img_filepath : str
         The path for the (source) image.
     """
@@ -38,6 +41,7 @@ class Img(Tag):
     process_typography = False
 
     html_name = 'img'
+    in_ext = None
     _infilepath = None
     _outfilepaths = None
 
@@ -46,28 +50,9 @@ class Img(Tag):
                          context=context)
         self._outfilepaths = dict()
 
-    @property
-    def mtime(self):
-        """The last modification time of this tag and dependent files."""
-        mtimes = [super().mtime]
-
-        # Get the modification times of files
-        img_filepath = pathlib.Path(self.infilepath())
-        if img_filepath.is_file():
-            mtime = img_filepath.stat().st_mtime
-            mtimes.append(mtime)
-
-        # Remove None values from mtimes
-        mtimes = list(filter(bool, mtimes))
-
-        # The mtime is the latest mtime of all the tags and labels
-        return max(mtimes)
-
-    def infilepath(self, content=None, context=None):
-        """The infilepath for the image for the given document target.
-
-        The infile may be converted to an outfile for the target document
-        format.
+    def content_as_filepath(self, content=None, context=None):
+        """Returns a filepath from the content, if it's a valid filepath,
+        or returns None if it isn't.
 
         Parameters
         ----------
@@ -80,42 +65,21 @@ class Img(Tag):
 
         Returns
         -------
-        infilepath : str
-            The infilepath for the image source file.
-
-        Raises
-        ------
-        ImgFileNotFound
-            Raises an ImgFileNotFound exception if a filepath couldn't be
-            found in the tag contents.
+        filepath : Union[:obj:`pathlib.Path`. None]
+            The filepath, if found, or None if a valid filepath was not found.
         """
-        if self._infilepath is not None:
-            return self._infilepath
-
-        # Retrieve unspecified parameters
         content = content or self.content
         context = context or self.context
 
         # Move the contents to the infilepath attribute
-        if isinstance(content, list):
-            contents = ''.join(content).strip()
-        elif isinstance(content, pathlib.Path) and content.is_file():
-            contents = content
+        if isinstance(content, pathlib.Path) and content.is_file():
+            return content
         elif isinstance(content, str):
             # Get the infilepath for the file
             filepaths = find_files(content, context)
-            contents = filepaths[0] if filepaths else None
-        else:
-            contents = None
+            return filepaths[0] if filepaths else None
 
-        if contents is None:
-            msg = "An image path '{}' could not be found.".format(content)
-            raise ImgFileNotFound(msg)
-
-        # Convert the file to the format needed by target
-        self._infilepath = contents
-
-        return self._infilepath
+        return None
 
     def add_file(self, target, content=None, attributes=None, context=None):
         """Convert and add the file dependency for the specified document
@@ -148,9 +112,16 @@ class Img(Tag):
         BuildError
             If a builder could not be found for the builder
         """
-        # See if a cached version is available
-        if target in self._outfilepaths:
-            return self._outfilepaths[target]
+        # See if a cached path exists already. This can only be done if the
+        # content, attributes and context aren't specified because the
+        # values of this tag will be used for these parameters.
+        if all(i is None for i in (content, attributes, context)):
+            if target in self._outfilepaths:
+                return self._outfilepaths[target]
+            else:
+                can_cache = True
+        else:
+            can_cache = False
 
         # If not get the outfilepath for the given document target
         assert self.context.is_valid('builders')
@@ -166,13 +137,23 @@ class Img(Tag):
         assert target_builder, ("A target builder for '{}' is needed in the "
                                 "document context")
 
-        # Raises ImgNotFound if the file is not found
-        parameters = ([self.infilepath(content=content)] +
-                      list(attrs.filter(target=target).totuple()))
-        build = target_builder.add_build(parameters=parameters, context=context)
+        # Prepare the parameters. Either their a filepath of the contents
+        # or the contents themselves.
+        content = (self.content_as_filepath(content=content, context=context)
+                   or content)
+        parameters = ([content] + list(attrs.filter(target=target).totuple()))
+        build = target_builder.add_build(parameters=parameters,
+                                         context=context,
+                                         in_ext=self.in_ext,
+                                         target=target,
+                                         use_cache=False)
+        outfilepath = build.outfilepath
 
-        self._outfilepaths[target] = build.outfilepath
-        return self._outfilepaths[target]
+        # Cache the outfilepath, if possible
+        if can_cache:
+            self._outfilepaths[target] = outfilepath
+
+        return outfilepath
 
     def tex_fmt(self, content=None, attributes=None, context=None,
                 mathmode=False, level=1):
@@ -205,62 +186,3 @@ class Img(Tag):
         attrs['src'] = url
 
         return super().html_fmt(attributes=attrs, level=level)
-
-
-class RenderedImg(Img):
-    """An img base class for saving and caching an image that needs to be
-    rendered by an external program.
-
-    A rendered image saves the contents of the tag into an infile, and the
-    parent tag may convert this file to an outfile in the format needed
-    by the document target format.
-
-    .. note:: This class is not intended to be directly used as a tag. Rather,
-              it is intended to be subclassed for other image types
-              that need to be rendered first.
-
-    Attributes
-    ----------
-    active : bool
-        If True, the Tag can be used by the TagFactory.
-    input_format : str
-        The source format for the file to render. (ex: '.tex' or '.asy')
-    """
-
-    in_ext = None
-
-    def add_file(self, target, content=None, attributes=None, context=None):
-        # Return a cached version, if available
-        if self._infilepath is not None:
-            return self._infilepath
-
-        # First, try to see if there are filepaths in the content
-        try:
-            return super().add_file(target=target, content=content,
-                                    attributes=attributes, context=context)
-        except ImgFileNotFound:
-            pass
-
-        # At this stage, a file couldn't be found in the contents. Try saving
-        # them. Check that the in_ext and out_ext are set
-        assert isinstance(self.in_ext, str)
-
-        # Otherwise, try saving the contents to a temp file. Retrieve builder
-        target_builder = self.context.get('builders', dict()).get(target)
-        assert target_builder, ("A target builder for '{}' is needed in the "
-                                "document context")
-
-        # Setup the builder
-        content = content or self.content
-        attrs = attributes or self.attributes
-        parameters = [content] + list(attrs.filter(target=target).totuple())
-
-        builder = target_builder.add_build(parameters=parameters,
-                                           in_ext=self.in_ext,
-                                           context=context,
-                                           target=target,
-                                           use_cache=False)
-
-        # Set the produced file to the infilepath of this tag
-        self._infilepath = builder.outfilepath
-        return self._infilepath

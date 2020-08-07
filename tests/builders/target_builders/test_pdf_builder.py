@@ -305,3 +305,24 @@ def test_pdf_builder_simple_doc(load_example):
     # New builders don't need to rebuild.
     builder = PdfBuilder(env, context=doc.context)
     assert builder.status == 'done'
+
+
+def test_pdf_builder_simple_doc_render(load_example):
+    """Test a render of a simple document with the PdfBuilder."""
+    # 1. example 1: tests/builders/examples/ex3
+    doc = load_example('tests/builders/examples/ex3/dummy.dm')
+    target_root = doc.target_root
+
+    doc.render()
+
+    # Check the copied and rendered files
+    tgt_filepath = TargetPath(target_root=target_root, target='pdf',
+                              subpath='dummy.pdf')
+    assert tgt_filepath.exists()
+
+    # Check that the file is a pdf
+    assert b'%PDF' in tgt_filepath.read_bytes()
+
+    # Make sure meta files aren't preset
+    assert not tgt_filepath.with_name('dummy.log').exists()
+    assert not tgt_filepath.with_name('dummy.out').exists()

@@ -155,6 +155,22 @@ def test_tex_builder_simple_doc(load_example):
     assert builder.status == 'done'
 
 
+def test_tex_builder_simple_doc_render(load_example):
+    """Test a document render with the TexBuilder."""
+    # 1. example 1: tests/builders/examples/ex3
+    doc = load_example('tests/builders/examples/ex3/dummy.dm')
+    target_root = doc.target_root
+
+    doc.render()
+
+    # Check the rendered files
+    key = pathlib.Path('tests/builders/examples/ex3/dummy.tex')
+    tgt_filepath = TargetPath(target_root=target_root, target='tex',
+                              subpath='dummy.tex')
+    assert tgt_filepath.exists()
+    assert tgt_filepath.read_text() == key.read_text()
+
+
 def test_tex_builder_inherited_doc(load_example):
     """Test a build with the TexBuilder using an inherited template."""
     # 1. example 1: tests/builders/examples/ex4

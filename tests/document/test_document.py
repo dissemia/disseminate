@@ -552,35 +552,6 @@ def test_document_recursion(env_cls, tmpdir):
     assert len(doc2.subdocuments) == 1  # test-a as subdoc
 
 
-# Test targets
-@pytest.fixture(params=['.html', '.tex'])
-def target(request):
-    return request.param
-
-
-def test_document_render(load_example, target):
-    """Tests the conversion of a basic html file."""
-
-    ext = target
-    stripped_ext = ext.strip('.')
-
-    # Load the document and render it with no template
-    doc = load_example("tests/document/example1/dummy.dm")
-
-    targets = {k: v for k, v in doc.targets.items() if k == ext}
-    doc.render(targets=targets)
-
-    # Make sure the output matches the answer key
-    render_file = doc.target_filepath(target=ext)
-    ref_file = TargetPath(target_root='tests/document/example1',
-                          subpath='dummy' + target)
-    assert ref_file.read_text() == render_file.read_text()
-
-    # An invalid file raises an error
-    with pytest.raises(exceptions.DocumentException):
-        doc = load_example("tests/document/missing.dm")
-
-
 def test_document_render_missing_template(doc):
     """Tests the rendering of a document when a specified templates is
     missing."""
@@ -646,10 +617,8 @@ def test_document_example8(load_example):
     doc = load_example("tests/document/example8/src/fundamental_solnNMR/"
                        "inept/inept.dm")
 
-    targets = {'.html': doc.target_filepath(target='.html'),
-               '.tex': doc.target_filepath(target='.tex')}
-    doc.render(targets=targets)
+    doc.render()
 
     # Check the rendered html
     key = pathlib.Path('tests/document/example8/html/inept.html').read_text()
-    assert targets['.html'].read_text() == key
+    assert doc.targets['.html'].read_text() == key

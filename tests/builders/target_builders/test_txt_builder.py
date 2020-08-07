@@ -153,3 +153,19 @@ def test_txt_builder_simple_doc(load_example):
     # New builders don't need to rebuild.
     builder = TxtBuilder(env, context=doc.context)
     assert builder.status == 'done'
+
+
+def test_txt_builder_simple_doc_render(load_example):
+    """Test a render of a simple document with the TxtBuilder."""
+    # 1. example 1: tests/builders/examples/ex3
+    doc = load_example('tests/builders/examples/ex3/dummy.dm')
+    target_root = doc.target_root
+
+    doc.render()
+
+    # Check the copied and rendered files
+    tgt_filepath = TargetPath(target_root=target_root, target='txt',
+                              subpath='dummy.txt')
+    assert tgt_filepath.exists()
+    key = pathlib.Path('tests/builders/examples/ex3/dummy.txt')
+    assert tgt_filepath.read_text() == key.read_text()

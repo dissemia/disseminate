@@ -9,8 +9,8 @@ from disseminate.tags import Tag, TagError
 from disseminate.paths import TargetPath
 
 
-def test_img_filepath(load_example):
-    """Test the identification of image filepaths."""
+def test_img_content_as_filepath(load_example):
+    """Test the @img tag's content_as_filepath method."""
     doc = load_example('tests/tags/examples/img_ex1/test.dm')
     context = doc.context
     project_root = doc.project_root
@@ -19,44 +19,19 @@ def test_img_filepath(load_example):
     src = "@img{sample.pdf}"
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
-    assert img.infilepath().match('sample.pdf')
+    assert img.content_as_filepath().match('sample.pdf')
 
     # 2. Test a absolute path
     src = "@img{{{}}}".format(project_root.absolute() / 'sample.pdf')
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
-    assert img.infilepath().match('sample.pdf')
+    assert img.content_as_filepath().match('sample.pdf')
 
     # 3. Test a missing file. Raises a TagError
     src = "@img{missing.pdf}"
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
-    with pytest.raises(TagError):
-        img.infilepath()
-
-
-def test_img_mtime(doc):
-    """Test the correct modification time for images referenced by
-    an @img tag."""
-    # Copy an image to the temporary directory
-    img_src = """<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-</svg"""
-    src_path = doc.src_filepath.parent
-    img_filepath = src_path / 'test.svg'
-    img_filepath.write_text(img_src)
-
-    # Create an image tag
-    src = "@img{{{}}}".format(str(img_filepath))
-
-    # Generate a tag and compare the generated tex to the answer key
-    root = Tag(name='root', content=src, attributes='', context=doc.context)
-    img = root.content
-
-    # Check the mtimes
-    assert img.mtime == img_filepath.stat().st_mtime
-    assert root.mtime == img.mtime  # root should be at least as late as @img
-    assert root.mtime > doc.mtime  # and the root tag is later than the src file
+    assert img.content_as_filepath() is None
 
 
 def test_img_attribute(load_example):

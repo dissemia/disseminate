@@ -1,12 +1,12 @@
 """
 Tags to render equations
 """
-from .img import RenderedImg
+from .img import Img
 from .utils import content_to_str
 from ..formats import tex_cmd, tex_env
 
 
-class Eq(RenderedImg):
+class Eq(Img):
     """The inline equation tag
 
     Render an equation in native LaTeX (.tex targets) or into a rendered

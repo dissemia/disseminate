@@ -4,9 +4,7 @@ Builder to save temporary files
 import logging
 
 from .builder import Builder, BuildError
-from .utils import generate_mock_parameters, generate_outfilepath
 from ..utils.classes import weakattr
-from ..utils.file import mkdir_p
 
 
 class SaveTempFile(Builder):
