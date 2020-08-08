@@ -122,7 +122,8 @@ def generate_outfilepath(env, parameters, target=None, append=None, ext=None,
     # Find the first valid infilepath
     parameters = (parameters if isinstance(parameters, list) or
                   isinstance(parameters, tuple) else [parameters])
-    parameters = [fp for fp in parameters if hasattr(fp, 'subpath')]
+    parameters = [fp for fp in parameters if isinstance(fp, pathlib.Path)]
+
     if len(parameters) == 0:
         return None
     infilepath = parameters[0]
@@ -140,7 +141,8 @@ def generate_outfilepath(env, parameters, target=None, append=None, ext=None,
         target = None
 
     # Formulate the subpath
-    subpath = infilepath.subpath
+    subpath = (infilepath.subpath if hasattr(infilepath, 'subpath') else
+               infilepath)
     if media_path and not str(subpath).startswith(media_path):
         subpath = rename(path=media_path / subpath, append=append,
                          extension=ext)

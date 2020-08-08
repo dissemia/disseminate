@@ -142,9 +142,15 @@ class Img(Tag):
         content = (self.content_as_filepath(content=content, context=context)
                    or content)
         parameters = ([content] + list(attrs.filter(target=target).totuple()))
+
+        # Use the content's filepath suffix as the in_ext, if a file has been
+        # specified, otherwise use this class's in_ext attribute
+        in_ext = (content.suffix if isinstance(content, pathlib.Path) else
+                  self.in_ext)
+
         build = target_builder.add_build(parameters=parameters,
                                          context=context,
-                                         in_ext=self.in_ext,
+                                         in_ext=in_ext,
                                          target=target,
                                          use_cache=False)
         outfilepath = build.outfilepath
@@ -165,11 +171,25 @@ class Img(Tag):
         attributes = attributes or self.attributes
         attrs = format_attribute_width(attributes, target='.tex')
 
-        # Get the filename for the file. Wrap this filename in curly braces
-        # in case the filename includes special characters
+        # Get the filename for the file.
         base = outfilepath.with_suffix('')
         suffix = outfilepath.suffix
+
+        # If the filename has unicode characters, you need to detokenize them
+        # for latex to run correctly
+        try:
+            str(outfilepath).encode('ascii')
+        except UnicodeEncodeError:
+            base = tex_cmd(cmd='detokenize', formatted_content=str(base))
+
+        # Wrap this filename in curly braces, which is needed for paths with
+        # spaces and absolute paths
         dest_filepath = "{{{base}}}{suffix}".format(base=base, suffix=suffix)
+
+        # base = outfilepath.with_suffix('')
+        # suffix = outfilepath.suffix
+        # dest_filepath = ("{{\detokenize{{{base}}}}}"
+        #                  "{suffix}".format(base=base, suffix=suffix))
 
         return tex_cmd(cmd='includegraphics', attributes=attrs,
                        formatted_content=str(dest_filepath))
@@ -178,7 +198,7 @@ class Img(Tag):
         # Add the file dependency
         outfilepath = self.add_file(target='.html', content=content,
                                     context=context, attributes=attributes)
-        url = outfilepath.get_url(context=self.context)
+        url = outfilepath.get_url(context=self.context, target='.html')
 
         # Format the width and attributes
         attrs = self.attributes.copy() if attributes is None else attributes

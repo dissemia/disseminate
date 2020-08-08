@@ -381,6 +381,8 @@ tex_cmd_arguments = {'textbf': empty,
                      'hfill': empty,
                      'pageref': (StringPositionalValue,),
                      'href': (StringPositionalValue,),
+
+                     'detokenize': empty,
                      }
 
 tex_cmd_optionals = {'includegraphics': ('width', 'height'),

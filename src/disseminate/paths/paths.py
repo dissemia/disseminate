@@ -175,18 +175,18 @@ class TargetPath(object):
         return TargetPath(target_root=self.target_root, target=self.target,
                           subpath=self.subpath)
 
-    def get_url(self, context=None):
+    def get_url(self, context=None, target=None):
         """Construct the url for the path."""
         url = None
 
         # See if a relative url is requested and get that if it is
         if context is not None and context.get('relative_links', True):
-            url = self._get_relative_url(context)
+            url = self._get_relative_url(context, target)
 
         # If a relative url could not be produced or one was not wanted, get
         # an absolute url.
         if url is None:
-            url = self._get_absolute_url(context)
+            url = self._get_absolute_url(context, target)
 
         # Cleanup the url by  and double slashes
         url = url.rstrip('/')  # stripping leading slashes
@@ -194,14 +194,14 @@ class TargetPath(object):
 
         return url
 
-    def _get_relative_url(self, context):
+    def _get_relative_url(self, context, target=None):
         """Construct the relative url for the path."""
         document = context.document if hasattr(context, 'document') else None
         if document is None:
             return None
 
         # Get the target_filepath. Prepend a '.' if needed. ex: '.html'
-        target = str(self.target)
+        target = str(target or self.target)
         target = '.' + target if not target.startswith('.') else target
 
         # Get the target_filepath and target_path
@@ -214,11 +214,11 @@ class TargetPath(object):
         # Construct a relative url relative to the target_path
         return str(relpath)
 
-    def _get_absolute_url(self, context):
+    def _get_absolute_url(self, context, target=None):
         """Construct the absolute url for the path."""
         # Get the parts of paths that will be used
         target_root = str(self.target_root).strip('.')
-        target = str(self.target).strip('.')
+        target = str(target or self.target).strip('.')
         subpath = str(self.subpath).strip('.')
 
         url_str = (context['base_url'] if isinstance(context, dict) and

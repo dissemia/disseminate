@@ -110,6 +110,7 @@ class ParallelBuilder(CompositeBuilder):
         builder = builder_cls(env=self.env, parameters=parameters,
                               outfilepath=outfilepath, context=context,
                               target=target, **kwargs)
+
         self.subbuilders.append(builder)
 
         return builder

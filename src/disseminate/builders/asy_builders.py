@@ -70,7 +70,7 @@ class Asy2svg(SequentialBuilder):
         subbuilders.append(pdf2svg)
 
         super().__init__(env, subbuilders=subbuilders, use_cache=use_cache,
-                         **kwargs)
+                         target=target, **kwargs)
 
 
 class SaveAsySvg(SequentialBuilder):

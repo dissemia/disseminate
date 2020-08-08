@@ -12,7 +12,6 @@ import pathvalidate
 
 from .utils import generate_outfilepath, generate_mock_parameters
 from .exceptions import runtime_error, BuildError
-from ..utils.file import mkdir_p
 from ..utils.classes import all_subclasses
 from ..utils.list import uniq
 from ..paths import TargetPath
@@ -338,8 +337,9 @@ class Builder(metaclass=ABCMeta):
 
         # Make sure the outfilepath directory exists
         if outfilepath and not outfilepath.parent.is_dir():
-            mkdir_p(outfilepath.parent)
+            outfilepath.parent.mkdir(parents=True, exist_ok=True)
 
+        self._outfilepath = outfilepath
         return outfilepath
 
     @outfilepath.setter

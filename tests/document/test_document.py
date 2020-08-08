@@ -573,8 +573,6 @@ def test_document_unusual_filenames(load_example):
     """Test the rendering of projects that use unusual filenames."""
 
     # Test example 11. Example 11 has unusual filenames that need to be loaded
-    # TODO: Currently this test works for html, but not pdf/html due to an
-    # inability of pdflatex to work with unicode filenames
     #
     # tests/document/example11
     # └── src
@@ -585,6 +583,11 @@ def test_document_unusual_filenames(load_example):
     #     │       └── img.one.asy
     #     └── root.file.dm
     doc = load_example('tests/document/example11/src/root.file.dm')
+    target_root = doc.target_root
+    html_root = target_root / 'html'
+    tex_root = target_root / 'tex'
+    pdf_root = target_root / 'pdf'
+
     doc.render()
 
     subdocs = doc.documents_list(only_subdocuments=True)
@@ -595,20 +598,46 @@ def test_document_unusual_filenames(load_example):
     assert subdocs[0].src_filepath.match('tests/document/example11/src/'
                                          'ch1.1/ch1.1.dm')
 
-    # Check dependencies
-    subdoc_src_filepath = subdocs[0].src_filepath
-    dep_manager = doc.context['dependency_manager']
+    # Check the creation of dependencies (html)
+    html_key = {html_root / 'ch1.1',  # dirs
+                html_root / 'media',
+                html_root / 'media' / 'ch1.1',
+                html_root / 'media' / 'ch1.1' / 'čísla',
+                html_root / 'media' / 'css',
 
-    subdoc_deps = dep_manager.dependencies[subdoc_src_filepath]
+                html_root / 'root.file.html',  # files
+                html_root / 'ch1.1' / 'ch1.1.html',
+                html_root / 'media' / 'ch1.1' / 'čísla' / 'fig1.1.1.png',
+                html_root / 'media' / 'ch1.1' / 'čísla' / 'img.one.svg',
+                html_root / 'media' / 'css' / 'base.css',
+                html_root / 'media' / 'css' / 'bootstrap.min.css',
+                html_root / 'media' / 'css' / 'default.css',
+                html_root / 'media' / 'css' / 'pygments.css',
+                }
 
-    assert any(dep.dep_filepath.match('src/ch1.1/čísla/img.one.asy')
-               for dep in subdoc_deps)
-    assert any(dep.dest_filepath.match('html/ch1.1/čísla/img.one.svg')
-               for dep in subdoc_deps)
-    assert any(dep.dep_filepath.match('src/ch1.1/čísla/fig1.1.1.png')
-               for dep in subdoc_deps)
-    assert any(dep.dest_filepath.match('html/ch1.1/čísla/fig1.1.1.png')
-               for dep in subdoc_deps)
+    html_actual = set(html_root.glob('**/*'))
+    assert html_key == html_actual
+
+    tex_key = {tex_root / 'ch1.1',  # dirs
+               tex_root / 'media',
+               tex_root / 'media' / 'ch1.1',
+               tex_root / 'media' / 'ch1.1' / 'čísla',
+
+               tex_root / 'root.file.tex',  # files
+               tex_root / 'ch1.1' / 'ch1.1.tex',
+               tex_root / 'media' / 'ch1.1' / 'čísla' / 'fig1.1.1.png',
+               tex_root / 'media' / 'ch1.1' / 'čísla' / 'img.one.pdf',
+               }
+    tex_actual = set(tex_root.glob('**/*'))
+    assert tex_key == tex_actual
+
+    pdf_key = {pdf_root / 'ch1.1',  # dirs
+
+               pdf_root / 'root.file.pdf',  # files
+               pdf_root / 'ch1.1' / 'ch1.1.pdf',
+               }
+    pdf_actual = set(pdf_root.glob('**/*'))
+    assert pdf_key == pdf_actual
 
 
 def test_document_example8(load_example):

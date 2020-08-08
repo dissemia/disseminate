@@ -9,7 +9,6 @@ import jinja2
 from .builder import Builder
 from .utils import generate_mock_parameters, generate_outfilepath
 from ..paths import SourcePath
-from ..utils.file import mkdir_p
 from ..utils.list import uniq
 from ..utils.classes import weakattr
 from .. import settings
@@ -151,7 +150,7 @@ class JinjaRender(Builder):
 
         # Make sure the outfilepath directory exists
         if outfilepath and not outfilepath.parent.is_dir():
-            mkdir_p(outfilepath.parent)
+            outfilepath.parent.mkdir(parents=True, exist_ok=True)
 
         return outfilepath
 

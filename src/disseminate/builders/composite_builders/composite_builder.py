@@ -111,7 +111,8 @@ class CompositeBuilder(Builder):
 
             # Get builder attributes that are useful to print out
             attrs = ["{}={}".format(attr, getattr(b, attr, None))
-                     for attr in ('use_cache', 'use_media', 'clear_done')
+                     for attr in ('use_cache', 'use_media', 'clear_done',
+                                  'target')
                      if getattr(b, attr, None) is not None]
 
             if attrs:
