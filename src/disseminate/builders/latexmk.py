@@ -11,6 +11,7 @@ class Latexmk(Builder):
               "-pdf "  # output pdf
               "-norc "  # do not use latexmkrc config
               "-f "  # continue past errors
+              "-bibtex- "  # don't use bibtex
               "-jobname={builder.jobname} "  # filename of output file
               "-output-directory={builder.cache_path} "  # dir for temp files
               "{builder.infilepaths}")  # tex file to use
