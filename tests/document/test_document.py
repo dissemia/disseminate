@@ -1,16 +1,31 @@
 """
 Tests for Document classes and functions.
 """
-import pathlib
+from pathlib import Path
 import logging
 
 import pytest
 from jinja2.exceptions import TemplateNotFound
 
-from disseminate.document import Document, exceptions
+from disseminate.document import Document
 from disseminate.paths import SourcePath, TargetPath
 from disseminate.utils.tests import strip_leading_space
 from disseminate import settings
+
+
+# Setup example paths
+ex1_root = Path("tests") / "document" / "examples" / "ex1"
+ex1_subpath = Path("dummy.dm")
+ex2_root = Path("tests") / "document" / "examples" / "ex2"
+ex2_subpath_noheader = Path("noheader.dm")
+ex2_subpath_withheader = Path("withheader.dm")
+ex4_root = Path("tests") / "document" / "examples" / "ex4" / "src"
+ex4_subpath = Path("file.dm")
+ex5_root = Path("tests") / "document" / "examples" / "ex5"
+ex5_subpath = Path("index.dm")
+ex8_root = Path("tests") / "document" / "examples" / "ex8"
+ex11_root = Path("tests") / "document" / "examples" / "ex11" / "src"
+ex11_subpath = Path("root.file.dm")
 
 
 # Tests for document methods
@@ -34,69 +49,66 @@ def test_document_paths(doc):
 
     # Test the paths
     assert isinstance(doc.src_filepath, SourcePath)
-    assert str(doc.src_filepath) == str(src_filepath)
-    assert str(doc.src_filepath.project_root) == str(project_root)
-
+    assert doc.src_filepath.project_root == project_root
     assert isinstance(doc.project_root, SourcePath)
-    assert str(doc.project_root) == str(project_root)
-
     assert isinstance(doc.target_root, TargetPath)
-    assert str(doc.target_root) == str(target_root)
-    assert str(doc.target_root.target_root) == str(target_root)
+    assert doc.target_root == target_root
 
 
 def test_document_src_filepaths(load_example):
-    """Test the src_filepaths of documents."""
+    """Test the src_filepaths of documents to see if they're correctly loaded
+    and parsed into SourcePaths with a project_root and subpath."""
     # 1. Example1 does not have markup source files in a src
     #    directory.
-    doc = load_example("tests/document/example1/dummy.dm")
+    doc = load_example(ex1_root / ex1_subpath)
 
     assert isinstance(doc.src_filepath, SourcePath)
-    assert str(doc.src_filepath) == "tests/document/example1/dummy.dm"
-    assert str(doc.src_filepath.project_root) == "tests/document/example1"
-    assert str(doc.src_filepath.subpath) == "dummy.dm"
+    assert doc.src_filepath == ex1_root / ex1_subpath
+    assert doc.src_filepath.project_root == ex1_root
+    assert doc.src_filepath.subpath == ex1_subpath
 
     # 2. Example4 has a markup source file in a source directory,
     #    'src'. Target files will be saved in the parent directory of the 'src'
     #    directory
-    doc = load_example("tests/document/example4/src/file.dm")
-    assert str(doc.src_filepath) == "tests/document/example4/src/file.dm"
-    assert str(doc.src_filepath.project_root) == "tests/document/example4/src"
-    assert str(doc.src_filepath.subpath) == "file.dm"
+    doc = load_example(ex4_root / ex4_subpath)
+
+    assert doc.src_filepath == ex4_root / ex4_subpath
+    assert doc.src_filepath.project_root == ex4_root
+    assert doc.src_filepath.subpath == ex4_subpath
 
     # 3. Example5 has markup source files in the root project directory, and
     #    in the sub1, sub2 and sub3 directories.
-    doc = load_example("tests/document/example5/index.dm")
+    doc = load_example(ex5_root / ex5_subpath)
 
     assert isinstance(doc.src_filepath, SourcePath)
-    assert str(doc.src_filepath) == "tests/document/example5/index.dm"
-    assert str(doc.src_filepath.project_root) == "tests/document/example5"
-    assert str(doc.src_filepath.subpath) == "index.dm"
+    assert doc.src_filepath == ex5_root / ex5_subpath
+    assert doc.src_filepath.project_root == ex5_root
+    assert doc.src_filepath.subpath == ex5_subpath
 
     # Check the subdocuments
     subdoc = list(doc.subdocuments.values())[0]
 
     assert isinstance(subdoc.src_filepath, SourcePath)
-    assert str(subdoc.src_filepath) == "tests/document/example5/sub1/index.dm"
-    assert str(subdoc.src_filepath.project_root) == "tests/document/example5"
-    assert str(subdoc.src_filepath.subpath) == "sub1/index.dm"
+    assert subdoc.src_filepath == ex5_root / "sub1" / "index.dm"
+    assert subdoc.src_filepath.project_root == ex5_root
+    assert subdoc.src_filepath.subpath == Path("sub1") / "index.dm"
 
     subdoc = list(doc.subdocuments.values())[1]
     assert isinstance(subdoc.src_filepath, SourcePath)
-    assert str(subdoc.src_filepath) == "tests/document/example5/sub2/index.dm"
-    assert str(subdoc.src_filepath.project_root) == "tests/document/example5"
-    assert str(subdoc.src_filepath.subpath) == "sub2/index.dm"
+    assert subdoc.src_filepath == ex5_root / "sub2" / "index.dm"
+    assert subdoc.src_filepath.project_root == ex5_root
+    assert subdoc.src_filepath.subpath == Path("sub2") / "index.dm"
 
     subdoc = list(doc.subdocuments.values())[2]
     assert isinstance(subdoc.src_filepath, SourcePath)
-    assert str(subdoc.src_filepath) == "tests/document/example5/sub3/index.dm"
-    assert str(subdoc.src_filepath.project_root) == "tests/document/example5"
-    assert str(subdoc.src_filepath.subpath) == "sub3/index.dm"
+    assert subdoc.src_filepath == ex5_root / "sub3" / "index.dm"
+    assert subdoc.src_filepath.project_root == ex5_root
+    assert subdoc.src_filepath.subpath == Path("sub3") / "index.dm"
 
 
 def test_document_targets(load_example):
     """Test the document targets method."""
-    doc = load_example("tests/document/example1/dummy.dm")
+    doc = load_example("tests/document/examples/ex1/dummy.dm")
     target_root = doc.target_root
 
     # dummy.dm has the entry 'html, tex' set in the header.
@@ -125,82 +137,65 @@ def test_document_target_filepath(load_example):
 
     # 1. Example1 does not have markup source files in a source
     #    directory. Target files will be saved in the project directory
-    doc = load_example("tests/document/example1/dummy.dm")
+    doc = load_example(ex1_root / ex1_subpath)
     target_root = doc.target_root
 
     assert isinstance(doc.target_filepath('.html'), TargetPath)
-    assert (str(doc.target_filepath('.html').target_root) ==
-            str(target_root))
-    assert (str(doc.target_filepath('.html').target) ==
-            "html")
-    assert (str(doc.target_filepath('.html').subpath) ==
-            "dummy.html")
+    assert doc.target_filepath('.html').target_root == target_root
+    assert doc.target_filepath('.html').target == Path("html")
+    assert doc.target_filepath('.html').subpath == Path("dummy.html")
 
     # 2. Example4 has a markup source file in a source directory,
     #    'src'. Target files will be saved in the parent directory of the 'src'
     #    directory
-    doc = load_example("tests/document/example4/src/file.dm")
+    doc = load_example(ex4_root / ex4_subpath)
     target_root = doc.target_root
 
-    assert (str(doc.target_filepath('.html').target_root) ==
-            str(target_root))
-    assert (str(doc.target_filepath('.html').target) ==
-            "html")
-    assert (str(doc.target_filepath('.html').subpath) ==
-            "file.html")
+    assert doc.target_filepath('.html').target_root == target_root
+    assert doc.target_filepath('.html').target == Path("html")
+    assert doc.target_filepath('.html').subpath == Path("file.html")
 
     # 3. Example5 has markup source files in the root project directory, and
     #    in the sub1, sub2 and sub3 directories.
-    doc = load_example("tests/document/example5/index.dm")
+    doc = load_example(ex5_root / ex5_subpath)
     target_root = doc.target_root
 
-    assert (str(doc.target_filepath('.html').target_root) ==
-            str(target_root))
-    assert (str(doc.target_filepath('.html').target) ==
-            "html")
-    assert (str(doc.target_filepath('.html').subpath) ==
-            "index.html")
+    assert doc.target_filepath('.html').target_root == target_root
+    assert doc.target_filepath('.html').target == Path("html")
+    assert doc.target_filepath('.html').subpath == Path("index.html")
 
     # Check the subdocuments
     subdoc = list(doc.subdocuments.values())[0]
     assert isinstance(subdoc.target_root, TargetPath)
-    assert str(subdoc.target_root) == str(target_root)
-    assert (str(subdoc.target_filepath('.html').target_root) ==
-            str(target_root))
-    assert (str(subdoc.target_filepath('.html').target) ==
-            "html")
-    assert (str(subdoc.target_filepath('.html').subpath) ==
-            "sub1/index.html")
+    assert subdoc.target_root == target_root
+    assert subdoc.target_filepath('.html').target_root == target_root
+    assert subdoc.target_filepath('.html').target == Path("html")
+    assert (subdoc.target_filepath('.html').subpath ==
+            Path("sub1") / "index.html")
 
     subdoc = list(doc.subdocuments.values())[1]
     assert isinstance(subdoc.target_root, TargetPath)
-    assert str(subdoc.target_root) == str(target_root)
-    assert (str(subdoc.target_filepath('.html').target_root) ==
-            str(target_root))
-    assert (str(subdoc.target_filepath('.html').target) ==
-            "html")
-    assert (str(subdoc.target_filepath('.html').subpath) ==
-            "sub2/index.html")
+    assert subdoc.target_root == target_root
+    assert subdoc.target_filepath('.html').target_root == target_root
+    assert subdoc.target_filepath('.html').target == Path("html")
+    assert (subdoc.target_filepath('.html').subpath ==
+            Path("sub2") / "index.html")
 
     subdoc = list(subdoc.subdocuments.values())[0]
     assert isinstance(subdoc.target_root, TargetPath)
-    assert str(subdoc.target_root) == str(target_root)
-    assert (str(subdoc.target_filepath('.html').target_root) ==
-            str(target_root))
-    assert (str(subdoc.target_filepath('.html').target) ==
-            "html")
-    assert (str(subdoc.target_filepath('.html').subpath) ==
-            "sub2/subsub2/index.html")
+    assert subdoc.target_root == target_root
+    assert subdoc.target_filepath('.html').target_root == target_root
+    assert subdoc.target_filepath('.html').target == Path("html")
+    assert (subdoc.target_filepath('.html').subpath ==
+            Path("sub2") / "subsub2" / "index.html")
 
     subdoc = list(doc.subdocuments.values())[2]
     assert isinstance(subdoc.target_root, TargetPath)
-    assert str(subdoc.target_root) == str(target_root)
-    assert (str(subdoc.target_filepath('.html').target_root) ==
-            str(target_root))
-    assert (str(subdoc.target_filepath('.html').target) ==
-            "html")
-    assert (str(subdoc.target_filepath('.html').subpath) ==
-            "sub3/index.html")
+    assert subdoc.target_root == target_root
+    assert subdoc.target_filepath('.html').target_root == target_root
+    assert subdoc.target_filepath('.html').target == Path("html")
+    assert (subdoc.target_filepath('.html').subpath ==
+            Path("sub3") / "index.html")
 
 
 def test_document_load_required(doctree, wait, caplog):
@@ -429,7 +424,7 @@ def test_document_label_mtime(doc):
 def test_document_context_update(load_example):
     """Tests that the context is properly updated in subsequent renders."""
     # First load a file with a header
-    doc = load_example("tests/document/example2/withheader.dm")
+    doc = load_example(ex2_root / ex2_subpath_withheader)
 
     # Check the contents of the context.
     # The title entry is converted to a tag.
@@ -454,8 +449,8 @@ def test_document_context_update(load_example):
 
     # Now switch to a file without a header and make sure the header values
     # are removed
-    doc.src_filepath = SourcePath(project_root="tests/document/example2",
-                                  subpath="noheader.dm")
+    doc.src_filepath = SourcePath(project_root=ex2_root,
+                                  subpath=ex2_subpath_noheader)
     doc.load(reload=True)
 
     # Check the contents  of the local_context
@@ -474,7 +469,7 @@ def test_document_macros(load_example):
     processed."""
 
     # First load a file with a header
-    doc = load_example("tests/document/example2/withheader.dm")
+    doc = load_example(ex2_root / ex2_subpath_withheader)
 
     doc.render()
     # See if the macro was properly replaced
@@ -574,7 +569,7 @@ def test_document_unusual_filenames(load_example):
 
     # Test example 11. Example 11 has unusual filenames that need to be loaded
     #
-    # tests/document/example11
+    # tests/document/examples/ex11
     # └── src
     #     ├── ch1.1
     #     │   ├── ch1.1.dm
@@ -582,7 +577,7 @@ def test_document_unusual_filenames(load_example):
     #     │       ├── fig1.1.1.png
     #     │       └── img.one.asy
     #     └── root.file.dm
-    doc = load_example('tests/document/example11/src/root.file.dm')
+    doc = load_example(ex11_root / ex11_subpath)
     target_root = doc.target_root
     html_root = target_root / 'html'
     tex_root = target_root / 'tex'
@@ -594,9 +589,8 @@ def test_document_unusual_filenames(load_example):
     assert len(subdocs) == 1
 
     # Check that the src_filepaths are correctly set
-    assert doc.src_filepath.match('tests/document/example11/src/root.file.dm')
-    assert subdocs[0].src_filepath.match('tests/document/example11/src/'
-                                         'ch1.1/ch1.1.dm')
+    assert doc.src_filepath == ex11_root / ex11_subpath
+    assert subdocs[0].src_filepath == ex11_root / 'ch1.1' / 'ch1.1.dm'
 
     # Check the creation of dependencies (html)
     html_key = {html_root / 'ch1.1',  # dirs
@@ -642,12 +636,12 @@ def test_document_unusual_filenames(load_example):
 
 def test_document_example8(load_example):
     """Test the example8 document directory."""
-    # Load the document and render it with no template
-    doc = load_example("tests/document/example8/src/fundamental_solnNMR/"
-                       "inept/inept.dm")
+    # Load the document with equations (@eq) an asymptote (@asy) tags
+    doc = load_example(ex8_root / "src" / "fundamental_solnNMR" /
+                       "inept" / "inept.dm")
 
     doc.render()
 
     # Check the rendered html
-    key = pathlib.Path('tests/document/example8/html/inept.html').read_text()
+    key = (ex8_root / "html" / "inept.html").read_text()
     assert doc.targets['.html'].read_text() == key

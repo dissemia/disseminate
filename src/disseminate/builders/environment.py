@@ -57,7 +57,7 @@ class Environment(object):
         self.scanner = Scanner
 
         # Setup the paths for the parent_context
-        if not isinstance(src_filepath, pathlib.Path):
+        if not isinstance(src_filepath, SourcePath):
             # Make sure the src_filepath is a Source path
             src_filepath = pathlib.Path(src_filepath)
             src_filepath = SourcePath(project_root=src_filepath.parent,
