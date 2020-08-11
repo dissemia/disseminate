@@ -1,9 +1,18 @@
 """
 Tests the DocumentContext class.
 """
+from pathlib import Path
+
 from disseminate import SourcePath, TargetPath
 from disseminate.document import DocumentContext, Document
 from disseminate.tags import TagFactory
+
+
+# Setup example paths
+ex4_root = Path("tests") / "document" / "examples" / "ex4" / "src"
+ex4_subpath = Path("file.dm")
+ex7_root = Path("tests") / "document" / "examples" / "ex7" / "src"
+ex7_subpath = Path("file1.dm")
 
 
 # A DummyDocument class
@@ -77,7 +86,7 @@ def test_document_context_basic_inheritence(context_cls, tmpdir):
 def test_document_context_simple_documents(load_example):
     """Test the preservation of the parent context with subdocuments."""
     # Load example4. It has a main document (file.dm)
-    doc = load_example('tests/document/example4/src/file.dm')
+    doc = load_example(ex4_root / ex4_subpath)
     label_manager = doc.label_manager
     dependency_manager = doc.dependency_manager
 
@@ -119,7 +128,7 @@ def test_document_context_simple_documents(load_example):
 
     # Load example7. It has a main document (file1.dm) and 1 subdocuments
     # (sub1/file11.dm), which has its own subdocument (subsub1/file111.dm)
-    doc = load_example('tests/document/example7/src/file1.dm')
+    doc = load_example(ex7_root / ex7_subpath)
     label_manager = doc.label_manager
     dependency_manager = doc.dependency_manager
 
@@ -155,10 +164,11 @@ def test_document_context_simple_documents(load_example):
         subdocs = doc.documents_list(only_subdocuments=True, recursive=True)
 
         assert len(subdocs) == 2
-        src_filepath1 = SourcePath(project_root='tests/document/example7/src',
-                                   subpath='sub1/file11.dm')
-        src_filepath2 = SourcePath(project_root='tests/document/example7/src',
-                                   subpath='sub1/subsub1/file111.dm')
+        src_filepath1 = SourcePath(project_root=ex7_root,
+                                   subpath=Path('sub1') / 'file11.dm')
+        src_filepath2 = SourcePath(project_root=ex7_root,
+                                   subpath=(Path('sub1') / 'subsub1' /
+                                            'file111.dm'))
         assert subdocs[0].src_filepath == src_filepath1
         assert subdocs[1].src_filepath == src_filepath2
 
@@ -190,7 +200,7 @@ def test_document_context_is_valid(load_example):
     """Test the is_valid method for document contexts."""
 
     # Load example4. It has a main document (file.dm)
-    doc = load_example('tests/document/example4/src/file.dm')
+    doc = load_example(ex4_root / ex4_subpath)
     context = doc.context
 
     # The initial context is valid.

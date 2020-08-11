@@ -62,7 +62,7 @@ class Environment(object):
             src_filepath = pathlib.Path(src_filepath)
             src_filepath = SourcePath(project_root=src_filepath.parent,
                                       subpath=src_filepath.name)
-        project_root = src_filepath.project_root
+        project_root = SourcePath(project_root=src_filepath.project_root)
         self.project_root = project_root
 
         if target_root is not None:

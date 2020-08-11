@@ -1,8 +1,9 @@
 """
-Test the compilation of documents with specific tags.
+Test the documents with specific tags.
 """
 
-def test_compiled_document_marginfig(env):
+
+def test_document_marginfig(env):
     """Test the marginfig tag in compiled documents"""
 
     # Create the paths in the temporary directory

@@ -184,6 +184,18 @@ def url_request(monkeypatch):
 
 
 @pytest.fixture
+def is_pdf():
+    """Tests whether the file is a pdf file
+    """
+    def _is_pdf(pdf_filepath):
+        # Retrieve the lines from the file
+        with open(pdf_filepath, 'rb') as file:
+            chunk = file.read(512)
+            return chunk.startswith(b'%PDF-')
+    return _is_pdf
+
+
+@pytest.fixture
 def a_in_b():
     """Test whether items in 'a' are in 'b'."""
     def _a_in_b(a, b):

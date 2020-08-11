@@ -85,8 +85,9 @@ class DocumentContext(BaseContext):
     #: context is cleared. These are typically for entries setup in the
     #: __init__ of the class.
     exclude_from_reset = {
-        # The document that owns the context should not be reset, since we do
-        # not want to have this document inherited from the parent.
+        # The document that owns the context and its parent variables should
+        # not be reset, since we do not want to have this document inherited
+        # from the parent.
         'document',
 
         # The following manager objects should remain the same every time the
@@ -135,6 +136,9 @@ class DocumentContext(BaseContext):
 
     def reset(self):
         super(DocumentContext, self).reset()
+        # Make sure the following entries are present from the parent or
+        # root context
+        self.is_valid('environment', 'project_root', 'target_root')
 
         document = self['document']()
         src_filepath = document.src_filepath
@@ -150,12 +154,7 @@ class DocumentContext(BaseContext):
         if src_filepath.exists():
             self['mtime'] = src_filepath.stat().st_mtime
 
-        # Set the root document variables; these should only be set if this
-        # is the context for the root document.
-        if self.get('project_root', None) is None:
-            self['project_root'] = document.project_root
-        if self.get('target_root', None) is None:
-            self['target_root'] = document.target_root
+        # The the root document, if it wasn't set already
         if self.get('root_document', None) is None:
             self['root_document'] = weakref.ref(document)
             self['is_root_document'] = True
@@ -303,24 +302,3 @@ class DocumentContext(BaseContext):
                                subpath=subpath / path)
                     for path in includes]
         return includes
-
-    # @property
-    # def inactive_tags(self):
-    #     """Retrieve a list of inactive tags for the document
-    #
-    #     Returns
-    #     -------
-    #     inactive_tags : List[str]
-    #         A list of the inactive tags for the document.
-    #     """
-    #     # Get the inactive tags from the context.
-    #     inactive_tags = self.get('inactive_tags', '')
-    #
-    #     # Convert to a list, if needed
-    #     inactive_tags_list = (str_to_list(inactive_tags)
-    #                           if isinstance(inactive_tags, str) else
-    #                           inactive_tags)
-    #
-    #     # Remove empty entries, and return set
-    #     return {inactive_tag for inactive_tag in inactive_tags_list
-    #             if inactive_tag}

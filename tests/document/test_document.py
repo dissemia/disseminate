@@ -23,7 +23,8 @@ ex4_root = Path("tests") / "document" / "examples" / "ex4" / "src"
 ex4_subpath = Path("file.dm")
 ex5_root = Path("tests") / "document" / "examples" / "ex5"
 ex5_subpath = Path("index.dm")
-ex8_root = Path("tests") / "document" / "examples" / "ex8"
+ex10_root = Path("tests") / "document" / "examples" / "ex10" / "src"
+ex10_subpath = Path("index.dm")
 ex11_root = Path("tests") / "document" / "examples" / "ex11" / "src"
 ex11_subpath = Path("root.file.dm")
 
@@ -634,14 +635,69 @@ def test_document_unusual_filenames(load_example):
     assert pdf_key == pdf_actual
 
 
-def test_document_example8(load_example):
-    """Test the example8 document directory."""
-    # Load the document with equations (@eq) an asymptote (@asy) tags
-    doc = load_example(ex8_root / "src" / "fundamental_solnNMR" /
-                       "inept" / "inept.dm")
+def test_document_multiple_dependency_locations(load_example):
+    """Test the addition of dependencies from multiple locations."""
 
+    # 1. Test example10, which has an image file local to a sub-directory, one
+    #    in the root directory and template files
+    # tests/document/example10
+    # └── src
+    #     ├── chapter1
+    #     │   ├── figures
+    #     │   │   └── local_img.png
+    #     │   └── index.dm
+    #     ├── index.dm
+    #     └── media
+    #         └── ch1
+    #             └── root_img.png
+    # Load the root document and subdocument
+    doc = load_example(ex10_root / ex10_subpath)
+    target_root = doc.target_root
+    subdoc = doc.documents_list(only_subdocuments=True)[0]
+
+    # Load the dependencies by rendering the root doc
     doc.render()
 
-    # Check the rendered html
-    key = (ex8_root / "html" / "inept.html").read_text()
-    assert doc.targets['.html'].read_text() == key
+    # Check the creation of dependencies (html)
+    html_root = target_root / 'html'
+    html_key = {html_root / 'chapter1',  # dirs
+                html_root / 'media',
+                html_root / 'media' / 'css',
+                html_root / 'media' / 'ch1',
+                html_root / 'media' / 'chapter1',
+                html_root / 'media' / 'chapter1' / 'figures',
+
+                html_root / 'index.html',  # files
+                html_root / 'chapter1' / 'index.html',
+                html_root / 'media' / 'ch1' / 'root_img.png',
+                html_root / 'media' / 'chapter1' / 'figures' / 'local_img.png',
+                html_root / 'media' / 'css' / 'base.css',
+                html_root / 'media' / 'css' / 'bootstrap.min.css',
+                html_root / 'media' / 'css' / 'default.css',
+                html_root / 'media' / 'css' / 'pygments.css',
+                }
+    html_actual = set(html_root.glob('**/*'))
+    assert html_actual == html_key
+
+    tex_root = target_root / 'tex'
+    tex_key = {tex_root / 'chapter1',  # dirs
+               tex_root / 'media',
+               tex_root / 'media' / 'ch1',
+               tex_root / 'media' / 'chapter1',
+               tex_root / 'media' / 'chapter1' / 'figures',
+
+               tex_root / 'index.tex',  # files
+               tex_root / 'chapter1' / 'index.tex',
+               tex_root / 'media' / 'ch1' / 'root_img.png',
+               tex_root / 'media' / 'chapter1' / 'figures' / 'local_img.png',
+               }
+    tex_actual = set(tex_root.glob('**/*'))
+    assert tex_actual == tex_key
+
+    pdf_root = target_root / 'pdf'
+    pdf_key = {pdf_root / 'chapter1',  # dirs
+
+               pdf_root / 'index.pdf',  # files
+               pdf_root / 'chapter1' / 'index.pdf'}
+    pdf_actual = set(pdf_root.glob('**/*'))
+    assert pdf_actual == pdf_key

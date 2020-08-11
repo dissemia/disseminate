@@ -1,12 +1,19 @@
 """
 Test the function of document trees and subdocuments.
 """
+from pathlib import Path
 import weakref
 import os
 
-from disseminate.document import Document
 from disseminate.utils.tests import strip_leading_space
-from disseminate import settings, SourcePath, TargetPath
+from disseminate import settings, SourcePath
+
+
+# Setup example paths
+ex5_root = Path("tests") / "document" / "examples" / "ex5"
+ex5_subpath = Path("index.dm")
+ex7_root = Path("tests") / "document" / "examples" / "ex7" / "src"
+ex7_subpath = Path("file1.dm")
 
 
 def touch(fname, times=None):
@@ -21,12 +28,12 @@ def test_documents_list(load_example):
     #    specified in the root file, 'src/file1.dm'. This file also includes
     #    a file, 'sub1/file11.dm', which in turn includes
     #    'sub1/subsub1/file111.dm'. All 3 files have content
-    src_filepath1 = SourcePath(project_root='tests/document/example7/src',
-                               subpath='file1.dm')
-    src_filepath2 = SourcePath(project_root='tests/document/example7/src',
-                               subpath='sub1/file11.dm')
-    src_filepath3 = SourcePath(project_root='tests/document/example7/src',
-                               subpath='sub1/subsub1/file111.dm')
+    src_filepath1 = SourcePath(project_root=ex7_root,
+                               subpath=Path("file1.dm"))
+    src_filepath2 = SourcePath(project_root=ex7_root,
+                               subpath=Path("sub1") / "file11.dm")
+    src_filepath3 = SourcePath(project_root=ex7_root,
+                               subpath=Path("sub1") / "subsub1"/ "file111.dm")
     doc = load_example(src_filepath1)
 
     # Get all files recursively, including the root document
@@ -137,19 +144,19 @@ def test_document_tree2(load_example):
     # Now test Example5. Example5 has a file in the root directory, a file in
     # the 'sub1', 'sub2' and 'sub3' directories and a file in the 'sub2/subsub2'
     # directory
-    doc = load_example("tests/document/example5/index.dm")
+    doc = load_example(ex5_root / ex5_subpath)
     project_root = doc.project_root
     target_root = doc.target_root
 
     # Setup paths of subdocuments
     src_filepath1 = SourcePath(project_root=project_root,
-                               subpath='sub1/index.dm')
+                               subpath=Path('sub1') / 'index.dm')
     src_filepath2 = SourcePath(project_root=project_root,
-                               subpath='sub2/index.dm')
+                               subpath=Path('sub2') / 'index.dm')
     src_filepath3 = SourcePath(project_root=project_root,
-                               subpath='sub3/index.dm')
+                               subpath=Path('sub3') / 'index.dm')
     src_filepath22 = SourcePath(project_root=project_root,
-                                subpath='sub2/subsub2/index.dm')
+                                subpath=Path('sub2') / 'subsub2' / 'index.dm')
 
     assert len(doc.subdocuments) == 3  # Only subdocuments of doc
     assert len(doc.documents_list(recursive=True)) == 5  # all subdocuments

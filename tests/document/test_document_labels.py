@@ -1,9 +1,15 @@
 """
 Tests the management of labels with documents.
 """
+from pathlib import Path
+
 from disseminate.document import Document
 from disseminate import SourcePath, TargetPath
 from disseminate import settings
+
+# Setup example paths
+ex4_root = Path("tests") / "document" / "examples" / "ex4" / "src"
+ex4_subpath = Path("file.dm")
 
 
 def test_document_labels(env):
@@ -35,8 +41,7 @@ def test_document_toc(env):
     """Test the generation of a toc from the header of a document."""
     # Setup the paths
     tmpdir = env.project_root
-    src_filepath = SourcePath(project_root='tests/document/example4/src',
-                              subpath='file.dm')
+    src_filepath = SourcePath(project_root=ex4_root, subpath=ex4_subpath)
     target_root = TargetPath(target_root=tmpdir)
 
     # Load example4, which has a file.dm with a 'toc' entry in the heading

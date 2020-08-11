@@ -186,11 +186,6 @@ class Img(Tag):
         # spaces and absolute paths
         dest_filepath = "{{{base}}}{suffix}".format(base=base, suffix=suffix)
 
-        # base = outfilepath.with_suffix('')
-        # suffix = outfilepath.suffix
-        # dest_filepath = ("{{\detokenize{{{base}}}}}"
-        #                  "{suffix}".format(base=base, suffix=suffix))
-
         return tex_cmd(cmd='includegraphics', attributes=attrs,
                        formatted_content=str(dest_filepath))
 
