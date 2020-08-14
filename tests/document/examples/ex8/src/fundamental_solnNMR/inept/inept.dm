@@ -2,6 +2,7 @@
 chapter: INEPT and Signal Enhancement
 author: Justin Lorieau
 targets: html, tex, pdf
+template: books/tufte
 @T1: T@sub{1}
 @p90: 90@deg
 @p180: 180@deg

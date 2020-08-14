@@ -65,9 +65,9 @@ def test_all_tags_and_templates_tex(doc):
                 tag_src += tag
             tag_src += '}\n'
             src += tag_src
-        print(template, src.splitlines()[-1])
+
         # Write the source document
         doc.src_filepath.write_text(src)
         doc.load()
-        doc.render()
+        doc.build()
 

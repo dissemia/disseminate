@@ -9,7 +9,6 @@ import pathlib
 
 from .document_context import DocumentContext
 from . import exceptions, signals
-from ..convert import convert
 from ..paths import SourcePath, TargetPath
 from .. import settings
 
@@ -542,115 +541,22 @@ class Document(object):
 
         return document_loaded
 
-    def get_renderer(self):
-        """Get the template renderer for this document.
-
-        Returns
-        -------
-        renderer : :obj:`Type[BaseRenderer] <.BaseRenderer>`
-        """
-        if ('renderers' in self.context and
-           'template' in self.context['renderers']):
-            return self.context['renderers']['template']
-        return None
-
-    def render_required(self, target_filepath):
-        """Evaluate whether a render is required to write the target file.
-
-        .. note:: This method re-loads the documents since it checks the
-                  modification time of tags in the context, which may become
-                  updated if the source file (or source files of sub-documents)
-                  are updated.
-
-        Parameters
-        ----------
-        target_filepath : :obj:`TargetPath <.paths.TargetPath>`
-            The path for the target file.
-
-        Returns
-        -------
-        render_required : bool
-            True, if a render is required.
-            False if a render isn't required.
-        """
-        target_filepath = pathlib.Path(target_filepath)
-
+    def build_needed(self):
+        """Evaluate whether a build is required"""
         # Reload document
         self.load()
+        return any(signals.document_build_needed.emit(document=self))
 
-        # 1. A render is required if the target_filepath doesn't exist
-        if not target_filepath.is_file():
-            logging.debug("Render required for {}: '{}' target file "
-                          "does not exist.".format(self, target_filepath))
-            return True
-
-        # Get the modification time for the source file(s) (src_filepath)
-        src_mtime = self.src_filepath.stat().st_mtime
-
-        # Get the modification for the target file (target_filepath)
-        target_mtime = target_filepath.stat().st_mtime
-
-        # 2. A render is required if the src_filepath mtime is newer than the
-        # target_filepath
-        if src_mtime > target_mtime:
-            logging.debug("Render required for {}: '{}' target file "
-                          "is older than source.".format(self, target_filepath))
-            return True
-
-        # 3. A render is required if any of the context entries need to be
-        #    updated.
-        entry_mtimes = [e.mtime for e in self.context.values()
-                        if hasattr(e, 'mtime') and e.mtime is not None]
-        max_entry_mtime = max(entry_mtimes) if len(entry_mtimes) > 0 else None
-        if max_entry_mtime is not None and target_mtime < max_entry_mtime:
-            logging.debug("Render required for {}:  The tags reference a "
-                          "document that's been updated.".format(self))
-            return True
-
-        # 4. Check the to see if the template for renderer has been updated
-        renderer = self.get_renderer()
-        if renderer.mtime > target_mtime:
-            logging.debug("Render required for {}:  The template has been "
-                          "updated.".format(self))
-            return True
-
-        # All tests passed. No new render is needed
-        return False
-
-    def render(self, targets=None, create_dirs=settings.create_dirs,
-               update_only=True, subdocuments=True):
-        """Render the document to one or more target formats.
-
-        Parameters
-        ----------
-        targets : Optional[Dict[str, :obj:`TargetPath <.paths.TargetPath>`]]
-            If specified, only the specified targets will be rendered.
-            This is a dict with the extension as keys and the target_filepath
-            as the value.
-        create_dirs : Optional[bool]
-            Create directories for the rendered target files, if the directories
-            don't exist.
-        update_only : Optional[bool]
-            If True, the file will only be rendered if the rendered file is
-            older than the source file.
-        subdocuments : Optional[bool]
-            If True, the subdocuments will be rendered (first) as well.
-
-        Returns
-        -------
-        bool
-            True, if the document needed to be rendered.
-            False, if the document did not need to be rendered.
-        """
+    def build(self, subdocuments=True):
+        """Run a build of the document"""
         # Make sure the latest source is loaded. This is needed in case the
         # list of targets has changed.
         self.load()
 
         if subdocuments:
             for doc in self.documents_list(only_subdocuments=True):
-                doc.render(targets=targets, create_dirs=create_dirs,
-                           update_only=update_only)
+                doc.build(subdocuments=subdocuments)
 
-        # Send the 'document_created' signal
-        signals.document_render.emit(document=self)
-        return True
+        # Send the 'document_build' signal
+        statuses = signals.document_build.emit(document=self)
+        return statuses[0] if len(statuses) == 1 else statuses

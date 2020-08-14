@@ -96,7 +96,6 @@ class SequentialBuilder(CompositeBuilder):
                 return status
 
         if number_subbuilders_done == len(self.subbuilders):
-            self.build_needed(reset=True)
             return 'done'
         else:
             return 'building'

@@ -212,7 +212,7 @@ def a_in_b():
 @pytest.yield_fixture
 def app(tmpdir):
     project_path = tmpdir.join('example7')
-    shutil.copytree('tests/document/example7', project_path)
+    shutil.copytree('tests/document/examples/ex7', project_path)
     app = create_app(in_path=str(project_path))
     app.config['PROJECTPATH'] = project_path
     yield app

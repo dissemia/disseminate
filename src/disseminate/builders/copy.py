@@ -3,7 +3,7 @@ A Builder to copy or link files.
 """
 import logging
 import pathlib
-from shutil import copyfile
+from shutil import copyfile, SameFileError
 
 from .builder import Builder
 
@@ -56,12 +56,15 @@ class Copy(Builder):
             infilepath = self.parameters[0]
             outfilepath = self.outfilepath
 
-            # Copy the file in the 2 files have different paths. If they have
-            # the same path, then a shutil.SameFileError exception is raised.
-            if infilepath != outfilepath:
+            # Copy the file if the 2 files have different paths and contents.
+            # If they have the same path, or they are hardlinks of each other,
+            # then a shutil.SameFileError exception is raised.
+            try:
+                copyfile(infilepath, outfilepath)
                 logging.debug("Copying '{}' -> '{}'".format(infilepath,
                                                             outfilepath))
-                copyfile(infilepath, outfilepath)
+            except SameFileError:
+                pass
 
             self.build_needed(reset=True)  # reset build flag
         return self.status

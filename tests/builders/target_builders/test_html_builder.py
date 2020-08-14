@@ -35,7 +35,7 @@ def test_html_builder_setup_html(env):
     assert builder.subbuilders[0].parameters == []
     assert builder.subbuilders[1].__class__.__name__ == 'JinjaRender'
     assert len(builder.subbuilders[1].parameters) > 0
-    assert builder.parameters == [src_filepath]
+    assert builder.parameters == ["build 'HtmlBuilder'", src_filepath]
     assert builder.outfilepath == target_filepath
 
     assert builder.build_needed()
@@ -54,7 +54,7 @@ def test_html_builder_setup_html(env):
     assert builder.subbuilders[0].parameters == []
     assert builder.subbuilders[1].__class__.__name__ == 'JinjaRender'
     assert len(builder.subbuilders[1].parameters) > 0
-    assert builder.parameters == [src_filepath]
+    assert builder.parameters == ["build 'HtmlBuilder'", src_filepath]
     assert builder.outfilepath == target_filepath
 
     assert builder.build_needed()
@@ -99,7 +99,7 @@ def test_html_builder_setup(env):
     assert builder.subbuilders[0].parameters == []
     assert builder.subbuilders[1].__class__.__name__ == 'JinjaRender'
     assert len(builder.subbuilders[1].parameters) > 0
-    assert builder.parameters == [src_filepath]
+    assert builder.parameters == ["build 'HtmlBuilder'", src_filepath]
     assert builder.outfilepath == target_filepath
 
     assert builder.build_needed()
@@ -193,15 +193,15 @@ def test_html_builder_simple_doc(load_example):
     assert builder.status == 'done'
 
 
-def test_html_builder_simple_doc_render(load_example):
-    """Test a render build for a simple document."""
+def test_html_builder_simple_doc_build(load_example):
+    """Test a build for a simple document."""
     # 1. example 1: tests/builders/examples/example3
     doc = load_example('tests/builders/examples/ex3/dummy.dm')
     target_root = doc.context['target_root']
 
-    doc.render()
+    doc.build()
 
-    # Check the copied and rendered files
+    # Check the copied and built files
     tgt_filepath = TargetPath(target_root=target_root, target='html',
                               subpath='dummy.html')
     assert tgt_filepath.exists()
@@ -284,6 +284,7 @@ def test_html_builder_inherited_doc(load_example):
 
     # Check the answer key
     key = pathlib.Path('tests/builders/examples/ex4/dummy.html')
+    print(doc.targets['.html'])
     assert doc.targets['.html'].read_text() == key.read_text()
 
     # Check the copied files

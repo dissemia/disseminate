@@ -1,5 +1,5 @@
 """
-Tests document renderings with specific targets
+Tests document build and build_needed methods.
 """
 from pathlib import Path
 
@@ -28,8 +28,10 @@ def test_document_simple_pdf(env, is_pdf, wait):
     # Make sure the target PDF hasn't been created yet.
     assert not doc.targets['.pdf'].is_file()
 
-    # Render the document
-    doc.render()
+    # build the document
+    assert doc.build_needed()
+    assert doc.build() == ['done']  # PdfBuilder successful
+    assert not doc.build_needed()
 
     # See if the PDF was succesfully generated (and the tex file is not in
     # the target directories; it should be in a cache directory)
@@ -42,7 +44,7 @@ def test_document_simple_pdf(env, is_pdf, wait):
     st_mtime = doc.targets['.pdf'].stat().st_mtime
     wait()  # sleep time offset needed for different mtimes
 
-    doc.render()
+    assert doc.build() == ['done']  # PdfBuilder successful
     assert doc.targets['.pdf'].stat().st_mtime == st_mtime
 
     # Now change the src tex file and make sure the pdf has changed
@@ -54,7 +56,7 @@ def test_document_simple_pdf(env, is_pdf, wait):
     new""")
 
     # Render again, and the mtime should change
-    doc.render()
+    assert doc.build() == ['done']  # PdfBuilder successful
     assert doc.targets['.pdf'].stat().st_mtime != st_mtime
 
 
@@ -75,7 +77,9 @@ def test_document_simple_tex_pdf(env, is_pdf):
     This is my third document""")
 
     # Render the document
-    doc.render()
+    assert doc.build_needed()
+    assert doc.build() == ['done', 'done']  # PdfBuilder, TexBuilder successful
+    assert not doc.build_needed()
 
     # See if the tex and pdf files were succesfully generated
     assert (target_root / 'pdf' / 'test.pdf').is_file()
@@ -84,15 +88,27 @@ def test_document_simple_tex_pdf(env, is_pdf):
     assert is_pdf(doc.targets['.pdf'])
 
 
-def test_document_example8_html_tex_pdf(load_example):
-    """Test rendering in html, tex, pdf the example8 document directory."""
+def test_document_template_books_tufte(load_example):
+    """Test rendering in html, tex, pdf for the books/tufte template.
+    (examples/ex8)
+    """
     # Load the document with equations (@eq) an asymptote (@asy) tags
     # 1. See how a subdocument alone is rendered
     doc = load_example(ex8_root / "src" / "fundamental_solnNMR" /
                        "inept" / "inept.dm")
     target_root = doc.target_root
 
-    doc.render()
+    # Check modifications from the context.txt (books/tufte)
+    assert doc.context['template'] == 'books/tufte'
+    assert 'heading_chapter_html' in doc.context['label_fmts']
+    assert (doc.context['label_fmts']['heading_chapter_html'] ==
+            "@prefix{@label.chapter_number} @label.title")
+
+    # Render the document
+    assert doc.build_needed()
+    assert doc.build() == ['done', 'done', 'done']  # HtmlBuilder, PdfBuilder,
+                                                    # TexBuilder successful
+    assert not doc.build_needed()
 
     # Check the dependencies and paths
     html_root = target_root / 'html'
@@ -108,6 +124,7 @@ def test_document_example8_html_tex_pdf(load_example):
                 html_root / 'media' / 'css' / 'bootstrap.min.css',
                 html_root / 'media' / 'css' / 'default.css',
                 html_root / 'media' / 'css' / 'pygments.css',
+                html_root / 'media' / 'css' / 'tufte.css',
                 }
     html_actual = set(html_root.glob('**/*'))
     assert html_key == html_actual
@@ -130,4 +147,3 @@ def test_document_example8_html_tex_pdf(load_example):
     # Check the rendered html
     key = (ex8_root / "html" / "inept.html").read_text()
     assert doc.targets['.html'].read_text() == key
-

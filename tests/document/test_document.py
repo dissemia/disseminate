@@ -351,8 +351,8 @@ def test_document_label_mtime(doc):
     @chapter[id=chapter-3]{Chapter 3}
     """)
 
-    # Load and the document
-    doc.render()
+    # Build the document for the html target
+    assert doc.build() == ['done']
 
     # Check that the labels were correctly loaded: 1 for the document and 1
     # for each of the 3 chapters.
@@ -472,7 +472,8 @@ def test_document_macros(load_example):
     # First load a file with a header
     doc = load_example(ex2_root / ex2_subpath_withheader)
 
-    doc.render()
+    # Build the document for the html and tex  targets
+    assert doc.build() == ['done', 'done']
     # See if the macro was properly replaced
     html_filepath = doc.targets['.html']
     rendered_html = html_filepath.read_text()
@@ -495,8 +496,9 @@ def test_document_load_on_render(doc):
     ---
     """
     doc.src_filepath.write_text(src)
-    doc.render()
 
+    # Build the document for the html, tex and pdf targets
+    assert doc.build() == ['done', 'done']
     assert doc.targets.keys() == {'.html', '.tex'}
 
 
@@ -584,7 +586,8 @@ def test_document_unusual_filenames(load_example):
     tex_root = target_root / 'tex'
     pdf_root = target_root / 'pdf'
 
-    doc.render()
+    # Build the document for the html, tex and pdf targets
+    assert doc.build() == ['done', 'done', 'done']
 
     subdocs = doc.documents_list(only_subdocuments=True)
     assert len(subdocs) == 1
@@ -655,8 +658,8 @@ def test_document_multiple_dependency_locations(load_example):
     target_root = doc.target_root
     subdoc = doc.documents_list(only_subdocuments=True)[0]
 
-    # Load the dependencies by rendering the root doc
-    doc.render()
+    # Build the document for the html, tex and pdf targets
+    assert doc.build() == ['done', 'done', 'done']
 
     # Check the creation of dependencies (html)
     html_root = target_root / 'html'

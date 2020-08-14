@@ -1,7 +1,6 @@
 """
 Test the PdfBuilder
 """
-import pathlib
 from collections import namedtuple
 
 from disseminate.builders.target_builders.pdf_builder import PdfBuilder
@@ -42,7 +41,7 @@ def test_pdf_builder_setup_pdf_in_targets(env):
     assert tex_builder.use_cache
     assert len(tex_builder.subbuilders[1].parameters) > 0
     assert tex_builder.subbuilders[1].outfilepath == target_tex_filepath
-    assert tex_builder.parameters == [src_filepath]
+    assert tex_builder.parameters == ["build 'TexBuilder'", src_filepath]
     assert tex_builder.outfilepath == target_tex_filepath
 
     pdf_builder = builder.subbuilders[1]
@@ -59,6 +58,7 @@ def test_pdf_builder_setup_pdf_in_targets(env):
     assert copy_builder.parameters == [target_cache_pdf_filepath]
     assert copy_builder.outfilepath == target_pdf_filepath
 
+    assert builder.parameters == ["build 'PdfBuilder'", src_filepath]
     assert builder.outfilepath == target_pdf_filepath
     assert not builder.use_cache
 
@@ -96,7 +96,8 @@ def test_pdf_builder_setup_pdf_tex_in_targets(env):
     assert builder.subbuilders[0].__class__.__name__ == 'TexBuilder'
     assert builder.subbuilders[0].target == 'tex'
     assert not builder.subbuilders[0].use_cache
-    assert builder.subbuilders[0].parameters == [src_filepath]
+    assert builder.subbuilders[0].parameters == ["build 'TexBuilder'",
+                                                 src_filepath]
     assert builder.subbuilders[0].outfilepath == target_tex_filepath
 
     assert builder.subbuilders[1].__class__.__name__ == 'Latexmk'
@@ -110,6 +111,7 @@ def test_pdf_builder_setup_pdf_tex_in_targets(env):
     assert copy_builder.parameters == [target_cache_pdf_filepath]
     assert copy_builder.outfilepath == target_pdf_filepath
 
+    assert builder.parameters == ["build 'PdfBuilder'", src_filepath]
     assert builder.outfilepath == target_pdf_filepath
 
     assert builder.build_needed()
@@ -127,7 +129,8 @@ def test_pdf_builder_setup_pdf_tex_in_targets(env):
     assert builder.subbuilders[0].__class__.__name__ == 'TexBuilder'
     assert builder.subbuilders[0].target == 'tex'
     assert not builder.subbuilders[0].use_cache
-    assert builder.subbuilders[0].parameters == [src_filepath]
+    assert builder.subbuilders[0].parameters == ["build 'TexBuilder'",
+                                                 src_filepath]
     assert builder.subbuilders[0].outfilepath == target_tex_filepath
 
     assert builder.subbuilders[1].__class__.__name__ == 'Latexmk'
@@ -141,6 +144,7 @@ def test_pdf_builder_setup_pdf_tex_in_targets(env):
     assert copy_builder.parameters == [target_cache_pdf_filepath]
     assert copy_builder.outfilepath == target_pdf_filepath
 
+    assert builder.parameters == ["build 'PdfBuilder'", src_filepath]
     assert builder.outfilepath == target_pdf_filepath
 
     assert builder.build_needed()
@@ -175,7 +179,8 @@ def test_pdf_builder_setup_not_in_targets(env):
     assert builder.subbuilders[0].__class__.__name__ == 'TexBuilder'
     assert builder.subbuilders[0].target == 'tex'
     assert builder.subbuilders[0].use_cache
-    assert builder.subbuilders[0].parameters == [src_filepath]
+    assert builder.subbuilders[0].parameters == ["build 'TexBuilder'",
+                                                 src_filepath]
     assert builder.subbuilders[0].outfilepath == target_tex_filepath
 
     assert builder.subbuilders[1].__class__.__name__ == 'Latexmk'
@@ -189,6 +194,7 @@ def test_pdf_builder_setup_not_in_targets(env):
     assert copy_builder.parameters == [target_cache_pdf_filepath]
     assert copy_builder.outfilepath == target_pdf_filepath
 
+    assert builder.parameters == ["build 'PdfBuilder'", src_filepath]
     assert builder.outfilepath == target_pdf_filepath
 
     assert builder.build_needed()
@@ -307,15 +313,15 @@ def test_pdf_builder_simple_doc(load_example):
     assert builder.status == 'done'
 
 
-def test_pdf_builder_simple_doc_render(load_example):
-    """Test a render of a simple document with the PdfBuilder."""
+def test_pdf_builder_simple_doc_build(load_example):
+    """Test a build of a simple document with the PdfBuilder."""
     # 1. example 1: tests/builders/examples/ex3
     doc = load_example('tests/builders/examples/ex3/dummy.dm')
     target_root = doc.target_root
 
-    doc.render()
+    doc.build()
 
-    # Check the copied and rendered files
+    # Check the copied and built files
     tgt_filepath = TargetPath(target_root=target_root, target='pdf',
                               subpath='dummy.pdf')
     assert tgt_filepath.exists()

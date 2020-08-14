@@ -4,7 +4,7 @@ A builder that renders a string to a file.
 import pathlib
 import logging
 
-import jinja2
+import jinja2, jinja2.meta
 
 from .builder import Builder
 from .utils import generate_mock_parameters, generate_outfilepath

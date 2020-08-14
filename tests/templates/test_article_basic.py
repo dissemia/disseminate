@@ -23,7 +23,7 @@ def test_reports_basic_tag_availability(doc, wait):
         @{name}{{My first {name}}}
         """.format(name=name))
 
-        doc.render()
+        doc.build()
 
         # Check the rendered html. Shouldn't be rendered as an h1/h2/h3 element
         html_targetfile = doc.targets['.html']
@@ -53,7 +53,7 @@ def test_reports_basic_tag_availability(doc, wait):
         @{name}{{My first {name}}}
         """.format(name=name))
 
-        doc.render()
+        doc.build()
 
         # Check the rendered html. Should be rendered as an h1/h2/h3 element
         html_targetfile = doc.targets['.html']

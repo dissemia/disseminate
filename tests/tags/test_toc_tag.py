@@ -125,8 +125,8 @@ def test_toc_changes(doc):
     """
     doc.src_filepath.write_text(strip_leading_space(markup))
 
-    # Create the document and render
-    doc.render()
+    # Create the document and build the html target
+    assert doc.build() == ['done']
 
     # Make sure the 'base_url' entry matches a basic format.
     doc.context['base_url'] = '/{target}/{subpath}'
@@ -151,7 +151,7 @@ def test_toc_changes(doc):
     @subsection[id=subheading1]{My first sub-heading}
     """
     doc.src_filepath.write_text(strip_leading_space(markup))
-    doc.render()
+    assert doc.build() == ['done']
 
     # Match the abbreviated toc
     toc = Toc(name='toc', content='all documents headings abbreviated',
@@ -204,7 +204,7 @@ def test_toc_absolute_and_relative_links(doctree):
     ---
     @chapter{one}
     """)
-    doc1.render()
+    assert doc1.build() == ['done']
 
     toc = Toc(name='toc', content='all headings abbreviated',
               attributes='', context=doc1.context)
@@ -275,8 +275,8 @@ def test_toc_levels_html(doc):
     """
     doc.src_filepath.write_text(strip_leading_space(markup))
 
-    # Create the document and render
-    doc.render()
+    # Create the document and build in html
+    assert doc.build() == ['done']
 
     # Retrieve the rendered file and check its contents
     html_filepath = doc.targets['.html']

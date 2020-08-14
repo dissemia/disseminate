@@ -106,9 +106,6 @@ default_context = {
     # (see tags/paragraphs.py)
     'process_paragraphs': {body_attr, "featurebox"},
 
-    # The filename for additional context header files
-    'additional_header_filename': 'context.txt',
-
     # The following are strings to present labels. They are substituted with
     # values from their respective label and parsed in disseminate format.
     # The label format strings are identified first by the tag that uses

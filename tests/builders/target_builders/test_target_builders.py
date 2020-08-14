@@ -27,8 +27,10 @@ def test_target_builder_setup(env):
 
         # Check the parameters. These should be SourcePaths with correctly set
         # project_root / subpath
-        assert len(builder.parameters) == 1
-        assert builder.parameters == [src_filepath]
+        cls_name = targer_builder_cls.__name__
+        assert len(builder.parameters) == 2
+        assert builder.parameters == ["build '{}'".format(cls_name),
+                                      src_filepath]
         assert builder.outfilepath == target_filepath
 
 
@@ -45,9 +47,11 @@ def test_target_builder_setup_doc(load_example):
 
         # Check the parameters. These should be SourcePaths with correctly set
         # project_root / subpath
-        assert len(builder.parameters) == 1
-        assert builder.parameters[0].match('dummy.dm')
-        assert (str(builder.parameters[0].subpath) ==
+        cls_name = targer_builder_cls.__name__
+        assert len(builder.parameters) == 2
+        assert builder.parameters[0] == "build '{}'".format(cls_name)
+        assert builder.parameters[1].match('dummy.dm')
+        assert (str(builder.parameters[1].subpath) ==
                 'dummy.dm')
         assert builder.outfilepath.match('{ext}/dummy.{ext}'.format(ext=ext))
         assert str(builder.outfilepath.subpath) == 'dummy.{ext}'.format(ext=ext)

@@ -27,6 +27,6 @@ def load_projects(request):
         docs = [env.root_document for env in envs]
         store['root_documents'] = docs
 
-    # See if any of the docs need to be rendered
-    [doc.render() for doc in store['root_documents']]
+    # See if any of the docs need to be built
+    [doc.build() for doc in store['root_documents']]
     return store['root_documents']

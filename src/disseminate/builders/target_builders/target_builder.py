@@ -51,6 +51,10 @@ class TargetBuilder(SequentialBuilder):
                  subbuilders=None, **kwargs):
         # Configure the parameters
         self.context = context
+        parameters = parameters if parameters is not None else []
+        parameters = (list(parameters) if isinstance(parameters, tuple) or
+                      isinstance(parameters, list) else [parameters])
+        subbuilders = subbuilders or []
 
         # Determine the target for the TargetBuilder
         if 'target' in kwargs:
@@ -68,13 +72,18 @@ class TargetBuilder(SequentialBuilder):
         builders = context.setdefault('builders', dict())
         builders[self.outfilepath_ext] = self
 
-        # Setup the paths
-        document = getattr(context, 'document', None)
+        # Setup parameters specific to this target builder.
+        # Make sure the src_filepath is in the parameters, since if this
+        # changes, it changes the input parameter hash for the decider
+        if len(parameters) == 0 and 'src_filepath' in context:
+            parameters.append(context['src_filepath'])
 
-        if parameters is None and 'src_filepath' in context:
-            parameters = context['src_filepath']
+        # Make sure the name of the builder is included in the parameters,
+        # since this will change the build hash for different target builders
+        parameters.insert(0, "build '{}'".format(self.__class__.__name__))
 
         # Determine if this target builder matches a document target
+        document = getattr(context, 'document', None)
         is_document_target = (document is not None and
                               self.outfilepath_ext in document.targets)
 
@@ -97,9 +106,6 @@ class TargetBuilder(SequentialBuilder):
                                                    use_media=self.use_media)
         # Setup the labels
 
-        # Setup the subbuilders
-        subbuilders = subbuilders or []
-
         # Add a parallel builder for dependencies
         if self.add_parallel_builder:
             parallel_builder = ParallelBuilder(env=env, **kwargs)
@@ -117,21 +123,6 @@ class TargetBuilder(SequentialBuilder):
         # Initialize builder
         super().__init__(env, parameters=parameters, outfilepath=outfilepath,
                          subbuilders=subbuilders, use_cache=use_cache, **kwargs)
-
-    def build_needed(self, reset=False):
-        """Determine whether a build is needed."""
-        if self.decision is None:
-            decider = self.env.decider
-            self.decision = decider.decision
-
-        # Get the src_filepath for the document
-        inputs = list(self.parameters)
-
-        # Get the (sorted) labels for the document
-
-        return self.decision.build_needed(inputs=inputs,
-                                          output=self.outfilepath,
-                                          reset=reset)
 
     @property
     def outfilepath(self):

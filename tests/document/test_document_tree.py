@@ -103,7 +103,6 @@ def test_document_tree1(doc, wait):
 
     # Test the targets
     assert doc.targets.keys() == {'.html', '.txt'}
-    assert doc.get_renderer().targets == {'.html', '.txt'}
 
     # Update the root document and remove a file
     assert doc.load() is False  # no documents are not loaded yet
@@ -127,7 +126,6 @@ def test_document_tree1(doc, wait):
 
     # Test the targets
     assert doc.targets.keys() == {'.txt', '.tex'}
-    assert doc.get_renderer().targets == {'.txt', '.tex'}
 
     # Now change file2 and reloading the root document, doc, should load
     # some new files since it has doc2 (file2) as a subdocument
@@ -175,7 +173,7 @@ def test_document_tree2(load_example):
     assert all_docs[4].src_filepath == src_filepath3
 
     # Check that the targets are rendered in the right locations
-    doc.render()
+    assert doc.build() == ['done']
 
     for doc in all_docs:
         target_filepath = doc.target_filepath('.html')
@@ -222,9 +220,9 @@ def test_document_garbage_collection(doc):
     assert doc2_ref() is not None
     assert doc3_ref() is not None
 
-    # Try rendering the document, then delete the subdocuments and they
-    # should no longer exist
-    doc.render()
+    # Try rendering the document into tex and txt target, then delete the
+    # subdocuments and they should no longer exist
+    assert doc.build() == ['done', 'done']
     doc.subdocuments.clear()
 
     assert doc2_ref() is None
@@ -257,7 +255,7 @@ def test_document_tree_matching_filenames(doc):
 
     # Reload root document
     doc.load()
-    doc.render()
+    assert doc.build() == ['done', 'done']  # build txt and tex targets
 
 
 def test_document_tree_updates(doc, wait):
@@ -377,8 +375,8 @@ def test_document_tree_updates(doc, wait):
     assert not hasattr(doc_list[2], 'test_object')
 
 
-def test_render_required(doc, wait):
-    """Tests the render_required method with multiple files."""
+def test_build_needed(doc, wait):
+    """Tests the build_needed method with multiple files."""
     # Create a document tree.
     env = doc.context['environment']
     project_root = env.project_root
@@ -411,9 +409,9 @@ def test_render_required(doc, wait):
     # Load the root document.
     doc.load()
 
-    # 1. Test that a render is required when the target file hasn't been
+    # 1. Test that a build is required when the target file hasn't been
     #    created
-    # Check that all documents need to be rendered
+    # Check that all documents need to be built
     doc_list = doc.documents_list(only_subdocuments=False, recursive=True)
     assert len(doc_list) == 3
 
@@ -434,24 +432,24 @@ def test_render_required(doc, wait):
     assert doc_list[1].context[body_attr].mtime == mtime2
     assert doc_list[2].context[body_attr].mtime == mtime3
 
-    # All three documents have a render_required
+    # All three documents have a build_needed
     for d in doc_list:
         target_filepath = d.targets['.html']
-        assert d.render_required(target_filepath)
+        assert d.build_needed()
 
-    # Now render the targets and a render should not be required
-    # Altogether 6 invocations of the render_required method
+    # Now build the targets and a build should not be required
+    # Altogether 6 invocations of the build_needed method
     for d in doc_list:
         target_filepath = d.targets['.html']
-        d.render()
-        assert not d.render_required(target_filepath)
+        assert d.build() == ['done']
+        assert not d.build_needed()
 
     # The target files should exist
     for d in doc_list:
         target_filepath = d.targets['.html']
         assert target_filepath.is_file()
 
-    # 2. Test that a render is required when the source file modification time
+    # 2. Test that a build is required when the source file modification time
     #    is updated. We'll update the 2nd document, and only its mtime should
     #    get updated once we load the document
 
@@ -475,18 +473,22 @@ def test_render_required(doc, wait):
     assert doc_list[1].context[body_attr].mtime == mtime2
     assert doc_list[2].context[body_attr].mtime == mtime3
 
-    # The doc2 requires a render now.
+    # The doc2 contents haven't changed, so it doesn't require a build.
+    for d, answer in zip(doc_list, [False, False, False]):
+        assert d.build_needed() is answer
+
+    # But if it's contents are changed, then it needs a build
+    src_filepath2.write_text('update')
+
     for d, answer in zip(doc_list, [False, True, False]):
-        target_filepath = d.targets['.html']
-        assert d.render_required(target_filepath) is answer
+        assert d.build_needed() is answer
 
     # Render the documents
     for d in doc_list:
-        d.render()
-        target_filepath = d.targets['.html']
-        assert not d.render_required(target_filepath)
+        d.build()
+        assert not d.build_needed()
 
-    # 3. A render is required if the tags have been updated.
+    # 3. A build is required if the tags have been updated.
     #    In this case, place a reference in the 2nd document for the 3rd.
     wait()  # sleep time offset needed for different mtimes
     src_filepath2.write_text("""
@@ -494,16 +496,14 @@ def test_render_required(doc, wait):
     @ref{ch:file3-dm-file3}
     """)
 
-    # Now the 2nd document needs to be rendered.
+    # Now the 2nd document needs to be built.
     for d, answer in zip(doc_list, [False, True, False]):
-        target_filepath = d.targets['.html']
-        assert d.render_required(target_filepath) is answer
+        assert d.build_needed() is answer
 
-    # Render the documents and the documents will not require a rendering
+    # Render the documents and the documents will not require a build
     for d in doc_list:
-        d.render()
-        target_filepath = d.targets['.html']
-        assert not d.render_required(target_filepath)
+        assert d.build() == ['done']
+        assert not d.build_needed()
 
     # Touch the 3rd document. Now the @ref tag in the second document has
     # changed
@@ -512,10 +512,10 @@ def test_render_required(doc, wait):
 
     for d, answer in zip(doc_list, [False, True, True]):
         target_filepath = d.targets['.html']
-        assert d.render_required(target_filepath) is answer
+        assert d.build_needed() is answer
 
     # Render all documents
     for d in doc_list:
-        d.render()
+        assert d.build() == ['done']
         target_filepath = d.targets['.html']
-        assert not d.render_required(target_filepath)
+        assert not d.build_needed()

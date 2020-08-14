@@ -452,10 +452,6 @@ class Builder(metaclass=ABCMeta):
         target = (target if not isinstance(target, str) or
                   target.startswith('.') else '.' + target)
 
-        msg = ("The document target must be specified and listed in the "
-               "settings.tracked_deps.")
-        assert target and target in settings.tracked_deps, msg
-
         if target in settings.tracked_deps:
             # If the in_ext is an allowed format, just use a copy builder
             # defined as the builder with a '.*' infilepath_ext and

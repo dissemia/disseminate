@@ -60,12 +60,16 @@ class CompositeBuilder(Builder):
         return tuple(args)
 
     def build(self, complete=False):
-        def run_build(self):
+        def run_build_once(self):
+            """Execute one round of the subbuilders"""
             status = 'done'
 
             for builder in self.subbuilders:
                 status = builder.status
+
                 if status == 'done':
+                    # The builder is responsible for resetting its build_needed
+                    # method after the build is done.
                     continue
 
                 elif status == 'building':
@@ -89,10 +93,15 @@ class CompositeBuilder(Builder):
 
         if complete:
             while self.status in {'building', 'ready'}:
-                run_build(self)
+                run_build_once(self)
         else:
             if self.status in {'building', 'ready'}:
-                run_build(self)
+                run_build_once(self)
+
+        # Get the current status and reset build_needed states
+        status = self.status
+        if status == 'done':
+            self.build_needed(reset=True)
 
         # Remove finished builders, if specified by 'clear_done'
         if self.clear_done:
@@ -100,7 +109,7 @@ class CompositeBuilder(Builder):
                 if subbuilder.status == 'done':
                     self.subbuilders.remove(subbuilder)
 
-        return self.status
+        return status
 
     def print(self, level=1):
         """Print the builder and subbuilders"""

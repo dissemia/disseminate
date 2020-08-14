@@ -24,8 +24,8 @@ def test_document_marginfig(env):
         # Write the source
         src_filepath.write_text(src.format(template=template))
 
-        # Reload and render the document
-        doc.render()
+        # Reload and build the document for html, tex and pdf targets
+        assert doc.build() == ['done', 'done', 'done']
 
         assert doc.targets['.tex'].is_file()
         assert doc.targets['.html'].is_file()

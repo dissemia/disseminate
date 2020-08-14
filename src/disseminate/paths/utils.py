@@ -128,9 +128,14 @@ def find_file(path, context, raise_error=True):
             raise FileNotFoundError(msg)
         return None
 
-    # See if the file is itself a valid file
-    if path.is_file():
-        return path
+    # See if the file is itself a valid file. This might fail if the string
+    # in the path would make a filename that is too long, raising an OSError
+    try:
+        if path.is_file():
+            return path
+    except OSError as e:
+        if raise_error:
+            raise e
 
     # Otherwise see if the path can be reconstructed
     paths = ['.'] + context['paths']
@@ -143,8 +148,12 @@ def find_file(path, context, raise_error=True):
         else:
             new_path = p / path
 
-        if new_path.is_file():
-            return new_path
+        try:
+            if new_path.is_file():
+                return new_path
+        except OSError as e:
+            if raise_error:
+                raise e
 
     # I'm out of ideas and places to search! Raise an error
     if raise_error:

@@ -2,15 +2,19 @@
 Test the 'render' subcommand from the CLI.
 """
 from pathlib import Path
-import shutil
 
 from click.testing import CliRunner
 
 from disseminate.cli import main
 
 
-def test_cli_render_simple_document(tmpdir):
-    """Test the CLI render subcommand with a simple document."""
+# Setup the example paths
+ex1_root = Path('tests') / 'document' / 'examples' / 'ex1'
+ex1_subpath = Path('dummy.dm')
+
+
+def test_cli_build_simple_document(tmpdir):
+    """Test the CLI build subcommand with a simple document."""
     # Setup the CLI runner and paths
     tmpdir = Path(tmpdir)
     runner = CliRunner()
@@ -19,8 +23,8 @@ def test_cli_render_simple_document(tmpdir):
     #    source file 'dummy.dm' and 2 answer key targets: 'dummy.html' and
     #    'dummy.tex'. Write the generated files an compare them to the
     #    answer keys.
-    result = runner.invoke(main, ['render', '-i',
-                                  'tests/document/example1/dummy.dm',
+    result = runner.invoke(main, ['build', '-i',
+                                  str(ex1_root / ex1_subpath),
                                   '-o', str(tmpdir)])
 
     # Make sure the command was successfully run

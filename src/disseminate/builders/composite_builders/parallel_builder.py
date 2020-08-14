@@ -14,7 +14,6 @@ class ParallelBuilder(CompositeBuilder):
         statuses = {sb.status for sb in self.subbuilders}
 
         if {'done'} == statuses or len(statuses) == 0:  # subbuilders are done
-            self.build_needed(reset=True)
             return 'done'
 
         inactive = {i for i in statuses if i.startswith('inactive')}

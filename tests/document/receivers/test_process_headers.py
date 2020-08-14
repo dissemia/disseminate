@@ -1,11 +1,67 @@
 """
 Test the process_header processors.
 """
-from disseminate.document.receivers import process_headers
+from disseminate.document.receivers.process_headers import (process_headers,
+    find_template_paths, find_jinja2_parent_templates,
+    find_additional_context_filepaths)
+from disseminate import settings
 
 
-def test_process_context_header(context_cls):
-    """Test the process_context_header function."""
+# Helper functions
+
+def test_find_template_paths():
+    """Test the find_template_paths helper function."""
+
+    # 1. Try a default template
+    paths = find_template_paths(template_name='default')
+    assert len(paths) == 1
+    assert paths[0] == settings.module_template_paths[0] / 'default'
+    assert paths[0].is_dir()
+
+
+def test_find_jinja2_parent_templates():
+    """Test the find_jinja2_parent_templates helper function"""
+
+    # 1. Load a base template (i.e. no derivation)
+    template_path = settings.module_template_paths[0] / 'default'
+    paths = find_jinja2_parent_templates(template_path)
+    assert len(paths) == 0
+
+    # 2. Load a derived template filepath
+    template_path = settings.module_template_paths[0] / 'books' / 'tufte'
+    paths = find_jinja2_parent_templates(template_path)
+
+    assert len(paths) == 1
+    assert paths[0] == settings.module_template_paths[0] / 'default'
+
+
+def test_find_additional_context_filepaths():
+    """Test the find_additional_context_filepaths helper function."""
+
+    # 1. Load a base template
+    paths = find_template_paths(template_name='default')
+    context_paths = find_additional_context_filepaths(paths)
+    assert len(context_paths) == 1
+    assert (context_paths[0] ==
+            settings.module_template_paths[0] / 'default' / 'context.txt')
+
+    # 2. Load a derived template
+    paths = find_template_paths(template_name='books/tufte')
+    paths += find_jinja2_parent_templates(paths[0])
+    context_paths = find_additional_context_filepaths(paths)
+    assert len(context_paths) == 2
+    assert (context_paths[0] ==
+            settings.module_template_paths[0] / 'books' / 'tufte' /
+            'context.txt')
+    assert (context_paths[1] ==
+            settings.module_template_paths[0] / 'default' / 'context.txt')
+
+
+# The process_header receiver
+
+def test_process_context_header_basic(context_cls):
+    """Test the process_context_header function's basic functionality in
+    loading entries from a context header entry."""
 
     header = """
     ---
@@ -18,12 +74,8 @@ def test_process_context_header(context_cls):
     """
 
     # Setup a context class with a targets attribute
-    class SubContext(context_cls):
-        targets = ['.html']
-        preload = {'targets', 'renderers', 'template'}
-
-    # Load the header into a context
-    context = SubContext(test=header)
+    context = context_cls(test=header, targets='html',
+                          template='default/template', paths=[])
 
     # Now process the context entries
     process_headers(context)
@@ -36,117 +88,54 @@ def test_process_context_header(context_cls):
     assert context['macro'] == '@i{example}'
 
 
-def test_process_context_header_custom_template(doc):
-    """Test the process_context_header loading of custom templates."""
+def test_process_context_header_template_paths(context_cls):
+    """Test the process_context_header loading of template paths."""
 
-    project_root = doc.project_root
-    template_filepath = project_root / 'mytemplate.html'
-    template_filepath.touch()
+    # 1. Test an example with the default template
+    context = context_cls(paths=[], template='default')
 
-    doc.context['template'] = 'mytemplate'
+    process_headers(context)
+    assert len(context['paths']) == 1
+    assert context['paths'][0] == settings.module_template_paths[0] / 'default'
 
-    # Try the processor
-    process_headers(doc.context)
+    # 2. Test an example with the books/tufte template (a derived template)
+    context = context_cls(paths=[], template='books/tufte')
+    process_headers(context)
+    assert len(context['paths']) == 2
+    assert (context['paths'][0] ==
+            settings.module_template_paths[0] / 'books' / 'tufte')
+    assert (context['paths'][1] ==
+            settings.module_template_paths[0] / 'default')
 
-    # Make sure the custom template was read in
-    assert 'renderers' in doc.context
-    assert 'template' in doc.context['renderers']
-    assert doc.context['renderers']['template'].template == 'mytemplate'
 
-
-def test_process_context_header_additional_context_files(doc):
+def test_process_context_header_additional_context_files(context_cls):
     """Test the process_context_header with additional context files."""
 
-    # 1. Try basic value entries
-    # Create a basic parent_context and context, including values needed by
-    # process_context_additional_header_files
-    assert 'value' not in doc.context
+    # 1. Try a context without loading additional context files
+    context = context_cls(**settings.default_context)
+    assert context['inactive_tags'] == set()
 
-    # Create additional headers and see how they're read in. These are tied
-    # to templates, so create a template as well
-    project_root = doc.project_root
+    # 1. Test an example with the default template (this one sets the
+    #   'inactive_tags' entry
+    context = context_cls(**settings.default_context)
+    process_headers(context)
+    assert context['inactive_tags'] == {'sidenote'}
 
-    header1 = project_root / 'context.txt'
-    template_filepath = project_root / 'mytemplate.html'
+    # 2. Test an example with an inherited template
+    context = context_cls(**settings.default_context)
+    context['template'] = 'books/tufte'
+    process_headers(context)
+    assert context['inactive_tags'] == {'subsubsection'}
 
-    header1.write_text("value: b")
-    template_filepath.touch()
+    # 3. Test an example where a header entry in the context takes precedence
+    #    over a context entry from the template
+    hdr = """
+    ---
+    inactive_tags: some, other
+    ---
+    """
+    context['hdr'] = hdr
 
-    doc.context['template'] = 'mytemplate'
-
-    # Try the processor
-    process_headers(doc.context)
-
-    # Since header1 is the first in the path, its value gets loaded locally
-    # into the context, but the value from header2 is not overwritten.
-    # Consequently, 'value' should equal 'b'. The parent_context's value should
-    # still be 'a'
-    assert doc.context['value'] == 'b'
-
-
-# # FIXME: Re-implement template inheritance
-# def test_process_headers_precedence(doctree, wait):
-#     """Test the precedence of context entries between the default context,
-#     template context and document context."""
-#
-#     # Load the 3 documents from the doctree
-#     doc1, doc2, doc3 = doctree.documents_list()
-#
-#     # 1. Initially, these documents should have default context entries from
-#     #    the default context (settings) and the default template
-#     #    (templates/default/context.txt). Updating the default template's
-#     #    context may require updating this test.
-#     for doc in (doc1, doc2, doc3):
-#         assert 'attr' not in doc.context
-#         assert doc.context['inactive_tags'] == {'sidenote'}
-#         assert doc.context['template'] == 'default/template'
-#
-#     # 2. Add a template with a context.txt
-#     wait()  # sleep time offset needed for different mtimes
-#     src_path = doc1.src_filepath.parent
-#     template_filepath = src_path / 'test.html'
-#     context_filepath = src_path / 'context.txt'
-#
-#     template_filepath.write_text("""
-#     <html>
-#     </html>
-#     """)
-#     context_filepath.write_text("""
-#     inactive_tags: chapter
-#     attr: string
-#     """)
-#     doc1.src_filepath.write_text("""
-#     ---
-#     template: test
-#     ---
-#     """)
-#     for doc in (doc1, doc2, doc3):
-#         doc.load()
-#
-#     assert doc1.context['template'] == 'test'
-#     assert doc1.context['inactive_tags'] == {'chapter'}
-#     assert doc2.context['inactive_tags'] == {'chapter'}
-#     assert doc3.context['inactive_tags'] == {'chapter'}
-#     assert doc1.context['attr'] == 'string'
-#     assert doc2.context['attr'] == 'string'
-#     assert doc3.context['attr'] == 'string'
-#
-#     # 3. Now write the attribute in the root document (doc1) and it should
-#     #    override the value for the document and subdocuments
-#     wait()  # sleep time offset needed for different mtimes
-#     doc1.src_filepath.write_text("""
-#     ---
-#     template: test
-#     inactive_tags: title
-#     attr: new string
-#     ---
-#     """)
-#     for doc in (doc1, doc2, doc3):
-#         doc.load()
-#
-#     assert doc1.context['inactive_tags'] == {'title'}  # replaced
-#     assert doc2.context['inactive_tags'] == {'title'}
-#     assert doc3.context['inactive_tags'] == {'title'}
-#     assert doc1.context['attr'] == 'new string'  # replaced
-#     assert doc2.context['attr'] == 'new string'
-#     assert doc3.context['attr'] == 'new string'
+    process_headers(context)
+    assert context['hdr'] == '    '  # header entry processed
+    assert context['inactive_tags'] == {'subsubsection', 'some', 'other'}

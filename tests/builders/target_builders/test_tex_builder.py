@@ -33,7 +33,7 @@ def test_tex_builder_setup_in_targets(env):
     assert builder.subbuilders[1].__class__.__name__ == 'JinjaRender'
     assert len(builder.subbuilders[1].parameters) > 0
     assert builder.subbuilders[1].outfilepath == target_filepath
-    assert builder.parameters == [src_filepath]
+    assert builder.parameters == ["build 'TexBuilder'", src_filepath]
     assert builder.outfilepath == target_filepath
 
     assert builder.build_needed()
@@ -52,7 +52,7 @@ def test_tex_builder_setup_in_targets(env):
     assert builder.subbuilders[0].parameters == []
     assert builder.subbuilders[1].__class__.__name__ == 'JinjaRender'
     assert len(builder.subbuilders[1].parameters) > 0
-    assert builder.parameters == [src_filepath]
+    assert builder.parameters == ["build 'TexBuilder'", src_filepath]
     assert builder.outfilepath == target_filepath
 
     assert builder.build_needed()
@@ -83,7 +83,7 @@ def test_tex_builder_setup_not_in_targets(env):
     assert builder.subbuilders[0].parameters == []
     assert builder.subbuilders[1].__class__.__name__ == 'JinjaRender'
     assert len(builder.subbuilders[1].parameters) > 0
-    assert builder.parameters == [src_filepath]
+    assert builder.parameters == ["build 'TexBuilder'", src_filepath]
     assert builder.outfilepath == target_filepath
 
     assert builder.build_needed()
@@ -155,15 +155,15 @@ def test_tex_builder_simple_doc(load_example):
     assert builder.status == 'done'
 
 
-def test_tex_builder_simple_doc_render(load_example):
-    """Test a document render with the TexBuilder."""
+def test_tex_builder_simple_doc_build(load_example):
+    """Test a document build with the TexBuilder."""
     # 1. example 1: tests/builders/examples/ex3
     doc = load_example('tests/builders/examples/ex3/dummy.dm')
     target_root = doc.target_root
 
-    doc.render()
+    doc.build()
 
-    # Check the rendered files
+    # Check the built files
     key = pathlib.Path('tests/builders/examples/ex3/dummy.tex')
     tgt_filepath = TargetPath(target_root=target_root, target='tex',
                               subpath='dummy.tex')

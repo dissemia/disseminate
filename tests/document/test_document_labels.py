@@ -54,8 +54,8 @@ def test_document_toc(env):
     context['process_context_tags'] = {'toc'}
     context['relative_links'] = False
 
-    # Render the doc
-    doc.render()
+    # build the doc for the html target
+    assert doc.build() == ['done']
 
     # Make sure the 'toc' context entry is correct
     toc_tag = doc.context['toc']
@@ -331,8 +331,8 @@ def test_document_tree_updates_with_section_labels(env, wait):
     assert title_labels[1].id == 'ch:file2-dm-file2'
     assert title_labels[2].id == 'ch:file3-dm-file3'
 
-    # Render the files and check their mtimes
-    doc.render()
+    # Build the files for the html target
+    assert doc.build() == ['done']
     target_filepath1 = doc_list[0].target_filepath('.html')
     target_filepath2 = doc_list[1].target_filepath('.html')
     target_filepath3 = doc_list[2].target_filepath('.html')
@@ -372,12 +372,12 @@ def test_document_tree_updates_with_section_labels(env, wait):
     doc1, doc2, doc3 = doc.documents_list(only_subdocuments=False,
                                           recursive=True)
 
-    assert doc1.render_required(target_filepath1)
-    assert doc2.render_required(target_filepath2)
-    assert doc3.render_required(target_filepath3)
+    assert doc1.build_needed()
+    assert doc2.build_needed()
+    assert doc3.build_needed()
 
     # The files have therefore been updated
-    doc.render()
+    assert doc.build() == ['done']
     assert mtime1 < target_filepath1.stat().st_mtime  # reloaded
     assert mtime2 < target_filepath2.stat().st_mtime  # reloaded
     assert mtime3 < target_filepath3.stat().st_mtime  # reloaded
@@ -410,14 +410,14 @@ def test_document_tree_updates_with_section_labels(env, wait):
     assert doc_list[1].src_filepath == src_filepath2
 
     # Render the documents
-    doc.render()
-    assert not doc_list[0].render_required(target_filepath1)
-    assert not doc_list[1].render_required(target_filepath2)
+    assert doc.build() == ['done']
+    assert not doc_list[0].build_needed()
+    assert not doc_list[1].build_needed()
 
     # Now touch the second document. doc2 will need a new render, since it's
     # updated, and doc1 will need a render since it depends on doc2
     wait()  # sleep time offset needed for different mtimes
     src_filepath2.touch()
 
-    assert doc_list[0].render_required(target_filepath1)
-    assert doc_list[1].render_required(target_filepath2)
+    assert doc_list[0].build_needed()
+    assert doc_list[1].build_needed()

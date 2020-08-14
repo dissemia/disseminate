@@ -30,7 +30,6 @@ class DocumentContext(BaseContext):
         'paths': list,
         'label_manager': LabelManager,
         'dependency_manager': DependencyManager,
-        'renderers': dict,
         'mtime': float,
         'doc_id': str,
         'process_context_tags': set,
@@ -69,8 +68,6 @@ class DocumentContext(BaseContext):
         # directories from the parent if the parent's template is different.
         # Also, the paths may be relative to the parent document and may be
         # invalid for a subdocument in a subdirectory.
-        # Not that if the subdocument and parent document share the same
-        # template, the renderer will correctly populate the paths for each.
         'paths',
 
         # Do not inherit builders. Each document and context has its own
@@ -91,10 +88,10 @@ class DocumentContext(BaseContext):
         'document',
 
         # The following manager objects should remain the same every time the
-        # context is reset. They should persist for a project.
+        # context is reset. They should persist for a project, and they are
+        # defined by the root document and build environment.
         'label_manager',
         'dependency_manager',
-        'renderers',
         'environment',
 
         # Keep the same list for paths when resetting. Note that will place
@@ -111,18 +108,6 @@ class DocumentContext(BaseContext):
     replace = {
         'targets',
         'inactive_tags',
-    }
-
-    # Preload the following entries.
-    # The ProcessContextHeaders processor first reads the context from the
-    # header of the document and loads context information from additional
-    # context files in the templates before loading these values in the document
-    # context. The following entries are loaded in the context before the
-    # additional context files from templates are loaded.
-    preload = {
-        'renderers',
-        'template',
-        'targets',
     }
 
     def __init__(self, document, *args, **kwargs):
