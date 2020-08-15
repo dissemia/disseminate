@@ -145,12 +145,6 @@ class Document(object):
             return self.title
 
     @property
-    def temp_dir(self):
-        if self._temp_dir is None:
-            self._temp_dir = pathlib.Path(mkdtemp())
-        return self._temp_dir
-
-    @property
     def mtime(self):
         return self.context.get('mtime', None)
 
