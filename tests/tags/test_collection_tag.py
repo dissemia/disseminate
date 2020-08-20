@@ -48,30 +48,6 @@ def doctree(doctree, wait):
     return doc1
 
 
-def test_collection_mtime(doctree):
-    """Test the calculation of the modification time for the collection tag."""
-
-    # Get the mtimes for the 3 documents.
-    docs = doctree.documents_list()
-    assert len(docs) == 3
-
-    src_filepath1 = docs[0].context['src_filepath']
-    src_filepath2 = docs[1].context['src_filepath']
-    src_filepath3 = docs[2].context['src_filepath']
-
-    mtime1 = src_filepath1.stat().st_mtime
-    mtime2 = src_filepath2.stat().st_mtime
-    mtime3 = src_filepath3.stat().st_mtime
-    assert mtime1 < mtime2 < mtime3
-
-    # Get the collection tag from the root document. Its mtime should correspond
-    # to the latest one: mtime3.
-    body_attr = settings.body_attr
-    root1 = doctree.context[body_attr]
-    tag = root1.content[1]  # collection time
-    assert tag.mtime == mtime3
-
-
 def test_collection_selective_target(doctree):
     """Test the collection tag when one of the sub-documents is not listed as
     a target."""

@@ -158,6 +158,9 @@ default_context = {
         'subsection': {'subsubsection'},
     },
 
+    # Set the separator between a doc_id and label_id when identifying a label
+    'label_sep': '::',
+
     # The following tags are unavailable. This is a string so that contexts
     # from templates can replace these values. See
     # disseminate.tags.factory.TagFactory.

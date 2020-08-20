@@ -1,26 +1,57 @@
 """
 The manager for labels.
 """
+from collections import OrderedDict
+
 from .types import ContentLabel, DocumentLabel
-from .exceptions import LabelNotFound
-from .signals import label_register
+from .exceptions import LabelNotFound, DuplicateLabel
+from .register_orders import register_orders
+from .register_content_labels import register_content_labels
 from ..utils.classes import weakattr
 from ..utils.dict import find_entry
 from ..utils.string import replace_macros
+from .. import settings
+
+
+def parse_id(id, context=None):
+    """Parses a label's identifier into a doc_id and label_id.
+
+    Parameters
+    ----------
+    id : str
+        The unique identifier (within a project of documents) for the label.
+        The id includes the label_id, and it might include the doc_id.
+        ex:
+        'test.dm::intro'. (See label_sep for details)
+        'ch:nmr-introduction'
+    context : :obj:`.DocumentContext`
+        The document context.
+
+    Returns
+    -------
+    doc_id, label_id : Tuple[Union[str, None], str]
+        The doc_id and label_id from the label id.
+
+    Examples
+    --------
+    >>> parse_id('intro')
+    (None, 'intro')
+    >>> parse_id('fig:diagram-1')
+    (None, 'fig:diagram-1')
+    >>> parse_id('test1.dm::fig:diagram-1')
+    ('test1.dm', 'fig:diagram-1')
+    """
+    if context is not None and 'label_sep' in context:
+        label_sep = context['label_sep']
+    else:
+        label_sep = settings.default_context['label_sep']
+
+    parts = id.split(label_sep)
+    return tuple(parts) if len(parts) == 2 else (None, parts[0])
 
 
 class LabelManager(object):
     """Manage labels for a project (a document tree).
-
-    Labels are added with the :meth:`add_label` methods. These labels are collected
-    and are only available after the :meth:`register_labels` method is
-    executed. Labels are automatically registered when the :meth:`get_label` and
-    :meth:`get_labels` methods are used.
-
-    The collection/register method is used because labels keep track of their
-    modification times (mtimes) and update these if their parameters change. A
-    change in the label's mtime indicates that a document needs to be
-    re-rendered.
 
     Parameters
     ----------
@@ -30,19 +61,9 @@ class LabelManager(object):
 
     Attributes
     ----------
-    labels : List[:obj:`Label <.label_manager.types.Label>`]
-        A list of registered labels
-    collected_labels : Dict[str, List[:obj:`Label \
-        <.label_manager.types.Label>`]]
-        A dictionary organized by document src_filepath (key, str) and a list
-        of labels collected by the :meth:`add_label` methods. Collected labels
-        aren't registered and available for tags to use yet. The
-        :meth:`register_labels` method transfers them to the labels attribute
-        and sets their order.
-    processors : List[:obj:`Type[ProcessLabel] \
-        <.label_manager.processors.ProcessLabels>`]
-        An ordered list of label processors executed on the collected and
-        registered labels by the register_labels method.
+    labels : Dict[Tuple[str,str], :obj:`Label <.label_manager.types.Label>`]
+        A list of labels where the key is the (doc_id, label_id) and the values
+        are the label objects.
     """
 
     root_context = weakattr()
@@ -50,26 +71,47 @@ class LabelManager(object):
     collected_labels = None
 
     def __init__(self, root_context):
-        self.labels = []
-        self.collected_labels = dict()
+        self.labels = OrderedDict()
         self.root_context = root_context
+
+    def register(self, context=None):
+        """Register the labels.
+        """
+        context = context or self.root_context
+
+        for func in (register_orders,  # Register label 'order' attribute
+                     register_content_labels,  # Set chapter/section attributes
+                     ):
+            func(labels=self.labels, root_context=context)
+
+    def reset(self, doc_ids=None):
+        """Reset the the labels.
+
+        Parameters
+        ----------
+        doc_ids : Union[str, List[str], Tuple[str]]
+            If specified, remove the labels for the given doc_ids
+        """
+        # Prepare the parameters
+        doc_ids = {doc_ids} if isinstance(doc_ids, str) else doc_ids
+
+        if doc_ids is None:
+            self.labels.clear()
+        else:
+            keys_to_remove = set(filter(lambda k: k[0] in doc_ids,
+                                        self.labels.keys()))
+            for key in keys_to_remove:
+                del self.labels[key]
 
     def add_label(self, id, kind, context, label_cls, *args, **kwargs):
         """Add a label.
-
-        The add_label function adds a new or existing label to the
-        collected_labels. The register_labels (:meth:`register_labels`)
-        method must be invoked to register all collected labels to the list
-        of available labels (self.labels)
-
-        Typically, the helper methods, like :meth:`add_content_label` or
-        :meth:`add_document_label` are used instead, as these specify the label
-        class to use.
 
         Parameters
         ----------
         id : str
             The unique identifier (within a project of documents) for the label.
+            The id includes the label_id and possibly the doc_id of the label.
+            'test.dm::intro'. (See parse_id for details)
             ex: 'ch:nmr-introduction'
         kind : Union[str, List[str], Tuple[str]]
             The kind of the label. ex: 'figure', ('heading', 'chapter'),
@@ -87,48 +129,29 @@ class LabelManager(object):
             label manager.
 
         """
-        assert context.is_valid('doc_id', 'mtime')
+        # Parse the label_id
+        doc_id, label_id = parse_id(id, context=context)
+        if doc_id is None:
+            assert context.is_valid('doc_id')
+            doc_id = context['doc_id']
 
-        # Get the values needed from the context
-        doc_id = context['doc_id']
-        mtime = context['mtime']
+        # Make the key for the labels dict
+        label_key = (doc_id, label_id)
 
-        # The objective here is to reuse labels, if possible, since this
-        # produces an accurate mtime if the label is changed.
+        # See if it's a duplicate
+        if label_key in self.labels:
+            other_label = self.labels[label_key]
+            msg = "Label id '{}' already exists in the labels as '{}'."
+            raise DuplicateLabel(msg.format(id, other_label))
 
         # Organize the kind into a tuple, if needed
         if isinstance(kind, str):
             kind = (kind,)
 
-        # First see if it's already been added to the collected labels.
-        # If it has, simply return that.
-        collected_labels = self.collected_labels.setdefault(doc_id, [])
-        existing_collected_labels = [label for label in collected_labels
-                                     if label.id == id]
-
-        if len(existing_collected_labels) > 0:
-            return existing_collected_labels[0]
-
-        # Next, see if the label already exists in the registered labels.
-        # If an existing label is found, we must transfer it to the
-        # collected_labels.
-
-        existing_labels = [label for label in self.labels if label.id == id]
-
-        # Get the existing label, if found, and update it.
-        label = None
-        if len(existing_labels) > 0:
-            label = existing_labels[0]
-            label.kind = kind
-            label.mtime = mtime  # update the mtime
-
-        # If no matching label was found. Create a new one.
-        if label is None:
-            label = label_cls(doc_id=doc_id, id=id, kind=kind, mtime=mtime,
-                              order=None, *args, **kwargs)
-
-        collected_labels = self.collected_labels.setdefault(doc_id, [])
-        collected_labels.append(label)
+        # Now create the label and add it to the labels
+        label = label_cls(doc_id=doc_id, id=label_id, kind=kind, order=None,
+                          *args, **kwargs)
+        self.labels[label_key] = label
 
         return label
 
@@ -152,20 +175,7 @@ class LabelManager(object):
         label.title = title
         return label
 
-    def reset(self, context):
-        """Reset the registration for the labels of the given document.
-
-        Parameters
-        ----------
-        context : :obj:`DocumentContext <.DocumentContext>`
-            The context for the document whose labels are being reset.
-        """
-        assert context.is_valid('doc_id')
-        doc_id = context['doc_id']
-
-        self.collected_labels[doc_id] = []
-
-    def get_label(self, id):
+    def get_label(self, id, register=True, context=None):
         """Return the label for the given label id.
 
         .. note:: This function registers the added labels.
@@ -173,12 +183,20 @@ class LabelManager(object):
         Parameters
         ----------
         id : str
-            The label of the label ex: 'ch:nmr-introduction'
+            The unique identifier (within a project of documents) for the label.
+            The id includes the label_id and possibly the doc_id of the label.
+            'test.dm::intro'. (See parse_id for details)
+            ex: 'ch:nmr-introduction'
+        register : Optional[bool]
+            If True, labels will be registered before doing the search
+        context : :obj:`DocumentContext <.DocumentContext>`
+            The context for the document adding the label. (This may be
+            different from the context of the root document, self.root_context)
 
         Returns
         -------
         label : :obj:`Type[Label] <.label_manager.types.Label>`
-            A named tuple with the label's information.
+            The corresponding label.
 
         Raises
         ------
@@ -186,21 +204,71 @@ class LabelManager(object):
             A LabelNotFound exception is raised if a label with the given id
             could not be found.
         """
-        # Make sure the labels are registered
-        self.register_labels()
+        # Register the labels
+        if register:
+            self.register()
 
-        # Find the label
-        existing_labels = {i for i in self.labels if i.id == id}
+        # Parse the label_id
+        doc_id, label_id = parse_id(id, context=context or self.root_context)
 
-        if len(existing_labels) == 0 or id is None:
-            msg = "Could not find label '{}'"
-            raise LabelNotFound(msg.format(id))
+        # Try the label key
+        if (doc_id, label_id) in self.labels:
+            return self.labels[(doc_id, label_id)]
 
-        return existing_labels.pop()
+        # Try to find the first label with a matching label_id, if no
+        # doc_id is specified
+        if doc_id is None:
+            try:
+                return next(l for k, l in self.labels.items()
+                            if k[1] == label_id)
+            except StopIteration:
+                pass
 
-    def get_labels(self, doc_id=None, kinds=None):
+        # I give up! I can't find the label.
+        msg = "Could not find a label with identifier '{}'"
+        raise LabelNotFound(msg.format(id))
+
+    def get_labels_by_id(self, ids, register=True, context=None):
+        """Return the labels with the given (optional) doc_ids and label_ids.
+
+        Parameters
+        ----------
+        ids : Union[str, Tuple[str]]
+            The unique identifiers (within a project of documents) for the
+            label. The id includes the label_id and possibly the doc_id of the
+            label. 'test.dm::intro'. (See parse_id for details)
+            ex: 'ch:nmr-introduction'
+        register : Optional[bool]
+            If True, labels will be registered before doing the search
+        context : :obj:`DocumentContext <.DocumentContext>`
+            The context for the document adding the label. (This may be
+            different from the context of the root document, self.root_context)
+
+        Returns
+        -------
+        labels : List[:obj:`Type[Label] <.label_manager.types.Label>`]
+            A list of label objects.
+
+        Raises
+        ------
+        LabelNotFound : :exc:`LabelNotFound <.exceptions.LabelNotFound>`
+            A LabelNotFound exception is raised if a label with the given id
+            could not be found.
+        """
+        # Prepare the parameters
+        ids = ids if isinstance(ids, list) or isinstance(ids, tuple) else [ids]
+
+        # Register the labels
+        if register:
+            self.register()
+
+        return list(map(lambda x:
+                        self.get_label(x, register=False, context=context),
+                    ids))
+
+    def get_labels_by_kind(self, doc_id=None, kinds=None, register=True):
         """Return a filtered and sorted list of all labels for the given
-        document.
+        document and kinds.
 
         .. note:: This function registers the added labels.
 
@@ -208,59 +276,43 @@ class LabelManager(object):
         ----------
         doc_id : Optional[str]
             If specified, only label for the given document id will be returned.
-            (This is used an alternative to the context.
+            (This is used an alternative to the context.)
         kinds : Optional[Union[str, List[str], Tuple[str]]
             If None, all label kinds are returned.
             If string, all labels matching the kind string will be returned.
             If a list of strings is returned, all labels matching all the kinds
             listed will be returned.
+        register : Optional[bool]
+            If True, labels will be registered before doing the search
 
         Returns
         -------
         labels : List[:obj:`Type[Label] <.label_manager.types.Label>`]
             A list of label objects.
         """
-        # Make sure the labels are registered
-        self.register_labels()
+        # Prepare the parameters
+        kinds = kinds or []
+        kinds = (kinds if isinstance(kinds, list) or isinstance(kinds, tuple)
+                 else [kinds])
 
-        # Filter labels by document.
+        # Register the labels
+        if register:
+            self.register()
+
+        # Filter labels by doc_id.
+        labels = self.labels.values()
         if doc_id is not None:
-            document_labels = [l for l in self.labels if l.doc_id == doc_id]
-        else:
-            document_labels = self.labels
-
-        if kinds is None:
-            return list(document_labels)
+            labels = [l for l in labels if l.doc_id == doc_id]
 
         # Filter labels by kind
-        if isinstance(kinds, str):
-            kinds = [kinds]
-
         returned_labels = []
-        for kind in kinds:
-            returned_labels += [l for l in document_labels if kind in l.kind]
+        if kinds:
+            for kind in kinds:
+                returned_labels += [l for l in labels if kind in l.kind]
+        else:
+            returned_labels = labels
 
         return returned_labels
-
-    def register_labels(self):
-        """Process collected labels and register them in the label_manager.
-
-        This function:
-
-            1. Transfers the collected_labels to the list of registered labels
-               (self.labels)
-            2. Sets the local order (within a document) and global order
-               (between multiple documents in a document tree) for labels.
-            3. Sets references to the heading labels and the counts for
-               heading labels.
-        """
-        # Only register labels if there are collected labels to register
-        if len(self.collected_labels) > 0:
-            label_register.emit(registered_labels=self.labels,
-                                collected_labels=self.collected_labels,
-                                root_context=self.root_context)
-
-        return None
 
     def format_string(self, id, *keys, target=None):
         """Retrieve the formatted label string for a label.

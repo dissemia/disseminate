@@ -79,7 +79,6 @@ class Toc(Tag):
 
     process_typography = False
 
-    _mtime = None
     _ref_tags = None
 
     def __init__(self, name, content, attributes, context):
@@ -94,8 +93,8 @@ class Toc(Tag):
         elif isinstance(content, Tag):
             self.toc_kind = content.txt
 
-        # If the TOC kind hasn't been assigned, the content could be parsed.
-        # Raise and exception
+        # If the TOC kind hasn't been assigned, the content could not be parsed.
+        # Raise an exception
         if self.toc_kind is None:
             msg = "The {} tag could not parse the tag contents: {}"
             raise exceptions.TagError(msg.format(self.name, content))
@@ -106,14 +105,6 @@ class Toc(Tag):
         if header is not None:
             self.header_tag = Heading(name='TOC', content='Table of Contents',
                                       attributes='nolabel', context=context)
-
-    @property
-    def mtime(self):
-        # Get the maximum mtimes from the labels this toc tag depends on
-        labels = self.get_labels()
-        label_mtimes = [label.mtime for label in labels]
-        mtimes = list(filter(bool, label_mtimes + [self._mtime]))
-        return max(mtimes) if mtimes else None
 
     def get_labels(self):
         """Get the labels, ordering function and labeling type.
@@ -127,19 +118,21 @@ class Toc(Tag):
 
         # If 'all' is specified in the toc_kind, then all documents should be
         # selected. This is done by having a doc_id of None with the
-        # 'get_labels' method of the label manager. If 'all' is not
+        # 'get_labels_by_kind' method of the label manager. If 'all' is not
         # specified, then use this document's doc_id. This will return labels
-        # only for this document and its context from the 'get_labels' method
-        # of the label manager.
+        # only for this document and its context from the 'get_labels_by_kind'
+        # method of the label manager.
         context = self.context
         doc_id = context.get('doc_id') if 'all' not in self.toc_kind else None
         label_manager = self.context['label_manager']
 
         labels = []
         if 'heading' in self.toc_kind or 'headings' in self.toc_kind:
-            labels += label_manager.get_labels(doc_id=doc_id, kinds='heading')
+            labels += label_manager.get_labels_by_kind(doc_id=doc_id,
+                                                       kinds='heading')
         if 'document' in self.toc_kind or 'documents' in self.toc_kind:
-            labels += label_manager.get_labels(doc_id=doc_id, kinds='document')
+            labels += label_manager.get_labels_by_kind(doc_id=doc_id,
+                                                       kinds='document')
 
         # Now filter apply additional filters
         doc_id = context.get('doc_id')
@@ -167,23 +160,8 @@ class Toc(Tag):
     def reference_tags(self):
         """This tag's TocRef tag items.
         """
-        # Get labels and determine their latest modification time (mtime).
-        # We poll the fresh list of labels instead of the cached ref_tags
-        # because the entries in the TOC may have changed since the ref_tags
-        # were last loaded.
         labels = self.get_labels()
-        label_mtimes = [label.mtime for label in labels]
-        latest_mtime = max(label_mtimes) if len(label_mtimes) > 0 else None
 
-        # Determine whether the labels are up to date and whether tags have
-        # already been prepared. If so, use those.
-        if (self._ref_tags is not None and
-            self._mtime is not None and
-            latest_mtime is not None and
-           self._mtime >= latest_mtime):
-            return self._ref_tags
-
-        # The labels have changed. Update the ref tags.
         # Collect the created tags.
         tags = []
 
@@ -205,21 +183,17 @@ class Toc(Tag):
 
             tags.append(tag)
 
-        # Cache the ref tags and update the modification time for labels
-        self._ref_tags = tags
-        self._mtime = latest_mtime
-        return self._ref_tags
+        return tags
 
     def html_fmt(self, content=None, attributes=None, cache=None, level=1):
         tags = self.reference_tags
         elements = []
 
-        # cache the documents_by_id
         root_document = self.context.root_document
         documents_by_id = (root_document.documents_by_id(recursive=True)
                            if root_document is not None else None)
 
-        # cache the labels
+        # Get the labels
         labels = self.get_labels()
         labels_by_id = {l.id: l for l in labels}
 

@@ -137,27 +137,6 @@ class Tag(object):
         short_attr = self.attributes.get('short', None)
         return short_attr if short_attr is not None else self.title
 
-    @property
-    def mtime(self):
-        """The last modification time of this tag's (and subtag) document and
-        for the documents of all labels referenced by this tag."""
-        # Get mtimes for sub-tags
-        if isinstance(self.content, list):
-            mtimes = [tag.mtime for tag in self.content
-                      if hasattr(tag, 'mtime')]
-        elif isinstance(self.content, Tag):
-            mtimes = [self.content.mtime]
-        else:
-            mtimes = list()
-
-        mtimes.append(self.context.get('mtime', None))
-
-        # Remove None values from mtimes
-        mtimes = list(filter(bool, mtimes))
-
-        # The mtime is the latest mtime of all the tags and labels
-        return max(mtimes)
-
     def copy(self, new_context=None):
         """Create a copy of this tag and all sub-tabs.
 

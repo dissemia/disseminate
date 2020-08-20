@@ -1,16 +1,20 @@
 """
-A receiver to process content labels
+A function to register content labels
 """
-from ..signals import label_register
-from ..types import ContentLabel, DocumentLabel
+from .types import ContentLabel, DocumentLabel
 
 
-@label_register.connect_via(order=1000)
-def assign_content_labels(registered_labels, **kwargs):
+def register_content_labels(labels, **kwargs):
     """Assign chapter/section/subsection links for Content labels.
 
     This processor only works on content labels (:obj:`ContentLabel
     <.types.ContentLabel>`)
+
+    Parameters
+    ----------
+    labels : Dict[Tuple[str,str], :obj:`Label <.label_manager.types.Label>`]
+        A list of labels where the key is the (doc_id, label_id) and the values
+        are the label objects.
     """
 
     # Keep track of the current heading registered_labels
@@ -21,7 +25,7 @@ def assign_content_labels(registered_labels, **kwargs):
     subsubsection_label = None
 
     # Process each Contentlabel.
-    content_labels = [label for label in registered_labels
+    content_labels = [label for label in labels.values()
                       if isinstance(label, ContentLabel)]
 
     # Keep track of the current doc_id
@@ -31,7 +35,6 @@ def assign_content_labels(registered_labels, **kwargs):
         # Switch the local count whenever a new document is encountered.
         # However, the local_counter is not reset between documents
         if not isinstance(label, DocumentLabel) and doc_id != label.doc_id:
-            local_counter = dict()
             doc_id = label.doc_id
 
         if label.kind and label.kind[-1] == 'part':

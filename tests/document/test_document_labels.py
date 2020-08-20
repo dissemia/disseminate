@@ -66,92 +66,6 @@ def test_document_toc(env):
     assert toc_tag.html == key
 
 
-def test_document_tag_mtime(env, wait):
-    """Test the calculation of mtimes for labels from tags."""
-    # Prepare two files
-    tmpdir = env.project_root
-    project_root = tmpdir / 'src'
-    project_root.mkdir()
-    src_filepath1 = SourcePath(project_root=project_root, subpath='main.dm')
-    src_filepath2 = SourcePath(project_root=project_root, subpath='sub.dm')
-
-    # Write to the files
-    src_filepath1.write_text("""
-    ---
-    target: html
-    include:
-        sub.dm
-    ---
-    @chapter[id=chapter-one]{Chapter One}
-    """)
-    wait()  # sleep time offset needed for different mtimes
-
-    src_filepath2.write_text("""
-    ---
-    target: html
-    ---
-    @chapter[id=chapter-two]{Chapter Two}
-    """)
-    wait()  # sleep time offset needed for different mtimes
-
-    doc = Document(src_filepath1, environment=env)  # main.dm
-    label_manager = doc.context['label_manager']
-
-    # Get the two documents
-    docs = doc.documents_list(only_subdocuments=False, recursive=False)
-    assert len(docs) == 2
-    doc1, doc2 = docs  # doc1 == doc; doc2 is sub.dm
-
-    # Get the body root tag and the mtimes
-    body_attr = settings.body_attr
-    root1 = doc1.context[body_attr]
-    root2 = doc2.context[body_attr]
-
-    # Check that the mtimes match the file modification times
-    assert src_filepath1.stat().st_mtime == root1.mtime
-    assert src_filepath2.stat().st_mtime == root2.mtime
-
-    # Now change the two src files. Add a reference to the 2nd file in the
-    # first.
-    src_filepath1.write_text("""
-    ---
-    target: html
-    include:
-        sub.dm
-    ---
-    @ref{chapter-two}
-    @chapter[id=chapter-one]{Chapter One}
-    """)
-    wait()  # sleep time offset needed for different mtimes
-
-    src_filepath2.write_text("""
-    ---
-    target: html
-    ---
-    @chapter[id=chapter-two]{Chapter Two}
-    """)
-    wait()  # sleep time offset needed for different mtimes
-
-    # Reload the documents
-    doc1.load()
-    doc2.load()
-
-    # Get the root tag and the mtimes
-    root1 = doc1.context[body_attr]
-    root2 = doc2.context[body_attr]
-
-    # Check that the first file was written before the second.
-    assert src_filepath1.stat().st_mtime < src_filepath2.stat().st_mtime
-
-    # The labels have been registered. The root1 depends on the second document,
-    # which is later than the first document, so it should have it's mtime
-    # instead of the mtime of the first document.
-    assert src_filepath1.stat().st_mtime < src_filepath2.stat().st_mtime
-    assert src_filepath1.stat().st_mtime < root1.mtime
-    assert src_filepath2.stat().st_mtime == root1.mtime
-    assert src_filepath2.stat().st_mtime == root2.mtime
-
-
 def test_document_tree_updates_document_labels(env, wait):
     """Test the updates to the document tree and labels."""
     # Create a document tree.
@@ -190,7 +104,7 @@ def test_document_tree_updates_document_labels(env, wait):
     assert len(label_manager.labels) == 3
 
     # Get the labels, and register them
-    label_list = label_manager.get_labels()
+    label_list = list(label_manager.get_labels_by_kind())
 
     assert label_list[0].id == 'doc:file1-dm'
     assert label_list[1].id == 'doc:file2-dm'
@@ -217,7 +131,7 @@ def test_document_tree_updates_document_labels(env, wait):
     assert doc_list[2].src_filepath == src_filepath2
 
     # Check the ordering of labels
-    label_list = label_manager.get_labels()  # register labels
+    label_list = list(label_manager.get_labels_by_kind())  # register labels
     assert len(label_list) == 3
     assert label_list[0].id == 'doc:file1-dm'
     assert label_list[1].id == 'doc:file3-dm'
@@ -246,7 +160,7 @@ def test_document_tree_updates_document_labels(env, wait):
     assert doc_list[0].src_filepath == src_filepath1
     assert doc_list[1].src_filepath == src_filepath2
 
-    label_list = label_manager.get_labels()  # register labels
+    label_list = list(label_manager.get_labels_by_kind())  # register labels
     assert len(label_manager.labels) == 2
     assert label_list[0].id == 'doc:file1-dm'
     assert label_list[1].id == 'doc:file2-dm'
@@ -267,7 +181,7 @@ def test_document_tree_updates_document_labels(env, wait):
     assert doc_list[1].src_filepath == src_filepath2
     assert doc_list[2].src_filepath == src_filepath3
 
-    label_list = label_manager.get_labels()
+    label_list = list(label_manager.get_labels_by_kind())
     assert len(label_list) == 3
     assert label_list[0].id == 'doc:file1-dm'
     assert label_list[1].id == 'doc:file2-dm'
@@ -321,8 +235,8 @@ def test_document_tree_updates_with_section_labels(env, wait):
 
     # Check the ordering of labels
     label_manager = doc.context['label_manager']
-    labels = label_manager.get_labels()
-    title_labels = label_manager.get_labels(kinds='chapter')
+    labels = label_manager.get_labels_by_kind()
+    title_labels = label_manager.get_labels_by_kind(kinds='chapter')
 
     # Check the number of labels: 3 for documents, 3 for chapters
     assert len(labels) == 6
@@ -358,7 +272,8 @@ def test_document_tree_updates_with_section_labels(env, wait):
     assert doc_list[1].src_filepath == src_filepath3
     assert doc_list[2].src_filepath == src_filepath2
 
-    title_labels = label_manager.get_labels(kinds='chapter')  # register labels
+    # register labels
+    title_labels = label_manager.get_labels_by_kind(kinds='chapter')
 
     # Check the number of labels: 3 for documents, 3 for chapters
     assert len(label_manager.labels) == 6

@@ -2,7 +2,7 @@
 Test the TOC tag.
 """
 from disseminate.document import Document
-from disseminate.paths import SourcePath, TargetPath
+from disseminate.paths import SourcePath
 from disseminate.tags.toc import Toc
 from disseminate.utils.tests import strip_leading_space
 
@@ -10,7 +10,7 @@ from disseminate.utils.tests import strip_leading_space
 # Tests for methods
 
 def test_toc_get_labels(env):
-    """Test the get_labels method."""
+    """Test the get_labels_by_kind method."""
 
     # 1. The 'tests/tags/toc_example2' directory contains three markup
     # files:
@@ -55,7 +55,7 @@ def test_toc_get_labels(env):
 
 
 def test_toc_reference_tags(env):
-    """Test the get_labels method."""
+    """Test the get_labels_by_kind method."""
 
     # 1. The 'tests/tags/toc_example2' directory contains three markup
     # files:
@@ -81,89 +81,6 @@ def test_toc_reference_tags(env):
     assert tags[2].attributes['level'] == 4  # section
     assert tags[3].name == 'toc-section'
     assert tags[3].attributes['level'] == 3  # section
-
-
-def test_toc_mtime(env):
-    """Test the correct mtime for tocs."""
-
-    # 1. The 'tests/tags/toc_example2' directory contains three markup
-    # files:
-    #     file1.dm, file2.dm and file3.dm. The 'file1.dm' includes
-    #     'file2.dm'
-    #     and 'file3.dm'. All 3 files have headings
-    src_filepath = SourcePath(project_root='tests/tags/toc_example2',
-                              subpath='file1.dm')
-    doc1 = Document(src_filepath, environment=env)
-    doc2, doc3 = doc1.documents_list(only_subdocuments=True)
-
-    # Create a toc tag for all 3 documents. The mtime of the toc should
-    # match
-    # the greatest mtime for all 3 documents, since the toc has labels that
-    # depend on each of the documents
-    max_mtime = max([doc.mtime for doc in (doc1, doc2, doc3)])
-
-    for doc in (doc1, doc2, doc3):
-        # Create a toc for all headings and doc (the first document)
-        toc = Toc(name='toc', content='all headings', attributes='',
-                  context=doc.context)
-
-        assert toc.mtime == max_mtime
-
-
-# Other tests
-
-def test_toc_changes(doc):
-    """Test the generation of tocs when the label manager changes."""
-
-    # Setup a test document
-    markup = """
-    ---
-    title: my first file
-    relative_links: False
-    ---
-    @section[id=heading1]{My first heading}
-    """
-    doc.src_filepath.write_text(strip_leading_space(markup))
-
-    # Create the document and build the html target
-    assert doc.build() == ['done']
-
-    # Make sure the 'base_url' entry matches a basic format.
-    doc.context['base_url'] = '/{target}/{subpath}'
-
-    # Match the abbreviated toc
-    toc = Toc(name='toc', content='all documents headings abbreviated',
-              attributes='', context=doc.context)
-
-    key = ('<ul class="toc">\n'
-             '<li class="toc-level-3"><a href="#heading1" class="ref">My first heading</a></li>\n'
-             '<li class="toc-level-3"><a href="" class="ref">my first file</a></li>\n'
-           '</ul>\n')
-    assert toc.html == key
-
-    # Change the document
-    markup = """
-    ---
-    title: my first file
-    relative_links: False
-    ---
-    @section[id=heading1]{My first heading}
-    @subsection[id=subheading1]{My first sub-heading}
-    """
-    doc.src_filepath.write_text(strip_leading_space(markup))
-    assert doc.build() == ['done']
-
-    # Match the abbreviated toc
-    toc = Toc(name='toc', content='all documents headings abbreviated',
-              attributes='', context=doc.context)
-    key = ('<ul class="toc">\n'
-             '<li class="toc-level-3"><a href="#heading1" class="ref">My first heading</a></li>\n'
-             '<ul>\n'
-               '<li class="toc-level-4"><a href="#subheading1" class="ref">My first sub-heading</a></li>\n'
-               '<li class="toc-level-4"><a href="" class="ref">my first file</a></li>\n'
-             '</ul>\n'
-           '</ul>\n')
-    assert toc.html == key
 
 
 def test_toc_absolute_and_relative_links(doctree):
@@ -255,6 +172,8 @@ def test_toc_absolute_and_relative_links(doctree):
            '</ul>\n')
     assert toc.html == key
 
+
+# html target
 
 def test_toc_levels_html(doc):
     """Test the correct assignment of toc-levels."""
@@ -426,7 +345,7 @@ def test_toc_heading_html(env):
     assert toc.html == key
 
 
-# tex tests
+# tex target
 
 def test_toc_heading_tex(env):
     """Test the generation of tocs from headings for tex"""

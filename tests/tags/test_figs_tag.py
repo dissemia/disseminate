@@ -59,6 +59,7 @@ def test_figure_caption_no_id(doc, attributes_cls):
 
 def test_figure_caption_with_id(doc):
     """Tests the parsing of captions in figure tags when an id is specified."""
+    label_man = doc.context['label_manager']
 
     # Set the label format for the caption figure
     label_fmts = doc.context['label_fmts']
@@ -68,6 +69,9 @@ def test_figure_caption_with_id(doc):
     # the id is in the caption tag
     for src in ("@marginfig[id=fig-1]{@caption{This is my caption}}",
                 "@marginfig{@caption[id=fig-1]{This is my caption}}"):
+
+        # Reset label manager to prevent duplicate labels
+        label_man.reset()
 
         # Generate a tag and compare the generated tex to the answer key
         root = Tag(name='root', content=src, attributes='', context=doc.context)
@@ -111,6 +115,7 @@ def test_marginfig_caption_no_id_html(doc):
 def test_marginfig_caption_with_id_html(doc):
     """Tests the html generation of captions in figure tags when an id is
     specified."""
+    label_man = doc.context['label_manager']
 
     # Set the label format for the caption figure
     label_fmts = doc.context['label_fmts']
@@ -128,6 +133,9 @@ def test_marginfig_caption_with_id_html(doc):
            '</figure>\n')
 
     for count, src in enumerate(srcs):
+        # Reset the label manager to avoid duplicate labels
+        label_man.reset()
+
         # Generate a tag and compare the generated tex to the answer key
         root = Tag(name='root', content=src, attributes='', context=doc.context)
         fig = root.content
@@ -231,6 +239,7 @@ def test_marginfig_caption_no_id_tex(doc):
 def test_marginfig_caption_with_id_tex(doc):
     """Tests the tex generation of captions in figure tags when an id is
     specified."""
+    label_man = doc.context['label_manager']
 
     # Set the label format for the caption figure
     label_fmts = doc.context['label_fmts']
@@ -241,6 +250,9 @@ def test_marginfig_caption_with_id_tex(doc):
     srcs = ("@marginfig[id=fig-1]{@caption{This is my caption}}",
             "@marginfig{@caption[id=fig-1]{This is my caption}}")
     for count, src in enumerate(srcs):
+        # Reset the labels to avoid creating a duplicate label
+        label_man.reset()
+
         # Generate a tag and compare the generated tex to the answer key
         root = Tag(name='root', content=src, attributes='', context=doc.context)
         fig = root.content

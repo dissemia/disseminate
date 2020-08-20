@@ -8,19 +8,6 @@ from ..signals import document_onload, document_deleted
 def reset_document(document, **kwargs):
     """Reset the context and managers for a document on load."""
     context = document.context or dict()
-    src_filepath = context.get('src_filepath', None)
-
-    # Reset the dependency manager
-    if 'dependency_manager' in context and src_filepath is not None:
-        dep = context['dependency_manager']
-        dep.reset(src_filepath=document.src_filepath)
-
-    # Reset the label manager
-    if 'label_manager' in context and src_filepath is not None:
-        label_manager = context['label_manager']
-
-        # Reset the labels for this document.
-        label_manager.reset(context=context)
 
     # Reset the context
     context.reset()
@@ -33,18 +20,6 @@ def delete_document(document, **kwargs):
     """Reset the context and managers for a document on document deletion."""
     context = document.context or dict()
     src_filepath = context.get('src_filepath', None)
-
-    # Reset the dependency manager
-    if 'dependency_manager' in context and src_filepath is not None:
-        dep = context['dependency_manager']
-        dep.reset(src_filepath=document.src_filepath)
-
-    # Reset the label manager
-    if 'label_manager' in context and src_filepath is not None:
-        label_manager = context['label_manager']
-
-        # Reset the labels for this document.
-        label_manager.reset(context=context)
 
     # Reset the context
     del context
