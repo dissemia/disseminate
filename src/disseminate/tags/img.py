@@ -5,8 +5,11 @@ import pathlib
 
 from .tag import Tag, TagError
 from .utils import format_attribute_width
+from ..signals import signal
 from ..paths.utils import find_files
 from ..formats import tex_cmd
+
+add_file = signal('add_file')
 
 
 class ImgFileNotFound(TagError):
@@ -123,37 +126,28 @@ class Img(Tag):
         else:
             can_cache = False
 
-        # If not get the outfilepath for the given document target
-        assert self.context.is_valid('builders')
-
         # Retrieve the unspecified arguments
-        target = target if target.startswith('.') else '.' + target
         content = content or self.content
         attrs = attributes or self.attributes
         context = context or self.context
-
-        # Retrieve builder
-        target_builder = self.context.get('builders', dict()).get(target)
-        assert target_builder, ("A target builder for '{}' is needed in the "
-                                "document context")
 
         # Prepare the parameters. Either their a filepath of the contents
         # or the contents themselves.
         content = (self.content_as_filepath(content=content, context=context)
                    or content)
-        parameters = ([content] + list(attrs.filter(target=target).totuple()))
+        parameters = [content] + list(attrs.filter(target=target).totuple())
 
-        # Use the content's filepath suffix as the in_ext, if a file has been
+        # Use the content's filepath suffix as the in_ext, if a file has
+        # been
         # specified, otherwise use this class's in_ext attribute
         in_ext = (content.suffix if isinstance(content, pathlib.Path) else
                   self.in_ext)
+        outfilepaths = add_file.emit(parameters=parameters, context=context,
+                                     in_ext=in_ext, target=target,
+                                     use_cache=False)
+        assert len(outfilepaths) == 1
 
-        build = target_builder.add_build(parameters=parameters,
-                                         context=context,
-                                         in_ext=in_ext,
-                                         target=target,
-                                         use_cache=False)
-        outfilepath = build.outfilepath
+        outfilepath = outfilepaths[0]
 
         # Cache the outfilepath, if possible
         if can_cache:

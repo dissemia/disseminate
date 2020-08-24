@@ -50,13 +50,14 @@ def test_md5decider(env):
 
     # Changing the arguments will change the build decision
     kwargs['inputs'] = kwargs['inputs'] + ['new']
-    assert not decision.build_needed(**kwargs)  # Cache value
-    decision = decider.decision                 # new decision needed
     assert decision.build_needed(**kwargs)
 
+    # A new decision will give the same result
+    decision = decider.decision
+    assert decision.build_needed(**kwargs)
+
+    # Reverting the inputs will give the old decision
     kwargs['inputs'] = infilepaths
-    assert decision.build_needed(**kwargs)  # Cache value
-    decision = decider.decision             # new decision needed
     assert not decision.build_needed(**kwargs)
 
     # Changing one of the files will change its build decision

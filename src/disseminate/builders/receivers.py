@@ -4,7 +4,7 @@ Receivers to tie builders to other events
 from .builder import Builder
 from .exceptions import BuildError
 from ..signals import signal
-from .. import settings
+
 
 document_onload = signal('document_onload')
 document_build = signal('document_build')
@@ -57,9 +57,12 @@ def build(document):
 
 @document_build_needed.connect_via(order=1000)
 def build_needed(document):
+    """Evaluate whether any of the target builders need to be build"""
+
     # Get the target builders
     # The builders dict should be in context from add_target_builders
     context = document.context
+
     assert 'builders' in context
     builders = context['builders']
 

@@ -10,8 +10,6 @@ from .utils_hash import hash_items
 class Md5Decision(Decision):
     """A decision for the Md5Decider"""
 
-    _hash = None
-
     def build_needed(self, inputs, output, reset=False):
         build_needed = super().build_needed(inputs, output)
 
@@ -36,7 +34,6 @@ class Md5Decision(Decision):
         # Reset the cached hash, if needed
         if reset:
             # Recalculate the hash
-            self._hash = None
             input_hash, output_hash = self.calculate_hash(inputs=inputs,
                                                           output=output)
             db[input_hash] = output_hash
@@ -44,16 +41,14 @@ class Md5Decision(Decision):
         else:
             return cached_output_hash != output_hash
 
-    def calculate_hash(self, inputs, output):
+    @staticmethod
+    def calculate_hash(inputs, output):
         """Calculate the md5 hash for the inputs, output and args."""
-        if self._hash is None:
-            sorted_inputs = sorted(inputs, key=str)
-            hash_input = hash_items(*sorted_inputs)
-            hash_output = hash_items(output)
+        sorted_inputs = sorted(inputs, key=str)
+        hash_input = hash_items(*sorted_inputs)
+        hash_output = hash_items(output)
 
-            # Convert the hash to bytes, which will be stored in the database
-            self._hash = (hash_input, hash_output)
-        return self._hash
+        return (hash_input, hash_output)
 
 
 class Md5Decider(Decider):

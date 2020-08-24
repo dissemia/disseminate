@@ -13,15 +13,6 @@ class CompositeBuilder(Builder):
     ----------
     clear_done : bool
         If True (default), remove 'done' subbuilders during the build.
-
-    Notes
-    -----
-    - The build filepaths for subbuilders are set as follows, with user-supplied
-      paths in parentheses:
-      - builder - subbuilder1 (parameters) - outfilepath1
-                - subbuilder2 outfilepath2 - outfilepath3
-                - subbuilder3 outfilepath3 - outfilepath4
-                - outfilepath4 - (outfilepath)
     """
     subbuilders = None
 

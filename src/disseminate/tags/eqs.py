@@ -81,7 +81,7 @@ class Eq(Img):
 
         # Create a special context for this tag specifically
         if context is None:
-            context = self.context.filter(['paths'])
+            context = self.context.filter(['paths', 'builders'])
             context['eq'] = self
             context['template'] = 'default/eq'
 

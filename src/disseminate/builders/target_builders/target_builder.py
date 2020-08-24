@@ -1,6 +1,7 @@
 """
 A builder for document targets.
 """
+from .signals import add_dependencies
 from ..jinja_render import JinjaRender
 from ..composite_builders import SequentialBuilder, ParallelBuilder
 from ..utils import generate_outfilepath
@@ -123,6 +124,22 @@ class TargetBuilder(SequentialBuilder):
         # Initialize builder
         super().__init__(env, parameters=parameters, outfilepath=outfilepath,
                          subbuilders=subbuilders, use_cache=use_cache, **kwargs)
+
+    @property
+    def parameters(self):
+        """Add additional dependencies in the parameters."""
+        parameters = list(SequentialBuilder.parameters.fget(self))
+
+        # Get additional parameter dependencies
+        extra_params = add_dependencies.emit(context=self.context)
+
+        for extra_param in extra_params:
+            parameters += extra_param
+        return parameters
+
+    @parameters.setter
+    def parameters(self, value):
+        SequentialBuilder.parameters.fset(self, value)
 
     @property
     def outfilepath(self):

@@ -3,7 +3,6 @@ Test the Ref tag.
 """
 import pytest
 
-from disseminate.paths import SourcePath, TargetPath
 from disseminate.tags import Tag
 from disseminate.tags.ref import Ref
 from disseminate.label_manager import LabelNotFound

@@ -1,7 +1,6 @@
 """
 Classes and functions for rendering documents.
 """
-from tempfile import mkdtemp
 from shutil import rmtree
 from collections import OrderedDict
 import logging
@@ -191,20 +190,10 @@ class Document(object):
 
         Returns
         -------
-        target_filepath : :obj:`TargetPath <.paths.TargetPath>`
+        target_filepath : Union[:obj:`TargetPath <.paths.TargetPath>`, None]
             The target filepath.
-
-        Raises
-        ------
-        MissingTargetException
-            Raised if the target is not available
         """
-        try:
-            return self.targets[target]
-        except KeyError:
-            msg = "The target '{}' is not available for document '{}'"
-            msg = msg.format(target, self.doc_id)
-            raise exceptions.MissingTargetException(msg)
+        return self.targets.get(target, None)
 
     @property
     def dependency_manager(self):
