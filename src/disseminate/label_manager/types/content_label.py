@@ -43,6 +43,12 @@ class ContentLabel(Label):
         super().__init__(doc_id=doc_id, id=id, kind=kind, order=order)
         self.title = title
 
+    def __repr__(self):
+        if self.title is not None:
+            return super().__repr__(title=self.title)
+        else:
+            return super().__repr__()
+
     @property
     def part_number(self):
         """The number for the part to which this label belongs."""

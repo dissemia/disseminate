@@ -1,7 +1,7 @@
 """
 Test the Label class.
 """
-from disseminate.label_manager.types import Label
+from disseminate.label_manager.types import Label, ContentLabel, DocumentLabel
 
 
 def test_label_repr():
@@ -16,3 +16,12 @@ def test_label_repr():
     label.order = (3, 1)
     assert repr(label) == ("Label(doc_id: 'mydoc', id: 'test1', "
                            "kind: heading[3], section[1])")
+
+
+def test_contentlabel_repr():
+    """Test the representation of ContentLabel objects."""
+
+    # Create a label
+    label = ContentLabel(doc_id='mydoc', id='test1', kind=(), title='My Title')
+    assert repr(label) == ("ContentLabel(doc_id: 'mydoc', id: 'test1' "
+                           "title: 'My Title')")

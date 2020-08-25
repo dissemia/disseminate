@@ -12,8 +12,9 @@ import pathvalidate
 
 from .utils import generate_outfilepath, generate_mock_parameters
 from .exceptions import runtime_error, BuildError
+from ..signals import signal
 from ..utils.classes import all_subclasses
-from ..utils.list import uniq
+from ..utils.list import uniq, flatten
 from ..paths import TargetPath
 from .. import settings
 
@@ -92,6 +93,8 @@ class Builder(metaclass=ABCMeta):
         If specified, use the given document target for the build. This is used
         in formatting the TargetPath.
         ex: 'html' target will store built files in the 'html/' subdirectory.
+    parameters_from_signals : Optional[List[str]]
+        A list of optional signal names to receive extra parameter dependencies.
     popen : Union[:obj:`subprocess.Popen`, None, str]
         The process for the externally run program.
         The popen can also be None, if a process hasn't been run, or "done"
@@ -115,6 +118,8 @@ class Builder(metaclass=ABCMeta):
     # Options that impact how the outfilepath is formatted
     outfilepath_append = None
     target = None
+
+    parameters_from_signals = None
 
     popen = None
 
@@ -265,8 +270,11 @@ class Builder(metaclass=ABCMeta):
     def parameters(self):
         """The list of input parameters, including filepaths, needed for the
         build"""
+        parameters = list(getattr(self, '_parameters', []))
+        parameters += self.get_parameters_from_signals()
+
         # Input parameters should only be listed once.
-        return uniq(getattr(self, '_parameters', []))
+        return uniq(parameters)
 
     @parameters.setter
     def parameters(self, value):
@@ -294,6 +302,24 @@ class Builder(metaclass=ABCMeta):
                                p[0] == name]
 
         return filtered_parameters[0] if filtered_parameters else None
+
+    def get_parameters_from_signals(self, sort=True):
+        """Retrieve additional parameters from emitted signals specified in
+        the parameters_from_signals list attribute."""
+        parameters = []
+
+        if isinstance(self.parameters_from_signals, str):
+            self.parameters_from_signals = [self.parameters_from_signals]
+
+        if isinstance(self.parameters_from_signals, list):
+            # Retrieve the signals
+            for signal_name in self.parameters_from_signals:
+                # Convert the signal name to an actual signal
+                sig = signal(signal_name)
+                rv = sig.emit(builder=self)
+                parameters += list(flatten(rv))
+
+        return list(sorted(parameters)) if sort else parameters
 
     @property
     def infilepaths(self):

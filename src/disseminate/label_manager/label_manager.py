@@ -256,7 +256,8 @@ class LabelManager(object):
             could not be found.
         """
         # Prepare the parameters
-        ids = ids if isinstance(ids, list) or isinstance(ids, tuple) else [ids]
+        ids = (ids if any(isinstance(ids, t) for t in (list, tuple, set))
+               else [ids])
 
         # Register the labels
         if register:

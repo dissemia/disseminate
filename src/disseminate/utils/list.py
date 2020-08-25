@@ -98,6 +98,25 @@ def unwrap(l):
     return new_l
 
 
+def flatten(l):
+    """Flatten a list of lists.
+
+    Examples
+    --------
+    >>> list(flatten([1, 2, 3]))
+    [1, 2, 3]
+    >>> list(flatten([[1, 2, 3], [4, 5, 6]]))
+    [1, 2, 3, 4, 5, 6]
+    >>> list(flatten([[1,2], [3, [4, 5], 6]]))
+    [1, 2, 3, 4, 5, 6]
+    """
+    for element in l:
+        if isinstance(element, list):
+            yield from flatten(element)
+        else:
+            yield element
+
+
 def chunks(l, N):
     """Return a generator in chunks of N.
 

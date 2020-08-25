@@ -45,7 +45,7 @@ class Label(object):
         # Wrap the kind in a tuple, if it's a string
         self.kind = (kind,) if isinstance(kind, str) else kind
 
-    def __repr__(self):
+    def __repr__(self, **params):
         cls_name = self.__class__.__name__
         if all(isinstance(i, tuple) or isinstance(i, list)
                for i in (self.kind, self.order)):
@@ -54,8 +54,15 @@ class Label(object):
                                    for k, o in zip(self.kind, self.order)])
         else:
             kind_str = ''
-        return "{}(doc_id: '{}', id: '{}'{})".format(cls_name, self.doc_id,
+        msg = "{}(doc_id: '{}', id: '{}'{}".format(cls_name, self.doc_id,
                                                      self.id, kind_str)
+        if params:
+            attr_str = ", ".join(
+                "{}: '{}'".format(k, v) for k, v in sorted(params.items()))
+            msg += " " + attr_str + ")"
+        else:
+            msg += ")"
+        return msg
 
     @property
     def number(self):

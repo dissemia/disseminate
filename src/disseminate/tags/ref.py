@@ -9,14 +9,16 @@ from ..signals import signal
 from ..formats import html_tag, tex_cmd
 
 
-add_dependencies = signal("add_dependencies")
+ref_label_dependencies = signal("ref_label_dependencies")
 
 
-@add_dependencies.connect_via(order=1000)
-def add_ref_labels(context, **kwargs):
+@ref_label_dependencies.connect_via(order=1000)
+def add_ref_labels(builder, **kwargs):
     """Find and add the labels associated with Ref tags for all tags in
     the context.
     """
+    context = builder.context
+
     # Find tags in the context and get the ref tag labels
     ref_label_ids = set()
     for tag in filter(lambda t: isinstance(t, Tag), context.values()):
@@ -33,7 +35,7 @@ def add_ref_labels(context, **kwargs):
     # Retrieve the labels
     label_man = context.get('label_manager')
     if label_man is not None and ref_label_ids:
-        return sorted(label_man.get_labels_id(ids=ref_label_ids))
+        return sorted(label_man.get_labels_by_id(ids=ref_label_ids))
     else:
         return []
 

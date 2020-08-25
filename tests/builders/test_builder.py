@@ -6,6 +6,7 @@ import pytest
 from disseminate.builders.builder import Builder
 from disseminate.builders.pdfcrop import PdfCrop
 from disseminate.paths import SourcePath, TargetPath
+from disseminate.signals import signal
 
 
 def test_builder_creation(env):
@@ -81,13 +82,36 @@ def test_builder_filepaths_unusual_filenames(env):
     assert builder.infilepaths == [usual_filepath]
 
 
-
 def test_builder_get_parameter(env):
     """Test the Builder get_parameter method."""
     builder = Builder(env=env, parameters=[('test', 'value'), 1])
 
     assert builder.get_parameter('test') == 'value'
     assert builder.get_parameter(1) is None
+
+
+def test_builder_parameters_from_signals(env):
+    """Test the parameters_from_signals functionality for builders."""
+    builder = Builder(env=env, parameters=[('test', 'value'), 1])
+
+    assert builder.parameters == [('test', 'value'), 1]
+
+    # Create a signal
+    test_signal = signal("test_signal")
+    @test_signal.connect_via(order=1000)
+    def test(builder):
+        return ['extra']
+
+    # 1. The signal adds a parameter
+    builder.parameters_from_signals = ['test_signal']
+    assert builder.parameters == [('test', 'value'), 1, 'extra']
+
+    # 2. It does so only once
+    assert builder.parameters == [('test', 'value'), 1, 'extra']
+
+    # 3. Removing the signal removes the parameter
+    builder.parameters_from_signals = None
+    assert builder.parameters == [('test', 'value'), 1]
 
 
 def test_builder_status(env):
