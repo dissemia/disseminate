@@ -2,6 +2,7 @@
 Objects to manage builds
 """
 import logging
+from concurrent.futures import ThreadPoolExecutor
 import subprocess
 import pathlib
 from abc import ABCMeta
@@ -17,6 +18,17 @@ from ..utils.classes import all_subclasses
 from ..utils.list import uniq, flatten
 from ..paths import TargetPath
 from .. import settings
+
+
+# Setup a global pool for processes
+executor = ThreadPoolExecutor()
+
+
+def run(**kwargs):
+    """Run the command with the given arguments."""
+    popen = subprocess.Popen(**kwargs)
+    popen.wait()
+    return popen
 
 
 class CustomFormatter(Formatter):
@@ -95,10 +107,9 @@ class Builder(metaclass=ABCMeta):
         ex: 'html' target will store built files in the 'html/' subdirectory.
     parameters_from_signals : Optional[List[str]]
         A list of optional signal names to receive extra parameter dependencies.
-    popen : Union[:obj:`subprocess.Popen`, None, str]
-        The process for the externally run program.
-        The popen can also be None, if a process hasn't been run, or "done"
-        if the process is finished.
+    future : Union[:obj:`concurrent.futures.Future`, None, str]
+        The future object for the process for the externally run program.
+        The future can also be None, if a process hasn't been run.
     """
     env = None
     action = None
@@ -121,7 +132,7 @@ class Builder(metaclass=ABCMeta):
 
     parameters_from_signals = None
 
-    popen = None
+    future = None
 
     _active = dict()
     _available_builders = dict()
@@ -221,35 +232,35 @@ class Builder(metaclass=ABCMeta):
 
         # The build needs parameters to do anythting, and the filepath
         # parameters should point to valid files
-        elif (not has_parameters or
-              not all(i.exists() for i in self.parameters
-                      if hasattr(i, 'exists'))):
+        if (not has_parameters or not all(i.exists() for i in self.parameters
+                                          if hasattr(i, 'exists'))):
             return "missing (parameters)"
 
         # If a build is not needed or the process is done, then the build is
         # done
-        elif not self.build_needed() or self.popen == "done":
+        if not self.build_needed():
             return "done"
 
         # If a process is open (self.open is not None), then a build is
         # currently in process
-        elif self.popen is not None:
-            poll = self.popen.poll()
-            if poll is None:
-                # If popen.poll() returns None, the process isn't done.
+        if self.future is not None:
+            if not self.future.done():
+                # The process isn't done.
                 return "building"
-            elif not self.outfilepath.exists():
+
+            if not self.outfilepath.exists():
                 # An output file should have been created. If it wasn't then
                 # the build was not successful
                 return "missing (outfilepath)"
-            elif poll == 0:
+
+            if self.future.result().poll() == 0:
                 # exit code of 0. Successful!
                 # Reset the popen and the build status
-                self.popen = 'done'
                 self.build_needed(reset=True)
                 return "done"
-            else:  # non-zero exit code. Unsuccessful. :(
-                runtime_error(popen=self.popen)
+
+            # non-zero exit code. Unsuccessful. :(
+            runtime_error(popen=self.future.result().poll())
 
         else:
             return "ready"
@@ -389,16 +400,17 @@ class Builder(metaclass=ABCMeta):
 
     def run_cmd(self, *args):
         """If the action is a external command, run it."""
-        if self.popen is None and (isinstance(self.action, str) or args):
+        if self.future is None and (isinstance(self.action, str) or args):
 
             # Format the action string, if it's to be used
             args = args if args else self.run_cmd_args()
             logging.debug("'{}' run with: '{}'".format(self.__class__.__name__,
                                                        " ".join(args)))
 
-            popen = subprocess.Popen(args=args, stdout=subprocess.PIPE,
+            # add the process to the executor pool
+            future = executor.submit(run, args=args, stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE, bufsize=4096,)
-            self.popen = popen
+            self.future = future
 
     def build(self, complete=False):
         """Run the build.

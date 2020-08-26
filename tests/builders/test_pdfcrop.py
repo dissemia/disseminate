@@ -44,7 +44,6 @@ def test_pdfcrop_build_with_outfilepath(env):
 
     # Now run the command to completion
     status = pdfcrop.build(complete=True)
-    assert pdfcrop.popen == "done"  # A new process hasn't been spawned
     assert status == 'done'
     assert pdfcrop.status == 'done'
     assert outfilepath.exists()
