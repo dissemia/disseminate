@@ -6,7 +6,6 @@ from copy import deepcopy
 
 from ..context import BaseContext
 from ..label_manager import LabelManager
-from ..dependency_manager import DependencyManager
 from ..paths import SourcePath, TargetPath
 from ..utils.string import str_to_list
 from .. import settings
@@ -29,7 +28,6 @@ class DocumentContext(BaseContext):
         'targets': set,
         'paths': list,
         'label_manager': LabelManager,
-        'dependency_manager': DependencyManager,
         'mtime': float,
         'doc_id': str,
         'process_context_tags': set,
@@ -91,7 +89,6 @@ class DocumentContext(BaseContext):
         # context is reset. They should persist for a project, and they are
         # defined by the root document and build environment.
         'label_manager',
-        'dependency_manager',
         'environment',
 
         # Keep the same list for paths when resetting. Note that will place
@@ -149,9 +146,6 @@ class DocumentContext(BaseContext):
         # Initialize the managers, if this is the root (document) context
         if self.get('label_manager', None) is None:
             self['label_manager'] = LabelManager(root_context=self)
-        if self.get('dependency_manager', None) is None:
-            dep = DependencyManager(root_context=self)
-            self['dependency_manager'] = dep
 
         # Set the document's level. This is based off of the parent context's
         # level

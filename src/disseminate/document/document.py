@@ -196,10 +196,6 @@ class Document(object):
         return self.targets.get(target, None)
 
     @property
-    def dependency_manager(self):
-        return self.context.get('dependency_manager', None)
-
-    @property
     def label_manager(self):
         return self.context.get('label_manager', None)
 

@@ -4,7 +4,7 @@ Tests the DocumentContext class.
 from pathlib import Path
 
 from disseminate import SourcePath, TargetPath
-from disseminate.document import DocumentContext, Document
+from disseminate.document import DocumentContext
 from disseminate.tags import TagFactory
 
 
@@ -36,7 +36,6 @@ def test_document_context_basic_inheritence(context_cls, tmpdir):
                       'project_root': SourcePath('tests/document/example1'),
                       'target_root': TargetPath(tmpdir),
                       'label_manager': Mock(),
-                      'dependency_manager': Mock(),
                       }
     parent_context = context_cls(**parent_context)
 
@@ -54,15 +53,11 @@ def test_document_context_basic_inheritence(context_cls, tmpdir):
         assert context['target_root'] == parent_context['target_root']
         assert context['document']() == doc  # dereference weakref
         assert context['label_manager'] == parent_context['label_manager']
-        assert (context['dependency_manager'] ==
-                parent_context['dependency_manager'])
 
         # Check that the persistent objects, like the label_manager, are the
         # *same* object
         assert (id(context['label_manager']) ==
                 id(parent_context['label_manager']))
-        assert (id(context['dependency_manager']) ==
-                id(parent_context['dependency_manager']))
 
         # Check items that *should not* be inherited
         assert 'paths' in context.do_not_inherit
@@ -88,10 +83,8 @@ def test_document_context_simple_documents(load_example):
     # Load example4. It has a main document (file.dm)
     doc = load_example(ex4_root / ex4_subpath)
     label_manager = doc.label_manager
-    dependency_manager = doc.dependency_manager
 
     assert label_manager is not None
-    assert dependency_manager is not None
 
     def test_context_entries(doc):
         context = doc.context
@@ -102,16 +95,11 @@ def test_document_context_simple_documents(load_example):
         assert context['document']() == doc  # dereference weakref
         assert context['root_document']() == doc  # dereference weakref
         assert context['doc_id'] == doc.doc_id
-
         assert context['label_manager'] == label_manager
-        assert context['dependency_manager'] == dependency_manager
 
         # Check that the persistent objects, like the label_manager, are the
         # *same* object
-        assert (id(context['label_manager']) ==
-                id(label_manager))
-        assert (id(context['dependency_manager']) ==
-                id(dependency_manager))
+        assert id(context['label_manager']) == id(label_manager)
 
         # Check items that *should not* be inherited
         assert 'paths' in context.do_not_inherit
@@ -130,10 +118,8 @@ def test_document_context_simple_documents(load_example):
     # (sub1/file11.dm), which has its own subdocument (subsub1/file111.dm)
     doc = load_example(ex7_root / ex7_subpath)
     label_manager = doc.label_manager
-    dependency_manager = doc.dependency_manager
 
     assert label_manager is not None
-    assert dependency_manager is not None
 
     def test_context_entries(doc):
         context = doc.context
@@ -145,14 +131,10 @@ def test_document_context_simple_documents(load_example):
         assert context['root_document']() == doc  # dereference weakref
 
         assert context['label_manager'] == label_manager
-        assert context['dependency_manager'] == dependency_manager
 
         # Check that the persistent objects, like the label_manager, are the
         # *same* object
-        assert (id(context['label_manager']) ==
-                id(label_manager))
-        assert (id(context['dependency_manager']) ==
-                id(dependency_manager))
+        assert id(context['label_manager']) == id(label_manager)
 
         # Check items that *should not* be inherited
         assert 'paths' in context.do_not_inherit
