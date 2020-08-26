@@ -394,17 +394,14 @@ def test_build_needed(doc, wait):
     ---
     @chapter{file1}
     """)
-    wait()  # sleep time offset needed for different mtimes
 
     src_filepath2.write_text("""
     @chapter{file2}
     """)
-    wait()  # sleep time offset needed for different mtimes
 
     src_filepath3.write_text("""
     @chapter{file3}
     """)
-    wait()  # sleep time offset needed for different mtimes
 
     # Load the root document.
     doc.load()
@@ -418,35 +415,11 @@ def test_build_needed(doc, wait):
     for d in doc_list:
         target_filepath = d.targets['.html']
         assert not target_filepath.is_file()
-
-    # Check the mtimes of the document
-    body_attr = settings.body_attr
-    mtime1 = doc_list[0].mtime
-    mtime2 = doc_list[1].mtime
-    mtime3 = doc_list[2].mtime
-
-    # Check that these match the modification times for the body tag in the
-    # context
-    assert mtime1 < mtime2 < mtime3
-    assert doc_list[0].context[body_attr].mtime == mtime1
-    assert doc_list[1].context[body_attr].mtime == mtime2
-    assert doc_list[2].context[body_attr].mtime == mtime3
-
-    # All three documents have a build_needed
-    for d in doc_list:
-        target_filepath = d.targets['.html']
         assert d.build_needed()
 
-    # Now build the targets and a build should not be required
-    # Altogether 6 invocations of the build_needed method
+    assert doc.build() == ['done']  # html target built
     for d in doc_list:
-        target_filepath = d.targets['.html']
-        assert d.build() == ['done']
         assert not d.build_needed()
-
-    # The target files should exist
-    for d in doc_list:
-        target_filepath = d.targets['.html']
         assert target_filepath.is_file()
 
     # 2. Test that a build is required when the source file modification time
@@ -454,24 +427,9 @@ def test_build_needed(doc, wait):
     #    get updated once we load the document
 
     src_filepath2.touch()
-    assert mtime2 < src_filepath2.stat().st_mtime
 
     for doc in doc_list:
         doc.load()
-
-    # The modification time (mtime) for the body tag in the second document
-    # is now updated to the new mtime.
-    assert doc_list[0].context[body_attr].mtime == mtime1
-    assert doc_list[1].context[body_attr].mtime != mtime2
-    assert doc_list[1].context[body_attr].mtime == src_filepath2.stat().st_mtime
-    assert doc_list[2].context[body_attr].mtime == mtime3
-
-    # Update the mtimes and check that the body tag now matches the new mtimes
-    mtime2 = src_filepath2.stat().st_mtime
-
-    assert doc_list[0].context[body_attr].mtime == mtime1
-    assert doc_list[1].context[body_attr].mtime == mtime2
-    assert doc_list[2].context[body_attr].mtime == mtime3
 
     # The doc2 contents haven't changed, so it doesn't require a build.
     for d, answer in zip(doc_list, [False, False, False]):
@@ -485,12 +443,11 @@ def test_build_needed(doc, wait):
 
     # Render the documents
     for d in doc_list:
-        d.build()
+        assert d.build() == ['done']
         assert not d.build_needed()
 
     # 3. A build is required if the tags have been updated.
     #    In this case, place a reference in the 2nd document for the 3rd.
-    wait()  # sleep time offset needed for different mtimes
     src_filepath2.write_text("""
     @chapter{file2}
     @ref{ch:file3-dm-file3}
@@ -505,17 +462,47 @@ def test_build_needed(doc, wait):
         assert d.build() == ['done']
         assert not d.build_needed()
 
-    # Touch the 3rd document. Now the @ref tag in the second document has
-    # changed
-    wait()  # offset time for filesystem
-    src_filepath3.touch()
+    # Touch the 3rd document without changing the label ch:file3-dm-file3. In
+    # this case, doc2 will not need to be re-rendered
+    src_filepath3.write_text("""
+    @chapter{file3}
+    @chapter{new}
+    """)
 
-    for d, answer in zip(doc_list, [False, True, True]):
-        target_filepath = d.targets['.html']
+    for d, answer in zip(doc_list, [False, False, True]):
         assert d.build_needed() is answer
 
     # Render all documents
     for d in doc_list:
         assert d.build() == ['done']
-        target_filepath = d.targets['.html']
+        assert not d.build_needed()
+
+    # 4. Reorder the ch:file3-dm-file3 label, which should trigger a build
+    #    needed in doc2.
+    src_filepath3.write_text("""
+    @chapter{new}
+    @chapter{file3}
+    """)
+
+    for d, answer in zip(doc_list, [False, True, True]):
+        assert d.build_needed() is answer
+
+    # Render all documents
+    for d in doc_list:
+        assert d.build() == ['done']
+        assert not d.build_needed()
+
+    # 5. Try changing the title of the ch:file3-dm-file3 label, which should
+    #    also trigger a build in doc2
+    src_filepath3.write_text("""
+    @chapter{new}
+    @chapter[id=ch:file3-dm-file3]{new file3}
+    """)
+
+    for d, answer in zip(doc_list, [False, True, True]):
+        assert d.build_needed() is answer
+
+    # Render all documents
+    for d in doc_list:
+        assert d.build() == ['done']
         assert not d.build_needed()

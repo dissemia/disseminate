@@ -6,7 +6,7 @@ import pytest
 from disseminate.builders.builder import Builder
 from disseminate.builders.pdfcrop import PdfCrop
 from disseminate.paths import SourcePath, TargetPath
-from disseminate.signals import signal
+from disseminate.signals import signal, signals
 
 
 def test_builder_creation(env):
@@ -97,21 +97,27 @@ def test_builder_parameters_from_signals(env):
     assert builder.parameters == [('test', 'value'), 1]
 
     # Create a signal
-    test_signal = signal("test_signal")
-    @test_signal.connect_via(order=1000)
-    def test(builder):
-        return ['extra']
+    try:
+        test_signal = signal("test_signal")
+        @test_signal.connect_via(order=1000)
+        def test(builder):
+            return ['extra']
 
-    # 1. The signal adds a parameter
-    builder.parameters_from_signals = ['test_signal']
-    assert builder.parameters == [('test', 'value'), 1, 'extra']
+        # 1. The signal adds a parameter
+        builder.parameters_from_signals = ['test_signal']
+        assert builder.parameters == [('test', 'value'), 1, 'extra']
 
-    # 2. It does so only once
-    assert builder.parameters == [('test', 'value'), 1, 'extra']
+        # 2. It does so only once
+        assert builder.parameters == [('test', 'value'), 1, 'extra']
 
-    # 3. Removing the signal removes the parameter
-    builder.parameters_from_signals = None
-    assert builder.parameters == [('test', 'value'), 1]
+        # 3. Removing the signal removes the parameter
+        builder.parameters_from_signals = None
+        assert builder.parameters == [('test', 'value'), 1]
+    except Exception as e:
+        raise e
+    finally:
+        # Remove the signal
+        del signals.signals['test_signal']
 
 
 def test_builder_status(env):

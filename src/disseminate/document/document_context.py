@@ -37,7 +37,6 @@ class DocumentContext(BaseContext):
         'label_fmts': dict,
         'label_resets': dict,
         'inactive_tags': set,
-        'ref_label_ids': set,
     }
 
     #: The keys for context entries that should not be inherited
@@ -77,9 +76,6 @@ class DocumentContext(BaseContext):
         #: The contents of the body (specified by body_attr) doesn't carry over
         #: because each body has its own body.
         settings.body_attr,
-
-        # The labels referenced by a document are different for each document.
-        'ref_label_ids',
         }
 
     #: The keys for context entries that should not be removed when the
