@@ -7,11 +7,20 @@ import logging
 import jinja2, jinja2.meta
 
 from .builder import Builder
+from .exceptions import BuildError
+from .executor import executor
 from .utils import generate_mock_parameters, generate_outfilepath
 from ..paths import SourcePath
 from ..utils.list import uniq
 from ..utils.classes import weakattr
 from .. import settings
+
+
+def run(template, context, outfilepath, **kwargs):
+    """Run the command with the given arguments."""
+    rendered_string = template.render(**context)
+    outfilepath.write_text(rendered_string)
+    return outfilepath
 
 
 class JinjaRender(Builder):
@@ -85,10 +94,6 @@ class JinjaRender(Builder):
         return template
 
     @property
-    def status(self):
-        return "done" if not self.build_needed() else "ready"
-
-    @property
     def parameters(self):
         parameters = list(self._parameters) if self._parameters else []
         context = self.context
@@ -124,19 +129,6 @@ class JinjaRender(Builder):
     def parameters(self, value):
         self._parameters = value
 
-    def build(self, complete=False):
-        outfilepath = self.outfilepath
-        logging.debug("Rendering to '{}'".format(outfilepath))
-
-        # Render the template and add it to the infilepath (so that it can
-        # be used by the decider to decide whether a build is needed)
-        template = self.template()
-        rendered_string = template.render(**self.context)
-        outfilepath.write_text(rendered_string)
-
-        self.build_needed(reset=True)  # reset build flag
-        return self.status
-
     @property
     def outfilepath(self):
         outfilepath = self._outfilepath
@@ -169,6 +161,39 @@ class JinjaRender(Builder):
     @outfilepath.setter
     def outfilepath(self, value):
         self._outfilepath = value
+
+    def run_cmd(self, *args):
+        if self.future is None:
+            outfilepath = self.outfilepath
+            logging.debug("Rendering to '{}'".format(outfilepath))
+
+            # Render the template and add it to the infilepath (so that it can
+            # be used by the decider to decide whether a build is needed)
+            template = self.template()
+            future = executor.submit(run, template=template,
+                                     context=self.context,
+                                     outfilepath=outfilepath)
+
+            self.future = future
+
+    @staticmethod
+    def runtime_success(future):
+        """Test whether a future from a subprocess is successful."""
+        return future.result().exists()  # outfilepath exists
+
+    @staticmethod
+    def runtime_error(future, error_msg=None, raise_error=True):
+        """Raise an error from a future working with subprocess"""
+        outfilepath = future.result()
+
+        if error_msg is None:
+            error_msg = ("The render of  '{}' was "
+                         "unsuccessful.".format(outfilepath))
+        if raise_error:
+            e = BuildError(error_msg)
+            raise e
+        else:
+            logging.warning(error_msg)
 
 
 # Utilities

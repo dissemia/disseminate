@@ -10,9 +10,9 @@ from distutils.spawn import find_executable
 
 import pathvalidate
 
-from .executor import executor, run
+from .executor import executor, run, runtime_error, runtime_success
 from .utils import generate_outfilepath, generate_mock_parameters
-from .exceptions import runtime_error, BuildError
+from .exceptions import BuildError
 from ..signals import signal
 from ..utils.classes import all_subclasses
 from ..utils.list import uniq, flatten
@@ -128,6 +128,9 @@ class Builder(metaclass=ABCMeta):
     _parameters = None
     _outfilepath = None
 
+    runtime_error = runtime_error  # handler function when runtime error found
+    runtime_success = runtime_success  # handler to test succesful run
+
     def __init__(self, env, target=None, parameters=None, outfilepath=None,
                  use_cache=None, use_media=None, **kwargs):
         self.env = env
@@ -242,14 +245,14 @@ class Builder(metaclass=ABCMeta):
                 # the build was not successful
                 return "missing (outfilepath)"
 
-            if self.future.result().poll() == 0:
+            if self.runtime_success(future=self.future):
                 # exit code of 0. Successful!
                 # Reset the popen and the build status
                 self.build_needed(reset=True)
                 return "done"
 
             # non-zero exit code. Unsuccessful. :(
-            runtime_error(popen=self.future.result().poll())
+            self.runtime_error(future=self.future)
 
         else:
             return "ready"
