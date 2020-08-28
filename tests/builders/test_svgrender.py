@@ -1,9 +1,8 @@
 """
 Tests for the SvgRender builder.
 """
-from collections import namedtuple
-
 from disseminate.builders.svgrender import SvgRender
+from disseminate.tags import Tag
 from disseminate.paths import TargetPath
 
 
@@ -16,14 +15,14 @@ def test_svgrender_with_find_builder_cls():
 
 def test_svgrender_setup_with_outfilepath(env):
     """Test the setup of the SvgRender builder."""
-    target_root = env.context['target_root']
+
     context = env.context
     target_root = env.target_root
     cache_path = env.cache_path
 
-    # Create a mock tag and template
-    Tag = namedtuple("Tag", "tex")
-    context['body'] = Tag(tex='My test body')
+    # Create a tag and template
+    context['body'] = Tag(name='body', content='My test body', attributes='',
+                          context=context)
 
     # 1. Setup a build with an outfilepath
     outfilepath = TargetPath(target_root=target_root,
@@ -37,14 +36,14 @@ def test_svgrender_setup_with_outfilepath(env):
     assert svgrender.subbuilders[0].__class__.__name__ == 'PdfRender'
     assert svgrender.subbuilders[0].use_cache
     assert (svgrender.subbuilders[0].outfilepath ==
-            cache_path / 'media' / 'template_b9b44d13de71.pdf')
+            cache_path / 'media' / 'template_8e0eae27545c.pdf')
 
     assert svgrender.subbuilders[1].__class__.__name__ == 'Pdf2SvgCropScale'
     assert svgrender.subbuilders[1].use_cache
     assert (svgrender.subbuilders[1].parameters[0] ==
             svgrender.subbuilders[0].outfilepath)
     assert (svgrender.subbuilders[1].outfilepath ==
-            cache_path / 'media' / 'template_b9b44d13de71.svg')
+            cache_path / 'media' / 'template_8e0eae27545c.svg')
 
     assert svgrender.subbuilders[2].__class__.__name__ == 'Copy'
     assert not svgrender.subbuilders[2].use_cache
@@ -55,9 +54,6 @@ def test_svgrender_setup_with_outfilepath(env):
     # The outfilepath should match the one given
     assert svgrender.outfilepath == outfilepath
 
-    # The rendered string should be in the parameters
-    assert any(["My test body" in str(f) for f in svgrender.parameters])
-
 
 def test_svgrender_setup_without_outfilepath(env):
     """Test the setup of the SvgRender builder without an outfilepath."""
@@ -65,42 +61,42 @@ def test_svgrender_setup_without_outfilepath(env):
     cache_path = env.cache_path
     target_root = env.target_root
 
-    # Create a mock tag and template
-    Tag = namedtuple("Tag", "tex")
-    context['body'] = Tag(tex='My test body')
+    # Create a tag and template
+    context['body'] = Tag(name='body', content='My test body', attributes='',
+                          context=context)
 
     # 1. Setup a build without an outfilepath
     svgrender = SvgRender(env=env, context=context, use_cache=False)
 
     assert not svgrender.use_cache
     assert (svgrender.outfilepath ==
-            target_root / 'media' / 'template_b9b44d13de71.svg')
+            target_root / 'media' / 'template_8e0eae27545c.svg')
 
     # Test the paths for the subbuilders
     assert len(svgrender.subbuilders) == 3
 
     assert svgrender.subbuilders[0].__class__.__name__ == 'PdfRender'
     assert svgrender.subbuilders[0].use_cache
-    assert len(svgrender.subbuilders[0].parameters) == 3
+    assert len(svgrender.subbuilders[0].parameters) == 4
     assert (svgrender.subbuilders[0].outfilepath ==
-            cache_path / 'media' / 'template_b9b44d13de71.pdf')
+            cache_path / 'media' / 'template_8e0eae27545c.pdf')
 
     assert svgrender.subbuilders[1].__class__.__name__ == 'Pdf2SvgCropScale'
     assert svgrender.subbuilders[1].use_cache
     assert (svgrender.subbuilders[1].parameters[0] ==
             svgrender.subbuilders[0].outfilepath)
     assert (svgrender.subbuilders[1].outfilepath ==
-            cache_path / 'media' / 'template_b9b44d13de71.svg')
+            cache_path / 'media' / 'template_8e0eae27545c.svg')
 
     assert svgrender.subbuilders[2].__class__.__name__ == 'Copy'
     assert not svgrender.subbuilders[2].use_cache
     assert (svgrender.subbuilders[2].parameters[0] ==
             svgrender.subbuilders[1].outfilepath)
     assert (svgrender.subbuilders[2].outfilepath ==
-            target_root / 'media' / 'template_b9b44d13de71.svg')
+            target_root / 'media' / 'template_8e0eae27545c.svg')
 
     assert svgrender.outfilepath == (target_root / 'media' /
-                                     'template_b9b44d13de71.svg')
+                                     'template_8e0eae27545c.svg')
 
 
 def test_svgrender_setup_without_outfilepath_scale(env):
@@ -110,18 +106,18 @@ def test_svgrender_setup_without_outfilepath_scale(env):
     cache_path = env.cache_path
     target_root = env.target_root
 
-    # Create a mock tag and template
-    Tag = namedtuple("Tag", "tex")
-    context['body'] = Tag(tex='My test body')
+    # Create a tag and template
+    context['body'] = Tag(name='body', content='My test body', attributes='',
+                          context=context)
 
     # 2. Test an example with modification attributes. The final filename should
     #    change.
     svgrender = SvgRender(parameters=[('scale', 2.0)], env=env, context=context)
     assert svgrender.outfilepath.target_root == target_root
     assert str(svgrender.outfilepath.subpath) != ('media/template_'
-                                                  'b9b44d13de71.svg')
+                                                  '8e0eae27545c.svg')
     assert str(svgrender.outfilepath.subpath) == ('media/template_'
-                                                  '1b0167b8955c.svg')
+                                                  '6d2ea7ca1604.svg')
 
 
 def test_svgrender_setup_without_outfilepath_crop(env):
@@ -131,9 +127,9 @@ def test_svgrender_setup_without_outfilepath_crop(env):
     context = env.context
     target_root = env.target_root
 
-    # Create a mock tag and template
-    Tag = namedtuple("Tag", "tex")
-    context['body'] = Tag(tex='My test body')
+    # Create a tag and template
+    context['body'] = Tag(name='body', content='My test body', attributes='',
+                          context=context)
 
     # 2. Test an example with modification attributes. The final filename should
     #    change.
@@ -141,9 +137,9 @@ def test_svgrender_setup_without_outfilepath_crop(env):
                           context=context)
     assert svgrender.outfilepath.target_root == target_root
     assert str(svgrender.outfilepath.subpath) != ('media/template_'
-                                                  'b9b44d13de71.svg')
+                                                  '8e0eae27545c.svg')
     assert str(svgrender.outfilepath.subpath) == ('media/template_'
-                                                  'dc27f6264dc5.svg')
+                                                  'b58aaa830f24.svg')
 
 
 def test_svgrender_setup_without_outfilepath_use_cache(env):
@@ -153,39 +149,39 @@ def test_svgrender_setup_without_outfilepath_use_cache(env):
     cache_path = env.cache_path
     target_root = env.target_root
 
-    # Create a mock tag and template
-    Tag = namedtuple("Tag", "tex")
-    context['body'] = Tag(tex='My test body')
+    # Create a tag and template
+    context['body'] = Tag(name='body', content='My test body', attributes='',
+                          context=context)
 
     # 1. Setup a build without an outfilepath
     svgrender = SvgRender(env=env, context=context, use_cache=True)
 
     assert svgrender.use_cache
     assert (svgrender.outfilepath ==
-            cache_path / 'media' / 'template_b9b44d13de71.svg')
+            cache_path / 'media' / 'template_8e0eae27545c.svg')
 
     # Test the paths for the subbuilders. There is no copy builder.
     assert len(svgrender.subbuilders) == 3
 
     assert svgrender.subbuilders[0].__class__.__name__ == 'PdfRender'
     assert svgrender.subbuilders[0].use_cache
-    assert len(svgrender.subbuilders[0].parameters) == 3
+    assert len(svgrender.subbuilders[0].parameters) == 4
     assert (svgrender.subbuilders[0].outfilepath ==
-            cache_path / 'media' / 'template_b9b44d13de71.pdf')
+            cache_path / 'media' / 'template_8e0eae27545c.pdf')
 
     assert svgrender.subbuilders[1].__class__.__name__ == 'Pdf2SvgCropScale'
     assert svgrender.subbuilders[1].use_cache
     assert (svgrender.subbuilders[1].parameters[0] ==
             svgrender.subbuilders[0].outfilepath)
     assert (svgrender.subbuilders[1].outfilepath ==
-            cache_path / 'media' / 'template_b9b44d13de71.svg')
+            cache_path / 'media' / 'template_8e0eae27545c.svg')
 
     assert svgrender.subbuilders[2].__class__.__name__ == 'Copy'
     assert svgrender.subbuilders[2].use_cache
     assert (svgrender.subbuilders[2].parameters[0] ==
             svgrender.subbuilders[1].outfilepath)
     assert (svgrender.subbuilders[2].outfilepath ==
-            cache_path / 'media' / 'template_b9b44d13de71.svg')
+            cache_path / 'media' / 'template_8e0eae27545c.svg')
 
     # 2. Test an example with modification attributes. The final filename should
     #    change.
@@ -193,9 +189,9 @@ def test_svgrender_setup_without_outfilepath_use_cache(env):
                           use_cache=True)
     assert svgrender.outfilepath.target_root == cache_path
     assert str(svgrender.outfilepath.subpath) != ('media/template_'
-                                                  'b9b44d13de71.svg')
+                                                  '8e0eae27545c.svg')
     assert str(svgrender.outfilepath.subpath) == ('media/template_'
-                                                  '1b0167b8955c.svg')
+                                                  '6d2ea7ca1604.svg')
 
 
 def test_svgrender_chain_subbuilders(env):
@@ -203,9 +199,9 @@ def test_svgrender_chain_subbuilders(env):
     target_root = env.context['target_root']
     context = env.context
 
-    # Create a mock tag and template
-    Tag = namedtuple("Tag", "tex")
-    context['body'] = Tag(tex='My test body')
+    # Create a tag and template
+    context['body'] = Tag(name='body', content='My test body', attributes='',
+                          context=context)
 
     # 1. Setup a build with an outfilepath
     outfilepath = TargetPath(target_root=target_root,
@@ -216,16 +212,15 @@ def test_svgrender_chain_subbuilders(env):
 
     # Test the paths
     assert (str(svgrender.subbuilders[0].outfilepath.subpath) ==
-            'media/template_b9b44d13de71.pdf')
+            'media/template_8e0eae27545c.pdf')
     assert (svgrender.subbuilders[1].parameters[0] ==
             svgrender.subbuilders[0].outfilepath)
     assert (str(svgrender.subbuilders[1].outfilepath.subpath) ==
-            'media/template_b9b44d13de71.svg')
+            'media/template_8e0eae27545c.svg')
     assert (svgrender.subbuilders[2].parameters[0] ==
             svgrender.subbuilders[1].outfilepath)
     assert svgrender.subbuilders[2].outfilepath == outfilepath
 
-    assert any(["My test body" in str(f) for f in svgrender.parameters])
     assert svgrender.outfilepath == outfilepath
 
 
@@ -234,9 +229,9 @@ def test_svgrender_simple(env):
     target_root = env.context['target_root']
     context = env.context
 
-    # Create a mock tag and template
-    Tag = namedtuple("Tag", "tex")
-    context['body'] = Tag(tex='My test body')
+    # Create a tag and template
+    context['body'] = Tag(name='body', content='My test body', attributes='',
+                          context=context)
 
     # 1. Test a build with an outfilepath
     outfilepath = TargetPath(target_root=target_root,
@@ -257,7 +252,9 @@ def test_svgrender_simple(env):
     assert svgrender.status == 'done'
 
     # 2. Changing the render contents should trigger a new build
-    context['body'] = Tag(tex='My new test body')
+    # Create a tag and template
+    context['body'] = Tag(name='body', content='My new test body',
+                          attributes='', context=context)
     svgrender = SvgRender(env=env, context=context, outfilepath=outfilepath)
     assert svgrender.status == 'ready'
 
@@ -267,9 +264,9 @@ def test_svgrender_simple_without_outfilepath(env):
     target_root = env.target_root
     context = env.context
 
-    # Create a mock tag and template
-    Tag = namedtuple("Tag", "tex")
-    context['body'] = Tag(tex='My test body')
+    # Create a tag and template
+    context['body'] = Tag(name='body', content='My test body', attributes='',
+                          context=context)
 
     # 1. Test a build without an outfilepath. Since we use template.tex, it
     #    will be used for the outfilepath
@@ -278,7 +275,7 @@ def test_svgrender_simple_without_outfilepath(env):
     assert svgrender.status == 'ready'
     assert svgrender.build(complete=True) == 'done'
     assert (svgrender.outfilepath ==
-            target_root / 'media' / 'template_b9b44d13de71.svg')
+            target_root / 'media' / 'template_8e0eae27545c.svg')
     assert svgrender.outfilepath.exists()
 
     # A new build should not be needed
@@ -286,14 +283,15 @@ def test_svgrender_simple_without_outfilepath(env):
     assert svgrender.status == 'done'
 
     # 2. Changing the rendered contents changes the outfilepath
-    context['body'] = Tag(tex='My new test body')
+    context['body'] = Tag(name='body', content='My new test body',
+                          attributes='', context=context)
 
     svgrender = SvgRender(env=env, context=context)
 
     assert svgrender.status == 'ready'
     assert svgrender.build(complete=True) == 'done'
     assert (svgrender.outfilepath ==
-            target_root / 'media' / 'template_e343d4a49636.svg')
+            target_root / 'media' / 'template_29f92505a7b8.svg')
     assert svgrender.outfilepath.exists()
 
     # A new build should not be needed
@@ -306,7 +304,7 @@ def test_svgrender_simple_without_outfilepath(env):
     assert svgrender.status == 'ready'
     assert svgrender.build(complete=True) == 'done'
     assert (svgrender.outfilepath ==
-            target_root / 'html' / 'media' / 'template_e343d4a49636.svg')
+            target_root / 'html' / 'media' / 'template_29f92505a7b8.svg')
     assert svgrender.outfilepath.exists()
 
     # A new build should not be needed
@@ -321,15 +319,13 @@ def test_svgrender_simple_without_outfilepath_scale_crop(env):
     cache_path = env.cache_path
     context = env.context
 
-    # Create a mock tag and template
-    Tag = namedtuple("Tag", "tex")
-    context['body'] = Tag(tex='My test body')
+    # Create a tag and template
+    context['body'] = Tag(name='body', content='My test body', attributes='',
+                          context=context)
 
     # 1. Test a build without an outfilepath. Since we use template.tex, it
     #    will be used for the outfilepath
-    svgrender = SvgRender(env=env, parameters=[context['body'],
-                                               ('crop', 0),
-                                               ('scale', 1.2),],
+    svgrender = SvgRender(env=env, parameters=[('crop', 0), ('scale', 1.2)],
                           context=context)
 
     # Check the subbuilder paths
@@ -339,20 +335,20 @@ def test_svgrender_simple_without_outfilepath_scale_crop(env):
 
     assert pdfrender.use_cache and pdfrender.use_media
     assert (pdfrender.outfilepath ==
-            cache_path / 'media' / 'template_31ec06791436.pdf')
+            cache_path / 'media' / 'template_c775ca0d259d.pdf')
 
     assert pdf2svg.use_cache and pdf2svg.use_media
     assert pdf2svg.infilepaths == [pdfrender.outfilepath]
     assert (pdf2svg.outfilepath ==
-            cache_path / 'media' / 'template_31ec06791436.svg')
+            cache_path / 'media' / 'template_c775ca0d259d.svg')
 
     assert not copy.use_cache and pdf2svg.use_media
     assert copy.infilepaths == [pdf2svg.outfilepath]
     assert (copy.outfilepath ==
-            target_root / 'media' / 'template_31ec06791436.svg')
+            target_root / 'media' / 'template_c775ca0d259d.svg')
 
     assert svgrender.status == 'ready'
     assert svgrender.build(complete=True) == 'done'
     assert (svgrender.outfilepath ==
-            target_root / 'media' / 'template_31ec06791436.svg')
+            target_root / 'media' / 'template_c775ca0d259d.svg')
     assert svgrender.outfilepath.exists()

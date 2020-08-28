@@ -17,6 +17,10 @@ from .. import settings
 class JinjaRender(Builder):
     """A builder that renders a file using Jinja2.
 
+    .. note:: The JinjaRender should not render the template until the build
+              step to make sure the document and context are properly loaded
+              first.
+
     Parameters
     ----------
     env: :obj:`.builders.Environment`
@@ -43,7 +47,6 @@ class JinjaRender(Builder):
     infilepath_ext = '.render'  # dummy extension for find_builder_cls
 
     render_ext = None
-    rendered_string = None
 
     def __init__(self, env, context, render_ext=None, **kwargs):
         super().__init__(env, **kwargs)
@@ -67,6 +70,20 @@ class JinjaRender(Builder):
             self.env._jinja_environment = env
         return self.env._jinja_environment
 
+    def template(self):
+        """Retrieve the template from the context"""
+        context = self.context
+        template_filepath = context.get('template', 'default/template')
+        templates = [template_filepath + '/template' + self.render_ext,
+                     template_filepath + self.render_ext]
+
+        # Get the Jinja2 environment
+        jinja_env = self.jinja_environment()
+
+        # Retrieve the template
+        template = jinja_env.get_or_select_template(templates)
+        return template
+
     @property
     def status(self):
         return "done" if not self.build_needed() else "ready"
@@ -79,18 +96,9 @@ class JinjaRender(Builder):
         # Render the string and add it (as well as dependent template files)
         # to the list of returned input parameters
         if context is not None:
-            # Get the template filepath to use with the renderer
-            target = self.render_ext
-
-            template_filepath = context.get('template', 'default/template')
-            templates = [template_filepath + '/template' + target,
-                         template_filepath + target]
-
-            # Get the Jinja2 environment
-            jinja_env = self.jinja_environment()
-
             # Retrieve the template
-            template = jinja_env.get_or_select_template(templates)
+            jinja_env = self.jinja_environment()
+            template = self.template()
 
             # Add the template filepaths to the infilepath dependencies.
             # These are added to the parameters so that if they are changed,
@@ -106,10 +114,9 @@ class JinjaRender(Builder):
             # Scan for additional dependencies
             parameters += self.env.scanner.scan(parameters=parameters)
 
-            # Render the template and add it to the infilepath (so that it can
-            # be used by the decider to decide whether a build is needed)
-            self.rendered_string = template.render(**context)
-            parameters.append(self.rendered_string)
+            # add hashes (from tags) to context values
+            parameters += sorted(v.hash for v in context.values()
+                                 if hasattr(v, 'hash') and v.hash is not None)
 
         return uniq(parameters)
 
@@ -120,7 +127,12 @@ class JinjaRender(Builder):
     def build(self, complete=False):
         outfilepath = self.outfilepath
         logging.debug("Rendering to '{}'".format(outfilepath))
-        outfilepath.write_text(self.rendered_string)
+
+        # Render the template and add it to the infilepath (so that it can
+        # be used by the decider to decide whether a build is needed)
+        template = self.template()
+        rendered_string = template.render(**self.context)
+        outfilepath.write_text(rendered_string)
 
         self.build_needed(reset=True)  # reset build flag
         return self.status

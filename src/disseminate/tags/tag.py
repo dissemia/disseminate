@@ -37,6 +37,9 @@ class Tag(object):
     ----------
     aliases : Tuple[str]
         A tuple of strings for other names a tag goes by
+    hash : Optional[str]
+        The hash for the tag's contents before processing. This is useful for
+        detecting changes in the string's contents.
     html_name : str
         If specified, use this name for the html tag. Otherwise, use name.
     tex_cmd : str
@@ -74,6 +77,7 @@ class Tag(object):
     context = weakattr()
 
     aliases = None
+    hash = None
 
     html_name = None
     tex_cmd = None

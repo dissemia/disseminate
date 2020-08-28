@@ -2,7 +2,6 @@
 Objects to manage builds
 """
 import logging
-from concurrent.futures import ThreadPoolExecutor
 import subprocess
 import pathlib
 from abc import ABCMeta
@@ -11,6 +10,7 @@ from distutils.spawn import find_executable
 
 import pathvalidate
 
+from .executor import executor, run
 from .utils import generate_outfilepath, generate_mock_parameters
 from .exceptions import runtime_error, BuildError
 from ..signals import signal
@@ -18,17 +18,6 @@ from ..utils.classes import all_subclasses
 from ..utils.list import uniq, flatten
 from ..paths import TargetPath
 from .. import settings
-
-
-# Setup a global pool for processes
-executor = ThreadPoolExecutor()
-
-
-def run(**kwargs):
-    """Run the command with the given arguments."""
-    popen = subprocess.Popen(**kwargs)
-    popen.wait()
-    return popen
 
 
 class CustomFormatter(Formatter):

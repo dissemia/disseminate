@@ -1,10 +1,9 @@
 """
 Test the PdfRender builder.
 """
-from collections import namedtuple
-
 from disseminate.builders.pdfrender import PdfRender
 from disseminate.paths import TargetPath
+from disseminate.tags import Tag
 
 
 def test_pdfrender_with_find_builder_cls():
@@ -20,9 +19,9 @@ def test_pdfrender_setup(env):
     cache_path = env.cache_path
     context = env.context
 
-    # Create a mock tag and template
-    Tag = namedtuple("Tag", "tex")
-    context['body'] = Tag(tex='My test body')
+    # Create a tag and template
+    context['body'] = Tag(name='body', content='My test body', attributes='',
+                          context=context)
 
     # 1. Setup a build with an outfilepath
     outfilepath = TargetPath(target_root=target_root,
@@ -35,16 +34,16 @@ def test_pdfrender_setup(env):
 
     assert pdfrender.subbuilders[0].__class__.__name__ == 'JinjaRender'
     assert pdfrender.subbuilders[0].use_cache
-    assert len(pdfrender.subbuilders[0].parameters) == 3
+    assert len(pdfrender.subbuilders[0].parameters) == 4
     assert (pdfrender.subbuilders[0].outfilepath ==
-            cache_path / 'media' / 'template_b9b44d13de71.tex')
+            cache_path / 'media' / 'template_8e0eae27545c.tex')
 
     assert pdfrender.subbuilders[1].__class__.__name__ == 'Latexmk'
     assert pdfrender.subbuilders[1].use_cache
     assert (pdfrender.subbuilders[1].parameters[0] ==
             pdfrender.subbuilders[0].outfilepath)
     assert (pdfrender.subbuilders[1].outfilepath ==
-            cache_path / 'media' / 'template_b9b44d13de71.pdf')
+            cache_path / 'media' / 'template_8e0eae27545c.pdf')
 
     assert pdfrender.subbuilders[2].__class__.__name__ == 'Copy'
     assert not pdfrender.subbuilders[2].use_cache
@@ -62,49 +61,49 @@ def test_pdfrender_setup_without_outfilepath(env):
     cache_path = env.cache_path
     target_root = env.target_root
 
-    # Create a mock tag and template
-    Tag = namedtuple("Tag", "tex")
-    context['body'] = Tag(tex='My test body')
+    # Create a tag and template
+    context['body'] = Tag(name='body', content='My test body', attributes='',
+                          context=context)
 
     # 1. Setup a build without an outfilepath
     pdfrender = PdfRender(env=env, context=context, use_cache=False)
 
     assert not pdfrender.use_cache
     assert (pdfrender.outfilepath ==
-            target_root / 'media' / 'template_b9b44d13de71.pdf')
+            target_root / 'media' / 'template_8e0eae27545c.pdf')
 
     # Test the paths for the subbuilders
     assert len(pdfrender.subbuilders) == 3
 
     assert pdfrender.subbuilders[0].__class__.__name__ == 'JinjaRender'
     assert pdfrender.subbuilders[0].use_cache
-    assert len(pdfrender.subbuilders[0].parameters) == 3
+    assert len(pdfrender.subbuilders[0].parameters) == 4
     assert (pdfrender.subbuilders[0].outfilepath ==
-            cache_path / 'media' / 'template_b9b44d13de71.tex')
+            cache_path / 'media' / 'template_8e0eae27545c.tex')
 
     assert pdfrender.subbuilders[1].__class__.__name__ == 'Latexmk'
     assert pdfrender.subbuilders[1].use_cache
     assert (pdfrender.subbuilders[1].parameters[0] ==
             pdfrender.subbuilders[0].outfilepath)
     assert (pdfrender.subbuilders[1].outfilepath ==
-            cache_path / 'media' / 'template_b9b44d13de71.pdf')
+            cache_path / 'media' / 'template_8e0eae27545c.pdf')
 
     assert pdfrender.subbuilders[2].__class__.__name__ == 'Copy'
     assert not pdfrender.subbuilders[2].use_cache
     assert (pdfrender.subbuilders[2].parameters[0] ==
             pdfrender.subbuilders[1].outfilepath)
     assert (pdfrender.subbuilders[2].outfilepath ==
-            target_root / 'media' / 'template_b9b44d13de71.pdf')
+            target_root / 'media' / 'template_8e0eae27545c.pdf')
 
     assert pdfrender.outfilepath == (target_root / 'media' /
-                                     'template_b9b44d13de71.pdf')
+                                     'template_8e0eae27545c.pdf')
 
     # 2. Test an example with modification attributes. The final filename should
     #    change.
     pdfrender = PdfRender(parameters=[('scale', 2.0)], env=env, context=context)
     assert pdfrender.outfilepath.target_root == target_root
-    assert pdfrender.outfilepath.name != 'template_b9b44d13de71.pdf'
-    assert pdfrender.outfilepath.name == 'template_1b0167b8955c.pdf'
+    assert pdfrender.outfilepath.name != 'template_8e0eae27545c.pdf'
+    assert pdfrender.outfilepath.name == 'template_6d2ea7ca1604.pdf'
 
 
 def test_pdfrender_setup_without_outfilepath_use_cache(env):
@@ -114,47 +113,47 @@ def test_pdfrender_setup_without_outfilepath_use_cache(env):
     cache_path = env.cache_path
     target_root = env.target_root
 
-    # Create a mock tag and template
-    Tag = namedtuple("Tag", "tex")
-    context['body'] = Tag(tex='My test body')
+    # Create a tag and template
+    context['body'] = Tag(name='body', content='My test body', attributes='',
+                          context=context)
 
     # 1. Setup a build without an outfilepath
     pdfrender = PdfRender(env=env, context=context, use_cache=True)
 
     assert pdfrender.use_cache
     assert (pdfrender.outfilepath ==
-            cache_path / 'media' / 'template_b9b44d13de71.pdf')
+            cache_path / 'media' / 'template_8e0eae27545c.pdf')
 
     # Test the paths for the subbuilders. There is no copy builder.
     assert len(pdfrender.subbuilders) == 3
 
     assert pdfrender.subbuilders[0].__class__.__name__ == 'JinjaRender'
     assert pdfrender.subbuilders[0].use_cache
-    assert len(pdfrender.subbuilders[0].parameters) == 3
+    assert len(pdfrender.subbuilders[0].parameters) == 4
     assert (pdfrender.subbuilders[0].outfilepath ==
-            cache_path / 'media' / 'template_b9b44d13de71.tex')
+            cache_path / 'media' / 'template_8e0eae27545c.tex')
 
     assert pdfrender.subbuilders[1].__class__.__name__ == 'Latexmk'
     assert pdfrender.subbuilders[1].use_cache
     assert (pdfrender.subbuilders[1].parameters[0] ==
             pdfrender.subbuilders[0].outfilepath)
     assert (pdfrender.subbuilders[1].outfilepath ==
-            cache_path / 'media' / 'template_b9b44d13de71.pdf')
+            cache_path / 'media' / 'template_8e0eae27545c.pdf')
 
     assert pdfrender.subbuilders[2].__class__.__name__ == 'Copy'
     assert pdfrender.subbuilders[2].use_cache
     assert (pdfrender.subbuilders[2].parameters[0] ==
             pdfrender.subbuilders[1].outfilepath)
     assert (pdfrender.subbuilders[2].outfilepath ==
-            cache_path / 'media' / 'template_b9b44d13de71.pdf')
+            cache_path / 'media' / 'template_8e0eae27545c.pdf')
 
     # 2. Test an example with modification attributes. The final filename should
     #    change.
     pdfrender = PdfRender(parameters=[('scale', 2.0)], env=env, context=context,
                           use_cache=True)
     assert pdfrender.outfilepath.target_root == cache_path
-    assert pdfrender.outfilepath.name != 'template_b9b44d13de71.pdf'
-    assert pdfrender.outfilepath.name == 'template_1b0167b8955c.pdf'
+    assert pdfrender.outfilepath.name != 'template_8e0eae27545c.pdf'
+    assert pdfrender.outfilepath.name == 'template_6d2ea7ca1604.pdf'
 
 
 def test_pdfrender_chain_subbuilders(env):
@@ -162,9 +161,9 @@ def test_pdfrender_chain_subbuilders(env):
     target_root = env.context['target_root']
     context = env.context
 
-    # Create a mock tag and template
-    Tag = namedtuple("Tag", "tex")
-    context['body'] = Tag(tex='My test body')
+    # Create a tag and template
+    context['body'] = Tag(name='body', content='My test body', attributes='',
+                          context=context)
 
     # 1. Setup a build with an outfilepath
     outfilepath = TargetPath(target_root=target_root,
@@ -174,18 +173,16 @@ def test_pdfrender_chain_subbuilders(env):
     pdfrender.chain_subbuilders()
 
     # Check the paths
-    assert len(pdfrender.subbuilders[0].parameters) == 3
+    assert len(pdfrender.subbuilders[0].parameters) == 4
     assert (str(pdfrender.subbuilders[0].outfilepath.subpath) ==
-            'media/template_b9b44d13de71.tex')
+            'media/template_8e0eae27545c.tex')
     assert (pdfrender.subbuilders[1].parameters[0] ==
             pdfrender.subbuilders[0].outfilepath)
     assert (str(pdfrender.subbuilders[1].outfilepath.subpath) ==
-            'media/template_b9b44d13de71.pdf')
+            'media/template_8e0eae27545c.pdf')
     assert (pdfrender.subbuilders[2].parameters[0] ==
             pdfrender.subbuilders[1].outfilepath)
     assert pdfrender.subbuilders[2].outfilepath == outfilepath
-
-    assert any("My test body" in str(f) for f in pdfrender.parameters)
     assert pdfrender.outfilepath == outfilepath
 
 
@@ -194,9 +191,9 @@ def test_pdfrender_simple(env):
     target_root = env.context['target_root']
     context = env.context
 
-    # Create a mock tag and template
-    Tag = namedtuple("Tag", "tex")
-    context['body'] = Tag(tex='My test body')
+    # Create a tag and template
+    context['body'] = Tag(name='body', content='My test body', attributes='',
+                          context=context)
 
     # 1. Test a build with an outfilepath
     outfilepath = TargetPath(target_root=target_root,
@@ -217,7 +214,9 @@ def test_pdfrender_simple(env):
     assert pdfrender.status == 'done'
 
     # 2. Changing the render contents should trigger a new build
-    context['body'] = Tag(tex='My new test body')
+    # Create a tag and template
+    context['body'] = Tag(name='body', content='My new test body',
+                          attributes='', context=context)
     pdfrender = PdfRender(env=env, context=context, outfilepath=outfilepath)
     assert pdfrender.status == 'ready'
 
@@ -227,7 +226,7 @@ def test_pdfrender_simple(env):
 
     assert pdfrender.build(complete=True) == 'done'
     assert (pdfrender.outfilepath ==
-            target_root / 'media' / 'template_e343d4a49636.pdf')
+            target_root / 'media' / 'template_29f92505a7b8.pdf')
     assert pdfrender.outfilepath.exists()
 
     # 3. Test a build without an outfilepath but a document target specified.
@@ -235,5 +234,5 @@ def test_pdfrender_simple(env):
 
     assert pdfrender.build(complete=True) == 'done'
     assert (pdfrender.outfilepath ==
-            target_root / 'pdf' / 'media' / 'template_e343d4a49636.pdf')
+            target_root / 'pdf' / 'media' / 'template_29f92505a7b8.pdf')
     assert pdfrender.outfilepath.exists()

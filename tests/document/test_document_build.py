@@ -116,9 +116,9 @@ def test_document_template_books_tufte(load_example):
                 html_root / 'media' / 'css',
 
                 html_root / 'inept.html',  # files
-                html_root / 'media' / 'eq_52be90863f2c.svg',
-                html_root / 'media' / 'eq_f4d356fee5fa.svg',
-                html_root / 'media' / 'eq_f874fd00fc30.svg',
+                html_root / 'media' / 'eq_6b1a39e86f33.svg',
+                html_root / 'media' / 'eq_95cdf31980fa.svg',
+                html_root / 'media' / 'eq_d98b71da63d9.svg',
                 html_root / 'media' / 'inept_599eeae484a5.svg',
                 html_root / 'media' / 'css' / 'base.css',
                 html_root / 'media' / 'css' / 'bootstrap.min.css',
@@ -146,4 +146,5 @@ def test_document_template_books_tufte(load_example):
 
     # Check the rendered html
     key = (ex8_root / "html" / "inept.html").read_text()
+    print(doc.targets['.html'])
     assert doc.targets['.html'].read_text() == key

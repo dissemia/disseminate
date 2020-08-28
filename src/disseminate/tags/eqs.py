@@ -42,9 +42,14 @@ class Eq(Img):
 
     _block_equation = False
 
+    #: Holds a dict of sub-context dicts to be used in rendering the equation
+    #: to a file. This tag owns these sub-contexts.
+    _target_context = None
+
     def __init__(self, name, content, attributes, context,
                  block_equation=False):
         self.block_equation = block_equation
+        self._target_context = dict()
 
         super().__init__(name=name, content=content, attributes=attributes,
                          context=context)
@@ -65,10 +70,12 @@ class Eq(Img):
         self._block_equation = value
 
     def html_fmt(self, content=None, attributes=None, context=None, level=1):
+        # Create a context for the render. This context is owned by this
+        # tag
         attrs = attributes or self.attributes.copy()
 
-        # Crop equation images created by the dependency manager. This removes
-        # white space around the image so that the equation images.
+        # Crop equation images created by the dependency manager. This
+        # removes white space around the image so that the equation images.
         # Note: This crop command should not cut off baselines such that
         # equation images won't line up properly with the surrounding text.
         # ex: H vs Hy
@@ -79,12 +86,15 @@ class Eq(Img):
         else:
             attrs['class'] = 'eq'
 
-        # Create a special context for this tag specifically
-        if context is None:
+        if context is None and 'html' not in self._target_context:
+            # Create a special context for this tag specifically. This tag
+            # will own this context
             context = self.context.filter(['paths', 'builders'])
             context['eq'] = self
             context['template'] = 'default/eq'
+            self._target_context['html'] = context
 
+        context = context or self._target_context['html']
         return super(Eq, self).html_fmt(content=content, attributes=attrs,
                                         context=context, level=level)
 
