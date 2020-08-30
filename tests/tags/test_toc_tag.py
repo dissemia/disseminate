@@ -121,7 +121,7 @@ def test_toc_absolute_and_relative_links(doctree):
     ---
     @chapter{one}
     """)
-    assert doc1.build() == ['done']
+    assert doc1.build() == 'done'
 
     toc = Toc(name='toc', content='all headings abbreviated',
               attributes='', context=doc1.context)
@@ -195,7 +195,7 @@ def test_toc_levels_html(doc):
     doc.src_filepath.write_text(strip_leading_space(markup))
 
     # Create the document and build in html
-    assert doc.build() == ['done']
+    assert doc.build() == 'done'
 
     # Retrieve the rendered file and check its contents
     html_filepath = doc.targets['.html']
@@ -217,7 +217,6 @@ def test_toc_levels_html(doc):
                '</ul>\n'
              '</ul>\n'
            '</ul>\n')
-    print(html)
     assert key in html
 
 

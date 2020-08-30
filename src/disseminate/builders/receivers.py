@@ -2,6 +2,7 @@
 Receivers to tie builders to other events
 """
 from .builder import Builder
+from .composite_builders import ParallelBuilder
 from .exceptions import BuildError
 from ..signals import signal
 
@@ -28,31 +29,32 @@ def add_target_builders(document, context):
 
 # Loaded on document build
 @document_build.connect_via(order=1000)
-def build(document):
-    """Build a document's targets using the target builders."""
-    # Get the target builders
-    # The builders dict should be in context from add_target_builders
+def build(document, complete=True):
+    """Build a document tree's targets (and subdocuments) using the target
+    builders."""
+
+    # Setup a parallel builder
     context = document.context
-    assert 'builders' in context
-    builders = context['builders']
+    env = context['environment']
+    par_builder = ParallelBuilder(env=env)
 
-    # Go through each document target and run the target build
-    statuses = []
-    for target in context.targets:
-        # target builder should be in builders from add_target_builders
-        assert target in builders
+    # Get all of the documents
+    for doc in document.documents_list(only_subdocuments=False, recursive=True):
+        # Get all the target builders for the document. These are dicts
+        # with the target string as keys and the target builders as values.
+        doc_builders = doc.context['builders']
 
-        target_builder = builders[target]
+        # Append these to the par builder
+        par_builder.subbuilders += doc_builders.values()
 
-        status = target_builder.build(complete=True)
-        statuses.append(status)
+    if complete:
+        while par_builder.status in {'building', 'ready'}:
+            par_builder.build(complete=False)
+    else:
+        if par_builder.status in {'building', 'ready'}:
+            par_builder.build(complete=False)
 
-        if status != 'done':
-            msg = ("An error was encountered with builder '{}'. The build "
-                   "returned the status '{}'")
-            raise BuildError(msg.format(target_builder, status))
-
-    return statuses
+    return par_builder.status
 
 
 @document_build_needed.connect_via(order=1000)

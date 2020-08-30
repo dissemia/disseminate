@@ -389,7 +389,7 @@ def test_document_macros(load_example):
     doc = load_example(ex2_root / ex2_subpath_withheader)
 
     # Build the document for the html and tex  targets
-    assert doc.build() == ['done', 'done']
+    assert doc.build() == 'done'
     # See if the macro was properly replaced
     html_filepath = doc.targets['.html']
     rendered_html = html_filepath.read_text()
@@ -414,7 +414,7 @@ def test_document_load_on_render(doc):
     doc.src_filepath.write_text(src)
 
     # Build the document for the html, tex and pdf targets
-    assert doc.build() == ['done', 'done']
+    assert doc.build() == 'done'
     assert doc.targets.keys() == {'.html', '.tex'}
 
 
@@ -503,7 +503,7 @@ def test_document_unusual_filenames(load_example):
     pdf_root = target_root / 'pdf'
 
     # Build the document for the html, tex and pdf targets
-    assert doc.build() == ['done', 'done', 'done']
+    assert doc.build() == 'done'
 
     subdocs = doc.documents_list(only_subdocuments=True)
     assert len(subdocs) == 1
@@ -575,7 +575,7 @@ def test_document_multiple_dependency_locations(load_example):
     subdoc = doc.documents_list(only_subdocuments=True)[0]
 
     # Build the document for the html, tex and pdf targets
-    assert doc.build() == ['done', 'done', 'done']
+    assert doc.build() == 'done'
 
     # Check the creation of dependencies (html)
     html_root = target_root / 'html'

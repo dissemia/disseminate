@@ -6,7 +6,7 @@ import weakref
 import os
 
 from disseminate.utils.tests import strip_leading_space
-from disseminate import settings, SourcePath
+from disseminate import SourcePath
 
 
 # Setup example paths
@@ -173,7 +173,7 @@ def test_document_tree2(load_example):
     assert all_docs[4].src_filepath == src_filepath3
 
     # Check that the targets are rendered in the right locations
-    assert doc.build() == ['done']
+    assert doc.build() == 'done'
 
     for doc in all_docs:
         target_filepath = doc.target_filepath('.html')
@@ -222,7 +222,7 @@ def test_document_garbage_collection(doc):
 
     # Try rendering the document into tex and txt target, then delete the
     # subdocuments and they should no longer exist
-    assert doc.build() == ['done', 'done']
+    assert doc.build() == 'done'
     doc.subdocuments.clear()
 
     assert doc2_ref() is None
@@ -255,7 +255,7 @@ def test_document_tree_matching_filenames(doc):
 
     # Reload root document
     doc.load()
-    assert doc.build() == ['done', 'done']  # build txt and tex targets
+    assert doc.build() == 'done'  # build txt and tex targets
 
 
 def test_document_tree_updates(doc, wait):
@@ -417,7 +417,7 @@ def test_build_needed(doc, wait):
         assert not target_filepath.is_file()
         assert d.build_needed()
 
-    assert doc.build() == ['done']  # html target built
+    assert doc.build() == 'done'  # html target built
     for d in doc_list:
         assert not d.build_needed()
         assert target_filepath.is_file()
@@ -443,7 +443,7 @@ def test_build_needed(doc, wait):
 
     # Render the documents
     for d in doc_list:
-        assert d.build() == ['done']
+        assert d.build() == 'done'
         assert not d.build_needed()
 
     # 3. A build is required if the tags have been updated.
@@ -459,7 +459,7 @@ def test_build_needed(doc, wait):
 
     # Render the documents and the documents will not require a build
     for d in doc_list:
-        assert d.build() == ['done']
+        assert d.build() == 'done'
         assert not d.build_needed()
 
     # Touch the 3rd document without changing the label ch:file3-dm-file3. In
@@ -474,7 +474,7 @@ def test_build_needed(doc, wait):
 
     # Render all documents
     for d in doc_list:
-        assert d.build() == ['done']
+        assert d.build() == 'done'
         assert not d.build_needed()
 
     # 4. Reorder the ch:file3-dm-file3 label, which should trigger a build
@@ -489,7 +489,7 @@ def test_build_needed(doc, wait):
 
     # Render all documents
     for d in doc_list:
-        assert d.build() == ['done']
+        assert d.build() == 'done'
         assert not d.build_needed()
 
     # 5. Try changing the title of the ch:file3-dm-file3 label, which should
@@ -504,5 +504,5 @@ def test_build_needed(doc, wait):
 
     # Render all documents
     for d in doc_list:
-        assert d.build() == ['done']
+        assert d.build() == 'done'
         assert not d.build_needed()

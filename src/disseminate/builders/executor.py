@@ -2,37 +2,44 @@
 The pool executor for running multiple functions at once.
 """
 import logging
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from collections import namedtuple
 import subprocess
 
 from .exceptions import BuildError
 
 # Setup a global pool for processes
-executor = ThreadPoolExecutor()
+executor = ProcessPoolExecutor()
+
+PopenResult = namedtuple('PopenResult', 'returncode args stdout stderr')
 
 
 def run(**kwargs):
     """Run the command with the given arguments."""
-    popen = subprocess.Popen(**kwargs)
+    popen = subprocess.Popen(**kwargs, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE, bufsize=4096,)
     popen.wait()
-    return popen
+    stdout, stderr = popen.communicate()
+    return PopenResult(returncode=popen.returncode,
+                       args=popen.args,
+                       stdout=stdout.decode('latin1'),
+                       stderr=stderr.decode('latin1'))
 
 
 @staticmethod
 def runtime_success(future):
     """Test whether a future from a subprocess is successful."""
-    return future.result().poll() == 0
+    return future.result().returncode == 0
 
 
 @staticmethod
 def runtime_error(future, error_msg=None, raise_error=True):
     """Raise an error from a future working with subprocess"""
-    popen = future.result().poll()
-    args = popen.args
-    returncode = popen.returncode
-    out, err = popen.communicate()
-    out = out.decode('latin1')
-    err = err.decode('latin1')
+    popen_result = future.result()
+    returncode = popen_result.returncode
+    args = popen_result.args
+    out = popen_result.stdout
+    err = popen_result.stderr
 
     if error_msg is None:
         error_msg = ("The conversion command '{}' was "

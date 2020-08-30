@@ -5,7 +5,6 @@ from pathlib import Path
 
 from disseminate.document import Document
 from disseminate import SourcePath, TargetPath
-from disseminate import settings
 
 # Setup example paths
 ex4_root = Path("tests") / "document" / "examples" / "ex4" / "src"
@@ -55,7 +54,7 @@ def test_document_toc(env):
     context['relative_links'] = False
 
     # build the doc for the html target
-    assert doc.build() == ['done']
+    assert doc.build() == 'done'
 
     # Make sure the 'toc' context entry is correct
     toc_tag = doc.context['toc']

@@ -526,16 +526,11 @@ class Document(object):
         self.load()
         return any(signals.document_build_needed.emit(document=self))
 
-    def build(self, subdocuments=True):
+    def build(self, complete=True):
         """Run a build of the document"""
-        # Make sure the latest source is loaded. This is needed in case the
-        # list of targets has changed.
+        # Make sure the document (and subdocuments) are loaded
         self.load()
 
-        if subdocuments:
-            for doc in self.documents_list(only_subdocuments=True):
-                doc.build(subdocuments=subdocuments)
-
         # Send the 'document_build' signal
-        statuses = signals.document_build.emit(document=self)
+        statuses = signals.document_build.emit(document=self, complete=complete)
         return statuses[0] if len(statuses) == 1 else statuses

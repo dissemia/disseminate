@@ -20,4 +20,4 @@ def build(in_path, out_dir=None):
 
     for doc in docs:
         logging.info("Building document '{}'".format(doc.src_filepath))
-        doc.build()
+        doc.build(complete=False)

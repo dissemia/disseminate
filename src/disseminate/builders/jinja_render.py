@@ -162,19 +162,15 @@ class JinjaRender(Builder):
     def outfilepath(self, value):
         self._outfilepath = value
 
-    def run_cmd(self, *args):
-        if self.future is None:
-            outfilepath = self.outfilepath
-            logging.debug("Rendering to '{}'".format(outfilepath))
+    def build(self, complete=False):
+        template = self.template()
+        context = self.context
+        outfilepath = self.outfilepath
+        rendered_string = template.render(**context)
+        outfilepath.write_text(rendered_string)
+        self.build_needed(reset=True)
+        return self.status
 
-            # Render the template and add it to the infilepath (so that it can
-            # be used by the decider to decide whether a build is needed)
-            template = self.template()
-            future = executor.submit(run, template=template,
-                                     context=self.context,
-                                     outfilepath=outfilepath)
-
-            self.future = future
 
     @staticmethod
     def runtime_success(future):

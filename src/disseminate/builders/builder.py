@@ -400,8 +400,7 @@ class Builder(metaclass=ABCMeta):
                                                        " ".join(args)))
 
             # add the process to the executor pool
-            future = executor.submit(run, args=args, stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE, bufsize=4096,)
+            future = executor.submit(run, args=args)
             self.future = future
 
     def build(self, complete=False):

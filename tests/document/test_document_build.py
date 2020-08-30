@@ -30,7 +30,7 @@ def test_document_simple_pdf(env, is_pdf, wait):
 
     # build the document
     assert doc.build_needed()
-    assert doc.build() == ['done']  # PdfBuilder successful
+    assert doc.build() == 'done'
     assert not doc.build_needed()
 
     # See if the PDF was succesfully generated (and the tex file is not in
@@ -44,7 +44,7 @@ def test_document_simple_pdf(env, is_pdf, wait):
     st_mtime = doc.targets['.pdf'].stat().st_mtime
     wait()  # sleep time offset needed for different mtimes
 
-    assert doc.build() == ['done']  # PdfBuilder successful
+    assert doc.build() == 'done'  # PdfBuilder successful
     assert doc.targets['.pdf'].stat().st_mtime == st_mtime
 
     # Now change the src tex file and make sure the pdf has changed
@@ -56,7 +56,7 @@ def test_document_simple_pdf(env, is_pdf, wait):
     new""")
 
     # Render again, and the mtime should change
-    assert doc.build() == ['done']  # PdfBuilder successful
+    assert doc.build() == 'done'  # PdfBuilder successful
     assert doc.targets['.pdf'].stat().st_mtime != st_mtime
 
 
@@ -78,7 +78,7 @@ def test_document_simple_tex_pdf(env, is_pdf):
 
     # Render the document
     assert doc.build_needed()
-    assert doc.build() == ['done', 'done']  # PdfBuilder, TexBuilder successful
+    assert doc.build() == 'done'  # PdfBuilder, TexBuilder successful
     assert not doc.build_needed()
 
     # See if the tex and pdf files were succesfully generated
@@ -106,8 +106,7 @@ def test_document_template_books_tufte(load_example):
 
     # Render the document
     assert doc.build_needed()
-    assert doc.build() == ['done', 'done', 'done']  # HtmlBuilder, PdfBuilder,
-                                                    # TexBuilder successful
+    assert doc.build() == 'done'
     assert not doc.build_needed()
 
     # Check the dependencies and paths
