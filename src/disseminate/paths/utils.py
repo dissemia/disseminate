@@ -75,7 +75,7 @@ def find_files(string, context):
     filepaths : List[:obj:`pathlib.Path`]
         List of found paths
     """
-    assert context.is_valid('paths')
+    assert 'paths' in context and isinstance(context['paths'], list)
 
     # Setup arguments and return values
     # First remove extra spaces and newlines on the ends.
@@ -114,7 +114,7 @@ def find_file(path, context, raise_error=True):
     FileNotFoundError
         Raised if the file could not be found.
     """
-    assert context.is_valid('paths')
+    assert 'paths' in context and isinstance(context['paths'], list)
 
     # Prepare the parameters
     if isinstance(path, str):
