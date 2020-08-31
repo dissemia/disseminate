@@ -102,8 +102,9 @@ class CompositeBuilder(Builder):
 
         return status
 
-    def print(self, level=1):
+    def print(self, level=1, max_level=None):
         """Print the builder and subbuilders"""
+
         def print_builder(b, level, num_spaces=2):
             msg = "  " * num_spaces * level
             msg += str(b)  # the __repr__ of the builder
@@ -120,8 +121,12 @@ class CompositeBuilder(Builder):
             print(msg)
 
         print_builder(self, level=level - 1)
+
+        if max_level is not None and level > max_level:
+            return None
+
         for subbuilder in self.subbuilders:
             if isinstance(subbuilder, CompositeBuilder):
-                subbuilder.print(level=level + 1)
+                subbuilder.print(level=level + 1, max_level=max_level)
             else:
                 print_builder(subbuilder, level=level)
