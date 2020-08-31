@@ -64,6 +64,27 @@ class Label(object):
             msg += ")"
         return msg
 
+    def __lt__(self, other):
+        return (self.doc_id, self.id) < (other.doc_id, other.id)
+
+    def __le__(self, other):
+        return (self.doc_id, self.id) <= (other.doc_id, other.id)
+
+    def __gt__(self, other):
+        return (self.doc_id, self.id) > (other.doc_id, other.id)
+
+    def __ge__(self, other):
+        return (self.doc_id, self.id) >= (other.doc_id, other.id)
+
+    def __eq__(self, other):
+        return (self.doc_id, self.id) == (other.doc_id, other.id)
+
+    def __ne__(self, other):
+        return (self.doc_id, self.id) != (other.doc_id, other.id)
+
+    def __hash__(self):
+        return hash((self.__class__.__name__, self.doc_id, self.id))
+
     @property
     def number(self):
         """The number for the label's most specific kind."""
