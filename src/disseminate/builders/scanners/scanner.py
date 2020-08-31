@@ -8,8 +8,6 @@ from ...utils.classes import all_subclasses
 class Scanner(object):
     """A scanner object parses the contents of a file and finds implicit file
     dependencies.
-
-    Works with parallel builders
     """
 
     extensions = tuple()

@@ -2,7 +2,6 @@
 Objects to manage builds
 """
 import logging
-import subprocess
 import pathlib
 from abc import ABCMeta
 from string import Formatter
@@ -214,6 +213,7 @@ class Builder(metaclass=ABCMeta):
         - 'missing (parameters)': All the required parameters have not been
           specified or files for paths in the parameters do not exist
         - 'missing (outfilepath)': The outfilepath was not created
+        - 'cancelled' : The build was cancelled.
         - 'building': The builder is building
         - 'done': The builder is done building
         """
@@ -239,6 +239,9 @@ class Builder(metaclass=ABCMeta):
             if not self.future.done():
                 # The process isn't done.
                 return "building"
+
+            if self.future.cancelled():
+                return "cancelled"
 
             if not self.outfilepath.exists():
                 # An output file should have been created. If it wasn't then
