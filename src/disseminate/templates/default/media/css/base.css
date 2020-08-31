@@ -2,11 +2,16 @@
  * CSS for templates/base/base.html
  */
 
+html {
+  position: relative; /* sticky footer */
+  min-height: 100%;  /* sticky footer */
+}
+
 body {
   color: #444444;
   background: #efefef;
   font-weight: 200;
-  margin: 0 auto 4rem auto;
+  margin: 0 auto 110px auto; /* 110px is for sticky footer */
 }
 
 h1 {
@@ -18,13 +23,12 @@ h2, h3, h4, h5, h6 {
 }
 
 .container {
-  padding-top: 1rem;
-  padding-left: 2rem;
+  padding: 1rem 1rem 1rem 2rem;
   max-width: 960px;
   background: #fcfcfc;
   border: 1px solid #CCCCCC;
   border-top: 0px;
-  border-bottom: 0px;
+  border-radius: 0 0 4px 4px;
 }
 
 /* Menu customizations */

@@ -100,14 +100,19 @@ def find_file(path, context, raise_error=True):
     """Search for an existing file given the path and, if needed, the 'paths'
     entry from a context.
 
-    Returns
-    -------
-    valid_path : :obj:`pathlib.Path`
-        A path for a file that exists
+    Parameters
+    ----------
+    path : Union[str, :obj:`pathlib.Path`]
+        The path stub to search.
     context : :obj:`.context.Context`
         The document's context with an entry of 'paths' to search.
     raise_error : Optional[bool]
         If True (default), raise error if a file isn't found.
+
+    Returns
+    -------
+    valid_path : :obj:`pathlib.Path`
+        A path for a file that exists.
 
     Raises
     ------

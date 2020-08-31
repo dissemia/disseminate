@@ -6,6 +6,7 @@ Classes for different kinds of paths.
 import pathlib
 import os
 import re
+import weakref
 
 
 re_dbl_slash = re.compile(r'(?<!\:)//')  # match '//' but not '://'
@@ -196,17 +197,18 @@ class TargetPath(object):
 
     def _get_relative_url(self, context, target=None):
         """Construct the relative url for the path."""
-        document = context.document if hasattr(context, 'document') else None
-        if document is None:
-            return None
-
         # Get the target_filepath. Prepend a '.' if needed. ex: '.html'
         target = str(target or self.target)
         target = '.' + target if not target.startswith('.') else target
 
         # Get the target_filepath and target_path
-        target_filepath = document.target_filepath(target)
-        target_path = target_filepath.parent
+        document = context.get('document', None)
+        document = document() if isinstance(document, weakref.ref) else document
+        if document is not None:
+            target_filepath = document.target_filepath(target)
+            target_path = target_filepath.parent
+        else:
+            return None
 
         # Get the relative path
         relpath = os.path.relpath(self, target_path)

@@ -1,6 +1,6 @@
 {%- extends "default/template.html" %}
 {%- block extra_css %}
-<link rel="stylesheet" href="/media/css/novel.css">
+<link rel="stylesheet" href="{{ "/media/css/novel.css" | rewrite_path }}">
 {%- endblock %}
 {%- block body %}
   {{ body.html }}

@@ -4,13 +4,15 @@ A builder that renders a string to a file.
 import pathlib
 import logging
 
-import jinja2, jinja2.meta
+import jinja2
+import jinja2.meta
 
 from .builder import Builder
 from .exceptions import BuildError
 from .executor import executor
 from .utils import generate_mock_parameters, generate_outfilepath
 from ..paths import SourcePath
+from ..paths.utils import find_file
 from ..utils.list import uniq
 from ..utils.classes import weakattr
 from .. import settings
@@ -21,6 +23,39 @@ def run(template, context, outfilepath, **kwargs):
     rendered_string = template.render(**context)
     outfilepath.write_text(rendered_string)
     return outfilepath
+
+
+@jinja2.contextfilter
+def rewrite_path(context, stub):
+    """A Jinja2 filter for rewriting paths, like css paths.
+
+    .. note:: This function will only modify the path if an existing file can
+              be found in the target directory. If not, it will log an error
+              and return the path unchanged. This means that the dependent
+              .css (and other) files should have been copied to the target
+              directory before rendering the template.
+    """
+    # Strip leading slashes so that the stub is not an absolute path
+    stub = stub.strip('/')
+
+    # Find the file with respect to the outfilepath
+    outfilepath = context['outfilepath']
+    paths = [outfilepath.parent,  # the outfilepath directory
+             outfilepath.use_subpath('')  # the target_root / target
+             ]
+
+    try:
+        filepath = find_file(stub, context={'paths': paths})
+    except FileNotFoundError:
+        msg = "Could not find '{}' in the target directory"
+        logging.error(msg.format(stub))
+        return stub
+
+    # Make it a relative path, if specified
+    target = context['target']
+    string = filepath.get_url(context=context, target=target)
+
+    return str(string)
 
 
 class JinjaRender(Builder):
@@ -76,6 +111,8 @@ class JinjaRender(Builder):
             ae = jinja2.select_autoescape(['html', 'htm', 'xml'])
             env = jinja2.Environment(autoescape=ae, loader=dl,
                                      keep_trailing_newline=True)
+            env.filters['rewrite_path'] = rewrite_path
+
             self.env._jinja_environment = env
         return self.env._jinja_environment
 
@@ -166,7 +203,8 @@ class JinjaRender(Builder):
         template = self.template()
         context = self.context
         outfilepath = self.outfilepath
-        rendered_string = template.render(**context)
+        rendered_string = template.render(**context, target=self.render_ext,
+                                          outfilepath=outfilepath)
         outfilepath.write_text(rendered_string)
         self.build_needed(reset=True)
         return self.status

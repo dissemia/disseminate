@@ -284,7 +284,7 @@ def test_html_builder_inherited_doc(load_example):
 
     # Check the answer key
     key = pathlib.Path('tests/builders/examples/ex4/dummy.html')
-    print(doc.targets['.html'])
+
     assert doc.targets['.html'].read_text() == key.read_text()
 
     # Check the copied files
