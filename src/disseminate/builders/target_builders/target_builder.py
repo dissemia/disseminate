@@ -33,6 +33,7 @@ class TargetBuilder(SequentialBuilder):
     """
 
     active_requirements = ('priority',)
+    priority = 1000
     context = weakattr()
 
     use_media = False

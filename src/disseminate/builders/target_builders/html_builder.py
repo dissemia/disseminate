@@ -4,6 +4,7 @@ A CompositeBuilder for html files.
 from .target_builder import TargetBuilder
 from ..copy import Copy
 from ...paths import TargetPath
+from ... import settings
 
 
 class HtmlBuilder(TargetBuilder):
@@ -13,6 +14,7 @@ class HtmlBuilder(TargetBuilder):
     priority = 1000
     infilepath_ext = '.dm'
     outfilepath_ext = '.html'
+    ext_wildcards = {'*' + ext for ext in settings.tracked_deps['.html']}
 
     def __init__(self, env, context, **kwargs):
         super().__init__(env=env, context=context, **kwargs)
@@ -20,7 +22,8 @@ class HtmlBuilder(TargetBuilder):
         # Add copy builders for extra dependencies, like css files
         target_root = env.target_root
         target = self.outfilepath_ext
-        for ext in ('*.css',):
+
+        for ext in self.ext_wildcards:
             copy_subbuilders = []
             for subbuilder in self.subbuilders:
                 filepaths = [filepath for filepath in subbuilder.infilepaths

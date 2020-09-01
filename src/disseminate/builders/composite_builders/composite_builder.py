@@ -17,6 +17,7 @@ class CompositeBuilder(Builder):
     subbuilders = None
 
     active_requirements = ('priority',)
+    priority = 1000
     parallel = False
     clear_done = True
 
