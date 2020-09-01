@@ -139,8 +139,6 @@ def test_simple_inline_equation_html(context):
     # Check the build
     build_env = context['environment']
     html_builder = context['builders']['.html']
-    svg_builder = html_builder._parallel_builder.subbuilders[4]
-    copy_builder = svg_builder.subbuilders[2]
 
     assert html_builder.build(complete=True) == 'done'
     target_filepath = (build_env.target_root / 'html' / 'media' /

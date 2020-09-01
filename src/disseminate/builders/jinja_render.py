@@ -10,7 +10,7 @@ import jinja2.meta
 
 from .builder import Builder
 from .exceptions import BuildError
-# from .executor import executor
+from .executor import executor
 from .utils import generate_mock_parameters, generate_outfilepath
 from ..paths import SourcePath
 from ..paths.utils import find_file
@@ -19,14 +19,17 @@ from ..utils.classes import weakattr
 from .. import settings
 
 
-# def run(template, context, outfilepath, target):
-#     """Run the command with the given arguments."""
-#     # rendered_string = asyncio.run(template.render_async(**context,
-#     #                               outfilepath=outfilepath, target=target))
-#     rendered_string = template.render(**context, outfilepath=outfilepath,
-#                                       target=target)
-#     outfilepath.write_text(rendered_string)
-#     return outfilepath
+def run(template, context, outfilepath, target):
+    """Run the command with the given arguments."""
+    # rendered_string = asyncio.run(template.render_async(**context,
+    #                               outfilepath=outfilepath, target=target))
+    if 'target' in context:
+        rendered_string = template.render(**context, outfilepath=outfilepath)
+    else:
+        rendered_string = template.render(**context, outfilepath=outfilepath,
+                                          target=target)
+    outfilepath.write_text(rendered_string)
+    return outfilepath
 
 
 @jinja2.contextfilter
@@ -208,28 +211,32 @@ class JinjaRender(Builder):
     def outfilepath(self, value):
         self._outfilepath = value
 
-    # def run_cmd(self, *args):
-    #     if self.future is None:
-    #         template = self.template()
-    #         outfilepath = self.outfilepath
-    #
-    #         logging.debug("Rendering '{}' with Jinja2 "
-    #                       "'{}'".format(outfilepath, template))
-    #         future = executor.submit(run, template=template,
-    #                                  context=self.context,
-    #                                  outfilepath=outfilepath,
-    #                                  target=self.render_ext)
-    #         self.future = future
+    def run_cmd(self, *args):
+        if self.future is None:
+            template = self.template()
+            outfilepath = self.outfilepath
 
-    def build(self, complete=False):
-        template = self.template()
-        context = self.context
-        outfilepath = self.outfilepath
-        rendered_string = template.render(**context, target=self.render_ext,
-                                          outfilepath=outfilepath)
-        outfilepath.write_text(rendered_string)
-        self.build_needed(reset=True)
-        return self.status
+            logging.debug("Rendering '{}' with Jinja2 "
+                          "'{}'".format(outfilepath, template))
+            future = executor.submit(run, template=template,
+                                     context=self.context,
+                                     outfilepath=outfilepath,
+                                     target=self.render_ext)
+            self.future = future
+
+    # def build(self, complete=False):
+    #     template = self.template()
+    #     context = self.context
+    #     outfilepath = self.outfilepath
+    #     if 'target' in context:
+    #         rendered_string = template.render(**context,
+    #                                           outfilepath=outfilepath)
+    #     else:
+    #         rendered_string = template.render(**context, target=self.render_ext,
+    #                                           outfilepath=outfilepath)
+    #     outfilepath.write_text(rendered_string)
+    #     self.build_needed(reset=True)
+    #     return self.status
 
     @staticmethod
     def runtime_success(future):

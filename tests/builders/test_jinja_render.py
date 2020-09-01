@@ -47,8 +47,8 @@ def test_jinja_render_setup_with_outfilepath(env):
 
     # Check the parameters and infilepaths. These should be SourcePaths with
     # correctly set project_root / subpath
-    assert len(render_build.parameters) == 9
-    assert len(render_build.infilepaths) == 7
+    assert len(render_build.parameters) == 11
+    assert len(render_build.infilepaths) == 9
     assert render_build.infilepaths[0].match('templates/default/template.html')
     assert (str(render_build.infilepaths[0].subpath) ==
             'template.html')
@@ -74,8 +74,12 @@ def test_jinja_render_setup_with_outfilepath(env):
                                              'media/css/pygments.css')
     assert (str(render_build.infilepaths[6].subpath) ==
             'media/css/pygments.css')
-    assert render_build.parameters[7] == '33996cdb1a'  # hash of tags
-    assert render_build.parameters[8] == 'd41d8cd98f'  # hash of tags
+    assert (str(render_build.infilepaths[7].subpath) ==
+            'media/icons/menu_inactive.svg')
+    assert (str(render_build.infilepaths[8].subpath) ==
+            'media/icons/menu_active.svg')
+    assert render_build.parameters[9] == '33996cdb1a'  # hash of tags
+    assert render_build.parameters[10] == 'd41d8cd98f'  # hash of tags
 
     # Check the outfilepath
     assert render_build.outfilepath == outfilepath
@@ -94,10 +98,10 @@ def test_jinja_render_setup_without_outfilepath(env):
     context['body'] = tag
 
     render_build = JinjaRender(env, context=context, render_ext='.html')
-    assert len(render_build.parameters) == 9
-    assert len(render_build.infilepaths) == 7
+    assert len(render_build.parameters) == 11
+    assert len(render_build.infilepaths) == 9
     assert (render_build.outfilepath ==
-            env.target_root / 'media' / 'template_fbb87e2565c1.html')
+            env.target_root / 'media' / 'template_812f3336a0a3.html')
 
     # The same tag body gives the same hash
     tag = Tag(name='body', content='My body', attributes='', context=context)
@@ -105,7 +109,7 @@ def test_jinja_render_setup_without_outfilepath(env):
 
     render_build = JinjaRender(env, context=context, render_ext='.html')
     assert (render_build.outfilepath ==
-            env.target_root / 'media' / 'template_fbb87e2565c1.html')
+            env.target_root / 'media' / 'template_812f3336a0a3.html')
 
     # A new content body produces a different hash
     tag = Tag(name='body', content='My new body', attributes='',
@@ -113,7 +117,7 @@ def test_jinja_render_setup_without_outfilepath(env):
     context['body'] = tag
     render_build = JinjaRender(env, context=context, render_ext='.html')
     assert (render_build.outfilepath ==
-            env.target_root / 'media' / 'template_733c81cbc5f5.html')
+            env.target_root / 'media' / 'template_98ff1b006859.html')
 
     # 3. Test an example without an outfilepath or target specified. An
     #    assertion error is raised
@@ -140,50 +144,30 @@ def test_jinja_render_setup_inherited(env):
 
     # Check the parameters and infilepaths. These should be SourcePaths with
     # correctly set project_root / subpath
-    assert len(render_build.parameters) == 13
-    assert len(render_build.infilepaths) == 11
+    assert len(render_build.parameters) == 15
+    assert len(render_build.infilepaths) == 13
     assert render_build.infilepaths[0].match('templates/books/tufte/'
                                              'template.html')
-    assert (str(render_build.infilepaths[0].subpath) ==
-            'template.html')
     assert render_build.infilepaths[1].match('templates/default/template.html')
-    assert (str(render_build.infilepaths[1].subpath) ==
-            'template.html')
     assert render_build.infilepaths[2].match('templates/default/menu.html')
-    assert (str(render_build.infilepaths[2].subpath) ==
-            'menu.html')
     assert render_build.infilepaths[3].match('templates/default/nav.html')
-    assert (str(render_build.infilepaths[3].subpath) ==
-            'nav.html')
     assert render_build.infilepaths[4].match('templates/books/'
                                              'tufte/context.txt')
-    assert (str(render_build.infilepaths[4].subpath) ==
-            'context.txt')
     assert render_build.infilepaths[5].match('templates/default/context.txt')
-    assert (str(render_build.infilepaths[5].subpath) ==
-            'context.txt')
     assert render_build.infilepaths[6].match('templates/books/tufte/'
                                              'media/css/tufte.css')
-    assert (str(render_build.infilepaths[6].subpath) ==
-            'media/css/tufte.css')
     assert render_build.infilepaths[7].match('templates/default/'
                                              'media/css/bootstrap.min.css')
-    assert (str(render_build.infilepaths[7].subpath) ==
-            'media/css/bootstrap.min.css')
     assert render_build.infilepaths[8].match('templates/default/'
                                              'media/css/base.css')
-    assert (str(render_build.infilepaths[8].subpath) ==
-            'media/css/base.css')
     assert render_build.infilepaths[9].match('templates/default/'
                                              'media/css/default.css')
-    assert (str(render_build.infilepaths[9].subpath) ==
-            'media/css/default.css')
     assert render_build.infilepaths[10].match('templates/default/'
                                               'media/css/pygments.css')
-    assert (str(render_build.infilepaths[10].subpath) ==
-            'media/css/pygments.css')
-    assert render_build.parameters[11] == "33996cdb1a"  # tag hash
-    assert render_build.parameters[12] == "d41d8cd98f"  # tag hash
+    assert render_build.infilepaths[11].match('media/icons/menu_inactive.svg')
+    assert render_build.infilepaths[12].match('media/icons/menu_active.svg')
+    assert render_build.parameters[13] == "33996cdb1a"  # tag hash
+    assert render_build.parameters[14] == "d41d8cd98f"  # tag hash
 
 
 def test_jinja_render(env):
@@ -235,7 +219,7 @@ def test_jinja_render(env):
     assert render_build.build(complete=True) == 'done'
     assert render_build.outfilepath.exists()
     assert (render_build.outfilepath.subpath ==
-            pathlib.Path('media') / 'template_733c81cbc5f5.html')
+            pathlib.Path('media') / 'template_98ff1b006859.html')
     assert render_build.status == 'done'
 
     # A new builder does not require a new build.
@@ -255,7 +239,7 @@ def test_jinja_render(env):
     assert render_build.outfilepath.exists()
     assert str(render_build.outfilepath.target) == 'test'
     assert (render_build.outfilepath.subpath ==
-            pathlib.Path('media') / 'template_733c81cbc5f5.html')
+            pathlib.Path('media') / 'template_98ff1b006859.html')
     assert render_build.status == 'done'
 
     # A new builder does not require a new build.

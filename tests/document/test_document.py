@@ -518,6 +518,7 @@ def test_document_unusual_filenames(load_example):
                 html_root / 'media' / 'ch1.1',
                 html_root / 'media' / 'ch1.1' / 'čísla',
                 html_root / 'media' / 'css',
+                html_root / 'media' / 'icons',
 
                 html_root / 'root.file.html',  # files
                 html_root / 'ch1.1' / 'ch1.1.html',
@@ -527,6 +528,8 @@ def test_document_unusual_filenames(load_example):
                 html_root / 'media' / 'css' / 'bootstrap.min.css',
                 html_root / 'media' / 'css' / 'default.css',
                 html_root / 'media' / 'css' / 'pygments.css',
+                html_root / 'media' / 'icons' / 'menu_inactive.svg',
+                html_root / 'media' / 'icons' / 'menu_active.svg',
                 }
 
     html_actual = set(html_root.glob('**/*'))
@@ -582,6 +585,7 @@ def test_document_multiple_dependency_locations(load_example):
     html_key = {html_root / 'chapter1',  # dirs
                 html_root / 'media',
                 html_root / 'media' / 'css',
+                html_root / 'media' / 'icons',
                 html_root / 'media' / 'ch1',
                 html_root / 'media' / 'chapter1',
                 html_root / 'media' / 'chapter1' / 'figures',
@@ -594,6 +598,8 @@ def test_document_multiple_dependency_locations(load_example):
                 html_root / 'media' / 'css' / 'bootstrap.min.css',
                 html_root / 'media' / 'css' / 'default.css',
                 html_root / 'media' / 'css' / 'pygments.css',
+                html_root / 'media' / 'icons' / 'menu_active.svg',
+                html_root / 'media' / 'icons' / 'menu_inactive.svg',
                 }
     html_actual = set(html_root.glob('**/*'))
     assert html_actual == html_key

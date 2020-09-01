@@ -113,6 +113,7 @@ def test_document_template_books_tufte(load_example):
     html_root = target_root / 'html'
     html_key = {html_root / 'media',  # dirs
                 html_root / 'media' / 'css',
+                html_root / 'media' / 'icons',
 
                 html_root / 'inept.html',  # files
                 html_root / 'media' / 'eq_6b1a39e86f33.svg',
@@ -124,6 +125,8 @@ def test_document_template_books_tufte(load_example):
                 html_root / 'media' / 'css' / 'default.css',
                 html_root / 'media' / 'css' / 'pygments.css',
                 html_root / 'media' / 'css' / 'tufte.css',
+                html_root / 'media' / 'icons' / 'menu_active.svg',
+                html_root / 'media' / 'icons' / 'menu_inactive.svg',
                 }
     html_actual = set(html_root.glob('**/*'))
     assert html_key == html_actual

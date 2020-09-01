@@ -284,7 +284,6 @@ def test_html_builder_inherited_doc(load_example):
 
     # Check the answer key
     key = pathlib.Path('tests/builders/examples/ex4/dummy.html')
-
     assert doc.targets['.html'].read_text() == key.read_text()
 
     # Check the copied files
@@ -296,6 +295,10 @@ def test_html_builder_inherited_doc(load_example):
                       subpath='media/css/pygments.css').exists()
     assert TargetPath(target_root=target_root, target='html',
                       subpath='media/css/tufte.css').exists()
+    assert TargetPath(target_root=target_root, target='html',
+                      subpath='media/icons/menu_active.svg').exists()
+    assert TargetPath(target_root=target_root, target='html',
+                      subpath='media/icons/menu_inactive.svg').exists()
 
     # New builders don't need to rebuild.
     builder = HtmlBuilder(env, context=doc.context)
