@@ -21,6 +21,8 @@ from .. import settings
 
 def run(template, context, outfilepath, target):
     """Run the command with the given arguments."""
+    # rendered_string = asyncio.run(template.render_async(**context,
+    #                               outfilepath=outfilepath, target=target))
     rendered_string = template.render(**context, outfilepath=outfilepath,
                                       target=target)
     outfilepath.write_text(rendered_string)
@@ -112,7 +114,8 @@ class JinjaRender(Builder):
             # Create the environment
             ae = jinja2.select_autoescape(['html', 'htm', 'xml'])
             env = jinja2.Environment(autoescape=ae, loader=dl,
-                                     keep_trailing_newline=True)
+                                     keep_trailing_newline=True,)
+                                     # enable_async=True)
             env.filters['rewrite_path'] = rewrite_path
 
             self.env._jinja_environment = env
@@ -212,6 +215,7 @@ class JinjaRender(Builder):
                                      context=self.context,
                                      outfilepath=outfilepath,
                                      target=self.render_ext)
+            # future.result(timeout=30)
             self.future = future
 
     # def build(self, complete=False):
