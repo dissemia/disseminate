@@ -243,6 +243,11 @@ class Builder(metaclass=ABCMeta):
             if self.future.cancelled():
                 return "cancelled"
 
+            exc = self.future.exception()
+            if exc is not None:
+                # Raise the exception, if an exception was raised
+                raise(exc)
+
             if not self.outfilepath.exists():
                 # An output file should have been created. If it wasn't then
                 # the build was not successful
