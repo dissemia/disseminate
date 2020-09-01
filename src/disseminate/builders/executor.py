@@ -9,7 +9,7 @@ import subprocess
 from .exceptions import BuildError
 
 # Setup a global pool for processes
-executor = ProcessPoolExecutor()
+executor = ThreadPoolExecutor()
 
 PopenResult = namedtuple('PopenResult', 'returncode args stdout stderr')
 

@@ -37,6 +37,7 @@ def build(document, complete=True):
     context = document.context
     env = context['environment']
     par_builder = ParallelBuilder(env=env)
+    par_builder.clear_done = True
 
     # Get all of the documents
     for doc in document.documents_list(only_subdocuments=False, recursive=True):
