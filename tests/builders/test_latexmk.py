@@ -6,11 +6,23 @@ from disseminate.builders.latexmk import Latexmk
 from disseminate.paths import SourcePath, TargetPath
 
 
+def reset_builder_cache():
+    Builder._active.clear()
+    Builder._available_builders.clear()
+
+
 def test_latexmk_with_find_builder_cls():
     """Test the Latexmk builder access with the find_builder_cls."""
 
-    builder_cls = Latexmk.find_builder_cls(in_ext='.tex', out_ext='.pdf')
-    assert builder_cls.__name__ == "Latexmk"
+    try:
+        default_state = Latexmk.available
+        Latexmk.available = True
+        reset_builder_cache()
+        builder_cls = Latexmk.find_builder_cls(in_ext='.tex', out_ext='.pdf')
+        assert builder_cls.__name__ == "Latexmk"
+    finally:
+        Latexmk.available = default_state
+        reset_builder_cache()
 
 
 def test_latexmk_find_builder_cls_backup():
@@ -23,15 +35,25 @@ def test_latexmk_find_builder_cls_backup():
         return builder_cls
 
     # 1. Test Latexmk > Pdflatex
-    latexmk = test_find('.tex', '.pdf', 'Latexmk')
-    latexmk.available = False
-    Builder._active.clear()
-    Builder._available_builders.clear()
+    try:
+        default_state = Latexmk.available
+        Latexmk.available = True
+        reset_builder_cache()
 
-    test_find('.tex', '.pdf', 'Pdflatex')
-    latexmk.available = True
-    Builder._active.clear()
-    Builder._available_builders.clear()
+        test_find('.tex', '.pdf', 'Latexmk')
+    finally:
+        Latexmk.available = default_state
+        reset_builder_cache()
+
+    try:
+        default_state = Latexmk.available
+        Latexmk.available = False
+        reset_builder_cache()
+
+        test_find('.tex', '.pdf', 'Pdflatex')
+    finally:
+        Latexmk.available = default_state
+        reset_builder_cache()
 
 
 def test_latexmk_setup_no_outfilepath_use_media_use_cache(env):

@@ -45,7 +45,7 @@ def test_pdf_builder_setup_pdf_in_targets(env):
     assert tex_builder.outfilepath == target_tex_filepath
 
     pdf_builder = builder.subbuilders[1]
-    assert pdf_builder.__class__.__name__ == 'Latexmk'
+    assert pdf_builder.__class__.__name__ in {'Latexmk', 'Pdflatex'}
     assert pdf_builder.use_cache
     assert pdf_builder.target == 'pdf'
     assert pdf_builder.parameters == [target_tex_filepath]
@@ -100,7 +100,8 @@ def test_pdf_builder_setup_pdf_tex_in_targets(env):
                                                  src_filepath]
     assert builder.subbuilders[0].outfilepath == target_tex_filepath
 
-    assert builder.subbuilders[1].__class__.__name__ == 'Latexmk'
+    assert (builder.subbuilders[1].__class__.__name__
+            in {'Latexmk', 'Pdflatex'})
     assert builder.subbuilders[1].target == 'pdf'
     assert builder.subbuilders[1].parameters == [target_tex_filepath]
     assert builder.subbuilders[1].outfilepath == target_cache_pdf_filepath
@@ -133,7 +134,8 @@ def test_pdf_builder_setup_pdf_tex_in_targets(env):
                                                  src_filepath]
     assert builder.subbuilders[0].outfilepath == target_tex_filepath
 
-    assert builder.subbuilders[1].__class__.__name__ == 'Latexmk'
+    assert (builder.subbuilders[1].__class__.__name__
+            in {'Latexmk', 'Pdflatex'})
     assert builder.subbuilders[1].target == 'pdf'
     assert builder.subbuilders[1].parameters == [target_tex_filepath]
     assert builder.subbuilders[1].outfilepath == target_cache_pdf_filepath
@@ -183,7 +185,8 @@ def test_pdf_builder_setup_not_in_targets(env):
                                                  src_filepath]
     assert builder.subbuilders[0].outfilepath == target_tex_filepath
 
-    assert builder.subbuilders[1].__class__.__name__ == 'Latexmk'
+    assert (builder.subbuilders[1].__class__.__name__ in
+            {'Latexmk', 'Pdflatex'})
     assert builder.subbuilders[1].target == 'pdf'
     assert builder.subbuilders[1].parameters == [target_tex_filepath]
     assert builder.subbuilders[1].outfilepath == target_cache_pdf_filepath

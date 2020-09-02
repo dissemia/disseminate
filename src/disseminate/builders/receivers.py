@@ -36,26 +36,16 @@ def build(document, complete=True):
     # Setup a parallel builder
     context = document.context
     env = context['environment']
-    par_builder = ParallelBuilder(env=env)
-    par_builder.clear_done = True
-
-    # Get all of the documents
-    for doc in document.documents_list(only_subdocuments=False, recursive=True):
-        # Get all the target builders for the document. These are dicts
-        # with the target string as keys and the target builders as values.
-        doc_builders = doc.context['builders']
-
-        # Append these to the par builder
-        par_builder.subbuilders += doc_builders.values()
+    root_builder = env.create_root_builder(document)
 
     if complete:
-        while par_builder.status in {'building', 'ready'}:
-            par_builder.build(complete=False)
+        while root_builder.status in {'building', 'ready'}:
+            root_builder.build(complete=False)
     else:
-        if par_builder.status in {'building', 'ready'}:
-            par_builder.build(complete=False)
+        if root_builder.status in {'building', 'ready'}:
+            root_builder.build(complete=False)
 
-    return par_builder.status
+    return root_builder.status
 
 
 @document_build_needed.connect_via(order=1000)

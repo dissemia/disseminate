@@ -11,6 +11,25 @@ from disseminate.builders.exceptions import BuildError
 from disseminate.paths import SourcePath, TargetPath
 
 
+def test_parallelbuilder_flatten(env):
+    """Test the ParallelBuilder flatten method."""
+    tmpdir = env.context['target_root']
+
+    # Add paths to the context
+    paths = [SourcePath(project_root='tests/builders/examples/ex1')]
+    env.context['paths'] = paths
+
+    # 1. Test a parallel builder for an html target.
+    infilepath = 'sample.pdf'
+    outfilepath = TargetPath(target_root=tmpdir, target='html',
+                             subpath='test.svg')
+    parallel_builder = ParallelBuilder(env, target='html')
+    parallel_builder.add_build(parameters=infilepath, outfilepath=outfilepath)
+
+    builds = parallel_builder.flatten()
+    assert len(builds) == 4
+
+
 def test_parallelbuilder_add_build_file_with_outfilepath(env):
     """Test the ParallelBuilder add_build method with an outfilepath
     specified"""

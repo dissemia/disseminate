@@ -1,11 +1,12 @@
 """
 A build environment to determine which build to use.
 """
-from itertools import chain
 import pathlib
+from itertools import chain
 
 from .deciders import Decider
 from .scanners import Scanner
+from .composite_builders import ParallelBuilder
 from ..document import Document
 from ..paths import SourcePath, TargetPath
 from .. import settings
@@ -82,17 +83,6 @@ class Environment(object):
     def __repr__(self):
         return "Environment({})".format(self.project_root)
 
-    @staticmethod
-    def get_target_root(project_root):
-        """Determine the target_root directory from the project_root."""
-        if project_root.match(settings.document_src_directory):
-            # If the project_root is in a src directory, use the directory above
-            # this directory
-            return TargetPath(target_root=project_root.parent)
-        else:
-            # Otherwise just use the same directory as the src directory
-            return TargetPath(target_root=project_root)
-
     @property
     def cache_path(self):
         """The path to the directory for storing cached files."""
@@ -110,19 +100,24 @@ class Environment(object):
             return self.context.get('media_path', None)
         return None
 
-    def collect_target_builders(self):
-        """Return all target builders for the root_document and all
-        sub-documents."""
-        documents = self.root_document.documents_list(recursive=True)
-        return chain(*[doc.context['builders'].values()
-                       if 'builders' in doc.context else []
-                       for doc in documents])
+    @property
+    def name(self):
+        """The name of the environment"""
+        root_doc = self.root_document
+        src_filepath = (root_doc.src_filepath.subpath if root_doc is not None
+                        else None)
+        return str(src_filepath) if src_filepath is not None else ''
 
-    def build(self):
-        target_builders = self.collect_target_builders()
-        for target_builder in target_builders:
-            target_builder.build(complete=True)
-        return 'done'
+    @staticmethod
+    def get_target_root(project_root):
+        """Determine the target_root directory from the project_root."""
+        if project_root.match(settings.document_src_directory):
+            # If the project_root is in a src directory, use the directory above
+            # this directory
+            return TargetPath(target_root=project_root.parent)
+        else:
+            # Otherwise just use the same directory as the src directory
+            return TargetPath(target_root=project_root)
 
     @staticmethod
     def _get_src_filepaths(root_path='',
@@ -199,3 +194,51 @@ class Environment(object):
 
         return [Environment(src_filepath=src_filepath, target_root=target_root)
                 for src_filepath in src_filepaths]
+
+    def create_root_builder(self, document=None):
+        """Create a root parallel builder for the target builders of the given
+        document or the root document.
+
+        Parameters
+        ----------
+        document : Optional[:obj:`.document.Document`]
+            The document to create a root builder for.
+
+        Returns
+        -------
+        root_builder : :obj:`.composite_builders.ParallelBuilder`
+            The root (parallel) builder.
+        """
+        root_builder = ParallelBuilder(env=self)
+        root_builder.clear_done = True
+
+        # Get all of the documents
+        subbuilders = self.collect_target_builders(document=document)
+        root_builder.subbuilders += subbuilders
+
+        return root_builder
+
+    def collect_target_builders(self, document=None):
+        """Return all target builders for the root_document and all
+        sub-documents.
+
+        Parameters
+        ----------
+        document : Optional[:obj:`.document.Document`]
+            The document to create a root builder for.
+
+        Returns
+        -------
+        target_builders : List[:obj:`.builders.Builder`
+            The list of target builders
+        """
+        document = document if document is not None else self.root_document
+        documents = document.documents_list(only_subdocuments=False,
+                                            recursive=True)
+        return chain(*[doc.context['builders'].values()
+                       if 'builders' in doc.context else []
+                       for doc in documents])
+
+    def build(self, complete=True):
+        root_builder = self.create_root_builder()
+        return root_builder.build(complete=complete)

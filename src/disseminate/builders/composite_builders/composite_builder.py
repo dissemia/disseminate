@@ -103,6 +103,51 @@ class CompositeBuilder(Builder):
 
         return status
 
+    def flatten(self, builder=None):
+        """Generate a flat list with this builder and all subbuilders
+        (recursively).
+
+        Parameters
+        ----------
+        builder : Optional[:obj:` <.composite_builders.CompositeBuilder>`]
+            If specified, flatten the given builder, instead of this builder.
+
+        Returns
+        -------
+        flattened_list : List[:obj:` <.composite_builders.CompositeBuilder>`]
+            The flattened list of builders.
+        """
+        builder = builder if builder is not None else self
+        flattened_list = [builder]  # add the given tag to the list
+
+        # Traverse the items and process each
+        for subbuilder in self.subbuilders:
+            # Add the item to the list
+            if isinstance(subbuilder, CompositeBuilder):
+                flattened_list += subbuilder.flatten(builder=subbuilder)
+            else:
+                flattened_list.append(subbuilder)
+
+        return flattened_list
+
+    def futures(self, builder=None):
+        """Generate a list of this builder's future and all sub-builder futures
+        (recursively)
+
+        Parameters
+        ----------
+        builder : Optional[:obj:` <.composite_builders.CompositeBuilder>`]
+            If specified, flatten the given builder, instead of this builder.
+
+        Returns
+        -------
+        futures : List[:obj:` <concurrent.futures.Future>`]
+            The flattened list of futures.
+        """
+        builder = builder if builder is not None else self
+        return [b.future for b in self.flatten(builder=builder)
+                if getattr(b, 'future', None) is not None]
+
     def print(self, level=1, max_level=None):
         """Print the builder and subbuilders"""
 

@@ -527,7 +527,7 @@ class Document(object):
         return any(signals.document_build_needed.emit(document=self))
 
     def build(self, complete=True):
-        """Run a build of the document"""
+        """Run a build of the document and all subdocuments."""
         # Make sure the document (and subdocuments) are loaded
         self.load()
 

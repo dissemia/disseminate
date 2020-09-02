@@ -38,7 +38,8 @@ def test_pdfrender_setup(env):
     assert (pdfrender.subbuilders[0].outfilepath ==
             cache_path / 'media' / 'template_8e0eae27545c.tex')
 
-    assert pdfrender.subbuilders[1].__class__.__name__ == 'Latexmk'
+    assert (pdfrender.subbuilders[1].__class__.__name__
+            in {'Latexmk', 'Pdflatex'})
     assert pdfrender.subbuilders[1].use_cache
     assert (pdfrender.subbuilders[1].parameters[0] ==
             pdfrender.subbuilders[0].outfilepath)
@@ -81,7 +82,8 @@ def test_pdfrender_setup_without_outfilepath(env):
     assert (pdfrender.subbuilders[0].outfilepath ==
             cache_path / 'media' / 'template_8e0eae27545c.tex')
 
-    assert pdfrender.subbuilders[1].__class__.__name__ == 'Latexmk'
+    assert (pdfrender.subbuilders[1].__class__.__name__
+            in {'Latexmk', 'Pdflatex'})
     assert pdfrender.subbuilders[1].use_cache
     assert (pdfrender.subbuilders[1].parameters[0] ==
             pdfrender.subbuilders[0].outfilepath)
@@ -133,7 +135,8 @@ def test_pdfrender_setup_without_outfilepath_use_cache(env):
     assert (pdfrender.subbuilders[0].outfilepath ==
             cache_path / 'media' / 'template_8e0eae27545c.tex')
 
-    assert pdfrender.subbuilders[1].__class__.__name__ == 'Latexmk'
+    assert (pdfrender.subbuilders[1].__class__.__name__
+            in {'Latexmk', 'Pdflatex'})
     assert pdfrender.subbuilders[1].use_cache
     assert (pdfrender.subbuilders[1].parameters[0] ==
             pdfrender.subbuilders[0].outfilepath)

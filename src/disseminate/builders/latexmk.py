@@ -5,7 +5,12 @@ from .builder import Builder
 
 
 class Latexmk(Builder):
-    """Compile a latex document into pdf using latexmk"""
+    """Compile a latex document into pdf using latexmk
+
+    .. note:: This builder has been disabled by default because it fails about
+              20% of the time with this system's ThreadPoolExecutor
+              implementation.
+    """
 
     action = ("latexmk "
               "-pdf "  # output pdf
@@ -16,7 +21,7 @@ class Latexmk(Builder):
               "-output-directory={builder.cache_path} "  # dir for temp files
               "{builder.infilepaths}")  # tex file to use
 
-    available = True
+    available = False
     priority = 5000
     required_execs = ('latexmk', 'pdflatex')
 
