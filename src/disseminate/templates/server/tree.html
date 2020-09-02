@@ -64,11 +64,11 @@
 {%- endmacro %}
 <body>
   <div class="container">
-    {% include "default/menu.html" %}
     <h2>Document Listing</h2>
     <div class="tableset">
         {{ recursetree(docs) }}
     </div>
   </div>
+  {% include "server/footer.html" %}
 </body>
 </html>

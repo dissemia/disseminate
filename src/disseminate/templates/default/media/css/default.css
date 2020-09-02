@@ -2,6 +2,10 @@
  * CSS for templates/default/template.html
  */
 
+body {
+  background: #efefef;
+}
+
 article {
   font-size: 14pt;
   font-family: Palatino, serif;
@@ -107,6 +111,19 @@ th {
 td {
   padding: 0.1em 0.5em;
 }
+
+/* structural elements */
+
+.container {
+  padding: 1rem 1rem 1rem 2rem;
+  max-width: 960px;
+  background: #fcfcfc;
+  border: 1px solid #CCCCCC;
+  border-top: 0px;
+  border-radius: 0 0 4px 4px;
+}
+
+/* span elements */
 
 .supsub {
     display: inline-block;
