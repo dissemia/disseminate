@@ -2,6 +2,7 @@
 The manager for labels.
 """
 from collections import OrderedDict
+from threading import Lock
 
 from .types import ContentLabel, DocumentLabel
 from .exceptions import LabelNotFound, DuplicateLabel
@@ -69,6 +70,7 @@ class LabelManager(object):
     root_context = weakattr()
     labels = None
     collected_labels = None
+    registered = False
 
     def __init__(self, root_context):
         self.labels = OrderedDict()
@@ -77,12 +79,24 @@ class LabelManager(object):
     def register(self, context=None):
         """Register the labels.
         """
+        if self.registered:
+            return None
+
+        # Only 1 thread should register the labels at a time
+        lock = Lock()
+        lock.acquire(blocking=True, timeout=10)
         context = context or self.root_context
 
+        # Run the registration functions.
         for func in (register_orders,  # Register label 'order' attribute
                      register_content_labels,  # Set chapter/section attributes
                      ):
             func(labels=self.labels, root_context=context)
+
+        # Labels have been registered. Release the lock
+        self.registered = True
+        if lock.locked():
+            lock.release()
 
     def reset(self, doc_ids=None):
         """Reset the the labels.
@@ -102,6 +116,8 @@ class LabelManager(object):
                                         self.labels.keys()))
             for key in keys_to_remove:
                 del self.labels[key]
+
+        self.registered = False
 
     def add_label(self, id, kind, context, label_cls, *args, **kwargs):
         """Add a label.
@@ -129,6 +145,8 @@ class LabelManager(object):
             label manager.
 
         """
+        self.registered = False
+
         # Parse the label_id
         doc_id, label_id = parse_id(id, context=context)
         if doc_id is None:
@@ -205,8 +223,7 @@ class LabelManager(object):
             could not be found.
         """
         # Register the labels
-        if register:
-            self.register()
+        self.register()
 
         # Parse the label_id
         doc_id, label_id = parse_id(id, context=context or self.root_context)
@@ -260,8 +277,7 @@ class LabelManager(object):
                else [ids])
 
         # Register the labels
-        if register:
-            self.register()
+        self.register()
 
         return list(map(lambda x:
                         self.get_label(x, register=False, context=context),
@@ -297,8 +313,7 @@ class LabelManager(object):
                  else [kinds])
 
         # Register the labels
-        if register:
-            self.register()
+        self.register()
 
         # Filter labels by doc_id.
         labels = self.labels.values()
