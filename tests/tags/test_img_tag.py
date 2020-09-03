@@ -5,7 +5,7 @@ import pathlib
 
 import pytest
 
-from disseminate.tags import Tag, TagError
+from disseminate.tags import Tag
 from disseminate.paths import TargetPath
 
 

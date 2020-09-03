@@ -1,3 +1,11 @@
+.container {
+  width: 780px;
+}
+
+article {
+  width: 97%;
+}
+
 h2 .label {
   color: inherit;
   font-variant: small-caps;
