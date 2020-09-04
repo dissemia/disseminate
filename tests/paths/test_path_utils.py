@@ -25,11 +25,17 @@ def test_find_files_example1(doc):
     filepaths = find_files('garbage331.py', context)
     assert len(filepaths) == 0
 
-    # Try absolute paths
+    # Try absolute paths (existing file)
     img_path = (pathlib.Path(curdir) / 'tests' / 'paths' /
                 'find_files_example1' / 'sample.pdf').absolute()
     filepaths = find_files(img_path, context)
     assert len(filepaths) == 1
+
+    # Try absolute paths (non-exisistent file)
+    img_path = (pathlib.Path(curdir) / 'tests' / 'paths' /
+                'find_files_example1' / 'missing.pdf').absolute()
+    filepaths = find_files(img_path, context)
+    assert len(filepaths) == 0
 
 
 def test_find_files_example2(doc_cls, env, tmpdir):

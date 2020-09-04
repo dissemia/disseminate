@@ -126,7 +126,7 @@ def find_file(path, context, raise_error=True):
         path_strs = path.strip().splitlines()  # Keep only the first line
         path = pathlib.Path(path_strs[0] if path_strs else '')
 
-    # If it not a path at this stage, return None--no path can be found
+    # If it's not a path at this stage, return None--no path can be found
     if not isinstance(path, pathlib.Path):
         if raise_error:
             msg = "Could not find file '{}'".format(path)
@@ -141,6 +141,13 @@ def find_file(path, context, raise_error=True):
     except OSError as e:
         if raise_error:
             raise e
+
+    # See if it's an absolute file that doesn't exist
+    if path.is_absolute():
+        if raise_error:
+            msg = "Could not find file '{}'".format(path)
+            raise FileNotFoundError(msg)
+        return None
 
     # Otherwise see if the path can be reconstructed
     paths = ['.'] + context['paths']

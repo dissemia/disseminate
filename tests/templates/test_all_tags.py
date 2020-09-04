@@ -46,11 +46,12 @@ def test_all_tags_and_templates_tex(doc):
                 tag_src += 'one && two'
             elif tag == 'img':
                 img_path = (pathlib.Path(curdir).absolute() /
-                            'tests' / 'templates' / 'example1' / 'sample.png')
+                            'tests' / 'templates' / 'examples' /
+                            'ex1' / 'sample.png')
                 tag_src += str(img_path)
             elif tag == 'asy':
                 img_path = (pathlib.Path(curdir).absolute() / 'tests' /
-                            'convert' / 'asy_example1' / 'diagram.asy')
+                            'document' / 'examples' / 'ex7' / 'diagram.asy')
                 tag_src += str(img_path)
             elif tag == 'ref':
                 tag_src += 'doc:' + doc.doc_id.replace('.', '-')

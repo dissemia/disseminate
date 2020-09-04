@@ -2,6 +2,7 @@
 Test utils for builders
 """
 import pathlib
+import os.path
 
 from disseminate.builders.utils import (sort_key, generate_mock_parameters,
                                         generate_outfilepath)
@@ -119,4 +120,17 @@ def test_generate_outfilepath(env):
     env.context['media_path'] = 'media'
     fp = generate_outfilepath(env=env, parameters=infilepath, use_cache=False,
                               use_media=True)
+    assert fp == env.target_root / 'media' / 'test' / 'mytest.html'
+
+    # 10. Test an example with an absolute path (pathlib.Path object)
+    infilepath = pathlib.Path(os.path.curdir) / 'test' / 'mytest.html'
+    fp = generate_outfilepath(env=env, parameters=[infilepath],
+                              use_cache=False, use_media=True)
+    assert fp == env.target_root / 'media' / 'test' / 'mytest.html'
+
+    # 10. Test an example with an absolute path (SourcePath object)
+    infilepath = SourcePath(project_root=os.path.curdir,
+                            subpath='test/mytest.html')
+    fp = generate_outfilepath(env=env, parameters=[infilepath],
+                              use_cache=False, use_media=True)
     assert fp == env.target_root / 'media' / 'test' / 'mytest.html'
