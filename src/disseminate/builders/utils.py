@@ -99,8 +99,8 @@ def generate_outfilepath(env, parameters, target=None, append=None, ext=None,
     ----------
     env : :obj:`.builders.Environment`
         The build environment.
-    parameters : Tuple[:obj:`.paths.SourcePath`, str, tuple, list]
-        The parameters for the builder. The first SourcePath will be used.
+    parameters : Tuple[:obj:`pathlib.Path`]
+        The parameters for the builder. The first pathlib.Path will be used.
     target : Optional[str]
         If specified, use the given target as a subdirectory in the target_root.
     append : Optional[str]
@@ -118,14 +118,28 @@ def generate_outfilepath(env, parameters, target=None, append=None, ext=None,
     outfilepath : Union[:obj:`.paths.TargetPath`, None]
         The outfilepath based on the parameters given, or None if no outfilepath
         could be generated
+
+    .. note :: When dealing with absolute paths, only the filename is kept
+               in formulating the subpath. So for
+
+               target_root = '.'
+               target = 'html'
+               use_media = True
+               parameters = ['/usr/local/bin/2to3']
+
+               The generated outfilepath will be:
+
+               TargetPath('html/media/2to3')
     """
-    # Find the first valid infilepath
+    # Find the first valid infilepath that is not an absolute path
     parameters = (parameters if isinstance(parameters, list) or
                   isinstance(parameters, tuple) else [parameters])
     parameters = [fp for fp in parameters if isinstance(fp, pathlib.Path)]
 
     if len(parameters) == 0:
         return None
+
+    # Find the first infilepath that isn't an absolute path
     infilepath = parameters[0]
 
     # Formulate the target_root
@@ -143,6 +157,12 @@ def generate_outfilepath(env, parameters, target=None, append=None, ext=None,
     # Formulate the subpath
     subpath = (infilepath.subpath if hasattr(infilepath, 'subpath') else
                infilepath)
+
+    # Convert the subpath to a filename, if it's an absolute path
+    if hasattr(subpath, 'is_absolute') and subpath.is_absolute():
+        subpath = pathlib.Path(subpath.name)
+
+    # Add media_path, if specified
     if media_path and not str(subpath).startswith(media_path):
         subpath = rename(path=media_path / subpath, append=append,
                          extension=ext)

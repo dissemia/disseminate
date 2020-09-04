@@ -123,14 +123,29 @@ def test_generate_outfilepath(env):
     assert fp == env.target_root / 'media' / 'test' / 'mytest.html'
 
     # 10. Test an example with an absolute path (pathlib.Path object)
-    infilepath = pathlib.Path(os.path.curdir) / 'test' / 'mytest.html'
+    curdir = pathlib.Path(os.path.curdir).resolve()
+    infilepath = curdir / 'test' / 'mytest.html'
     fp = generate_outfilepath(env=env, parameters=[infilepath],
                               use_cache=False, use_media=True)
-    assert fp == env.target_root / 'media' / 'test' / 'mytest.html'
+    assert fp == env.target_root / 'media' / 'mytest.html'
 
-    # 10. Test an example with an absolute path (SourcePath object)
-    infilepath = SourcePath(project_root=os.path.curdir,
+    # 11. Test an example with an absolute path (SourcePath object)
+    infilepath = SourcePath(project_root=curdir,
                             subpath='test/mytest.html')
     fp = generate_outfilepath(env=env, parameters=[infilepath],
                               use_cache=False, use_media=True)
     assert fp == env.target_root / 'media' / 'test' / 'mytest.html'
+
+    # 12. Test an example with an absolute path with a non-existent file (str)
+    infilepath = SourcePath(project_root=curdir,
+                            subpath='test/mytest.html')
+    fp = generate_outfilepath(env=env, parameters=[str(infilepath)],
+                              use_cache=False, use_media=True)
+    assert fp is None
+
+    # 13. Test an example with an absolute path with an existing file (str)
+    infilepath = SourcePath(project_root=curdir,
+                            subpath='tests/builders/examples/ex9/1.pdf')
+    fp = generate_outfilepath(env=env, parameters=[str(infilepath)],
+                              use_cache=False, use_media=True)
+    assert fp is None
