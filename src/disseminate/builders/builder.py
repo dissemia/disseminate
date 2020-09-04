@@ -121,6 +121,7 @@ class Builder(metaclass=ABCMeta):
     parameters_from_signals = None
 
     future = None
+    timeout = settings.default_timeout
 
     _active = dict()
     _available_builders = dict()
@@ -408,7 +409,7 @@ class Builder(metaclass=ABCMeta):
                                                        " ".join(args)))
 
             # add the process to the executor pool
-            future = executor.submit(run, args=args)
+            future = executor.submit(run, args=args, timeout=self.timeout)
             self.future = future
 
     def build(self, complete=False):

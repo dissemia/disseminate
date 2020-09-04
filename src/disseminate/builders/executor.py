@@ -14,12 +14,12 @@ executor = ThreadPoolExecutor()
 PopenResult = namedtuple('PopenResult', 'returncode args stdout stderr')
 
 
-def run(**kwargs):
+def run(timeout, **kwargs):
     """Run the command with the given arguments."""
     popen = subprocess.Popen(**kwargs, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, bufsize=4096,)
     popen.wait()
-    stdout, stderr = popen.communicate()
+    stdout, stderr = popen.communicate(timeout=timeout)
     return PopenResult(returncode=popen.returncode,
                        args=popen.args,
                        stdout=stdout.decode('latin1'),

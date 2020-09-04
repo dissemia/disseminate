@@ -19,12 +19,6 @@ document_max_size = 204800  # 200kB
 #: exist
 create_dirs = True
 
-#: A set of extensions that are compiled from other extensions. The keys are
-#: the compiled extension and the values are the extensions from which these
-#: extensions are compiled.
-compiled_exts = {'.pdf': '.tex',
-                 }
-
 #: HTTP Server
 #: -----------
 
@@ -220,7 +214,7 @@ module_only = False
 #: the paths for templates in disseminate modules
 module_template_paths = [pathlib.Path(__file__).parent / 'templates']
 
-#: Dependency Defaults
+#: Builder Defaults
 #: -------------------
 
 #: A series of allowed tracked extensions for each target type with information
@@ -236,11 +230,11 @@ tracked_deps = {
     '.css': ['.css', ]
     }
 
-#: Builder Defaults
-#: ----------------
-
 #: The default decider class
 default_decider = 'Md5Decider'
+
+#: The default number of seconds before a subprocess is timedout.
+default_timeout = 20
 
 #: Tags
 #: ----
