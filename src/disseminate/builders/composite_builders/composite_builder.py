@@ -38,6 +38,15 @@ class CompositeBuilder(Builder):
                 number_subbuilders += len(subbuilder.subbuilders)
         return number_subbuilders
 
+    @property
+    def status(self):
+        statuses = [sb.status for sb in self.subbuilders]
+        statuses = [status for status in statuses if status != 'done']
+
+        # Return 'done' if all statuses are done (or there are no subbuilders)
+        # Otherwise return the first non-done status
+        return 'done' if len(statuses) == 0 else statuses[0]
+
     def run_cmd_args(self):
         """Format the for all sub commands
 

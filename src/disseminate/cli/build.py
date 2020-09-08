@@ -33,8 +33,10 @@ def build(in_path, out_dir=None, progress=False):
             progress_table.print_hdr()
             progress_table.print_row(builders)
 
-        while root_builder.status in {'ready', 'building'}:
-            root_builder.build(complete=False)
+        status = root_builder.status
+        while status in {'ready', 'building'}:
+            status = root_builder.build(complete=False)
 
             if progress:  # Print progress, if enabled
                 progress_table.print_row(builders)
+        print('root_builder.status:', root_builder.status)
