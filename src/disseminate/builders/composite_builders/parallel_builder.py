@@ -9,27 +9,6 @@ class ParallelBuilder(CompositeBuilder):
     action = 'parallel build'
     parallel = True
 
-    # @property
-    # def status(self):
-    #     statuses = {sb.status for sb in self.subbuilders}
-    #
-    #     if {'done'} == statuses or len(statuses) == 0:  # subbuilders are done
-    #         return 'done'
-    #
-    #     inactive = {i for i in statuses if i.startswith('inactive')}
-    #     if inactive:
-    #         return inactive.pop()
-    #
-    #     missing = {i for i in statuses if i.startswith('missing')}
-    #     if missing:
-    #         return missing.pop()
-    #
-    #     building = {i for i in statuses if i.startswith('building')}
-    #     if building:
-    #         return building.pop()
-    #
-    #     return 'ready'
-
     def build_needed(self, reset=False):
         return any(sb.build_needed(reset=reset) for sb in self.subbuilders)
 

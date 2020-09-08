@@ -4,6 +4,9 @@ Test the HtmlBuilder
 import pathlib
 from collections import namedtuple
 
+import pytest
+
+from disseminate.builders.exceptions import BuildError
 from disseminate.builders.target_builders.html_builder import HtmlBuilder
 from disseminate.paths import SourcePath, TargetPath
 
@@ -463,9 +466,14 @@ def test_html_builder_add_build_invalid(load_example):
     assert html_builder.status == 'ready'
 
     # Now run the build. It won't work
-    assert html_builder.build(complete=True) == 'missing (outfilepath)'
-    assert html_builder.status == 'missing (outfilepath)'
-    assert build.status == 'missing (outfilepath)'
+    with pytest.raises(BuildError):
+        html_builder.build(complete=True)
+
+    with pytest.raises(BuildError):
+        html_builder.status
+
+    with pytest.raises(BuildError):
+        assert build.status
 
     # Check that the files were not created
     assert not build.outfilepath.exists()
