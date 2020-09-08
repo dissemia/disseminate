@@ -247,18 +247,23 @@ class Builder(metaclass=ABCMeta):
             exc = self.future.exception()
             if exc is not None:
                 # Raise the exception, if an exception was raised
-                raise(exc)
+                raise exc
 
-            if not self.outfilepath.exists():
-                # An output file should have been created. If it wasn't then
-                # the build was not successful
-                return "missing (outfilepath)"
+            run_successful = self.runtime_success(future=self.future)
+            if run_successful:
+                # Couldn't find the generated file!
+                if not self.outfilepath.exists():
+                    cls_name = self.__class__.__name__
+                    msg = ("The '{}' build was successful but could not find "
+                           "the output file '{}'")
+                    logging.error(msg.format(cls_name, self.outfilepath))
 
-            if self.runtime_success(future=self.future):
-                # exit code of 0. Successful!
-                # Reset the popen and the build status
-                self.build_needed(reset=True)
-                return "done"
+                    return "missing (outfilepath)"
+
+                # It was a successful run and the generated file exists
+                else:
+                    self.build_needed(reset=True)
+                    return "done"
 
             # non-zero exit code. Unsuccessful. :(
             self.runtime_error(future=self.future)

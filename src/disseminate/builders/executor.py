@@ -18,8 +18,8 @@ def run(timeout, **kwargs):
     """Run the command with the given arguments."""
     popen = subprocess.Popen(**kwargs, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, bufsize=4096,)
-    popen.wait()
-    stdout, stderr = popen.communicate(timeout=timeout)
+    popen.wait(timeout=timeout)
+    stdout, stderr = popen.communicate()
     return PopenResult(returncode=popen.returncode,
                        args=popen.args,
                        stdout=stdout.decode('latin1'),

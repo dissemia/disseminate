@@ -234,7 +234,7 @@ tracked_deps = {
 default_decider = 'Md5Decider'
 
 #: The default number of seconds before a subprocess is timedout.
-default_timeout = 20
+default_timeout = 15
 
 #: Tags
 #: ----
