@@ -126,6 +126,7 @@ class Builder(metaclass=ABCMeta):
     _active = dict()
     _available_builders = dict()
     _parameters = None
+    _missing_parameters = None
     _outfilepath = None
 
     runtime_error = runtime_error  # handler function when runtime error found
@@ -219,14 +220,11 @@ class Builder(metaclass=ABCMeta):
         - 'done': The builder is done building
         """
         active = self.active
-        has_parameters = len(self.parameters) > 0
+
         if not active:
             return "inactive"
 
-        # The build needs parameters to do anythting, and the filepath
-        # parameters should point to valid files
-        if (not has_parameters or not all(i.exists() for i in self.parameters
-                                          if hasattr(i, 'exists'))):
+        if self.missing_parameters:
             return "missing (parameters)"
 
         # If a build is not needed or the process is done, then the build is
@@ -296,6 +294,27 @@ class Builder(metaclass=ABCMeta):
     @parameters.setter
     def parameters(self, value):
         self._parameters = value
+
+    @property
+    def missing_parameters(self):
+        """Returns True if there are no parameters or there are missing
+        parameters.
+
+        This function will check the parameters until the parameters are all
+        found, in which case, it will just return False.
+        """
+        if self._missing_parameters is False:
+            return False
+
+        parameters = self.parameters
+        has_parameters = len(parameters) > 0
+
+        if (not has_parameters or
+            not all(i.exists() for i in parameters if hasattr(i, 'exists'))):
+            return True
+        else:
+            self._missing_parameters = False
+            return False
 
     def get_parameter(self, name, *parameters):
         """Return parameters inserted as 2-ples of name/value.
