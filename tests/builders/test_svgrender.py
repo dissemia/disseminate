@@ -1,6 +1,8 @@
 """
 Tests for the SvgRender builder.
 """
+import pathlib
+
 from disseminate.builders.svgrender import SvgRender
 from disseminate.tags import Tag
 from disseminate.paths import TargetPath
@@ -36,14 +38,14 @@ def test_svgrender_setup_with_outfilepath(env):
     assert svgrender.subbuilders[0].__class__.__name__ == 'PdfRender'
     assert svgrender.subbuilders[0].use_cache
     assert (svgrender.subbuilders[0].outfilepath ==
-            cache_path / 'media' / 'template_8e0eae27545c.pdf')
+            cache_path / 'media' / 'template_e2ed83180e33.pdf')
 
     assert svgrender.subbuilders[1].__class__.__name__ == 'Pdf2SvgCropScale'
     assert svgrender.subbuilders[1].use_cache
     assert (svgrender.subbuilders[1].parameters[0] ==
             svgrender.subbuilders[0].outfilepath)
     assert (svgrender.subbuilders[1].outfilepath ==
-            cache_path / 'media' / 'template_8e0eae27545c.svg')
+            cache_path / 'media' / 'template_e2ed83180e33.svg')
 
     assert svgrender.subbuilders[2].__class__.__name__ == 'Copy'
     assert not svgrender.subbuilders[2].use_cache
@@ -70,7 +72,7 @@ def test_svgrender_setup_without_outfilepath(env):
 
     assert not svgrender.use_cache
     assert (svgrender.outfilepath ==
-            target_root / 'media' / 'template_8e0eae27545c.svg')
+            target_root / 'media' / 'template_e2ed83180e33.svg')
 
     # Test the paths for the subbuilders
     assert len(svgrender.subbuilders) == 3
@@ -79,24 +81,24 @@ def test_svgrender_setup_without_outfilepath(env):
     assert svgrender.subbuilders[0].use_cache
     assert len(svgrender.subbuilders[0].parameters) == 4
     assert (svgrender.subbuilders[0].outfilepath ==
-            cache_path / 'media' / 'template_8e0eae27545c.pdf')
+            cache_path / 'media' / 'template_e2ed83180e33.pdf')
 
     assert svgrender.subbuilders[1].__class__.__name__ == 'Pdf2SvgCropScale'
     assert svgrender.subbuilders[1].use_cache
     assert (svgrender.subbuilders[1].parameters[0] ==
             svgrender.subbuilders[0].outfilepath)
     assert (svgrender.subbuilders[1].outfilepath ==
-            cache_path / 'media' / 'template_8e0eae27545c.svg')
+            cache_path / 'media' / 'template_e2ed83180e33.svg')
 
     assert svgrender.subbuilders[2].__class__.__name__ == 'Copy'
     assert not svgrender.subbuilders[2].use_cache
     assert (svgrender.subbuilders[2].parameters[0] ==
             svgrender.subbuilders[1].outfilepath)
     assert (svgrender.subbuilders[2].outfilepath ==
-            target_root / 'media' / 'template_8e0eae27545c.svg')
+            target_root / 'media' / 'template_e2ed83180e33.svg')
 
     assert svgrender.outfilepath == (target_root / 'media' /
-                                     'template_8e0eae27545c.svg')
+                                     'template_e2ed83180e33.svg')
 
 
 def test_svgrender_setup_without_outfilepath_scale(env):
@@ -114,10 +116,10 @@ def test_svgrender_setup_without_outfilepath_scale(env):
     #    change.
     svgrender = SvgRender(parameters=[('scale', 2.0)], env=env, context=context)
     assert svgrender.outfilepath.target_root == target_root
-    assert str(svgrender.outfilepath.subpath) != ('media/template_'
-                                                  '8e0eae27545c.svg')
-    assert str(svgrender.outfilepath.subpath) == ('media/template_'
-                                                  '6d2ea7ca1604.svg')
+    assert (svgrender.outfilepath.subpath !=
+            pathlib.Path('media') / 'template_e2ed83180e33.svg')
+    assert (svgrender.outfilepath.subpath ==
+           pathlib.Path('media') / 'template_d81f0510cd90.svg')
 
 
 def test_svgrender_setup_without_outfilepath_crop(env):
@@ -136,10 +138,10 @@ def test_svgrender_setup_without_outfilepath_crop(env):
     svgrender = SvgRender(parameters=[('crop', 0, 0, 0, 0)], env=env,
                           context=context)
     assert svgrender.outfilepath.target_root == target_root
-    assert str(svgrender.outfilepath.subpath) != ('media/template_'
-                                                  '8e0eae27545c.svg')
-    assert str(svgrender.outfilepath.subpath) == ('media/template_'
-                                                  'b58aaa830f24.svg')
+    assert (svgrender.outfilepath.subpath !=
+            pathlib.Path('media') / 'template_e2ed83180e33.svg')
+    assert (svgrender.outfilepath.subpath ==
+            pathlib.Path('media') / 'template_1f0500fe5d53.svg')
 
 
 def test_svgrender_setup_without_outfilepath_use_cache(env):
@@ -158,7 +160,7 @@ def test_svgrender_setup_without_outfilepath_use_cache(env):
 
     assert svgrender.use_cache
     assert (svgrender.outfilepath ==
-            cache_path / 'media' / 'template_8e0eae27545c.svg')
+            cache_path / 'media' / 'template_e2ed83180e33.svg')
 
     # Test the paths for the subbuilders. There is no copy builder.
     assert len(svgrender.subbuilders) == 3
@@ -167,31 +169,31 @@ def test_svgrender_setup_without_outfilepath_use_cache(env):
     assert svgrender.subbuilders[0].use_cache
     assert len(svgrender.subbuilders[0].parameters) == 4
     assert (svgrender.subbuilders[0].outfilepath ==
-            cache_path / 'media' / 'template_8e0eae27545c.pdf')
+            cache_path / 'media' / 'template_e2ed83180e33.pdf')
 
     assert svgrender.subbuilders[1].__class__.__name__ == 'Pdf2SvgCropScale'
     assert svgrender.subbuilders[1].use_cache
     assert (svgrender.subbuilders[1].parameters[0] ==
             svgrender.subbuilders[0].outfilepath)
     assert (svgrender.subbuilders[1].outfilepath ==
-            cache_path / 'media' / 'template_8e0eae27545c.svg')
+            cache_path / 'media' / 'template_e2ed83180e33.svg')
 
     assert svgrender.subbuilders[2].__class__.__name__ == 'Copy'
     assert svgrender.subbuilders[2].use_cache
     assert (svgrender.subbuilders[2].parameters[0] ==
             svgrender.subbuilders[1].outfilepath)
     assert (svgrender.subbuilders[2].outfilepath ==
-            cache_path / 'media' / 'template_8e0eae27545c.svg')
+            cache_path / 'media' / 'template_e2ed83180e33.svg')
 
     # 2. Test an example with modification attributes. The final filename should
     #    change.
     svgrender = SvgRender(parameters=[('scale', 2.0)], env=env, context=context,
                           use_cache=True)
     assert svgrender.outfilepath.target_root == cache_path
-    assert str(svgrender.outfilepath.subpath) != ('media/template_'
-                                                  '8e0eae27545c.svg')
-    assert str(svgrender.outfilepath.subpath) == ('media/template_'
-                                                  '6d2ea7ca1604.svg')
+    assert (svgrender.outfilepath.subpath !=
+            pathlib.Path('media') / 'template_e2ed83180e33.svg')
+    assert (svgrender.outfilepath.subpath ==
+            pathlib.Path('media') / 'template_d81f0510cd90.svg')
 
 
 def test_svgrender_chain_subbuilders(env):
@@ -212,11 +214,11 @@ def test_svgrender_chain_subbuilders(env):
 
     # Test the paths
     assert (str(svgrender.subbuilders[0].outfilepath.subpath) ==
-            'media/template_8e0eae27545c.pdf')
+            'media/template_e2ed83180e33.pdf')
     assert (svgrender.subbuilders[1].parameters[0] ==
             svgrender.subbuilders[0].outfilepath)
     assert (str(svgrender.subbuilders[1].outfilepath.subpath) ==
-            'media/template_8e0eae27545c.svg')
+            'media/template_e2ed83180e33.svg')
     assert (svgrender.subbuilders[2].parameters[0] ==
             svgrender.subbuilders[1].outfilepath)
     assert svgrender.subbuilders[2].outfilepath == outfilepath
@@ -275,7 +277,7 @@ def test_svgrender_simple_without_outfilepath(env):
     assert svgrender.status == 'ready'
     assert svgrender.build(complete=True) == 'done'
     assert (svgrender.outfilepath ==
-            target_root / 'media' / 'template_8e0eae27545c.svg')
+            target_root / 'media' / 'template_e2ed83180e33.svg')
     assert svgrender.outfilepath.exists()
 
     # A new build should not be needed
@@ -291,7 +293,7 @@ def test_svgrender_simple_without_outfilepath(env):
     assert svgrender.status == 'ready'
     assert svgrender.build(complete=True) == 'done'
     assert (svgrender.outfilepath ==
-            target_root / 'media' / 'template_29f92505a7b8.svg')
+            target_root / 'media' / 'template_bfb3bf91fda0.svg')
     assert svgrender.outfilepath.exists()
 
     # A new build should not be needed
@@ -304,7 +306,7 @@ def test_svgrender_simple_without_outfilepath(env):
     assert svgrender.status == 'ready'
     assert svgrender.build(complete=True) == 'done'
     assert (svgrender.outfilepath ==
-            target_root / 'html' / 'media' / 'template_29f92505a7b8.svg')
+            target_root / 'html' / 'media' / 'template_bfb3bf91fda0.svg')
     assert svgrender.outfilepath.exists()
 
     # A new build should not be needed
@@ -335,20 +337,20 @@ def test_svgrender_simple_without_outfilepath_scale_crop(env):
 
     assert pdfrender.use_cache and pdfrender.use_media
     assert (pdfrender.outfilepath ==
-            cache_path / 'media' / 'template_c775ca0d259d.pdf')
+            cache_path / 'media' / 'template_d8efb5a40bde.pdf')
 
     assert pdf2svg.use_cache and pdf2svg.use_media
     assert pdf2svg.infilepaths == [pdfrender.outfilepath]
     assert (pdf2svg.outfilepath ==
-            cache_path / 'media' / 'template_c775ca0d259d.svg')
+            cache_path / 'media' / 'template_d8efb5a40bde.svg')
 
     assert not copy.use_cache and pdf2svg.use_media
     assert copy.infilepaths == [pdf2svg.outfilepath]
     assert (copy.outfilepath ==
-            target_root / 'media' / 'template_c775ca0d259d.svg')
+            target_root / 'media' / 'template_d8efb5a40bde.svg')
 
     assert svgrender.status == 'ready'
     assert svgrender.build(complete=True) == 'done'
     assert (svgrender.outfilepath ==
-            target_root / 'media' / 'template_c775ca0d259d.svg')
+            target_root / 'media' / 'template_d8efb5a40bde.svg')
     assert svgrender.outfilepath.exists()

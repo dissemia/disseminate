@@ -116,10 +116,10 @@ def test_document_template_books_tufte(load_example):
                 html_root / 'media' / 'icons',
 
                 html_root / 'inept.html',  # files
-                html_root / 'media' / 'eq_6b1a39e86f33.svg',
-                html_root / 'media' / 'eq_95cdf31980fa.svg',
-                html_root / 'media' / 'eq_d98b71da63d9.svg',
-                html_root / 'media' / 'inept_599eeae484a5.svg',
+                html_root / 'media' / 'eq_540144aca54d.svg',
+                html_root / 'media' / 'eq_64f0a2d701c3.svg',
+                html_root / 'media' / 'eq_e7377ca643a1.svg',
+                html_root / 'media' / 'inept_87560c6686dd.svg',
                 html_root / 'media' / 'css' / 'base.css',
                 html_root / 'media' / 'css' / 'bootstrap.min.css',
                 html_root / 'media' / 'css' / 'default.css',
@@ -128,6 +128,7 @@ def test_document_template_books_tufte(load_example):
                 html_root / 'media' / 'icons' / 'menu_active.svg',
                 html_root / 'media' / 'icons' / 'menu_inactive.svg',
                 }
+    print(target_root / 'html')
     html_actual = set(html_root.glob('**/*'))
     assert html_key == html_actual
 
@@ -135,7 +136,7 @@ def test_document_template_books_tufte(load_example):
     tex_key = {tex_root / 'media',  # dirs
 
                tex_root / 'inept.tex',  # files
-               tex_root / 'media' / 'inept_599eeae484a5.pdf',
+               tex_root / 'media' / 'inept_87560c6686dd.pdf',
                }
     tex_actual = set(tex_root.glob('**/*'))
     assert tex_key == tex_actual

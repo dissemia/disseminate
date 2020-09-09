@@ -3,9 +3,9 @@ Utilities for builders and environments
 """
 import pathlib
 
+from .deciders.utils_hash import hash_items
 from ..paths import SourcePath, TargetPath
 from ..paths.utils import rename
-from ..utils.string import hashtxt
 
 
 def sort_key(parameter):
@@ -71,9 +71,7 @@ def generate_mock_parameters(env, parameters, project_root=None, subpath=None,
     # Generate a hash
     if gen_hash:
         # The hash is constructed from the parameters.
-        hash_value = hashtxt("".join(map(hashtxt,
-                                         sorted(map(str, parameters)))),
-                             truncate=12)
+        hash_value = hash_items(*parameters, sort=True)[:12]  # truncate hash
     else:
         hash_value = None
 

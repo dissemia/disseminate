@@ -101,7 +101,7 @@ def test_jinja_render_setup_without_outfilepath(env):
     assert len(render_build.parameters) == 11
     assert len(render_build.infilepaths) == 9
     assert (render_build.outfilepath ==
-            env.target_root / 'media' / 'template_812f3336a0a3.html')
+            env.target_root / 'media' / 'template_db4eb3246a48.html')
 
     # The same tag body gives the same hash
     tag = Tag(name='body', content='My body', attributes='', context=context)
@@ -109,7 +109,7 @@ def test_jinja_render_setup_without_outfilepath(env):
 
     render_build = JinjaRender(env, context=context, render_ext='.html')
     assert (render_build.outfilepath ==
-            env.target_root / 'media' / 'template_812f3336a0a3.html')
+            env.target_root / 'media' / 'template_db4eb3246a48.html')
 
     # A new content body produces a different hash
     tag = Tag(name='body', content='My new body', attributes='',
@@ -117,7 +117,7 @@ def test_jinja_render_setup_without_outfilepath(env):
     context['body'] = tag
     render_build = JinjaRender(env, context=context, render_ext='.html')
     assert (render_build.outfilepath ==
-            env.target_root / 'media' / 'template_98ff1b006859.html')
+            env.target_root / 'media' / 'template_590bc5076ae8.html')
 
     # 3. Test an example without an outfilepath or target specified. An
     #    assertion error is raised
@@ -219,7 +219,7 @@ def test_jinja_render(env):
     assert render_build.build(complete=True) == 'done'
     assert render_build.outfilepath.exists()
     assert (render_build.outfilepath.subpath ==
-            pathlib.Path('media') / 'template_98ff1b006859.html')
+            pathlib.Path('media') / 'template_590bc5076ae8.html')
     assert render_build.status == 'done'
 
     # A new builder does not require a new build.
@@ -239,7 +239,7 @@ def test_jinja_render(env):
     assert render_build.outfilepath.exists()
     assert str(render_build.outfilepath.target) == 'test'
     assert (render_build.outfilepath.subpath ==
-            pathlib.Path('media') / 'template_98ff1b006859.html')
+            pathlib.Path('media') / 'template_590bc5076ae8.html')
     assert render_build.status == 'done'
 
     # A new builder does not require a new build.

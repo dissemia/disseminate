@@ -5,7 +5,7 @@ import pathlib
 import hashlib
 
 
-def hash_items(*items, chunk_size=4096, hashfunc=hashlib.md5):
+def hash_items(*items, chunk_size=4096, hashfunc=hashlib.md5, sort=True):
     """Create a unique text string hash from the given item objects.
 
     Parameters
@@ -17,6 +17,9 @@ def hash_items(*items, chunk_size=4096, hashfunc=hashlib.md5):
         read the files in the given number of chunk bytes.
     hashfunc : Optional[func]
         The type of hash to use.
+    sort : Optional[bool]
+        If True, sort the items before calculating the hash. Enabling this
+        option ensures that the *items order does not change the hash.
 
     Returns
     -------
@@ -25,7 +28,7 @@ def hash_items(*items, chunk_size=4096, hashfunc=hashlib.md5):
     """
 
     # Create the hash function
-    hashobj = hashfunc()
+    hashes = list()
 
     for item in items:
         if isinstance(item, pathlib.Path):
@@ -35,12 +38,18 @@ def hash_items(*items, chunk_size=4096, hashfunc=hashlib.md5):
             else:
                 hashtxt = hash_file(item, chunk_size=chunk_size,
                                     hashfunc=hashfunc)
-            hashobj.update(hashtxt)
+            hashes.append(hashtxt)
         elif isinstance(item, bytes):
-            hashobj.update(item)
+            hashes.append(hashfunc(item).digest())
         else:
-            hashobj.update(str(item).encode())
+            hashes.append(hashfunc(str(item).encode()).digest())
 
+    if sort:
+        hashes = sorted(hashes)
+
+    hashobj = hashfunc()
+    for item in hashes:
+        hashobj.update(item)
     return hashobj.hexdigest()
 
 

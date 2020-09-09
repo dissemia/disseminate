@@ -10,11 +10,15 @@ def test_hash_items_simple_strings():
     """Test the hash_items function with simple strings."""
 
     # 1. Test string order
-    assert hash_items('one', 'two') == '5b9164ad6f496d9dee12ec7634ce253f'
-    assert hash_items('two', 'one') == '66058ec26cd62e957604145e726b0f0b'
+    assert (hash_items('one', 'two', sort=False) ==
+            '1397b7ee3222e3980d0d20f23a871b02')
+    assert (hash_items('two', 'one', sort=False) ==
+            'cf5ee7b5ea1bc2b55af82075798f5f54')
+    assert (hash_items('one', 'two', sort=True) ==
+            'cf5ee7b5ea1bc2b55af82075798f5f54')
 
     # 2. Test binary strings
-    assert hash_items('one', b'two') == '5b9164ad6f496d9dee12ec7634ce253f'
+    assert hash_items('one', b'two') == 'cf5ee7b5ea1bc2b55af82075798f5f54'
 
 
 def test_hash_items_txt_files(tmpdir):

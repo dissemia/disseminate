@@ -93,7 +93,7 @@ def test_saveaspdf_setup_without_outfilepath(env):
     asy2pdf = SaveAsyPdf(env=env, parameters=asystring, context=context)
 
     assert (asy2pdf.outfilepath ==
-            env.target_root / 'media' / 'test_64dffc6ac7c2.pdf')
+            env.target_root / 'media' / 'test_589ebe70585e.pdf')
 
 
 def test_asy2svg_setup_with_outfilepath(env):
@@ -155,7 +155,7 @@ def test_saveassvg_setup_without_outfilepath(env):
     asy2svg = SaveAsySvg(env=env, parameters=asystring, context=context)
 
     assert (asy2svg.outfilepath ==
-            env.target_root / 'media' / 'test_64dffc6ac7c2.svg')
+            env.target_root / 'media' / 'test_589ebe70585e.svg')
 
 
 def test_asy2pdf_build(env):

@@ -50,7 +50,7 @@ def test_save_temp_file_setup_without_outfilepath(env):
     assert save_build.parameters == ['my test']
 
     assert (save_build.outfilepath ==
-            env.target_root / 'media' / 'test_1488d34f91f2.test')
+            env.target_root / 'media' / 'test_431cdce841d9.test')
 
     # 3. Test an example with a src_filepath in the context
     context['src_filepath'] = SourcePath(project_root=env.project_root,
@@ -64,7 +64,7 @@ def test_save_temp_file_setup_without_outfilepath(env):
     assert save_build.parameters == ['my test']
 
     assert (save_build.outfilepath ==
-            env.target_root / 'media' / 'test/test_1488d34f91f2.test')
+            env.target_root / 'media' / 'test' / 'test_431cdce841d9.test')
 
 
 def test_save_temp_file_build(env):

@@ -20,7 +20,7 @@ def test_asy_invalid_html(doc):
 
     # Load the html
     html = img.html
-    assert html == '<img src="media/test_c838921f79c0.svg">\n'
+    assert html == '<img src="media/test_42424e473037.svg">\n'
 
     # Check the build
     context['targets'] |= {'html'}
@@ -46,7 +46,7 @@ def test_asy_inline_html(doc):
 
     # Check the rendered tag and that the asy and svg files were properly
     # created
-    assert img.html == '<img src="media/test_a270b9e4ed3f.svg">\n'
+    assert img.html == '<img src="media/test_afa49f1699c4.svg">\n'
 
     # Check the build
     html_builder = doc.context['builders']['.html']
@@ -110,10 +110,10 @@ def test_asy_attribute_inline_html(doc):
     # Check the rendered tag and that the asy and svg files were properly
     # created
     # The filename should not match the value without the attribute
-    assert img.html != '<img src="media/test_a270b9e4ed3f.svg">\n'
+    assert img.html != '<img src="media/test_afa49f1699c4.svg">\n'
 
     # A new filename with an attribute should be different
-    assert img.html == '<img src="media/test_8cf890d444f0.svg">\n'
+    assert img.html == '<img src="media/test_58d2cba4c837.svg">\n'
 
     # Check the build
     html_builder = doc.context['builders']['.html']
@@ -147,7 +147,7 @@ def test_asy_inline_tex(doc):
     # created. The filename is wrapped in curly braces to account for filenames
     # with periods and other special characters
     target_root = doc.target_root
-    img_filepath = target_root / 'tex' / 'media' / 'test_80940aa73734.pdf'
+    img_filepath = target_root / 'tex' / 'media' / 'test_1c56ea679f0d.pdf'
     suffix = img_filepath.suffix
     base = img_filepath.with_suffix('')
     filepath = "{{{base}}}{suffix}".format(base=base, suffix=suffix)
@@ -173,17 +173,17 @@ def test_asy_inline_target_order(doc):
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
 
-    tex_filepath = target_root / 'tex' / 'media' / 'test_35795736a89a.pdf'
+    tex_filepath = target_root / 'tex' / 'media' / 'test_63a3c6007dd1.pdf'
     suffix = tex_filepath.suffix
     base = tex_filepath.with_suffix('')
     filepath = "{{{base}}}{suffix}".format(base=base, suffix=suffix)
 
     assert img.tex == '\\includegraphics{{{}}}'.format(filepath)
-    assert img.html == '<img src="media/test_35795736a89a.svg">\n'
+    assert img.html == '<img src="media/test_63a3c6007dd1.svg">\n'
 
     # 2. Test html then tex
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
 
-    assert img.html == '<img src="media/test_35795736a89a.svg">\n'
+    assert img.html == '<img src="media/test_63a3c6007dd1.svg">\n'
     assert img.tex == '\\includegraphics{{{}}}'.format(filepath)
