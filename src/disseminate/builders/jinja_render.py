@@ -211,32 +211,34 @@ class JinjaRender(Builder):
     def outfilepath(self, value):
         self._outfilepath = value
 
-    def run_cmd(self, *args):
-        if self.future is None:
-            template = self.template()
-            outfilepath = self.outfilepath
+    # Note: Enable this function and comment out the build to run the
+    # render in the thread pool. This slows the run, however, by about 30-40%
+    # def run_cmd(self, *args):
+    #     if self.future is None:
+    #         template = self.template()
+    #         outfilepath = self.outfilepath
+    #
+    #         logging.debug("Rendering '{}' with Jinja2 "
+    #                       "'{}'".format(outfilepath, template))
+    #         future = executor.submit(run, template=template,
+    #                                  context=self.context,
+    #                                  outfilepath=outfilepath,
+    #                                  target=self.render_ext)
+    #         self.future = future
 
-            logging.debug("Rendering '{}' with Jinja2 "
-                          "'{}'".format(outfilepath, template))
-            future = executor.submit(run, template=template,
-                                     context=self.context,
-                                     outfilepath=outfilepath,
-                                     target=self.render_ext)
-            self.future = future
-
-    # def build(self, complete=False):
-    #     template = self.template()
-    #     context = self.context
-    #     outfilepath = self.outfilepath
-    #     if 'target' in context:
-    #         rendered_string = template.render(**context,
-    #                                           outfilepath=outfilepath)
-    #     else:
-    #         rendered_string = template.render(**context, target=self.render_ext,
-    #                                           outfilepath=outfilepath)
-    #     outfilepath.write_text(rendered_string)
-    #     self.build_needed(reset=True)
-    #     return self.status
+    def build(self, complete=False):
+        template = self.template()
+        context = self.context
+        outfilepath = self.outfilepath
+        if 'target' in context:
+            rendered_string = template.render(**context,
+                                              outfilepath=outfilepath)
+        else:
+            rendered_string = template.render(**context, target=self.render_ext,
+                                              outfilepath=outfilepath)
+        outfilepath.write_text(rendered_string)
+        self.build_needed(reset=True)
+        return self.status
 
     @staticmethod
     def runtime_success(future):
