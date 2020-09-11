@@ -12,7 +12,6 @@
 </head>
 <body>
   <div class="container">
-    {% include "default/menu.html" %}
     <h2>Signals Listings</h2>
     <div class="listing">
       <ol>
@@ -33,6 +32,7 @@
         {%- endfor -%}
       </ol>
     </div>
-</div>
+  </div>
+  {% include "server/footer.html" %}
 </body>
 </html>

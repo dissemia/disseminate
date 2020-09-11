@@ -36,7 +36,7 @@ def test_prev_heading_label_html(doctree, wait):
     prev2 = Prev(name='prev', content='prev', attributes='',
                  context=doc2.context)
     assert (prev2.html ==
-            '<a href="test1.html#sec:test1-dm-0" class="ref">0</a>')
+            '<a href="test.html#sec:test-dm-0" class="ref">0</a>')
 
     prev3 = Prev(name='prev', content='prev', attributes='',
                  context=doc3.context)
@@ -89,7 +89,7 @@ def test_prev_context_html(doctree, wait):
 
     assert doc1.context['prev'].html == ''
     assert (doc2.context['prev'].html ==
-            '<a href="test1.html#sec:test1-dm-0" class="ref">0</a>')
+            '<a href="test.html#sec:test-dm-0" class="ref">0</a>')
     assert (doc3.context['prev'].html ==
             '<a href="test2.html#sec:test2-dm-1" class="ref">1</a>')
 
@@ -159,10 +159,10 @@ def test_navigation_missing_target_html(doctree, wait):
     assert doc1.context['prev'].html == ''
     assert doc2.context['prev'].html == ''
     assert (doc3.context['prev'].html ==
-            '<a href="test1.html#sec:test1-dm-0" class="ref">0</a>')
+            '<a href="test.html#sec:test-dm-0" class="ref">0</a>')
 
 
-def test_pdflink(tmpdir):
+def test_pdflink(env):
     """Test the pdflink tag."""
 
     # 1. The 'tests/tags/toc_example1' directory contains three markup files:
@@ -171,9 +171,9 @@ def test_pdflink(tmpdir):
     #    The file1.dm has pdf has a target
     src_filepath = SourcePath(project_root='tests/tags/toc_example1',
                               subpath='file1.dm')
-    target_root = TargetPath(tmpdir)
-    doc = Document(src_filepath, target_root)
+    doc = Document(src_filepath, environment=env)
 
     # Create the pdflink tag
-    pdf = Pdflink(name='pdflink', content='', attributes='', context=doc.context)
+    pdf = Pdflink(name='pdflink', content='', attributes='',
+                  context=doc.context)
     assert pdf.html == '<a href="../../pdf/file1.pdf" class="ref">pdf</a>'

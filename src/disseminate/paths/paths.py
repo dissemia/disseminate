@@ -6,6 +6,7 @@ Classes for different kinds of paths.
 import pathlib
 import os
 import re
+import weakref
 
 
 re_dbl_slash = re.compile(r'(?<!\:)//')  # match '//' but not '://'
@@ -68,6 +69,54 @@ class SourcePath(object):
     def __deepcopy__(self, memo):
         return SourcePath(project_root=self.project_root, subpath=self.subpath)
 
+    def use_name(self, name):
+        """with_name(name) that returns a SourcePath.
+
+        A new method name is used since the flavor_cls method takes precedence.
+
+        Examples
+        --------
+        >>> p = SourcePath(project_root='/media', subpath='tests/fig1.png')
+        >>> p.use_name('fig2.png')
+        SourcePath('/media/tests/fig2.png')
+        >>> p.use_name('fig2.png').subpath
+        SourcePath('tests/fig2.png')
+        """
+        return SourcePath(project_root=self.project_root,
+                          subpath=self.subpath.with_name(name))
+
+    def use_suffix(self, suffix):
+        """with_suffix(suffix) that returns a SourcePath.
+
+        A new method name is used since the flavor_cls method takes
+        precedence.
+
+        Examples
+        --------
+        >>> p = SourcePath(project_root='/media', subpath='tests/fig1.png')
+        >>> p.use_suffix('.pdf')
+        SourcePath('/media/tests/fig1.pdf')
+        >>> p.use_name('fig1.pdf').subpath
+        SourcePath('tests/fig1.pdf')
+        """
+        return SourcePath(project_root=self.project_root,
+                          subpath=self.subpath.with_suffix(suffix))
+
+    def use_subpath(self, subpath):
+        """Returns a SourcePath with the subpath replaced with the given string
+        or path.
+
+        Examples
+        --------
+        >>> p = SourcePath(project_root='/media', subpath='tests/fig1.png')
+        >>> p.use_subpath('text.txt')
+        SourcePath('/media/text.txt')
+        >>> p.use_subpath('text.txt').subpath
+        SourcePath('text.txt')
+        """
+        return SourcePath(project_root=self.project_root,
+                          subpath=subpath)
+
 
 class TargetPath(object):
     """A path for a file in a target directory that keeps track of the
@@ -127,18 +176,18 @@ class TargetPath(object):
         return TargetPath(target_root=self.target_root, target=self.target,
                           subpath=self.subpath)
 
-    def get_url(self, context=None):
+    def get_url(self, context=None, target=None):
         """Construct the url for the path."""
         url = None
 
         # See if a relative url is requested and get that if it is
         if context is not None and context.get('relative_links', True):
-            url = self._get_relative_url(context)
+            url = self._get_relative_url(context, target)
 
         # If a relative url could not be produced or one was not wanted, get
         # an absolute url.
         if url is None:
-            url = self._get_absolute_url(context)
+            url = self._get_absolute_url(context, target)
 
         # Cleanup the url by  and double slashes
         url = url.rstrip('/')  # stripping leading slashes
@@ -146,19 +195,20 @@ class TargetPath(object):
 
         return url
 
-    def _get_relative_url(self, context):
+    def _get_relative_url(self, context, target=None):
         """Construct the relative url for the path."""
-        document = context.document if hasattr(context, 'document') else None
-        if document is None:
-            return None
-
         # Get the target_filepath. Prepend a '.' if needed. ex: '.html'
-        target = str(self.target)
+        target = str(target or self.target)
         target = '.' + target if not target.startswith('.') else target
 
         # Get the target_filepath and target_path
-        target_filepath = document.target_filepath(target)
-        target_path = target_filepath.parent
+        document = context.get('document', None)
+        document = document() if isinstance(document, weakref.ref) else document
+        if document is not None:
+            target_filepath = document.target_filepath(target)
+            target_path = target_filepath.parent
+        else:
+            return None
 
         # Get the relative path
         relpath = os.path.relpath(self, target_path)
@@ -166,11 +216,11 @@ class TargetPath(object):
         # Construct a relative url relative to the target_path
         return str(relpath)
 
-    def _get_absolute_url(self, context):
+    def _get_absolute_url(self, context, target=None):
         """Construct the absolute url for the path."""
         # Get the parts of paths that will be used
         target_root = str(self.target_root).strip('.')
-        target = str(self.target).strip('.')
+        target = str(target or self.target).strip('.')
         subpath = str(self.subpath).strip('.')
 
         url_str = (context['base_url'] if isinstance(context, dict) and
@@ -178,3 +228,55 @@ class TargetPath(object):
 
         return url_str.format(target_root=target_root, target=target,
                               subpath=subpath)
+
+    def use_name(self, name):
+        """with_name(name) that returns a TargetPath.
+
+        A new method name is used since the flavor_cls method takes
+        precedence.
+
+        Examples
+        --------
+        >>> p = TargetPath(target_root='/media', subpath='tests/fig1.png')
+        >>> p.use_name('fig2.png')
+        TargetPath('/media/tests/fig2.png')
+        >>> p.use_name('fig2.png').subpath
+        TargetPath('tests/fig2.png')
+        """
+        return TargetPath(target_root=self.target_root,
+                          target=self.target,
+                          subpath=self.subpath.with_name(name))
+
+    def use_suffix(self, suffix):
+        """with_suffix(suffix) that returns a TargetPath.
+
+        A new method name is used since the flavor_cls method takes
+        precedence.
+
+        Examples
+        --------
+        >>> p = TargetPath(target_root='/media', subpath='tests/fig1.png')
+        >>> p.use_suffix('.pdf')
+        TargetPath('/media/tests/fig1.pdf')
+        >>> p.use_suffix('.pdf').subpath
+        TargetPath('tests/fig1.pdf')
+        """
+        return TargetPath(target_root=self.target_root,
+                          target=self.target,
+                          subpath=self.subpath.with_suffix(suffix))
+
+    def use_subpath(self, subpath):
+        """Returns a TargetPath with the subpath replaced with the given string
+        or path.
+
+        Examples
+        --------
+        >>> p = TargetPath(target_root='/media', subpath='tests/fig1.png')
+        >>> p.use_subpath('text.txt')
+        TargetPath('/media/text.txt')
+        >>> p.use_subpath('text.txt').subpath
+        TargetPath('text.txt')
+        """
+        return TargetPath(target_root=self.target_root,
+                          target=self.target,
+                          subpath=subpath)

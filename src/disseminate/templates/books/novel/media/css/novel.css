@@ -1,3 +1,16 @@
+.container {
+  width: 840px;
+  padding: 1rem 4rem 1rem 5rem;
+}
+
+article {
+  width: 97%;
+}
+
+label.menu-toggle {
+  margin-left: -4.2rem;
+}
+
 h2 .label {
   color: inherit;
   font-variant: small-caps;

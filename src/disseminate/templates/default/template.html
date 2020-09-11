@@ -16,10 +16,10 @@
   <meta name="template" content="{{ template }}">
 {%- endif %}
 {%- block css %}
-  <link rel="stylesheet" href="/media/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-  <link rel="stylesheet" href="/media/css/base.css">
-  <link rel="stylesheet" href="/media/css/default.css">
-  <link rel="stylesheet" href="/media/css/pygments.css">
+  <link rel="stylesheet" href="{{ "/media/css/bootstrap.min.css" | rewrite_path }}">
+  <link rel="stylesheet" href="{{ "/media/css/base.css" | rewrite_path }}">
+  <link rel="stylesheet" href="{{ "/media/css/default.css" | rewrite_path }}">
+  <link rel="stylesheet" href="{{ "/media/css/pygments.css" | rewrite_path }}">
 {% endblock %}
 {%- block extra_css %}
 {%- endblock %}

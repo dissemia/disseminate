@@ -5,13 +5,12 @@ from disseminate.document import Document
 from disseminate.paths import SourcePath, TargetPath
 
 
-def test_reports_basic_tag_availability(tmpdir, wait):
+def test_reports_basic_tag_availability(doc, wait):
     """Test the unavailability of Part tags for basic reports."""
 
     # 1. Write a source file and create a document
     # Write a source file and create a document
-    src_filepath = SourcePath(project_root=tmpdir, subpath='test.dm')
-    target_root = TargetPath(target_root=tmpdir)
+    src_filepath = doc.src_filepath
 
     # Part and chapter tags should not be available to reports
     for name in ('part', 'chapter'):
@@ -24,8 +23,7 @@ def test_reports_basic_tag_availability(tmpdir, wait):
         @{name}{{My first {name}}}
         """.format(name=name))
 
-        doc = Document(src_filepath=src_filepath, target_root=target_root)
-        doc.render()
+        doc.build()
 
         # Check the rendered html. Shouldn't be rendered as an h1/h2/h3 element
         html_targetfile = doc.targets['.html']
@@ -55,8 +53,7 @@ def test_reports_basic_tag_availability(tmpdir, wait):
         @{name}{{My first {name}}}
         """.format(name=name))
 
-        doc = Document(src_filepath=src_filepath, target_root=target_root)
-        doc.render()
+        doc.build()
 
         # Check the rendered html. Should be rendered as an h1/h2/h3 element
         html_targetfile = doc.targets['.html']

@@ -6,21 +6,6 @@ The label base class for the label manager.
 class Label(object):
     """A label used for referencing.
 
-    Labels keep track of modification times (mtimes). The mtime may be updated
-    if it's later than the mtime of the document that owns the label_manager
-    that owns this label.
-
-    The mtimes are tracked because updates to labels may require an
-    update of a rendered document. For example, a project may have two
-    documents, each owning a label. If the first document (and its label) is
-    updated, and the second document depends on this label, then the second
-    document should be re-rendered if the label has changed. However, if that
-    label hasn't changed, then the second document should not be re-rendered.
-
-    Alternatively, a label, like a chapter label, owned by a document that has
-    not changed might get reordered, and its mtime should be later than the
-    source document's mtime. This will trigger a re-rendering of the document.
-
     Parameters
     ----------
     doc_id : str
@@ -33,9 +18,6 @@ class Label(object):
         The kind of the label is a tuple that identifies the kind of a label
         from least specific to most specific. ex: ('figure',), ('chapter',),
         ('equation',), ('heading', 'chapter',)
-    mtime : Optional[float]
-        The modification time of the source document that created this label,
-        or the modification time for changes to the label.
     order : Optional[Tuple[int]]
         The order/number of the label. The order is a tuple of integers with a
         length that matches the 'kind' tuple. Each entry represents the
@@ -55,16 +37,15 @@ class Label(object):
     kind = None
     order = None
 
-    def __init__(self, doc_id, id, kind, mtime=None, order=None):
+    def __init__(self, doc_id, id, kind, order=None):
         self.doc_id = doc_id
         self.id = id
-        self.mtime = mtime
         self.order = order
 
         # Wrap the kind in a tuple, if it's a string
         self.kind = (kind,) if isinstance(kind, str) else kind
 
-    def __repr__(self):
+    def __repr__(self, **params):
         cls_name = self.__class__.__name__
         if all(isinstance(i, tuple) or isinstance(i, list)
                for i in (self.kind, self.order)):
@@ -73,8 +54,36 @@ class Label(object):
                                    for k, o in zip(self.kind, self.order)])
         else:
             kind_str = ''
-        return "{}(doc_id: '{}', id: '{}'{})".format(cls_name, self.doc_id,
+        msg = "{}(doc_id: '{}', id: '{}'{}".format(cls_name, self.doc_id,
                                                      self.id, kind_str)
+        if params:
+            attr_str = ", ".join(
+                "{}: '{}'".format(k, v) for k, v in sorted(params.items()))
+            msg += " " + attr_str + ")"
+        else:
+            msg += ")"
+        return msg
+
+    def __lt__(self, other):
+        return (self.doc_id, self.id) < (other.doc_id, other.id)
+
+    def __le__(self, other):
+        return (self.doc_id, self.id) <= (other.doc_id, other.id)
+
+    def __gt__(self, other):
+        return (self.doc_id, self.id) > (other.doc_id, other.id)
+
+    def __ge__(self, other):
+        return (self.doc_id, self.id) >= (other.doc_id, other.id)
+
+    def __eq__(self, other):
+        return (self.doc_id, self.id) == (other.doc_id, other.id)
+
+    def __ne__(self, other):
+        return (self.doc_id, self.id) != (other.doc_id, other.id)
+
+    def __hash__(self):
+        return hash((self.__class__.__name__, self.doc_id, self.id))
 
     @property
     def number(self):
@@ -83,15 +92,3 @@ class Label(object):
             return self.order[-1]
         else:
             return None
-
-    @property
-    def mtime(self):
-        return getattr(self, '_mtime', None)
-
-    @mtime.setter
-    def mtime(self, value):
-        """An mtime setter to make sure the modification time only increases"""
-        current_value = getattr(self, '_mtime', None)
-        if (not isinstance(current_value, float) or
-           (isinstance(value, float) and value > current_value)):
-            setattr(self, '_mtime', value)

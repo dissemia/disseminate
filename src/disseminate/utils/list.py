@@ -1,6 +1,7 @@
 """
 Utilities for lists.
 """
+import hashlib
 
 
 def uniq(l, key=None):
@@ -97,6 +98,25 @@ def unwrap(l):
     return new_l
 
 
+def flatten(l):
+    """Flatten a list of lists.
+
+    Examples
+    --------
+    >>> list(flatten([1, 2, 3]))
+    [1, 2, 3]
+    >>> list(flatten([[1, 2, 3], [4, 5, 6]]))
+    [1, 2, 3, 4, 5, 6]
+    >>> list(flatten([[1,2], [3, [4, 5], 6]]))
+    [1, 2, 3, 4, 5, 6]
+    """
+    for element in l:
+        if isinstance(element, list):
+            yield from flatten(element)
+        else:
+            yield element
+
+
 def chunks(l, N):
     """Return a generator in chunks of N.
 
@@ -114,3 +134,22 @@ def chunks(l, N):
     """
     for i in range(0, len(l), N):
         yield l[i:i + N]
+
+
+def md5hash(l):
+    """Generates a hash of a list or tuple.
+
+    Examples
+    --------
+    >>> md5hash(('a', 'b', 1))
+    '68b6a776378decbb4a79cda89087c4ce'
+    >>> md5hash(('a', 'b', '1'))
+    '68b6a776378decbb4a79cda89087c4ce'
+    >>> md5hash(['a', [1, 'b'], 'c'])
+    '1c81219649292a2ef9240fc997353078'
+    >>> md5hash(['a', ['1', 'b'], 'c'])
+    '1c81219649292a2ef9240fc997353078'
+    """
+    s = ''.join(md5hash(i) if isinstance(i, list) or isinstance(i, tuple)
+                else str(i) for i in l).encode()
+    return hashlib.md5(s).hexdigest()

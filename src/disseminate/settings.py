@@ -19,12 +19,6 @@ document_max_size = 204800  # 200kB
 #: exist
 create_dirs = True
 
-#: A set of extensions that are compiled from other extensions. The keys are
-#: the compiled extension and the values are the extensions from which these
-#: extensions are compiled.
-compiled_exts = {'.pdf': '.tex',
-                 }
-
 #: HTTP Server
 #: -----------
 
@@ -96,6 +90,7 @@ default_context = {
     # Options related to links
     'relative_links': True,
     'base_url': '/{target}/{subpath}',
+    'media_path': 'media',
 
     # Process tags for the following entries in a context
     # (see processors/process_context_tags.py)
@@ -104,9 +99,6 @@ default_context = {
     # Process paragraphs for tags with the following names
     # (see tags/paragraphs.py)
     'process_paragraphs': {body_attr, "featurebox"},
-
-    # The filename for additional context header files
-    'additional_header_filename': 'context.txt',
 
     # The following are strings to present labels. They are substituted with
     # values from their respective label and parsed in disseminate format.
@@ -159,6 +151,9 @@ default_context = {
         'section': {'subsection', 'subsubsection'},
         'subsection': {'subsubsection'},
     },
+
+    # Set the separator between a doc_id and label_id when identifying a label
+    'label_sep': '::',
 
     # The following tags are unavailable. This is a string so that contexts
     # from templates can replace these values. See
@@ -219,7 +214,7 @@ module_only = False
 #: the paths for templates in disseminate modules
 module_template_paths = [pathlib.Path(__file__).parent / 'templates']
 
-#: Dependency Defaults
+#: Builder Defaults
 #: -------------------
 
 #: A series of allowed tracked extensions for each target type with information
@@ -234,6 +229,12 @@ tracked_deps = {
     # css files can include .css files
     '.css': ['.css', ]
     }
+
+#: The default decider class
+default_decider = 'Md5Decider'
+
+#: The default number of seconds before a subprocess is timedout.
+default_timeout = 15
 
 #: Tags
 #: ----
@@ -374,6 +375,8 @@ tex_cmd_arguments = {'textbf': empty,
                      'hfill': empty,
                      'pageref': (StringPositionalValue,),
                      'href': (StringPositionalValue,),
+
+                     'detokenize': empty,
                      }
 
 tex_cmd_optionals = {'includegraphics': ('width', 'height'),

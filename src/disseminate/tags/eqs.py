@@ -1,15 +1,12 @@
 """
 Tags to render equations
 """
-from copy import copy
-
-from .img import RenderedImg
-from .exceptions import TagError
+from .img import Img
 from .utils import content_to_str
 from ..formats import tex_cmd, tex_env
 
 
-class Eq(RenderedImg):
+class Eq(Img):
     """The inline equation tag
 
     Render an equation in native LaTeX (.tex targets) or into a rendered
@@ -31,7 +28,7 @@ class Eq(RenderedImg):
 
     aliases = ('term', 'termb')
     active = True
-    input_format = '.tex'
+    in_ext = '.render'
 
     process_content = True
 
@@ -45,9 +42,14 @@ class Eq(RenderedImg):
 
     _block_equation = False
 
+    #: Holds a dict of sub-context dicts to be used in rendering the equation
+    #: to a file. This tag owns these sub-contexts.
+    _target_context = None
+
     def __init__(self, name, content, attributes, context,
                  block_equation=False):
         self.block_equation = block_equation
+        self._target_context = dict()
 
         super().__init__(name=name, content=content, attributes=attributes,
                          context=context)
@@ -67,33 +69,13 @@ class Eq(RenderedImg):
     def block_equation(self, value):
         self._block_equation = value
 
-    def prepare_content(self, content=None, context=None):
-        """Render the content in LaTeX into a valid .tex file."""
-        context = context or self.context
-
-        # Get the renderer for the equation
-        if ('renderers' not in context or
-           'equation' not in context['renderers']):
-            raise TagError("Missing equation renderer in the document context")
-        renderer = context['renderers']['equation']
-
-        # Get the unspecified arguments
-        # FIXME: content or tex_fmt
-        content = self.tex_fmt(mathmode=False)
-        context = context if context is not None else context
-
-        # Make a copy of the context and add the content as the 'body' entry.
-        context_cp = copy(context)
-        context_cp['body'] = content
-        kwargs = dict()
-
-        return renderer.render(context=context_cp, target='.tex', **kwargs)
-
-    def html_fmt(self, content=None, attributes=None, level=1):
+    def html_fmt(self, content=None, attributes=None, context=None, level=1):
+        # Create a context for the render. This context is owned by this
+        # tag
         attrs = attributes or self.attributes.copy()
 
-        # Crop equation images created by the dependency manager. This removes
-        # white space around the image so that the equation images.
+        # Crop equation images created by the dependency manager. This
+        # removes white space around the image so that the equation images.
         # Note: This crop command should not cut off baselines such that
         # equation images won't line up properly with the surrounding text.
         # ex: H vs Hy
@@ -103,10 +85,21 @@ class Eq(RenderedImg):
             attrs['class'] = 'eq blockeq'
         else:
             attrs['class'] = 'eq'
-        return super(Eq, self).html_fmt(content=content, attributes=attrs,
-                                        level=level)
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+        if context is None and 'html' not in self._target_context:
+            # Create a special context for this tag specifically. This tag
+            # will own this context
+            context = self.context.filter(['paths', 'builders'])
+            context['eq'] = self
+            context['template'] = 'default/eq'
+            self._target_context['html'] = context
+
+        context = context or self._target_context['html']
+        return super(Eq, self).html_fmt(content=content, attributes=attrs,
+                                        context=context, level=level)
+
+    def tex_fmt(self, content=None, attributes=None, mathmode=False,
+                context=None, level=1):
         # Retrieve unspecified arguments
         attributes = attributes or self.attributes
         content = content or self.content

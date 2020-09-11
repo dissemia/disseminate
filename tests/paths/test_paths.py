@@ -1,6 +1,7 @@
 """
 Tests for Paths objects.
 """
+import pathlib
 import copy
 
 from disseminate.paths import SourcePath, TargetPath
@@ -62,7 +63,7 @@ def test_path_filesystem(tmpdir):
 
 
 def test_path_empty_attributes():
-    """Test the behavior of the ProjectPath and TargetPath with empty optional
+    """Test the behavior of the SourcePath and TargetPath with empty optional
     arguments."""
     src_path = SourcePath(project_root='src')
     assert str(src_path) == 'src'

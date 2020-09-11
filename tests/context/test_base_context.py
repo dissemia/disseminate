@@ -463,3 +463,27 @@ def test_context_replace(context_cls):
 
         assert parent['targets'] == ['.html']
         assert child['targets'] == ['.pdf', '.html']  # appended by default
+
+
+def test_context_filter(context_cls):
+    """Test the BaseContext filter method.
+    """
+
+    # Setup the contexts
+    parent_context = context_cls(a_list=[1, 2, 3], b=2, c='c', d={'e': 4})
+    context = context_cls(parent_context=parent_context)
+
+    # 1. Try immutable entries
+    copy = context.filter(['b', 'c'])
+    assert copy.__class__ == context.__class__
+    assert len(copy) == 2
+    assert copy['b'] == 2
+    assert copy['c'] == 'c'
+
+    # 2. Try mutable entries. These should be copied
+    copy = context.filter(['a_list', 'd'])
+    assert len(copy) == 2
+    assert copy['a_list'] == context['a_list']
+    assert id(copy['a_list']) != id(context['a_list'])
+    assert copy['d'] == context['d']
+    assert id(copy['d']) != id(context['d'])

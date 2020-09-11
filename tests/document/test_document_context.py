@@ -1,9 +1,18 @@
 """
 Tests the DocumentContext class.
 """
+from pathlib import Path
+
 from disseminate import SourcePath, TargetPath
-from disseminate.document import DocumentContext, Document
-from disseminate.tags import Tag, TagFactory
+from disseminate.document import DocumentContext
+from disseminate.tags import TagFactory
+
+
+# Setup example paths
+ex4_root = Path("tests") / "document" / "examples" / "ex4" / "src"
+ex4_subpath = Path("file.dm")
+ex7_root = Path("tests") / "document" / "examples" / "ex7" / "src"
+ex7_subpath = Path("file1.dm")
 
 
 # A DummyDocument class
@@ -27,7 +36,6 @@ def test_document_context_basic_inheritence(context_cls, tmpdir):
                       'project_root': SourcePath('tests/document/example1'),
                       'target_root': TargetPath(tmpdir),
                       'label_manager': Mock(),
-                      'dependency_manager': Mock(),
                       }
     parent_context = context_cls(**parent_context)
 
@@ -45,15 +53,11 @@ def test_document_context_basic_inheritence(context_cls, tmpdir):
         assert context['target_root'] == parent_context['target_root']
         assert context['document']() == doc  # dereference weakref
         assert context['label_manager'] == parent_context['label_manager']
-        assert (context['dependency_manager'] ==
-                parent_context['dependency_manager'])
 
         # Check that the persistent objects, like the label_manager, are the
         # *same* object
         assert (id(context['label_manager']) ==
                 id(parent_context['label_manager']))
-        assert (id(context['dependency_manager']) ==
-                id(parent_context['dependency_manager']))
 
         # Check items that *should not* be inherited
         assert 'paths' in context.do_not_inherit
@@ -74,45 +78,34 @@ def test_document_context_basic_inheritence(context_cls, tmpdir):
     test_context_entries(context)
 
 
-def test_document_context_simple_documents(tmpdir):
+def test_document_context_simple_documents(load_example):
     """Test the preservation of the parent context with subdocuments."""
-    src_filepath = SourcePath(project_root='tests/document/example4/src',
-                              subpath='file.dm')
-    target_root = TargetPath(target_root=tmpdir)
-
     # Load example4. It has a main document (file.dm)
-    doc = Document(src_filepath, target_root)
+    doc = load_example(ex4_root / ex4_subpath)
     label_manager = doc.label_manager
-    dependency_manager = doc.dependency_manager
 
     assert label_manager is not None
-    assert dependency_manager is not None
 
     def test_context_entries(doc):
         context = doc.context
         # Check the entries that should be inherited by the parent
-        assert context['src_filepath'] == src_filepath
-        assert context['project_root'] == src_filepath.project_root
-        assert context['target_root'] == target_root
+        assert context['src_filepath'] == doc.src_filepath
+        assert context['project_root'] == doc.src_filepath.project_root
+        assert context['target_root'] == doc.target_root
         assert context['document']() == doc  # dereference weakref
         assert context['root_document']() == doc  # dereference weakref
         assert context['doc_id'] == doc.doc_id
-
         assert context['label_manager'] == label_manager
-        assert context['dependency_manager'] == dependency_manager
 
         # Check that the persistent objects, like the label_manager, are the
         # *same* object
-        assert (id(context['label_manager']) ==
-                id(label_manager))
-        assert (id(context['dependency_manager']) ==
-                id(dependency_manager))
+        assert id(context['label_manager']) == id(label_manager)
 
         # Check items that *should not* be inherited
         assert 'paths' in context.do_not_inherit
 
         assert 'paths' in context
-        assert src_filepath.project_root in context['paths']
+        assert doc.src_filepath.project_root in context['paths']
 
     # Test the context
     test_context_entries(doc)
@@ -123,49 +116,41 @@ def test_document_context_simple_documents(tmpdir):
 
     # Load example7. It has a main document (file1.dm) and 1 subdocuments
     # (sub1/file11.dm), which has its own subdocument (subsub1/file111.dm)
-    src_filepath = SourcePath(project_root='tests/document/example7/src',
-                              subpath='file1.dm')
-    target_root = TargetPath(tmpdir)
-    doc = Document(src_filepath, target_root)
+    doc = load_example(ex7_root / ex7_subpath)
     label_manager = doc.label_manager
-    dependency_manager = doc.dependency_manager
 
     assert label_manager is not None
-    assert dependency_manager is not None
 
     def test_context_entries(doc):
         context = doc.context
         # Check the entries that should be inherited by the parent
-        assert context['src_filepath'] == src_filepath
-        assert context['project_root'] == src_filepath.project_root
-        assert context['target_root'] == target_root
+        assert context['src_filepath'] == doc.src_filepath
+        assert context['project_root'] == doc.src_filepath.project_root
+        assert context['target_root'] == doc.target_root
         assert context['document']() == doc  # dereference weakref
         assert context['root_document']() == doc  # dereference weakref
 
         assert context['label_manager'] == label_manager
-        assert context['dependency_manager'] == dependency_manager
 
         # Check that the persistent objects, like the label_manager, are the
         # *same* object
-        assert (id(context['label_manager']) ==
-                id(label_manager))
-        assert (id(context['dependency_manager']) ==
-                id(dependency_manager))
+        assert id(context['label_manager']) == id(label_manager)
 
         # Check items that *should not* be inherited
         assert 'paths' in context.do_not_inherit
 
         assert 'paths' in context
-        assert src_filepath.project_root in context['paths']
+        assert doc.src_filepath.project_root in context['paths']
 
         # Test the subdocuments
         subdocs = doc.documents_list(only_subdocuments=True, recursive=True)
 
         assert len(subdocs) == 2
-        src_filepath1 = SourcePath(project_root='tests/document/example7/src',
-                                   subpath='sub1/file11.dm')
-        src_filepath2 = SourcePath(project_root='tests/document/example7/src',
-                                   subpath='sub1/subsub1/file111.dm')
+        src_filepath1 = SourcePath(project_root=ex7_root,
+                                   subpath=Path('sub1') / 'file11.dm')
+        src_filepath2 = SourcePath(project_root=ex7_root,
+                                   subpath=(Path('sub1') / 'subsub1' /
+                                            'file111.dm'))
         assert subdocs[0].src_filepath == src_filepath1
         assert subdocs[1].src_filepath == src_filepath2
 
@@ -193,14 +178,11 @@ def test_document_context_nested_load(doc):
     assert doc.context['label_fmts']['heading'] == "My heading @label.title "
 
 
-def test_document_context_is_valid(tmpdir):
+def test_document_context_is_valid(load_example):
     """Test the is_valid method for document contexts."""
-    src_filepath = SourcePath(project_root='tests/document/example4/src',
-                              subpath='file.dm')
-    target_root = TargetPath(target_root=tmpdir)
 
     # Load example4. It has a main document (file.dm)
-    doc = Document(src_filepath, target_root)
+    doc = load_example(ex4_root / ex4_subpath)
     context = doc.context
 
     # The initial context is valid.
@@ -271,3 +253,58 @@ def test_document_context_tag_inheritance(context_cls):
     assert id(child['toc']) != id(toc)  # a new tag was created
     assert type(child['toc']) == type(toc)  # of the same type
     assert child['toc'].content == 'heading expanded'  # different contents
+
+
+def test_document_context_reset(doc):
+    """Test that the document context is properly reset when loading different
+    templates."""
+
+    # Try an article
+    doc.src_filepath.write_text("""
+    ---
+    template: articles/basic
+    ---
+    """)
+    doc.load()
+    assert doc.context['template'] == 'articles/basic'
+    context_article = doc.context.copy()
+
+    # Try a report
+    doc.src_filepath.write_text("""
+    ---
+    template: reports/basic
+    ---
+    """)
+    doc.load()
+    assert doc.context['template'] == 'reports/basic'
+
+    # Revert to an article, and make sure the context matches
+    doc.src_filepath.write_text("""
+    ---
+    template: articles/basic
+    ---
+    """)
+    doc.load()
+    assert doc.context['template'] == 'articles/basic'
+
+    all_keys = doc.context.keys() | context_article.keys()
+    assert id(doc.context) != id(context_article)  # different context objs
+    assert doc.context.keys() == all_keys  # keys match
+    assert context_article.keys() == all_keys  # keys match
+
+    for key in all_keys:
+        # Define the match function
+        if key == 'builders':
+            # Match the builder types
+            match = lambda v1, v2: ({k: type(v) for k, v in v1.items()} ==
+                                    {k: type(v) for k, v in v2.items()})
+        elif key == 'mtime':
+            # New mtime is later than the first
+            match = lambda v1, v2: v2 >= v1
+        else:
+            match = lambda v1, v2: v1 == v2
+
+        v1 = context_article[key]
+        v2 = doc.context[key]
+
+        assert match(v1, v2)

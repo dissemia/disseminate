@@ -1,26 +1,26 @@
 """
 Signals for label events
 """
+from .label_manager import LabelManager
 from ..signals import signal
 
 
-document_deleted = signal('document_deleted')
+document_onload = signal('document_onload')
 
 
-@document_deleted.connect_via(order=1000)
-def deregister_labels(document):
-    """A signal subscriber for removing labels when a document is deleted"""
+@document_onload.connect_via(order=1050)
+def reset_label_manager(context, **kwargs):
+    """Reset the label manager in the context on document load.
 
-    # Get the doc_id and label_manager for the document being destroyed
-    context = document.context
-    doc_id = context.get('doc_id')
-    label_manager = context.get('label_manager')
+    This should be done before the text of the document is loaded in the
+    document object.
+    """
+    # If no label manager is loaded, then this is the root context. Create a
+    # label manager
+    label_manager = context.setdefault('label_manager',
+                                       LabelManager(root_context=context))
 
-    # Remove labels associated with the doc_id
-    if doc_id is not None and label_manager is not None:
-        labels_to_keep = [label for label in label_manager.labels
-                          if label.doc_id != doc_id]
-
-        # move the labels to keep back to the label_manager
-        label_manager.labels.clear()
-        label_manager.labels += labels_to_keep
+    # Remove labels for this document, so that new labels can be populated
+    doc_id = context.get('doc_id', None)
+    if doc_id is not None:
+        label_manager.reset(doc_ids=doc_id)

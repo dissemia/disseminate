@@ -1,15 +1,18 @@
 import copy
-import pytest
 import io
 import os
 import shutil
 from time import sleep
 from collections import namedtuple
+import pathlib
+
+import pytest
 
 from disseminate.context import BaseContext
 from disseminate.attributes import Attributes
 from disseminate.paths import SourcePath, TargetPath
 from disseminate.document import Document
+from disseminate.builders import Environment
 from disseminate.server.server import create_app
 
 
@@ -50,13 +53,6 @@ def wait():
 
 
 @pytest.fixture(scope='function')
-def context_cls():
-    """Returns a copy of the context class."""
-    CopyContext = copy.deepcopy(BaseContext)
-    return CopyContext
-
-
-@pytest.fixture(scope='function')
 def attributes_cls():
     """Returns a copy of the attributes class."""
     CopyAttributes = copy.deepcopy(Attributes)
@@ -71,28 +67,50 @@ def mocktag_cls():
     return MockTag
 
 
-@pytest.fixture(scope='function')
-def doc(tmpdir):
-    """Returns a test document"""
+@pytest.fixture
+def env_cls():
+    """The build environment class"""
+    return Environment
+
+
+@pytest.fixture
+def env(tmpdir):
+    """A build environment"""
     # Setup the paths
+    tmpdir = pathlib.Path(tmpdir)
+    target_root = TargetPath(target_root=tmpdir)
     src_filepath = SourcePath(project_root=tmpdir, subpath='test.dm')
-    target_root = TargetPath(target_root=tmpdir)
+    src_filepath.write_text("""
+    ---
+    targets: html, tex, pdf
+    ---
+    """)
 
-    # Create the source file
-    src_filepath.touch()
+    # Create a new environment so that context is stored on the env instead as
+    # weakref (default)
+    class TestEnvironment(Environment):
+        context = None
 
-    # Create and return the document
-    return Document(src_filepath=src_filepath, target_root=target_root)
+    env = TestEnvironment(src_filepath=src_filepath, target_root=target_root)
+    return env
 
 
 @pytest.fixture(scope='function')
-def doctree(tmpdir):
+def doc(env):
+    """Returns a test document"""
+    return env.root_document
+
+
+@pytest.fixture(scope='function')
+def doctree(env):
     """Returns a document that is a document tree with 2 sub-documents."""
+    root_doc = env.root_document
+    project_root = env.project_root
+
     # Setup the paths
-    src_filepath1 = SourcePath(project_root=tmpdir, subpath='test1.dm')
-    src_filepath2 = SourcePath(project_root=tmpdir, subpath='test2.dm')
-    src_filepath3 = SourcePath(project_root=tmpdir, subpath='test3.dm')
-    target_root = TargetPath(target_root=tmpdir)
+    src_filepath1 = root_doc.src_filepath
+    src_filepath2 = SourcePath(project_root=project_root, subpath='test2.dm')
+    src_filepath3 = SourcePath(project_root=project_root, subpath='test3.dm')
 
     # Create the source file
     src_filepath1.write_text("""
@@ -105,13 +123,39 @@ def doctree(tmpdir):
     src_filepath2.touch()
     src_filepath3.touch()
 
-    # Create and return the document
-    return Document(src_filepath=src_filepath1, target_root=target_root)
+    # Reload and return the document
+    root_doc.load()
+    return root_doc
 
 
 @pytest.fixture(scope='function')
 def doc_cls():
     return Document
+
+
+@pytest.fixture(scope='function')
+def context(doc):
+    return doc.context
+
+
+@pytest.fixture(scope='function')
+def context_cls():
+    """Returns a copy of the context class."""
+    CopyContext = copy.deepcopy(BaseContext)
+    return CopyContext
+
+
+@pytest.fixture
+def load_example(env_cls, tmpdir):
+    """Return a function that returns a document from an example path"""
+    # Setup the paths
+    tmpdir = pathlib.Path(tmpdir)
+    target_root = TargetPath(target_root=tmpdir)
+
+    def _load_example(example_path):
+        env = env_cls(example_path, target_root=target_root)
+        return env.root_document
+    return _load_example
 
 
 @pytest.fixture
@@ -140,6 +184,18 @@ def url_request(monkeypatch):
 
 
 @pytest.fixture
+def is_pdf():
+    """Tests whether the file is a pdf file
+    """
+    def _is_pdf(pdf_filepath):
+        # Retrieve the lines from the file
+        with open(pdf_filepath, 'rb') as file:
+            chunk = file.read(512)
+            return chunk.startswith(b'%PDF-')
+    return _is_pdf
+
+
+@pytest.fixture
 def a_in_b():
     """Test whether items in 'a' are in 'b'."""
     def _a_in_b(a, b):
@@ -156,7 +212,7 @@ def a_in_b():
 @pytest.yield_fixture
 def app(tmpdir):
     project_path = tmpdir.join('example7')
-    shutil.copytree('tests/document/example7', project_path)
+    shutil.copytree('tests/document/examples/ex7', project_path)
     app = create_app(in_path=str(project_path))
     app.config['PROJECTPATH'] = project_path
     yield app

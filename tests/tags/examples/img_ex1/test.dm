@@ -1,0 +1,3 @@
+---
+targets: html, tex
+---

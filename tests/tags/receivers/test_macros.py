@@ -49,7 +49,7 @@ expected_result_txt = """
 
 
 def test_process_macros(context_cls):
-    """Test the process_context_macros function."""
+    """Test the process_macros function."""
 
     # 1. Test a reference example
     context = context_cls({'@13C': '@sup{13}C',
@@ -72,7 +72,7 @@ def test_process_macros(context_cls):
 
 
 def test_process_nested_macros_and_tags(context_cls):
-    """Test the combination of process_context_tags and process_macros with nested
+    """Test the combination of process_content and process_macros with nested
     macros."""
 
     test1 = "My @p90x pulse."
