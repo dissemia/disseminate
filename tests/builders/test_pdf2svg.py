@@ -18,7 +18,7 @@ def test_pdf2svg_with_find_builder_cls():
     assert builder_cls.__name__ == "Pdf2SvgCropScale"
 
 
-def test_pdf2svg_build_with_outfilepath(env):
+def test_pdf2svg_build_with_outfilepath(env, is_svg):
     """Test the Pdf2svg builder."""
     # 1. Test example with the infilepath and outfilepath specified.
     infilepath = SourcePath(project_root='tests/builders/examples/ex1',
@@ -42,10 +42,10 @@ def test_pdf2svg_build_with_outfilepath(env):
     assert isinstance(pdf2svg.outfilepath, TargetPath)
 
     # Make sure we created an svg
-    assert '<?xml version="1.0" encoding="UTF-8"?>' in outfilepath.read_text()
+    assert is_svg(outfilepath)
 
 
-def test_pdf2svg_pdfcrop_with_outfilepath(env):
+def test_pdf2svg_pdfcrop_with_outfilepath(env, svg_dims):
     """Test the Pdf2svg builder with a PdfCrop subbuilder."""
 
     # 1. Test example with the infilepath and outfilepath specified.
@@ -104,12 +104,11 @@ def test_pdf2svg_pdfcrop_with_outfilepath(env):
     assert outfilepath.exists()
 
     # Make sure the produced svg is cropped
-    svg_text = outfilepath.read_text()
-    assert 'width="65.5156pt" height="58.2628pt"' not in svg_text  # if not crop
-    assert 'width="30.70147pt" height="29.60897pt"' in svg_text
+    assert not svg_dims(outfilepath, width='65.5pt', height='58.3pt', abs=0.3)
+    assert svg_dims(outfilepath, width='30.7pt', height='29.6pt', abs=0.3)
 
 
-def test_pdf2svg_pdfcrop_without_outfilepath(env):
+def test_pdf2svg_pdfcrop_without_outfilepath(env, svg_dims):
     """Test the Pdf2svg builder with a PdfCrop subbuilder."""
 
     # 2. Test example without the outfilepath specified. Since use_cache is
@@ -136,14 +135,12 @@ def test_pdf2svg_pdfcrop_without_outfilepath(env):
     status = pdf2svg.build(complete=True)
     assert status == 'done'
 
-    # Check the product
-    assert pdf2svg.outfilepath.exists()
-    svg_text = outfilepath.read_text()
-    assert 'width="65.5156pt" height="58.2628pt"' not in svg_text  # if not crop
-    assert 'width="30.70147pt" height="29.60897pt"' in svg_text
+    # Make sure the produced svg is cropped
+    assert not svg_dims(outfilepath, width='65.5pt', height='58.3pt', abs=0.3)
+    assert svg_dims(outfilepath, width='30.7pt', height='29.6pt', abs=0.3)
 
 
-def test_pdf2svg_scalesvg_with_outfilepath(env):
+def test_pdf2svg_scalesvg_with_outfilepath(env, svg_dims):
     """Test the Pdf2svg builder with a ScaleSvg subbuilder."""
 
     # 1. Test example with the infilepath and outfilepath specified.
@@ -201,17 +198,12 @@ def test_pdf2svg_scalesvg_with_outfilepath(env):
     assert pdf2svg.status == 'done'
     assert outfilepath.exists()
 
-    # Make sure the produced svg is cropped
-    svg_text = outfilepath.read_text()
-    assert 'width="82px" height="73px"' not in svg_text  # if not scaled
-    assert 'width="164px" height="146px"' in svg_text
-
-    # Remove all intermediary files
-    for builder in [subpdf2svg, scalesvg]:
-        builder.outfilepath.unlink()
+    # Make sure the produced svg is scaled
+    assert not svg_dims(outfilepath, width='82', height='73', abs=0.3)
+    assert svg_dims(outfilepath, width='164', height='146', abs=0.3)
 
 
-def test_pdf2svg_scalesvg_without_outfilepath(env):
+def test_pdf2svg_scalesvg_without_outfilepath(env, svg_dims):
     """Test the Pdf2svg builder with a ScaleSvg subbuilder."""
 
     # 2. Test example without the outfilepath specified. The final file will
@@ -239,6 +231,6 @@ def test_pdf2svg_scalesvg_without_outfilepath(env):
     assert status == 'done'
     assert outfilepath.exists()
 
-    svg_text = outfilepath.read_text()
-    assert 'width="82px" height="73px"' not in svg_text  # if not scaled
-    assert 'width="164px" height="146px"' in svg_text
+    # Make sure the produced svg is scaled
+    assert not svg_dims(outfilepath, width='82', height='73', abs=0.3)
+    assert svg_dims(outfilepath, width='164', height='146', abs=0.3)
