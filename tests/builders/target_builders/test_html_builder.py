@@ -401,7 +401,7 @@ def test_html_builder_add_build_pdf2svgcropscale(load_example, svg_dims):
     assert build.status == 'done'
 
     # Check that the svg file and dimensions
-    assert svg_dims(tp, width='133.3', abs=0.3)
+    assert svg_dims(tp, width='133.3', abs=0.5)
 
     # Add a dependency for the media file (with scale and crop)
     scale_params = ('scale', 1.2)
@@ -427,7 +427,7 @@ def test_html_builder_add_build_pdf2svgcropscale(load_example, svg_dims):
     svg = tp.read_text()
 
     # Check that the svg file and dimensions
-    assert svg_dims(tp, width='200', abs=0.3)
+    assert svg_dims(tp, width='200', abs=0.5)
 
 
 def test_html_builder_add_build_invalid(load_example):
