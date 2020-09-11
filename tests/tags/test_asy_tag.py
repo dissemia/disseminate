@@ -5,6 +5,7 @@ These tests also serve to test the rendering of an image from inline code or
 from a specified file.
 """
 from disseminate.tags import Tag
+from disseminate.builders.exceptions import BuildError
 
 
 def test_asy_invalid_html(doc):
@@ -25,8 +26,16 @@ def test_asy_invalid_html(doc):
     # Check the build
     context['targets'] |= {'html'}
     html_builder = doc.context['builders']['.html']
-    assert html_builder.build(complete=True) == 'missing (outfilepath)'
 
+    # Check the build. Asymptote may fail with an exit code of 0 and not
+    # generate a file, or it may exit with a code not equal to 0.
+    try:
+        status = html_builder.build(complete=True)
+    except BuildError:
+        status = 'build error'
+
+    assert status in {'missing (outfilepath)', 'build error'}
+    
 
 # html targets
 

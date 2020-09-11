@@ -3,6 +3,7 @@ Test the Asy builder
 """
 from disseminate.builders.asy_builders import (Asy2pdf, Asy2svg, SaveAsyPdf,
                                                SaveAsySvg)
+from disseminate.builders.exceptions import BuildError
 from disseminate.paths import SourcePath, TargetPath
 
 
@@ -248,11 +249,14 @@ def test_saveasypdf_build_invalid(env):
     asy2pdf = SaveAsyPdf(parameters=asystring, outfilepath=outfilepath,
                          context=env.context, env=env)
 
-    # Check the build -- the output file was not created
-    assert asy2pdf.status == 'ready'
-    assert asy2pdf.build(complete=True) == 'missing (outfilepath)'
-    assert asy2pdf.status == 'missing (outfilepath)'
+    # Check the build. Asymptote may fail with an exit code of 0 and not
+    # generate a file, or it may exit with a code not equal to 0.
+    try:
+        status = asy2pdf.build(complete=True)
+    except BuildError:
+        status = 'build error'
 
+    assert status in {'missing (outfilepath)', 'build error'}
     assert not asy2pdf.outfilepath.exists()
 
 
@@ -288,9 +292,14 @@ def test_saveasysvg_build_invalid(env):
     asy2svg = SaveAsySvg(parameters=asystring, outfilepath=outfilepath,
                          context=env.context, env=env)
 
-    # Check the build -- the output file was not created
     assert asy2svg.status == 'ready'
-    assert asy2svg.build(complete=True) == 'missing (outfilepath)'
-    assert asy2svg.status == 'missing (outfilepath)'
 
+    # Check the build. Asymptote may fail with an exit code of 0 and not
+    # generate a file, or it may exit with a code not equal to 0.
+    try:
+        status = asy2svg.build(complete=True)
+    except BuildError:
+        status = 'build error'
+
+    assert status in {'missing (outfilepath)', 'build error'}
     assert not asy2svg.outfilepath.exists()

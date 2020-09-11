@@ -298,8 +298,7 @@ class Ref(Tag):
                            cache=cache)
 
             # Add a target-specific attribute to the url so that it's
-            # properly
-            # parsed for the '.tex' target
+            # properly parsed for the '.tex' target
             url = url + '.tex' if url else ''
 
             # wrap content in 'href' tag, if a url is present, otherwise

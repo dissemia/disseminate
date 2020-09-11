@@ -253,3 +253,58 @@ def test_document_context_tag_inheritance(context_cls):
     assert id(child['toc']) != id(toc)  # a new tag was created
     assert type(child['toc']) == type(toc)  # of the same type
     assert child['toc'].content == 'heading expanded'  # different contents
+
+
+def test_document_context_reset(doc):
+    """Test that the document context is properly reset when loading different
+    templates."""
+
+    # Try an article
+    doc.src_filepath.write_text("""
+    ---
+    template: articles/basic
+    ---
+    """)
+    doc.load()
+    assert doc.context['template'] == 'articles/basic'
+    context_article = doc.context.copy()
+
+    # Try a report
+    doc.src_filepath.write_text("""
+    ---
+    template: reports/basic
+    ---
+    """)
+    doc.load()
+    assert doc.context['template'] == 'reports/basic'
+
+    # Revert to an article, and make sure the context matches
+    doc.src_filepath.write_text("""
+    ---
+    template: articles/basic
+    ---
+    """)
+    doc.load()
+    assert doc.context['template'] == 'articles/basic'
+
+    all_keys = doc.context.keys() | context_article.keys()
+    assert id(doc.context) != id(context_article)  # different context objs
+    assert doc.context.keys() == all_keys  # keys match
+    assert context_article.keys() == all_keys  # keys match
+
+    for key in all_keys:
+        # Define the match function
+        if key == 'builders':
+            # Match the builder types
+            match = lambda v1, v2: ({k: type(v) for k, v in v1.items()} ==
+                                    {k: type(v) for k, v in v2.items()})
+        elif key == 'mtime':
+            # New mtime is later than the first
+            match = lambda v1, v2: v2 >= v1
+        else:
+            match = lambda v1, v2: v1 == v2
+
+        v1 = context_article[key]
+        v2 = doc.context[key]
+
+        assert match(v1, v2)

@@ -25,7 +25,7 @@ def test_all_tags_and_templates_tex(doc):
                  for p in templates]
 
     # Try processing the documents with all the tags
-    for template in templates:
+    for template in sorted(templates):
         src = ("---\n"
                "template: {}\n"
                "target: pdf\n"
@@ -33,6 +33,7 @@ def test_all_tags_and_templates_tex(doc):
                "---\n").format(template)
 
         for tag in sorted(tag_classes.keys()):
+
             # Prepare the attributes. Some tags have special attribute
             # requirements
             if tag == 'panel':
@@ -42,26 +43,26 @@ def test_all_tags_and_templates_tex(doc):
 
             # Add the tag to the source body. Some tags have special content
             tag_src = settings.tag_prefix + tag + attrs + '{'
-            if tag == 'supsub':
-                tag_src += 'one && two'
+            if tag == 'asy':
+                img_path = (pathlib.Path(curdir).absolute() / 'tests' /
+                            'builders' / 'examples' / 'ex7' / 'diagram.asy')
+                tag_src += str(img_path)
+            elif tag == 'caption':
+                tag_src = (settings.tag_prefix + "@figure{" +
+                           settings.tag_prefix + "@caption{caption}")
             elif tag == 'img':
                 img_path = (pathlib.Path(curdir).absolute() /
                             'tests' / 'templates' / 'examples' /
                             'ex1' / 'sample.png')
                 tag_src += str(img_path)
-            elif tag == 'asy':
-                img_path = (pathlib.Path(curdir).absolute() / 'tests' /
-                            'document' / 'examples' / 'ex7' / 'diagram.asy')
-                tag_src += str(img_path)
+            elif tag == 'list':
+                tag_src += "- my list"
             elif tag == 'ref':
                 tag_src += 'doc:' + doc.doc_id.replace('.', '-')
             elif tag == 'smb' or tag == 'symbol':
                 tag_src += 'alpha'
-            elif tag == 'caption':
-                tag_src = (settings.tag_prefix + "@figure{" +
-                           settings.tag_prefix + "@caption{caption}")
-            elif tag == 'list':
-                tag_src += "- my list"
+            elif tag == 'supsub':
+                tag_src += 'one && two'
             else:
                 tag_src += tag
             tag_src += '}\n'
@@ -71,4 +72,3 @@ def test_all_tags_and_templates_tex(doc):
         doc.src_filepath.write_text(src)
         doc.load()
         doc.build()
-

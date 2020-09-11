@@ -2,6 +2,12 @@
 \documentclass[12pt]{report}
 {%- endblock %}
 {%- block header %}
+
+%%% Disable auxiliary files
+% These are used for references in latex documents, which are handled by
+% disseminate. Additionally, aux files can trip up compiles of PDFs.
+\nofiles
+
 %%%
 % Graphics
 \usepackage{graphicx}
