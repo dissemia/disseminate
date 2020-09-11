@@ -104,8 +104,8 @@ def test_pdf2svg_pdfcrop_with_outfilepath(env, svg_dims):
     assert outfilepath.exists()
 
     # Make sure the produced svg is cropped
-    assert not svg_dims(outfilepath, width='65.5pt', height='58.3pt', abs=0.2)
-    assert svg_dims(outfilepath, width='30.7pt', height='29.6pt', abs=0.2)
+    assert not svg_dims(outfilepath, width='65.5pt', height='58.3pt', abs=0.3)
+    assert svg_dims(outfilepath, width='30.7pt', height='29.6pt', abs=0.3)
 
 
 def test_pdf2svg_pdfcrop_without_outfilepath(env, svg_dims):
@@ -136,8 +136,8 @@ def test_pdf2svg_pdfcrop_without_outfilepath(env, svg_dims):
     assert status == 'done'
 
     # Make sure the produced svg is cropped
-    assert not svg_dims(outfilepath, width='65.5pt', height='58.3pt', abs=0.2)
-    assert svg_dims(outfilepath, width='30.7pt', height='29.6pt', abs=0.2)
+    assert not svg_dims(outfilepath, width='65.5pt', height='58.3pt', abs=0.3)
+    assert svg_dims(outfilepath, width='30.7pt', height='29.6pt', abs=0.3)
 
 
 def test_pdf2svg_scalesvg_with_outfilepath(env, svg_dims):
@@ -199,8 +199,8 @@ def test_pdf2svg_scalesvg_with_outfilepath(env, svg_dims):
     assert outfilepath.exists()
 
     # Make sure the produced svg is scaled
-    assert not svg_dims(outfilepath, width='82px', height='73px', abs=0.2)
-    assert svg_dims(outfilepath, width='164px', height='146px', abs=0.2)
+    assert not svg_dims(outfilepath, width='82px', height='73px', abs=0.3)
+    assert svg_dims(outfilepath, width='164px', height='146px', abs=0.3)
 
 
 def test_pdf2svg_scalesvg_without_outfilepath(env, svg_dims):
@@ -232,5 +232,5 @@ def test_pdf2svg_scalesvg_without_outfilepath(env, svg_dims):
     assert outfilepath.exists()
 
     # Make sure the produced svg is scaled
-    assert not svg_dims(outfilepath, width='82px', height='73px', abs=0.2)
-    assert svg_dims(outfilepath, width='164px', height='146px', abs=0.2)
+    assert not svg_dims(outfilepath, width='82px', height='73px', abs=0.3)
+    assert svg_dims(outfilepath, width='164px', height='146px', abs=0.3)
