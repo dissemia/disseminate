@@ -39,7 +39,7 @@ def test_asy_invalid_html(doc):
 
 # html targets
 
-def test_asy_inline_html(doc):
+def test_asy_inline_html(doc, svg_dims):
     """Test the handling of html with the asy tag with inline asy code."""
     context = doc.context
 
@@ -61,13 +61,12 @@ def test_asy_inline_html(doc):
     html_builder = doc.context['builders']['.html']
     assert html_builder.build(complete=True) == 'done'  # build successful
     outfilepath = img._outfilepaths['.html']
+
     assert outfilepath.exists()  # file was created
-
-    assert '<svg' in outfilepath.read_text()
-    assert 'width="200pt" height="200pt"' in outfilepath.read_text()
+    assert svg_dims(outfilepath, width='200', height='200')
 
 
-def test_asy_file_html(doc):
+def test_asy_file_html(doc, svg_dims):
     """Test the handling of html with the asy tag with an asy file."""
     context = doc.context
     target_root = context['target_root']
@@ -96,12 +95,10 @@ def test_asy_file_html(doc):
 
     # Make sure incorrect paths haven't been created
     assert not (target_root / 'media').is_dir()
-
-    assert '<svg' in outfilepath.read_text()
-    assert 'width="200pt" height="200pt"' in outfilepath.read_text()
+    assert svg_dims(outfilepath, width='200', height='200', abs=0.3)
 
 
-def test_asy_attribute_inline_html(doc):
+def test_asy_attribute_inline_html(doc, svg_dims):
     """Test the handling of html with the asy tag including attributes with
     inline asy code"""
     context = doc.context
@@ -131,9 +128,8 @@ def test_asy_attribute_inline_html(doc):
     assert outfilepath.exists()  # file was created
 
     # The svg file should have different dimensions
-    assert '<svg' in outfilepath.read_text()
-    assert 'width="200pt" height="200pt"' not in outfilepath.read_text()
-    assert 'width="500px" height="500px"' in outfilepath.read_text()
+    assert not svg_dims(outfilepath, width='200', height='200', abs=0.3)
+    assert svg_dims(outfilepath, width='500', height='500', abs=0.3)
 
 
 # tex target

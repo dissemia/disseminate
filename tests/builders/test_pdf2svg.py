@@ -199,8 +199,8 @@ def test_pdf2svg_scalesvg_with_outfilepath(env, svg_dims):
     assert outfilepath.exists()
 
     # Make sure the produced svg is scaled
-    assert not svg_dims(outfilepath, width='82px', height='73px', abs=0.3)
-    assert svg_dims(outfilepath, width='164px', height='146px', abs=0.3)
+    assert not svg_dims(outfilepath, width='82', height='73', abs=0.3)
+    assert svg_dims(outfilepath, width='164', height='146', abs=0.3)
 
 
 def test_pdf2svg_scalesvg_without_outfilepath(env, svg_dims):
@@ -232,5 +232,5 @@ def test_pdf2svg_scalesvg_without_outfilepath(env, svg_dims):
     assert outfilepath.exists()
 
     # Make sure the produced svg is scaled
-    assert not svg_dims(outfilepath, width='82px', height='73px', abs=0.3)
-    assert svg_dims(outfilepath, width='164px', height='146px', abs=0.3)
+    assert not svg_dims(outfilepath, width='82', height='73', abs=0.3)
+    assert svg_dims(outfilepath, width='164', height='146', abs=0.3)
