@@ -8,7 +8,7 @@ from disseminate.builders.scalesvg import ScaleSvg
 from disseminate.paths import SourcePath, TargetPath
 
 
-def test_scalesvg_build_with_outfilepath(env):
+def test_scalesvg_build_with_outfilepath(env, svg_dims):
     """Test the ScaleSvg builder with the outfilepath specified."""
 
     # 1. Test example with the infilepath and outfilepath specified.
@@ -38,8 +38,9 @@ def test_scalesvg_build_with_outfilepath(env):
     assert scalesvg.status == 'done'
     assert outfilepath.exists()
 
-    # Make sure we created a scaled svg
-    assert 'width="164px" height="146px"' in outfilepath.read_text()
+    # Make sure the produced svg is scaled
+    assert not svg_dims(outfilepath, width='82px', height='73px')
+    assert svg_dims(outfilepath, width='164px', height='146px')
 
 
 def test_scalesvg_build_without_outfilepath(env):
