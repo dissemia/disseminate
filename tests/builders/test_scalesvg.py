@@ -39,8 +39,8 @@ def test_scalesvg_build_with_outfilepath(env, svg_dims):
     assert outfilepath.exists()
 
     # Make sure the produced svg is scaled
-    assert not svg_dims(outfilepath, width='82px', height='73px')
-    assert svg_dims(outfilepath, width='164px', height='146px')
+    assert not svg_dims(outfilepath, width='82px', height='73px', abs=0.2)
+    assert svg_dims(outfilepath, width='164px', height='146px', abs=0.2)
 
 
 def test_scalesvg_build_without_outfilepath(env):
