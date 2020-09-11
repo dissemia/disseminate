@@ -16,6 +16,7 @@ addons:
     - texlive-latex-base
     - texlive-latex-extra  # provides 'enumitem'
     - texlive-fonts-recommended  # provides 'ecrm1200'
+    - latexmk
     - pdf2svg
     - librsvg2-bin
     - asymptote
