@@ -6,7 +6,6 @@ from copy import deepcopy
 
 from ..context import BaseContext
 from ..label_manager import LabelManager
-from ..dependency_manager import DependencyManager
 from ..paths import SourcePath, TargetPath
 from ..utils.string import str_to_list
 from .. import settings
@@ -20,20 +19,15 @@ class DocumentContext(BaseContext):
 
     #: Required entries in the document context dict to be a valid document
     #: context--as well as their matching type to be checked.
-    #:
-    #: - targets aren't listed as a list or set entry because mutables,
-    #:   like lists, are appended to, instead of replaced. Targets should
-    #:   by replaced by values in the header.
     validation_types = {
         'document': None,
+        'environment': None,
         'src_filepath': SourcePath,
         'project_root': SourcePath,
         'target_root': TargetPath,
         'targets': set,
         'paths': list,
         'label_manager': LabelManager,
-        'dependency_manager': DependencyManager,
-        'renderers': dict,
         'mtime': float,
         'doc_id': str,
         'process_context_tags': set,
@@ -72,9 +66,10 @@ class DocumentContext(BaseContext):
         # directories from the parent if the parent's template is different.
         # Also, the paths may be relative to the parent document and may be
         # invalid for a subdocument in a subdirectory.
-        # Not that if the subdocument and parent document share the same
-        # template, the renderer will correctly populate the paths for each.
         'paths',
+
+        # Do not inherit builders. Each document and context has its own
+        'builders',
 
         #: The contents of the body (specified by body_attr) doesn't carry over
         #: because each body has its own body.
@@ -85,15 +80,16 @@ class DocumentContext(BaseContext):
     #: context is cleared. These are typically for entries setup in the
     #: __init__ of the class.
     exclude_from_reset = {
-        # The document that owns the context should not be reset, since we do
-        # not want to have this document inherited from the parent.
+        # The document that owns the context and its parent variables should
+        # not be reset, since we do not want to have this document inherited
+        # from the parent.
         'document',
 
         # The following manager objects should remain the same every time the
-        # context is reset. They should persist for a project.
+        # context is reset. They should persist for a project, and they are
+        # defined by the root document and build environment.
         'label_manager',
-        'dependency_manager',
-        'renderers',
+        'environment',
 
         # Keep the same list for paths when resetting. Note that will place
         # the entry here to prevent the lists path from being reset by the
@@ -111,18 +107,6 @@ class DocumentContext(BaseContext):
         'inactive_tags',
     }
 
-    # Preload the following entries.
-    # The ProcessContextHeaders processor first reads the context from the
-    # header of the document and loads context information from additional
-    # context files in the templates before loading these values in the document
-    # context. The following entries are loaded in the context before the
-    # additional context files from templates are loaded.
-    preload = {
-        'renderers',
-        'template',
-        'targets',
-    }
-
     def __init__(self, document, *args, **kwargs):
         self.document = document
 
@@ -134,6 +118,9 @@ class DocumentContext(BaseContext):
 
     def reset(self):
         super(DocumentContext, self).reset()
+        # Make sure the following entries are present from the parent or
+        # root context
+        self.is_valid('environment', 'project_root', 'target_root')
 
         document = self['document']()
         src_filepath = document.src_filepath
@@ -149,12 +136,7 @@ class DocumentContext(BaseContext):
         if src_filepath.exists():
             self['mtime'] = src_filepath.stat().st_mtime
 
-        # Set the root document variables; these should only be set if this
-        # is the context for the root document.
-        if self.get('project_root', None) is None:
-            self['project_root'] = document.project_root
-        if self.get('target_root', None) is None:
-            self['target_root'] = document.target_root
+        # The the root document, if it wasn't set already
         if self.get('root_document', None) is None:
             self['root_document'] = weakref.ref(document)
             self['is_root_document'] = True
@@ -164,9 +146,6 @@ class DocumentContext(BaseContext):
         # Initialize the managers, if this is the root (document) context
         if self.get('label_manager', None) is None:
             self['label_manager'] = LabelManager(root_context=self)
-        if self.get('dependency_manager', None) is None:
-            dep = DependencyManager(root_context=self)
-            self['dependency_manager'] = dep
 
         # Set the document's level. This is based off of the parent context's
         # level
@@ -177,7 +156,8 @@ class DocumentContext(BaseContext):
         paths.clear()
 
         # Include the path for the src_filepath
-        local_path = src_filepath.parent
+        local_path = SourcePath(project_root=src_filepath.project_root,
+                                subpath=src_filepath.subpath.parent)
         if local_path not in paths:
             paths.append(local_path)
 
@@ -301,24 +281,3 @@ class DocumentContext(BaseContext):
                                subpath=subpath / path)
                     for path in includes]
         return includes
-
-    # @property
-    # def inactive_tags(self):
-    #     """Retrieve a list of inactive tags for the document
-    #
-    #     Returns
-    #     -------
-    #     inactive_tags : List[str]
-    #         A list of the inactive tags for the document.
-    #     """
-    #     # Get the inactive tags from the context.
-    #     inactive_tags = self.get('inactive_tags', '')
-    #
-    #     # Convert to a list, if needed
-    #     inactive_tags_list = (str_to_list(inactive_tags)
-    #                           if isinstance(inactive_tags, str) else
-    #                           inactive_tags)
-    #
-    #     # Remove empty entries, and return set
-    #     return {inactive_tag for inactive_tag in inactive_tags_list
-    #             if inactive_tag}

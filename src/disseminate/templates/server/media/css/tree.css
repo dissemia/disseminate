@@ -103,3 +103,7 @@ tr.level-5 td.src {
   content: '△';
   font-size: 14px;
 }
+
+.footer {
+  height: 4rem;
+}

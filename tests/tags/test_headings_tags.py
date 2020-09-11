@@ -16,49 +16,50 @@ def test_heading_labels(doc, context_cls):
     #    raise and exception
     with pytest.raises(AssertionError):
         # A 'doc_id' is needed to create the label id tag
-        br1 = Chapter(name='chapter', content='', attributes='',
+        ch1 = Chapter(name='chapter', content='', attributes='',
                       context=context)
 
     # 2. Create a chapter heading without a label_manager
     context['doc_id'] = 'test'
     with pytest.raises(AssertionError):
-        br2 = Chapter(name='chapter', content='', attributes='',
+        ch2 = Chapter(name='chapter', content='', attributes='',
                       context=context)
 
     # 3. Now create a heading label with a context that includes a 'doc_id'
     #    and a 'label_manager'.
     context = doc.context
-    br3 = Chapter(name='chapter', content='', attributes='',
+    ch3 = Chapter(name='chapter', content='', attributes='',
                   context=context)
-    assert br3.label_id == 'ch:test-dm-1'
-    assert br3.attributes['id'] == 'ch:test-dm-1'
+    assert ch3.label_id == 'ch:test-dm-1'
+    assert ch3.attributes['id'] == 'ch:test-dm-1'
 
     # 4. Create chapter headings with a doc_id
     context.reset()
     context['doc_id'] = 'src/test.dm'
-    br4 = Chapter(name='chapter', content='', attributes='', context=context)
-    assert br4.label_id == 'ch:src-test-dm-1'
-    assert br4.attributes['id'] == 'ch:src-test-dm-1'
+    ch4 = Chapter(name='chapter', content='', attributes='', context=context)
+    assert ch4.label_id == 'ch:src-test-dm-1'
+    assert ch4.attributes['id'] == 'ch:src-test-dm-1'
 
     # 5. Create chapter headings with a doc_id and content
     context.reset()
     context['doc_id'] = 'src/test.dm'
-    br5 = Chapter(name='chapter', content='Introduction', attributes='',
+    ch5 = Chapter(name='chapter', content='Introduction', attributes='',
                   context=context)
-    assert br5.label_id == 'ch:src-test-dm-introduction'
-    assert br5.attributes['id'] == 'ch:src-test-dm-introduction'
+    assert ch5.label_id == 'ch:src-test-dm-introduction'
+    assert ch5.attributes['id'] == 'ch:src-test-dm-introduction'
 
     # 6. Create chapter headings with an id specified
     context.reset()
     context['doc_id'] = 'src/test.dm'
-    br6 = Chapter(name='chapter', content='Introduction',
+    ch6 = Chapter(name='chapter', content='Introduction',
                   attributes='id=myid', context=context)
-    assert br6.label_id == 'myid'
-    assert br6.attributes['id'] == 'myid'
+    assert ch6.label_id == 'myid'
+    assert ch6.attributes['id'] == 'myid'
 
 
 def test_heading_with_macros(doc):
     """Test the heading tags that use macros."""
+    label_man = doc.context['label_manager']
 
     # Get the context from a test document with a 'doc_id' and 'label_manager'
     context = doc.context
@@ -76,6 +77,7 @@ def test_heading_with_macros(doc):
     assert chap.label_id == 'ch:test-dm-this-is-my-test'
 
     # 2. Test a macro with tags
+    label_man.reset()  # reset labels to avoid raising a DuplicateLabel
     context['@test'] = 'This is @b{my} test'
 
     text = """
@@ -92,6 +94,7 @@ def test_heading_with_macros(doc):
     assert chap.label_id == 'ch:test-dm-this-is-my-test'
 
     # 3. Test a macro for a header entry that forms a tag.
+    label_man.reset()  # reset labels to avoid raising a DuplicateLabel
     context['@title'] = 'This is @b{my} test'
 
     text = """
@@ -114,6 +117,7 @@ def test_heading_with_macros(doc):
 
 def test_heading_with_substituted_content(doc):
     """Test heading tags with substituted content."""
+    label_man = doc.context['label_manager']
 
     # Get the context from a test document with a 'doc_id' and 'label_manager'
     context = doc.context
@@ -125,6 +129,8 @@ def test_heading_with_substituted_content(doc):
 
     # 2. Test with a substituted content from the context with a simple string
     #    substitution.
+    label_man.reset()  # reset labels to avoid raising a DuplicateLabel
+
     context['title'] = 'My title'
     title = Chapter(name='title', content='', attributes=tuple(),
                     context=context)
@@ -134,6 +140,8 @@ def test_heading_with_substituted_content(doc):
                           '</h2>\n')
 
     # 3. Test with a substituted content from the context with formatting
+    label_man.reset()  # reset labels to avoid raising a DuplicateLabel
+
     context['label_fmts']['heading_chapter'] = ('@b{Chapter} '
                                                 '@label.chapter_number. '
                                                 '@label.title')
@@ -160,7 +168,7 @@ def test_heading_labels_formatting(doc):
 
     # Check that a chapter label was created
     label_manager = doc.context['label_manager']
-    chapter_labels = label_manager.get_labels(kinds='chapter')
+    chapter_labels = label_manager.get_labels_by_kind(kinds='chapter')
     assert len(chapter_labels) == 1
 
 
@@ -177,7 +185,7 @@ def test_heading_labels_nolabel(doc):
 
     # Check that no chapter label was created
     label_manager = doc.context['label_manager']
-    chapter_labels = label_manager.get_labels(kinds='chapter')
+    chapter_labels = label_manager.get_labels_by_kind(kinds='chapter')
     assert len(chapter_labels) == 0
 
 
@@ -188,6 +196,7 @@ def test_heading_newline_preservation_default(doc):
     for default targets."""
 
     # Get the label manager and context from the document
+    label_man = doc.context['label_manager']
     context = doc.context
 
     # 1. Test without surrounding newlines
@@ -196,6 +205,7 @@ def test_heading_newline_preservation_default(doc):
     assert root.txt == 'Chapter 1. Chapter 1'
 
     # 2. Test with surrounding newlines
+    label_man.reset()  # reset labels to avoid raising a DuplicateLabel
     src = '\n@chapter{Chapter 1}\n'
     root = Tag(name='root', content=src, attributes='', context=context)
     assert root.txt == ('\n'
@@ -203,6 +213,7 @@ def test_heading_newline_preservation_default(doc):
                         '\n')
 
     # 3. Test with double newlines, used for paragraphs
+    label_man.reset()  # reset labels to avoid raising a DuplicateLabel
     src = '\n\n@chapter{Chapter 1}\n\n'
     root = Tag(name='root', content=src, attributes='', context=context)
     assert root.txt == ('\n\n'
@@ -216,6 +227,7 @@ def test_heading_labels_tex(doc):
     """Tests the production of heading tex with labels."""
 
     # Get the label manager and context from the document
+    label_man = doc.context['label_manager']
     context = doc.context
 
     # 1. Test with default labels
@@ -257,8 +269,11 @@ def test_heading_labels_tex(doc):
     # Generate a tag for each and compare the generated html to the answer key
     for src, tex in markups.items():
         doc.context.reset()
+        label_man.reset()  # reset the labels
+
         root = Tag(name='root', content=src, attributes='', context=context)
         heading = root.content
+        print(src, heading.tex)
         assert heading.tex == tex
 
 
@@ -267,6 +282,7 @@ def test_heading_newline_preservation_tex(doc):
     for tex targets."""
 
     # Get the label manager and context from the document
+    label_man = doc.context['label_manager']
     context = doc.context
 
     # 1. Test without surrounding newlines
@@ -277,6 +293,7 @@ def test_heading_newline_preservation_tex(doc):
                         '\\label{ch:test-dm-chapter-1}')
 
     # 2. Test with surrounding newlines
+    label_man.reset()  # reset labels to avoid raising a DuplicateLabel
     src = '\n@chapter{Chapter 1}\n'
     root = Tag(name='root', content=src, attributes='', context=context)
     assert root.tex == ('\n'
@@ -286,6 +303,7 @@ def test_heading_newline_preservation_tex(doc):
                         '\n')
 
     # 3. Test with double newlines, used for paragraphs
+    label_man.reset()  # reset labels to avoid raising a DuplicateLabel
     src = '\n\n@chapter{Chapter 1}\n\n'
     root = Tag(name='root', content=src, attributes='', context=context)
     assert root.tex == ('\n\n'
@@ -301,6 +319,7 @@ def test_heading_labels_html(doc):
     """Tests the production of heading html with labels."""
 
     # Get the label manager and context from the document
+    label_man = doc.context['label_manager']
     context = doc.context
 
     # 1. Test with default labels
@@ -345,6 +364,7 @@ def test_heading_labels_html(doc):
 
     # Generate a tag for each and compare the generated html to the answer key
     for src, html in markups.items():
+        label_man.reset()  # reset labels to avoid raising a DuplicateLabel
         root = Tag(name='root', content=src, attributes='', context=context)
         heading = root.content
         assert heading.html == html
@@ -355,6 +375,7 @@ def test_heading_newline_preservation_html(doc):
     for html targets."""
 
     # Get the label manager and context from the document
+    label_man = doc.context['label_manager']
     context = doc.context
 
     # 1. Test without surrounding newlines
@@ -366,6 +387,7 @@ def test_heading_newline_preservation_html(doc):
                          '</h2></span>\n')
 
     # 2. Test with surrounding newlines
+    label_man.reset()  # reset labels to avoid raising a DuplicateLabel
     src = '\n@chapter{Chapter 1}\n'
     root = Tag(name='root', content=src, attributes='', context=context)
     assert root.html == ('<span class="root">\n'
@@ -375,6 +397,7 @@ def test_heading_newline_preservation_html(doc):
                          '</span>\n')
 
     # 3. Test with double newlines, used for paragraphs
+    label_man.reset()  # reset labels to avoid raising a DuplicateLabel
     src = '\n\n@chapter{Chapter 1}\n\n'
     root = Tag(name='root', content=src, attributes='', context=context)
     assert root.html == ('<span class="root">\n\n'

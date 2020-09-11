@@ -4,7 +4,6 @@ Setup the server
 import secrets
 
 from sanic import Sanic
-from sanic.response import text
 from sanic.exceptions import NotFound
 
 from .views.blueprints import system, tree, page, server_static_path

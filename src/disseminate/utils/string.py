@@ -12,8 +12,9 @@ from .. import settings
 
 def hashtxt(text, truncate=10):
     """Creates a hash from the given text."""
-    return (hashlib.md5(text.encode()).hexdigest() if truncate is None else
-            hashlib.md5(text.encode()).hexdigest()[:truncate])
+    text = text if isinstance(text, bytes) else text.encode()
+    return (hashlib.md5(text).hexdigest() if truncate is None else
+            hashlib.md5(text).hexdigest()[:truncate])
 
 
 def titlelize(string, truncate=True, capitalize=False):

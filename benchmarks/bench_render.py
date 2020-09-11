@@ -5,8 +5,10 @@ import random
 import tempfile
 import os
 import shutil
+import pathlib
 
 from disseminate.document import Document
+from disseminate.builders.environment import Environment
 
 
 dummy_text = """This is my dummy text. It has a few sentences that can be used.
@@ -22,8 +24,8 @@ class Suite:
     def setup(self):
         # create a tmpdir
         self.tmpdir = tempfile.mkdtemp()
-        self.tgt_path = self.tmpdir
-        self.src_path = os.path.join(self.tmpdir, 'src')
+        self.tgt_path = pathlib.Path(self.tmpdir)
+        self.src_path = pathlib.Path(os.path.join(self.tmpdir, 'src'))
         os.mkdir(self.src_path)
 
         # Create the chapters and main file
@@ -64,7 +66,9 @@ class Suite:
         """.format("\n          ".join(chapter_filenames)))
 
         # Load the document
-        self.doc = Document(self.root_filepath, self.tgt_path)
+        envs = Environment.create_environments(root_path=self.src_path, target_root=self.tgt_path)
+        self.env = envs[0]
+        self.doc = self.env.root_document
 
     def teardown(self):
         # Cleanup tmpdir
@@ -73,16 +77,17 @@ class Suite:
     def time_load_independent_files(self):
         """Benchmark the render performance of independent files."""
         # Load the document
-        doc = Document(self.root_filepath, self.tgt_path)
+        doc = self.doc
+        doc.load()
 
     def time_render_independent_files_html(self):
         """Benchmark the render performance of independent files."""
         # Render the file
         targets = {k: v for k, v in self.doc.targets.items() if k == '.html'}
-        self.doc.render(targets=targets, update_only=False)
+        self.doc.build()
 
     def time_render_independent_files_tex(self):
         """Benchmark the render performance of independent files."""
         # Render the file
         targets = {k: v for k, v in self.doc.targets.items() if k == '.tex'}
-        self.doc.render(targets=targets, update_only=False)
+        self.doc.build()

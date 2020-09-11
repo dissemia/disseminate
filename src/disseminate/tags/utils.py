@@ -1,8 +1,6 @@
 """
 Misc utilities for tags.
 """
-import pathlib
-
 from copy import copy
 from ..attributes import Attributes
 

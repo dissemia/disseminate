@@ -118,6 +118,7 @@ def test_labeltag_tex(doc, mocktag_cls):
 
     # Get the context from the doc. The doc context has a label_manager
     # built-in.
+    label_man = doc.context['label_manager']
     context = doc.context
 
     # 1. Test a label tag with a basic kind. kind = ('heading', 'chapter')
@@ -133,8 +134,10 @@ def test_labeltag_tex(doc, mocktag_cls):
 
     # 2. Test a label tag with a different label format, including the chapter
     #    number. kind = ('heading', 'chapter_number')
+    label_man.reset()  # reset labels to avoid raising a DuplicateLabel
     context['label_fmts']['heading_chapter'] = 'Chapter @label.chapter_number '
     kind = ('heading', 'chapter')
+
     tag2 = mocktag_cls(name='label', content='My title', attributes='',
                        context=context)
     label2_id = create_label(tag=tag2, kind=kind)
@@ -169,6 +172,7 @@ def test_labeltag_html(doc, mocktag_cls):
 
     # Get the context from the doc. The doc context has a label_manager
     # built-in.
+    label_man = doc.context['label_manager']
     context = doc.context
 
     # 1. Test a label tag with a basic kind. kind = ('heading', 'chapter')
@@ -184,8 +188,10 @@ def test_labeltag_html(doc, mocktag_cls):
 
     # 2. Test a label tag with a different label format, including the chapter
     #    number. kind = ('heading', 'chapter_number')
+    label_man.reset()  # reset labels to avoid raising a DuplicateLabel
     context['label_fmts']['heading_chapter'] = 'Chapter @label.chapter_number '
     kind = ('heading', 'chapter')
+
     tag2 = mocktag_cls(name='label', content='My title', attributes='',
                        context=context)
     label2_id = create_label(tag=tag2, kind=kind)

@@ -491,6 +491,27 @@ class BaseContext(dict):
             elif type(original_value) == type(change_value):
                 self[key] = change_value
 
+    def filter(self, keys):
+        """Create a new context with the entries copied for the given keys.
+
+        Parameters
+        ----------
+        keys : Iterable[str]
+            The keys for entries to include in the returned filtered BaseContext
+
+        Returns
+        -------
+        copy : :obj:`.context.BaseContext`
+            The filtered copy of the BaseContext.
+        """
+        # Create an empty copy
+        cls = self.__class__
+        copy = cls.__new__(cls)
+
+        # Update the copy with the values specified by keys
+        copy.match_update(changes=self, keys=keys)
+        return copy
+
     def print(self):
         """Pretty print this context"""
         pprint(self)

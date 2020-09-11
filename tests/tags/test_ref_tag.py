@@ -3,7 +3,6 @@ Test the Ref tag.
 """
 import pytest
 
-from disseminate.paths import SourcePath, TargetPath
 from disseminate.tags import Tag
 from disseminate.tags.ref import Ref
 from disseminate.label_manager import LabelNotFound
@@ -50,25 +49,14 @@ def test_ref_html(doc):
                         '<strong>My Fig. 1</strong></a>')
 
 
-def test_ref_html_crossreference_html(doc_cls, tmpdir):
+def test_ref_html_crossreference_html(doctree):
     """Test the ref tag between documents, using the html target."""
 
-    # Setup 2 documents; doc2 is a subordinate to doc1
-    target_root = TargetPath(target_root=tmpdir)
+    # Use the doctree to setup ref tags
+    doc1 = doctree
+    doc2, doc3 = doc1.documents_list(only_subdocuments=True)
 
-    src_filepath1 = SourcePath(project_root=tmpdir, subpath='test1.dm')
-    src_filepath2 = SourcePath(project_root=tmpdir, subpath='test2.dm')
-
-    src_filepath1.write_text("""
-    ---
-    include: test2.dm
-    ----""")
-    src_filepath2.touch()
-
-    doc1 = doc_cls(src_filepath=src_filepath1, target_root=target_root)
-    doc2 = doc1.documents_list()[1]
-
-    assert doc1.doc_id == 'test1.dm'
+    assert doc1.doc_id == 'test.dm'
     assert doc2.doc_id == 'test2.dm'
 
     # Create label for doc1 and doc2
@@ -96,7 +84,7 @@ def test_ref_html_crossreference_html(doc_cls, tmpdir):
     assert ref1.html == ('<a href="test2.html#doc2" class="ref">'
                          '<strong>My Fig. 2</strong></a>')
     assert isinstance(ref2, Ref)
-    assert ref2.html == ('<a href="test1.html#doc1" class="ref">'
+    assert ref2.html == ('<a href="test.html#doc1" class="ref">'
                          '<strong>My Fig. 1</strong></a>')
 
 

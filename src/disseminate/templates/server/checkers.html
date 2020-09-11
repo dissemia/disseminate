@@ -25,11 +25,11 @@
 {%- endmacro %}
 <body>
   <div class="container">
-    {% include "default/menu.html" %}
     <h2>Dependency Checks</h2>
     <div class="listing">
       {{ recursetree(checkers) }}
     </div>
   </div>
+  {% include "server/footer.html" %}
 </body>
 </html>

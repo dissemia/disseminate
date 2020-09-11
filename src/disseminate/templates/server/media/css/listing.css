@@ -84,3 +84,7 @@ h2 {
 .status.unknown {
   color: #888;
 }
+
+.footer {
+  height: 4rem;
+}

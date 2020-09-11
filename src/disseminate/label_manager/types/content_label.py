@@ -39,11 +39,15 @@ class ContentLabel(Label):
     subsection_label = weakattr()
     subsubsection_label = weakattr()
 
-    def __init__(self, doc_id, id, kind, mtime, title,
-                 order=None):
-        super().__init__(doc_id=doc_id, id=id, kind=kind, mtime=mtime,
-                         order=order)
+    def __init__(self, doc_id, id, kind, title, order=None):
+        super().__init__(doc_id=doc_id, id=id, kind=kind, order=order)
         self.title = title
+
+    def __repr__(self):
+        if self.title is not None:
+            return super().__repr__(title=self.title)
+        else:
+            return super().__repr__()
 
     @property
     def part_number(self):

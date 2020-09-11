@@ -34,7 +34,7 @@ def set_navigation_labels(root_document):
 
     # Get all of the document labels
     label_manager = root_context.get('label_manager')
-    labels = label_manager.get_labels(kinds='heading')
+    labels = label_manager.get_labels_by_kind(kinds='heading')
     labels_by_doc_id = {doc_id: next(group) for doc_id, group in
                         groupby(labels, lambda l: l.doc_id)}
 

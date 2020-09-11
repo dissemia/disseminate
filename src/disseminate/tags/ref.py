@@ -4,9 +4,40 @@ The Ref tag to reference captions and other labels.
 from .tag import Tag
 from .exceptions import assert_content_str
 from .utils import content_to_str, format_content
-from ..document.exceptions import MissingTargetException
 from ..label_manager.types import DocumentLabel
+from ..signals import signal
 from ..formats import html_tag, tex_cmd
+
+
+ref_label_dependencies = signal("ref_label_dependencies")
+
+
+@ref_label_dependencies.connect_via(order=1000)
+def add_ref_labels(builder, **kwargs):
+    """Find and add the labels associated with Ref tags for all tags in
+    the context.
+    """
+    context = builder.context
+
+    # Find tags in the context and get the ref tag labels
+    ref_label_ids = set()
+    for tag in filter(lambda t: isinstance(t, Tag), context.values()):
+        # Flatten the tag tree
+        flat_tags = tag.flatten(filter_tags=True)
+
+        # Retrieve all Ref tags and their label ids
+        ids = [t.label_id for t in flat_tags if isinstance(t, Ref)]
+        ref_label_ids.update(ids)
+
+    # Remove None entries
+    ref_label_ids.discard(None)
+
+    # Retrieve the labels
+    label_man = context.get('label_manager')
+    if label_man is not None and ref_label_ids:
+        return sorted(label_man.get_labels_by_id(ids=ref_label_ids))
+    else:
+        return []
 
 
 class RefError(Exception):
@@ -154,6 +185,10 @@ class Ref(Tag):
         # link to the label's document.
         document = self.document(cache=cache)
         target_filepath = document.target_filepath(target)
+
+        if target_filepath is None:
+            return None
+
         link = target_filepath.get_url(context=self.context)
 
         return link + '#' + label.id if include_anchor else link
@@ -258,18 +293,13 @@ class Ref(Tag):
             # file itself.
             # Tex formats will only work with pdf links
             include_anchor = not isinstance(label, DocumentLabel)
-            try:
-                url = self.url(target='.pdf', include_anchor=include_anchor,
-                               cache=cache)
 
-                # Add a target-specific attribute to the url so that it's
-                # properly
-                # parsed for the '.tex' target
-                url = url + '.tex' if url else ''
-            except MissingTargetException:
-                # If 'pdf' is not a valid target, then there is no url link
-                # to the other document.
-                url = ''
+            url = self.url(target='.pdf', include_anchor=include_anchor,
+                           cache=cache)
+
+            # Add a target-specific attribute to the url so that it's
+            # properly parsed for the '.tex' target
+            url = url + '.tex' if url else ''
 
             # wrap content in 'href' tag, if a url is present, otherwise
             # just return a regular text string
