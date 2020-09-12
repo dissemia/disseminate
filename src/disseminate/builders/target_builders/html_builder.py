@@ -1,5 +1,5 @@
 """
-A CompositeBuilder for html files.
+A TargetBuilder for html files.
 """
 from .target_builder import TargetBuilder
 from ..copy import Copy
