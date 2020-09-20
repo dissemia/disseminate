@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<package version="3.0"
+         xml:lang="en"
+         xmlns="http://www.idpf.org/2007/opf"
+         unique-identifier="pub-id">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <!-- Required Fields -->
+    <dc:identifier id="pub-id">urn:uuid:{{uuid}}</dc:identifier>
+    <dc:title>{{ title }}</dc:title>
+    <dc:language>en</dc:language>
+    <meta property="dcterms:modified">{{ date }}</meta>
+    <!-- Optional Fields -->
+  </metadata>
+  <manifest>
+    <!-- Main content files in ebook -->
+    {%- for file in xhtml_files %}
+    <item href="{{ file.subpath }}"
+          id="{{ file.id }}"
+          media-type="application/xhtml+xml"{% if file.is_toc %} properties="nav"{% endif %}/>
+    {%- endfor %}
+    <!-- Media files -->
+    {%- for file in css_files %}
+    <item href="{{ file.subpath }}"
+          id="{{ file.id }}"
+          media-type="text/css"/>
+    {%- endfor %}
+    {%- for file in svg_files %}
+    <item href="{{ file.subpath }}"
+          id="{{ file.id }}"
+          media-type="image/svg+xml"/>
+    {%- endfor %}
+  </manifest>
+  <spine>
+    <!-- The default reading order of elements -->
+    {%- for file in xhtml_files %}
+    <itemref idref="{{ file.id }}"/>
+    {%- endfor %}
+  </spine>
+</package>

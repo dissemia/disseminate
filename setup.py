@@ -88,7 +88,8 @@ setup(
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc',
                 'asv'],
-        'test': ['pytest', 'pytest-sanic>1.6', 'tox', 'coverage'],
+        'test': ['pytest', 'pytest-sanic>1.6', 'tox', 'coverage',
+                 'epubcheck>=0.4'],
         'termcolor': ['termcolor']  # MIT license
     },
     scripts=['scripts/dm', ],

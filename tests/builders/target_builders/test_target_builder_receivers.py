@@ -1,9 +1,9 @@
 """
-Test the Builder receivers
+Test the target builder signals and receivers
 """
 
 
-def test_builder_receiver_targets(env):
+def test_add_target_builders(env):
     """Test the add_targets_builders receiver with reloading of document
     targets"""
 
@@ -26,3 +26,6 @@ def test_builder_receiver_targets(env):
         """)
     doc.load()
     assert doc.context['builders'].keys() == {'.html', '.tex'}
+
+
+def test_target_builder_

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:epub="http://www.idpf.org/2007/ops"  lang="en">
+  <head>
+    {%- if title %}
+    <title>{{ title }}</title>
+    {%- endif %}
+    {%- block css %}
+    <link rel="stylesheet" href="{{ "/media/css/epub.css" | rewrite_path }}"/>
+    {% endblock %}
+    {%- block extra_css %}
+    {%- endblock %}
+  </head>
+  <body>
+    <article>
+      {%- block body %}
+      {{ body.xhtml }}
+      {%- endblock %}
+    </article>
+  </body>
+</html>
