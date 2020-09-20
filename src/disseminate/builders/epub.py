@@ -6,13 +6,13 @@ import pathlib
 import uuid
 from datetime import datetime, timezone
 
-from .builder import Builder
+from .composite_builders import SequentialBuilder
 from ..paths.utils import find_file
 from ..utils.classes import weakattr
 from ..utils.string import slugify
 
 
-class XHtml2Epub(Builder):
+class XHtml2Epub(SequentialBuilder):
     """Convert xhtml files to an epub v3 file.
 
     Parameters
@@ -36,10 +36,9 @@ class XHtml2Epub(Builder):
 
     _render_context = None
 
-    def __init__(self, env, context, subbuilders=None, **kwargs):
+    def __init__(self, env, context, **kwargs):
         # Setup the arguments
         assert context is not None
-        subbuilders = subbuilders or []
 
         super().__init__(env, **kwargs)
         self.context = context
@@ -48,6 +47,10 @@ class XHtml2Epub(Builder):
         # One of the file should have a toc.xhtml
         assert any(p.name == self.toc_filename for p in self.parameters
                    if hasattr(p, 'name')), "epub requires a toc.xhtml file"
+
+        # Create a subbuilder for the content.opf file
+        opf_builder = self.create_opf_builder()
+        self.subbuilders.append(opf_builder)
 
     def create_opf_builder(self, template_name='default/xhtml/content'):
         """Create a render builder for the content.opf file.
@@ -111,6 +114,9 @@ class XHtml2Epub(Builder):
         return rv
 
     def build(self, complete=False):
+        # Build subbuilders first
+        super().build(complete=complete)
+
         context = self.context
         root_path = pathlib.Path('.')  # Base path for zip file
 
