@@ -4,6 +4,7 @@ Builders for EPUB files
 import zipfile
 import pathlib
 import uuid
+import logging
 from datetime import datetime, timezone
 
 from .composite_builders import SequentialBuilder
@@ -60,7 +61,8 @@ class XHtml2Epub(SequentialBuilder):
         template_name : Optional[str]
             The name of the template to use for the content.opf.
         """
-        builder_cls = XHtml2Epub.find_builder_cls(in_ext='.render')
+        # Find the render builder class
+        builder_cls = self.find_builder_cls(in_ext='.render')
 
         # Setup a renderer for the content.opfs
         fps = [p for p in self.parameters if hasattr(p, 'suffix')]
@@ -118,10 +120,12 @@ class XHtml2Epub(SequentialBuilder):
         super().build(complete=complete)
 
         context = self.context
+        outfilepath = self.outfilepath
         root_path = pathlib.Path('.')  # Base path for zip file
 
+        logging.debug("Creating epub file '{}'".format(outfilepath))
         # Create the epub
-        with zipfile.ZipFile(self.outfilepath, 'w',
+        with zipfile.ZipFile(outfilepath, 'w',
                              compression=zipfile.ZIP_DEFLATED) as epub:
             # Add the mimetype file
             epub.writestr('mimetype',

@@ -5,7 +5,7 @@ import pathlib
 
 import epubcheck
 
-from disseminate.builders.epub import XHtml2Epub
+from disseminate.builders.xhtml2epub import XHtml2Epub
 from disseminate.paths import SourcePath, TargetPath
 
 

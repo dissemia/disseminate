@@ -3,9 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
       xmlns:epub="http://www.idpf.org/2007/ops"  lang="en">
   <head>
-    {%- if title %}
-    <title>{{ title }}</title>
-    {%- endif %}
+    <title>{{ title|default("Document Title") }}</title>
     {%- block css %}
     <link rel="stylesheet" href="{{ "/media/css/epub.css" | rewrite_path }}"/>
     {% endblock %}
@@ -13,10 +11,8 @@
     {%- endblock %}
   </head>
   <body>
-    <article>
-      {%- block body %}
-      {{ body.xhtml }}
-      {%- endblock %}
-    </article>
+    {%- block body %}
+    {{ body.xhtml }}
+    {%- endblock %}
   </body>
 </html>

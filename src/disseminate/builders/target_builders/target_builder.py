@@ -86,27 +86,19 @@ class TargetBuilder(SequentialBuilder):
         parameters.insert(0, "build '{}'".format(self.__class__.__name__))
 
         # Determine if this target builder matches a document target
-        document = getattr(context, 'document', None)
-        is_document_target = (document is not None and
-                              self.outfilepath_ext in document.targets)
+        is_document_target = self.outfilepath_ext in context.targets
 
         # Only use cache for outfilepaths if this is not a document target
         use_cache = False if is_document_target else True
 
         # Setup the outfilepath, if one isn't specified.
         if outfilepath is None:
-            if is_document_target:
-                # Use the document target as the outfilepath, if this target is
-                # listed in the document targets
-                outfilepath = document.targets[self.outfilepath_ext]
-            else:
-                # Otherwise create one from the src_filepath
-                outfilepath = generate_outfilepath(env=env,
-                                                   parameters=parameters,
-                                                   target=self.outfilepath_ext,
-                                                   ext=self.outfilepath_ext,
-                                                   use_cache=use_cache,
-                                                   use_media=self.use_media)
+            outfilepath = generate_outfilepath(env=env,
+                                               parameters=parameters,
+                                               target=self.outfilepath_ext,
+                                               ext=self.outfilepath_ext,
+                                               use_cache=use_cache,
+                                               use_media=self.use_media)
 
         # Add a parallel builder for dependencies
         if self.add_parallel_builder:
