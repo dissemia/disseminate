@@ -87,130 +87,6 @@ def test_figure_caption_with_id(doc):
         assert caption.default == 'My Fig. 1. This is my caption'
 
 
-# html tests
-
-def test_marginfig_caption_no_id_html(doc):
-    """Tests the html generation of captions in figure tags when no id is
-    specified."""
-
-    # Set the label format for the caption figure
-    label_fmts = doc.context['label_fmts']
-    label_fmts['caption_figure'] = "My Fig. @label.number. "
-
-    # Generate the markup without an id
-    src = "@marginfig{@caption{This is my caption}}"
-
-    # Generate a tag and compare the generated tex to the answer key
-    root = Tag(name='root', content=src, attributes='', context=doc.context)
-    marginfig = root.content
-
-    key = ('<figure class="marginfig">'
-           '<figcaption id="caption-92042fbb8b" class="caption">'
-           '<span class="label">My Fig. 1. </span>'
-           'This is my caption</figcaption>'
-           '</figure>\n')
-    assert marginfig.html == key
-
-
-def test_marginfig_caption_with_id_html(doc):
-    """Tests the html generation of captions in figure tags when an id is
-    specified."""
-    label_man = doc.context['label_manager']
-
-    # Set the label format for the caption figure
-    label_fmts = doc.context['label_fmts']
-    label_fmts['caption_figure'] = "My Fig. @label.number. "
-
-    # Test two cases: one in which the id is in the figure tag, and one in which
-    # the id is in the caption tag
-    srcs = ("@marginfig[id=fig-1]{@caption{This is my caption}}",
-            "@marginfig{@caption[id=fig-1]{This is my caption}}")
-
-    key = ('<figure class="marginfig">'
-           '<figcaption id="fig-1" class="caption">'
-           '<span class="label">My Fig. 1. </span>'
-           'This is my caption</figcaption>'
-           '</figure>\n')
-
-    for count, src in enumerate(srcs):
-        # Reset the label manager to avoid duplicate labels
-        label_man.reset()
-
-        # Generate a tag and compare the generated tex to the answer key
-        root = Tag(name='root', content=src, attributes='', context=doc.context)
-        fig = root.content
-
-        assert fig.html == key
-
-
-def test_figure_html(doc):
-    """Test the @figure tag html format"""
-
-    # Set the label format for the caption figure
-    label_fmts = doc.context['label_fmts']
-    label_fmts['caption_figure'] = "My Fig. @label.number. "
-
-    # Generate the markup without an id
-    src = "@fig{@caption{This is my caption}}"
-
-    # Generate a tag and compare the generated tex to the answer key
-    root = Tag(name='root', content=src, attributes='', context=doc.context)
-    marginfig = root.content
-
-    key = ('<figure class="figure">'
-           '<figcaption id="caption-92042fbb8b" class="caption">'
-           '<span class="label">My Fig. 1. </span>'
-           'This is my caption</figcaption>'
-           '</figure>\n')
-    assert marginfig.html == key
-
-
-def test_fullfigure_html(doc):
-    """Test the @fullfigure tag html format"""
-
-    # Set the label format for the caption figure
-    label_fmts = doc.context['label_fmts']
-    label_fmts['caption_figure'] = "My Fig. @label.number. "
-
-    # Generate the markup without an id
-    src = "@fullfigure{@caption{This is my caption}}"
-
-    # Generate a tag and compare the generated html to the answer key
-    root = Tag(name='root', content=src, attributes='', context=doc.context)
-    marginfig = root.content
-
-    key = ('<figure class="fullfigure">'
-           '<figcaption id="caption-92042fbb8b" class="caption">'
-           '<span class="label">My Fig. 1. </span>'
-           'This is my caption</figcaption>'
-           '</figure>\n')
-    assert marginfig.html == key
-
-
-def test_panel_html(doc):
-    """Test the @panel tag html format"""
-
-    # 1. Generate a panel tag without a width
-    src = "@panel{This is my panel}"
-
-    # Generate a tag and compare the generated html to the answer key
-    root = Tag(name='root', content=src, attributes='', context=doc.context)
-    panel = root.content
-
-    key = '<span class="panel">This is my panel</span>\n'
-    assert panel.html == key
-
-    # 2. Generate a panel tag a width
-    src = "@panel[width='30%']{This is my panel}"
-
-    # Generate a tag and compare the generated html to the answer key
-    root = Tag(name='root', content=src, attributes='', context=doc.context)
-    panel = root.content
-
-    key = '<span class="panel" style="width: 30.0%">This is my panel</span>\n'
-    assert panel.html == key
-
-
 # tex tests
 
 def test_marginfig_caption_no_id_tex(doc):
@@ -333,3 +209,200 @@ def test_panel_tex(doc):
            'This is my panel\n'
            '\\end{panel}')
     assert panel.tex == key
+
+
+# html tests
+
+def test_marginfig_caption_no_id_html(doc):
+    """Tests the html generation of captions in figure tags when no id is
+    specified."""
+
+    # Set the label format for the caption figure
+    label_fmts = doc.context['label_fmts']
+    label_fmts['caption_figure'] = "My Fig. @label.number. "
+
+    # Generate the markup without an id
+    src = "@marginfig{@caption{This is my caption}}"
+
+    # Generate a tag and compare the generated tex to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    marginfig = root.content
+
+    key = ('<figure class="marginfig">'
+           '<figcaption id="caption-92042fbb8b" class="caption">'
+           '<span class="label">My Fig. 1. </span>'
+           'This is my caption</figcaption>'
+           '</figure>\n')
+    assert marginfig.html == key
+
+
+def test_marginfig_caption_with_id_html(doc):
+    """Tests the html generation of captions in figure tags when an id is
+    specified."""
+    label_man = doc.context['label_manager']
+
+    # Set the label format for the caption figure
+    label_fmts = doc.context['label_fmts']
+    label_fmts['caption_figure'] = "My Fig. @label.number. "
+
+    # Test two cases: one in which the id is in the figure tag, and one in which
+    # the id is in the caption tag
+    srcs = ("@marginfig[id=fig-1]{@caption{This is my caption}}",
+            "@marginfig{@caption[id=fig-1]{This is my caption}}")
+
+    key = ('<figure class="marginfig">'
+           '<figcaption id="fig-1" class="caption">'
+           '<span class="label">My Fig. 1. </span>'
+           'This is my caption</figcaption>'
+           '</figure>\n')
+
+    for count, src in enumerate(srcs):
+        # Reset the label manager to avoid duplicate labels
+        label_man.reset()
+
+        # Generate a tag and compare the generated tex to the answer key
+        root = Tag(name='root', content=src, attributes='', context=doc.context)
+        fig = root.content
+
+        assert fig.html == key
+
+
+def test_figure_html(doc):
+    """Test the @figure tag html format"""
+
+    # Set the label format for the caption figure
+    label_fmts = doc.context['label_fmts']
+    label_fmts['caption_figure'] = "My Fig. @label.number. "
+
+    # Generate the markup without an id
+    src = "@fig{@caption{This is my caption}}"
+
+    # Generate a tag and compare the generated tex to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    fig = root.content
+
+    key = ('<figure class="figure">'
+           '<figcaption id="caption-92042fbb8b" class="caption">'
+           '<span class="label">My Fig. 1. </span>'
+           'This is my caption</figcaption>'
+           '</figure>\n')
+    assert fig.html == key
+
+
+def test_fullfigure_html(doc):
+    """Test the @fullfigure tag html format"""
+
+    # Set the label format for the caption figure
+    label_fmts = doc.context['label_fmts']
+    label_fmts['caption_figure'] = "My Fig. @label.number. "
+
+    # Generate the markup without an id
+    src = "@fullfigure{@caption{This is my caption}}"
+
+    # Generate a tag and compare the generated html to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    marginfig = root.content
+
+    key = ('<figure class="fullfigure">'
+           '<figcaption id="caption-92042fbb8b" class="caption">'
+           '<span class="label">My Fig. 1. </span>'
+           'This is my caption</figcaption>'
+           '</figure>\n')
+    assert marginfig.html == key
+
+
+def test_panel_html(doc):
+    """Test the @panel tag html format"""
+
+    # 1. Generate a panel tag without a width
+    src = "@panel{This is my panel}"
+
+    # Generate a tag and compare the generated html to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    panel = root.content
+
+    key = '<span class="panel">This is my panel</span>\n'
+    assert panel.html == key
+
+    # 2. Generate a panel tag a width
+    src = "@panel[width='30%']{This is my panel}"
+
+    # Generate a tag and compare the generated html to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    panel = root.content
+
+    key = '<span class="panel" style="width: 30.0%">This is my panel</span>\n'
+    assert panel.html == key
+
+
+# xhtml target
+
+def test_figure_xhtml(doc, is_xml):
+    """Test the @figure tag html format"""
+
+    # Set the label format for the caption figure
+    label_fmts = doc.context['label_fmts']
+    label_fmts['caption_figure'] = "My Fig. @label.number. "
+
+    # Generate the markup without an id
+    src = "@fig{@caption{This is my caption}}"
+
+    # Generate a tag and compare the generated tex to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    fig = root.content
+
+    key = ('<figure class="figure">\n'
+           '  <figcaption id="caption-92042fbb8b" class="caption">'
+           '<span class="label">My Fig. 1. </span>'
+           'This is my caption</figcaption>\n'
+           '</figure>\n')
+    assert fig.xhtml == key
+    assert is_xml(fig.xhtml)
+
+
+def test_fullfigure_xhtml(doc, is_xml):
+    """Test the @fullfigure tag xhtml format"""
+
+    # Set the label format for the caption figure
+    label_fmts = doc.context['label_fmts']
+    label_fmts['caption_figure'] = "My Fig. @label.number. "
+
+    # Generate the markup without an id
+    src = "@fullfigure{@caption{This is my caption}}"
+
+    # Generate a tag and compare the generated html to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    marginfig = root.content
+
+    key = ('<figure class="fullfigure">\n'
+           '  <figcaption id="caption-92042fbb8b" class="caption">'
+           '<span class="label">My Fig. 1. </span>'
+           'This is my caption</figcaption>\n'
+           '</figure>\n')
+    assert marginfig.xhtml == key
+    assert is_xml(marginfig.xhtml)
+
+
+def test_panel_xhtml(doc, is_xml):
+    """Test the @panel tag xhtml format"""
+
+    # 1. Generate a panel tag without a width
+    src = "@panel{This is my panel}"
+
+    # Generate a tag and compare the generated html to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    panel = root.content
+
+    assert panel.xhtml == '<span class="panel">This is my panel</span>\n'
+    assert is_xml(panel.xhtml)
+
+    # 2. Generate a panel tag a width
+    src = "@panel[width='30%']{This is my panel}"
+
+    # Generate a tag and compare the generated html to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    panel = root.content
+
+    assert (panel.xhtml ==
+            '<span class="panel" style="width: 30.0%">This is my panel</span>\n')
+    assert is_xml(panel.xhtml)

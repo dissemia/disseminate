@@ -2,11 +2,16 @@
 Test the EpubBuilder
 """
 from collections import namedtuple
+import pathlib
 
 import epubcheck
 
 from disseminate.builders.target_builders import EpubBuilder
 from disseminate.paths import TargetPath
+
+# Paths for examples
+ex3_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex3'
+ex6_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex6'
 
 
 def test_epub_builder_find_or_create_xhtml_builders(doctree):
@@ -156,7 +161,7 @@ def test_epub_builder_setup_epub_in_targets(env):
     assert builder.status == 'ready'
 
 
-def test_epub_builder_simple(env):
+def test_epub_builder_simple1(env):
     """Test a simple build with the EpubBuilder with epub target"""
     context = env.context
     target_root = env.target_root
@@ -203,7 +208,7 @@ def test_epub_builder_simple(env):
     # else
     assert epub_filepath.exists()
     assert xhtml_filepath.exists()
-    assert len(list(epub_filepath.parent.glob('*'))) == 1  # only test.pdf
+    assert len(list(epub_filepath.parent.glob('*'))) == 1  # only test.epub
 
     # Check the epub file
     assert epubcheck.validate(epub_filepath)
@@ -211,3 +216,40 @@ def test_epub_builder_simple(env):
     # New builders don't need to rebuild.
     builder = EpubBuilder(env, context=context)
     assert builder.status == 'done'
+
+
+def test_epub_builder_simple_doc_build(load_example):
+    """Test a build of a simple document with the EPubBuilder."""
+    # 1. example 1: tests/builders/examples/ex3
+    doc = load_example(ex3_root / 'dummy.dm')
+    target_root = doc.target_root
+
+    doc.build()
+
+    # Check the copied and built files
+    tgt_filepath = TargetPath(target_root=target_root, target='epub',
+                              subpath='dummy.epub')
+    assert tgt_filepath.exists()
+    assert len(list(tgt_filepath.parent.glob('*'))) == 1  # only test.epub
+
+    # Check that the file is a valid epub
+    assert epubcheck.validate(tgt_filepath)
+
+
+def test_epub_builder_doctree_build(load_example):
+    """Test a build of a document tree with the EPubBuilder."""
+    # 1. example 1: tests/builders/examples/ex3
+    doc = load_example(ex6_root / 'index.dm')
+    target_root = doc.target_root
+
+    doc.build()
+
+    # Check the copied and built files
+    tgt_filepath = TargetPath(target_root=target_root, target='epub',
+                              subpath='index.epub')
+    assert tgt_filepath.exists()
+    assert len(list(tgt_filepath.parent.glob('*'))) == 1  # only test.epub
+
+    # Check that the file is a valid epub
+    assert epubcheck.validate(tgt_filepath)
+

@@ -8,7 +8,7 @@ from itertools import groupby
 from .tag import Tag
 from .ref import Ref
 from ..signals import signal
-from ..formats import html_tag
+from ..formats import xhtml_tag
 
 document_tree_updated = signal('document_tree_updated')
 
@@ -92,18 +92,17 @@ class Next(Ref):
 
     active = True
 
-    def __init__(self, name, content, attributes, context):
+    def __init__(self, name, content, **kwargs):
         # Bypass the Ref initiator, as it sets the label_id
         # Do not use the tag contents--this tag cannot do anything with it.
         content = ''
-        Tag.__init__(self, name, content, attributes, context)
+        Tag.__init__(self, name=name, content=content, **kwargs)
 
-    def default_fmt(self, content=None, attributes=None, label=None):
+    def default_fmt(self, **kwargs):
         # The next reference is designed for html only
         return ""
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, cache=None,
-                level=1):
+    def tex_fmt(self, cache=None, **kwargs):
         context = self.context
         cache = dict() if cache is None else cache
 
@@ -112,13 +111,11 @@ class Next(Ref):
             cache['label'] = label()  # Dereference. See above.
 
         if 'label' in cache:
-            return super(Next, self).html_fmt(content=content, cache=cache,
-                                              level=level)
+            return super(Next, self).html_fmt(cache=cache, **kwargs)
         else:
             return ""
 
-    def html_fmt(self, content=None, attributes=None, label=None, cache=None,
-                 level=1):
+    def html_fmt(self, cache=None, **kwargs):
         context = self.context
         cache = dict() if cache is None else cache
 
@@ -127,10 +124,12 @@ class Next(Ref):
             cache['label'] = label()  # Dereference. See above.
 
         if 'label' in cache:
-            return super(Next, self).html_fmt(content=content, cache=cache,
-                                              level=level)
+            return super(Next, self).html_fmt(cache=cache, **kwargs)
         else:
             return ""
+
+    def xhtml_fmt(self, **kwargs):
+        raise NotImplementedError
 
 
 class Prev(Ref):
@@ -140,7 +139,7 @@ class Prev(Ref):
     -----
     1. As opposed to the parent Ref tag, if a label is not found, an empty
        string is returned by the target format functions.
-    2. The following are tag attributes that are recognized:
+    2. The following are tag attributes that are recognized
 
     kind : str
         The kind of label to reference by this tag. By default, it's a
@@ -149,18 +148,17 @@ class Prev(Ref):
 
     active = True
 
-    def __init__(self, name, content, attributes, context):
+    def __init__(self, name, content, **kwargs):
         # Bypass the Ref initiator, as it sets the label_id
         # Do not use the tag contents--this tag cannot do anything with it.
         content = ''
-        Tag.__init__(self, name, content, attributes, context)
+        Tag.__init__(self, name=name, content=content, **kwargs)
 
-    def default_fmt(self, content=None, attributes=None, label=None):
+    def default_fmt(self, **kwargs):
         # The next reference is designed for html only
         return ""
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, cache=None,
-                level=1):
+    def tex_fmt(self, cache=None, **kwargs):
         context = self.context
         cache = dict() if cache is None else cache
 
@@ -169,13 +167,11 @@ class Prev(Ref):
             cache['label'] = label()  # Dereference. See above.
 
         if 'label' in cache:
-            return super(Prev, self).html_fmt(content=content, cache=cache,
-                                              level=level)
+            return super(Prev, self).html_fmt(cache=cache, **kwargs)
         else:
             return ""
 
-    def html_fmt(self, content=None, attributes=None, label=None, cache=None,
-                 level=1):
+    def html_fmt(self, cache=None, **kwargs):
         context = self.context
         cache = dict() if cache is None else cache
 
@@ -184,10 +180,12 @@ class Prev(Ref):
             cache['label'] = label()  # Dereference. See above.
 
         if 'label' in cache:
-            return super(Prev, self).html_fmt(content=content, cache=cache,
-                                              level=level)
+            return super(Prev, self).html_fmt(cache=cache, **kwargs)
         else:
             return ""
+
+    def xhtml_fmt(self, **kwargs):
+        raise NotImplementedError
 
 
 class Pdflink(Ref):
@@ -197,26 +195,26 @@ class Pdflink(Ref):
     -----
     1. As opposed to the parent Ref tag, if a label is not found, an empty
        string is returned by the target format functions.
+    2. The xhtml target should use the 'next_html' reference in the context
     """
 
     active = True
 
-    def __init__(self, name, content, attributes, context):
+    def __init__(self, name, content, **kwargs):
         # Bypass the Ref initiator, as it sets the label_id
         # Do not use the tag contents--this tag cannot do anything with it.
         content = ''
-        Tag.__init__(self, name, content, attributes, context)
+        Tag.__init__(self, name, content, **kwargs)
 
-    def default_fmt(self, content=None, attributes=None, cache=None):
+    def default_fmt(self, **kwargs):
         # The next reference is designed for html only
         return ""
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, cache=None,
-                level=1):
+    def tex_fmt(self, **kwargs):
         # The next reference is designed for html only
         return ""
 
-    def html_fmt(self, content=None, attributes=None, cache=None, level=1):
+    def html_fmt(self, attributes=None, method='html', level=1, **kwargs):
         context = self.context
         
         # Only works if the document that owns this tag will be rendered to
@@ -233,13 +231,14 @@ class Pdflink(Ref):
         # Get the relative path do this html document
         relative_path = relpath(pdf_target_filepath, html_target_filepath)
 
-        attrs = self.attributes.copy() if attributes is None else attributes
+        attrs = attributes or self.attributes.copy()
         attrs['class'] = 'ref'
         attrs['href'] = relative_path
 
         # wrap content in 'a' tag
-        return html_tag('a', attributes=attrs,
-                        formatted_content='pdf',
-                        level=level,
-                        pretty_print=False)  # no line breaks
+        return xhtml_tag('a', attributes=attrs, formatted_content='pdf',
+                         method=method, level=level,
+                         pretty_print=False)  # no line breaks
 
+    def xhtml_fmt(self, **kwargs):
+        raise NotImplementedError

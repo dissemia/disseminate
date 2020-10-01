@@ -450,7 +450,7 @@ class Attributes(dict):
                 # Append it as a string
                 self[attr] = ' '.join((str(current_value), str(value)))
 
-    def filter(self, attrs=None, target='', sep=settings.attribute_target_sep,
+    def filter(self, attrs=None, target=None, sep=settings.attribute_target_sep,
                sort_by_attrs=False):
         """Create an Attributes dict with target-specific entries.
 
@@ -494,6 +494,7 @@ class Attributes(dict):
         Attributes{'tgt': 'default'}
         """
         # Strip the leading period from the target, if present
+        target = '' if target is None else target
         target = target[1:] if target.startswith('.') else target
 
         # Setup the returned attributes dict

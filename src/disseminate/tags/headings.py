@@ -33,7 +33,7 @@ class Heading(Tag, LabelMixin):
                    'subsubsection': 'subsubsec',
                     }
 
-    def __init__(self, name, content, attributes, context):
+    def __init__(self, name, content, attributes, context, **kwargs):
 
         # If no content is specified, see if it's specified in the context
         if (isinstance(content, str) and content.strip() == '' and
@@ -41,10 +41,13 @@ class Heading(Tag, LabelMixin):
             content = content_to_str(context[name])
 
         # Call the parent class's constructor
-        Tag.__init__(self, name, content, attributes, context)
+        Tag.__init__(self, name=name, content=content, attributes=attributes,
+                     context=context, **kwargs)
 
         if not 'nolabel' in self.attributes:
-            LabelMixin.__init__(self, name, content, attributes, context)
+            LabelMixin.__init__(self, name=name, content=content,
+                                attributes=attributes, context=context,
+                                **kwargs)
 
     def generate_label_id(self):
         if 'id' in self.attributes:
@@ -60,7 +63,7 @@ class Heading(Tag, LabelMixin):
         cls_name = self.__class__.__name__.lower()
         return 'heading', cls_name  # ex: ('heading', 'chapter')
 
-    def default_fmt(self, content=None):
+    def default_fmt(self, content=None, attributes=None):
         # Prepare the content with the label. References for the default format
         # are not supported
         label_tag = self.label_tag
@@ -71,11 +74,13 @@ class Heading(Tag, LabelMixin):
         else:
             content = content_to_str(self.content)
 
-        return super().default_fmt(content=content)
+        return super().default_fmt(content=content, attributes=attributes)
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1,
+                **kwargs):
         cls_name = self.__class__.__name__.lower()
         content = ''
+        attributes = attributes or self.attributes
 
         # Prepare the tag contents to include the label tag.
         # ex: 'My Title' becomes 'Chap 1. My Title'
@@ -84,7 +89,7 @@ class Heading(Tag, LabelMixin):
                                               level=level + 1)
 
         # Format the heading tag. ex: \chapter{Chapter 1. My First Chapter}
-        content = tex_cmd(cls_name, attributes=self.attributes,
+        content = tex_cmd(cls_name, attributes=attributes,
                           formatted_content=content)
 
         # Get the label for this heading to get its number, if available
@@ -105,7 +110,7 @@ class Heading(Tag, LabelMixin):
 
         return content
 
-    def html_fmt(self, content=None, attributes=None, level=1):
+    def html_fmt(self, content=None, **kwargs):
         # Prepare the tag contents to include the label tag.
         # ex: 'My Title' becomes 'Chap 1. My Title'
         label_tag = self.label_tag
@@ -116,8 +121,7 @@ class Heading(Tag, LabelMixin):
         else:
             content = self.content
 
-        return super().html_fmt(content=content, attributes=attributes,
-                                level=level)
+        return super().html_fmt(content=content, **kwargs)
 
 
 class Title(Heading):

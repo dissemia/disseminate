@@ -230,12 +230,16 @@ class JinjaRender(Builder):
         template = self.template()
         context = self.context
         outfilepath = self.outfilepath
+
+        logging.debug("Rendering '{}' with Jinja2 "
+                      "'{}'".format(outfilepath, template))
         if 'target' in context:
             rendered_string = template.render(**context,
                                               outfilepath=outfilepath)
         else:
             rendered_string = template.render(**context, target=self.render_ext,
                                               outfilepath=outfilepath)
+
         outfilepath.write_text(rendered_string)
         self.build_needed(reset=True)
         return self.status

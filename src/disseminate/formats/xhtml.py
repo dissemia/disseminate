@@ -13,14 +13,22 @@ from ..attributes import Attributes
 from .. import settings
 
 
-class HtmlFormatError(FormattingError):
-    """Error in html formatting."""
+class XHtmlFormatError(FormattingError):
+    """Error in xhtml formatting."""
     pass
 
 
-def html_tag(name, attributes=None, formatted_content=None, level=1,
-             pretty_print=settings.html_pretty):
-    """Format an html tag string.
+def html_tag(*args, **kwargs):
+    return html_tag(*args, **kwargs, method='html')
+
+
+def xml_tag(*args, **kwargs):
+    return xhtml_tag(*args, **kwargs, method='xml')
+
+
+def xhtml_tag(name, attributes=None, formatted_content=None, level=1,
+              target=None, method='html', pretty_print=settings.xhtml_pretty):
+    """Format an xhtml tag string.
 
     Parameters
     ----------
@@ -32,6 +40,10 @@ def html_tag(name, attributes=None, formatted_content=None, level=1,
         The contents of the html tag.
     level : Optional[int]
         The level of the tag.
+    target : Optional[str]
+        If speficied, filter the attributes that match the given target.
+    method : Optional[str]
+        The rendering method. 'html', 'xhtml' or 'xml'
     pretty_print : Optional[bool]
         If True, make the formatted html pretty--i.e. with newlines and spacing
         for nested tags.
@@ -39,17 +51,26 @@ def html_tag(name, attributes=None, formatted_content=None, level=1,
     Returns
     -------
     html : str
-        If level=1, a string formatted in html
+        If level=1, a string formatted in (x)html
         if level>1, an html element (:obj:`lxml.build.E`)
 
     Raises
     ------
-    HtmlFormatError : :exc:`HtmlFormatError`
+    XHtmlFormatError : :exc:`XHtmlFormatError`
         A TagError is raised if a non-allowed environment is used
+
+    Examples
+    --------
+    >>> xhtml_tag('img', attributes="src='test.svg'")
+    Markup('<img src="test.svg">\\n')
+    >>> xhtml_tag('img', attributes="src='test.svg'", method='xml')
+    Markup('<img src="test.svg"/>\\n')
     """
+    method = 'xml' if method == 'xhtml' else method
+
     # See if the tag is permitted
-    allowed_tag = (name in settings.html_tag_arguments or
-                   name in settings.html_tag_optionals)
+    allowed_tag = (name in settings.xhtml_tag_arguments or
+                   name in settings.xhtml_tag_optionals)
 
     # Format the attributes
     attributes = '' if attributes is None else attributes
@@ -57,38 +78,34 @@ def html_tag(name, attributes=None, formatted_content=None, level=1,
                   attributes)
 
     # Get the required arguments
-    if name in settings.html_tag_arguments:
+    if name in settings.xhtml_tag_arguments:
         # If it's an allowed tag, get the required arguments for that tag
-        reqs = attributes.filter(attrs=settings.html_tag_arguments[name],
-                                 target='html',
-                                 sort_by_attrs=True)
-    elif not allowed_tag and 'span' in settings.html_tag_arguments:
+        reqs = attributes.filter(attrs=settings.xhtml_tag_arguments[name],
+                                 target=target, sort_by_attrs=True)
+    elif not allowed_tag and 'span' in settings.xhtml_tag_arguments:
         # If it's not an allowed tag, use a 'span' tag and its required
         # arguments
-        reqs = attributes.filter(attrs=settings.html_tag_arguments['span'],
-                                 target='html',
-                                 sort_by_attrs=True)
+        reqs = attributes.filter(attrs=settings.xhtml_tag_arguments['span'],
+                                 target=target, sort_by_attrs=True)
     else:
         reqs = None
 
     # Make sure the correct number of required arguments were found
-    if reqs is not None and len(reqs) != len(settings.html_tag_arguments[name]):
+    if reqs is not None and len(reqs) != len(settings.xhtml_tag_arguments[name]):
         msg = ("The html tag '{}' did not receive the correct "
                "required arguments. Required arguments received: {}")
-        raise HtmlFormatError(msg.format(name, reqs))
+        raise XHtmlFormatError(msg.format(name, reqs))
 
     # Get optional arguments
-    if name in settings.html_tag_optionals:
+    if name in settings.xhtml_tag_optionals:
         # If it's an allowed tag, get the optional arguments for that tag
-        opts = attributes.filter(attrs=settings.html_tag_optionals[name],
-                                 target='html',
-                                 sort_by_attrs=True)
-    elif not allowed_tag and 'span' in settings.html_tag_optionals:
+        opts = attributes.filter(attrs=settings.xhtml_tag_optionals[name],
+                                 target=target, sort_by_attrs=True)
+    elif not allowed_tag and 'span' in settings.xhtml_tag_optionals:
         # If it's not an allowed tag, use a 'span' tag and its optional
         # arguments
-        opts = attributes.filter(attrs=settings.html_tag_optionals['span'],
-                                 target='html',
-                                 sort_by_attrs=True)
+        opts = attributes.filter(attrs=settings.xhtml_tag_optionals['span'],
+                                 target=target, sort_by_attrs=True)
     else:
         opts = None
 
@@ -136,14 +153,19 @@ def html_tag(name, attributes=None, formatted_content=None, level=1,
 
     # Format the tag into a string, if it's the root level
     if level == 1:
-        s = (etree.tostring(e, pretty_print=pretty_print, method='html')
+        s = (etree.tostring(e, pretty_print=pretty_print, method=method)
                   .decode("utf-8"))
         return Markup(s)  # Mark string as safe, since it's escaped by lxml
     else:
         return e
 
 
-def html_entity(entity, level=1, pretty_print=settings.html_pretty):
+def xml_entity(*args, **kwargs):
+    return xhtml_entity(*args, **kwargs, method='xml')
+
+
+def xhtml_entity(entity, level=1, method='html',
+                 pretty_print=settings.xhtml_pretty):
     """Format an html entity string.
 
     Parameters
@@ -152,45 +174,48 @@ def html_entity(entity, level=1, pretty_print=settings.html_pretty):
         an html entity string
     level : Optional[str]
         The level of the tag.
+    method : Optional[str]
+        The rendering method. 'html', 'xhtml' or 'xml'
     pretty_print : Optional[bool]
         If True, make the formatted html pretty--i.e. with newlines and spacing
         for nested tags.
 
     Returns
     -------
-    html : str
-        The entity formatted in html.
-
-    Examples
-    --------
-    >>> html_entity('alpha')
-    Markup('&alpha;\\n')
+    xhtml : str
+        The entity formatted in xhtml.
 
     Raises
     ------
-    ValueError
-        Raised for an invalid entity reference
-    TagError
+    XHtmlFormatError
         Raised if the contents of the tag aren't a simple string. i.e. nested
         tags are not allowed.
+
+    Examples
+    --------
+    >>> xhtml_entity('alpha')
+    Markup('&alpha;\\n')
     """
+    method = 'xml' if method == 'xhtml' else method
+
     if not isinstance(entity, str):
         msg = "The tag content '{}' cannot be translated into an html entity"
-        raise HtmlFormatError(msg.format(str(entity)))
+        raise XHtmlFormatError(msg.format(str(entity)))
 
     e = Entity(entity.strip())
     if level == 1:
-        s = (etree.tostring(e, pretty_print=pretty_print, method='html')
+        s = (etree.tostring(e, pretty_print=pretty_print, method=method)
              .decode("utf-8"))
         return Markup(s)  # Mark string as safe, since it's escaped by lxml
     else:
         return e
 
 
-def html_list(*elements, attributes=None, listtype='ol', level=1,
-              pretty_print=settings.html_pretty,
-              inner=False):
+def xhtml_list(*elements, attributes=None, listtype='ol', level=1,
+               target=None, method='html', pretty_print=settings.xhtml_pretty,
+               inner=False):
     """
+    A xhtml list element.
 
     Parameters
     ----------
@@ -203,6 +228,10 @@ def html_list(*elements, attributes=None, listtype='ol', level=1,
         The type of list to create. ex: ul, ol
     level : Optional[int]
         The level of the tag.
+    target : Optional[str]
+        If speficied, filter the attributes that match the given target.
+    method : Optional[str]
+        The rendering method. 'html', 'xhtml' or 'xml'
     pretty_print : Optional[bool]
         If True, make the formatted html pretty--i.e. with newlines and spacing
         for nested tags.
@@ -212,15 +241,17 @@ def html_list(*elements, attributes=None, listtype='ol', level=1,
 
     Returns
     -------
-    html : str
+    xhtml : str
         If level=1, a string formatted in html
         if level>1, an html element (:obj:`lxml.build.E`)
 
     Raises
     ------
-    HtmlFormatError : :exc:`HtmlFormatError`
+    XHtmlFormatError : :exc:`HtmlFormatError`
         A TagError is raised if a non-allowed list environment is used
     """
+    method = 'xml' if method == 'xhtml' else method
+
     current_elements = []
     listlevel = elements[0][0] if elements else 0
 
@@ -244,21 +275,21 @@ def html_list(*elements, attributes=None, listtype='ol', level=1,
 
         # If there are sub list items, add these as well
         if group[1:]:
-            l = html_list(*group[1:], listtype=listtype, level=level+1,
-                          pretty_print=pretty_print, inner=True)
+            l = xhtml_list(*group[1:], listtype=listtype, level=level + 1,
+                           target=target, method=method,
+                           pretty_print=pretty_print, inner=True)
             current_elements.append(l)
 
     # Wrap current_elements in a list
     attributes = attributes if not inner else ''
     if level == 1:
-        e = html_tag(name=listtype, formatted_content=current_elements,
-                     attributes=attributes, level=level + 1,
-                     pretty_print=pretty_print)
-        s = (etree.tostring(e, pretty_print=pretty_print, method='html')
+        e = xhtml_tag(name=listtype, formatted_content=current_elements,
+                      attributes=attributes, level=level + 1, target=target,
+                      method=method, pretty_print=pretty_print)
+        s = (etree.tostring(e, pretty_print=pretty_print, method=method)
              .decode("utf-8"))
         return Markup(s)  # Mark string as safe, since it's escaped by lxml
     else:
-        return html_tag(name=listtype, formatted_content=current_elements,
-                        attributes=attributes, level=level+1,
-                        pretty_print=pretty_print)
-
+        return xhtml_tag(name=listtype, formatted_content=current_elements,
+                         attributes=attributes, level=level+1, target=target,
+                         method=method, pretty_print=pretty_print)

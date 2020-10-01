@@ -2,6 +2,6 @@ HTML Format
 -----------
 
 .. automodule:: disseminate.formats.html
-    :members: HtmlFormatError, html_tag, html_entity
+    :members: HtmlFormatError, xhtml_tag, xhtml_entity
     :imported-members:
     :show-inheritance:

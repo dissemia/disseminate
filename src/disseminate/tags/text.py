@@ -5,8 +5,23 @@ from textwrap import wrap
 
 from .tag import Tag
 from .exceptions import TagError, assert_content_str
-from ..formats import tex_cmd, tex_env, tex_verb, html_entity, html_tag
+from ..formats import tex_cmd, tex_env, tex_verb, xhtml_entity, xhtml_tag
 from .utils import format_content
+
+
+class Body(Tag):
+    """A body tag for the body of a document.
+
+    In (x)html, this is rendered as a <div> instead of the default <span>
+    """
+
+    active = True
+    html_name = 'div'
+
+    def html_fmt(self, attributes=None, **kwargs):
+        attributes = attributes or self.attributes.copy()
+        attributes['class'] = 'body'
+        return super().html_fmt(attributes=attributes, **kwargs)
 
 
 class P(Tag):
@@ -22,9 +37,8 @@ class P(Tag):
     active = True
     include_paragraphs = False
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
-        tex = super(P, self).tex_fmt(content=content, mathmode=mathmode,
-                                     attributes=attributes, level=level)
+    def tex_fmt(self, **kwargs):
+        tex = super(P, self).tex_fmt(**kwargs)
 
         # Rewrap the text
         # if settings.tex_paragraph_width > 0:
@@ -94,7 +108,8 @@ class Sup(Tag):
     html_name = "sup"
     active = True
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1,
+                **kwargs):
         content = content if content is not None else self.content
 
         # Collect the content elements
@@ -123,7 +138,8 @@ class Sub(Tag):
     html_name = "sub"
     active = True
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1,
+                **kwargs):
         content = content if content is not None else self.content
 
         # Collect the content elements
@@ -175,15 +191,17 @@ class Supsub(Tag):
         self._sup = sup.strip()
         self._sub = sub.strip()
 
-    def html_fmt(self, content=None, attributes=None, level=1):
-        attrs = self.attributes.copy()
+    def html_fmt(self, content=None, attributes=None, format_func='html_fmt',
+                 method='html', level=1, **kwargs):
+        attrs = attributes or self.attributes.copy()
         attrs['class'] = 'supsub'
-        br_tag = html_tag(name='br', level=level + 1)
-        return html_tag(name='span', attributes=attrs,
-                        formatted_content=[self._sup, br_tag, self._sub],
-                        level=level,)
+        br_tag = xhtml_tag(name='br', method=method, level=level + 1)
+        return xhtml_tag(name='span', attributes=attrs,
+                         formatted_content=[self._sup, br_tag, self._sub],
+                         method=method, level=level)
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1,
+                **kwargs):
         formatted = "^{" + self._sup + "}_{" + self._sub + "}"
         return (tex_cmd(cmd='ensuremath', attributes='',
                         formatted_content=formatted)
@@ -210,10 +228,12 @@ class Symbol(Tag):
         super().__init__(name=name, content=content, attributes=attributes,
                          context=context)
 
-    def html_fmt(self, content=None, attributes=None, level=1):
-        return html_entity(entity=self.content, level=level)
+    def html_fmt(self, content=None, attributes=None, format_func='html_fmt',
+                 method='html', level=1):
+        return xhtml_entity(entity=self.content, method=method, level=level)
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1,
+                **kwargs):
         content = content if content is not None else self.content
         content = "\\" + content
         return (tex_cmd(cmd='ensuremath', attributes='',
@@ -251,13 +271,12 @@ class Verb(Tag):
 
     html_name = 'code'
 
-    def html_fmt(self, content=None, attributes=None, level=1):
-        attrs = self.attributes.copy() if attributes is None else attributes
+    def html_fmt(self, attributes=None, *args, **kwargs):
+        attrs = attributes or self.attributes.copy()
 
         if self.name == "verbatim":
             attrs['class'] = 'block'
-        return super(Verb, self).html_fmt(content=content, attributes=attrs,
-                                          level=level + 1)
+        return super(Verb, self).html_fmt(*args, **kwargs)
 
     def tex_fmt(self, *args, **kwargs):
         if self.name == "verbatim":

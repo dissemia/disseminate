@@ -48,9 +48,8 @@ class Img(Tag):
     _infilepath = None
     _outfilepaths = None
 
-    def __init__(self, name, content, attributes, context):
-        super().__init__(name=name, content=content, attributes=attributes,
-                         context=context)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._outfilepaths = dict()
 
     def content_as_filepath(self, content=None, context=None):
@@ -155,8 +154,7 @@ class Img(Tag):
 
         return outfilepath
 
-    def tex_fmt(self, content=None, attributes=None, context=None,
-                mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, context=None, **kwargs):
         # Add the file dependency
         outfilepath = self.add_file(target='.tex', content=content,
                                     context=context, attributes=attributes)
@@ -183,15 +181,18 @@ class Img(Tag):
         return tex_cmd(cmd='includegraphics', attributes=attrs,
                        formatted_content=str(dest_filepath))
 
-    def html_fmt(self, content=None, attributes=None, context=None, level=1):
+    def html_fmt(self, content=None, attributes=None, context=None,
+                 method='html', **kwargs):
         # Add the file dependency
-        outfilepath = self.add_file(target='.html', content=content,
+        target = '.' + method if not method.startswith('.') else method
+        outfilepath = self.add_file(target=target, content=content,
                                     context=context, attributes=attributes)
-        url = outfilepath.get_url(context=self.context, target='.html')
+        url = outfilepath.get_url(context=self.context, target=target)
 
         # Format the width and attributes
-        attrs = self.attributes.copy() if attributes is None else attributes
-        attrs = format_attribute_width(attrs, target='.html')
+        attrs = attributes or self.attributes.copy()
+        attrs = format_attribute_width(attrs, target=target)
         attrs['src'] = url
 
-        return super().html_fmt(attributes=attrs, level=level)
+        return super().html_fmt(content='', attributes=attrs, method=method,
+                                **kwargs)

@@ -309,8 +309,9 @@ class Builder(metaclass=ABCMeta):
         parameters = self.parameters
         has_parameters = len(parameters) > 0
 
-        if (not has_parameters or
-            not all(i.exists() for i in parameters if hasattr(i, 'exists'))):
+        if not has_parameters:
+            return True
+        elif not all(i.exists() for i in parameters if hasattr(i, 'exists')):
             return True
         else:
             self._missing_parameters = False

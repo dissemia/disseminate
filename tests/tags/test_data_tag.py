@@ -47,36 +47,6 @@ def test_csv_parsing_with_formatted_text(csv_tag3):
                        "My @b{3-3} column")
 
 
-# html targets
-
-def test_csv_with_header_html(csv_tag1):
-    """Test the @csv (DelimData) tag with header data in html format"""
-
-    # Check the html. These are lxml elements that are rendered into an actual
-    # table by the @table tag
-    html = csv_tag1.html_table()
-    assert len(html) == 2  # 1 header row, 1 body row
-
-
-def test_csv_without_header_html(csv_tag2):
-    """Test the @csv (DelimData) tag with header data in html format"""
-
-    # Check the html. These are lxml elements that are rendered into an actual
-    # table by the @table tag
-    html = csv_tag2.html_table()
-    assert len(html) == 1  # 1 body row
-
-
-def test_csv_parsing_with_formatted_text_html(csv_tag3):
-    """Test the @csv (DelimData) tag with formated text, converting in html
-    format"""
-
-    # Check the html. These are lxml elements that are rendered into an actual
-    # table by the @table tag
-    html = csv_tag3.html_table()
-    assert len(html) == 2  # 1 header row, 1 body row
-
-
 # tex targets
 
 def test_csv_with_header_tex(csv_tag1):
@@ -143,3 +113,34 @@ def test_ampersand_text_tex(csv_tag4):
            '9 & 10\\&11 & 12 \\\\\n'
            '\\bottomrule')
     assert tex == csv_tag4.tex_table()
+
+
+# html targets
+
+def test_csv_with_header_html(csv_tag1):
+    """Test the @csv (DelimData) tag with header data in html format"""
+
+    # Check the html. These are lxml elements that are rendered into an actual
+    # table by the @table tag
+    html = csv_tag1.html_table()
+    assert len(html) == 2  # 1 header row, 1 body row
+
+
+def test_csv_without_header_html(csv_tag2):
+    """Test the @csv (DelimData) tag with header data in html format"""
+
+    # Check the html. These are lxml elements that are rendered into an actual
+    # table by the @table tag
+    html = csv_tag2.html_table()
+    assert len(html) == 1  # 1 body row
+
+
+def test_csv_parsing_with_formatted_text_html(csv_tag3):
+    """Test the @csv (DelimData) tag with formated text, converting in html
+    format"""
+
+    # Check the html. These are lxml elements that are rendered into an actual
+    # table by the @table tag
+    html = csv_tag3.html_table()
+    assert len(html) == 2  # 1 header row, 1 body row
+

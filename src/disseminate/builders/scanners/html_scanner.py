@@ -26,7 +26,7 @@ _re_html_img = regex.compile(r'<img\s+(?:[^>]*?\s+)?'
 class HtmlScanner(Scanner):
     """A scanner for html files."""
 
-    extensions = ('.html', '.htm')
+    extensions = ('.html', '.htm', '.xhtml')
 
     @staticmethod
     def scan_function(content):

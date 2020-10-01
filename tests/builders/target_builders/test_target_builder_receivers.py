@@ -1,6 +1,9 @@
 """
 Test the target builder signals and receivers
 """
+from disseminate.signals.signals import signal
+
+find_builder = signal('find_builder')
 
 
 def test_add_target_builders(env):
@@ -28,4 +31,21 @@ def test_add_target_builders(env):
     assert doc.context['builders'].keys() == {'.html', '.tex'}
 
 
-def test_target_builder_
+def test_find_builder(env):
+    """Test the find_builder receiver."""
+
+    # 1. Get the document targets
+    target_root = env.target_root
+    context = env.root_document.context
+    targets = context.targets
+    assert targets == {'.html', '.pdf', '.tex', '.xhtml'}
+
+    for target in targets:
+        builders = find_builder.emit(context=context, target=target)
+        assert len(builders) == 1
+
+    # Find all target builders. The signal wraps th results in a list.
+    # The first item should contain all 3 target builders
+    target_builders = find_builder.emit(context=context)
+    assert len(target_builders) == 1
+    assert len(target_builders[0]) == 4

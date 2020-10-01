@@ -53,7 +53,7 @@ def test_caption_tex(context_cls):
     assert caption.tex == '\\caption{This is \\textbf{my} caption}'
 
 
-# Test html targets
+# Test html target
 
 def test_caption_html(context_cls):
     """Test the formatting of nakedcaptions for html targets.
@@ -83,4 +83,26 @@ def test_caption_html(context_cls):
                             'This is <strong>my</strong> caption</caption>\n')
 
 
+# Test xhtml target
 
+def test_caption_xhtml(context, is_xml):
+    """Test the formatting of nakedcaptions for html targets.
+
+    Naked captions will not create a label.
+    """
+    # 1. Test a basic caption
+    src = "@caption{This is @b{my} caption}"
+
+    root = Tag(name='root', content=src, attributes='', context=context)
+    caption = root.content
+
+    assert caption.xhtml == ('<caption class="caption">'
+                             'This is <strong>my</strong> caption</caption>\n')
+    assert is_xml(caption.xhtml)
+
+    # 2. Test an empty caption
+    root = Tag(name='root', content='@caption', attributes='', context=context)
+    caption = root.content
+
+    assert caption.xhtml == ('<caption class="caption"/>\n')
+    assert is_xml(caption.xhtml)

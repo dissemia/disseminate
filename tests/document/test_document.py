@@ -107,30 +107,47 @@ def test_document_src_filepaths(load_example):
     assert subdoc.src_filepath.subpath == Path("sub3") / "index.dm"
 
 
-def test_document_targets(load_example):
+def test_document_targets(doc):
     """Test the document targets method."""
-    doc = load_example("tests/document/examples/ex1/dummy.dm")
+    env = doc.context['environment']
     target_root = doc.target_root
+    cache_path = env.cache_path
 
-    # dummy.dm has the entry 'html, tex' set in the header.
+    # 1. Try an example with an 'html' target
+    doc.src_filepath.write_text("""
+    ---
+    targets: html
+    ---
+    Test1
+    """)
+    doc.load()
+
     targets = doc.targets
-
-    assert targets.keys() == {'.html', '.tex'}
+    assert targets.keys() == {'.html'}
 
     assert '.html' in targets
     assert isinstance(targets['.html'], TargetPath)
-    assert str(targets['.html'].target_root) == str(target_root)
-    assert str(targets['.html'].target) == 'html'
-    assert str(targets['.html'].subpath) == 'dummy.html'
+    assert targets['.html'] == target_root / 'html' / 'test.html'
 
-    assert '.tex' in targets
-    assert str(targets['.tex'].target_root) == str(target_root)
-    assert str(targets['.tex'].target) == 'tex'
-    assert str(targets['.tex'].subpath) == 'dummy.tex'
+    # 2. Try an example with a cached target
+    doc.src_filepath.write_text("""
+    ---
+    targets: pdf
+    ---
+    Test1
+    """)
+    doc.load()
 
-    # Test changing the targets from the context
-    doc.context['targets'] = set()
-    assert doc.targets.keys() == set()
+    targets = doc.targets
+    assert targets.keys() == {'.tex', '.pdf'}
+
+    assert '.tex' in targets  # located in the cache directory
+    assert isinstance(targets['.tex'], TargetPath)
+    assert targets['.tex'] == cache_path / 'tex' / 'test.tex'
+
+    assert '.pdf' in targets
+    assert isinstance(targets['.pdf'], TargetPath)
+    assert targets['.pdf'] == target_root / 'pdf' / 'test.pdf'
 
 
 def test_document_target_filepath(load_example):
@@ -402,7 +419,7 @@ def test_document_load_on_render(doc):
 
     # The initial document has the targets listed in the example document
     # created from the 'doc' fixture (conftest.py)
-    assert doc.targets.keys() == {'.html', '.tex', '.pdf'}
+    assert doc.targets.keys() == {'.html', '.tex', '.pdf', '.xhtml'}
 
     # Change the source file, and run the render function. The targets should
     # be updated to the new values in the updated header.

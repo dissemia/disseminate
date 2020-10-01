@@ -1,9 +1,14 @@
 """
 Tests for navigation tags.
 """
+import pathlib
+
 from disseminate.tags.navigation import Next, Prev, Pdflink
 from disseminate.document import Document
-from disseminate.paths import SourcePath, TargetPath
+from disseminate.paths import SourcePath
+
+
+ex1_root = pathlib.Path('tests') / 'tags' / 'examples' / 'toc_ex1'
 
 
 def add_headings(*docs, wait):
@@ -162,16 +167,15 @@ def test_navigation_missing_target_html(doctree, wait):
             '<a href="test.html#sec:test-dm-0" class="ref">0</a>')
 
 
-def test_pdflink(env):
+def test_pdflink(load_example):
     """Test the pdflink tag."""
 
-    # 1. The 'tests/tags/toc_example1' directory contains three markup files:
+    # 1. The 'tests/tags/examples/toc_ex1' directory contains three markup
+    #    files:
     #    file1.dm, in the root folder, and file21.dm and file2.dm in the 'sub'
     #    folder. The 'file1.dm' includes 'file21.dm' and 'file22.dm'.
     #    The file1.dm has pdf has a target
-    src_filepath = SourcePath(project_root='tests/tags/toc_example1',
-                              subpath='file1.dm')
-    doc = Document(src_filepath, environment=env)
+    doc = load_example(ex1_root / 'file1.dm')
 
     # Create the pdflink tag
     pdf = Pdflink(name='pdflink', content='', attributes='',

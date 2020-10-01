@@ -3,7 +3,7 @@ Core classes and functions for tags.
 """
 from .exceptions import TagError
 from .signals import tag_created
-from ..formats import tex_env, tex_cmd, html_tag
+from ..formats import tex_env, tex_cmd, xhtml_tag
 from ..attributes import Attributes
 from .utils import format_content, replace_context, copy_tag
 from ..utils.string import titlelize
@@ -285,7 +285,8 @@ class Tag(object):
     def html(self):
         return self.html_fmt()
 
-    def html_fmt(self, content=None, attributes=None, level=1):
+    def html_fmt(self, content=None, attributes=None, format_func='html_fmt',
+                 method='html', level=1):
         """Convert the tag to an html string or html element.
 
         Parameters
@@ -297,6 +298,11 @@ class Tag(object):
         attributes : Optional[Union[str, :obj:`Attributes <.Attributes>`]]
             Specify an alternative attributes dict from the tag's attributes.
             It can either be a string or an attributes dict.
+        format_func : Optional[str]
+            The format function to use with by formatted_content when formatting
+            sub-tags.
+        method : Optional[str]
+            The rendering method for the string. ex: 'html' or 'xml'
         level : Optional[int]
             The level of the tag.
 
@@ -310,15 +316,31 @@ class Tag(object):
 
         # Collect the content elements
         content = content if content is not None else self.content
-        content = format_content(content=content, format_func='html_fmt',
+        content = format_content(content=content, format_func=format_func,
                                  level=level + 1)
 
         # Set the attributes
         attributes = self.attributes if attributes is None else attributes
 
         # Format the html tag
-        return html_tag(name=name, level=level, attributes=attributes,
-                        formatted_content=content)
+        return xhtml_tag(name=name, level=level, attributes=attributes,
+                         formatted_content=content, method=method)
+
+    @property
+    def xhtml(self):
+        return self.xhtml_fmt()
+
+    def xhtml_fmt(self, method='xhtml', format_func='xhtml_fmt', **kwargs):
+        """Convert the tag to an xhtml string or html element.
+
+        Returns
+        -------
+        xhtml : str or xhtml element
+            A string in XHTML format or an XHTML element (
+            :obj:`lxml.builder.E`).
+        """
+        return self.html_fmt(method=method, format_func=format_func,
+                             **kwargs)
 
 
 class TagFactory(object):

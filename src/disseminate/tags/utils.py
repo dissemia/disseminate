@@ -216,14 +216,14 @@ def format_attribute_width(attributes, target):
     width = attributes.get('width', target=target)
     percentage_width = percentage(width)
 
-    if target == '.tex':
+    if 'tex' in target:
         if percentage_width:
             attr = "width.tex={}\\textwidth".format(percentage_width / 100.)
             formatted_attributes.load(attr)
         elif width:
             attr = "width.tex={}".format(width)
             formatted_attributes.load(attr)
-    elif target == '.html':
+    elif 'html' in target:  # covers .xhtml and .html
         if percentage_width:
             attr = 'width: {}%'.format(percentage_width)
             formatted_attributes['style'] = attr

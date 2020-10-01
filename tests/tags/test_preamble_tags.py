@@ -4,21 +4,7 @@ Test the preamble tags.
 from disseminate.tags.preamble import Authors, Titlepage
 
 
-def test_authors_tag_html(context_cls):
-    """Test the rendering of the authors tag in html."""
-    # setup the tag
-    for context, key in [({'author': 'Justin L Lorieau'},
-                          '<div class="authors">Justin L Lorieau</div>'),
-                         ({'authors': 'Fred Kay, D Smith'},
-                          '<div class="authors">Fred Kay and D Smith</div>'),
-                         ({'authors': ['A', 'B', 'C']},
-                          '<div class="authors">A, B and C</div>'),
-                         ]:
-        context = context_cls(**context)
-        tag = Authors(name='authors', content='', attributes=tuple(),
-                      context=context)
-        tag.html == key
-
+# tex targets
 
 def test_authors_tag_tex(context_cls):
     """Test the rendering of the authors tag in tex."""
@@ -40,6 +26,40 @@ def test_authors_tag_tex(context_cls):
         assert key == tex
 
 
+def test_titlepage_tag_tex(doc):
+    """Test the rendering of the authors tag in tex."""
+    # setup the tag
+    context = doc.context
+    context['authors'] = 'Fred Kay, D Smith'
+    context['title'] = 'My Title'
+
+    tag = Titlepage(name='titlepage', content='', attributes=tuple(),
+                    context=context)
+
+    tex = tag.tex
+
+    key = "\n\\maketitle\n\n"
+    assert key == tex
+
+
+# html target
+
+def test_authors_tag_html(context_cls):
+    """Test the rendering of the authors tag in html."""
+    # setup the tag
+    for context, key in [({'author': 'Justin L Lorieau'},
+                          '<div class="authors">Justin L Lorieau</div>'),
+                         ({'authors': 'Fred Kay, D Smith'},
+                          '<div class="authors">Fred Kay and D Smith</div>'),
+                         ({'authors': ['A', 'B', 'C']},
+                          '<div class="authors">A, B and C</div>'),
+                         ]:
+        context = context_cls(**context)
+        tag = Authors(name='authors', content='', attributes=tuple(),
+                      context=context)
+        tag.html == key
+
+
 def test_titlepage_tag_html(doc):
     """Test the rendering of the authors tag in html."""
     # setup the tag
@@ -57,8 +77,25 @@ def test_titlepage_tag_html(doc):
     assert tag.html == key
 
 
-def test_titlepage_tag_tex(doc):
-    """Test the rendering of the authors tag in tex."""
+def test_authors_tag_xhtml(context_cls, is_xml):
+    """Test the rendering of the authors tag in xhtml."""
+    # setup the tag
+    for context, key in [({'author': 'Justin L Lorieau'},
+                          '<div class="authors">Justin L Lorieau</div>\n'),
+                         ({'authors': 'Fred Kay, D Smith'},
+                          '<div class="authors">Fred Kay and D Smith</div>\n'),
+                         ({'authors': ['A', 'B', 'C']},
+                          '<div class="authors">A, B and C</div>\n'),
+                         ]:
+        context = context_cls(**context)
+        tag = Authors(name='authors', content='', attributes=tuple(),
+                      context=context)
+        assert tag.xhtml == key
+        assert is_xml(tag.xhtml)
+
+
+def test_titlepage_tag_xhtml(doc, is_xml):
+    """Test the rendering of the authors tag in xhtml."""
     # setup the tag
     context = doc.context
     context['authors'] = 'Fred Kay, D Smith'
@@ -66,8 +103,11 @@ def test_titlepage_tag_tex(doc):
 
     tag = Titlepage(name='titlepage', content='', attributes=tuple(),
                     context=context)
-
-    tex = tag.tex
-
-    key = "\n\\maketitle\n\n"
-    assert key == tex
+    key = ('<div class="title-page">\n'
+           '  <h1 id="title:test-dm-my-title">\n'
+           '    <span class="label">My Title</span>\n'
+           '  </h1>\n'
+           '  <div class="authors">Fred Kay and D Smith</div>\n'
+           '</div>\n')
+    assert tag.xhtml == key
+    assert is_xml(tag.xhtml)

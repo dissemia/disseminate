@@ -1,5 +1,7 @@
 import pathlib
+import regex
 
+import lxml.etree
 import pytest
 
 from disseminate.tags.data import DelimData
@@ -9,6 +11,29 @@ class DelimDataFixture(DelimData):
     """A new DelimData tag that holds a strong reference to the context"""
     context = None
     aliases = tuple()
+
+
+xml_parser = None
+@pytest.fixture
+def is_xml():
+    """Tests a string for valid xml.
+
+    Raises
+    ------
+    :exc:`lxml.etree.XMLSyntaxError`
+        If a syntax error was found.
+    """
+    global xml_parser
+    if xml_parser is None:
+        xml_parser = lxml.etree.XMLParser()
+
+    def _is_xml(string):
+        string = regex.sub(r'&\w+;', '', string)  # strip & ignore entities
+        if string.strip():  # only look a non-empty stringss
+            lxml.etree.fromstring(string, xml_parser)
+        return True
+
+    return _is_xml
 
 
 @pytest.fixture

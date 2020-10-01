@@ -163,7 +163,10 @@ class CompositeBuilder(Builder):
         def print_builder(b, level, num_spaces=2):
             msg = "  " * num_spaces * level
             msg += str(b)  # the __repr__ of the builder
-            msg += "({}) ".format(self.outfilepath.subpath)
+            if not b.missing_parameters:
+                msg += "({}) ".format(b.outfilepath.subpath)
+            else:
+                msg += " "
 
             # Get builder attributes that are useful to print out
             attrs = ["{}={}".format(attr, getattr(b, attr, None))

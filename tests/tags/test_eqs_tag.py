@@ -119,6 +119,56 @@ def test_block_equation_paragraph(context):
     assert eq.tex == '\\ensuremath{y=x}'
 
 
+# tex targets
+
+def test_simple_inline_equation_tex(context):
+    """Test the rendering of simple inline equations for tex."""
+
+    # Setup the equation tag
+    eq = Eq(name='eq', content='y = x', attributes=tuple(), context=context)
+
+    assert eq.tex == "\\ensuremath{y = x}"
+
+
+def test_block_equation_tex(context):
+    """Test the rendering of block equations for tex to ensure that the tex
+    text is well-formed."""
+
+    # 1. A basic block equation
+    test = """
+    @eq[env=align*]{
+    y &= x + b \\
+    &= x + a
+    }
+    """
+    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
+    root = Tag(name='root', content=test, attributes='', context=context)
+    p = root.content
+
+    assert p.name == 'p'
+    assert p.tex == ('\n\n    \\begin{align*} %\n'
+                     'y &= x + b \\\n'
+                     '    &= x + a\n'
+                     '\\end{align*}\n    \n')
+
+    # 2. A custom block equation with a different environment
+    test = """
+    @eq[env=alignat* 2]{
+    y &= x + b \\
+    &= x + a
+    }
+    """
+    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
+    root = Tag(name='root', content=test, attributes='', context=context)
+    p = root.content
+
+    assert p.name == 'p'
+    assert p.tex == ('\n\n    \\begin{alignat*}{2} %\n'
+                     'y &= x + b \\\n'
+                     '    &= x + a\n'
+                     '\\end{alignat*}\n    \n')
+
+
 # html targets
 
 def test_simple_inline_equation_html(context):
@@ -285,7 +335,7 @@ def test_block_equation_html(context):
     assert (target_root / 'html' / 'media' / 'eq_551f4e949221.svg').exists()
 
 
-def test_equation_relative_absolute_links(context):
+def test_equation_relative_absolute_links_html(context):
     """Test rendered equation images with absolute and relative links."""
 
     # setup the context
@@ -304,54 +354,23 @@ def test_equation_relative_absolute_links(context):
             '<img src="media/eq_f07e7117e784.svg" class="eq">\n')
 
 
-# tex targets
+# xhtml target
 
-def test_simple_inline_equation_tex(context):
-    """Test the rendering of simple inline equations for tex."""
+def test_simple_inline_equation_xhtml(context, is_xml):
+    """Test the rendering of simple inline equations for xhtml."""
 
-    # Setup the equation tag
-    eq = Eq(name='eq', content='y = x', attributes=tuple(), context=context)
+    # setup the context
+    context['relative_links'] = False  # report absolute links
 
-    assert eq.tex == "\\ensuremath{y = x}"
+    # 1. Setup a basic equation tag
+    eq = Eq(name='eq', content='y = x', attributes='', context=context)
 
-
-def test_block_equation_tex(context):
-    """Test the rendering of block equations for tex to ensure that the tex
-    text is well-formed."""
-
-    # 1. A basic block equation
-    test = """
-    @eq[env=align*]{
-    y &= x + b \\
-    &= x + a
-    }
-    """
-    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
-    root = Tag(name='root', content=test, attributes='', context=context)
-    p = root.content
-
-    assert p.name == 'p'
-    assert p.tex == ('\n\n    \\begin{align*} %\n'
-                     'y &= x + b \\\n'
-                     '    &= x + a\n'
-                     '\\end{align*}\n    \n')
-
-    # 2. A custom block equation with a different environment
-    test = """
-    @eq[env=alignat* 2]{
-    y &= x + b \\
-    &= x + a
-    }
-    """
-    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
-    root = Tag(name='root', content=test, attributes='', context=context)
-    p = root.content
-
-    assert p.name == 'p'
-    assert p.tex == ('\n\n    \\begin{alignat*}{2} %\n'
-                     'y &= x + b \\\n'
-                     '    &= x + a\n'
-                     '\\end{alignat*}\n    \n')
+    # Check the rendered tag and that the asy and svg files were properly
+    # created
+    xhtml = eq.xhtml
+    assert xhtml == '<img src="/xhtml/media/eq_f07e7117e784.svg" class="eq"/>\n'
+    assert eq.xhtml == xhtml  # running twice should give same answer
+    assert is_xml(eq.xhtml)
 
 
 # Multiple targets

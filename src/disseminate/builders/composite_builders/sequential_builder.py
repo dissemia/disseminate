@@ -1,4 +1,5 @@
 from .composite_builder import CompositeBuilder
+from ..builder import Builder
 from ..copy import Copy
 
 
@@ -84,31 +85,6 @@ class SequentialBuilder(CompositeBuilder):
             if not hasattr(subbuilder, 'chain_subbuilders'):
                 continue
             subbuilder.chain_subbuilders()
-
-    # Note: This version of the status runs faster
-    # @property
-    # def status(self):
-    #     if len(self.subbuilders) == 0:
-    #         return 'done'
-    #
-    #     # The composite builder's status is considered done if the subbuilders
-    #     # are all done
-    #     number_subbuilders_done = 0
-    #     for subbuilder in self.subbuilders:
-    #         # Bug alert: The subbuilder's status should be retrieved and
-    #         # returned once. Polling the subbuilder.status multiple times may
-    #         # return different answers if the subbuilder changes status when
-    #         # polled at different points.
-    #         status = subbuilder.status
-    #         if status == 'done':
-    #             number_subbuilders_done += 1
-    #         else:
-    #             return status
-    #
-    #     if number_subbuilders_done == len(self.subbuilders):
-    #         return 'done'
-    #     else:
-    #         return 'building'
 
     @property
     def outfilepath(self):

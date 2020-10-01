@@ -19,9 +19,8 @@ class BaseFigure(Tag):
     html_class = None
     active = False
 
-    def __init__(self, name, content, attributes, context):
-        super().__init__(name=name, content=content, attributes=attributes,
-                         context=context)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         # Transfer the label id ('id') to the caption, if available. First,
         # find the caption tag, if available
@@ -41,7 +40,7 @@ class BaseFigure(Tag):
             # Create the label in the label_manager
             caption.create_label()
 
-    def html_fmt(self, content=None, attributes=None, level=1):
+    def html_fmt(self, attributes=None, **kwargs):
         attrs = attributes if attributes is not None else self.attributes
 
         # Set the html class
@@ -52,7 +51,7 @@ class BaseFigure(Tag):
             else:
                 attrs['class'] = self.html_class
 
-        return super().html_fmt(content=content, attributes=attrs, level=level)
+        return super().html_fmt(attributes=attrs, **kwargs)
 
 
 class Marginfigure(BaseFigure):
@@ -89,7 +88,7 @@ class Panel(Tag):
     html_name = 'panel'
     tex_env = 'panel'
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+    def tex_fmt(self, attributes=None, **kwargs):
         attrs = self.attributes.copy() if attributes is None else attributes
 
         # Format the width
@@ -104,15 +103,15 @@ class Panel(Tag):
 
         # Raises an error if a width is not present. Strip multiple newlines
         # as these break up side-by-side figures
-        env = super().tex_fmt(content=content, attributes=attrs,
-                              mathmode=mathmode, level=level)
+        env = super().tex_fmt(attributes=attrs, **kwargs)
         return strip_multi_newlines(env).strip()
 
-    def html_fmt(self, content=None, attributes=None, level=1):
+    def html_fmt(self, attributes=None, method='html', **kwargs):
         attrs = self.attributes.copy() if attributes is None else attributes
+        target = '.' + method if not method.startswith('.') else method
 
         # Format the width
-        attrs = format_attribute_width(attrs, target='.html')
+        attrs = format_attribute_width(attrs, target=method)
         attrs['class'] = 'panel'
 
-        return super().html_fmt(content=content, attributes=attrs, level=level)
+        return super().html_fmt(attributes=attrs, method=method, **kwargs)

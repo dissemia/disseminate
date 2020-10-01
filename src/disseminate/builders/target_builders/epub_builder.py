@@ -23,6 +23,12 @@ class EpubBuilder(TargetBuilder):
     _epub_builder = None
     _render_toc_context = None
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Populate the subbuilders
+        self.create_subbuilders()
+
     def find_or_create_xhtml_builders(self, **kwargs):
         """Find or create the target XHtmlBuilder for all documents in the
         document tree."""
@@ -162,14 +168,3 @@ class EpubBuilder(TargetBuilder):
                                              outfilepath=outfilepath,
                                              context=context, **kwargs)
 
-    def build(self, complete=False):
-        # Reload the document
-        document = self.context.document
-        if document is not None:
-            document.load()
-
-        # Populate the subbuilders
-        self.create_subbuilders()
-
-        # Run the gransparent method
-        return super(TargetBuilder, self).build(complete=complete)

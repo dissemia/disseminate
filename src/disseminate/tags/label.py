@@ -6,7 +6,7 @@ from .utils import content_to_str
 from .exceptions import assert_content_str
 from .utils import format_content
 from ..attributes import Attributes
-from ..formats import html_tag
+from ..formats import xhtml_tag
 from ..utils.string import titlelize, slugify
 from ..utils.classes import weakattr
 
@@ -126,7 +126,7 @@ class LabelMixin(object):
     label_tag = None
     label_anchor = None
 
-    def __init__(self, name, content, attributes, context):
+    def __init__(self, *args, **kwargs):
         self.create_label()
 
     def generate_label_id(self):
@@ -186,19 +186,19 @@ class LabelAnchor(Tag):
     tex_cmd = 'label'
     html_name = 'span'
 
-    def __init__(self, name, attributes, content, context):
+    def __init__(self, *args, content, **kwargs):
         # Set the label_id from the content
         assert_content_str(content)
         label_id = content.strip()
         self.label_id = label_id
 
-        super().__init__(name=name, attributes=attributes, content=content,
-                         context=context)
+        super().__init__(*args, content=content, **kwargs)
 
-    def html_fmt(self, content=None, attributes=None, level=1):
+    def html_fmt(self, method='html', level=1, **kwargs):
         # <span id="#label-id" />
         html_id = self.label_id
-        return html_tag('span', attributes='id=' + html_id, level=level)
+        return xhtml_tag('span', attributes='id=' + html_id, method=method,
+                         level=level)
 
 
 class LabelTag(Tag):
@@ -236,7 +236,7 @@ class LabelTag(Tag):
     process_content = False
     process_typography = False
 
-    def __init__(self, name, attributes, content, context):
+    def __init__(self, name, attributes, content, context, **kwargs):
         # Set the label_id from the content
         assert_content_str(content)
         label_id = content.strip()
@@ -247,7 +247,7 @@ class LabelTag(Tag):
             self.label_manager = context['label_manager']
 
         super().__init__(name=name, attributes=attributes,
-                         content=content, context=context)
+                         content=content, context=context, **kwargs)
 
         # Clean up the attributes.
         # 1. Remove the 'id' attribute, since it will be included by the
@@ -289,29 +289,35 @@ class LabelTag(Tag):
         else:
             return ''
 
-    def html_fmt(self, content=None, attributes=None, level=1):
+    def html_fmt(self, content=None, attributes=None, format_func='html_fmt',
+                 method='html', level=1, **kwargs):
         # Get the label tag format
         label_manager = self.label_manager
         label_id = self.label_id
         context = self.context
 
         if all(i is not None for i in (label_manager, label_id, context)):
+            # Retrieve the format string for the label
+            # Use the 'html' format_str for html and xhtml
             format_str = label_manager.format_string(id=self.label_id,
                                                      target='.html')
 
-            # Process the tags and format the contents for html
+            # Process the tags and format the contents for html (html_fmt) or
+            # xhtml (xhtml_fmt)
             processed_tag = Tag(name='label', content=format_str, attributes='',
                                 context=context)
             content = format_content(content=processed_tag.content,
-                                     format_func='html_fmt', level=level + 1)
+                                     format_func=format_func, level=level + 1)
 
             attributes = (self.attributes.copy()
                           if attributes is None else attributes)
             attributes['class'] = 'label'
-            return html_tag('span', attributes=attributes,
-                            formatted_content=content,
-                            level= level)
+            return xhtml_tag('span', attributes=attributes,
+                             formatted_content=content, method=method,
+                             level=level)
         else:
             return ''
 
+    def xhtml_fmt(self, format_func='xhtml_fmt', method='xhtml', **kwargs):
+        return self.html_fmt(format_func=format_func, method=method, **kwargs)
 

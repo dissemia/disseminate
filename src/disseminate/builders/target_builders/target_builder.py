@@ -51,7 +51,7 @@ class TargetBuilder(SequentialBuilder):
     _render_builder = None
 
     def __init__(self, env, context, parameters=None, outfilepath=None,
-                 subbuilders=None, **kwargs):
+                 subbuilders=None, use_cache=None, **kwargs):
         # Configure the parameters
         self.context = context
         parameters = parameters if parameters is not None else []
@@ -89,7 +89,8 @@ class TargetBuilder(SequentialBuilder):
         is_document_target = self.outfilepath_ext in context.targets
 
         # Only use cache for outfilepaths if this is not a document target
-        use_cache = False if is_document_target else True
+        if use_cache is None:
+            use_cache = False if is_document_target else True
 
         # Setup the outfilepath, if one isn't specified.
         if outfilepath is None:

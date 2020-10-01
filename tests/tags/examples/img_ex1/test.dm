@@ -1,3 +1,3 @@
 ---
-targets: html, tex
+targets: xhtml, html, tex
 ---

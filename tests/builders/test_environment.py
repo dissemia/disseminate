@@ -1,8 +1,15 @@
 """
 Tests for the build environment.
 """
+import pathlib
 from disseminate.builders.environment import Environment
 from disseminate.paths import SourcePath, TargetPath
+
+# Paths for examples
+ex_root = pathlib.Path('tests') / 'builders' / 'examples'
+ex3_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex3'
+ex5_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex5'
+ex6_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex6'
 
 
 def test_environment_setup1(tmpdir):
@@ -11,12 +18,12 @@ def test_environment_setup1(tmpdir):
     # ├── dummy.dm
     # ├── dummy.html
     # └── dummy.tex
-    src_filepath = SourcePath(project_root='tests/builders/examples/ex3',
-                              subpath='dummy.dm')
+    src_filepath = SourcePath(project_root=ex3_root, subpath='dummy.dm')
     env = Environment(src_filepath=src_filepath, target_root=tmpdir)
+    cache_path = env.cache_path
 
     target_builders = set(env.collect_target_builders())
-    assert len(target_builders) == 4
+    assert len(target_builders) == 6
 
     # Check that the correct builders were inserted in the context
     html_builders = [b for b in target_builders
@@ -36,6 +43,14 @@ def test_environment_setup1(tmpdir):
                     if b.__class__.__name__ == 'TxtBuilder']
     assert txt_builders
 
+    xhtml_builders = [b for b in target_builders
+                      if b.__class__.__name__ == 'XHtmlBuilder']
+    assert xhtml_builders
+
+    epub_builders = [b for b in target_builders
+                     if b.__class__.__name__ == 'EpubBuilder']
+    assert epub_builders
+
     # Check the paths
     tp_html = TargetPath(target_root=tmpdir, target='html',
                          subpath='dummy.html')
@@ -50,6 +65,14 @@ def test_environment_setup1(tmpdir):
     tp_txt = TargetPath(target_root=tmpdir, target='txt', subpath='dummy.txt')
     assert txt_builders[0].outfilepath == tp_txt
 
+    tp_xhtml = TargetPath(target_root=cache_path, target='xhtml',
+                          subpath='dummy.xhtml')
+    assert xhtml_builders[0].outfilepath == tp_xhtml
+
+    tp_epub = TargetPath(target_root=tmpdir, target='epub',
+                         subpath='dummy.epub')
+    assert epub_builders[0].outfilepath == tp_epub
+
 
 def test_environment_simple_build1(tmpdir):
     """Test an environment simple build from example 1"""
@@ -57,8 +80,7 @@ def test_environment_simple_build1(tmpdir):
     # ├── dummy.dm
     # ├── dummy.html
     # └── dummy.tex
-    src_filepath = SourcePath(project_root='tests/builders/examples/ex3',
-                              subpath='dummy.dm')
+    src_filepath = SourcePath(project_root=ex3_root, subpath='dummy.dm')
     env = Environment(src_filepath=src_filepath, target_root=tmpdir)
 
     # Try the build and check the generated files
@@ -66,20 +88,17 @@ def test_environment_simple_build1(tmpdir):
 
     tp_html = TargetPath(target_root=tmpdir, target='html',
                          subpath='dummy.html')
-    tp_key = TargetPath(target_root='tests/builders/examples/ex3',
-                        subpath='dummy.html')
+    tp_key = TargetPath(target_root=ex3_root, subpath='dummy.html')
     assert tp_html.is_file()
     assert tp_html.read_text() == tp_key.read_text()
 
     tp_txt = TargetPath(target_root=tmpdir, target='txt', subpath='dummy.txt')
-    tp_key = TargetPath(target_root='tests/builders/examples/ex3',
-                        subpath='dummy.txt')
+    tp_key = TargetPath(target_root=ex3_root, subpath='dummy.txt')
     assert tp_txt.is_file()
     assert tp_txt.read_text() == tp_key.read_text()
 
     tp_tex = TargetPath(target_root=tmpdir, target='tex', subpath='dummy.tex')
-    tp_key = TargetPath(target_root='tests/builders/examples/ex3',
-                        subpath='dummy.tex')
+    tp_key = TargetPath(target_root=ex3_root, subpath='dummy.tex')
     assert tp_tex.is_file()
     assert tp_tex.read_text() == tp_key.read_text()
 
@@ -97,14 +116,13 @@ def test_create_environments():
     # │   ├── dummy.html
     # │   ├── dummy.tex
     # │   └── dummy.txt
-    for root_path in ('tests/builders/examples',
-                      'tests/builders/examples/ex1/..',):
+    for root_path in (ex_root,
+                      ex_root / 'ex1' / '..',):
         envs = Environment.create_environments(root_path=root_path)
         env_ex3 = [env for env in envs if env.project_root.match('ex3')][0]
-        assert env_ex3.target_root.resolve().match('builders/examples/ex3')
+        assert env_ex3.target_root.resolve().match(str(ex3_root))
         src_filepath = env_ex3.root_document.src_filepath
-        assert src_filepath.project_root.resolve().match('builders/examples/'
-                                                         'ex3')
+        assert src_filepath.project_root.resolve().match(str(ex3_root))
         assert str(src_filepath.subpath) == 'dummy.dm'
 
     # 2. Check an example in which the project_root is in a src file (ex5)│  
@@ -114,14 +132,16 @@ def test_create_environments():
     # │           └── images
     # │               └── NMR
     # │                   └── hsqc_bw.pdf
-    envs = Environment.create_environments(root_path='tests/builders/examples')
-    env_ex5 = [env for env in envs if env.project_root.match('ex5/src')][0]
+    envs = Environment.create_environments(root_path=ex_root)
+    ex5_project_root = ex5_root / 'src'
+    env_ex5 = [env for env in envs
+               if env.project_root.match(str(ex5_project_root))][0]
 
-    assert str(env_ex5.project_root) == 'tests/builders/examples/ex5/src'
-    assert str(env_ex5.target_root) == 'tests/builders/examples/ex5'
+    assert env_ex5.project_root == ex5_project_root
+    assert env_ex5.target_root == ex5_root
     src_filepath = env_ex5.root_document.src_filepath
-    assert str(src_filepath.project_root) == 'tests/builders/examples/ex5/src'
-    assert str(src_filepath.subpath) == 'index.dm'
+    assert src_filepath.project_root == ex5_project_root
+    assert src_filepath.subpath.name == 'index.dm'
 
     # 3. Check an example with a nested directory structure (ex6)
     #     ├── index.dm
@@ -133,7 +153,7 @@ def test_create_environments():
     #     │       └── index.dm
     #     └── sub3
     #         └── index.dm
-    envs = Environment.create_environments(root_path='tests/builders/examples')
+    envs = Environment.create_environments(root_path=ex_root)
     env_ex6 = [env for env in envs if env.project_root.match('ex6')][0]
 
     # None of the subdirectories should have an environment: just the root
@@ -142,11 +162,11 @@ def test_create_environments():
     assert len([env for env in envs if env.project_root.match('sub3')]) == 0
     assert len([env for env in envs if env.project_root.match('subsub2')]) == 0
 
-    assert str(env_ex6.project_root) == 'tests/builders/examples/ex6'
-    assert str(env_ex6.target_root) == 'tests/builders/examples/ex6'
+    assert env_ex6.project_root == ex6_root
+    assert env_ex6.target_root == ex6_root
     src_filepath = env_ex6.root_document.src_filepath
-    assert str(src_filepath.project_root) == 'tests/builders/examples/ex6'
-    assert str(src_filepath.subpath) == 'index.dm'
+    assert src_filepath.project_root == ex6_root
+    assert src_filepath.subpath.name == 'index.dm'
 
     # There should be 4 subdocuments
     num = len(env_ex6.root_document.documents_list(only_subdocuments=True,
@@ -155,13 +175,12 @@ def test_create_environments():
 
     # 4. Try an example in which the src_filepath for the root_document is
     #    specified directly.
-    envs = Environment.create_environments(root_path='tests/builders/examples/'
-                                                     'ex6/index.dm')
+    envs = Environment.create_environments(root_path=ex6_root / 'index.dm')
     env_ex6 = [env for env in envs if env.project_root.match('ex6')][0]
 
-    assert str(env_ex6.project_root) == 'tests/builders/examples/ex6'
-    assert str(env_ex6.target_root) == 'tests/builders/examples/ex6'
+    assert env_ex6.project_root == ex6_root
+    assert env_ex6.target_root == ex6_root
     src_filepath = env_ex6.root_document.src_filepath
-    assert str(src_filepath.project_root) == 'tests/builders/examples/ex6'
-    assert str(src_filepath.subpath) == 'index.dm'
+    assert src_filepath.project_root == ex6_root
+    assert src_filepath.subpath.name == 'index.dm'
 

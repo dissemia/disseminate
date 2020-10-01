@@ -71,7 +71,7 @@ def test_xhtml_builder_simple(env):
     tag = namedtuple('tag', 'xhtml')
     context['body'] = tag(xhtml="My body")  # expects {{ body.html }}
 
-    builder = XHtmlBuilder(env, context=context)
+    builder = XHtmlBuilder(env, context=context, use_cache=True)
 
     # Check the paths
     target_filepath = TargetPath(target_root=cache_path, target='xhtml',
@@ -96,5 +96,5 @@ def test_xhtml_builder_simple(env):
                       subpath='media/css/epub.css').exists()
 
     # New builders don't need to rebuild.
-    builder = XHtmlBuilder(env, context=context, outfilepath=target_filepath)
+    builder = XHtmlBuilder(env, context=context, use_cache=True)
     assert builder.status == 'done'

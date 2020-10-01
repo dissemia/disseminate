@@ -3,7 +3,7 @@ Tags for document preambles.
 """
 from .tag import Tag
 from .headings import Title
-from ..formats import html_tag
+from ..formats import xhtml_tag
 from ..utils.string import str_to_list
 
 
@@ -13,8 +13,8 @@ class Authors(Tag):
     aliases = ('author',)
     active = True
 
-    def __init__(self, name, content, attributes, context):
-        super(Authors, self).__init__(name, content, attributes, context)
+    def __init__(self, name, context, **kwargs):
+        super(Authors, self).__init__(name=name, context=context, **kwargs)
 
         # Use the specified author list in the content, if specified, otherwise
         # try to get it from the context.
@@ -53,12 +53,13 @@ class Authors(Tag):
             else:
                 return ', '.join(others) + ', ' + ' and '.join(last_two)
 
-    def html_fmt(self, content=None, attributes=None, level=1):
-        return html_tag('div', attributes='class=authors',
-                        formatted_content=self.author_string(), level=level)
-
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+    def tex_fmt(self, *args, **kwargs):
         return self.author_string()
+
+    def html_fmt(self, content=None, method='html', level=1, *args, **kwargs):
+        return xhtml_tag('div', attributes='class=authors',
+                         formatted_content=self.author_string(),
+                         method=method, level=level)
 
 
 class Titlepage(Tag):
@@ -93,11 +94,19 @@ class Titlepage(Tag):
         if 'author' in self.context:
             return self.context['author']
 
-    def html_fmt(self, content=None, attributes=None, level=1):
-        title_tag = self.title_tag.html_fmt(level=level + 1)
-        author_tag = self.authors_tag.html_fmt(content=content, level=level + 1)
-        return html_tag('div', attributes='class=title-page',
-                        formatted_content=[title_tag, author_tag], level=level)
+    def html_fmt(self, content=None, attributes=None, format_func='html_fmt',
+                 method='html', level=1, **kwargs):
+        title_tag = self.title_tag
+        title_html = getattr(title_tag, format_func)(method=method,
+                                                     level=level + 1)
+        authors_tag = self.authors_tag
+        authors_html = getattr(authors_tag, format_func)(content=content,
+                                                         method=method,
+                                                         level=level + 1)
+        return xhtml_tag('div', attributes='class=title-page',
+                         formatted_content=[title_html, authors_html],
+                         method=method, level=level)
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1,
+                **kwargs):
         return "\n\\maketitle\n\n"

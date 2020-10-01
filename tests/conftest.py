@@ -83,7 +83,7 @@ def env(tmpdir):
     src_filepath = SourcePath(project_root=tmpdir, subpath='test.dm')
     src_filepath.write_text("""
     ---
-    targets: html, tex, pdf
+    targets: html, xhtml, tex, pdf
     ---
     """)
 

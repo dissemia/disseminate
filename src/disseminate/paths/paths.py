@@ -201,13 +201,23 @@ class TargetPath(object):
         target = str(target or self.target)
         target = '.' + target if not target.startswith('.') else target
 
-        # Get the target_filepath and target_path
+        # Get the target_filepath and target_path. This should be from the
+        # document that owns the this context or
         document = context.get('document', None)
+
+        # If one isn't found, try using the root document. This can happen
+        # if a mock context is used to simulate a document, like the toc
+        # from the EpubBuilder
+        document = document or context.get('root_document', None)
+
+        # Dereference the document, if it's a weakref
         document = document() if isinstance(document, weakref.ref) else document
+
         if document is not None:
             target_filepath = document.target_filepath(target)
             target_path = target_filepath.parent
         else:
+            # Give up
             return None
 
         # Get the relative path

@@ -12,6 +12,10 @@ from disseminate.tags import Tag
 from disseminate.paths import TargetPath
 
 
+hash_filename1 = lambda ext: 'template_16a2e0a61f60' + ext
+hash_filename2 = lambda ext: 'template_03e03ebefa53' + ext
+
+
 @pytest.fixture
 def jinja2_env():
     """Setup a jinja2 environment"""
@@ -47,7 +51,7 @@ def test_jinja_render_setup_with_outfilepath(env):
 
     # Check the parameters and infilepaths. These should be SourcePaths with
     # correctly set project_root / subpath
-    assert len(render_build.parameters) == 11
+    assert len(render_build.parameters) == 12
     assert len(render_build.infilepaths) == 9
     assert render_build.infilepaths[0].match('templates/default/template.html')
     assert (str(render_build.infilepaths[0].subpath) ==
@@ -80,6 +84,7 @@ def test_jinja_render_setup_with_outfilepath(env):
             'media/icons/menu_active.svg')
     assert render_build.parameters[9] == '33996cdb1a'  # hash of tags
     assert render_build.parameters[10] == 'd41d8cd98f'  # hash of tags
+    assert render_build.parameters[11] == 'e596b323f6'  # hash of tags
 
     # Check the outfilepath
     assert render_build.outfilepath == outfilepath
@@ -98,10 +103,10 @@ def test_jinja_render_setup_without_outfilepath(env):
     context['body'] = tag
 
     render_build = JinjaRender(env, context=context, render_ext='.html')
-    assert len(render_build.parameters) == 11
+    assert len(render_build.parameters) == 12
     assert len(render_build.infilepaths) == 9
     assert (render_build.outfilepath ==
-            env.target_root / 'media' / 'template_db4eb3246a48.html')
+            env.target_root / 'media' / hash_filename1('.html'))
 
     # The same tag body gives the same hash
     tag = Tag(name='body', content='My body', attributes='', context=context)
@@ -109,7 +114,7 @@ def test_jinja_render_setup_without_outfilepath(env):
 
     render_build = JinjaRender(env, context=context, render_ext='.html')
     assert (render_build.outfilepath ==
-            env.target_root / 'media' / 'template_db4eb3246a48.html')
+            env.target_root / 'media' / hash_filename1('.html'))
 
     # A new content body produces a different hash
     tag = Tag(name='body', content='My new body', attributes='',
@@ -117,7 +122,7 @@ def test_jinja_render_setup_without_outfilepath(env):
     context['body'] = tag
     render_build = JinjaRender(env, context=context, render_ext='.html')
     assert (render_build.outfilepath ==
-            env.target_root / 'media' / 'template_590bc5076ae8.html')
+            env.target_root / 'media' / hash_filename2('.html'))
 
     # 3. Test an example without an outfilepath or target specified. An
     #    assertion error is raised
@@ -144,7 +149,7 @@ def test_jinja_render_setup_inherited(env):
 
     # Check the parameters and infilepaths. These should be SourcePaths with
     # correctly set project_root / subpath
-    assert len(render_build.parameters) == 15
+    assert len(render_build.parameters) == 16
     assert len(render_build.infilepaths) == 13
     assert render_build.infilepaths[0].match('templates/books/tufte/'
                                              'template.html')
@@ -168,6 +173,7 @@ def test_jinja_render_setup_inherited(env):
     assert render_build.infilepaths[12].match('media/icons/menu_active.svg')
     assert render_build.parameters[13] == "33996cdb1a"  # tag hash
     assert render_build.parameters[14] == "d41d8cd98f"  # tag hash
+    assert render_build.parameters[15] == "e596b323f6"  # tag hash
 
 
 def test_jinja_render(env):
@@ -219,7 +225,7 @@ def test_jinja_render(env):
     assert render_build.build(complete=True) == 'done'
     assert render_build.outfilepath.exists()
     assert (render_build.outfilepath.subpath ==
-            pathlib.Path('media') / 'template_590bc5076ae8.html')
+            pathlib.Path('media') / hash_filename2('.html'))
     assert render_build.status == 'done'
 
     # A new builder does not require a new build.
@@ -239,7 +245,7 @@ def test_jinja_render(env):
     assert render_build.outfilepath.exists()
     assert str(render_build.outfilepath.target) == 'test'
     assert (render_build.outfilepath.subpath ==
-            pathlib.Path('media') / 'template_590bc5076ae8.html')
+            pathlib.Path('media') / hash_filename2('.html'))
     assert render_build.status == 'done'
 
     # A new builder does not require a new build.

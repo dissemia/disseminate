@@ -1,5 +1,5 @@
 ---
-targets: html, tex
+targets: html, tex, pdf, xhtml
 include:
   file2.dm
   file3.dm

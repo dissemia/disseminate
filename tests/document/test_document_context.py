@@ -193,6 +193,32 @@ def test_document_context_is_valid(load_example):
     assert not context.is_valid()
 
 
+def test_document_context_target_filepath(context):
+    """Test the DocumentContext target_filepath method."""
+    targets = context.targets
+    target_root = context['target_root']
+
+    # Test the target_filepath method in the context, which uses find_builder
+    for target in targets:
+        target = target.strip('.')
+        target_filepath = context.target_filepath(target=target)
+        assert target_filepath == target_root / target / ('test.' + target)
+
+
+def test_document_context_target_filepaths(context):
+    """Test the DocumentContext target_filepaths method."""
+    # Use the context's target_filepaths function to get all targets
+    targets = context.targets
+    target_root = context['target_root']
+
+    targets_dict = context.target_filepaths()
+    for target in targets:
+        target_filepath = targets_dict[target]
+        target = target.strip('.')
+
+        assert target_filepath == target_root / target / ('test.' + target)
+
+
 def test_document_context_includes(doc):
     """Test the DocumentContext includes property."""
 

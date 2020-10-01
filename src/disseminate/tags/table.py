@@ -15,9 +15,8 @@ class BaseTable(Tag):
     html_name = 'table'
     html_class = None
 
-    def __init__(self, name, content, attributes, context):
-        super().__init__(name=name, content=content, attributes=attributes,
-                         context=context)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         # Transfer the label id ('id') to the caption, if available. First,
         # find the caption tag, if available
@@ -34,41 +33,8 @@ class BaseTable(Tag):
             # Create the label in the label_manager
             caption.create_label()
 
-    def html_fmt(self, content=None, attributes=None, level=1):
-        # Setup the html class, if specified
-        attributes = (attributes if attributes is not None else
-                      self.attributes.filter(target='.html'))
-        if self.html_class is not None:
-            if 'class' in attributes:
-                attributes['class'] += " " + self.html_class
-            else:
-                attributes['class'] = self.html_class
-
-        # Collect the contents of this table and prepare in a list
-        content = content if content is not None else self.content
-        content = [content] if not isinstance(content, list) else content
-
-        # Render the html for the content
-        content_html = []
-        for item in content:
-            if item == self:
-                # The flatten method will also return the self tag. To avoid
-                # recursion, do not process this tag.
-                continue
-            elif isinstance(item, Data):
-                # Process the data in the table
-                content_html += item.html_table(level=level+1)
-            elif isinstance(item, Tag):
-                # Process other tags like captions
-                content_html.append(item.html_fmt(level=level + 1))
-            else:
-                content_html.append(item)
-
-        # Return the formatted table
-        return super().html_fmt(content=content_html, attributes=attributes,
-                                level=level)
-
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1,
+                **kwargs):
         # Collect the contents of this table and prepare in a list
         content = content if content is not None else self.content
         content = [content] if not isinstance(content, list) else content
@@ -94,7 +60,51 @@ class BaseTable(Tag):
 
         # Return the formatted table
         return super().tex_fmt(content=content_tex, attributes=attributes,
-                               level=level)
+                               level=level, **kwargs)
+
+    def html_fmt(self, content=None, attributes=None, format_func='html_fmt',
+                 method='html', level=1, **kwargs):
+        # Setup the html class, if specified
+        attributes = (attributes if attributes is not None else
+                      self.attributes.filter(target='.html'))
+        if self.html_class is not None:
+            if 'class' in attributes:
+                attributes['class'] += " " + self.html_class
+            else:
+                attributes['class'] = self.html_class
+
+        # Collect the contents of this table and prepare in a list
+        content = content if content is not None else self.content
+        content = [content] if not isinstance(content, list) else content
+
+        # Render the html for the content
+        content_html = []
+        for item in content:
+            if item == self:
+                # The flatten method will also return the self tag. To avoid
+                # recursion, do not process this tag.
+                continue
+            elif isinstance(item, Data):
+                # Process the data in the table
+                content_html += item.html_table(format_func=format_func,
+                                                method=method, level=level+1)
+            elif isinstance(item, Tag):
+                # Process other tags like captions. Use either 'html_fmt' or
+                # 'xhtml_fmt' functions, as indicated by the format_func
+                # variable
+                html = getattr(item, format_func)(method=method,
+                                                  format_func=format_func,
+                                                  level=level + 1)
+                content_html.append(html)
+            else:
+                content_html.append(item)
+
+        # Return the formatted table
+        return super().html_fmt(content=content_html, attributes=attributes,
+                                method=method, level=level, **kwargs)
+
+    def xhtml_fmt(self, format_func='xhtml_fmt', method='xhtml', **kwargs):
+        return self.html_fmt(format_func=format_func, method=method, **kwargs)
 
 
 class MarginTable(BaseTable):

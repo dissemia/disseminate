@@ -24,19 +24,17 @@ class FeatureBox(Tag):
     html_classes = "featurebox"
     tex_env = "featurebox"
 
-    def __init__(self, name, content, attributes, context):
-        super().__init__(name='featurebox', content=content,
-                         attributes=attributes, context=context)
+    def __init__(self, name, *args, **kwargs):
+        super().__init__(name='featurebox', *args, **kwargs)
 
-    def html_fmt(self, content=None, attributes=None, level=1):
+    def html_fmt(self, attributes=None, **kwargs):
         attributes = (self.attributes.copy() if attributes is None else
                       attributes)
 
         # Add the html attribute
         attributes['class'] = (attributes['class'] + " " + self.html_classes
                                if 'class' in attributes else self.html_classes)
-        return super().html_fmt(content=content, attributes=attributes,
-                                level=level)
+        return super().html_fmt(attributes=attributes, **kwargs)
 
 
 class ExampleBox(FeatureBox):
