@@ -67,6 +67,11 @@ class XHtml2Epub(SequentialBuilder):
         # Setup a renderer for the content.opfs
         fps = [p for p in self.parameters if hasattr(p, 'suffix')]
 
+        # Place the title.xhtml and toc.xhtml file at the front of the filepaths
+        front_fps = ([fp for fp in fps if fp.name == 'title.xhtml'] +
+                     [fp for fp in fps if fp.name == 'toc.xhtml'])
+        fps = front_fps + [fp for fp in fps if fp not in front_fps]
+
         render_context = (self._render_context or
                           self.context.filter(['paths', 'title', 'date']))
         render_context['template'] = template_name
@@ -124,6 +129,7 @@ class XHtml2Epub(SequentialBuilder):
         root_path = pathlib.Path('.')  # Base path for zip file
 
         logging.debug("Creating epub file '{}'".format(outfilepath))
+
         # Create the epub
         with zipfile.ZipFile(outfilepath, 'w',
                              compression=zipfile.ZIP_DEFLATED) as epub:

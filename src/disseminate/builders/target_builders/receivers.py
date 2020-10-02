@@ -63,12 +63,15 @@ def add_target_builders(root_document):
     for doc in docs:
         context = doc.context
         builders = context.setdefault('builders', dict())
-        builders.clear()  # Reset builders if the targets for the doc have
-                          # changed
+        builders.clear()  # Reset builders
 
         environment = context['environment']
         for target in context.targets:
             target = target if target.startswith('.') else '.' + target
+
+            # TODO: Fix this target-specific behavior because it's a bit hacky
+            if target == '.epub' and doc != root_document:
+                target = '.xhtml'
 
             if target not in builders:
                 builder_cls = Builder.find_builder_cls(in_ext='.dm',

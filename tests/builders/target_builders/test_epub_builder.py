@@ -242,7 +242,7 @@ def test_epub_builder_doctree_build(load_example):
     doc = load_example(ex6_root / 'index.dm')
     target_root = doc.target_root
 
-    doc.build()
+    assert doc.build() == 'done'
 
     # Check the copied and built files
     tgt_filepath = TargetPath(target_root=target_root, target='epub',
