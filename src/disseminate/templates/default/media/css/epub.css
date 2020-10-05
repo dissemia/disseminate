@@ -1,1 +1,63 @@
 /* css for epub ebooks */
+
+
+.body {
+  font-size: 14pt;
+  font-family: Palatino, serif;
+  line-height: 20pt;
+}
+
+/* headings */
+
+h1, h2, h3, h4, h5 {
+  font-family: sans-serif;
+}
+
+h1, h2 {
+  display: block;
+  margin-top: 1.0em;
+  margin-bottom: 1.0em;
+  font-weight: 400;
+}
+
+h1 {
+  font-size: 1.6em;
+  text-align: center;
+}
+
+h2 {
+  font-size: 1.5em;
+  margin-top: 1.0em;
+  margin-bottom: 0.75em;
+}
+
+h3 {
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+h3, h4, h5 {
+  font-size: 1.0em;
+  margin-top: 1.0em;
+  margin-bottom: 1.0em;
+}
+
+/* images and equations */
+img {
+  vertical-align: middle;
+  border-style: none;
+}
+
+img.eq {
+  padding-bottom: -4pt;
+}
+
+/* text formatting */
+.supsub {
+    display: inline-block;
+    margin: -9em 0;
+    vertical-align: -0.1em;
+    line-height: 0.75em;
+    font-size: 70%;
+    text-align: left;
+}

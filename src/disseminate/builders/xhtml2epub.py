@@ -11,6 +11,7 @@ from .composite_builders import SequentialBuilder
 from ..paths.utils import find_file
 from ..utils.classes import weakattr
 from ..utils.string import slugify
+from ..utils.list import uniq
 
 
 class XHtml2Epub(SequentialBuilder):
@@ -30,6 +31,7 @@ class XHtml2Epub(SequentialBuilder):
 
     infilepath_ext = '.xhtml'
     outfilepath_ext = '.epub'
+    scan_parameters_on_init = False
 
     context = weakattr()
     package_subdir = pathlib.Path('xhtml')  # dir in ebook to store content
@@ -52,6 +54,30 @@ class XHtml2Epub(SequentialBuilder):
         # Create a subbuilder for the content.opf file
         opf_builder = self.create_opf_builder()
         self.subbuilders.append(opf_builder)
+
+    @property
+    def parameters(self):
+        parameters = SequentialBuilder.parameters.fget(self)
+
+        # The parameters may included multiple references to the same files,
+        # like css files, when building a tree. Remove these
+        filtered_parameters = []
+        resolved_parameters = []
+        for parameter in parameters:
+            if not hasattr(parameter, 'resolve'):
+                filtered_parameters.append(parameter)
+                continue
+
+            resolved_parameter = parameter.resolve()
+            if resolved_parameter not in resolved_parameters:
+                resolved_parameters.append(resolved_parameter)
+                filtered_parameters.append(parameter)
+
+        return filtered_parameters
+
+    @parameters.setter
+    def parameters(self, value):
+        SequentialBuilder.parameters.fset(self, value)
 
     def create_opf_builder(self, template_name='default/xhtml/content'):
         """Create a render builder for the content.opf file.
@@ -121,6 +147,12 @@ class XHtml2Epub(SequentialBuilder):
         return rv
 
     def build(self, complete=False):
+        # Scan for additional dependencies. This is done during the build,
+        # rather during __init__ (as is usually done), because the xhtml
+        # files might not have been created until a previous builder has
+        # built them
+        self.scan_parameters()
+
         # Build subbuilders first
         super().build(complete=complete)
 

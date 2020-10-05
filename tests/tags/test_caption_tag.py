@@ -70,8 +70,8 @@ def test_caption_html(context_cls):
     root = Tag(name='root', content=src, attributes='', context=context)
     caption = root.content
 
-    assert caption.html == ('<caption class="caption">This is my caption'
-                            '</caption>\n')
+    assert caption.html == ('<span class="caption">This is my caption'
+                            '</span>\n')
 
     # 2. Test a caption with nested tags
     src = "@caption{This is @b{my} caption}"
@@ -79,8 +79,8 @@ def test_caption_html(context_cls):
     root = Tag(name='root', content=src, attributes='', context=context)
     caption = root.content
 
-    assert caption.html == ('<caption class="caption">'
-                            'This is <strong>my</strong> caption</caption>\n')
+    assert caption.html == ('<span class="caption">'
+                            'This is <strong>my</strong> caption</span>\n')
 
 
 # Test xhtml target
@@ -96,13 +96,13 @@ def test_caption_xhtml(context, is_xml):
     root = Tag(name='root', content=src, attributes='', context=context)
     caption = root.content
 
-    assert caption.xhtml == ('<caption class="caption">'
-                             'This is <strong>my</strong> caption</caption>\n')
+    assert caption.xhtml == ('<span class="caption">'
+                             'This is <strong>my</strong> caption</span>\n')
     assert is_xml(caption.xhtml)
 
     # 2. Test an empty caption
     root = Tag(name='root', content='@caption', attributes='', context=context)
     caption = root.content
 
-    assert caption.xhtml == ('<caption class="caption"/>\n')
+    assert caption.xhtml == ('<span class="caption"/>\n')
     assert is_xml(caption.xhtml)

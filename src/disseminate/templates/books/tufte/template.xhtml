@@ -1,0 +1,7 @@
+{%- extends "default/template.xhtml" %}
+{%- block extra_css %}
+  <link rel="stylesheet" href="{{ "/media/css/tufte.css" | rewrite_path }}"/>
+{%- endblock %}
+{%- block body %}
+  {{ body.xhtml }}
+{%- endblock %}

@@ -167,4 +167,3 @@ class EpubBuilder(TargetBuilder):
         return self._xhtml_builder.add_build(parameters=parameters,
                                              outfilepath=outfilepath,
                                              context=context, **kwargs)
-

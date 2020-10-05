@@ -109,7 +109,7 @@ def test_tag_text_xhtml(context_cls, is_xml):
         assert tag.xhtml == xhtml
         assert is_xml(tag.xhtml)
 
-    markups = {'@symbol{alpha}': '&alpha;\n',
+    markups = {'@symbol{alpha}': '&#945;\n',
                }
 
     # Generate a tag for each and compare the generated html to the answer key

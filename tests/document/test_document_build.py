@@ -3,6 +3,8 @@ Tests document build and build_needed methods.
 """
 from pathlib import Path
 
+import epubcheck
+
 # Setup example paths
 ex8_root = Path("tests") / "document" / "examples" / "ex8"
 
@@ -88,8 +90,8 @@ def test_document_simple_tex_pdf(env, is_pdf):
     assert is_pdf(doc.targets['.pdf'])
 
 
-def test_document_template_books_tufte(load_example):
-    """Test rendering in html, tex, pdf for the books/tufte template.
+def test_document_template_books_tufte(load_example, cmp_epub):
+    """Test rendering in tex/pdf/html/xhtml/epub for the books/tufte template.
     (examples/ex8)
     """
     # Load the document with equations (@eq) an asymptote (@asy) tags
@@ -108,6 +110,28 @@ def test_document_template_books_tufte(load_example):
     assert doc.build_needed()
     assert doc.build() == 'done'
     assert not doc.build_needed()
+
+    # 1. Test the tex target
+    tex_root = target_root / 'tex'
+    tex_key = {tex_root / 'media',  # dirs
+
+               tex_root / 'inept.tex',  # files
+               tex_root / 'media' / 'inept_87560c6686dd.pdf',
+               }
+    tex_actual = set(tex_root.glob('**/*'))
+    assert tex_key == tex_actual
+
+    # 2. Test the pdf target
+    pdf_root = target_root / 'pdf'
+    pdf_key = {pdf_root / 'inept.pdf',
+               }
+    pdf_actual = set(pdf_root.glob('**/*'))
+    assert pdf_key == pdf_actual
+
+    # 3. Test the html target
+    key = (ex8_root / "html" / "inept.html").read_text()
+    print(doc.targets['.html'])
+    assert doc.targets['.html'].read_text() == key
 
     # Check the dependencies and paths
     html_root = target_root / 'html'
@@ -132,22 +156,38 @@ def test_document_template_books_tufte(load_example):
     html_actual = set(html_root.glob('**/*'))
     assert html_key == html_actual
 
-    tex_root = target_root / 'tex'
-    tex_key = {tex_root / 'media',  # dirs
+    # 4. Test the xhtml target
+    print(doc.targets['.xhtml'])
+    key = (ex8_root / "xhtml" / "inept.xhtml").read_text()
+    assert doc.targets['.xhtml'].read_text() == key
 
-               tex_root / 'inept.tex',  # files
-               tex_root / 'media' / 'inept_87560c6686dd.pdf',
-               }
-    tex_actual = set(tex_root.glob('**/*'))
-    assert tex_key == tex_actual
+    # Check the dependencies and paths
+    xhtml_root = target_root / 'xhtml'
+    xhtml_key = {xhtml_root / 'media',  # dirs
+                 xhtml_root / 'media' / 'css',
 
-    pdf_root = target_root / 'pdf'
-    pdf_key = {pdf_root / 'inept.pdf',
-               }
-    pdf_actual = set(pdf_root.glob('**/*'))
-    assert pdf_key == pdf_actual
+                 xhtml_root / 'inept.xhtml',  # files
+                 xhtml_root / 'media' / 'eq_540144aca54d.svg',
+                 xhtml_root / 'media' / 'eq_64f0a2d701c3.svg',
+                 xhtml_root / 'media' / 'eq_e7377ca643a1.svg',
+                 xhtml_root / 'media' / 'inept_87560c6686dd.svg',
+                 xhtml_root / 'media' / 'css' / 'epub.css',
+                 xhtml_root / 'media' / 'css' / 'tufte.css',
+                }
+    print(target_root / 'xhtml')
+    xhtml_actual = set(xhtml_root.glob('**/*'))
+    assert xhtml_key == xhtml_actual
 
-    # Check the rendered html
-    key = (ex8_root / "html" / "inept.html").read_text()
-    print(doc.targets['.html'])
-    assert doc.targets['.html'].read_text() == key
+    # 5. Test the epub target
+    print(doc.targets['.epub'])
+    epub_root = target_root / 'epub'
+    epub_key = {epub_root / 'inept.epub',
+                }
+    epub_actual = set(epub_root.glob('**/*'))
+    assert epub_key == epub_actual
+
+    # Check the epub file itself
+    assert cmp_epub(doc.targets['.epub'],
+                    ex8_root / 'epub' / 'inept.epub')
+    assert epubcheck.validate(epub_root / 'inept.epub')
+

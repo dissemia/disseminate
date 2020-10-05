@@ -30,7 +30,10 @@ class Caption(Tag, LabelMixin):
                         }
     """
 
-    html_name = 'caption'
+    # Render captions as <span> because the <caption> tag is a block element,
+    # and captions can be rendered inline
+    html_name = 'span'
+    html_class = 'caption'
     tex_cmd = 'caption'
 
     kind = None

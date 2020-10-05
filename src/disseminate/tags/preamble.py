@@ -57,7 +57,7 @@ class Authors(Tag):
         return self.author_string()
 
     def html_fmt(self, content=None, method='html', level=1, *args, **kwargs):
-        return xhtml_tag('div', attributes='class=authors',
+        return xhtml_tag('span', attributes='class=authors',
                          formatted_content=self.author_string(),
                          method=method, level=level)
 

@@ -48,11 +48,11 @@ def test_authors_tag_html(context_cls):
     """Test the rendering of the authors tag in html."""
     # setup the tag
     for context, key in [({'author': 'Justin L Lorieau'},
-                          '<div class="authors">Justin L Lorieau</div>'),
+                          '<span class="authors">Justin L Lorieau</span>'),
                          ({'authors': 'Fred Kay, D Smith'},
-                          '<div class="authors">Fred Kay and D Smith</div>'),
+                          '<span class="authors">Fred Kay and D Smith</span>'),
                          ({'authors': ['A', 'B', 'C']},
-                          '<div class="authors">A, B and C</div>'),
+                          '<span class="authors">A, B and C</span>'),
                          ]:
         context = context_cls(**context)
         tag = Authors(name='authors', content='', attributes=tuple(),
@@ -72,7 +72,7 @@ def test_titlepage_tag_html(doc):
     key = ('<div class="title-page">\n'
            '<h1 id="title:test-dm-my-title">'
            '<span class="label">My Title</span></h1>\n'
-           '<div class="authors">Fred Kay and D Smith</div>\n'
+           '<span class="authors">Fred Kay and D Smith</span>\n'
            '</div>\n')
     assert tag.html == key
 
@@ -81,11 +81,12 @@ def test_authors_tag_xhtml(context_cls, is_xml):
     """Test the rendering of the authors tag in xhtml."""
     # setup the tag
     for context, key in [({'author': 'Justin L Lorieau'},
-                          '<div class="authors">Justin L Lorieau</div>\n'),
+                          '<span class="authors">Justin L Lorieau</span>\n'),
                          ({'authors': 'Fred Kay, D Smith'},
-                          '<div class="authors">Fred Kay and D Smith</div>\n'),
+                          '<span class="authors">Fred Kay and D Smith'
+                          '</span>\n'),
                          ({'authors': ['A', 'B', 'C']},
-                          '<div class="authors">A, B and C</div>\n'),
+                          '<span class="authors">A, B and C</span>\n'),
                          ]:
         context = context_cls(**context)
         tag = Authors(name='authors', content='', attributes=tuple(),
@@ -107,7 +108,7 @@ def test_titlepage_tag_xhtml(doc, is_xml):
            '  <h1 id="title:test-dm-my-title">\n'
            '    <span class="label">My Title</span>\n'
            '  </h1>\n'
-           '  <div class="authors">Fred Kay and D Smith</div>\n'
+           '  <span class="authors">Fred Kay and D Smith</span>\n'
            '</div>\n')
     assert tag.xhtml == key
     assert is_xml(tag.xhtml)

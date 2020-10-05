@@ -15,8 +15,11 @@ class BaseFigure(Tag):
     the label manager and reorganizing captions to the bottom of the figure.
     """
 
-    html_name = 'figure'
-    html_class = None
+    # Render the figures as '<span>' elements in xhtml, instead of <figure>
+    # elements becase <figure> elements are block level items--i.e. they
+    # cannot be placed inside a paragraph.
+    # html_name = 'figure'
+    html_class = 'span'
     active = False
 
     def __init__(self, *args, **kwargs):
@@ -35,7 +38,8 @@ class BaseFigure(Tag):
             caption.kind = ('caption', 'figure')
 
             # Make the caption a figcaption tag for html
-            caption.html_name = 'figcaption'
+            # caption.html_name = 'figcaption'
+            caption.html_class = 'figcaption'
 
             # Create the label in the label_manager
             caption.create_label()

@@ -2,6 +2,7 @@
 Text formatting tags
 """
 from textwrap import wrap
+from html.entities import name2codepoint
 
 from .tag import Tag
 from .exceptions import TagError, assert_content_str
@@ -228,10 +229,6 @@ class Symbol(Tag):
         super().__init__(name=name, content=content, attributes=attributes,
                          context=context)
 
-    def html_fmt(self, content=None, attributes=None, format_func='html_fmt',
-                 method='html', level=1):
-        return xhtml_entity(entity=self.content, method=method, level=level)
-
     def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1,
                 **kwargs):
         content = content if content is not None else self.content
@@ -240,6 +237,21 @@ class Symbol(Tag):
                         formatted_content=content)
                 if not mathmode else
                 content)
+
+    def html_fmt(self, content=None, attributes=None,  method='html', level=1,
+                 **kwargs):
+        content = content or self.content
+        return xhtml_entity(entity=content, method=method, level=level)
+
+    def xhtml_fmt(self, content=None, attributes=None, method='xml', level=1,
+                 **kwargs):
+        content = (content or self.content).strip()
+
+        # Convert the entity name to a code point, needed for epub.
+        # ex: 'gamma' -> '#947'
+        content = ('#' + str(name2codepoint[content])
+                   if content in name2codepoint else content)
+        return xhtml_entity(entity=content, method=method, level=level)
 
 
 class Verb(Tag):

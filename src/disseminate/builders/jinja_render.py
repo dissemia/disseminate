@@ -95,7 +95,7 @@ class JinjaRender(Builder):
     action = 'render'
     priority = 1000
     active_requirements = ('priority',)
-    scan_parameters = False  # This is done after all parameters are loaded
+    scan_parameters_on_init = False  # This is done after all parameters are loaded
 
     context = weakattr()
 
