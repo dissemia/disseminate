@@ -2,11 +2,12 @@
 Utilities for lists.
 """
 import hashlib
+from itertools import filterfalse
 
 
 def uniq(l, key=None):
     """Find the unique items in the given list while preserving the order of
-    the list and optionnally using a key mapping function.
+    the list and optionally using a key mapping function.
 
     Parameters
     ----------
@@ -25,15 +26,26 @@ def uniq(l, key=None):
     >>> uniq([(1, 'a'), (2, 'a'), (3, 'b'), (4, 'c')], key=lambda i:i[0])
     [(1, 'a'), (2, 'a'), (3, 'b'), (4, 'c')]
     """
+    return list(unique_everseen(l, key=key))
+
+
+def unique_everseen(iterable, key=None):
+    """List unique elements, preserving order. Remember all elements ever seen.
+    """
+    # unique_everseen('AAAABBBCCDAABBB') --> A B C D
+    # unique_everseen('ABBCcAD', str.lower) --> A B C D
     seen = set()
-    # Get the mappings of the list items, base on the key
+    seen_add = seen.add
     if key is None:
-        uniques = [item for item in l if item not in seen
-                   and not seen.add(item)]
+        for element in filterfalse(seen.__contains__, iterable):
+            seen_add(element)
+            yield element
     else:
-        uniques = [item for item in l if key(item) not in seen
-                   and not seen.add(key(item))]
-    return uniques
+        for element in iterable:
+            k = key(element)
+            if k not in seen:
+                seen_add(k)
+                yield element
 
 
 def dupes(l, key=None):

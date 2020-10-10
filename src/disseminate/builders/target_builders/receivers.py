@@ -60,23 +60,28 @@ def add_target_builders(root_document):
     # Get the subdocuments in the tree
     docs = root_document.documents_list(only_subdocuments=False, recursive=True)
 
+    # Reset all of the builders
+    for doc in docs:
+        doc.context.setdefault('builders', dict()).clear()
+
+    # Populate the target builders for each document
     for doc in docs:
         context = doc.context
         builders = context.setdefault('builders', dict())
-        builders.clear()  # Reset builders
 
         environment = context['environment']
         for target in context.targets:
             target = target if target.startswith('.') else '.' + target
 
-            # TODO: Fix this target-specific behavior because it's a bit hacky
-            if target == '.epub' and doc != root_document:
-                target = '.xhtml'
-
             if target not in builders:
                 builder_cls = Builder.find_builder_cls(in_ext='.dm',
                                                        out_ext=target)
-                builders[target] = builder_cls(env=environment, context=context)
+
+                # Only add the target builder if not only_root or, if
+                # only_root, the doc is equal to the root_document.
+                if not builder_cls.only_root or doc == root_document:
+                    builders[target] = builder_cls(env=environment,
+                                                   context=context)
 
 
 @find_builder.connect_via(order=1000)

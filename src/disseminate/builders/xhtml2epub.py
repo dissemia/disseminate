@@ -5,13 +5,13 @@ import zipfile
 import pathlib
 import uuid
 import logging
+import os.path
 from datetime import datetime, timezone
 
 from .composite_builders import SequentialBuilder
 from ..paths.utils import find_file
 from ..utils.classes import weakattr
 from ..utils.string import slugify
-from ..utils.list import uniq
 
 
 class XHtml2Epub(SequentialBuilder):
@@ -135,8 +135,9 @@ class XHtml2Epub(SequentialBuilder):
             is_toc = filepath.name == self.toc_filename
 
             # Generate the subpath for the file, as this is the relative
-            # path in the epub container
-            subpath = str(filepath.subpath)
+            # path in the epub container. Make sure to strip '..' relpath
+            # elements, as this can create compatibility issues.
+            subpath = str(os.path.normpath(filepath.subpath))
 
             # Generate the navigation identifier for the file
             id = slugify(subpath) if not is_toc else 'toc'

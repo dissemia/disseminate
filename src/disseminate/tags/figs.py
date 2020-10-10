@@ -19,7 +19,7 @@ class BaseFigure(Tag):
     # elements becase <figure> elements are block level items--i.e. they
     # cannot be placed inside a paragraph.
     # html_name = 'figure'
-    html_class = 'span'
+    html_name = 'span'
     active = False
 
     def __init__(self, *args, **kwargs):

@@ -16,6 +16,7 @@ class EpubBuilder(TargetBuilder):
     infilepath_ext = '.dm'
     outfilepath_ext = '.epub'
 
+    only_root = True
     add_parallel_builder = False
     add_render_builder = False
 
@@ -39,10 +40,10 @@ class EpubBuilder(TargetBuilder):
         doc_list = doc.documents_list(only_subdocuments=False, recursive=True)
 
         xhtml_builders = []
-        for d in doc_list:
-            builders = d.context.setdefault('builders', dict())
+        for doc in doc_list:
+            builders = doc.context.setdefault('builders', dict())
             if '.xhtml' not in builders:
-                xhtml_builder = XHtmlBuilder(env=env, context=d.context,
+                xhtml_builder = XHtmlBuilder(env=env, context=doc.context,
                                              target='xhtml', **kwargs)
 
                 builders['.xhtml'] = xhtml_builder

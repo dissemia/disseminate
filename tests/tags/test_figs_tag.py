@@ -281,7 +281,7 @@ def test_figure_html(doc):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     fig = root.content
 
-    key = ('<span class="fig">'
+    key = ('<span class="figure">'
            '<span class="caption" id="caption-92042fbb8b">'
            '<span class="label">My Fig. 1. </span>'
            'This is my caption</span>'
@@ -351,7 +351,7 @@ def test_figure_xhtml(doc, is_xml):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     fig = root.content
 
-    key = ('<span class="fig">\n'
+    key = ('<span class="figure">\n'
            '  <span class="caption" id="caption-92042fbb8b">'
            '<span class="label">My Fig. 1. </span>'
            'This is my caption</span>\n'

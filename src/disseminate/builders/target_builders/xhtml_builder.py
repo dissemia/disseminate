@@ -1,7 +1,6 @@
 """
 A TargetBuilder for xhtml files.
 """
-
 from .html_builder import HtmlBuilder
 
 

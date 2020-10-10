@@ -1,6 +1,8 @@
 """
 A builder for document targets.
 """
+import logging
+
 from ..jinja_render import JinjaRender
 from ..composite_builders import SequentialBuilder, ParallelBuilder
 from ..utils import generate_outfilepath
@@ -25,6 +27,8 @@ class TargetBuilder(SequentialBuilder):
 
     Attributes
     ----------
+    only_root : Optional[bool]
+        If True, only add the target builder for the root document.
     add_parallel_builder : Optional[bool]
         If True (default), create a parallel builder for adding dependencies for
         a target.
@@ -42,6 +46,7 @@ class TargetBuilder(SequentialBuilder):
     copy = False
     clear_done = False
 
+    only_root = False
     add_parallel_builder = True
     add_render_builder = True
 
@@ -52,6 +57,12 @@ class TargetBuilder(SequentialBuilder):
 
     def __init__(self, env, context, parameters=None, outfilepath=None,
                  subbuilders=None, use_cache=None, **kwargs):
+        if __debug__ and 'src_filepath' in context:
+            # log the creation of the target builder
+            msg = "Add target builder '{}' to document '{}'"
+            logging.debug(msg.format(self.__class__.__name__,
+                                     context['src_filepath']))
+
         # Configure the parameters
         self.context = context
         parameters = parameters if parameters is not None else []
