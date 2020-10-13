@@ -153,7 +153,7 @@ def test_builder_status(env):
 
     # Create the outfilepath
     outfilepath.write_text('infile')
-    assert builder.build() == 'done'
+    assert builder.build(complete=True) == 'done'
     assert builder.status == 'done'
 
     # 5. A new builder will report that it's done too.

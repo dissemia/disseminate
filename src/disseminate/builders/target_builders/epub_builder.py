@@ -163,8 +163,3 @@ class EpubBuilder(TargetBuilder):
         # Setup the paths
         copy_builder.parameters = [xhtml2epub.outfilepath]
         copy_builder.outfilepath = self.outfilepath
-
-    def add_build(self, parameters, outfilepath=None, context=None, **kwargs):
-        return self._xhtml_builder.add_build(parameters=parameters,
-                                             outfilepath=outfilepath,
-                                             context=context, **kwargs)

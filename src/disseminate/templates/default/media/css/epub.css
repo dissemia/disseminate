@@ -61,3 +61,27 @@ img.eq {
     font-size: 70%;
     text-align: left;
 }
+
+/* figures */
+span.marginfig, span.sidenote, span.figure .caption, table.table caption, table.margintable {
+  display: block;
+  font-size: 11pt;
+  line-height: 14pt;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  background-color: #fcfcfc;
+}
+
+span.marginfig {
+  display: inline-block;
+  max-width: 50%;
+}
+
+span.marginfig img {
+  float: left;
+}
+
+span.caption {
+  vertical-align: top;
+}
+

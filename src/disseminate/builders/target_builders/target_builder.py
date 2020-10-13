@@ -18,7 +18,7 @@ class TargetBuilder(SequentialBuilder):
         The build environment
     context: :obj:`.context.Context`
         The context dict for the document being rendered.
-    iparameters, args : Tuple[:obj:`pathlib.Path`, str, tuple, list]
+    parameters, args : Tuple[:obj:`pathlib.Path`, str, tuple, list]
         The input parameters (dependencies), including filepaths, for the build
     outfilepath : Optional[:obj:`pathlib.Path`]
         If specified, the path for the output file.

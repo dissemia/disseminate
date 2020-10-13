@@ -214,21 +214,21 @@ span.authors {
 
 /* sidenotes, marginfigs and margin tables and caption */
 span.marginfig, span.sidenote, span.figure .caption, table.table caption, table.margintable {
-    clear: right;
-    float: right;
-    width: 40%;
-    margin-right: -43%;
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-    vertical-align: top;
-    position: relative;
-    font-size: 11pt;
-    line-height: 14pt;
-    padding: 0.2rem;
-    border-top: 1px solid #eee;
-    border-bottom: 1px solid #eee;
-    background-color: #fcfcfc;
-    overflow-x: hidden;
+  overflow-x: hidden;
+  clear: right;
+  float: right;
+  width: 40%;
+  margin-right: -43%;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  vertical-align: top;
+  position: relative;
+  font-size: 11pt;
+  line-height: 14pt;
+  padding: 0.2rem;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  background-color: #fcfcfc;
 }
 
 /* Tables */
