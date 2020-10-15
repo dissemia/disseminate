@@ -228,11 +228,11 @@ def test_marginfig_caption_no_id_html(doc):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     marginfig = root.content
 
-    key = ('<span class="marginfig">'
+    key = ('<aside class="marginfig">'
            '<span class="caption" id="caption-92042fbb8b">'
            '<span class="label">My Fig. 1. </span>'
            'This is my caption</span>'
-           '</span>\n')
+           '</aside>\n')
     assert marginfig.html == key
 
 
@@ -250,11 +250,11 @@ def test_marginfig_caption_with_id_html(doc):
     srcs = ("@marginfig[id=fig-1]{@caption{This is my caption}}",
             "@marginfig{@caption[id=fig-1]{This is my caption}}")
 
-    key = ('<span class="marginfig">'
+    key = ('<aside class="marginfig">'
            '<span class="caption" id="fig-1">'
            '<span class="label">My Fig. 1. </span>'
            'This is my caption</span>'
-           '</span>\n')
+           '</aside>\n')
 
     for count, src in enumerate(srcs):
         # Reset the label manager to avoid duplicate labels
@@ -336,6 +336,29 @@ def test_panel_html(doc):
 
 
 # xhtml target
+
+def test_marginfig_xhtml(doc):
+    """Tests the xhtml generation of marginfigure tags."""
+
+    # Set the label format for the caption figure
+    label_fmts = doc.context['label_fmts']
+    label_fmts['caption_figure'] = "My Fig. @label.number. "
+
+    # Generate the markup without an id
+    src = "@marginfig{@caption{This is my caption}}"
+
+    # Generate a tag and compare the generated tex to the answer key
+    root = Tag(name='root', content=src, attributes='', context=doc.context)
+    marginfig = root.content
+
+    key = ('<aside xmlns:ns0="http://www.idpf.org/2007/ops" class="marginfig" ns0:type="footnote">\n'
+           '  <span class="caption" id="caption-92042fbb8b">'
+           '<span class="label">My Fig. 1. </span>'
+           'This is my caption</span>\n'
+           '</aside>\n')
+    print(marginfig.xhtml)
+    assert marginfig.xhtml == key
+
 
 def test_figure_xhtml(doc, is_xml):
     """Test the @figure tag html format"""

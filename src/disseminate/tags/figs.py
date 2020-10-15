@@ -6,6 +6,7 @@ from .caption import Caption
 from .utils import format_attribute_width
 from ..utils.string import strip_multi_newlines
 from ..utils.types import StringPositionalValue
+from .. import settings
 
 
 class BaseFigure(Tag):
@@ -44,27 +45,33 @@ class BaseFigure(Tag):
             # Create the label in the label_manager
             caption.create_label()
 
-    def html_fmt(self, attributes=None, **kwargs):
-        attrs = attributes if attributes is not None else self.attributes
+    def html_fmt(self, attributes=None, method='html', **kwargs):
+        attrs = attributes or self.attributes.copy()
+        target = '.html' if method == 'html' else 'xhtml'
 
         # Set the html class
         if self.html_class is not None:
-            attrs = self.attributes.filter(target='.html')
             if 'class' in attrs:
                 attrs['class'] = ' ' + self.html_class
             else:
                 attrs['class'] = self.html_class
-
-        return super().html_fmt(attributes=attrs, **kwargs)
+        return super().html_fmt(attributes=attrs, method=method, **kwargs)
 
 
 class Marginfigure(BaseFigure):
     """The @marginfig tag"""
 
     aliases = ('marginfig',)
+    html_name = 'aside'
     html_class = 'marginfig'
     tex_env = 'marginfigure'
     active = True
+
+    def xhtml_fmt(self, attributes=None, **kwargs):
+        attributes = attributes or self.attributes.copy()
+        attr_name = '{{{}}}type'.format(settings.xhtml_namespace['epub'])
+        attributes[attr_name] = 'footnote'
+        return super().xhtml_fmt(attributes=attributes, **kwargs)
 
 
 class Figure(BaseFigure):

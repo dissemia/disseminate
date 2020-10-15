@@ -8,6 +8,7 @@ from .tag import Tag
 from .exceptions import TagError, assert_content_str
 from ..formats import tex_cmd, tex_env, tex_verb, xhtml_entity, xhtml_tag
 from .utils import format_content
+from .. import settings
 
 
 class Body(Tag):
@@ -23,6 +24,26 @@ class Body(Tag):
         attributes = attributes or self.attributes.copy()
         attributes['class'] = 'body'
         return super().html_fmt(attributes=attributes, **kwargs)
+
+    def xhtml_fmt(self, content=None, attributes=None, format_func='xhtml_fmt',
+                  method='xhtml', level=1, **kwargs):
+        # Wrap the body tag in the epub namespace
+        name = (self.html_name if self.html_name is not None else
+                self.name.lower())
+
+        # Collect the content elements
+        content = content if content is not None else self.content
+        content = format_content(content=content, format_func=format_func,
+                                 level=level + 1)
+
+        # Set the attributes
+        attributes = attributes or self.attributes.copy()
+        attributes['class'] = 'body'
+
+        # Format the html tag
+        return xhtml_tag(name=name, level=level, attributes=attributes,
+                         formatted_content=content, method=method,
+                         nsmap=settings.xhtml_namespace)
 
 
 class P(Tag):

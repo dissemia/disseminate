@@ -56,6 +56,18 @@ def test_attributes_init():
     attrs = Attributes((('test', 'class'),))
     assert attrs == {'test': 'class'}
 
+    # 5. Test positionals with quoted spaces
+    attrs = Attributes('one "{my second positional}"')
+    assert attrs['one'] == StringPositionalValue
+    assert attrs['{my second positional}'] == StringPositionalValue
+
+    # 6. Test positionals without quoted spaces
+    attrs = Attributes('one {my second positional}')
+    assert attrs['one'] == StringPositionalValue
+    assert attrs['{my'] == StringPositionalValue
+    assert attrs['second'] == StringPositionalValue
+    assert attrs['positional}'] == StringPositionalValue
+
 
 def test_attributes_copy():
     """Test the copy method of Attributes classes."""
@@ -64,84 +76,90 @@ def test_attributes_copy():
             Attributes('class="base btnred" red style=map'))
 
 
-def test_attributes_get_positional():
-    """Test the get method of Attributes classes."""
+def test_attributes_find_item():
+    """Test the find_item method of Attributes classes."""
 
     # 1. Test the parsing for basic strings.
     attrs = Attributes('class=base 1.tex 2')
-
-    # Positional arguments
-    assert attrs.get_positional(PositionalValue, target='tex') == '1'
-    assert attrs.get_positional(PositionalValue) == '2'
-    assert attrs.get_positional('class') is None
+    assert (attrs.find_item(IntPositionalValue, target='tex') ==
+            ('1.tex', IntPositionalValue))
+    assert (attrs.find_item(PositionalValue, target='tex') ==
+            ('1.tex', IntPositionalValue))
+    assert attrs.find_item(PositionalValue) == ('2', IntPositionalValue)
+    assert attrs.find_item(StringPositionalValue) is None
 
     # 2. Test positional arguments that re-use the attribute separator ('.')
     attrs = Attributes('3.1416 2.718.tex')
-    assert attrs.get_positional(PositionalValue, target='tex') == '2.718'
-    assert attrs.get_positional(PositionalValue) == '3.1416'
-    assert attrs.get_positional(FloatPositionalValue, target='tex') == '2.718'
-    assert attrs.get_positional(FloatPositionalValue) == '3.1416'
-    assert attrs.get_positional(IntPositionalValue, target='tex') is None
-    assert attrs.get_positional(IntPositionalValue) is None
+    assert (attrs.find_item(PositionalValue, target='tex') ==
+            ('2.718.tex', FloatPositionalValue))
+    assert attrs.find_item(PositionalValue) == ('3.1416', FloatPositionalValue)
+    assert (attrs.find_item(FloatPositionalValue, target='tex') ==
+            ('2.718.tex', FloatPositionalValue))
+    assert (attrs.find_item(FloatPositionalValue) ==
+            ('3.1416', FloatPositionalValue))
+    assert attrs.find_item(IntPositionalValue, target='tex') is None
+    assert attrs.find_item(IntPositionalValue) is None
 
     # 3. Test positional arguments with paths/urls
     attrs = Attributes('link#anchor')
-    assert attrs.get_positional(PositionalValue) == 'link#anchor'
+    assert (attrs.find_item(PositionalValue) ==
+            ('link#anchor', StringPositionalValue))
 
     attrs = Attributes('my_file.pdf#link-anchor')
-    assert attrs.get_positional(PositionalValue) == 'my_file.pdf#link-anchor'
-    assert (attrs.get_positional(PositionalValue, target='.tex') ==
-            'my_file.pdf#link-anchor')
-    assert (attrs.get_positional(StringPositionalValue, target='.tex') ==
-            'my_file.pdf#link-anchor')
+    assert (attrs.find_item(PositionalValue) ==
+            ('my_file.pdf#link-anchor', StringPositionalValue))
+    assert (attrs.find_item(PositionalValue, target='.tex') ==
+            ('my_file.pdf#link-anchor', StringPositionalValue))
+    assert (attrs.find_item(StringPositionalValue, target='.tex') ==
+            ('my_file.pdf#link-anchor', StringPositionalValue))
+
+    # 3. Test key/value entries
+    attrs = Attributes('class="general" class.html="specific"')
+    assert attrs.find_item('class') == ('class', 'general')
+    assert (attrs.find_item('class', target='.html') ==
+            ('class.html', 'specific'))
+    assert (attrs.find_item('class', target='.tex') ==
+            ('class', 'general'))
+
+    # 4. Test a mix of positional and key/value entries
+    attrs = Attributes('class=base 1.tex 2 "my first" "my.second"')
+    assert attrs.find_item('class') == ('class', 'base')
+    assert attrs.find_item('1', target='.tex') == ('1.tex', IntPositionalValue)
+    assert attrs.find_item('1.tex') == ('1.tex', IntPositionalValue)
+    assert attrs.find_item('1.html') is None
+    assert attrs.find_item('2') == ('2', IntPositionalValue)
+    assert attrs.find_item('2', target='tex') == ('2', IntPositionalValue)
+    assert attrs.find_item('my first') == ('my first', StringPositionalValue)
+    assert (attrs.find_item('my first', target='.html') ==
+            ('my first', StringPositionalValue))
+    assert attrs.find_item('my.second') == ('my.second', StringPositionalValue)
+    assert (attrs.find_item('my.second', target='.html') ==
+            ('my.second', StringPositionalValue))
 
 
 def test_attributes_get():
     """Test the get method of Attributes classes."""
 
     # 1. Test the parsing for basic strings.
-    attrs = Attributes('class=base 1.tex 2')
+    attrs = Attributes('class=base 1.tex 2 "my first" "my.second"')
     assert attrs.get('class') == 'base'
 
     # Positional arguments
-    assert attrs.get_positional(PositionalValue, target='tex') == '1'
-    assert attrs.get_positional(PositionalValue) == '2'
     assert attrs.get(PositionalValue, target='tex') == '1'
     assert attrs.get(PositionalValue) == '2'
 
+    assert attrs.get('1.tex') == IntPositionalValue
+    assert attrs.get('1', target='tex') == IntPositionalValue
+    assert attrs.get('1', target='html') is None
 
-def test_attributes_get_by_type():
-    """Test the get_by_type method of Attributes classes."""
+    assert attrs.get('2') == IntPositionalValue
+    assert attrs.get('2', target='tex') == IntPositionalValue
 
-    # 1. Test the basic conversion of values
-    attrs = Attributes('int=1 float=3.2 string=test bool=false tuple="1 2 3"')
-    assert attrs.get_by_type('int', int) == 1
-    assert attrs.get_by_type('float', float) == 3.2
-    assert attrs.get_by_type('string', str) == 'test'
-    assert attrs.get_by_type('bool', bool) is False
-    assert attrs.get_by_type('tuple', tuple) == ('1', '2', '3')
-    assert attrs.get_by_type('tuple', list) == ['1', '2', '3']
+    assert attrs.get('my first') == StringPositionalValue
+    assert attrs.get('my first', target='tex') == StringPositionalValue
 
-    # 2. Try missing entries
-    assert 'notint' not in attrs
-    assert attrs.get_by_type('notint', int) is None
-
-    with pytest.raises(KeyError):
-        attrs.get_by_type('notint', int, raise_error=True)
-
-    # 3. Try type conversions that don't work
-    #   3.1 Without raising an error; just return the default
-    assert attrs.get_by_type('float', int) is None
-
-    #   3.2 With raising an error.
-    with pytest.raises(ValueError):
-        attrs.get_by_type('float', int, raise_error=True)
-
-    # 4. Try with target-specific keys
-    attrs = Attributes('class=test class.html=htmltest')
-    assert attrs.get_by_type('class', target='.html') == 'htmltest'
-    assert attrs.get_by_type('class', target='.tex') == 'test'
-    assert attrs.get_by_type('class') == 'test'
+    assert attrs.get('my.second') == StringPositionalValue
+    assert attrs.get('my.second', target='tex') == StringPositionalValue
 
 
 def test_attributes_append():
@@ -163,6 +181,19 @@ def test_attributes_append():
     attrs.append('2.tex')
     assert attrs['1'] == PositionalValue
     assert attrs['2.tex'] == PositionalValue
+
+
+def test_attributes_strip():
+    """Test the strip method of Attributes classes."""
+
+    # 1. Test target-specific and non-target-specific targets
+    attrs = Attributes('class=basic class.html=specific two')
+    assert len(attrs) == 3
+
+    attrs.strip()
+    assert len(attrs) == 2
+    assert attrs['class'] == 'specific'
+    assert attrs['two'] == StringPositionalValue
 
 
 def test_attributes_filter():
@@ -208,14 +239,43 @@ def test_attributes_filter():
                                   sort_by_attrs=True)
     assert 'my_file.pdf#link-anchor' in filtered_attrs
 
-    # Filtering without a target attribute doesn't work
-    filtered_attrs = attrs.filter(target='tex')
-    assert len(filtered_attrs) == 0
-
-    # But filtering with a target attribute does work
-    attrs = Attributes('my_file.pdf#link-anchor.tex')
+    # Filtering without a target attribute works
     filtered_attrs = attrs.filter(target='tex')
     assert 'my_file.pdf#link-anchor' in filtered_attrs
+
+    # 6. Test examples with quoted spaces
+    # 6.1. Test an example with quoted spaces in the value
+    attrs = Attributes('class="image one"')
+    filtered_attrs = attrs.filter(attrs='class')
+    assert filtered_attrs['class'] == "image one"
+
+    # 6.1. Test an example with quoted spaces in the positional value
+    attrs = Attributes('one "two three"')
+    assert 'one' in attrs
+    assert 'two three' in attrs
+
+    filtered_attrs = attrs.filter(attrs=('one', 'two three'))
+    assert 'one' in filtered_attrs
+    assert 'two three' in filtered_attrs
+
+    filtered_attrs = attrs.filter(attrs=('one', 'two three'), target='.html')
+    assert 'one' in filtered_attrs
+    assert 'two three' in filtered_attrs
+
+    # 6.2. Test an example with quoted spaces and periods in the positional
+    # value
+    attrs = Attributes('one "{http://link.org/}type"')
+    assert 'one' in attrs
+    assert '{http://link.org/}type' in attrs
+
+    filtered_attrs = attrs.filter(attrs=('one', '{http://link.org/}type'))
+    assert 'one' in filtered_attrs
+    assert '{http://link.org/}type' in filtered_attrs
+
+    filtered_attrs = attrs.filter(attrs=('one', '{http://link.org/}type'),
+                                  target='.xhtml')
+    assert 'one' in filtered_attrs
+    assert '{http://link.org/}type' in filtered_attrs
 
 
 def test_attributes_filter_order():
@@ -227,18 +287,6 @@ def test_attributes_filter_order():
     assert attrs.html == "one='1' two='2'"
     assert attrs.filter(('one', 'two')).html == "one='1' two='2'"
     assert attrs.filter(('two', 'one')).html == "one='1' two='2'"
-
-
-def test_attributes_exclude():
-    """Test the exclude method of Attributes classes."""
-
-    # 1. Test target-specific and non-target-specific targets
-    attrs = Attributes('class=basic class.html=specific')
-    assert attrs.exclude('test') == {'class': 'basic', 'class.html': 'specific'}
-    assert attrs.exclude('class') == {}
-    assert attrs.exclude('test', target='html') == {'class': 'basic'}
-    assert attrs.exclude('class', target='tex') == {'class.html': 'specific'}
-    assert attrs.exclude(('class', 'test')) == {}
 
 
 # html targets

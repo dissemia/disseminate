@@ -320,7 +320,7 @@ class Tag(object):
                                  level=level + 1)
 
         # Set the attributes
-        attributes = self.attributes if attributes is None else attributes
+        attributes = attributes or self.attributes
 
         # Format the html tag
         return xhtml_tag(name=name, level=level, attributes=attributes,

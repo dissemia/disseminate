@@ -249,6 +249,8 @@ list_level_spaces = 2
 #: XHTML targets
 #: ~~~~~~~~~~~~
 
+xhtml_namespace = {'epub': 'http://www.idpf.org/2007/ops'}
+
 #: Render XHTML pages with newlines and indentation
 xhtml_pretty = True
 
@@ -263,6 +265,7 @@ xhtml_tag_arguments = {'a': ('href',),
 #: Allowed optional arguments/attributes for html tags
 #: This dict will be checked to see if an html tag is allowed.
 xhtml_tag_optionals = {'a': ('class', 'role'),
+                       'aside': ('class', 'id', '{http://www.idpf.org/2007/ops}type'),
                        'blockquote': empty,
                        'br': empty,
                        'code': empty,

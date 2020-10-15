@@ -3,7 +3,7 @@ Utilities for formatting html strings and text.
 """
 from itertools import groupby
 
-from lxml.builder import E
+from lxml.builder import E, ElementMaker
 from lxml import etree
 from lxml.etree import Entity
 from markupsafe import Markup
@@ -27,7 +27,8 @@ def xml_tag(*args, **kwargs):
 
 
 def xhtml_tag(name, attributes=None, formatted_content=None, level=1,
-              target=None, method='html', pretty_print=settings.xhtml_pretty):
+              target=None, method='html', nsmap=None,
+              pretty_print=settings.xhtml_pretty):
     """Format an xhtml tag string.
 
     Parameters
@@ -44,6 +45,8 @@ def xhtml_tag(name, attributes=None, formatted_content=None, level=1,
         If speficied, filter the attributes that match the given target.
     method : Optional[str]
         The rendering method. 'html', 'xhtml' or 'xml'
+    nsmap : Optional[dict]
+        Optional namespace map to create the tag with.
     pretty_print : Optional[bool]
         If True, make the formatted html pretty--i.e. with newlines and spacing
         for nested tags.
@@ -116,6 +119,7 @@ def xhtml_tag(name, attributes=None, formatted_content=None, level=1,
     formatted_content = ([formatted_content]
                          if not isinstance(formatted_content, list) else
                          formatted_content)
+
     # Clean up the formatted contents
     new_formatted_content = []
     for element in formatted_content:
@@ -134,15 +138,18 @@ def xhtml_tag(name, attributes=None, formatted_content=None, level=1,
     formatted_content += new_formatted_content
 
     # Create the tag
+    # Create the element maker with a namespace, if needed
+    EM = E if nsmap is None else ElementMaker(nsmap=nsmap)
+
     if not allowed_tag:
         # Append the name as a class to the span element
         other['class'] = name
 
         # If the tag isn't listed in the 'allowed' tags, just create a span
         # element.
-        e = E('span', *formatted_content) if formatted_content else E('span')
+        e = EM('span', *formatted_content) if formatted_content else E('span')
     else:
-        e = E(name, *formatted_content) if formatted_content else E(name)
+        e = EM(name, *formatted_content) if formatted_content else E(name)
 
     # Add the reqs and opts attributes
     for attrs in (i for i in (reqs, opts, other) if i is not None):

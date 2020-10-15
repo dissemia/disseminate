@@ -13,7 +13,8 @@ def test_tag_text_body(context_cls):
     body = root.content
 
     assert body.html == '<div class="body">My body!</div>\n'
-    assert body.xhtml == '<div class="body">My body!</div>\n'
+    assert body.xhtml == ('<div xmlns:epub="http://www.idpf.org/2007/ops" '
+                          'class="body">My body!</div>\n')
     assert body.tex == 'My body!'
     assert body.default == 'My body!'
 
