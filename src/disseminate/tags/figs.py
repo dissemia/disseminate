@@ -22,6 +22,8 @@ class BaseFigure(Tag):
     html_name = 'figure'
     active = False
 
+    include_paragraphs = False
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

@@ -49,7 +49,7 @@ img {
 }
 
 img.eq {
-  padding-bottom: -4pt;
+  max-width: 100%;  /* scale down images larger than the container */
 }
 
 /* text formatting */
@@ -72,16 +72,6 @@ figure.marginfig, span.sidenote, figure.figure .caption, table.table caption, ta
   background-color: #fcfcfc;
 }
 
-/*aside.marginfig {*/
-/*  display: inline-block;*/
-/*  max-width: 50%;*/
-/*}*/
-
-/*aside.marginfig img {*/
-/*  float: left;*/
-/*}*/
-
-/*span.caption {*/
-/*  vertical-align: top;*/
-/*}*/
-
+span.panel {
+  display: table-cell;
+}
