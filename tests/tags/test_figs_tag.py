@@ -228,11 +228,11 @@ def test_marginfig_caption_no_id_html(doc):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     marginfig = root.content
 
-    key = ('<aside class="marginfig">'
-           '<span class="caption" id="caption-92042fbb8b">'
+    key = ('<figure class="marginfig">'
+           '<figcaption id="caption-92042fbb8b" class="caption">'
            '<span class="label">My Fig. 1. </span>'
-           'This is my caption</span>'
-           '</aside>\n')
+           'This is my caption</figcaption>'
+           '</figure>\n')
     assert marginfig.html == key
 
 
@@ -250,11 +250,11 @@ def test_marginfig_caption_with_id_html(doc):
     srcs = ("@marginfig[id=fig-1]{@caption{This is my caption}}",
             "@marginfig{@caption[id=fig-1]{This is my caption}}")
 
-    key = ('<aside class="marginfig">'
-           '<span class="caption" id="fig-1">'
+    key = ('<figure class="marginfig">'
+           '<figcaption id="fig-1" class="caption">'
            '<span class="label">My Fig. 1. </span>'
-           'This is my caption</span>'
-           '</aside>\n')
+           'This is my caption</figcaption>'
+           '</figure>\n')
 
     for count, src in enumerate(srcs):
         # Reset the label manager to avoid duplicate labels
@@ -263,7 +263,6 @@ def test_marginfig_caption_with_id_html(doc):
         # Generate a tag and compare the generated tex to the answer key
         root = Tag(name='root', content=src, attributes='', context=doc.context)
         fig = root.content
-
         assert fig.html == key
 
 
@@ -281,11 +280,11 @@ def test_figure_html(doc):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     fig = root.content
 
-    key = ('<span class="figure">'
-           '<span class="caption" id="caption-92042fbb8b">'
+    key = ('<figure class="figure">'
+           '<figcaption id="caption-92042fbb8b" class="caption">'
            '<span class="label">My Fig. 1. </span>'
-           'This is my caption</span>'
-           '</span>\n')
+           'This is my caption</figcaption>'
+           '</figure>\n')
     assert fig.html == key
 
 
@@ -303,11 +302,11 @@ def test_fullfigure_html(doc):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     marginfig = root.content
 
-    key = ('<span class="fullfigure">'
-           '<span class="caption" id="caption-92042fbb8b">'
+    key = ('<figure class="fullfigure">'
+           '<figcaption id="caption-92042fbb8b" class="caption">'
            '<span class="label">My Fig. 1. </span>'
-           'This is my caption</span>'
-           '</span>\n')
+           'This is my caption</figcaption>'
+           '</figure>\n')
     assert marginfig.html == key
 
 
@@ -351,11 +350,11 @@ def test_marginfig_xhtml(doc):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     marginfig = root.content
 
-    key = ('<aside xmlns:ns0="http://www.idpf.org/2007/ops" class="marginfig" ns0:type="footnote">\n'
-           '  <span class="caption" id="caption-92042fbb8b">'
+    key = ('<figure class="marginfig">\n'
+           '  <figcaption id="caption-92042fbb8b" class="caption">'
            '<span class="label">My Fig. 1. </span>'
-           'This is my caption</span>\n'
-           '</aside>\n')
+           'This is my caption</figcaption>\n'
+           '</figure>\n')
     print(marginfig.xhtml)
     assert marginfig.xhtml == key
 
@@ -374,11 +373,11 @@ def test_figure_xhtml(doc, is_xml):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     fig = root.content
 
-    key = ('<span class="figure">\n'
-           '  <span class="caption" id="caption-92042fbb8b">'
+    key = ('<figure class="figure">\n'
+           '  <figcaption id="caption-92042fbb8b" class="caption">'
            '<span class="label">My Fig. 1. </span>'
-           'This is my caption</span>\n'
-           '</span>\n')
+           'This is my caption</figcaption>\n'
+           '</figure>\n')
     assert fig.xhtml == key
     assert is_xml(fig.xhtml)
 
@@ -397,11 +396,11 @@ def test_fullfigure_xhtml(doc, is_xml):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     marginfig = root.content
 
-    key = ('<span class="fullfigure">\n'
-           '  <span class="caption" id="caption-92042fbb8b">'
+    key = ('<figure class="fullfigure">\n'
+           '  <figcaption id="caption-92042fbb8b" class="caption">'
            '<span class="label">My Fig. 1. </span>'
-           'This is my caption</span>\n'
-           '</span>\n')
+           'This is my caption</figcaption>\n'
+           '</figure>\n')
     assert marginfig.xhtml == key
     assert is_xml(marginfig.xhtml)
 

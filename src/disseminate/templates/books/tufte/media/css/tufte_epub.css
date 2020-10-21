@@ -1,0 +1,38 @@
+body {
+  max-width: 60em;
+}
+
+p {
+  width: 70%; /* width relative to parent 'body' (x)*/
+}
+
+figure.marginfig, span.sidenote, figure.figure .caption, table.table caption, table.margintable {
+  overflow-x: hidden;
+  clear: right;
+  width: 40%; /* width relative to parent 'p' (y=(1-x)/x) */
+  margin: 1em;
+  margin-right: -42%;
+  padding: 0.25em 0;
+  vertical-align: top;
+  position: relative;
+  float: right;
+}
+
+
+
+  /*p {*/
+  /*  width: 70%;*/
+  /*}*/
+
+  /*figure.marginfig, span.sidenote, figure.figure .caption, table.table caption, table.margintable {*/
+  /*  overflow-x: hidden;*/
+  /*  clear: right;*/
+  /*  float: right;*/
+  /*  width: 40%;*/
+  /*  padding: 0.25em 0;*/
+  /*  margin-right: -41%;*/
+  /*  margin-top: 0.5rem;*/
+  /*  margin-bottom: 0.5rem;*/
+  /*  vertical-align: top;*/
+  /*  position: relative;*/
+  /*}*/

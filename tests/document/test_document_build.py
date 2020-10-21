@@ -171,6 +171,7 @@ def test_document_template_books_tufte(load_example, cmp_epub):
                  xhtml_root / 'media' / 'inept_87560c6686dd.svg',
                  xhtml_root / 'media' / 'css' / 'epub.css',
                  xhtml_root / 'media' / 'css' / 'tufte.css',
+                 xhtml_root / 'media' / 'css' / 'tufte_epub.css',
                 }
     print(target_root / 'xhtml')
     xhtml_actual = set(xhtml_root.glob('**/*'))

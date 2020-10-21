@@ -19,8 +19,7 @@ class BaseFigure(Tag):
     # Render the figures as '<span>' elements in xhtml, instead of <figure>
     # elements becase <figure> elements are block level items--i.e. they
     # cannot be placed inside a paragraph.
-    # html_name = 'figure'
-    html_name = 'span'
+    html_name = 'figure'
     active = False
 
     def __init__(self, *args, **kwargs):
@@ -39,7 +38,7 @@ class BaseFigure(Tag):
             caption.kind = ('caption', 'figure')
 
             # Make the caption a figcaption tag for html
-            # caption.html_name = 'figcaption'
+            caption.html_name = 'figcaption'
             caption.html_class = 'figcaption'
 
             # Create the label in the label_manager
@@ -58,11 +57,10 @@ class BaseFigure(Tag):
         return super().html_fmt(attributes=attrs, method=method, **kwargs)
 
 
-class Marginfigure(BaseFigure):
+class MarginFigure(BaseFigure):
     """The @marginfig tag"""
 
     aliases = ('marginfig',)
-    html_name = 'aside'
     html_class = 'marginfig'
     tex_env = 'marginfigure'
     active = True

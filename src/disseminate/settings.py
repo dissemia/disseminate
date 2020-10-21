@@ -161,6 +161,9 @@ default_context = {
     # disseminate.tags.factory.TagFactory.
     'inactive_tags': set(),
 
+    # Target-specific customizations
+    'epub': dict(),
+
     # Macros are string entries that aren't processed into tags and asts.
     # These start with the 'tag_prefix' (e.g. '@')
     # Macros - Isotopes
@@ -264,8 +267,9 @@ xhtml_tag_arguments = {'a': ('href',),
 
 #: Allowed optional arguments/attributes for html tags
 #: This dict will be checked to see if an html tag is allowed.
-xhtml_tag_optionals = {'a': ('class', 'role'),
-                       'aside': ('class', 'id', '{http://www.idpf.org/2007/ops}type'),
+epub_type = "{{{}}}type".format(xhtml_namespace['epub'])
+xhtml_tag_optionals = {'a': ('class', 'role', epub_type),
+                       'aside': ('class', 'id', epub_type),
                        'blockquote': empty,
                        'br': empty,
                        'code': empty,

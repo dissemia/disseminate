@@ -12,8 +12,8 @@ from disseminate.tags import Tag
 from disseminate.paths import TargetPath
 
 
-hash_filename1 = lambda ext: 'template_990e525221be' + ext
-hash_filename2 = lambda ext: 'template_486c9978af65' + ext
+hash_filename1 = lambda ext: 'template_70e8e0c4da8e' + ext
+hash_filename2 = lambda ext: 'template_f60e6bbc4f85' + ext
 
 
 @pytest.fixture

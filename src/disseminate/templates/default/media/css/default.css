@@ -213,7 +213,7 @@ span.authors {
 }
 
 /* sidenotes, marginfigs and margin tables and caption */
-span.marginfig, span.sidenote, span.figure .caption, table.table caption, table.margintable {
+figure.marginfig, span.sidenote, figure.figure .caption, table.table caption, table.margintable {
   overflow-x: hidden;
   clear: right;
   float: right;

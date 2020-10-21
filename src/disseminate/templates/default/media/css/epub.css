@@ -4,7 +4,7 @@
 .body {
   font-size: 14pt;
   font-family: Palatino, serif;
-  line-height: 20pt;
+  line-height: 1.42;
 }
 
 /* headings */
@@ -63,7 +63,7 @@ img.eq {
 }
 
 /* figures */
-span.marginfig, span.sidenote, span.figure .caption, table.table caption, table.margintable {
+figure.marginfig, span.sidenote, figure.figure .caption, table.table caption, table.margintable {
   display: block;
   font-size: 11pt;
   line-height: 14pt;
@@ -72,16 +72,16 @@ span.marginfig, span.sidenote, span.figure .caption, table.table caption, table.
   background-color: #fcfcfc;
 }
 
-span.marginfig {
-  display: inline-block;
-  max-width: 50%;
-}
+/*aside.marginfig {*/
+/*  display: inline-block;*/
+/*  max-width: 50%;*/
+/*}*/
 
-span.marginfig img {
-  float: left;
-}
+/*aside.marginfig img {*/
+/*  float: left;*/
+/*}*/
 
-span.caption {
-  vertical-align: top;
-}
+/*span.caption {*/
+/*  vertical-align: top;*/
+/*}*/
 

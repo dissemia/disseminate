@@ -99,7 +99,8 @@ class XHtml2Epub(SequentialBuilder):
         fps = front_fps + [fp for fp in fps if fp not in front_fps]
 
         render_context = (self._render_context or
-                          self.context.filter(['paths', 'title', 'date']))
+                          self.context.filter(['paths', 'title', 'date',
+                                               'epub']))
         render_context['template'] = template_name
         render_context['xhtml_files'] = self.filepath_dict_list(fps, '.xhtml')
         render_context['svg_files'] = self.filepath_dict_list(fps, '.svg')
