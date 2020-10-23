@@ -35,6 +35,9 @@ def test_html_tag():
             '<span class="invalid"></span>\n')
 
     assert (xhtml_tag('invalid', attributes='class=myclass') ==
+            '<span class="myclass"></span>\n')
+
+    assert (xhtml_tag('invalid', attributes='') ==
             '<span class="invalid"></span>\n')
 
     # The script tag is not allowed. It will be rendered as a span.

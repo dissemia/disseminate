@@ -83,7 +83,7 @@ def test_img_tex(load_example, is_pdf):
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
 
-    assert img.tex == ("\\includegraphics[width=1.0\\textwidth]"
+    assert img.tex == ("\\includegraphics[width=0.99\\textwidth]"
                        "{{{}}}".format(filepath))
 
     # 3. Now test an tex-specific attribute
@@ -122,7 +122,7 @@ def test_img_html(load_example):
     # Generate a tag and compare the generated text to the answer key
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
-    assert img.html == '<img src="media/sample.svg" style="width: 100.0%">\n'
+    assert img.html == '<img src="media/sample.svg" class="w100">\n'
 
     # Check the build
     env = doc.context['environment']
@@ -158,7 +158,7 @@ def test_img_xhtml(load_example, is_xml, is_svg):
     # Generate a tag and compare the generated text to the answer key
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
-    assert img.xhtml == '<img src="media/sample.svg" style="width: 100.0%"/>\n'
+    assert img.xhtml == '<img src="media/sample.svg" class="w100"/>\n'
     assert is_xml(img.xhtml)
 
     # Check the build

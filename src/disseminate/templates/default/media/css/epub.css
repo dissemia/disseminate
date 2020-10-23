@@ -1,12 +1,5 @@
 /* css for epub ebooks */
 
-
-.body {
-  font-size: 14pt;
-  font-family: Palatino, serif;
-  line-height: 1.42;
-}
-
 /* headings */
 
 h1, h2, h3, h4, h5 {
@@ -42,6 +35,38 @@ h3, h4, h5 {
   margin-bottom: 1.0em;
 }
 
+/* Structural elements */
+
+.body {
+  font-size: 14pt;
+  font-family: Palatino, serif;
+  line-height: 1.42;
+}
+
+.w100 {
+  width: 100%;
+}
+
+.w75 {
+  width: 75%;
+}
+
+.w50 {
+  width: 50%;
+}
+
+.w25 {
+  width: 25%;
+}
+
+.w66 {
+  width: 66%;
+}
+
+.w33 {
+  width: 33%;
+}
+
 /* images and equations */
 img {
   vertical-align: middle;
@@ -72,6 +97,45 @@ figure.marginfig, span.sidenote, figure.figure .caption, table.table caption, ta
   background-color: #fcfcfc;
 }
 
-span.panel {
-  display: table-cell;
+figure.fullfigure {
+  padding: 0.5rem 0;
+  display: flex;
+  width: 145%;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
 }
+
+figure.fullfigure img {
+  padding-right: 0.25rem;
+  flex-grow: 1.0;
+}
+
+figure.figure {
+  padding: 0.5rem 0;
+  display: flex;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+figure.figure img {
+  padding-right: 0.25rem;
+  flex-grow: 1.0;
+}
+
+
+/* captions */
+
+caption, figcaption {
+  display: block;
+  font-size: 11pt;
+  line-height: 13pt;
+  margin-top: 1em;
+}
+
+span.panel {
+  font-size: 10pt;
+  line-height: 12pt;
+  padding-right: 0.25rem;
+  flex-grow: 1.0;
+}
+

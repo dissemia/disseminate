@@ -1,8 +1,11 @@
 """
 Misc utilities for tags.
 """
+from math import ceil
 from copy import copy
+
 from ..attributes import Attributes
+from ..utils.types import StringPositionalValue
 
 
 def content_to_str(content, target='.txt', **kwargs):
@@ -153,22 +156,22 @@ def percentage(value):
 
     Returns
     -------
-    percentage : Union[float, None]
-        The percentage from 0.0 to 100, or
+    percentage : Union[int, None]
+        The percentage from 0 to 100, or
         None if the value could not be converted.
 
     Examples
     --------
     >>> percentage('10.2%')
-    10.2
+    11
     >>> percentage('10.2')
-    1019.9999999999999
+    1020
     >>> percentage('0.3%')
-    0.3
+    1
     >>> percentage('0.3')
-    30.0
+    30
     >>> percentage(30)
-    30.0
+    30
     """
     if isinstance(value, str):
         if '%' in value:
@@ -183,51 +186,134 @@ def percentage(value):
                 value = None
 
     try:
-        return abs(float(value))
+        return abs(ceil(value))
     except (ValueError, TypeError):
         return None
 
 
-def format_attribute_width(attributes, target):
-    """Format the width entry for an attributes dict and the given target.
+def tex_percentwidth(attributes, target='.tex', use_positional=False):
+    """Generates an tex width string based on the 'width' entry in the
+    attributes.
 
-    .. note:: For .tex targets, the entry is added as a 'width.tex' entry
-              in the returned formatted_attributes. This is the desired effect
-              for macros like \includegraphics, but other functions, like
-              minipage, require a StringPositionalValue. In this case, a tag
-              function should reorganize the formatted_attributes accordingly.
+    Currently, this function works in halves (w50), thirds (w33, w66) and
+    quarters (w25, w75)
 
     Parameters
     ----------
     attributes : :obj:`.attributes.Attributes`
         The attributes dict
-    target : str
+    target : Optional[str]
+        The target format to format the attribute dict for.
+    use_positional : Optional[bool]
+        Insert the entry as a positional attribute
+
+    Returns
+    -------
+    attributes: :obj:`.attributes.Attributes`
+        The same attributes dict with the width inserted as a
+        StringPositionalArgument, if a width was found.
+
+    Examples
+    --------
+    >>> tex_percentwidth('width=50%')
+    Attributes{'width': '0.5\\\\textwidth'}
+    >>> tex_percentwidth('width=3.2in')
+    Attributes{'width': '3.2in'}
+    >>> tex_percentwidth('width=50%', use_positional=True)
+    Attributes{'width': '50%', '0.5\\\\textwidth': <class '...StringPositionalValue'>}
+    """
+    attributes = (Attributes(attributes)
+                  if not isinstance(attributes, Attributes) else attributes)
+
+    # Convert the width to a number between 0 and 100
+    width = attributes.get('width', target=target)
+    if width is None:
+        return attributes
+
+    percent_width = percentage(width)  # width from 0 to 100
+
+    # Find which width window this falls in
+    windows = {99: (75, 100),  # ]75, 100]
+               74: (67, 75),
+               65: (50, 67),
+               49: (34, 50),
+               32: (25, 33),
+               24: (0, 25)}
+
+    fit_percent_width = None
+    if isinstance(percent_width, int):
+        for test_percent_width, (range_min, range_max) in windows.items():
+            if range_min < percent_width <= range_max:
+                fit_percent_width = test_percent_width
+
+    # Set the width value in the attributes dict
+    if isinstance(fit_percent_width, int):
+        str = "{}\\textwidth".format(fit_percent_width / 100.)
+        if use_positional:
+            attributes[str] = StringPositionalValue
+        else:
+            attributes['width'] = str
+    else:
+        str = "{}".format(width)
+        if use_positional:
+            attributes[str] = StringPositionalValue
+        else:
+            attributes['width'] = str
+
+    return attributes
+
+
+def xhtml_percentwidth(attributes, target='.html'):
+    """Generates an (x)html class name based on the 'width' entry in the
+    attributes.
+
+    Currently, this function works in halves (w50), thirds (w33, w66) and
+    quarters (w25, w75)
+
+    Parameters
+    ----------
+    attributes : :obj:`.attributes.Attributes`
+        The attributes dict
+    target : Optional[str]
         The target format to format the attribute dict for.
 
     Returns
     -------
-    formatted_attributes : :obj:`.attributes.Attributes`
-        The attributes dict with formatted width for the given target.
+    attributes: :obj:`.attributes.Attributes`
+        The same attributes dict with the 'class' entry set to an html class
+        for the percent width, if a width was found.
+
+    Examples
+    --------
+    >>> xhtml_percentwidth('width=50%')
+    Attributes{'width': '50%', 'class': 'w50'}
+    >>> xhtml_percentwidth('width=0%')  # None returned
+    Attributes{'width': '0%'}
     """
-    attributes = Attributes(attributes)
-    formatted_attributes = Attributes({k: v for k, v in attributes.items()
-                                       if 'width' not in k})
+    attributes = (Attributes(attributes)
+                  if not isinstance(attributes, Attributes) else attributes)
 
     width = attributes.get('width', target=target)
-    percentage_width = percentage(width)
+    if width is None:
+        return attributes
 
-    if 'tex' in target:
-        if percentage_width:
-            attr = "width.tex={}\\textwidth".format(percentage_width / 100.)
-            formatted_attributes.load(attr)
-        elif width:
-            attr = "width.tex={}".format(width)
-            formatted_attributes.load(attr)
-    elif 'html' in target:  # covers .xhtml and .html
-        if percentage_width:
-            attr = 'width: {}%'.format(percentage_width)
-            formatted_attributes['style'] = attr
-        elif width:
-            attr = 'width: {}'.format(width)
-            formatted_attributes['style'] = attr
-    return formatted_attributes
+    percent_width = percentage(width)  # width from 0 to 100
+
+    if not isinstance(percent_width, int):
+        return attributes
+
+    windows = {'w100': (75, 100),  # ]75, 100]
+               'w75':  (67, 75),
+               'w66': (50, 67),
+               'w50': (34, 50),
+               'w33': (25, 33),
+               'w25': (0, 25)}
+
+    for html_class, (range_min, range_max) in windows.items():
+        if range_min < percent_width <= range_max:
+            cls_str = (attributes['class'] + ' ' + html_class
+                      if 'class' in attributes else html_class)
+            attributes['class'] = cls_str
+            return attributes
+
+    return attributes

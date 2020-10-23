@@ -205,7 +205,7 @@ def test_panel_tex(doc):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     panel = root.content
 
-    key = ('\\begin{panel}{0.3\\textwidth}\n'
+    key = ('\\begin{panel}{0.32\\textwidth}\n'
            'This is my panel\n'
            '\\end{panel}')
     assert panel.tex == key
@@ -330,7 +330,7 @@ def test_panel_html(doc):
     root = Tag(name='root', content=src, attributes='', context=doc.context)
     panel = root.content
 
-    key = '<span class="panel" style="width: 30.0%">This is my panel</span>\n'
+    key = '<span class="panel w33">This is my panel</span>\n'
     assert panel.html == key
 
 
@@ -426,5 +426,5 @@ def test_panel_xhtml(doc, is_xml):
     panel = root.content
 
     assert (panel.xhtml ==
-            '<span class="panel" style="width: 30.0%">This is my panel</span>\n')
+            '<span class="panel w33">This is my panel</span>\n')
     assert is_xml(panel.xhtml)

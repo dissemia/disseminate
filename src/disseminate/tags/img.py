@@ -4,7 +4,7 @@ Image tags
 import pathlib
 
 from .tag import Tag, TagError
-from .utils import format_attribute_width
+from .utils import xhtml_percentwidth, tex_percentwidth
 from ..signals import signal
 from ..paths.utils import find_files
 from ..formats import tex_cmd
@@ -160,8 +160,8 @@ class Img(Tag):
                                     context=context, attributes=attributes)
 
         # Format the width
-        attributes = attributes or self.attributes
-        attrs = format_attribute_width(attributes, target='.tex')
+        attrs = attributes or self.attributes.copy()
+        attrs = tex_percentwidth(attrs, target='.tex')
 
         # Get the filename for the file.
         base = outfilepath.with_suffix('')
@@ -191,7 +191,7 @@ class Img(Tag):
 
         # Format the width and attributes
         attrs = attributes or self.attributes.copy()
-        attrs = format_attribute_width(attrs, target=target)
+        attrs = xhtml_percentwidth(attrs, target=target)
         attrs['src'] = url
 
         return super().html_fmt(content='', attributes=attrs, method=method,

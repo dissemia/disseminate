@@ -122,6 +122,30 @@ td {
   border-radius: 0 0 4px 4px;
 }
 
+.w100 {
+  width: 100%;
+}
+
+.w75 {
+  width: 75%;
+}
+
+.w50 {
+  width: 50%;
+}
+
+.w25 {
+  width: 25%;
+}
+
+.w66 {
+  width: 66%;
+}
+
+.w33 {
+  width: 33%;
+}
+
 /* span elements */
 
 .supsub {
@@ -306,7 +330,12 @@ span.label::after {
 }
 
 img.eq {
+  max-width: 100%; /* scale down image if larger than container */
   padding-bottom: 4px;
+}
+
+span.panel {
+  display: table-cell;
 }
 
 /* Special elements */

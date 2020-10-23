@@ -3,6 +3,8 @@ Tests document build and build_needed methods.
 """
 from pathlib import Path
 
+import epubcheck
+
 # Setup example paths
 ex8_root = Path("tests") / "document" / "examples" / "ex8"
 
@@ -188,3 +190,4 @@ def test_document_template_books_tufte(load_example, cmp_epub):
     # Check the epub file itself
     assert cmp_epub(doc.targets['.epub'],
                     ex8_root / 'epub' / 'inept.epub')
+    assert epubcheck.validate(doc.targets['.epub'])

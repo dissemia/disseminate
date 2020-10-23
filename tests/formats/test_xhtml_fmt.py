@@ -38,7 +38,7 @@ def test_xml_tag():
             '<span class="invalid"/>\n')
 
     assert (xml_tag('invalid', attributes='class=myclass') ==
-            '<span class="invalid"/>\n')
+            '<span class="myclass"/>\n')
 
     # The script tag is not allowed. It will be rendered as a span.
     assert (xml_tag('script', attributes='test') ==

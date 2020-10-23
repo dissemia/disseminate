@@ -3,7 +3,7 @@ Tags for figure environments.
 """
 from .tag import Tag
 from .caption import Caption
-from .utils import format_attribute_width
+from .utils import xhtml_percentwidth, tex_percentwidth
 from ..utils.string import strip_multi_newlines
 from ..utils.types import StringPositionalValue
 from .. import settings
@@ -103,14 +103,7 @@ class Panel(Tag):
         attrs = self.attributes.copy() if attributes is None else attributes
 
         # Format the width
-        attrs = format_attribute_width(attrs, target='.tex')
-
-        # Convert the width attribute to a StringPositional, which is needed
-        # by the panel environment
-        # ex: \begin{panel}{0.5\textwidth} \end{panel}
-        width = attrs.get('width', target='.tex')
-        if width is not None:
-            attrs[width] = StringPositionalValue
+        attrs = tex_percentwidth(attrs, target='.tex', use_positional=True)
 
         # Raises an error if a width is not present. Strip multiple newlines
         # as these break up side-by-side figures
@@ -121,8 +114,7 @@ class Panel(Tag):
         attrs = self.attributes.copy() if attributes is None else attributes
         target = '.' + method if not method.startswith('.') else method
 
-        # Format the width
-        attrs = format_attribute_width(attrs, target=method)
+        # Format the html classes
         attrs['class'] = 'panel'
-
+        attrs = xhtml_percentwidth(attributes=attrs, target=target)
         return super().html_fmt(attributes=attrs, method=method, **kwargs)

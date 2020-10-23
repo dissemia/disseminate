@@ -142,8 +142,13 @@ def xhtml_tag(name, attributes=None, formatted_content=None, level=1,
     EM = E if nsmap is None else ElementMaker(nsmap=nsmap)
 
     if not allowed_tag:
-        # Append the name as a class to the span element
-        other['class'] = name
+        # Append the name as a class to the span element, if a class hasn't
+        # been specified
+        if (reqs is not None and 'class' in reqs or
+           opts is not None and 'class' in opts):
+            pass
+        else:
+            other['class'] = name
 
         # If the tag isn't listed in the 'allowed' tags, just create a span
         # element.
