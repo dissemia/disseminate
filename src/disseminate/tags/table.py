@@ -14,6 +14,7 @@ class BaseTable(Tag):
     tex_env = 'table'
     html_name = 'table'
     html_class = None
+    include_paragraphs = False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -29,6 +30,10 @@ class BaseTable(Tag):
 
             # Set the label kind for the caption as a table caption
             caption.kind = ('caption', 'table')
+
+            # Make the caption a caption tag for html
+            caption.html_name = 'caption'
+            caption.html_class = 'tablecaption'
 
             # Create the label in the label_manager
             caption.create_label()

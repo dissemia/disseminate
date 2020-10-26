@@ -6,21 +6,42 @@ p {
   width: 70%; /* width relative to parent 'body' (x)*/
 }
 
-span.sidenote,figure.marginfig, figure.figure .caption,  table.table caption, table.margintable {
+.sidenote, .marginfig, .caption, .table caption, .margintable {
   overflow-x: hidden;
   clear: right;
-  margin: 1em 0;
+  margin: 1em 0 0 0;
   padding: 0.25em 0;
   vertical-align: top;
   position: relative;
   float: right;
+
 }
 
 span.sidenote, table.table caption, table.margintable {
-  width: 40%; /* width relative to parent 'p' (y=(1-x)/x) */
-  margin-right: -42%;
+  width: 40%;
 }
 
 figure.marginfig, figure.figure .caption {
-  width: 28%;
+  width: 28%; /* width relative to parent 'p' (y=(1-x)/x) */
+}
+
+figure.figure img {
+  width: 70%;
+}
+
+/* tables */
+
+thead, tbody {
+  width: 70%;
+}
+
+table.table caption, table.margintable {
+  width: 28%; /* width relative to parent 'p' (y=(1-x)/x) */
+  text-align: left;
+}
+
+/* special elements */
+
+div.featurebox p {
+  width: 100%;
 }

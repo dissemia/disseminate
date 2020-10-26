@@ -316,6 +316,11 @@ caption, figcaption {
   margin-top: 1em;
 }
 
+figure.figure .caption {
+  border: 0;
+  background: transparent;
+}
+
 span.panel {
   font-size: 10pt;
   line-height: 12pt;
