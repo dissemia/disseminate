@@ -2,8 +2,8 @@ body {
   max-width: 60em;
 }
 
-p {
-  width: 70%; /* width relative to parent 'body' (x)*/
+p, ul, ol, thead, tbody, figure.figure img { /* Tufte text width */
+  width: 70%;
 }
 
 .sidenote, .marginfig, .caption, .table caption, .margintable {
@@ -25,15 +25,7 @@ figure.marginfig, figure.figure .caption {
   width: 28%; /* width relative to parent 'p' (y=(1-x)/x) */
 }
 
-figure.figure img {
-  width: 70%;
-}
-
 /* tables */
-
-thead, tbody {
-  width: 70%;
-}
 
 table.table caption, table.margintable {
   width: 28%; /* width relative to parent 'p' (y=(1-x)/x) */
@@ -42,6 +34,6 @@ table.table caption, table.margintable {
 
 /* special elements */
 
-div.featurebox p {
-  width: 100%;
+.featurebox p, .featurebox ol, .featurebox ul {
+  width: calc(100% - 2em);
 }
