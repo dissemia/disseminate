@@ -1,6 +1,6 @@
 /* Tufte widths */
 
-p, ul, ol, div.featurebox {
+p, ul, ol {
   width: 70%; /* width relative to parent 'body' (x)*/
 }
 
@@ -30,7 +30,7 @@ h2 .label span {
 
 /* captions */
 
-.sidenote, .marginfig, .caption, .table caption, .margintable {
+.sidenote, .marginfig, .table caption, .margintable {
   overflow-x: hidden;
   clear: right;
   margin: 1em 0 0 0;
@@ -70,13 +70,10 @@ table.table caption, table.margintable {
 
 /* special elements */
 
-div.featurebox p {
-  width: 100%;
+div.featurebox {
+  width: calc(70% - 2em);
 }
 
-
-/* special elements */
-
 .featurebox p, .featurebox ol, .featurebox ul {
-  width: 100%;
+  width: 94%;
 }
