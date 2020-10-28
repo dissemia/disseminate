@@ -28,6 +28,12 @@ h2 .label span {
   margin-top: -1.2em;
 }
 
+/* TOC */
+
+ol.toc, ol.toc ol, ol.toc ol ol, ol.toc ol ol ol, ol.toc ol ol ol ol {
+    width: calc(100% - 1em);
+}
+
 /* captions */
 
 .sidenote, .marginfig, .table caption, .margintable {
@@ -75,5 +81,5 @@ div.featurebox {
 }
 
 .featurebox p, .featurebox ol, .featurebox ul {
-  width: 94%;
+  width: calc(100% - 2em);
 }
