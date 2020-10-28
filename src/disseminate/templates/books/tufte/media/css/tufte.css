@@ -1,6 +1,6 @@
 /* Tufte widths */
 
-p, ul, ol {
+article p, article ul, article ol {
   width: 70%; /* width relative to parent 'body' (x)*/
 }
 
