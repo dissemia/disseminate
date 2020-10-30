@@ -4,8 +4,6 @@ Tests for navigation tags.
 import pathlib
 
 from disseminate.tags.navigation import Next, Prev, Pdflink
-from disseminate.document import Document
-from disseminate.paths import SourcePath
 
 
 ex1_root = pathlib.Path('tests') / 'tags' / 'examples' / 'toc_ex1'
@@ -180,4 +178,4 @@ def test_pdflink(load_example):
     # Create the pdflink tag
     pdf = Pdflink(name='pdflink', content='', attributes='',
                   context=doc.context)
-    assert pdf.html == '<a href="../../pdf/file1.pdf" class="ref">pdf</a>'
+    assert pdf.html == '../pdf/file1.pdf'

@@ -151,6 +151,11 @@ def test_document_template_books_tufte(load_example, cmp_epub):
                 html_root / 'media' / 'css' / 'tufte.css',
                 html_root / 'media' / 'icons' / 'menu_active.svg',
                 html_root / 'media' / 'icons' / 'menu_inactive.svg',
+                html_root / 'media' / 'icons' / 'dm_icon.svg',
+                html_root / 'media' / 'icons' / 'txt_icon.svg',
+                html_root / 'media' / 'icons' / 'tex_icon.svg',
+                html_root / 'media' / 'icons' / 'pdf_icon.svg',
+                html_root / 'media' / 'icons' / 'epub_icon.svg',
                 }
     print(target_root / 'html')
     html_actual = set(html_root.glob('**/*'))

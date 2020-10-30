@@ -218,14 +218,6 @@ ol.toc li.toc-level-6 { /* paragraph */
   list-style: none;
 }
 
-/* Document utils */
-
-ul.docutils {
-  float: right;
-  list-style: none;
-  margin: 0.25em;
-}
-
 /* author listing */
 
 span.authors {

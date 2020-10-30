@@ -1,6 +1,7 @@
 import pathlib
 
 from .utils.types import IntPositionalValue, StringPositionalValue
+from .__version__ import __version__
 
 
 #: Document Defaults
@@ -75,6 +76,9 @@ context_max_depth = 6
 context_max_size = 8192  # 8kB
 
 default_context = {
+    # Set the disseminate version
+    'version': __version__,
+
     # The default targets to render. This is a string so that documents
     # can overwrite these values
     'targets': {'html'},
@@ -85,7 +89,12 @@ default_context = {
     # Entries for navigation
     'prev': '',
     'next': '',
+    'srclink': '',
+    'txtlink': '',
+    'texlink': '',
     'pdflink': '',
+    'epublink': '',
+
     'toc': 'all headings expanded',
 
     # Options related to links
@@ -95,7 +104,9 @@ default_context = {
 
     # Process tags for the following entries in a context
     # (see processors/process_context_tags.py)
-    'process_context_tags': {body_attr, 'toc', 'prev', 'next', 'pdflink'},
+    'process_context_tags': {body_attr, 'toc', 'prev', 'next',
+                             'srclink', 'txtlink', 'texlink', 'pdflink',
+                             'epublink'},
 
     # Process paragraphs for tags with the following names
     # (see tags/paragraphs.py)

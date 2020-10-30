@@ -5,10 +5,12 @@ import weakref
 from os.path import relpath
 from itertools import groupby
 
+from markupsafe import escape
+
 from .tag import Tag
 from .ref import Ref
 from ..signals import signal
-from ..formats import xhtml_tag
+
 
 document_tree_updated = signal('document_tree_updated')
 
@@ -188,17 +190,12 @@ class Prev(Ref):
         raise NotImplementedError
 
 
-class Pdflink(Ref):
-    """Produces a link to the pdf for this document.
+class OtherLink(Tag):
+    """Produces a link to a source document or another target for this
+    document."""
 
-    Notes
-    -----
-    1. As opposed to the parent Ref tag, if a label is not found, an empty
-       string is returned by the target format functions.
-    2. The xhtml target should use the 'next_html' reference in the context
-    """
-
-    active = True
+    active = False
+    other_target = None
 
     def __init__(self, name, content, **kwargs):
         # Bypass the Ref initiator, as it sets the label_id
@@ -206,39 +203,99 @@ class Pdflink(Ref):
         content = ''
         Tag.__init__(self, name, content, **kwargs)
 
+    def this_filepath(self, target):
+        """The filepath for this (target) document."""
+        context = self.context
+
+        if (context is not None and target is not None and
+           target in context.targets):
+            return context.target_filepath(target)
+        else:
+            return None
+
+    def other_filepath(self, target=None):
+        """The filepath for the other document target or src_filepath to create
+        a link to."""
+        context = self.context
+        target = target or self.other_target
+
+        if (context is not None and target is not None and
+           target in context.targets):
+            return context.target_filepath(target)
+        else:
+            return None
+
+    def other_relpath(self, this_target, other_target=None):
+        """Produce the the relpath for the other target."""
+        # Get the filepaths
+        this_filepath = self.this_filepath(target=this_target)
+        other_filepath = self.other_filepath(target=other_target)
+
+        if this_filepath is None or other_filepath is None:
+            # Both paths should be found to forumate a relative path
+            return ''
+
+        if this_filepath == other_filepath:
+            # If both paths are the same, the relpath is the current dir,
+            # and this should not give a link to itself.
+            return ''
+
+        # Generate the relative path
+        rp = relpath(other_filepath, this_filepath.parent)
+        return escape(rp)
+
     def default_fmt(self, **kwargs):
-        # The next reference is designed for html only
         return ""
 
     def tex_fmt(self, **kwargs):
-        # The next reference is designed for html only
-        return ""
+        return self.other_relpath(this_target='.tex')
 
-    def html_fmt(self, attributes=None, method='html', level=1, **kwargs):
-        context = self.context
-        
-        # Only works if the document that owns this tag will be rendered to
-        # a pdf.
-        if '.pdf' not in context.targets:
-            return ""
-
-        # Get the document that owns this context and reconstruct the link to
-        # the pdf.
-        document = context.document
-        pdf_target_filepath = document.target_filepath('.pdf')
-        html_target_filepath = document.target_filepath('.html')
-
-        # Get the relative path do this html document
-        relative_path = relpath(pdf_target_filepath, html_target_filepath)
-
-        attrs = attributes or self.attributes.copy()
-        attrs['class'] = 'ref'
-        attrs['href'] = relative_path
-
-        # wrap content in 'a' tag
-        return xhtml_tag('a', attributes=attrs, formatted_content='pdf',
-                         method=method, level=level,
-                         pretty_print=False)  # no line breaks
+    def html_fmt(self, **kwargs):
+        return self.other_relpath(this_target='.html')
 
     def xhtml_fmt(self, **kwargs):
         raise NotImplementedError
+
+
+class Srclink(OtherLink):
+    """Produces a link to the src file for this document"""
+    active = True
+
+    def other_filepath(self, target=None):
+        context = self.context
+        return (context['src_filepath'] if context is not None and
+                'src_filepath' in context else None)
+
+
+class Txtlink(OtherLink):
+    """Produces a link to the txt target for this document."""
+    active = True
+    other_target = '.txt'
+
+
+class Texlink(OtherLink):
+    """Produces a link to the tex target for this document."""
+    active = True
+    other_target = '.tex'
+
+
+class Pdflink(OtherLink):
+    """Produces a link to the pdf target for this document"""
+    active = True
+    other_target = '.pdf'
+
+
+class Epublink(OtherLink):
+    """Produces a link to the epub target for the root document."""
+    active = True
+    other_target = '.epub'
+
+    def other_filepath(self, target=None):
+        context = self.context
+        root_doc = getattr(context, 'root_document', None)
+        root_context = root_doc.context if root_doc is not None else None
+
+        if root_context is not None and '.epub' in root_context.targets:
+            return root_context.target_filepath('.epub')
+        else:
+            return None

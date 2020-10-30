@@ -14,8 +14,43 @@
     </ul>
   </div>
   <div id="menu-content">
-    {%- if targets %}
-    {% endif %}
+    <ul class="docutils">
+      {%- if srclink is defined and srclink.html %}
+      <li class="src">
+        <a href="{{ srclink.html }}">
+          <img src="{{ "/media/icons/dm_icon.svg"  | rewrite_path }}">
+        </a>
+      </li>
+      {% endif %}
+      {%- if txtlink is defined and txtlink.html %}
+      <li>
+        <a href="{{ txtlink.html }}">
+          <img src="{{ "/media/icons/txt_icon.svg"  | rewrite_path }}">
+        </a>
+      </li>
+      {% endif %}
+      {%- if texlink is defined and texlink.html %}
+      <li>
+        <a href="{{ texlink.html }}">
+          <img src="{{ "/media/icons/tex_icon.svg"  | rewrite_path }}">
+        </a>
+      </li>
+      {% endif %}
+      {%- if pdflink is defined and pdflink.html %}
+      <li>
+        <a href="{{ pdflink.html }}">
+          <img src="{{ "/media/icons/pdf_icon.svg"  | rewrite_path }}">
+        </a>
+      </li>
+      {% endif %}
+      {%- if epublink is defined and epublink.html %}
+      <li>
+        <a href="{{ epublink.html }}">
+          <img src="{{ "/media/icons/epub_icon.svg"  | rewrite_path }}">
+        </a>
+      </li>
+      {% endif %}
+    </ul>
     {%- if toc %}
     {{ toc.html }}
     {%- endif %}

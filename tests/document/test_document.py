@@ -549,6 +549,11 @@ def test_document_unusual_filenames(load_example):
                 html_root / 'media' / 'css' / 'pygments.css',
                 html_root / 'media' / 'icons' / 'menu_inactive.svg',
                 html_root / 'media' / 'icons' / 'menu_active.svg',
+                html_root / 'media' / 'icons' / 'dm_icon.svg',
+                html_root / 'media' / 'icons' / 'txt_icon.svg',
+                html_root / 'media' / 'icons' / 'tex_icon.svg',
+                html_root / 'media' / 'icons' / 'pdf_icon.svg',
+                html_root / 'media' / 'icons' / 'epub_icon.svg',
                 }
 
     html_actual = set(html_root.glob('**/*'))
@@ -619,6 +624,11 @@ def test_document_multiple_dependency_locations(load_example):
                 html_root / 'media' / 'css' / 'pygments.css',
                 html_root / 'media' / 'icons' / 'menu_active.svg',
                 html_root / 'media' / 'icons' / 'menu_inactive.svg',
+                html_root / 'media' / 'icons' / 'dm_icon.svg',
+                html_root / 'media' / 'icons' / 'txt_icon.svg',
+                html_root / 'media' / 'icons' / 'tex_icon.svg',
+                html_root / 'media' / 'icons' / 'pdf_icon.svg',
+                html_root / 'media' / 'icons' / 'epub_icon.svg',
                 }
     html_actual = set(html_root.glob('**/*'))
     assert html_actual == html_key

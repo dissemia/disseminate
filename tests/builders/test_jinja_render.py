@@ -12,8 +12,8 @@ from disseminate.tags import Tag
 from disseminate.paths import TargetPath
 
 
-hash_filename1 = lambda ext: 'template_f9d6ed2b6af8' + ext
-hash_filename2 = lambda ext: 'template_3109a7054d0a' + ext
+hash_filename1 = lambda ext: 'template_2700cc82f32d' + ext
+hash_filename2 = lambda ext: 'template_ca0bf01582ef' + ext
 
 
 @pytest.fixture
@@ -51,8 +51,8 @@ def test_jinja_render_setup_with_outfilepath(env):
 
     # Check the parameters and infilepaths. These should be SourcePaths with
     # correctly set project_root / subpath
-    assert len(render_build.parameters) == 12
-    assert len(render_build.infilepaths) == 9
+    assert len(render_build.parameters) == 17
+    assert len(render_build.infilepaths) == 14
     assert render_build.infilepaths[0].match('templates/default/template.html')
     assert (str(render_build.infilepaths[0].subpath) ==
             'template.html')
@@ -82,9 +82,19 @@ def test_jinja_render_setup_with_outfilepath(env):
             'media/icons/menu_inactive.svg')
     assert (str(render_build.infilepaths[8].subpath) ==
             'media/icons/menu_active.svg')
-    assert render_build.parameters[9] == '33996cdb1a'  # hash of tags
-    assert render_build.parameters[10] == 'd41d8cd98f'  # hash of tags
-    assert render_build.parameters[11] == 'e596b323f6'  # hash of tags
+    assert (str(render_build.infilepaths[9].subpath) ==
+            'media/icons/dm_icon.svg')
+    assert (str(render_build.infilepaths[10].subpath) ==
+            'media/icons/txt_icon.svg')
+    assert (str(render_build.infilepaths[11].subpath) ==
+            'media/icons/tex_icon.svg')
+    assert (str(render_build.infilepaths[12].subpath) ==
+            'media/icons/pdf_icon.svg')
+    assert (str(render_build.infilepaths[13].subpath) ==
+            'media/icons/epub_icon.svg')
+    assert render_build.parameters[14] == '33996cdb1a'  # hash of tags
+    assert render_build.parameters[15] == 'd41d8cd98f'  # hash of tags
+    assert render_build.parameters[16] == 'e596b323f6'  # hash of tags
 
     # Check the outfilepath
     assert render_build.outfilepath == outfilepath
@@ -103,8 +113,8 @@ def test_jinja_render_setup_without_outfilepath(env):
     context['body'] = tag
 
     render_build = JinjaRender(env, context=context, render_ext='.html')
-    assert len(render_build.parameters) == 12
-    assert len(render_build.infilepaths) == 9
+    assert len(render_build.parameters) == 17
+    assert len(render_build.infilepaths) == 14
     assert (render_build.outfilepath ==
             env.target_root / 'media' / hash_filename1('.html'))
 
@@ -149,8 +159,8 @@ def test_jinja_render_setup_inherited(env):
 
     # Check the parameters and infilepaths. These should be SourcePaths with
     # correctly set project_root / subpath
-    assert len(render_build.parameters) == 16
-    assert len(render_build.infilepaths) == 13
+    assert len(render_build.parameters) == 21
+    assert len(render_build.infilepaths) == 18
     assert render_build.infilepaths[0].match('templates/books/tufte/'
                                              'template.html')
     assert render_build.infilepaths[1].match('templates/default/template.html')
@@ -171,9 +181,14 @@ def test_jinja_render_setup_inherited(env):
                                               'media/css/pygments.css')
     assert render_build.infilepaths[11].match('media/icons/menu_inactive.svg')
     assert render_build.infilepaths[12].match('media/icons/menu_active.svg')
-    assert render_build.parameters[13] == "33996cdb1a"  # tag hash
-    assert render_build.parameters[14] == "d41d8cd98f"  # tag hash
-    assert render_build.parameters[15] == "e596b323f6"  # tag hash
+    assert render_build.infilepaths[13].match('media/icons/dm_icon.svg')
+    assert render_build.infilepaths[14].match('media/icons/txt_icon.svg')
+    assert render_build.infilepaths[15].match('media/icons/tex_icon.svg')
+    assert render_build.infilepaths[16].match('media/icons/pdf_icon.svg')
+    assert render_build.infilepaths[17].match('media/icons/epub_icon.svg')
+    assert render_build.parameters[18] == "33996cdb1a"  # tag hash
+    assert render_build.parameters[19] == "d41d8cd98f"  # tag hash
+    assert render_build.parameters[20] == "e596b323f6"  # tag hash
 
 
 def test_jinja_render(env):

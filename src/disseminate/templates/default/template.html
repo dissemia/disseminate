@@ -15,6 +15,9 @@
 {%- if template %}
   <meta name="template" content="{{ template }}">
 {%- endif %}
+{%- if version %}
+  <meta name="disseminate" content="{{ version }}">
+{%- endif %}
 {%- block css %}
   <link rel="stylesheet" href="{{ "/media/css/bootstrap.min.css" | rewrite_path }}">
   <link rel="stylesheet" href="{{ "/media/css/base.css" | rewrite_path }}">

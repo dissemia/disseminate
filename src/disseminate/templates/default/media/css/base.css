@@ -214,7 +214,7 @@ input.account-toggle[type=checkbox]:checked ~ .dropdown-account-content {
 ul.docutils {
   float: right;
   list-style: none;
-  margin: 1.0em;
+  margin: 0.25em;
   padding: 0;
   text-align: center;
   border: #dfdfdf 1px solid;
@@ -230,6 +230,10 @@ ul.docutils li {
 ul.docutils img {
   width: 30px;
   display: block;
+}
+
+ul.docutils li.src {
+  border-right: 1px solid #dddddd;
 }
 
 /* Customizations for ol listings */
