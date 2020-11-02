@@ -77,7 +77,7 @@ table.table caption, table.margintable {
 /* special elements */
 
 div.featurebox {
-  width: calc(70% - 2em);
+  width: 70%;
 }
 
 .featurebox p, .featurebox ol, .featurebox ul {
