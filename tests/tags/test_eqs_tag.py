@@ -183,7 +183,7 @@ def test_simple_inline_equation_html(context):
     # Check the rendered tag and that the asy and svg files were properly
     # created
     html = eq.html
-    assert html == '<img src="/html/media/eq_f07e7117e784.svg" class="eq">\n'
+    assert html == '<img src="/html/media/eq_b659cf87bb35.svg" class="eq">\n'
     assert eq.html == html  # running twice should give same answer
 
     # Check the build
@@ -192,7 +192,7 @@ def test_simple_inline_equation_html(context):
 
     assert html_builder.build(complete=True) == 'done'
     target_filepath = (build_env.target_root / 'html' / 'media' /
-                       'eq_f07e7117e784.svg')
+                       'eq_b659cf87bb35.svg')
     assert target_filepath.exists()
 
     # 2. Test tag with disseminate formatting
@@ -202,13 +202,13 @@ def test_simple_inline_equation_html(context):
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert (eq.html ==
-            '<img src="/html/media/eq_c2cf39c2508c.svg" class="eq">\n')
+            '<img src="/html/media/eq_4eab20b8766c.svg" class="eq">\n')
 
     # Check the build
     assert html_builder.build(complete=True) == 'done'
 
     target_filepath = (build_env.target_root / 'html' / 'media' /
-                       'eq_c2cf39c2508c.svg')
+                       'eq_4eab20b8766c.svg')
     assert target_filepath.exists()
 
     # Make sure the @termb has been converted
@@ -228,7 +228,7 @@ def test_simple_inline_equation_html(context):
     # Check the rendered tag and that the asy and svg files were properly
     # created
     assert (eq.html ==
-            '<img src="/html/media/eq_0ab202fa3077.svg" class="eq">\n')
+            '<img src="/html/media/eq_90bcd3fb5e1d.svg" class="eq">\n')
 
 
 def test_block_equation_html(context):
@@ -262,13 +262,13 @@ def test_block_equation_html(context):
 
     # Check the image infilepath and that the contents are in the file
     assert (eq.html ==
-            '<img src="media/eq_c97ec2ca544e.svg" class="eq blockeq">\n')
+            '<img src="media/eq_a5d76f56919f.svg" class="eq blockeq">\n')
 
     # Check the build
     build_env = context['environment']
     html_builder = context['builders']['.html']
     assert html_builder.build(complete=True) == 'done'
-    assert (target_root / 'html' / 'media' / 'eq_c97ec2ca544e.svg').exists()
+    assert (target_root / 'html' / 'media' / 'eq_a5d76f56919f.svg').exists()
 
     # 2. Test a markup example with a more complicated environment
     test = """
@@ -295,11 +295,11 @@ def test_block_equation_html(context):
 
     # Check the image infilepath and that the contents are in the file
     assert (eq.html ==
-            '<img src="media/eq_411045a5537c.svg" class="eq blockeq">\n')
+            '<img src="media/eq_92d71e90a027.svg" class="eq blockeq">\n')
 
     # Check the build
     assert html_builder.build(complete=True) == 'done'
-    assert (target_root / 'html' / 'media' / 'eq_411045a5537c.svg').exists()
+    assert (target_root / 'html' / 'media' / 'eq_92d71e90a027.svg').exists()
 
     # 3. Test an block equation in a paragraph in which the block equation
     #    hasn't been specified.
@@ -328,11 +328,11 @@ def test_block_equation_html(context):
 
     # Check the image infilepath and that the contents are in the file
     assert (eq.html ==
-            '<img src="media/eq_551f4e949221.svg" class="eq blockeq">\n')
+            '<img src="media/eq_4b140ec236d7.svg" class="eq blockeq">\n')
 
     # Check the build
     assert html_builder.build(complete=True) == 'done'
-    assert (target_root / 'html' / 'media' / 'eq_551f4e949221.svg').exists()
+    assert (target_root / 'html' / 'media' / 'eq_4b140ec236d7.svg').exists()
 
 
 def test_equation_relative_absolute_links_html(context):
@@ -346,12 +346,12 @@ def test_equation_relative_absolute_links_html(context):
 
     # Check that the returned html uses absolute links
     assert (eq.html ==
-            '<img src="/html/media/eq_f07e7117e784.svg" class="eq">\n')
+            '<img src="/html/media/eq_b659cf87bb35.svg" class="eq">\n')
 
     # Switch to relative links
     context['relative_links'] = True
     assert (eq.html ==
-            '<img src="media/eq_f07e7117e784.svg" class="eq">\n')
+            '<img src="media/eq_b659cf87bb35.svg" class="eq">\n')
 
 
 # xhtml target
@@ -368,7 +368,7 @@ def test_simple_inline_equation_xhtml(context, is_xml):
     # Check the rendered tag and that the asy and svg files were properly
     # created
     xhtml = eq.xhtml
-    assert xhtml == '<img src="/xhtml/media/eq_f07e7117e784.svg" class="eq"/>\n'
+    assert xhtml == '<img src="/xhtml/media/eq_b659cf87bb35.svg" class="eq"/>\n'
     assert eq.xhtml == xhtml  # running twice should give same answer
     assert is_xml(eq.xhtml)
 
@@ -406,7 +406,7 @@ def test_block_equation_multiple_targets(context):
     # Check the html target
     eq = p.content[1]
     assert (eq.html ==
-            '<img src="/html/media/eq_c97ec2ca544e.svg" class="eq blockeq">\n')
+            '<img src="/html/media/eq_a5d76f56919f.svg" class="eq blockeq">\n')
 
     # 2. Test a block equation with a custom math environment
     test = """
@@ -428,7 +428,7 @@ def test_block_equation_multiple_targets(context):
     # Check the html target
     eq = p.content[1]
     assert p.html == ('<p>\n'
-                      '    <img src="/html/media/eq_27f5243b4026.svg" '
+                      '    <img src="/html/media/eq_6eecb61fc4c2.svg" '
                       'class="eq blockeq">\n'
                       '    </p>\n')
     # Check the tex target

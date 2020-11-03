@@ -28,6 +28,7 @@ class PdfCrop(Builder):
     outfilepath_append = '_crop'
 
     crop_percentage = None
+    offset = None
 
     def __init__(self, env, **kwargs):
 
@@ -43,12 +44,28 @@ class PdfCrop(Builder):
                     if not isinstance(crop, int) else crop)
             self.crop_percentage = crop
 
+        # Set the offset for the image
+        offset = self.get_parameter('offset')
+        if offset:
+            # Validate the crop arguments, if specified
+            offset = (validate_tuple(offset, type=int, length=4,
+                                     raise_error=True)
+                      if not isinstance(offset, int) else offset)
+            self.offset = offset
+
     def run_cmd_args(self):
         args = list(super().run_cmd_args())
+        # Add crop percentage options
         if isinstance(self.crop_percentage, int):
             args = [args[0]] + ["-p", str(self.crop_percentage)] + args[1:]
         elif isinstance(self.crop_percentage, tuple):
             args = ([args[0]] +
                     ["-p4", *[str(i) for i in self.crop_percentage]] +
+                    args[1:])
+
+        # Add crop offsets
+        if isinstance(self.offset, tuple):
+            args = ([args[0]] +
+                    ["-a4", *[str(i) for i in self.offset]] +
                     args[1:])
         return tuple(args)

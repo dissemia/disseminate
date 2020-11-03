@@ -103,12 +103,12 @@ class Eq(Img):
         # tag
         attrs = attributes or self.attributes.copy()
 
-        # Crop equation images created by the dependency manager. This
-        # removes white space around the image so that the equation images.
-        # Note: This crop command should not cut off baselines such that
-        # equation images won't line up properly with the surrounding text.
-        # ex: H vs Hy
+        # Crop equation images build. This removes white space around the
+        # image so that the equation images. Note: This crop command should
+        # not cut off baselines such that equation images won't line up
+        # properly with the surrounding text. # ex: H vs Hy
         attrs['crop'] = (100, 100, 0, 0)
+        attrs['offset'] = (0, 0, -1, 0)
 
         if self.block_equation:
             attrs['class'] = 'eq blockeq'

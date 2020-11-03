@@ -140,9 +140,9 @@ def test_document_template_books_tufte(load_example, cmp_epub):
                 html_root / 'media' / 'icons',
 
                 html_root / 'inept.html',  # files
-                html_root / 'media' / 'eq_540144aca54d.svg',
-                html_root / 'media' / 'eq_64f0a2d701c3.svg',
-                html_root / 'media' / 'eq_e7377ca643a1.svg',
+                html_root / 'media' / 'eq_382cb76552f8.svg',
+                html_root / 'media' / 'eq_8b191ce25f98.svg',
+                html_root / 'media' / 'eq_b125983c4ac0.svg',
                 html_root / 'media' / 'inept_87560c6686dd.svg',
                 html_root / 'media' / 'css' / 'base.css',
                 html_root / 'media' / 'css' / 'bootstrap.min.css',
@@ -172,9 +172,9 @@ def test_document_template_books_tufte(load_example, cmp_epub):
                  xhtml_root / 'media' / 'css',
 
                  xhtml_root / 'inept.xhtml',  # files
-                 xhtml_root / 'media' / 'eq_540144aca54d.svg',
-                 xhtml_root / 'media' / 'eq_64f0a2d701c3.svg',
-                 xhtml_root / 'media' / 'eq_e7377ca643a1.svg',
+                 xhtml_root / 'media' / 'eq_382cb76552f8.svg',
+                 xhtml_root / 'media' / 'eq_8b191ce25f98.svg',
+                 xhtml_root / 'media' / 'eq_b125983c4ac0.svg',
                  xhtml_root / 'media' / 'inept_87560c6686dd.svg',
                  xhtml_root / 'media' / 'css' / 'epub.css',
                  xhtml_root / 'media' / 'css' / 'tufte.css',
