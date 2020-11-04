@@ -57,8 +57,6 @@ setup(
     author='Justin L Lorieau',
     classifiers=[  
         'Development Status :: 3 - Alpha',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
@@ -97,5 +95,8 @@ setup(
         'console_scripts': [
             'dm = disseminate.cli:main'
           ],
+        'pygments.lexers': [
+            'dmlexer = disseminate.utils.pygments.dm:DmLexer'
+        ]
     }
 )
