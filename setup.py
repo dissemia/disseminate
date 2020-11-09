@@ -70,7 +70,6 @@ setup(
         'regex>=2018.11.22',         # No license, replaced with re
         'jinja2>=2.11,<3.0',         # 3-clause BSD
         'lxml>=4.3.0',               # BSD license
-        'blinker>=1.4',              # MIT license
         'python-slugify>=2.0.1',     # MIT license
         'pdfCropMargins>=0.1.4',     # GPL v3
         # The following are needed for the CLI
@@ -84,8 +83,7 @@ setup(
         'pathvalidate>=2.2',
         ],
     extras_require={  # Optional
-        'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc',
-                'asv'],
+        'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc', 'asv'],
         'test': ['pytest', 'pytest-sanic>1.6', 'tox', 'coverage',
                  'epubcheck>=0.4'],
         'termcolor': ['termcolor']  # MIT license

@@ -12,13 +12,10 @@ functions for disseminate.
    checkers/index
    cli/index
    context/index
-   convert/index
-   dependency_manager/index
    document/index
    formats/index
    label_manager/index
    paths/index
    signals/index
-   renderers/index
    tags/index
    utils/index

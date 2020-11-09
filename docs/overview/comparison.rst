@@ -1,4 +1,4 @@
-Motivation
+Comparison
 ==========
 
 REST and Sphinx Comparison
