@@ -52,3 +52,8 @@ extensive and extensible tag functions.
 
    api/index
    development/releasenotes
+
+.. toctree::
+   :hidden:
+
+   genindex

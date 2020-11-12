@@ -124,3 +124,11 @@ class Javascript(Code):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.attributes['javascript'] = StringPositionalValue
+
+
+class Dm(Code):
+    """A tag for displaying dm code"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.attributes['dm'] = StringPositionalValue
