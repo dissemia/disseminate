@@ -8,41 +8,58 @@ Disseminate is invoked on the command line through the ``dm`` command.
 
 The disseminate main CLI includes the following help option:
 
-.. include:: ../../cmds/rst/dm_help.rst
+.. include:: ../../cmds/dm_help.rst
 
 Disseminate includes a series of sub-commands.
 
-render
+build
 ------
 
-The ``render`` sub-command compiles the disseminate source to the target
+The ``build`` sub-command compiles the disseminate source to the target
 formats.
 
-The ``render`` sub-command help presents the following optional arguments:
+The ``build`` sub-command help presents the following optional arguments:
 
-.. include:: ../../cmds/rst/dm_render_help.rst
+.. include:: ../../cmds/dm_build_help.rst
 
 
-serve
------
+preview
+-------
 
-The ``serve`` sub-command runs a web server on the local computer (localhost)
+The ``preview`` sub-command runs a web server on the local computer (localhost)
 to present the source and target format files of disseminate projects.
 
 The web server is started as follows:
 
-.. only:: html
+.. include:: ../../cmds/dm_preview.rst
 
-.. raw:: html
+The ``preview`` sub-command help presents the following optional arguments:
 
-    <div class="highlight console">
-    <pre>
-    <span class="gp">$</span> dm serve
-    <span class="go">Document(src/index.dm) render time 5.1 ms</span>
-    <span class="go">INFO     :  Disseminate serving requests on port 8899...</span>
-    </pre>
-    </div>
+.. include:: ../../cmds/dm_preview_help.rst
 
-The ``serve`` sub-command help presents the following optional arguments:
+setup
+-----
 
-.. include:: ../../cmds/rst/dm_serve_help.rst
+.. _cli_setup-check:
+
+``--check``
+~~~~~~~~~~~
+
+Disseminate uses external software for various conversion and compilation tasks.
+The ``--check`` function reports whether these software dependencies are
+installed and available to disseminate.
+
+.. include:: ../../cmds/dm_setup_check.rst
+
+.. _cli-setup-list-signals:
+
+``--list-signals``
+~~~~~~~~~~~~~~~~~~~
+
+Disseminate uses signals and receivers for modular and decoupled processing of
+documents, tags and other objects. The list of signals and attached receivers
+can be listed with the following command:
+
+.. include:: ../../cmds/dm_setup_list_signals.rst
+
+

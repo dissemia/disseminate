@@ -1,6 +1,0 @@
-Usage: dm render [OPTIONS]
-
-  Render a disseminate project
-
-Options:
-  --help  Show this message and exit.

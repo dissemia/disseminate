@@ -179,6 +179,8 @@ code.block {
     background-color: #eaeaff;
 }
 
+/* Terminal modes */
+
 pre.terminal {
     border: 1px solid #dddddd;
     border-radius: 5px;
@@ -219,6 +221,8 @@ pre.terminal .green {
 pre.terminal .red {
   color: #ff0000;
 }
+
+/* Other typesetting */
 
 span.paragraph {
   margin-right: 0;
@@ -344,25 +348,6 @@ td.field-body blockquote {
 
 .macro-card code {
   padding-right: 0.5em;
-}
-
-/* Interfaces -> Command-line */
-
-.console {
-    background: #222;
-    border-radius: 5pt;
-    padding: 5px 10px;
-}
-
-.console pre {
-    color: #eee;
-    margin: 0;
-    padding: 2px;
-    font-size: 11pt;
-}
-
-.console .go {
-    color: #eee;
 }
 
 /* API */
