@@ -19,7 +19,7 @@ def hash_items(*items, chunk_size=4096, hashfunc=hashlib.md5, sort=True):
         The type of hash to use.
     sort : Optional[bool]
         If True, sort the items before calculating the hash. Enabling this
-        option ensures that the *items order does not change the hash.
+        option ensures that the items order does not change the hash.
 
     Returns
     -------

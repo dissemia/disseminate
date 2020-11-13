@@ -211,14 +211,14 @@ class Builder(metaclass=ABCMeta):
         """The status of the builder.
 
         The builder can have the following states:
-        - 'ready': The builder is active and the parameters have been set
-        - 'inactive': The builder isn't active--see the active property
-        - 'missing (parameters)': All the required parameters have not been
-          specified or files for paths in the parameters do not exist
-        - 'missing (outfilepath)': The outfilepath was not created
-        - 'cancelled' : The build was cancelled.
-        - 'building': The builder is building
-        - 'done': The builder is done building
+          - 'ready': The builder is active and the parameters have been set
+          - 'inactive': The builder isn't active--see the active property
+          - 'missing (parameters)': All the required parameters have not been
+            specified or files for paths in the parameters do not exist
+          - 'missing (outfilepath)': The outfilepath was not created
+          - 'cancelled' : The build was cancelled.
+          - 'building': The builder is building
+          - 'done': The builder is done building
         """
         active = self.active
 

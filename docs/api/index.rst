@@ -9,6 +9,7 @@ functions for disseminate.
    :caption: API Documentation
 
    attributes/index
+   builders/index
    checkers/index
    cli/index
    context/index
