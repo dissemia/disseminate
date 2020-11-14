@@ -3,11 +3,6 @@ Document
 
 .. automodule:: disseminate.document
 
-Rendering Flow
---------------
-
-.. image:: graphs/disseminate_document.svg
-
 Table of Contents
 -----------------
 
@@ -20,5 +15,3 @@ Table of Contents
    exceptions
    signals
    receivers
-   utils
-   

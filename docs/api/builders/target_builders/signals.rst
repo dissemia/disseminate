@@ -2,5 +2,7 @@ Signals
 -------
 
 .. automodule:: disseminate.builders.target_builders.signals
-    :members: add_file, find_builder
-    :imported-members:
+
+.. autodata:: disseminate.builders.target_builders.signals.add_file
+
+.. autodata:: disseminate.builders.target_builders.signals.find_builder
