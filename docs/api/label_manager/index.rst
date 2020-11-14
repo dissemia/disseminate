@@ -8,7 +8,7 @@ Label Manager
    :caption: Label Manager
 
    label_manager
-   types
+   types/index
    receivers
    signals
    exceptions
