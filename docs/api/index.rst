@@ -17,6 +17,7 @@ functions for disseminate.
    formats/index
    label_manager/index
    paths/index
+   server/index
    signals/index
    tags/index
    utils/index
