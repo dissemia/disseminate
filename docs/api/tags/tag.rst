@@ -1,6 +1,6 @@
-Base Tag
---------
+Tag
+---
 
 .. automodule:: disseminate.tags.tag
-    :members: Tag, TagFactory, TagError
+    :members: Tag, TagFactory
     :imported-members:

@@ -66,7 +66,7 @@ def repl_tags(element, tag_class, replacement):
     ----------
     element : Union[str, list :obj:`Tag <disseminate.tags.core.Tag>`]
         The element to replace tags with a replacement string.
-    tag_class : :class:`Tag <disseminate.tags.core.Tag>
+    tag_class : :class:`Tag <disseminate.tags.core.Tag>`
         A tag class or subclass to replace.
     replacement : str
         The string to replace the tag with.

@@ -1,5 +1,5 @@
-Eq Tags
--------
+Eq
+--
 
 .. automodule:: disseminate.tags.eqs
     :members: Eq

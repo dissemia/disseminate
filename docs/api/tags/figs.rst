@@ -1,7 +1,7 @@
-Figs Tags
----------
+Figs
+----
 
 .. automodule:: disseminate.tags.figs
-    :members: BaseFigure, Marginfigure, Figure, FullFigure, Panel
+    :members: BaseFigure, MarginFigure, Figure, FullFigure, Panel
     :imported-members:
     :show-inheritance:
