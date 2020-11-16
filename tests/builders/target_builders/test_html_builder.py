@@ -436,7 +436,7 @@ def test_html_builder_add_build_pdf2svgcropscale(load_example, svg_dims):
     svg = tp.read_text()
 
     # Check that the svg file and dimensions
-    assert svg_dims(tp, width='200', abs=1)
+    assert svg_dims(tp, width='200', abs=3)
 
 
 def test_html_builder_add_build_invalid(load_example):
