@@ -1,6 +1,30 @@
 Release Notes
 =============
 
+v2.1
+----
+
+1. *Epub*. Implementation of epub version 3 as document target format.
+2. *Documentation*. Documentation updates for API changes, added an Overview
+   section with Installation, Quickstart and Features sections.
+
+
+v2.0
+----
+
+1. *Builders*. Implementation of thread locking and ThreadPoolExecutor for
+   builder threads.
+2. *Builders*. Implementation of process timeouts.
+3. *Templates*. CSS updates to ``books/tufte``, ``books/novel``.
+
+v1.0
+----
+
+1. *Builder*. Implementation of the builder framework for multithreaded and
+   multiprocess compilation of documents and document dependencies.
+2. *Dependency Manager*. Elimination of the dependency manager, which is now
+   replaced by builders.
+
 v0.21
 -----
 

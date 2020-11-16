@@ -32,9 +32,8 @@ Mac OS (Terminal)
        </pre>
 
 
-   If python3 is not installed, you can
-   `download <https://www.python.org/downloads/mac-osx/>`_ the latest version
-   and install it.
+   If python3 is not installed, you can download the latest version of
+   `python <https://www.python.org/downloads/mac-osx/>`_  and install it.
 
 2. *LaTeX*. Check whether `MacTeX <https://tug.org/mactex/>`_ or
    `TeX Live <https://www.tug.org/texlive/>`_ are installed.
@@ -56,7 +55,7 @@ Mac OS (Terminal)
          TeX Live (https://tug.org/texlive) version 2020
        </pre>
 
-   If not, you can `download <https://tug.org/mactex/>`_ and install MacTeX.
+   If not, you can download `MacTeX <https://tug.org/mactex/>`_ and install it.
 
 3. *Disseminate*. Install disseminate using pip.
 

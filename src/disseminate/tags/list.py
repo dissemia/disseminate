@@ -88,8 +88,8 @@ def clean_string_list(parsed_list):
     parsed_list : List[Tuple[int, str]]
         The parsed list from parse_string_list.
         
-    Returned
-    --------
+    Returns
+    -------
     cleaned_list : List[Tuple[int, str]]
         The cleaned list.
 
@@ -115,8 +115,8 @@ def normalize_levels(parsed_list, list_level_spaces=settings.list_level_spaces):
     list_level_spaces : int
         The number of spaces used to identify sub-levels in a list.
 
-    Returned
-    --------
+    Returns
+    -------
     normalized_list : List[Tuple[int, str]]
         The normalized list with levels fixed.
 
