@@ -88,6 +88,7 @@ def test_environment_simple_build1(tmpdir):
 
     tp_html = TargetPath(target_root=tmpdir, target='html',
                          subpath='dummy.html')
+    print(tp_html)
     tp_key = TargetPath(target_root=ex3_root, subpath='dummy.html')
     assert tp_html.is_file()
     assert tp_html.read_text() == tp_key.read_text()

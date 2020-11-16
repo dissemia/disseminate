@@ -2,4 +2,4 @@ include LICENSE
 include tox.ini
 include setup.cfg
 
-recursive-include src/disseminate/templates *.html *.css *.tex *.txt *.svg
+recursive-include src/disseminate/templates *.html *.xhtml *.opf *.xml *.css *.tex *.txt *.svg
