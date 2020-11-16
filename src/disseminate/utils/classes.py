@@ -3,7 +3,6 @@ Utilities for dealing with Python classes.
 """
 import weakref
 from itertools import chain as i_chain
-import time
 
 
 def all_subclasses(cls):
