@@ -1,7 +1,7 @@
-Img Tags
---------
+Img
+---
 
 .. automodule:: disseminate.tags.img
-    :members: Img, RenderedImg
+    :members: ImgFileNotFound, Img
     :imported-members:
     :show-inheritance:

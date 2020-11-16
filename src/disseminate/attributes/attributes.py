@@ -18,50 +18,85 @@ class _MissingAttribute(object):
     pass
 
 
-def gen_attr(attr, sep=settings.attribute_target_sep):
-    """The general attribute for the given attribute, whether it's a general
-    attribute or a target-specific attribute.
+def strip_attr(attr, sep=settings.attribute_target_sep):
+    """Strip a target-specific terminator from the given attr.
+
+    Parameters
+    ----------
+    attr : Union[str, :class:`PositionalValue <.PositionalValue>`]
+            The key of the attribute to retrieve or the PositionalValue to
+            retrieve.
+    sep : Optional[str]
+        The separator character (or string) to use to separate the key
+        and target.
+
+    Returns
+    -------
+    stripped_attr : str
+        The attribute with the target-specific terminator stripped.
 
     Examples
     --------
-    >>> gen_attr(3)
+    >>> strip_attr(3)
     3
-    >>> gen_attr('143')
+    >>> strip_attr('143')
     '143'
-    >>> gen_attr('3.1416')
-    '3.1416'
-    >>> gen_attr('2.718.tex')
-    '2.718'
-    >>> gen_attr('width.tex')
+    >>> strip_attr('width.tex')
     'width'
-    >>> gen_attr('width')
+    >>> strip_attr('width')
     'width'
-    >>> gen_attr('my_file.pdf#link-anchor')
-    'my_file'
-    >>> gen_attr('my_file.pdf#link-anchor.tex')
+    >>> strip_attr('my_file.pdf#link-anchor')
+    'my_file.pdf#link-anchor'
+    >>> strip_attr('my_file.pdf#link-anchor.tex')
     'my_file.pdf#link-anchor'
     """
-    if not isinstance(attr, str):
-        return attr
-    split = attr.split(sep)
+    if isinstance(attr, str):
+        # If a target-specific terminator is not included, nothing needs to
+        # be done
+        if sep not in attr:
+            return attr
 
-    if len(split) == 1:
-        # It already a general attr, return it
-        # ex:
-        #     attr: '3', return '3'
-        return split[0]
-    elif len(split) > 2:
-        # Only the last piece is a target. Just strip it.
-        # ex:
-        #     '3.1416.tex', return '3.1416'
-        return sep.join(split[0:-1])
-    else:
-        # See if the last piece matches a target.
-        # ex:
-        #     '3.1416', return '3.1416'
-        return (sep.join(split)
-                if split[-1].isdigit() else
-                sep.join(split[0:-1]))
+        # Check all available targets
+        targets = {target.strip('.') for target in settings.tracked_deps.keys()}
+        for target in targets:
+            term = sep + target
+            if attr.endswith(term):
+                return attr[:-len(term)]
+
+    return attr
+
+
+def is_target_specific(attr, sep=settings.attribute_target_sep):
+    """Tests whether the given attribute is a target-specific attribute.
+
+    Parameters
+    ----------
+    attr : Union[str, :class:`PositionalValue <.PositionalValue>`]
+            The key of the attribute to retrieve or the PositionalValue to
+            retrieve.
+    sep : Optional[str]
+        The separator character (or string) to use to separate the key
+        and target.
+
+    Returns
+    -------
+    is_target_specific : bool
+        True if the attr is a target-specific attribute
+
+    Examples
+    --------
+    >>> is_target_specific(3)
+    False
+    >>> is_target_specific('pos')
+    False
+    >>> is_target_specific('pos.tex')
+    True
+    >>> is_target_specific('/usr/docs/text.tex')  # not quoted
+    True
+    >>> is_target_specific('"/usr/docs/text.tex"')  # quoted
+    False
+    """
+    return attr != strip_attr(attr, sep=sep)
 
 
 re_attrs = regex.compile(r'((?P<key>[\w\.]+)'
@@ -69,7 +104,9 @@ re_attrs = regex.compile(r'((?P<key>[\w\.]+)'
                          r'(?P<value>("[^"]*"'
                          r'|\'[^\']*\''
                          r'|[^\s\]]+))'
-                         r'|(?P<position>[^\s,\[\]]+))')
+                         r'|(?P<position>"[^"]*"'
+                         r'|\'[^\']*\''
+                         r'|[^\s,\[\]]+|))')
 
 
 class Attributes(dict):
@@ -110,7 +147,7 @@ class Attributes(dict):
         return tuple(k if ispositional(v) else (k, v)
                      for k, v in self.items())
 
-    def load(self, s):
+    def load(self, s, sep=settings.attribute_target_sep):
         """Parses an attribute string into key/values for the Attributes dict.
 
         Parameters
@@ -120,6 +157,9 @@ class Attributes(dict):
             positional attributes and keyword attributes (kwargs), and
             attributes strings have the following form:
             "key1=value1 key2=value2 value3"
+        sep : Optional[str]
+            The separator character (or string) to use to separate the key
+            and target.
 
         Examples
         --------
@@ -143,7 +183,7 @@ class Attributes(dict):
                 # PostionalValue subclass. (ex: '3.1416.tex' turns into
                 # '3.1416' to create a FloatPositionalValue instead of just a
                 # PositionalValue)
-                gen_value = gen_attr(value, settings.attribute_target_sep)
+                gen_value = strip_attr(value, sep=sep)
 
                 # Add the positional attribute to the dict by putting the
                 # positional value as a key and the PostionalValue class or
@@ -152,85 +192,18 @@ class Attributes(dict):
 
         self.update(tuple(attrs))
 
-    def get_positional(self, attr, target=None, default=None,
-                       sep=settings.attribute_target_sep):
-        """Retrieve an positional argument/value.
-
-        Parameters
-        ----------
-        attr : :class`PositionalValue <.utils.types.PositionalValue>`
-            The PositionalValue of the attribute to retrieve.
-        target : Optional[str]
-            If specified, search for a positional argument for the given target.
-            ex: '1' will be returned for the '1.tex' positional argument and
-            'tex' target, if available. Otherwise, a general positional argument
-            is returned
-        default : Optional[Any]]
-            If the positional argument is not found, return this value instead.
-        sep : Optional[str]
-            The separator character (or string) to use to separate the key
-            and target.
-
-        Returns
-        -------
-        value : Any
-            The retrieved positional argument.
-
-        Examples
-        --------
-        >>> attrs = Attributes('class="general" class.html="specific" 1 2.tex')
-        >>> attrs.get_positional('class')
-        >>> attrs.get_positional(PositionalValue)
-        '1'
-        >>> attrs.get_positional(PositionalValue, target='tex')
-        '2'
-        """
-        # Remove the trailing period for the target, if it's present
-        target = target.strip('.') if isinstance(target, str) else target
-
-        # For see if it's an attribute for a positional argument
-        if ispositional(attr):
-            # Find all positional values that are of the same type as attr
-            positional_keys = [k for k, v in self.items()
-                               if ispositional(v, attr)]
-
-            # Return a target-specific positional argument, if requested and
-            # available.
-            target_positional_keys = ([k for k in positional_keys
-                                       if k.endswith(sep + target)]
-                                      if target is not None else [])
-
-            if target_positional_keys:
-                # A target positional key was found. Return the first one.
-                return target_positional_keys[0].split(sep + target)[0]
-            elif len(positional_keys) == 1:
-                # A target positional key was not sought or found. Return the
-                # only positional key, if only one was found.
-                return positional_keys[0]
-            elif len(positional_keys) > 1:
-                # More than 1 positional key was found. Return the generic one,
-                # if available. This is a bit tricky since the key might contain
-                # a separator ('.'). In this case, return the key with the
-                # fewest number of seperators. ex: '3.1416' before '2.718.tex'
-
-                sorted_keys = sorted([k for k in positional_keys
-                                      if isinstance(k, str)],
-                                     key=lambda x: x.count(sep))
-
-                if len(sorted_keys) > 1:
-                    return sorted_keys[0]
-
-        # Attribute/key not found
-        return default
-
-    def get_value(self, attr, target=None, default=None,
+    def find_item(self, attr, target=None, default=None,
                   sep=settings.attribute_target_sep):
-        """Retrieve an attribute entry.
+        """Find the key in the attributes dict with or without the target
+        specified.
+
+        This function will not modify the keys/values in this attributes dict.
 
         Parameters
         ----------
-        attr : str
-            The key of the attribute to retrieve.
+        attr : Union[str, :class:`PositionalValue <.PositionalValue>`]
+            The key of the attribute to retrieve or the PositionalValue to
+            retrieve.
         target : Optional[str]
             If specified, search for a key for the given target.
             ex: class.html with be returned for the 'class' key and 'html'
@@ -244,41 +217,67 @@ class Attributes(dict):
 
         Returns
         -------
-        value : Any
-            The retrieved value.
-            If the entry is a positional attribute, PositionalValue will be
-            returned.
+        key, value : Any
+            The retrieved item.
 
         Examples
         --------
-        >>> attrs = Attributes('class="general" class.html="specific"')
-        >>> attrs.get('class')
-        'general'
-        >>> attrs.get('class.html')
-        'specific'
-        >>> attrs.get('class', target='html')
-        'specific'
-        >>> attrs.get('class', target='tex')
-        'general'
-        >>> attrs.get('missing')
+        >>> attrs = Attributes('class="general" class.html="specific" pos')
+        >>> attrs.find_item('class')
+        ('class', 'general')
+        >>> attrs.find_item('class.html')
+        ('class.html', 'specific')
+        >>> attrs.find_item('class', target='html')
+        ('class.html', 'specific')
+        >>> attrs.find_item('class', target='tex')
+        ('class', 'general')
+        >>> attrs.find_item('pos')
+        ('pos', <class ...StringPositionalValue'>)
+        >>> attrs.find_item('missing')
         """
-        # Remove the trailing period for the target, if it's present
         target = target.strip('.') if isinstance(target, str) else target
 
-        if target is not None and sep.join((attr, target)) in self:
-            # See if a target-specific key is availble
-            return self[sep.join((attr, target))]
-        elif attr in self:
-            # Otherwise, see if the key itself is available
-            return self[attr]
-        else:
-            # When the key is not available, return the default
-            return default
+        # See if the target specific key is in the attributes
+        # ex: 'class.html' for target='.html' or 'file.txt.tex'
+        target_key = (sep.join((str(attr), target)) if target is not None
+                      else None)
+        if target_key and target_key in self:
+            return target_key, self[target_key]
+
+        # See if the attr is a key in the dict itself. ex: 'class'
+        if attr in self:
+            return attr, self[attr]
+
+        # See if it's a positional value
+        if ispositional(attr):
+            # Find all matching positional values
+            # ex: StringPositionalValue
+            items = [(k, v) for k, v in self.items() if ispositional(v, attr)]
+
+            if target:
+                # Filter by target, if specific
+                target_items = [(k, v) for k, v in items if k.endswith(target)]
+            else:
+                # Otherwise remove entries that have target-specific
+                target_items = [(k, v) for k, v in items
+                                if not is_target_specific(k, sep=sep)]
+
+            # Return the first item found
+            if target_items:
+                return target_items[0]
+            elif items:
+                return items[0]
+
+        # Give up
+        return default
 
     def get(self, attr, target=None, default=None,
             sep=settings.attribute_target_sep):
         """Retrieve an entry by target-specific key, if available and
         specified, or by key.
+
+        As opposed to the find_item method, this function will strip the
+        target-specific terminators of returned values
 
         Parameters
         ----------
@@ -305,7 +304,7 @@ class Attributes(dict):
 
         Examples
         --------
-        >>> attrs = Attributes('class="general" class.html="specific"')
+        >>> attrs = Attributes('class="general" class.html="specific" pos')
         >>> attrs.get('class')
         'general'
         >>> attrs.get('class.html')
@@ -314,112 +313,19 @@ class Attributes(dict):
         'specific'
         >>> attrs.get('class', target='tex')
         'general'
+        >>> attrs.get('pos')
+        <class ...StringPositionalValue'>
         >>> attrs.get('missing')
         """
-        # Remove the trailing period for the target, if it's present
-        target = target.strip('.') if isinstance(target, str) else target
+        rv = self.find_item(attr=attr, target=target, default=default,
+                            sep=sep)
+        if isinstance(rv, tuple) and len(rv) == 2:
+            key, value = rv
+            rv = key if ispositional(attr) else value
 
-        # Try retrieving a positional attribute
-        value = self.get_positional(attr=attr, target=target,
-                                    default=_MissingAttribute, sep=sep)
-        if value != _MissingAttribute:
-            #  A positional value was found, return it.
-            return value
-
-        # A positional argument was not found. Now try to access the key/value
-        # pair
-        value = self.get_value(attr=attr, target=target,
-                               default=_MissingAttribute, sep=sep)
-        if value != _MissingAttribute:
-            #  A positional value was found, return it.
-            return value
-
-        return default
-
-    def get_by_type(self, attr, value_type=str, target=None, default=None,
-                    sep=settings.attribute_target_sep, raise_error=False):
-        """Retrieve an entry by key and return for the given entry_type, if
-        it can be converted.
-
-        Parameters
-        ----------
-        attr : Union[str, :class:`PositionalValue <.PositionalValue>`]
-            The key of the entry to retrieve
-        value_type : Optional[Type]
-            The type of value returned.
-        target : Optional[str]
-            If specified, search for a key for the given target.
-            ex: class.html with be returned for the 'class' key and 'html'
-            target, if available, otherwise, the entry for 'class' will be
-            returned.
-        default : Optional[Any]
-            If the key is not found, return this value instead.
-        sep : Optional[str]
-            The separator character (or string) to use to separate the key
-            and target.
-        raise_error : Optional[bool]
-            If True and if the key is in this dict, but the type cannot be
-            converted, raise and AttributeFormatError.
-
-        Returns
-        -------
-        formatted_value : Any
-            The value in the specified value_type.
-        """
-        value = self.get(attr=attr, target=target, default=_MissingAttribute,
-                         sep=sep)
-
-        # Return the value directly if it matches the value_type
-        if isinstance(value, value_type):
-            return value
-
-        # Otherwise it needs to be converted
-        exception = None
-        if value == _MissingAttribute:
-            # The value was not found. Mark the exception as a KeyError,
-            # in case 'raise_error' is True. The value returned will be the
-            # default value
-            exception = KeyError(attr)
-
-        elif value_type == bool:
-            # Try converting boolean values. Strings are special, since they
-            # can be 'true'  or 'false'
-            if isinstance(value, str):
-                return False if 'false' in value.lower().strip() else True
-            else:
-                try:
-                    return bool(value)
-                except ValueError as e:
-                    exception = e
-
-        elif value_type == tuple or value_type == list:
-            # Try converting tuples and lists. Strings are special, since they
-            # need to be parsed into values for the tuple or list.
-            if isinstance(value, str):
-                try:
-                    return value_type(value.split())
-                except ValueError as e:
-                    exception = e
-            else:
-                try:
-                    return value_type(value)
-                except ValueError as e:
-                    exception = e
-
+            return strip_attr(rv, sep=sep) if isinstance(rv, str) else rv
         else:
-            # Otherwise, just try converting the value to the desired
-            # value_type
-            try:
-                return value_type(value)
-            except ValueError as e:
-                exception = e
-
-        # The conversion was not successful. Either raise the captured
-        # exception, if available, or return the default value.
-        if exception is not None and raise_error:
-            raise exception
-        else:
-            return default
+            return rv
 
     def append(self, attr, value=_MissingAttribute):
         """Set a value by appending to it, if it already exists, or creating
@@ -450,8 +356,37 @@ class Attributes(dict):
                 # Append it as a string
                 self[attr] = ' '.join((str(current_value), str(value)))
 
-    def filter(self, attrs=None, target='', sep=settings.attribute_target_sep,
-               sort_by_attrs=False):
+    def strip(self, sep=settings.attribute_target_sep):
+        """Replace the entries in this attributes dict without the
+        target-specific terminators."""
+        # Make a copy and reset this dict
+        cp = self.copy()
+        self.clear()
+
+        # Get all the keys to copy over
+        keys = list(cp.keys())
+
+        # Find target-specific terminators from keys.
+        stripped_keys = set()
+        for key in keys:
+            stripped_key = strip_attr(key, sep=sep)
+            if stripped_key != key:
+                stripped_keys.add(stripped_key)
+
+        # Remove keys that have target-specific entries
+        keys = [k for k in keys if k not in stripped_keys]
+
+        for key in keys:
+            stripped_key = strip_attr(key, sep=sep)
+
+            if key == stripped_key:
+                # use the key, if it hasn't been changed
+                self[key] = cp[key]
+            else:
+                self[stripped_key] = cp[key]
+
+    def filter(self, attrs=None, target=None, sep=settings.attribute_target_sep,
+               sort_by_attrs=False, strip=True):
         """Create an Attributes dict with target-specific entries.
 
         Parameters
@@ -475,6 +410,9 @@ class Attributes(dict):
             same order as the attrs passed. Otherwise, the returned attributes
             dict will be sorted with keys in the same order as this attributes
             dict (default).
+        strip : Optional[bool]
+            If True, strip all target-specific terminators from the returned
+            attris dict.
 
         Returns
         -------
@@ -486,15 +424,16 @@ class Attributes(dict):
         >>> attrs = Attributes('class=one tgt=default tgt.tex=tex')
         >>> attrs.filter()  # python >= 3.6 should have ordered entries
         Attributes{'class': 'one', 'tgt': 'default'}
-        >>> attrs.filter(target='tex')
+        >>> attrs.filter(target='tex', strip=False)
+        Attributes{'class': 'one', 'tgt.tex': 'tex'}
+        >>> attrs.filter(target='tex', strip=True)
         Attributes{'class': 'one', 'tgt': 'tex'}
         >>> attrs.filter(attrs='class')
         Attributes{'class': 'one'}
         >>> attrs.filter(attrs='tgt')
         Attributes{'tgt': 'default'}
         """
-        # Strip the leading period from the target, if present
-        target = target[1:] if target.startswith('.') else target
+        target = target.strip('.') if isinstance(target, str) else target
 
         # Setup the returned attributes dict
         d = Attributes()
@@ -505,7 +444,7 @@ class Attributes(dict):
                  else attrs)  # wrap strings
         attrs = (list(self.keys())
                  if attrs is None else attrs)  # populate empty attrs
-        attrs = uniq([gen_attr(k, sep) for k in attrs])  # general attrs
+        attrs = uniq(attrs)  # general attrs
 
         if not sort_by_attrs:
             # Sort the attrs so that they follow the same order as keys in
@@ -514,109 +453,44 @@ class Attributes(dict):
             order = {k: num for num, k in enumerate(self.keys())}
             attrs = sorted(attrs, key=lambda x: order.get(x, len(order)))
 
+        # Find keys to remove
+        if target is not None:
+            # Find target-specific terminators from keys.
+            remove_attrs = set()
+            for attr in attrs:
+                stripped_attr = strip_attr(attr, sep=sep)
+
+                if attr == stripped_attr:
+                    # If the attr does not have a target-specific terminator,
+                    # do not remove it.
+                    continue
+                # The following are entries when attr != stripped_attr, i.e.
+                # key had a target-specific terminator
+                if attr.endswith(sep + target):
+                    # The attr is a target-specific attr that matches the target
+                    # Remove the non-target-specific general entry
+                    remove_attrs.add(stripped_attr)
+                else:
+                    # The attr is a target-specific attr, but it matches a
+                    # different target. Remove that.
+                    remove_attrs.add(attr)
+        else:
+            # Remove target-specific keys
+            remove_attrs = {attr for attr in attrs
+                            if is_target_specific(attr, sep=sep)}
+
+        # Remove those entries
+        attrs = [attr for attr in attrs if attr not in remove_attrs]
+
         for attr in attrs:
-            # Try the positional value
-            if ispositional(attr):
-                value = self.get_positional(attr=attr, target=target,
-                                            default=_MissingAttribute, sep=sep)
-            else:
-                value = _MissingAttribute
+            rv = self.find_item(attr=attr, target=target, sep=sep)
+            if rv is not None:
+                k, v = rv
+                d[k] = v
 
-            if value != _MissingAttribute:
-                # value is the key. ex: '3', attr is the PostionalValue class
-                # or subclass. ex: 'IntPositionalValue'
-                d[value] = attr
-                continue
-
-            # Try a key/value entry
-            if not ispositional(attr):
-                value = self.get_value(attr=attr, target=target,
-                                       default=_MissingAttribute, sep=sep)
-            else:
-                value = _MissingAttribute
-
-            if value == _MissingAttribute:
-                # A value couldn't be found
-                continue
-            elif ispositional(value):
-                # A positional attribute was accessed by key-value because the
-                # value is the PositionalValue class (or a subclass)
-                # Since the attr may have the target trimmed (ex: '3.1416.tex'
-                # to '3.1416'), we may need to convert the PositionalValue
-                # type.
-                # ex: convert PositionalValue to FloatPositionalValue
-                d[attr] = positionalvalue_type(attr)
-            else:
-                # value was found, copy it over
-                d[attr] = value
-
-        return d
-
-    def exclude(self, attrs=None, target=None,
-                sep=settings.attribute_target_sep):
-        """Create an Attributes dict with the specified attrs excluded.
-
-        Parameters
-        ----------
-        attrs : Optional[List[Union[str, :class:`PositionalValue \
-            <.PositionalValue>`]]]
-            Exclude attrs. If specified, entries that match one of these
-            attrs will not be returned.
-        target : Optional[str]
-            If specified, target-specific entries will be excluded for the
-            given target.
-        sep : Optional[str]
-            The separator character (or string) to use to separate the key
-            and target.
-
-        Returns
-        -------
-        attributes : :obj:`Attributes <.attributes.Attributes>`
-            A filtered attributes dict.
-
-        Examples
-        --------
-        >>> attrs = Attributes('class=one tgt=default tgt.tex=tex')
-        >>> attrs.exclude('test')  # python >= 3.6 should have ordered entries
-        Attributes{'class': 'one', 'tgt': 'default', 'tgt.tex': 'tex'}
-        >>> attrs.exclude('class')
-        Attributes{'tgt': 'default', 'tgt.tex': 'tex'}
-        >>> attrs.exclude(target='tex')
-        Attributes{'class': 'one', 'tgt': 'default'}
-        >>> attrs.exclude('tgt')
-        Attributes{'class': 'one'}
-        """
-        d = Attributes()
-
-        exclude_keys = () if attrs is None else attrs
-        exclude_keys = ((exclude_keys,)
-                        if isinstance(exclude_keys, str) else
-                        exclude_keys)  # wrap strs
-        exclude_keys = set(exclude_keys)
-
-        for k, v in self.items():
-            # See if it's a positional value
-            if ispositional(v) and v in exclude_keys:
-                continue
-
-            # See if it's a key-value
-            elif target and isinstance(k, str) and k.endswith(sep + target):
-                # If a target to exclude is specified and the key ends with
-                # the target, skip it. ex: width.tex
-                continue
-
-            elif target is None and gen_attr(k, sep) in exclude_keys:
-                # If the target is not specified, remove the target-specific
-                # attribute if the general attribute should be exclude
-                continue
-
-            elif k in exclude_keys:
-                # If the key matches a key listed in the exclude_keys, skip it.
-                continue
-
-            # Not excluded, copy it over
-            d[k] = v
-
+        # Strip target-specific terminators, if strip is enabled
+        if strip:
+            d.strip()
         return d
 
     @property

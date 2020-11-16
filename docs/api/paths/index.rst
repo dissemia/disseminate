@@ -2,6 +2,9 @@ Paths
 =====
 
 .. automodule:: disseminate.paths
-   :members: SourcePath, TargetPath
-   :imported-members:
-   :show-inheritance:
+
+.. toctree::
+   :maxdepth: 1
+
+   paths
+   utils

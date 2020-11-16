@@ -30,16 +30,19 @@ class Caption(Tag, LabelMixin):
                         }
     """
 
-    html_name = 'caption'
+    # Render captions as <span> because the <caption> tag is a block element,
+    # and captions can be rendered inline
+    html_name = 'span'
+    html_class = 'caption'
     tex_cmd = 'caption'
 
     kind = None
     active = True
 
-    def __init__(self, name, content, attributes, context):
+    def __init__(self, *args, **kwargs):
         # Call the tag constructor, but not the LabelMixin construction.
         # The create_label method of LabelMixin must be invoked separately.
-        Tag.__init__(self, name, content, attributes, context)
+        Tag.__init__(self, *args, **kwargs)
 
         # Set the attributes to the class
         if 'class' not in self.attributes:
@@ -96,7 +99,7 @@ class Caption(Tag, LabelMixin):
 
         return content
 
-    def html_fmt(self, content=None, attributes=None, level=1):
+    def html_fmt(self, content=None, **kwargs):
         # Prepare the tag contents to include the label tag.
         # ex: 'My Title' becomes 'Chap 1. My Title'
         content = []
@@ -108,5 +111,4 @@ class Caption(Tag, LabelMixin):
         else:
             content.append(self.content)
 
-        return super().html_fmt(content=content, level=level)
-
+        return super().html_fmt(content=content, **kwargs)

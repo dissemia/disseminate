@@ -1,9 +1,14 @@
+.. role:: dm(code)
+   :language: dm
+
 Figures
 =======
 
 Tags to insert figures
 
-``@marginfig{...}``
+.. rst-class:: dl-parameter
+
+:dm:`@marginfig{...}`
    Insert a figure in the margin
 
    .. index::
@@ -28,7 +33,7 @@ Tags to insert figures
       
    :examples:
 
-      ::
+      .. code-block:: dm
 
          @marginfig[id=my-graph]{
             @img{media/graph.svg}
@@ -41,7 +46,7 @@ Tags to insert figures
          }
 
 
-``@fig{...}``
+:dm:`@fig{...}`
    Insert a figure in the main text.
 
    .. index::
@@ -62,7 +67,7 @@ Tags to insert figures
 
    :examples:
 
-      ::
+      .. code-block:: dm
 
          @fig[id=my-graph]{
             @img{media/graph.svg}
@@ -70,7 +75,7 @@ Tags to insert figures
               }
 
 
-``@fullfig{...}``
+:dm:`@fullfig{...}`
    Insert a full figure that spans the main text and margin.
 
    .. index::
@@ -92,7 +97,7 @@ Tags to insert figures
 
    :examples:
 
-      ::
+      .. code-block:: dm
 
          @fullfig[id=my-graph]{
             @img{media/graph.svg}
@@ -100,7 +105,7 @@ Tags to insert figures
               }
 
 
-``@panel{...}``
+:dm:`@panel{...}`
    Insert a panel in a figure.
 
    .. index::
@@ -114,7 +119,7 @@ Tags to insert figures
 
       ``width="x"``
 
-         The panel's width in percentage, px units
+         **(Required)** The panel's width in percentage, px units
 
       ``width.html="x"``
 
@@ -126,7 +131,7 @@ Tags to insert figures
 
    :examples:
 
-      ::
+      .. code-block:: dm
 
          @panel[width=30%]{
             @img{media/graph.svg}

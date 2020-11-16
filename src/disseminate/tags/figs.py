@@ -3,9 +3,10 @@ Tags for figure environments.
 """
 from .tag import Tag
 from .caption import Caption
-from .utils import format_attribute_width
+from .utils import xhtml_percentwidth, tex_percentwidth
 from ..utils.string import strip_multi_newlines
 from ..utils.types import StringPositionalValue
+from .. import settings
 
 
 class BaseFigure(Tag):
@@ -15,13 +16,16 @@ class BaseFigure(Tag):
     the label manager and reorganizing captions to the bottom of the figure.
     """
 
+    # Render the figures as '<span>' elements in xhtml, instead of <figure>
+    # elements becase <figure> elements are block level items--i.e. they
+    # cannot be placed inside a paragraph.
     html_name = 'figure'
-    html_class = None
     active = False
 
-    def __init__(self, name, content, attributes, context):
-        super().__init__(name=name, content=content, attributes=attributes,
-                         context=context)
+    include_paragraphs = False
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         # Transfer the label id ('id') to the caption, if available. First,
         # find the caption tag, if available
@@ -37,31 +41,37 @@ class BaseFigure(Tag):
 
             # Make the caption a figcaption tag for html
             caption.html_name = 'figcaption'
+            caption.html_class = 'figcaption'
 
             # Create the label in the label_manager
             caption.create_label()
 
-    def html_fmt(self, content=None, attributes=None, level=1):
-        attrs = attributes if attributes is not None else self.attributes
+    def html_fmt(self, attributes=None, method='html', **kwargs):
+        attrs = attributes or self.attributes.copy()
+        target = '.html' if method == 'html' else 'xhtml'
 
         # Set the html class
         if self.html_class is not None:
-            attrs = self.attributes.filter(target='.html')
             if 'class' in attrs:
                 attrs['class'] = ' ' + self.html_class
             else:
                 attrs['class'] = self.html_class
+        return super().html_fmt(attributes=attrs, method=method, **kwargs)
 
-        return super().html_fmt(content=content, attributes=attrs, level=level)
 
-
-class Marginfigure(BaseFigure):
+class MarginFigure(BaseFigure):
     """The @marginfig tag"""
 
     aliases = ('marginfig',)
     html_class = 'marginfig'
     tex_env = 'marginfigure'
     active = True
+
+    def xhtml_fmt(self, attributes=None, **kwargs):
+        attributes = attributes or self.attributes.copy()
+        attr_name = '{{{}}}type'.format(settings.xhtml_namespace['epub'])
+        attributes[attr_name] = 'footnote'
+        return super().xhtml_fmt(attributes=attributes, **kwargs)
 
 
 class Figure(BaseFigure):
@@ -89,30 +99,22 @@ class Panel(Tag):
     html_name = 'panel'
     tex_env = 'panel'
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+    def tex_fmt(self, attributes=None, **kwargs):
         attrs = self.attributes.copy() if attributes is None else attributes
 
         # Format the width
-        attrs = format_attribute_width(attrs, target='.tex')
-
-        # Convert the width attribute to a StringPositional, which is needed
-        # by the panel environment
-        # ex: \begin{panel}{0.5\textwidth} \end{panel}
-        width = attrs.get('width', target='.tex')
-        if width is not None:
-            attrs[width] = StringPositionalValue
+        attrs = tex_percentwidth(attrs, target='.tex', use_positional=True)
 
         # Raises an error if a width is not present. Strip multiple newlines
         # as these break up side-by-side figures
-        env = super().tex_fmt(content=content, attributes=attrs,
-                              mathmode=mathmode, level=level)
+        env = super().tex_fmt(attributes=attrs, **kwargs)
         return strip_multi_newlines(env).strip()
 
-    def html_fmt(self, content=None, attributes=None, level=1):
+    def html_fmt(self, attributes=None, method='html', **kwargs):
         attrs = self.attributes.copy() if attributes is None else attributes
+        target = '.' + method if not method.startswith('.') else method
 
-        # Format the width
-        attrs = format_attribute_width(attrs, target='.html')
+        # Format the html classes
         attrs['class'] = 'panel'
-
-        return super().html_fmt(content=content, attributes=attrs, level=level)
+        attrs = xhtml_percentwidth(attributes=attrs, target=target)
+        return super().html_fmt(attributes=attrs, method=method, **kwargs)

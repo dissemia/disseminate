@@ -95,7 +95,8 @@ class JinjaRender(Builder):
     action = 'render'
     priority = 1000
     active_requirements = ('priority',)
-    scan_parameters = False  # This is done after all parameters are loaded
+    scan_parameters_on_init = False  # This is done after all parameters are
+                                     # loaded
 
     context = weakattr()
 
@@ -230,12 +231,16 @@ class JinjaRender(Builder):
         template = self.template()
         context = self.context
         outfilepath = self.outfilepath
+
+        logging.debug("Rendering '{}' with Jinja2 "
+                      "'{}'".format(outfilepath, template))
         if 'target' in context:
             rendered_string = template.render(**context,
                                               outfilepath=outfilepath)
         else:
             rendered_string = template.render(**context, target=self.render_ext,
                                               outfilepath=outfilepath)
+
         outfilepath.write_text(rendered_string)
         self.build_needed(reset=True)
         return self.status

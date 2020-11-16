@@ -1,7 +1,7 @@
-Data Tags
----------
+Data
+----
 
 .. automodule:: disseminate.tags.data
-    :members: Data, DelimData
+    :members: Cell, HeaderCell, Data, DelimData
     :imported-members:
     :show-inheritance:

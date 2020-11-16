@@ -6,7 +6,10 @@ import pytest
 from disseminate.tags import Tag
 from disseminate.tags.text import Italics
 from disseminate.tags.utils import (repl_tags, content_to_str, replace_context,
-                                    copy_tag, format_attribute_width)
+                                    copy_tag, xhtml_percentwidth,
+                                    tex_percentwidth)
+from disseminate.attributes import Attributes
+from disseminate.utils.types import StringPositionalValue
 
 
 def test_content_to_str(context_cls):
@@ -153,25 +156,36 @@ def test_tag_copy(context_cls):
         assert id(tag2.context) == id(other)
 
 
-def test_format_attribute_width():
-    """Test the format_attribute_width function."""
-    attrs = format_attribute_width('width=30%', target='.html')
-    assert attrs['style'] == "width: 30.0%"
+def test_tex_percentwidth():
+    """Test the tex_percentwidth function."""
+    assert (tex_percentwidth('width=66%') ==
+            Attributes({'width': '0.65\\textwidth'}))
+    assert (tex_percentwidth('width=100%') ==
+            Attributes({'width': '0.99\\textwidth'}))
+    assert (tex_percentwidth('width=28%') ==
+            Attributes({'width': '0.32\\textwidth'}))
+    assert (tex_percentwidth('width=66%', use_positional=True) ==
+            Attributes({'width': '66%',
+                        '0.65\\textwidth': StringPositionalValue}))
+    assert (tex_percentwidth('width=100%', use_positional=True) ==
+            Attributes({'width': '100%',
+                        '0.99\\textwidth': StringPositionalValue}))
+    assert (tex_percentwidth('width=28%', use_positional=True) ==
+            Attributes({'width': '28%',
+                        '0.32\\textwidth': StringPositionalValue}))
+    assert (tex_percentwidth('width=3.2in', use_positional=True) ==
+            Attributes({'width': '3.2in',
+                        '3.2in': StringPositionalValue}))
 
-    attrs = format_attribute_width('width=30%', target='.tex')
-    assert attrs['width.tex'] == '0.3\\textwidth'
 
-    attrs = format_attribute_width('width.html=30 class="test"', target='.html')
-    assert attrs['style'] == "width: 3000.0%"
-    assert attrs['class'] == 'test'
+def test_xhtml_percentwidth():
+    """Test the xhtml_percentwidth function."""
 
-    attrs = format_attribute_width('width.tex=30 class="test"', target='.tex')
-    assert attrs['width.tex'] == '30.0\\textwidth'
-    assert attrs['class'] == 'test'
-
-    # Test widths in other units
-    attrs = format_attribute_width('width.html=300px', target='.html')
-    assert attrs['style'] == "width: 300px"
-
-    attrs = format_attribute_width('width.tex=2in', target='.tex')
-    assert attrs['width.tex'] == '2in'
+    assert (xhtml_percentwidth('width=66%') ==
+            Attributes({'width': '66%', 'class': 'w66'}))
+    assert (xhtml_percentwidth('width=100%') ==
+            Attributes({'width': '100%', 'class': 'w100'}))
+    assert (xhtml_percentwidth('width=0%') ==  # not valid
+            Attributes({'width': '0%'}))
+    assert (xhtml_percentwidth('width=2in') ==  # not valid
+            Attributes({'width': '2in'}))

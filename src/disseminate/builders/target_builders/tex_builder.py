@@ -1,5 +1,5 @@
 """
-A CompositeBuilder for tex files.
+A TargetBuilder for tex files.
 """
 from .target_builder import TargetBuilder
 

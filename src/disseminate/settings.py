@@ -1,6 +1,7 @@
 import pathlib
 
 from .utils.types import IntPositionalValue, StringPositionalValue
+from .__version__ import __version__
 
 
 #: Document Defaults
@@ -75,6 +76,9 @@ context_max_depth = 6
 context_max_size = 8192  # 8kB
 
 default_context = {
+    # Set the disseminate version
+    'version': __version__,
+
     # The default targets to render. This is a string so that documents
     # can overwrite these values
     'targets': {'html'},
@@ -85,7 +89,13 @@ default_context = {
     # Entries for navigation
     'prev': '',
     'next': '',
+    'srclink': '',
+    'txtlink': '',
+    'texlink': '',
     'pdflink': '',
+    'epublink': '',
+
+    'toc': 'all headings expanded',
 
     # Options related to links
     'relative_links': True,
@@ -94,7 +104,9 @@ default_context = {
 
     # Process tags for the following entries in a context
     # (see processors/process_context_tags.py)
-    'process_context_tags': {body_attr, 'toc', 'prev', 'next', 'pdflink'},
+    'process_context_tags': {body_attr, 'toc', 'prev', 'next',
+                             'srclink', 'txtlink', 'texlink', 'pdflink',
+                             'epublink'},
 
     # Process paragraphs for tags with the following names
     # (see tags/paragraphs.py)
@@ -160,6 +172,9 @@ default_context = {
     # disseminate.tags.factory.TagFactory.
     'inactive_tags': set(),
 
+    # Target-specific customizations
+    'epub': dict(),
+
     # Macros are string entries that aren't processed into tags and asts.
     # These start with the 'tag_prefix' (e.g. '@')
     # Macros - Isotopes
@@ -224,6 +239,7 @@ module_template_paths = [pathlib.Path(__file__).parent / 'templates']
 tracked_deps = {
     # html targets ca use .css style files, .svg and .png images
     '.html': ['.css', '.svg', '.png'],
+    '.xhtml': ['.css', '.svg', '.png'],
     # tex (and pdf) target can use .pdf and .png images
     '.tex': ['.pdf', '.png'],
     # css files can include .css files
@@ -244,59 +260,63 @@ empty = tuple()
 #: The number of spaces to identify sublist items.
 list_level_spaces = 2
 
-#: HTML targets
+#: XHTML targets
 #: ~~~~~~~~~~~~
 
-#: Render HTML pages with newlines and indentation
-html_pretty = True
+xhtml_namespace = {'epub': 'http://www.idpf.org/2007/ops'}
 
-#: Allowed html tags with required arguments/attributes.
+#: Render XHTML pages with newlines and indentation
+xhtml_pretty = True
+
+#: Allowed xhtml tags with required arguments/attributes.
 #: This dict will be checked to see if an html tag is allowed.
 #: The values are tuples that indicate the order of attributes for tags
-html_tag_arguments = {'a': ('href',),
-                      'img': ('src',),
-                      'link': ('rel',)
-                      }
+xhtml_tag_arguments = {'a': ('href',),
+                       'img': ('src',),
+                       'link': ('rel',)
+                       }
 
 #: Allowed optional arguments/attributes for html tags
 #: This dict will be checked to see if an html tag is allowed.
-html_tag_optionals = {'a': ('class', 'role'),
-                      'blockquote': empty,
-                      'br': empty,
-                      'code': empty,
-                      'caption': ('class', 'id'),
-                      'dd': empty,
-                      'div': ('class', 'id'),
-                      'dl': empty,
-                      'dt': empty,
-                      'em': empty,
-                      'figure': ('id', 'class'),
-                      'figcaption': ('id', 'class'),
-                      'h1': ('id', 'class'),
-                      'h2': ('id', 'class'),
-                      'h3': ('id', 'class'),
-                      'h4': ('id', 'class'),
-                      'h5': ('id', 'class'),
-                      'hr': empty,
-                      'li': ('class',),
-                      'link': ('href', 'media'),
-                      'i': empty,
-                      'img': ('alt', 'class', 'style'),
-                      'ol': ('class',),
-                      'p': ('class',),
-                      'pre': ('class',),
-                      'span': ('class', 'id', 'style'),
-                      'strong': empty,
-                      'sub': empty,
-                      'sup': empty,
-                      'table': ('id', 'class',),
-                      'tbody': ('class',),
-                      'td': ('class',),
-                      'th': ('class',),
-                      'thead': ('class',),
-                      'tr': ('class',),
-                      'ul': ('class',),
-                      }
+epub_type = "{{{}}}type".format(xhtml_namespace['epub'])
+xhtml_tag_optionals = {'a': ('class', 'role', epub_type),
+                       'aside': ('class', 'id', epub_type),
+                       'blockquote': empty,
+                       'br': empty,
+                       'code': empty,
+                       'caption': ('class', 'id'),
+                       'dd': empty,
+                       'div': ('class', 'id'),
+                       'dl': empty,
+                       'dt': empty,
+                       'em': empty,
+                       'figure': ('id', 'class'),
+                       'figcaption': ('id', 'class'),
+                       'h1': ('id', 'class'),
+                       'h2': ('id', 'class'),
+                       'h3': ('id', 'class'),
+                       'h4': ('id', 'class'),
+                       'h5': ('id', 'class'),
+                       'hr': empty,
+                       'li': ('class',),
+                       'link': ('href', 'media'),
+                       'i': empty,
+                       'img': ('alt', 'class', 'style'),
+                       'ol': ('class',),
+                       'p': ('class',),
+                       'pre': ('class',),
+                       'span': ('class', 'id', 'style'),
+                       'strong': empty,
+                       'sub': empty,
+                       'sup': empty,
+                       'table': ('id', 'class',),
+                       'tbody': ('class',),
+                       'td': ('class',),
+                       'th': ('class',),
+                       'thead': ('class',),
+                       'tr': ('class',),
+                       'ul': ('class',),
+                       }
 
 #: TEX targets
 #: ~~~~~~~~~~~

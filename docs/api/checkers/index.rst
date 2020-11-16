@@ -8,6 +8,9 @@ Checkers
    :caption: Checkers
 
    checker
-   exceptions
    types
    pdf
+   python
+   external
+   exceptions
+   utils

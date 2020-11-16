@@ -12,8 +12,8 @@ A document has the following responsibilities:
 1. *Managers*. The root document is responsible to create managers.
    There should only be one of each type of manager in a project, and a
    project uses the same managers.
-2. *Rendering*. The document is responsible for rendering the document in the
-   target format(s).
+2. *Rendering*. The document is responsible for delegating rendering of the
+   document in the target format(s).
 3. *Processors*. When rendering a document, the 'body' entry in the context
    (*i.e.* the body of the disseminate source file) will be run through a
    list of processors, listed in the document class.

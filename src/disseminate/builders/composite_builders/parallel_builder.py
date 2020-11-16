@@ -23,7 +23,7 @@ class ParallelBuilder(CompositeBuilder):
         parameters, args : Tuple[:obj:`pathlib.Path`, str, tuple, list]
             The input parameters (dependencies), including filepaths, for the
             build
-        outfilepath : Optional[str, :obj:`pathlib.Path]
+        outfilepath : Optional[str, :obj:`pathlib.Path`]
             The path for the output file.
         target : Optional[str]
             The document target for the build. ex: 'html' or 'tex'

@@ -138,7 +138,7 @@ def test_target_builder_ref_labels_html(env):
     assert builder.parameters == ["build '{}'".format(name), src_filepath]
 
     assert jinja_builder.__class__.__name__ == "JinjaRender"
-    assert len(jinja_builder.parameters) == 10
+    assert len(jinja_builder.parameters) == 16
 
     assert builder.build_needed()
     assert builder.build(complete=True) == 'done'

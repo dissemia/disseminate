@@ -7,24 +7,31 @@ Tags
    :maxdepth: 2
    :caption: Tags
              
-   tags
-   exceptions
-   heading
-   text
-   img
-   eqs
+   tag
    asy
-   figs
    caption
-   refs
-   navigation
+   code
    data
+   eqs
+   featurebox
+   figs
+   heading
+   img
+   label
+   list
+   navigation
+   notes
+   preamble
+   refs
    table
-   collection
+   text
+   toc
 
 .. toctree::
    :maxdepth: 2
-   :caption: Signals and Receivers
+   :caption: Extra
 
+   exceptions
    signals
    receivers
+   utils

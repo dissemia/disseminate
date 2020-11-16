@@ -5,9 +5,9 @@ from disseminate.builders.pdfrender import PdfRender
 from disseminate.paths import TargetPath
 from disseminate.tags import Tag
 
-hash_filename1 = lambda ext : 'template_a8931de28c22' + ext
-hash_filename2 = lambda ext : 'template_dbbfa2847deb' + ext
-hash_filename3 = lambda ext : 'template_9d847169a9c9' + ext
+hash_filename1 = lambda ext : 'template_f23df37446eb' + ext
+hash_filename2 = lambda ext : 'template_08d50158c948' + ext
+hash_filename3 = lambda ext : 'template_fb52fb79fce4' + ext
 
 
 def test_pdfrender_with_find_builder_cls():
@@ -38,7 +38,7 @@ def test_pdfrender_setup(env):
 
     assert pdfrender.subbuilders[0].__class__.__name__ == 'JinjaRender'
     assert pdfrender.subbuilders[0].use_cache
-    assert len(pdfrender.subbuilders[0].parameters) == 4
+    assert len(pdfrender.subbuilders[0].parameters) == 5
     assert (pdfrender.subbuilders[0].outfilepath ==
             cache_path / 'media' / hash_filename1('.tex'))
 
@@ -82,7 +82,7 @@ def test_pdfrender_setup_without_outfilepath(env):
 
     assert pdfrender.subbuilders[0].__class__.__name__ == 'JinjaRender'
     assert pdfrender.subbuilders[0].use_cache
-    assert len(pdfrender.subbuilders[0].parameters) == 4
+    assert len(pdfrender.subbuilders[0].parameters) == 5
     assert (pdfrender.subbuilders[0].outfilepath ==
             cache_path / 'media' / hash_filename1('.tex'))
 
@@ -135,7 +135,7 @@ def test_pdfrender_setup_without_outfilepath_use_cache(env):
 
     assert pdfrender.subbuilders[0].__class__.__name__ == 'JinjaRender'
     assert pdfrender.subbuilders[0].use_cache
-    assert len(pdfrender.subbuilders[0].parameters) == 4
+    assert len(pdfrender.subbuilders[0].parameters) == 5
     assert (pdfrender.subbuilders[0].outfilepath ==
             cache_path / 'media' / hash_filename1('.tex'))
 
@@ -181,7 +181,7 @@ def test_pdfrender_chain_subbuilders(env):
     pdfrender.chain_subbuilders()
 
     # Check the paths
-    assert len(pdfrender.subbuilders[0].parameters) == 4
+    assert len(pdfrender.subbuilders[0].parameters) == 5
     assert (pdfrender.subbuilders[0].outfilepath ==
             cache_path / 'media' / hash_filename1('.tex'))
     assert (pdfrender.subbuilders[1].parameters[0] ==

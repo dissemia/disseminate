@@ -7,7 +7,7 @@ import regex
 
 from .tag import Tag
 from ..attributes import Attributes
-from ..formats import html_list
+from ..formats import xhtml_list
 from .. import settings
 
 
@@ -88,8 +88,8 @@ def clean_string_list(parsed_list):
     parsed_list : List[Tuple[int, str]]
         The parsed list from parse_string_list.
         
-    Returned
-    --------
+    Returns
+    -------
     cleaned_list : List[Tuple[int, str]]
         The cleaned list.
 
@@ -115,8 +115,8 @@ def normalize_levels(parsed_list, list_level_spaces=settings.list_level_spaces):
     list_level_spaces : int
         The number of spaces used to identify sub-levels in a list.
 
-    Returned
-    --------
+    Returns
+    -------
     normalized_list : List[Tuple[int, str]]
         The normalized list with levels fixed.
 
@@ -198,16 +198,15 @@ class ListItem(Tag):
     active = False
     html_name = "li"
 
-    def __init__(self, name, content, attributes, context):
-        super().__init__(name, content, attributes, context)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         # Set the level to an integer
         self.attributes['level'] = int(self.attributes['level'])
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
+    def tex_fmt(self, **kwargs):
         list_level = self.attributes['level']
-        tex_content = super().tex_fmt(content=content, attributes=attributes,
-                                      mathmode=mathmode, level=level)
+        tex_content = super().tex_fmt(**kwargs)
         return "§" * (list_level + 1) + " " + tex_content + "\n"
 
 
@@ -219,7 +218,7 @@ class List(Tag):
     tex_env = "easylist"
     list_style = 'itemize'
 
-    def __init__(self, name, content, attributes, context):
+    def __init__(self, name, content, attributes, context, **kwargs):
         self.name = name
         self.attributes = Attributes(attributes)
         self.context = context
@@ -235,19 +234,20 @@ class List(Tag):
                                  context=context)
                         for level, list_content in parsed_list]
 
-    def html_fmt(self, content=None, attributes=None, level=1):
+    def tex_fmt(self, attributes=None, **kwargs):
+        return super().tex_fmt(attributes=self.list_style, **kwargs)
+
+    def html_fmt(self, content=None, attributes=None, format_func='html_fmt',
+                 method='html', level=1, **kwargs):
         elements = []
 
         for tag in self.content:
             listlevel = tag.attributes['level']
-            tag_html = tag.html_fmt(level=level+1)
-            elements.append((listlevel, tag_html))
-        return html_list(*elements, attributes=attributes,
-                         listtype=self.html_name, level=level)
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
-        return super().tex_fmt(content=content, attributes=self.list_style,
-                               mathmode=mathmode, level=level)
+            tag_html = getattr(tag, format_func)(method=method, level=level+1)
+            elements.append((listlevel, tag_html))
+        return xhtml_list(*elements, attributes=attributes,
+                          listtype=self.html_name, method=method, level=level)
 
 
 class OrderedList(List):

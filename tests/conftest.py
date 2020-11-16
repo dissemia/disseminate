@@ -6,8 +6,12 @@ from time import sleep
 from collections import namedtuple
 import pathlib
 import xml.dom.minidom
+import zipfile
+import logging
 
 import pytest
+import regex
+import lxml.etree
 
 from disseminate.context import BaseContext
 from disseminate.attributes import Attributes
@@ -83,7 +87,7 @@ def env(tmpdir):
     src_filepath = SourcePath(project_root=tmpdir, subpath='test.dm')
     src_filepath.write_text("""
     ---
-    targets: html, tex, pdf
+    targets: html, xhtml, tex, pdf
     ---
     """)
 
@@ -185,18 +189,6 @@ def url_request(monkeypatch):
 
 
 @pytest.fixture
-def is_pdf():
-    """Tests whether the file is a pdf file
-    """
-    def _is_pdf(pdf_filepath):
-        # Retrieve the lines from the file
-        with open(pdf_filepath, 'rb') as file:
-            chunk = file.read(512)
-            return chunk.startswith(b'%PDF-')
-    return _is_pdf
-
-
-@pytest.fixture
 def a_in_b():
     """Test whether items in 'a' are in 'b'."""
     def _a_in_b(a, b):
@@ -222,6 +214,20 @@ def app(tmpdir):
 @pytest.fixture
 def test_client(loop, app, sanic_client):
     return loop.run_until_complete(sanic_client(app))
+
+
+# Tests for formats
+
+@pytest.fixture
+def is_pdf():
+    """Tests whether the file is a pdf file
+    """
+    def _is_pdf(pdf_filepath):
+        # Retrieve the lines from the file
+        with open(pdf_filepath, 'rb') as file:
+            chunk = file.read(512)
+            return chunk.startswith(b'%PDF-')
+    return _is_pdf
 
 
 @pytest.fixture
@@ -275,3 +281,84 @@ def svg_dims():
 
             return is_matched
     return _svg_dims
+
+
+xml_parser = None
+@pytest.fixture
+def is_xml():
+    """Tests a string for valid xml.
+
+    Raises
+    ------
+    :exc:`lxml.etree.XMLSyntaxError`
+        If a syntax error was found.
+    """
+    global xml_parser
+    if xml_parser is None:
+        xml_parser = lxml.etree.XMLParser()
+
+    def _is_xml(string):
+        string = regex.sub(r'&[\#\w]\w*;', '', string)  # strip/ignore entities
+        if string.strip():  # only look a non-empty stringss
+            lxml.etree.fromstring(string, xml_parser)
+        return True
+
+    return _is_xml
+
+
+@pytest.fixture
+def cmp_epub():
+    """Compare the files from 2 different epub files.
+
+    Parameters
+    ----------
+    epubA : Union[str, obj:`pathlib.Path`]
+        The filepath to the first epub file to compare
+    epubB : Union[str, obj:`pathlib.Path`]
+        The filepath to the second epub file to compare
+    exclude_crc : Tuple[str]
+        A tuple of filenames for files to not compare the CRC hashes.
+
+    Returns
+    -------
+    same : bool
+        True, if the 2 files are the same, False if they aren't.
+    """
+    def _cmp_epub(epubA, epubB, exclude_crc=('xhtml/content.opf',)):
+        with zipfile.ZipFile(epubA) as fileA, zipfile.ZipFile(epubB) as fileB:
+            # Get the zipinfos for file A
+            zipinfosA = {z.filename: z for z in fileA.infolist()}
+            zipinfosB = {z.filename: z for z in fileB.infolist()}
+
+            # Find files in A but not in B and files in B bot not in A
+            in_A_not_B = zipinfosA.keys() - zipinfosB.keys()
+            in_B_not_A = zipinfosB.keys() - zipinfosA.keys()
+            if in_A_not_B:
+                msg = "The files '{}' are in '{}' but not '{}"
+                logging.error(msg.format(in_A_not_B, epubA, epubB))
+                return False
+            if in_B_not_A:
+                msg = "The files '{}' are in '{}' but not '{}"
+                logging.error(msg.format(in_B_not_A, epubB, epubA))
+                return False
+
+            # At this point, the files in epubA match those in epubB
+            # Compare the CRCs
+            for filename in zipinfosA.keys():
+                # Skip CRC check if filename is in exclude_crc
+                if filename in exclude_crc:
+                    continue
+
+                zipinfoA = zipinfosA[filename]
+                zipinfoB = zipinfosB[filename]
+
+                if zipinfoA.CRC != zipinfoB.CRC:
+                    msg = ("CRCs for file '{}' do not match between '{}' and "
+                           "'{}'")
+                    logging.error(msg.format(filename, epubA, epubB))
+                    return False
+
+        # Survived the gauntlet. The two files match.
+        return True
+
+    return _cmp_epub

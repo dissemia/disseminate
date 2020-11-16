@@ -1,10 +1,15 @@
+.. role:: dm(code)
+   :language: dm
+
 Navigation
 ==========
 
 Navigation tags are used to create html links to other documents, like the
 previous or next document.
 
-``@prev``
+.. rst-class:: dl-parameter
+
+:dm:`@prev`
     A link to the previous document
 
     .. index::
@@ -19,12 +24,12 @@ previous or next document.
 
     :examples:
 
-       ::
+       .. code-block:: dm
 
           @prev
 
 
-``@next``
+:dm:`@next`
     A link to the next document
 
     .. index::
@@ -39,7 +44,7 @@ previous or next document.
 
     :examples:
 
-       ::
+       .. code-block:: dm
 
           @next
 

@@ -54,11 +54,10 @@ def test_generate_label_id(mocktag_cls, context_cls):
     assert generate_label_id(tag6) == "tester-1"
 
 
-def test_create_label(doc, mocktag_cls):
+def test_create_label(context, mocktag_cls):
     """Test the create_label function."""
 
     # Get the context and label_manager from the doc
-    context = doc.context
     label_manager = context['label_manager']
 
     # 1. Test a basic heading label
@@ -95,12 +94,8 @@ def test_create_label(doc, mocktag_cls):
 
 # Test tex targets
 
-def test_labelanchor_tex(doc, mocktag_cls):
+def test_labelanchor_tex(context, mocktag_cls):
     """Test the LabelAnchor tag with tex targets."""
-
-    # Get the context from the doc. The doc context has a label_manager
-    # built-in.
-    context = doc.context
 
     # 1. Test a basic label
     tag1 = mocktag_cls(name='label', content='My title', attributes='',
@@ -113,13 +108,10 @@ def test_labelanchor_tex(doc, mocktag_cls):
     assert labelanchor1.tex == '\\label{test-dm-my-title}'
 
 
-def test_labeltag_tex(doc, mocktag_cls):
+def test_labeltag_tex(context, mocktag_cls):
     """Test the LabelTag with tex targets."""
 
-    # Get the context from the doc. The doc context has a label_manager
-    # built-in.
-    label_man = doc.context['label_manager']
-    context = doc.context
+    label_man = context['label_manager']
 
     # 1. Test a label tag with a basic kind. kind = ('heading', 'chapter')
     context['label_fmts']['heading'] = '@label.title'
@@ -149,12 +141,8 @@ def test_labeltag_tex(doc, mocktag_cls):
 
 # Test html targets
 
-def test_labelanchor_html(doc, mocktag_cls):
+def test_labelanchor_html(context, mocktag_cls):
     """Test the LabelAnchor tag with html targets."""
-
-    # Get the context from the doc. The doc context has a label_manager
-    # built-in.
-    context = doc.context
 
     # 1. Test a basic label
     tag1 = mocktag_cls(name='label', content='My title', attributes='',
@@ -167,13 +155,10 @@ def test_labelanchor_html(doc, mocktag_cls):
     assert labelanchor1.html == '<span id="test-dm-my-title"></span>\n'
 
 
-def test_labeltag_html(doc, mocktag_cls):
+def test_labeltag_html(context, mocktag_cls):
     """Test the LabelTag with html targets."""
 
-    # Get the context from the doc. The doc context has a label_manager
-    # built-in.
-    label_man = doc.context['label_manager']
-    context = doc.context
+    label_man = context['label_manager']
 
     # 1. Test a label tag with a basic kind. kind = ('heading', 'chapter')
     context['label_fmts']['heading'] = '@label.title'
@@ -200,3 +185,54 @@ def test_labeltag_html(doc, mocktag_cls):
                          context=context)
     # chapter number not assigned
     assert labeltag2.html == '<span class="label">Chapter 1 </span>\n'
+
+
+# Test xhtml targets
+
+def test_labelanchor_xhtml(context, mocktag_cls, is_xml):
+    """Test the LabelAnchor tag with html targets."""
+
+    # 1. Test a basic label
+    tag1 = mocktag_cls(name='label', content='My title', attributes='',
+                       context=context)
+    label1_id = create_label(tag=tag1, kind=())
+    assert isinstance(label1_id, str)
+
+    labelanchor1 = LabelAnchor(name='label', content=label1_id, attributes='',
+                               context=context)
+    assert labelanchor1.xhtml == '<span id="test-dm-my-title"/>\n'
+    assert is_xml(labelanchor1.xhtml)
+
+
+def test_labeltag_xhtml(context, mocktag_cls, is_xml):
+    """Test the LabelTag with html targets."""
+
+    label_man = context['label_manager']
+
+    # 1. Test a label tag with a basic kind. kind = ('heading', 'chapter')
+    context['label_fmts']['heading'] = '@label.title'
+    kind = ('heading',)
+    tag1 = mocktag_cls(name='label', content='My title', attributes='',
+                       context=context)
+    label1_id = create_label(tag=tag1, kind=kind)
+
+    labeltag1 = LabelTag(name='label', content=label1_id, attributes='',
+                         context=context)
+    assert labeltag1.xhtml == '<span class="label">My title</span>\n'
+    assert is_xml(labeltag1.xhtml)
+
+    # 2. Test a label tag with a different label format, including the chapter
+    #    number. kind = ('heading', 'chapter_number')
+    label_man.reset()  # reset labels to avoid raising a DuplicateLabel
+    context['label_fmts']['heading_chapter'] = 'Chapter @label.chapter_number '
+    kind = ('heading', 'chapter')
+
+    tag2 = mocktag_cls(name='label', content='My title', attributes='',
+                       context=context)
+    label2_id = create_label(tag=tag2, kind=kind)
+
+    labeltag2 = LabelTag(name='label', content=label2_id, attributes='',
+                         context=context)
+    # chapter number not assigned
+    assert labeltag2.xhtml == '<span class="label">Chapter 1 </span>\n'
+    assert is_xml(labeltag2.xhtml)

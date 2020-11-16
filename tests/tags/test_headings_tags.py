@@ -405,3 +405,108 @@ def test_heading_newline_preservation_html(doc):
                          '<span class="label">Chapter 1. Chapter 1</span>'
                          '</h2>\n\n'
                          '</span>\n')
+
+
+#: XHTML target
+
+def test_heading_labels_xhtml(doc, is_xml):
+    """Tests the production of heading xhtml with labels."""
+
+    # Get the label manager and context from the document
+    label_man = doc.context['label_manager']
+    context = doc.context
+
+    # 1. Test with default labels
+
+    markups = {
+        '@part{Part 1}': '<h1 id="part:test-dm-part-1">\n'
+                         '  <span class="label">Part 1. Part 1</span>\n'
+                         '</h1>\n',
+        '@chapter{Chapter 1}': '<h2 id="ch:test-dm-chapter-1">\n'
+                               '  <span class="label">Chapter 1. Chapter 1</span>\n'
+                               '</h2>\n',
+        '@section{Section 1}': '<h3 id="sec:test-dm-section-1">\n'
+                               '  <span class="label">1. Section 1</span>\n'
+                               '</h3>\n',
+        '@subsection{Section 2}': '<h4 id="subsec:test-dm-section-2">\n'
+                                  '  <span class="label">1. Section 2</span>\n'
+                                  '</h4>\n',
+        '@subsubsection{Section 3}': '<h5 id="subsubsec:test-dm-section-3">\n'
+                                     '  <span class="label">1. Section 3</span>\n'
+                                     '</h5>\n',
+        # Title heading
+        '@h1{Title 1}': '<h1 id="title:test-dm-title-1">\n'
+                        '  <span class="label">Title 1</span>\n'
+                        '</h1>\n',
+        # Chapter heading
+        '@h2{Chapter 2}': '<h2 id="ch:test-dm-chapter-2">\n'
+                          '  <span class="label">Chapter 1. Chapter 2</span>\n'
+                          '</h2>\n',
+        # Section heading
+        '@h3{Section 3}': '<h3 id="sec:test-dm-section-3">\n'
+                          '  <span class="label">1. Section 3</span>\n'
+                          '</h3>\n',
+        # Subsection heading
+        '@h4{Section 4}': '<h4 id="subsec:test-dm-section-4">\n'
+                          '  <span class="label">1. Section 4</span>\n'
+                          '</h4>\n',
+        # Subsubsection heading
+        '@h5{Section 5}': '<h5 id="subsubsec:test-dm-section-5">\n'
+                          '  <span class="label">1. Section 5</span>\n'
+                          '</h5>\n',
+        '@chapter': '<h2 id="ch:test-dm-1">\n'
+                    '  <span class="label">Chapter 1. </span>\n'
+                    '</h2>\n',
+        '@chapter{}': '<h2 id="ch:test-dm-2">\n'
+                      '  <span class="label">Chapter 1. </span>\n'
+                      '</h2>\n',
+               }
+
+    # Generate a tag for each and compare the generated html to the answer key
+    for src, xhtml in markups.items():
+        label_man.reset()  # reset labels to avoid raising a DuplicateLabel
+        root = Tag(name='root', content=src, attributes='', context=context)
+        heading = root.content
+        assert heading.xhtml == xhtml
+        assert is_xml(heading.xhtml)
+
+
+def test_heading_newline_preservation_xhtml(doc, is_xml):
+    """Test heading labels and the preservation of newlines around the tag
+    for xhtml targets."""
+
+    # Get the label manager and context from the document
+    label_man = doc.context['label_manager']
+    context = doc.context
+
+    # 1. Test without surrounding newlines
+    src = '@chapter{Chapter 1}'
+    root = Tag(name='root', content=src, attributes='', context=context)
+    assert root.xhtml == ('<span class="root">\n'
+                          '  <h2 id="ch:test-dm-chapter-1">\n'
+                          '    <span class="label">Chapter 1. Chapter 1</span>\n'
+                          '  </h2>\n'
+                          '</span>\n')
+    assert is_xml(root.xhtml)
+
+    # 2. Test with surrounding newlines
+    label_man.reset()  # reset labels to avoid raising a DuplicateLabel
+    src = '\n@chapter{Chapter 1}\n'
+    root = Tag(name='root', content=src, attributes='', context=context)
+    assert root.xhtml == ('<span class="root">\n'
+                          '<h2 id="ch:test-dm-chapter-1">'
+                          '<span class="label">Chapter 1. Chapter 1</span>'
+                          '</h2>\n'
+                          '</span>\n')
+    assert is_xml(root.xhtml)
+
+    # 3. Test with double newlines, used for paragraphs
+    label_man.reset()  # reset labels to avoid raising a DuplicateLabel
+    src = '\n\n@chapter{Chapter 1}\n\n'
+    root = Tag(name='root', content=src, attributes='', context=context)
+    assert root.xhtml == ('<span class="root">\n\n'
+                          '<h2 id="ch:test-dm-chapter-1">'
+                          '<span class="label">Chapter 1. Chapter 1</span>'
+                          '</h2>\n\n'
+                          '</span>\n')
+    assert is_xml(root.xhtml)

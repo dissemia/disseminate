@@ -1,5 +1,5 @@
 """
-A CompositeBuilder for txt files.
+A TargetBuilder for txt files.
 """
 from .target_builder import TargetBuilder
 

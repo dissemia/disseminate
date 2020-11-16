@@ -11,7 +11,6 @@ article {
   font-family: Palatino, serif;
   line-height: 22pt;
   color: #444444;
-  width: 70%;
 }
 
 h1, h2, h3, h4, h5 {
@@ -122,6 +121,30 @@ td {
   border-radius: 0 0 4px 4px;
 }
 
+.w100 {
+  width: 100%;
+}
+
+.w75 {
+  width: 75%;
+}
+
+.w50 {
+  width: 50%;
+}
+
+.w25 {
+  width: 25%;
+}
+
+.w66 {
+  width: 66%;
+}
+
+.w33 {
+  width: 33%;
+}
+
 /* span elements */
 
 .supsub {
@@ -135,7 +158,7 @@ td {
 
 /* TOC */
 
-article ul.toc {
+article ol.toc {
   border-width: 1px 0 1px 0;
   border-style: solid;
   border-color: #dddddd;
@@ -146,66 +169,58 @@ article ul.toc {
   font-family: sans-serif;
 }
 
-ul.toc ul {
+ol.toc ol {
   margin-left: 0;
   padding-left: 0;
 }
 
-ul.toc li.toc-level-0 { /* title */
+ol.toc li.toc-level-0 { /* title */
   font-size: 120%;
   font-weight: 400;
   padding: 0.5em 0 0.5em 0.5em;
   list-style: none;
 }
 
-ul.toc li.toc-level-1 { /* part */
+ol.toc li.toc-level-1 { /* part */
   padding: 0.5em 0 0.5em 1em;
   font-weight: 400;
   list-style: none;
 }
 
-ul.toc li.toc-level-2 { /* chapter */
+ol.toc li.toc-level-2 { /* chapter */
   padding: 0.5em 0 0.0em 1em;
   font-weight: 400;
   font-size: 95%;
   list-style: none;
 }
 
-ul.toc li.toc-level-3 { /* section */
+ol.toc li.toc-level-3 { /* section */
   padding-left: 2em;
   font-size: 90%;
   list-style: none;
 }
 
-ul.toc li.toc-level-4 { /* subsection */
+ol.toc li.toc-level-4 { /* subsection */
   padding-left: 3em;
   font-size: 90%;
   list-style: none;
 }
 
-ul.toc li.toc-level-5 { /* subsubsection */
+ol.toc li.toc-level-5 { /* subsubsection */
   padding-left: 4em;
   font-size: 90%;
   list-style: none;
 }
 
-ul.toc li.toc-level-6 { /* paragraph */
+ol.toc li.toc-level-6 { /* paragraph */
   padding-left: 5em;
   font-size: 90%;
   list-style: none;
 }
 
-/* Document utils */
-
-ul.docutils {
-  float: right;
-  list-style: none;
-  margin: 0.25em;
-}
-
 /* author listing */
 
-div.authors {
+span.authors {
   font-family: sans-serif;
   text-align: right;
   font-weight: 400;
@@ -213,22 +228,20 @@ div.authors {
 }
 
 /* sidenotes, marginfigs and margin tables and caption */
-figure.marginfig, span.sidenote, figure.figure figcaption, table.table caption, table.margintable {
-    clear: right;
-    float: right;
-    width: 40%;
-    margin-right: -43%;
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-    vertical-align: top;
-    position: relative;
-    font-size: 11pt;
-    line-height: 14pt;
-    padding: 0.2rem;
-    border-top: 1px solid #eee;
-    border-bottom: 1px solid #eee;
-    background-color: #fcfcfc;
-    overflow-x: hidden;
+figure.marginfig, span.sidenote, figure.figure .caption, table.table caption, table.margintable {
+  overflow-x: hidden;
+  clear: right;
+  float: right;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  vertical-align: top;
+  position: relative;
+  font-size: 11pt;
+  line-height: 14pt;
+  padding: 0.2rem;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  background-color: #fcfcfc;
 }
 
 /* Tables */
@@ -260,7 +273,7 @@ table tbody {
 figure.fullfigure {
   padding: 0.5rem 0;
   display: flex;
-  width: 145%;
+  width: 100%;
   border-top: 1px solid #eee;
   border-bottom: 1px solid #eee;
 }
@@ -292,6 +305,11 @@ caption, figcaption {
   margin-top: 1em;
 }
 
+figure.figure .caption {
+  border: 0;
+  background: transparent;
+}
+
 span.panel {
   font-size: 10pt;
   line-height: 12pt;
@@ -306,7 +324,12 @@ span.label::after {
 }
 
 img.eq {
+  max-width: 100%; /* scale down image if larger than container */
   padding-bottom: 4px;
+}
+
+span.panel {
+  display: table-cell;
 }
 
 /* Special elements */

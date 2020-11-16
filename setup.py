@@ -57,8 +57,6 @@ setup(
     author='Justin L Lorieau',
     classifiers=[  
         'Development Status :: 3 - Alpha',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
@@ -72,7 +70,6 @@ setup(
         'regex>=2018.11.22',         # No license, replaced with re
         'jinja2>=2.11,<3.0',         # 3-clause BSD
         'lxml>=4.3.0',               # BSD license
-        'blinker>=1.4',              # MIT license
         'python-slugify>=2.0.1',     # MIT license
         'pdfCropMargins>=0.1.4',     # GPL v3
         # The following are needed for the CLI
@@ -86,9 +83,10 @@ setup(
         'pathvalidate>=2.2',
         ],
     extras_require={  # Optional
-        'dev': ['sphinx', 'sphinx_rtd_theme', 'numpydoc',
+        'dev': ['sphinx', 'sphinx_rtd_theme', 'sphinx-click', 'numpydoc',
                 'asv'],
-        'test': ['pytest', 'pytest-sanic>1.6', 'tox', 'coverage'],
+        'test': ['pytest', 'pytest-sanic>1.6', 'tox', 'coverage',
+                 'epubcheck>=0.4'],
         'termcolor': ['termcolor']  # MIT license
     },
     scripts=['scripts/dm', ],
@@ -96,5 +94,8 @@ setup(
         'console_scripts': [
             'dm = disseminate.cli:main'
           ],
+        'pygments.lexers': [
+            'dmlexer = disseminate.utils.pygments.dm:DmLexer'
+        ]
     }
 )

@@ -4,11 +4,17 @@ The document context
 import weakref
 from copy import deepcopy
 
+from .exceptions import TargetNotFound
 from ..context import BaseContext
 from ..label_manager import LabelManager
+from ..signals.signals import signal
 from ..paths import SourcePath, TargetPath
 from ..utils.string import str_to_list
+from ..utils.list import flatten
 from .. import settings
+
+
+find_builder = signal('find_builder')
 
 
 class DocumentContext(BaseContext):
@@ -165,7 +171,6 @@ class DocumentContext(BaseContext):
         if self['project_root'] not in paths:
             paths.append(self['project_root'])
 
-    # TODO: Convert these entries to weakattr from utils.classes
     @property
     def document(self):
         """The document that owns this context"""
@@ -242,6 +247,70 @@ class DocumentContext(BaseContext):
         # Add trailing period to extensions in target_list, and make sure
         # there are no duplicates
         return {t if t.startswith('.') else '.' + t for t in target_list}
+
+    def target_filepath(self, target):
+        """Return the target filepath for this document's target, given
+        the target.
+
+        The target filepaths are retrieved from the builders. Accordingly,
+        these should already have been loaded in the context. Additionally,
+        this function may return target_filepaths for targets not listed by
+        the 'targets' property. This is because these targets may be
+        intermediary targets stored in a cache directory.
+
+        Parameters
+        ----------
+        target : str
+            The target to search
+
+        Returns
+        -------
+        target_filepath : :obj:`.paths.TargetPath`
+            The filepath for the target file of the document.
+
+        Raises
+        ------
+        TargetNotFound
+            Raised if a target was requested but not found.
+        """
+        builders = find_builder.emit(context=self, target=target)
+
+        # convert from list of lists to flat list
+        builders = list(flatten(builders))
+
+        if len(builders) == 0:
+            msg = ("A target_filepath could not be found for the '{}' "
+                   "document target")
+            raise TargetNotFound(msg.format(target))
+        builder = builders[0]
+        return builder.outfilepath
+
+    def target_filepaths(self):
+        """Return all target filepaths for this document's targets
+
+        The target filepaths are retrieved from the builders. Accordingly,
+        these should already have been loaded in the context. Additionally,
+        this function may return target_filepaths for targets not listed by
+        the 'targets' property. This is because these targets may be
+        intermediary targets stored in a cache directory.
+
+        Returns
+        -------
+        targets : Dict[str, :obj:`.paths.TargetPath`]
+            The targets dict. The strings are the targets and the values
+            are the corresponding target_filepaths.
+        """
+        builders = find_builder.emit(context=self)
+
+        # convert from list of lists to flat list
+        builders = list(flatten(builders))
+
+        # get the targetfilepaths
+        target_filepaths = [builder.outfilepath for builder in builders]
+
+        # Formulate the targets dict. Key names should include a period.
+        # ex: '.pdf'
+        return {p.suffix: p for p in target_filepaths}
 
     @property
     def includes(self):

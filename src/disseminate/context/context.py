@@ -13,6 +13,7 @@ from .. import settings
 
 
 class ContextException(Exception):
+    """An exception raised when processing a BaseContext"""
     pass
 
 

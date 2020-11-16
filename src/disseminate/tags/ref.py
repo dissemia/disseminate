@@ -6,7 +6,7 @@ from .exceptions import assert_content_str
 from .utils import content_to_str, format_content
 from ..label_manager.types import DocumentLabel
 from ..signals import signal
-from ..formats import html_tag, tex_cmd
+from ..formats import xhtml_tag, tex_cmd
 
 
 ref_label_dependencies = signal("ref_label_dependencies")
@@ -67,10 +67,10 @@ class Ref(Tag):
     doc_id = None
     label_id = None
 
-    def __init__(self, name, content, attributes, context):
+    def __init__(self, name, content, *args, **kwargs):
         assert_content_str(content)
 
-        super(Ref, self).__init__(name, content, attributes, context)
+        super(Ref, self).__init__(name, content, *args, **kwargs)
 
         # Set the label_id and doc_id
         self.label_id = self.content.strip()
@@ -193,15 +193,7 @@ class Ref(Tag):
 
         return link + '#' + label.id if include_anchor else link
 
-    @property
-    def mtime(self):
-        """The last modification time of the document that owns the label
-        referenced by this tag."""
-        # Get the mtime for the label
-        label = self.label
-        return label.mtime if label is not None else None
-
-    def default_fmt(self, content=None, attributes=None, cache=None):
+    def default_fmt(self, content=None, attributes=None, cache=None, **kwargs):
         """Convert the tag to a text string.
 
         Parameters
@@ -242,8 +234,10 @@ class Ref(Tag):
             return ''
 
     def tex_fmt(self, content=None, attributes=None, mathmode=False,
-                cache=None, level=1):
+                cache=None, level=1, **kwargs):
         """Format the tag in LaTeX format.
+
+        .. note:: This function renders tex links to compiled pdf documents
 
         Parameters
         ----------
@@ -308,8 +302,9 @@ class Ref(Tag):
         else:
             return ''
 
-    def html_fmt(self, content=None, attributes=None, cache=None, level=1):
-        """Convert the tag to an html string or html element.
+    def html_fmt(self, content=None, attributes=None, cache=None,
+                 format_func='html_fmt', method='html', level=1, **kwargs):
+        """Convert the tag to an (x)html string or (x)html element.
 
         Parameters
         ----------
@@ -326,6 +321,11 @@ class Ref(Tag):
             - 'label': :obj:`.types.Label`
             - 'documents_by_id': Dict[str, :obj:`document.Document`]
             - 'format_str': str
+        format_func : Optional[str]
+            The tag format function to use in rendering the reference tag.
+            (ex: 'html_fmt' or 'xhtml_fmt')
+        method : Optional[str]
+            The rendering method for the string. ex: 'html' or 'xml'
         level : Optional[int]
             The level of the tag.
 
@@ -342,16 +342,17 @@ class Ref(Tag):
         if all(i is not None for i in (label_manager, label, context)):
 
             # Retrieve the format string for the reference
+            # Use the 'html' format_str for html and xhtml
             keys = ('ref', *label.kind)
             format_str = label_manager.format_string(label.id, *keys,
                                                      target='.html')
 
             # substitute the link, process the tags and format the contents
-            # for html
+            # for html (html_fmt) or xhtml (xhtml_fmt)
             processed_tag = Tag(name='ref', content=format_str, attributes='',
                                 context=context)
             content = format_content(content=processed_tag.content,
-                                     format_func='html_fmt', level=level + 1)
+                                     format_func=format_func, level=level + 1)
 
             attrs = self.attributes.copy() if attributes is None else attributes
             attrs['class'] = 'ref'
@@ -360,10 +361,12 @@ class Ref(Tag):
             # for a DocumentLabel. DocumentLabels should just point to the
             # file itself.
             include_anchor = not isinstance(label, DocumentLabel)
-            attrs['href'] = self.url(cache=cache, include_anchor=include_anchor)
+            attrs['href'] = self.url(target=method, cache=cache,
+                                     include_anchor=include_anchor)
 
             # wrap content in 'a' tag
-            return html_tag('a', attributes=attrs, formatted_content=content,
-                            level=level, pretty_print=False)  # no line breaks
+            return xhtml_tag('a', attributes=attrs, formatted_content=content,
+                             level=level, method=method,
+                             pretty_print=False)  # no line breaks
         else:
             return ''

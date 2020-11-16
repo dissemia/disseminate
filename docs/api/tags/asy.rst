@@ -1,5 +1,5 @@
-Asy Tags
---------
+Asy
+---
 
 .. automodule:: disseminate.tags.asy
     :members: Asy

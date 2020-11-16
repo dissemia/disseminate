@@ -39,4 +39,4 @@ def build(in_path, out_dir=None, progress=False):
 
             if progress:  # Print progress, if enabled
                 progress_table.print_row(builders)
-        print('root_builder.status:', root_builder.status)
+        print('Build:', root_builder.status)

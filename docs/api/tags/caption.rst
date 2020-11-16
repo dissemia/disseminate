@@ -1,5 +1,5 @@
-Caption Tags
-------------
+Caption
+-------
 
 .. automodule:: disseminate.tags.caption
     :members: Caption, CaptionError

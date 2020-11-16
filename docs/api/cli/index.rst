@@ -6,6 +6,7 @@ CLI
 .. toctree::
    :maxdepth: 2
 
-   main
-   setup
+   cmds
+   setup/checkers
+   setup/signals
    term

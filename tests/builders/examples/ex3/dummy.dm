@@ -1,5 +1,5 @@
 ---
-targets: html, tex, pdf, txt
+targets: html, tex, pdf, txt, epub
 ---
 @i{This is my example}
 

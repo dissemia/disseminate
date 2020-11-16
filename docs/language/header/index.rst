@@ -1,15 +1,15 @@
+.. _header:
+
 Header
 ======
 
-Headers contain useful meta information on the document like the title
-and author. Meta information in disseminate is stored in a context,
-and these modify the behavior of tags and the rendering of documents.
+Headers contain useful meta information on the document and sub-documents,
+which may impact how the document, sub-documents and tags are rendered.
 
 Headers are optionally present at the start of a disseminate
-document. Headers are enclosed by 3 or more hyphens (’``-``‘). The
-following is an example of the header for this page.
+document. Headers are enclosed by 3 or more hyphens (’``-``‘).
 
-::
+.. code-block:: dm
 
    ---
    title: Disseminate Headers
@@ -31,6 +31,8 @@ Entries
 
 Basic Entries
 ~~~~~~~~~~~~~
+
+.. rst-class:: dl-parameter
 
 ``title``
    The project's title
@@ -69,10 +71,14 @@ Basic Entries
          author: Justin L Lorieau
 
 ``targets``
-   The target formats to render the document
+   The document target formats
 
    .. index::
       single: header; targets
+
+   :values:
+
+       ``html``, ``tex``, ``pdf``, ``epub``, ``txt``
 
    :examples:
 
@@ -86,12 +92,13 @@ Basic Entries
    .. index::
       single: header; template
 
-   :notes:
+   :values:
 
-      Templates are written in Jinja2 format. A template file should
-      be available for each of the desired targets. ex:
-      ``component.html`` for ``.html`` targets and ``component.tex``
-      for ``.tex`` targets.
+        - ``articles/basic``
+        - ``books/novel``
+        - ``books/tufte``
+        - ``default``
+        - ``reports/basic``
       
    :examples:
 
@@ -109,6 +116,22 @@ Basic Entries
 
 Render Options
 ~~~~~~~~~~~~~~
+
+.. rst-class:: dl-parameter
+
+``doc_id``
+   The unique document identifier, which may be used to reference labels in
+   other documents.
+
+   .. index::
+      single: header; doc_id
+
+   :examples:
+
+      .. code-block:: none
+
+          doc_id: chapters-chap1-dm
+
 
 ``label_fmts``
    The formats for labels in rendering the document.
@@ -129,7 +152,7 @@ Render Options
 
 
 ``label_resets``
-   Specify which label kinds reset the counters of other label kind counter.
+   Specify which label kinds reset the counters f9r other label kinds.
 
    .. index:: single: header; label_resets
 
@@ -198,10 +221,12 @@ Render Options
 Includes
 --------
 
-Sub-documents like parts of books, chapters or sections can be
-included with an include statement in the header. Sub-documents can be
+Sub-documents can be included in the header. Sub-documents may represent
+parts of books, chapters or sections. Sub-documents can be furthermore
 nested to form projects with multiple sub-levels. The include
 statement lists the sub-documents directly subordinate to a document.
+
+.. rst-class:: dl-parameter
 
 ``include``
    Sub-documents to include in the document tree
@@ -238,8 +263,9 @@ A **parent document** is the document that was included by a document.
 
 Inheritance
 -----------
-Header entries from parent documents are available to child documents. If child
-documents use the same entries, then these values will be overwritten.
+Most header entries from parent documents are available to child documents. If
+child documents specify their own version of these entries, then these values
+will be overwritten.
 
 For example, a parent document might specify a ``title`` entry in the header.
 If the parent document includes a child document, then the ``title`` entry will
@@ -253,8 +279,6 @@ the child document headers.
 From a technical perspective, header entries are loaded into the context for
 a document. The context is a Python dictionary that holds the variables needed
 to render a document.
-
-
 
 Additional Notes
 ----------------

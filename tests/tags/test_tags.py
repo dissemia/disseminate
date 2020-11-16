@@ -279,7 +279,6 @@ def test_flatten_tag(context_cls):
     assert flattened_tags[7].name == 'i'
 
 
-
 # Test for the default target
 
 def test_tag_default(context_cls):
@@ -405,6 +404,58 @@ def test_tag_html_nested(context_cls):
     assert root.html == ('<span class="root">'
                          '<p>paragraph</p>'
                          '</span>\n')
+
+    # Test an example with an empty tag
+    p = P(name='p', content='', attributes=None, context=context)
+    root = Tag(name='root', content=p, attributes=None, context=context)
+    assert root.html == ('<span class="root">'
+                         '<p></p>'
+                         '</span>\n')
+
+
+# Tests for xhtml targets
+
+def test_tag_xhtml(context_cls, is_xml):
+    """Test the conversion of tags to xhtml strings."""
+
+    context = context_cls()
+
+    # 1. Generate a simple root tag with a string as content
+    root = Tag(name='root', content='base string', attributes=None,
+               context=context)
+    assert root.html == '<span class="root">base string</span>\n'
+
+    # Generate a nested root tag with sub-tags
+    b = Tag(name='b', content='bolded', attributes=None, context=context)
+    b.html_name = 'strong'
+    elements = ["my first", b, "string"]
+    root = Tag(name='root', content=elements, attributes=None, context=context)
+    assert root.xhtml == ('<span class="root">'
+                          'my first<strong>bolded</strong>string'
+                          '</span>\n')
+    assert is_xml(root.xhtml)
+
+
+def test_tag_xhtml_nested(context_cls, is_xml):
+    """Nest nested tags with xhtml"""
+
+    context = context_cls()
+
+    # Test a basic string without additional tags
+    p = P(name='p', content='paragraph', attributes=None, context=context)
+    root = Tag(name='root', content=p, attributes=None, context=context)
+    assert root.xhtml == ('<span class="root">\n'
+                          '  <p>paragraph</p>\n'
+                          '</span>\n')
+    assert is_xml(root.xhtml)
+
+    # Test an example with an empty tag
+    p = P(name='p', content='', attributes=None, context=context)
+    root = Tag(name='root', content=p, attributes=None, context=context)
+    assert root.xhtml == ('<span class="root">\n'
+                          '  <p/>\n'
+                          '</span>\n')
+    assert is_xml(root.xhtml)
 
 
 # Tests for tex targets

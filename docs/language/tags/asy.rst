@@ -1,3 +1,6 @@
+.. role:: dm(code)
+   :language: dm
+
 Asymptote Diagrams
 ==================
 
@@ -6,7 +9,9 @@ Tags to insert and format `asymptote
 
 .. _tags-asy:
 
-``@asy{...}``
+.. rst-class:: dl-parameter
+
+:dm:`@asy{...}`
    Insert an asymptote image
 
    .. index::
@@ -14,7 +19,8 @@ Tags to insert and format `asymptote
 
    :contents:
 
-      The figure in Asymptote syntax.
+      The figure in Asymptote syntax or the location of an asymptote source
+      file.
 
    :attributes:
 
@@ -30,38 +36,9 @@ Tags to insert and format `asymptote
       
    :examples:
 
-      ::
+      .. code-block:: dm
 
          @asy[scale=2.0]{
               size(200);                                                                                                                                             
               draw(unitcircle);
               }
-
-Dependencies
-------------
-
-``html`` targets
-~~~~~~~~~~~~~~~~
-
-For ``html`` targets, the following software dependencies are needed:
-
-+--------------+----------------------------------------------------+
-| Software     | Purpose                                            |
-+==============+====================================================+
-| asy          | renders the asymptote diagrame to a ``.pdf`` file  |
-+--------------+----------------------------------------------------+
-| pdf2svg      | converts the ``.pdf`` file to an ``.svg`` file     |
-+--------------+----------------------------------------------------+
-| rsvg-convert | scales and crops the ``.svg`` file                 |
-+--------------+----------------------------------------------------+
-
-``pdf`` targets
-~~~~~~~~~~~~~~~
-
-For ``pdf`` targets, the following software dependencies are needed:
-
-+--------------+----------------------------------------------------+
-| Software     | Purpose                                            |
-+==============+====================================================+
-| asy          | renders the asymptote diagrame to a ``.pdf`` file  |
-+--------------+----------------------------------------------------+

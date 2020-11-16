@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<package version="3.0"
+         xml:lang="en"
+         xmlns="http://www.idpf.org/2007/opf"
+         unique-identifier="pub-id">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <!-- Required Fields -->
+    <dc:identifier id="pub-id">urn:uuid:{{uuid}}</dc:identifier>
+    <dc:title>{{ title }}</dc:title>
+    <dc:language>en</dc:language>
+    <meta property="dcterms:modified">{{ date }}</meta>
+
+    <!-- Optional Fields -->
+    {%- if epub is defined and epub.layout == "fixed" %}
+    <!-- fixed page layout -->
+    <meta property="rendition:layout">pre-paginated</meta>
+    <meta name="fixed-layout" content="true"/>
+    {%- else %}
+    <!-- reflowable page layout (default) -->
+    <meta property="rendition:layout">reflowable</meta>
+    <meta name="fixed-layout" content="false"/>
+    {%- endif %}
+
+    {%- if epub is defined and epub.orientation == "landscape" %}
+    <!-- Fixed in landscape mode -->
+    <meta property="rendition:orientation">landscape</meta>
+    <meta name="orientation-lock" content="landscape"/>
+    {%- elif epub is defined and epub.orientation == "portrait" %}
+    <!-- Fixed in portrait mode -->
+    <meta property="rendition:orientation">portrait</meta>
+    <meta name="orientation-lock" content="portrait"/>
+    {%- else %}
+    <!-- Allow page/device rotation (default) -->
+    <meta property="rendition:orientation">auto</meta>
+    {%- endif %}
+
+    {%- if epub is defined and epub.spread is defined %}
+    <!-- Specify the document spread: none, landscape, portrait, both, auto -->
+    <meta property="rendition:spread">{{ epub.spread }}</meta>
+    {% endif %}
+
+    {%- if epub is defined and epub.width is defined and epub.height is defined %}
+    <!-- Custom design resolution for fixed layout: {{ epub.width }}x{{ epub.height }} -->
+    <meta name="viewport" content="width={{ epub.width }}, {{ epub.height }}" />
+    <meta name="original-resolution" content="{{ epub.width }}x{{ epub.height }}"/>
+    {% endif %}
+  </metadata>
+  <manifest>
+    <!-- Main content files in ebook -->
+    {%- for file in xhtml_files %}
+    <item href="{{ file.subpath }}"
+          id="{{ file.id }}"
+          media-type="application/xhtml+xml"{% if file.is_toc %} properties="nav"{% endif %}/>
+    {%- endfor %}
+    <!-- Media files -->
+    {%- for file in css_files %}
+    <item href="{{ file.subpath }}"
+          id="{{ file.id }}"
+          media-type="text/css"/>
+    {%- endfor %}
+    {%- for file in svg_files %}
+    <item href="{{ file.subpath }}"
+          id="{{ file.id }}"
+          media-type="image/svg+xml"/>
+    {%- endfor %}
+  </manifest>
+  <spine>
+    <!-- The default reading order of elements -->
+    {%- for file in xhtml_files %}
+    <itemref idref="{{ file.id }}"/>
+    {%- endfor %}
+  </spine>
+</package>

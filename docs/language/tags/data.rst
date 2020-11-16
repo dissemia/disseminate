@@ -1,14 +1,19 @@
+.. role:: dm(code)
+   :language: dm
+
 .. _language-tags-data:
 
 Data
 ====
 
-Tags to insert and format data. This tag is used in conjunction with other tags,
-like the ``@table`` tag.
+Tags to insert data. This tag is used in conjunction with other tags, like the
+``@table`` tag.
 
 .. _tags-data:
 
-``@csv{...}``
+.. rst-class:: dl-parameter
+
+:dm:`@csv{...}`
    Include comma-separated value (CSV) data.
 
    .. index::
@@ -24,39 +29,38 @@ like the ``@table`` tag.
 
          The ``csv`` file does not include header labels in the first line.
 
-Examples
---------
+   :examples:
 
-1. The following example loads csv data from a file ``data/class_histogram.csv``
-   into a table.
+       The following example loads csv data from a file
+       ``data/class_histogram.csv`` into a table.
 
-   ::
+       .. code-block:: dm
 
-      @table{
-        @csv{data/class_histogram.csv}
-      }
+          @table{
+            @csv{data/class_histogram.csv}
+          }
 
-2. This example loads csv data directly into a table.
+       This example loads csv data directly into a table.
 
-   ::
+       .. code-block:: dm
 
-      @table{
-        @csv{
-          First Name, Last Name
-          John, Smith
-          Betty, Sue
-          Derek, Johnson
-        }
-      }
+          @table{
+            @csv{
+              First Name, Last Name
+              John, Smith
+              Betty, Sue
+              Derek, Johnson
+            }
+          }
 
-3. This example loads csv data without a header line into a table.
+       This example loads csv data without a header line into a table.
 
-   ::
+       .. code-block:: dm
 
-      @table{
-        @csv[noheader]{
-          John, Smith
-          Betty, Sue
-          Derek, Johnson
-        }
-      }
+          @table{
+            @csv[noheader]{
+              John, Smith
+              Betty, Sue
+              Derek, Johnson
+            }
+          }

@@ -65,7 +65,7 @@ def process_headers(context, **kwargs):
 
     # Now load the template paths and context values
     paths = context['paths']
-    paths[0:0] = template_paths  # insert at top of list w/o creating list
+    paths[0:0] = template_paths  # insert at top of list w/o creating new list
 
     # Copy over entries in the template_context, first, then those from the
     # header_context. Since the header_context contains entries from the headers

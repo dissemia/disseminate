@@ -1,10 +1,15 @@
 """
 Test the PdfBuilder
 """
+import pathlib
 from collections import namedtuple
 
 from disseminate.builders.target_builders.pdf_builder import PdfBuilder
 from disseminate.paths import TargetPath
+
+
+# Paths for examples
+ex3_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex3'
 
 
 def test_pdf_builder_setup_pdf_in_targets(env):
@@ -34,6 +39,7 @@ def test_pdf_builder_setup_pdf_in_targets(env):
     assert not target_pdf_filepath.exists()
     assert len(builder.subbuilders) == 3
 
+    # 1. Check the TexBuilder
     tex_builder = builder.subbuilders[0]
     assert tex_builder.__class__.__name__ == 'TexBuilder'
     assert tex_builder.use_cache
@@ -44,6 +50,7 @@ def test_pdf_builder_setup_pdf_in_targets(env):
     assert tex_builder.parameters == ["build 'TexBuilder'", src_filepath]
     assert tex_builder.outfilepath == target_tex_filepath
 
+    # 2. Check the tex2pdf conversion build
     pdf_builder = builder.subbuilders[1]
     assert pdf_builder.__class__.__name__ in {'Latexmk', 'Pdflatex'}
     assert pdf_builder.use_cache
@@ -51,6 +58,7 @@ def test_pdf_builder_setup_pdf_in_targets(env):
     assert pdf_builder.parameters == [target_tex_filepath]
     assert pdf_builder.outfilepath == target_cache_pdf_filepath
 
+    # 3. Check the copy build to the final pdf directory
     copy_builder = builder.subbuilders[2]
     assert copy_builder.__class__.__name__ == 'Copy'
     assert not copy_builder.use_cache
@@ -285,7 +293,7 @@ def test_pdf_builder_simple_tex_pdf(env):
 def test_pdf_builder_simple_doc(load_example):
     """Test a simple build with the PdfBuilder."""
     # 1. example 1: tests/builders/examples/ex3
-    doc = load_example('tests/builders/examples/ex3/dummy.dm')
+    doc = load_example(ex3_root / 'dummy.dm')
     env = doc.context['environment']
 
     # Setup the builder
@@ -319,7 +327,7 @@ def test_pdf_builder_simple_doc(load_example):
 def test_pdf_builder_simple_doc_build(load_example):
     """Test a build of a simple document with the PdfBuilder."""
     # 1. example 1: tests/builders/examples/ex3
-    doc = load_example('tests/builders/examples/ex3/dummy.dm')
+    doc = load_example(ex3_root / 'dummy.dm')
     target_root = doc.target_root
 
     doc.build()

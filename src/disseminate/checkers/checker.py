@@ -11,14 +11,13 @@ from .exceptions import MissingHandler
 class Checker(All):
     """Check for installed dependencies.
 
-    Handlers
-    --------
-    The check implements checker handlers for different categories of
-    dependencies (``check_`` methods).
+    .. note::
+        The check implements checker handlers for different categories of
+        dependencies (``check_`` methods).
 
-    For example, a dependencies listing with a category 'executables' will run
-    the :meth:`check_executables` method and a listing with a category of
-    'packages' will run the :meth:`check_packages` method.
+        For example, a dependencies listing with a category 'executables' will
+        run the :meth:`check_executables` method and a listing with a category
+        of 'packages' will run the :meth:`check_packages` method.
     """
 
     @classmethod
@@ -82,11 +81,11 @@ class Checker(All):
     def check_packages(self, packages=None):
         """Check the availability of packages.
 
-            Parameters
-            ----------
-            packages : Union[List[str], Tuple[str]]
-                The list of packages to check for availability.
-            """
+        Parameters
+        ----------
+        packages : Union[List[str], Tuple[str]]
+            The list of packages to check for availability.
+        """
         # Get a listing of 'check_packages' methods
         check_packages_meth_names = [meth for meth in dir(self)
                                      if meth.startswith('check_packages_')]

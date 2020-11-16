@@ -6,7 +6,7 @@ allowed. Tags start with an :code:`@` character, followed by a letter
 and one ore more letters or numbers. Tags may have contents, which are
 contained within curly braces. The following list shows valid tags:
 
-::
+.. code-block:: dm
 
   @example{...}
   @h1{...}
@@ -18,7 +18,7 @@ contained within curly braces. The following list shows valid tags:
 Additionally, tags may contain attributes. Attributes are added with
 square brackets before the contents.
 
-::
+.. code-block:: dm
    
    @h1[id="Intro"]{Introduction}
    @asy[scale=1.0]{dot((20,0));}
@@ -31,7 +31,7 @@ the contents are presented.
 passed to the processor by appending the target's name to the
 attribute:
 
-::
+.. code-block:: dm
    
   @img[width.tex=300 width.html=150 id=figure-1]{...}
 
@@ -46,8 +46,9 @@ stages of publication so that the targets have the final desired appearance.
    preamble
    heading
    text
-   image
-   equation
+   ref
+   img
+   eq
    code
    asy
    figs
@@ -57,4 +58,3 @@ stages of publication so that the targets have the final desired appearance.
    featurebox
    table
    data
-   collection

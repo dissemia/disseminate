@@ -34,25 +34,25 @@ def test_generate_mock_infilepath(env):
     fp = generate_mock_parameters(env=env, parameters=[infilepath, 'test'],
                                   ext='.test')
     assert fp.project_root == env.project_root
-    assert str(fp.subpath) == 'index_7fb2ff614581.test'
+    assert str(fp.subpath) == 'index_bccea4e70d82.test'
 
     # 2.2. Switch the infilepath order and the hash should be the same
     fp = generate_mock_parameters(env=env, parameters=['test', infilepath],
                                   ext='.test')
     assert fp.project_root == env.project_root
-    assert str(fp.subpath) == 'index_7fb2ff614581.test'
+    assert str(fp.subpath) == 'index_bccea4e70d82.test'
 
     # 2.3. Test an example with an infilepath with a subdir
     infilepath = SourcePath(project_root=ex6_root, subpath='sub1/index.dm')
     fp = generate_mock_parameters(env=env, parameters=[infilepath, 'test'],
                                   ext='.test')
     assert fp.project_root == env.project_root
-    assert fp.subpath == pathlib.Path('sub1') / 'index_94f68b3f33f2.test'
+    assert fp.subpath == pathlib.Path('sub1') / 'index_39b849c89733.test'
 
     # 3. Test examples without extensions
     fp = generate_mock_parameters(env=env, parameters=[infilepath, 'test'])
     assert fp.project_root == env.project_root
-    assert fp.subpath == pathlib.Path('sub1') / 'index_94f68b3f33f2'
+    assert fp.subpath == pathlib.Path('sub1') / 'index_39b849c89733'
 
     # 4. Test examples with src_filepath
     # 4.1. Test the default src_filepath for the env. (test.dm)

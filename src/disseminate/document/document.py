@@ -159,25 +159,18 @@ class Document(object):
     def targets(self):
         """The targets dict.
 
+        There may be more targets in this dict than those listed in the
+        context because some targets may be intermediary targets in a cache
+        path.
+
         Returns
         -------
-        targets : Dict[str, :obj:`TargetPath <.paths.TargetPath>`
+        targets : Dict[str, :obj:`TargetPath <.paths.TargetPath>`]
             The targets are a dict with the target extension as keys
             (ex: '.html') and the value is the target_filepath for that target.
             (ex: 'html/index.html') These paths are target paths.
         """
-        # Create the target dict
-        targets = dict()
-
-        # Get the filename relative to the project root (without the ext)
-        subpath = self.src_filepath.subpath
-
-        for target in self.context.targets:
-            target_path = TargetPath(target_root=self.target_root,
-                                     target=target,
-                                     subpath=subpath.with_suffix(target))
-            targets[target] = target_path
-        return targets
+        return self.context.target_filepaths()
 
     def target_filepath(self, target):
         """The filepath for the given target extension.
@@ -193,7 +186,7 @@ class Document(object):
         target_filepath : Union[:obj:`TargetPath <.paths.TargetPath>`, None]
             The target filepath.
         """
-        return self.targets.get(target, None)
+        return self.context.target_filepath(target=target)
 
     @property
     def label_manager(self):

@@ -11,6 +11,14 @@ from disseminate.builders.target_builders.html_builder import HtmlBuilder
 from disseminate.paths import SourcePath, TargetPath
 
 
+# Setup paths for examples
+ex1_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex1'
+ex3_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex3'
+ex4_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex4'
+ex5_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex5'
+ex8_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex8'
+
+
 def test_html_builder_setup_html(env):
     """Test the setup of a HtmlBuilder when 'html' is listed as a target
     in the context['targets']"""
@@ -64,8 +72,7 @@ def test_html_builder_setup_html(env):
     assert builder.status == 'ready'
 
     # 3. Test an add build
-    img_filepath = SourcePath(project_root='tests/builders//examples/ex1',
-                              subpath='sample.pdf')
+    img_filepath = SourcePath(project_root=ex1_root, subpath='sample.pdf')
     target_filepath = TargetPath(target_root=target_root,
                                  target='html', subpath='media/sample.svg')
     pdf2svg = builder.add_build(parameters=img_filepath)
@@ -109,8 +116,7 @@ def test_html_builder_setup(env):
     assert builder.status == 'ready'
 
     # 2. Test an add build
-    img_filepath = SourcePath(project_root='tests/builders//examples/ex1',
-                              subpath='sample.pdf')
+    img_filepath = SourcePath(project_root=ex1_root, subpath='sample.pdf')
     target_filepath = TargetPath(target_root=env.cache_path,
                                  target='html', subpath='media/sample.svg')
     pdf2svg = builder.add_build(parameters=img_filepath)
@@ -162,7 +168,7 @@ def test_html_builder_simple(env):
 def test_html_builder_simple_doc(load_example):
     """Test a simple build with the HtmlBuilder and a simple document."""
     # 1. example 1: tests/builders/examples/example3
-    doc = load_example('tests/builders/examples/ex3/dummy.dm')
+    doc = load_example(ex3_root / 'dummy.dm')
     env = doc.context['environment']
     target_root = doc.context['target_root']
 
@@ -180,7 +186,7 @@ def test_html_builder_simple_doc(load_example):
     assert doc.targets['.html'].exists()
 
     # Check the answer key
-    key = pathlib.Path('tests/builders/examples/ex3/dummy.html')
+    key = pathlib.Path(ex3_root / 'dummy.html')
     assert doc.targets['.html'].read_text() == key.read_text()
 
     # Check the copied files
@@ -199,7 +205,7 @@ def test_html_builder_simple_doc(load_example):
 def test_html_builder_simple_doc_build(load_example):
     """Test a build for a simple document."""
     # 1. example 1: tests/builders/examples/example3
-    doc = load_example('tests/builders/examples/ex3/dummy.dm')
+    doc = load_example(ex3_root / 'dummy.dm')
     target_root = doc.context['target_root']
 
     doc.build()
@@ -265,7 +271,7 @@ def test_html_builder_inherited_doc(load_example):
     """Test a build with the HtmlBuilder using an inherited template and a
     simple doc."""
     # 1. example 1: tests/builders/examples/ex4
-    doc = load_example('tests/builders/examples/ex4/dummy.dm')
+    doc = load_example(ex4_root / 'dummy.dm')
     env = doc.context['environment']
     target_root = doc.context['target_root']
 
@@ -286,7 +292,8 @@ def test_html_builder_inherited_doc(load_example):
     assert doc.targets['.html'].exists()
 
     # Check the answer key
-    key = pathlib.Path('tests/builders/examples/ex4/dummy.html')
+    key = ex4_root / 'dummy.html'
+    print(doc.targets['.html'])
     assert doc.targets['.html'].read_text() == key.read_text()
 
     # Check the copied files
@@ -321,7 +328,7 @@ def test_html_builder_add_build_pdf2svg(load_example, svg_dims):
     #             └── images
     #                 └── NMR
     #                     └── hsqc_bw.pdf
-    doc = load_example('tests/builders/examples/ex5/src/index.dm')
+    doc = load_example(ex5_root / 'src' / 'index.dm')
     env = doc.context['environment']
     target_root = doc.context['target_root']
 
@@ -337,7 +344,7 @@ def test_html_builder_add_build_pdf2svg(load_example, svg_dims):
     build = html_builder.add_build(parameters='media/images/NMR/hsqc_bw.pdf',
                                    context=doc.context)
 
-    sp = SourcePath(project_root='tests/builders/examples/ex5/src',
+    sp = SourcePath(project_root=ex5_root / 'src',
                     subpath='media/images/NMR/hsqc_bw.pdf')
     tp = TargetPath(target_root=target_root, target='html',
                     subpath='media/images/NMR/hsqc_bw.svg')
@@ -375,7 +382,7 @@ def test_html_builder_add_build_pdf2svgcropscale(load_example, svg_dims):
     #             └── images
     #                 └── NMR
     #                     └── hsqc_bw.pdf
-    doc = load_example('tests/builders/examples/ex5/src/index.dm')
+    doc = load_example(ex5_root / 'src' / 'index.dm')
     env = doc.context['environment']
     target_root = doc.context['target_root']
 
@@ -439,7 +446,7 @@ def test_html_builder_add_build_invalid(load_example):
     #    tests/builders/examples/ex8
     #    ├── invalid.pdf
     #    └── main.dm
-    doc = load_example('tests/builders/examples/ex8/main.dm')
+    doc = load_example(ex8_root / 'main.dm')
     env = doc.context['environment']
     target_root = doc.context['target_root']
 

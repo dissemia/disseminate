@@ -7,6 +7,6 @@ Formats
    :maxdepth: 2
    :caption: formats
 
-   html
+   xhtml
    tex
    exceptions
