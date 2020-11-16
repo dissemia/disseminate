@@ -11,6 +11,7 @@ from disseminate.paths import TargetPath
 
 # Paths for examples
 ex3_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex3'
+ex3_srcdir = ex3_root / 'src'
 ex6_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex6'
 
 
@@ -221,7 +222,7 @@ def test_epub_builder_simple1(env):
 def test_epub_builder_simple_doc_build(load_example):
     """Test a build of a simple document with the EPubBuilder."""
     # 1. example 1: tests/builders/examples/ex3
-    doc = load_example(ex3_root / 'dummy.dm')
+    doc = load_example(ex3_srcdir / 'dummy.dm', cp_src=True)
     target_root = doc.target_root
 
     doc.build()

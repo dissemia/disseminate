@@ -2,11 +2,17 @@
 General tests for target builders.
 """
 from collections import namedtuple
+import pathlib
 
 from disseminate.builders.target_builders.html_builder import HtmlBuilder
 from disseminate.builders.target_builders.tex_builder import TexBuilder
 from disseminate.paths import SourcePath, TargetPath
 from disseminate.signals import signal
+
+
+# Paths for examples
+ex3_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex3'
+ex3_srcdir = ex3_root / 'src'
 
 
 def test_target_builder_setup(env):
@@ -38,7 +44,7 @@ def test_target_builder_setup(env):
 def test_target_builder_setup_doc(load_example):
     """Test the setup of the target builders with a Document"""
     # 1. example 1: tests/builders/examples/ex3
-    doc = load_example('tests/builders/examples/ex3/dummy.dm')
+    doc = load_example(ex3_srcdir / 'dummy.dm', cp_src=True)
     env = doc.context['environment']
 
     for targer_builder_cls, ext in ((HtmlBuilder, 'html'),

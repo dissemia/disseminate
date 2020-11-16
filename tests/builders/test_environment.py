@@ -2,12 +2,15 @@
 Tests for the build environment.
 """
 import pathlib
+from shutil import copytree
+
 from disseminate.builders.environment import Environment
 from disseminate.paths import SourcePath, TargetPath
 
 # Paths for examples
 ex_root = pathlib.Path('tests') / 'builders' / 'examples'
 ex3_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex3'
+ex3_srcdir = ex3_root / 'src'
 ex5_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex5'
 ex6_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex6'
 
@@ -18,7 +21,7 @@ def test_environment_setup1(tmpdir):
     # ├── dummy.dm
     # ├── dummy.html
     # └── dummy.tex
-    src_filepath = SourcePath(project_root=ex3_root, subpath='dummy.dm')
+    src_filepath = SourcePath(project_root=ex3_srcdir, subpath='dummy.dm')
     env = Environment(src_filepath=src_filepath, target_root=tmpdir)
     cache_path = env.cache_path
 
@@ -74,36 +77,41 @@ def test_environment_setup1(tmpdir):
     assert epub_builders[0].outfilepath == tp_epub
 
 
-def test_environment_simple_build1(tmpdir):
+def test_environment_simple_build1(load_example):
     """Test an environment simple build from example 1"""
     # 1. tests/builders/examples/ex3/
     # ├── dummy.dm
     # ├── dummy.html
     # └── dummy.tex
-    src_filepath = SourcePath(project_root=ex3_root, subpath='dummy.dm')
-    env = Environment(src_filepath=src_filepath, target_root=tmpdir)
+    # Copy the source file to the tmpdir
+    root_doc = load_example(ex3_srcdir / 'dummy.dm', cp_src=True)
+    target_root = root_doc.target_root
+    env = root_doc.context['environment']
 
     # Try the build and check the generated files
     assert env.build() == 'done'
 
-    tp_html = TargetPath(target_root=tmpdir, target='html',
+    tp_html = TargetPath(target_root=target_root, target='html',
                          subpath='dummy.html')
     print(tp_html)
     tp_key = TargetPath(target_root=ex3_root, subpath='dummy.html')
     assert tp_html.is_file()
     assert tp_html.read_text() == tp_key.read_text()
 
-    tp_txt = TargetPath(target_root=tmpdir, target='txt', subpath='dummy.txt')
+    tp_txt = TargetPath(target_root=target_root, target='txt',
+                        subpath='dummy.txt')
     tp_key = TargetPath(target_root=ex3_root, subpath='dummy.txt')
     assert tp_txt.is_file()
     assert tp_txt.read_text() == tp_key.read_text()
 
-    tp_tex = TargetPath(target_root=tmpdir, target='tex', subpath='dummy.tex')
+    tp_tex = TargetPath(target_root=target_root, target='tex',
+                        subpath='dummy.tex')
     tp_key = TargetPath(target_root=ex3_root, subpath='dummy.tex')
     assert tp_tex.is_file()
     assert tp_tex.read_text() == tp_key.read_text()
 
-    tp_pdf = TargetPath(target_root=tmpdir, target='pdf', subpath='dummy.pdf')
+    tp_pdf = TargetPath(target_root=target_root, target='pdf',
+                        subpath='dummy.pdf')
     assert tp_pdf.is_file()
     assert b'PDF' in tp_pdf.read_bytes()
 
@@ -120,10 +128,10 @@ def test_create_environments():
     for root_path in (ex_root,
                       ex_root / 'ex1' / '..',):
         envs = Environment.create_environments(root_path=root_path)
-        env_ex3 = [env for env in envs if env.project_root.match('ex3')][0]
-        assert env_ex3.target_root.resolve().match(str(ex3_root))
+        env_ex3 = [env for env in envs if 'ex3' in str(env.project_root)][0]
+        assert env_ex3.target_root.resolve().match('ex3')
         src_filepath = env_ex3.root_document.src_filepath
-        assert src_filepath.project_root.resolve().match(str(ex3_root))
+        assert src_filepath.project_root.resolve().match('ex3/src')
         assert str(src_filepath.subpath) == 'dummy.dm'
 
     # 2. Check an example in which the project_root is in a src file (ex5)│  

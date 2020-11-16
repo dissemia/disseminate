@@ -157,7 +157,13 @@ def load_example(env_cls, tmpdir):
     tmpdir = pathlib.Path(tmpdir)
     target_root = TargetPath(target_root=tmpdir)
 
-    def _load_example(example_path):
+    def _load_example(example_path, cp_src=False):
+        if cp_src:
+            src_dir = tmpdir / 'src'
+            src_dir.mkdir()
+            shutil.copy(example_path, src_dir)
+            example_path = src_dir / example_path.name
+
         env = env_cls(example_path, target_root=target_root)
         return env.root_document
     return _load_example

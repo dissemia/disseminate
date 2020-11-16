@@ -3,6 +3,7 @@ Test the HtmlBuilder
 """
 import pathlib
 from collections import namedtuple
+from shutil import copytree
 
 import pytest
 
@@ -14,6 +15,7 @@ from disseminate.paths import SourcePath, TargetPath
 # Setup paths for examples
 ex1_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex1'
 ex3_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex3'
+ex3_srcdir = ex3_root / 'src'
 ex4_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex4'
 ex5_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex5'
 ex8_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex8'
@@ -168,7 +170,7 @@ def test_html_builder_simple(env):
 def test_html_builder_simple_doc(load_example):
     """Test a simple build with the HtmlBuilder and a simple document."""
     # 1. example 1: tests/builders/examples/example3
-    doc = load_example(ex3_root / 'dummy.dm')
+    doc = load_example(ex3_srcdir / 'dummy.dm', cp_src=True)
     env = doc.context['environment']
     target_root = doc.context['target_root']
 
@@ -205,7 +207,7 @@ def test_html_builder_simple_doc(load_example):
 def test_html_builder_simple_doc_build(load_example):
     """Test a build for a simple document."""
     # 1. example 1: tests/builders/examples/example3
-    doc = load_example(ex3_root / 'dummy.dm')
+    doc = load_example(ex3_srcdir / 'dummy.dm')
     target_root = doc.context['target_root']
 
     doc.build()
@@ -271,7 +273,7 @@ def test_html_builder_inherited_doc(load_example):
     """Test a build with the HtmlBuilder using an inherited template and a
     simple doc."""
     # 1. example 1: tests/builders/examples/ex4
-    doc = load_example(ex4_root / 'dummy.dm')
+    doc = load_example(ex4_root / 'dummy.dm', cp_src=True)
     env = doc.context['environment']
     target_root = doc.context['target_root']
 

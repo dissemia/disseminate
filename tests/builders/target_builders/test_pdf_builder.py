@@ -10,6 +10,7 @@ from disseminate.paths import TargetPath
 
 # Paths for examples
 ex3_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex3'
+ex3_srcdir = ex3_root / 'src'
 
 
 def test_pdf_builder_setup_pdf_in_targets(env):
@@ -293,7 +294,7 @@ def test_pdf_builder_simple_tex_pdf(env):
 def test_pdf_builder_simple_doc(load_example):
     """Test a simple build with the PdfBuilder."""
     # 1. example 1: tests/builders/examples/ex3
-    doc = load_example(ex3_root / 'dummy.dm')
+    doc = load_example(ex3_srcdir / 'dummy.dm', cp_src=True)
     env = doc.context['environment']
 
     # Setup the builder
@@ -327,7 +328,7 @@ def test_pdf_builder_simple_doc(load_example):
 def test_pdf_builder_simple_doc_build(load_example):
     """Test a build of a simple document with the PdfBuilder."""
     # 1. example 1: tests/builders/examples/ex3
-    doc = load_example(ex3_root / 'dummy.dm')
+    doc = load_example(ex3_srcdir / 'dummy.dm', cp_src=True)
     target_root = doc.target_root
 
     doc.build()

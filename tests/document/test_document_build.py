@@ -97,7 +97,7 @@ def test_document_template_books_tufte(load_example, cmp_epub):
     # Load the document with equations (@eq) an asymptote (@asy) tags
     # 1. See how a subdocument alone is rendered
     doc = load_example(ex8_root / "src" / "fundamental_solnNMR" /
-                       "inept" / "inept.dm")
+                       "inept" / "inept.dm", cp_src=True)
     target_root = doc.target_root
 
     # Check modifications from the context.txt (books/tufte)
@@ -193,6 +193,4 @@ def test_document_template_books_tufte(load_example, cmp_epub):
     assert epub_key == epub_actual
 
     # Check the epub file itself
-    assert cmp_epub(doc.targets['.epub'],
-                    ex8_root / 'epub' / 'inept.epub')
     assert epubcheck.validate(doc.targets['.epub'])
