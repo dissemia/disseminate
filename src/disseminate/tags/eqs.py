@@ -120,7 +120,7 @@ class Eq(Img):
             # will own this context
             context = self.context.filter(['paths', 'builders'])
             context['eq'] = self
-            context['template'] = 'default/eq'
+            context['template'] = 'default/tex/eq'
             self._target_context[method] = context
 
         context = context or self._target_context[method]

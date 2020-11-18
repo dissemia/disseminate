@@ -84,7 +84,7 @@ default_context = {
     'targets': {'html'},
 
     'paths': [],
-    'template': 'default/template',
+    'template': 'default',
 
     # Entries for navigation
     'prev': '',

@@ -81,7 +81,7 @@ class EpubBuilder(TargetBuilder):
                    for filepath in xhtml_filepaths)
 
     def create_toc_xhtml_builder(self, context=None,
-                                 template_name='default/xhtml/toc'):
+                                 template_name='default/xhtml/toc.xhtml'):
         """Create a toc.xhtml file for the document.
 
         Parameters
