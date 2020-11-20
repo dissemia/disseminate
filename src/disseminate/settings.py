@@ -222,6 +222,10 @@ template_basename = 'template'
 #: default filename for additional context files from templates
 template_context_filename = 'context.txt'
 
+#: default template starter description file
+template_starter_dir = 'starters'
+template_starter_desc_filename = 'description.yaml'
+
 #: Use module templates only. If True, user-specified custom templates, which
 #: may not be safe, can be used.
 module_only = False

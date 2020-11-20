@@ -1,5 +1,5 @@
 """
-Test the 'render' subcommand from the CLI.
+Test the 'build' subcommand from the CLI.
 """
 from pathlib import Path
 

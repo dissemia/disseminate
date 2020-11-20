@@ -1,6 +1,7 @@
 """
 Utilities for manipulating files and paths
 """
+import pathlib
 import os
 import shutil
 import logging
