@@ -3,6 +3,7 @@ The 'init' CLI sub-command.
 """
 import pathlib
 from textwrap import TextWrapper
+from shutil import copy2
 
 import click
 
@@ -22,21 +23,40 @@ def filepath_key(path):
     return num_parts, parts
 
 
-
 @click.command()
 @click.argument('names', nargs=-1)
+@click.option('--out-dir', '-o', required=False,
+              type=click.Path(exists=True, file_okay=False, dir_okay=True),
+              default=None,
+              help="the directory to create the project starter")
 @click.option('--info', is_flag=True, default=False,
               help="Show detailed information on the starter")
-def init(names=None, info=False):
+def init(names=None, out_dir=None, info=False):
     """Initialize a new template project"""
+    starters_dict = generate_starters_dict()
+
     if len(names) == 0:
-        print_starters_list()
+        print_starters_list(starters_dict)
         exit()
 
     name = names[0]
+
+    # Make sure the starter name is listed in the starter dict
+    if name not in starters_dict:
+        msg = "The project starter with name '{}' could not be found."
+        raise click.BadParameter(msg.format(name))
+
+    # Retrieve the starter
+    starter = starters_dict[name]
+
+    # Print the detailed info, if specified
     if info:
-        print_starter_info(name=name)
+        print_starter_info(name=name, starter=starter)
         exit()
+
+    # At this stage, try cloning the project starter
+    clone_starter(name=name, starter=starter, out_dir=out_dir)
+
 
 
 def starter_path_to_name(relpath):
@@ -63,7 +83,15 @@ def starter_path_template_name(relpath):
 
 def generate_starters_dict():
     """Create a dict of available starters with the starter name as the key
-    and the full path for the starter as the value."""
+    and the full path for the starter as the value.
+
+    Returns
+    -------
+    starters_dict : Dict[str, Dict[str,str]]
+        A dict for all available project starters. The key is the starter name
+        (str) and the value is a starter dict with the description of the
+        starter.
+    """
     # Find the configured starter directories in the template dir
     desc_filename = settings.template_starter_desc_filename
     description_filepaths = template_path.glob('**/' + desc_filename)
@@ -123,20 +151,25 @@ def starter_filepaths(starter):
     return filepaths
 
 
-def print_starters_list():
-    """Print a list of available starters"""
-    # Get the starter dict with the starter names
-    starter_dict = generate_starters_dict()
+def print_starters_list(starters_dict):
+    """Print a list of available starters
 
+    Parameters
+    ----------
+    starters_dict : Dict[str, Dict[str,str]]
+        A dict for all available project starters. The key is the starter name
+        (str) and the value is a starter dict with the description of the
+        starter.
+    """
     # Normalize the string length of starter names
-    maxlength = max(len(name) for name in starter_dict.keys())
+    maxlength = max(len(name) for name in starters_dict.keys())
 
     # Setup the textwrapper
     wrap_desc = TextWrapper(subsequent_indent=' ' * (maxlength + 3),
                             width=min(80, term_width()))
 
     # Print the starter names and short descriptions
-    for name, starter in starter_dict.items():
+    for name, starter in starters_dict.items():
         # textwrap the short description
         desc = starter.get('description', '')
         line = wrap_desc.fill("{} - {}".format(name, desc))
@@ -149,19 +182,17 @@ def print_starters_list():
         print(line)
 
 
-def print_starter_info(name):
-    """Print info for the starter with the given name."""
-    # Get the starter dict with the starter names
-    starter_dict = generate_starters_dict()
+def print_starter_info(name, starter):
+    """Print info for the starter with the given name.
 
-    # Make sure the starter name is listed in the starter dict
-    if name not in starter_dict:
-        msg = "The project starter with name '{}' could not be found."
-        raise click.BadParameter(msg.format(name))
-
-    # Retrieve the starter information
-    starter = starter_dict[name]
-
+    Parameters
+    ----------
+    name : str
+        The project starter name.
+    starter : dict
+        A dict with entries on the project starter. These are the entries
+        (values) from the generate_starters_dict function.
+    """
     # Setup the textwrapper
     wrap = TextWrapper(width=min(80, term_width()),
                        initial_indent='  ', subsequent_indent='  ')
@@ -198,3 +229,64 @@ def print_starter_info(name):
         for filepath in sorted(filepaths.keys(), key=filepath_key):
             block += wrap.fill(str(filepath)) + '\n'
         print(block)
+
+
+def is_empty(path):
+    """Returns True if the path is a directory and it's empty."""
+    path = pathlib.Path(path)
+    if not path.is_dir():
+        return False
+    try:
+        next(path.iterdir())
+    except StopIteration:
+        return True
+
+    return False
+
+
+def clone_starter(name, starter, out_dir):
+    """Clone the given project starter to the out_dir.
+
+    Parameters
+    ----------
+    """
+    twidth = min(80, term_width())
+    wrap = TextWrapper(width=twidth)
+    out_dir = (pathlib.Path(out_dir) if out_dir is not None else
+               pathlib.Path('.'))
+
+    # Check to see if the destination directory is empty
+    msg = ("The directory '{}' is not empty; do you still want to initialize "
+           "the project?")
+    msg = wrap.fill(msg.format(out_dir))
+    if not is_empty(out_dir) and not click.confirm(msg):
+        exit()
+
+    # Ok, we're good to clone the project starter
+    filepaths = starter_filepaths(starter)
+    max_filepath_len = max(len(filepath) for filepath in filepaths)
+
+    for filepath in sorted(filepaths, key=filepath_key):
+        full_filepath = filepaths[filepath]
+
+        # Format the printed message
+        src = filepath
+        dest = out_dir / filepath
+
+        start = "Copying {}{}".format(name + '/', src)
+        start += " " * (max_filepath_len - len(str(src)) + 1)
+        end = "-> {}".format(dest)
+
+        # Colorize the text
+        len_str = len(start + end)
+        start = "Copying {}{}".format(click.style(name + '/', fg='cyan'), src)
+        start += " " * (max_filepath_len - len(str(src)) + 1)
+
+        if len_str > twidth:
+            print("\n  ".join((start, end)))
+        else:
+            print("".join((start, end)))
+
+        # Make the destination directory
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        copy2(full_filepath, dest)
