@@ -79,7 +79,7 @@ class XHtml2Epub(SequentialBuilder):
     def parameters(self, value):
         SequentialBuilder.parameters.fset(self, value)
 
-    def create_opf_builder(self, template_name='default/xhtml/content'):
+    def create_opf_builder(self, template_name='default/xhtml/content.opf'):
         """Create a render builder for the content.opf file.
 
         Parameters
@@ -173,8 +173,10 @@ class XHtml2Epub(SequentialBuilder):
                           zipfile.ZIP_STORED)
 
             # Find and add the container.xml file
-            contain_file = find_file(pathlib.Path('META-INF') / 'container.xml',
-                                     context=context)
+            container_filepath = (pathlib.Path('xhtml') / 'META-INF' /
+                                  'container.xml')
+            contain_file = find_file(container_filepath, context=context)
+
             epub.write(contain_file,
                        arcname=root_path / 'META-INF' / 'container.xml')
 

@@ -1,0 +1,29 @@
+{%- extends "default/tex/template.tex" %}
+{%- block class %}
+\documentclass{tufte-book}
+{%- endblock %}
+{%- block marginheader %}
+{%- endblock %}
+{%- block extraheader %}
+%%%
+% Remove labels from captions  
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd{\@caption}
+  {\noindent\csname fnum@#1\endcsname: \ignorespaces}
+  {\noindent}
+  {}{}
+\makeatother
+
+%%%
+% Format chapter headings
+\usepackage[Bjornstrup]{fncychap}
+\setcounter{secnumdepth}{0} % turn on numbering for parts and chapters
+
+{%- endblock %}
+{% block body %}
+\begin{document}
+\mainmatter  % Needed to set chapter/section numbering
+{{ body.tex }}
+\end{document}
+{% endblock %}

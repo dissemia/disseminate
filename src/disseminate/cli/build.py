@@ -15,7 +15,8 @@ from ..builders.environment import Environment
 
 @click.command()
 @file_options
-@click.option('-p', '--progress', is_flag=True, default=False)
+@click.option('-p', '--progress', is_flag=True, default=False,
+              help="Show a progress bar for the build")
 def build(in_path, out_dir=None, progress=False):
     """Build a disseminate project"""
     # Setup the build environment

@@ -1,0 +1,10 @@
+title: Textbook #1
+description:
+  A textbook template that includes chapters (not parts)
+  A textbook is typically a project with multiple documents that may include
+  the following heading types\:
+    - @part
+    - @chapter
+    - @section
+    - @subsection
+    - @subsubsection

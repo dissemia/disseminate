@@ -41,8 +41,9 @@ def test_xhtml_builder_setup(env):
     assert len(render_builder.parameters) > 0
 
     # Check that the correct template was loaded
-    assert render_builder.parameters[0].parent.name == 'default'
-    assert render_builder.parameters[0].name == 'template.xhtml'
+    assert render_builder.parameters[0].project_root.match('templates/default/'
+                                                           'xhtml/')
+    assert render_builder.parameters[0].subpath.match('template.xhtml')
 
     assert builder.parameters == ["build 'XHtmlBuilder'", src_filepath]
     assert builder.outfilepath == target_filepath

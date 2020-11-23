@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+{%- if title %}
+  <title>{{ title }}</title>
+{%- endif %}
+{%- if description %}
+  <meta name="description" content="{{ description }}">
+{%- endif %}
+{%- if author %}
+  <meta name="author" content="{{ author }}">
+{%- endif %}
+{%- if template %}
+  <meta name="template" content="{{ template }}">
+{%- endif %}
+{%- if version %}
+  <meta name="disseminate" content="{{ version }}">
+{%- endif %}
+{%- block css %}
+  <link rel="stylesheet" href="{{ "/media/css/bootstrap.min.css" | rewrite_path }}">
+  <link rel="stylesheet" href="{{ "/media/css/base.css" | rewrite_path }}">
+  <link rel="stylesheet" href="{{ "/media/css/default.css" | rewrite_path }}">
+  <link rel="stylesheet" href="{{ "/media/css/pygments.css" | rewrite_path }}">
+{% endblock %}
+{%- block extra_css %}
+{%- endblock %}
+</head>
+<body>
+  <div class="container">
+    {% include "default/html/menu.html" %}
+    <article>
+      {%- block body %}
+      {{ body.html }}
+      {%- endblock %}
+    </article>
+    <footer>
+      {%- block footer %}
+      {%- endblock %}
+    </footer>
+  </div>
+</body>
+</html>
