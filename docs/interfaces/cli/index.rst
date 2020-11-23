@@ -12,13 +12,39 @@ The disseminate main CLI includes the following help option:
 
 Disseminate includes a series of sub-commands.
 
+init
+----
+
+The ``init`` sub-command initializes and lists template projects to start
+a new project in disseminate.
+
+The ``init`` help presents the following options.
+
+.. include:: ../../cmds/dm_init_help.rst
+
+The list of project starter templates can be listed.
+
+.. include:: ../../cmds/dm_init.rst
+
+The template names are listed in red. Detailed information on a project starter
+template can be listed with the ``--info`` flag. In the following example,
+the detailed information for the ``books/tufte/textbook1`` project starter
+template is listed.
+
+.. include:: ../../cmds/dm_init_info.rst
+
+A new project is initialized with the ``init`` command and the template name.
+
+
+.. include:: ../../cmds/dm_init_template.rst
+
 build
 ------
 
 The ``build`` sub-command compiles the disseminate source to the target
 formats.
 
-The ``build`` sub-command help presents the following optional arguments:
+The ``build`` help presents the following optional arguments:
 
 .. include:: ../../cmds/dm_build_help.rst
 

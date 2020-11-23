@@ -222,6 +222,10 @@ pre.terminal .red {
   color: #ff0000;
 }
 
+pre.terminal .magenta {
+  color: #bb60d5;
+}
+
 /* Other typesetting */
 
 span.paragraph {
