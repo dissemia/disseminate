@@ -90,6 +90,7 @@ def test_cli_init_clone(tmpdir):
     result = runner.invoke(main, ['init', 'books/tufte/textbook1', '-o',
                                   tmpdir])
     assert result.exit_code == 0
+    print(result.output)
     assert all(i in result.output for i in ("The directory",
                                             str(tmpdir.name),
                                             "is not empty"))
