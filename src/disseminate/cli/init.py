@@ -2,25 +2,18 @@
 The 'init' CLI sub-command.
 """
 import pathlib
-from textwrap import TextWrapper
+from textwrap import TextWrapper, dedent
 from shutil import copy2
 
 import click
 
-from .term import term_width
+from .term import term_width, wrap_with_newlines
 from ..utils.string import str_to_dict
 from .. import settings
 
 
 # Get the path for the templates directory
 template_path = pathlib.Path(__file__).parent.parent / 'templates'
-
-
-def filepath_key(path):
-    """A sort key function for paths"""
-    parts = pathlib.Path(path).parts
-    num_parts = len(parts)
-    return num_parts, parts
 
 
 @click.command()
@@ -30,12 +23,15 @@ def filepath_key(path):
               default=None,
               help="the directory to create the project starter")
 @click.option('--info', is_flag=True, default=False,
-              help="Show detailed information on the starter")
-def init(names=None, out_dir=None, info=False):
+              help="Show detailed information on the specified project starter")
+@click.option('-l', '--list', 'show_list',
+              is_flag=True, default=False,
+              help="List the available project starters")
+def init(names=None, out_dir=None, info=False, show_list=False):
     """Initialize a new template project"""
     starters_dict = generate_starters_dict()
 
-    if len(names) == 0:
+    if len(names) == 0 or show_list:
         print_starters_list(starters_dict)
         exit()
 
@@ -58,6 +54,12 @@ def init(names=None, out_dir=None, info=False):
     clone_starter(name=name, starter=starter, out_dir=out_dir)
 
 
+def filepath_key(path):
+    """A sort key function for paths"""
+    parts = pathlib.Path(path).parts
+    num_parts = len(parts)
+    return num_parts, parts
+
 
 def starter_path_to_name(relpath):
     """Convert a starter relative path (relative to template dir) to a
@@ -75,7 +77,7 @@ def starter_path_template_name(relpath):
     """Extract the template name for a given starter path"""
     parts = relpath.parts
 
-    # Find the 'starter' directory position in the parts tuple
+    # Find the 'starters' directory position in the parts tuple
     pos = parts.index(settings.template_starter_dir)
 
     return '/'.join(parts[0:pos])
@@ -161,22 +163,32 @@ def print_starters_list(starters_dict):
         (str) and the value is a starter dict with the description of the
         starter.
     """
+    twidth = min(80, term_width())
+    name_clr = settings.cli_init_starter_name_color
+    heading_clr = settings.cli_init_starter_subheadind_color
+
     # Normalize the string length of starter names
-    maxlength = max(len(name) for name in starters_dict.keys())
+    max_len = max(len(name) for name in starters_dict.keys())
 
     # Setup the textwrapper
-    wrap_desc = TextWrapper(subsequent_indent=' ' * (maxlength + 3),
-                            width=min(80, term_width()))
+    wrap = TextWrapper(subsequent_indent=' ' * (max_len + 3),
+                       width=twidth)
 
     # Print the starter names and short descriptions
-    for name, starter in starters_dict.items():
+    for name in sorted(starters_dict):
+        starter = starters_dict[name]
+
         # textwrap the short description
+        name_len = len(name)
+        start = click.style(name, fg=name_clr)
+        start += " " * (max_len - name_len)  # left justify
+
         desc = starter.get('description', '')
-        line = wrap_desc.fill("{} - {}".format(name, desc))
+        desc = desc.splitlines()[0]  # keep only the first line
+        end = wrap.fill(desc)
 
         # Replace the name with colored text
-        line = (click.style(name.ljust(maxlength), fg='cyan') +
-                line[maxlength:])
+        line = " - ".join((start, end))
 
         # print the starter line to terminal
         print(line)
@@ -193,23 +205,28 @@ def print_starter_info(name, starter):
         A dict with entries on the project starter. These are the entries
         (values) from the generate_starters_dict function.
     """
-    # Setup the textwrapper
+    # Setup the textwrapper and cli settings
+    name_clr = settings.cli_init_starter_name_color
+    heading_clr = settings.cli_init_starter_subheadind_color
+
     wrap = TextWrapper(width=min(80, term_width()),
                        initial_indent='  ', subsequent_indent='  ')
 
     # Print the starter name and title
     if 'title' in starter:
         print("{} ({})".format(click.style(starter['title'], bold=True),
-                               click.style(name, fg='cyan')))
+                               click.style(name, fg=name_clr)))
     else:
-        print(click.style(name, fg='cyan'))
+        print(click.style(name, fg=name_clr))
 
     # Print the description
     if 'description' in starter:
-        desc = "\n"
-        desc += click.style("Description", fg='yellow') + '\n'
-        desc += wrap.fill(starter['description'])
-        print(desc)
+        description = dedent("  " + starter['description'])
+
+        block = "\n"
+        block += click.style("Description", fg=heading_clr) + '\n'
+        block += wrap_with_newlines(description, wrapper=wrap)
+        print(block)
 
     # Print the other fields
     fields = [field for field in starter.keys()
@@ -217,15 +234,15 @@ def print_starter_info(name, starter):
               and not field.startswith('_')]
     for field in fields:
         block = "\n"
-        block += click.style(field.title(), fg='yellow') + '\n'
-        block += wrap.fill(starter[field])
+        block += click.style(field.title(), fg=heading_clr) + '\n'
+        block += wrap_with_newlines(starter[field], wrapper=wrap)
         print(block)
 
     # Print a list of files in the project starter
     filepaths = starter_filepaths(starter)
     if filepaths:
         block = "\n"
-        block += click.style("Files", fg='yellow') + '\n'
+        block += click.style("Files", fg=heading_clr) + '\n'
         for filepath in sorted(filepaths.keys(), key=filepath_key):
             block += wrap.fill(str(filepath)) + '\n'
         print(block)
@@ -251,9 +268,12 @@ def clone_starter(name, starter, out_dir):
     ----------
     """
     twidth = min(80, term_width())
-    wrap = TextWrapper(width=twidth)
+    name_clr = settings.cli_init_starter_name_color
+    heading_clr = settings.cli_init_starter_subheadind_color
     out_dir = (pathlib.Path(out_dir) if out_dir is not None else
                pathlib.Path('.'))
+
+    wrap = TextWrapper(width=twidth)
 
     # Check to see if the destination directory is empty
     msg = ("The directory '{}' is not empty; do you still want to initialize "
@@ -279,7 +299,7 @@ def clone_starter(name, starter, out_dir):
 
         # Colorize the text
         len_str = len(start + end)
-        start = "Copying {}{}".format(click.style(name + '/', fg='cyan'), src)
+        start = "Copying {}{}".format(click.style(name + '/', fg=name_clr), src)
         start += " " * (max_filepath_len - len(str(src)) + 1)
 
         if len_str > twidth:

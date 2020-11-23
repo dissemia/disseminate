@@ -35,6 +35,10 @@ text_extensions = ['.tex', ]
 #: Use terminal colors for the CLI
 colored_term = True
 
+#: Options for the 'init's subcommand
+cli_init_starter_name_color = 'red'
+cli_init_starter_subheadind_color = 'magenta'
+
 #: Convert and Tag Defaults
 #: ------------------------
 
