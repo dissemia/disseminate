@@ -93,7 +93,5 @@ def test_cli_init_clone(tmpdir):
 
     # Strip newlines
     output = " ".join(result.output.splitlines())
-    assert all(i in result.output for i in ("The directory",
-                                            str(tmpdir.name),
-                                            "is not empty"))
-
+    assert all(i in output for i in ("The directory", str(tmpdir.name),
+                                     "is not empty"))
