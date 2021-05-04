@@ -21,9 +21,10 @@ addons:
     - librsvg2-bin
     - asymptote
     update: true
+before_install:
+  - pip install --upgrade pip  # upgrade pip
 install:
 #  - pip install regex jinja2 lxml python-slugify click pdfCropMargins sanic numpy pandas pytest-sanic epubcheck cython
-  - pip install --upgrade pip  # upgrade pip
   - make install
 script:
   - pytest
