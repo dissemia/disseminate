@@ -20,8 +20,9 @@ addons:
     - pdf2svg
     - librsvg2-bin
     - asymptote
+    update: true
 install:
-  - pip install regex jinja2 lxml python-slugify click pdfCropMargins sanic numpy pandas pytest-sanic epubcheck cython
+#  - pip install regex jinja2 lxml python-slugify click pdfCropMargins sanic numpy pandas pytest-sanic epubcheck cython
   - make install
 script:
   - pytest
