@@ -21,7 +21,7 @@ addons:
     - librsvg2-bin
     - asymptote
 install:
-  - pip install regex jinja2 lxml python-slugify click pdfCropMargins sanic pytest-sanic epubcheck cython
+  - pip install regex jinja2 lxml python-slugify click pdfCropMargins sanic pytest-sanic epubcheck # cython
   - make install
 script:
   - pytest
