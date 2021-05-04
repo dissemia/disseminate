@@ -124,9 +124,13 @@ def test_group_paragraphs_with_tags(doc):
     assert group[6][0] == 'Here is a new one with '
     assert group[6][1].name, group[6][1].content == ('b', 'bolded')
     assert group[6][2] == ' text as an example.\n    '
-    assert group[6][3].name == 'marginfig'
 
-    assert group[7][0] == 'My final paragraph.\n'
+    assert group[7].name == 'marginfig'
+    assert group[7].content[0] == '\n      '
+    assert group[7].content[1].name == 'b'
+    assert group[7].content[2] == '\n    '
+
+    assert group[8][0] == 'My final paragraph.\n'
 
     # Test to make sure group_paragraphs can be run more than once
     group2 = group_paragraphs(group)
@@ -225,7 +229,7 @@ def test_assign_paragraph_with_tags(doc):
     assert group[2][1].paragraph_role == 'inline'
     assert group[4].paragraph_role is None  # Heading is not in a paragraph
     assert group[6][1].paragraph_role == 'inline'
-    assert group[6][3].paragraph_role == 'inline'
+    assert group[7].paragraph_role is None  # marginfig is not in a paragraph
 
 
 def test_process_paragraph_tags(doc):
@@ -269,10 +273,11 @@ def test_process_paragraph_tags(doc):
     assert root[6].content[0] == 'Here is a new one with '
     assert root[6].content[1].name == 'b'  # bolded
     assert root[6].content[2] == ' text as an example.\n    '
-    assert root[6].content[3].name == 'marginfig'  # margin tag
 
-    assert isinstance(root[7], P)
-    assert root[7].content == 'My final paragraph.\n'
+    assert root[7].name == 'marginfig'  # margin tag
+
+    assert isinstance(root[8], P)
+    assert root[8].content == 'My final paragraph.\n'
 
 
 def test_process_paragraph_tags_leading_spaces(doc):
@@ -402,9 +407,10 @@ def test_process_paragraphs_in_context(doc):
     assert tag[6].content[0] == 'Here is a new one with '
     assert tag[6].content[1].name == 'b'  # bolded
     assert tag[6].content[2] == ' text as an example.\n    '
-    assert tag[6].content[3].name == 'marginfig'  # margin tag
 
-    assert isinstance(tag[7], P)
-    assert tag[7].content == 'My final paragraph.\n'
+    assert tag[7].name == 'marginfig'  # margin tag
+
+    assert isinstance(tag[8], P)
+    assert tag[8].content == 'My final paragraph.\n'
     
 

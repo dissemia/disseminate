@@ -8,9 +8,9 @@ Utilities
    :caption: Utils
 
    classes
-   file
-   string
    dict
+   file
    list
-   types
+   string
    tests
+   types

@@ -1,7 +1,7 @@
 """
 A scanner object to find implicit dependencies.
 """
-from ...paths import SourcePath
+from ...paths import SourcePath, TargetPath
 from ...utils.classes import all_subclasses
 
 
@@ -65,9 +65,8 @@ class Scanner(object):
 
         # Parse each filepath
         for parameter in parameters:
-            if isinstance(parameter, SourcePath):
-                pass
-            else:
+            if (not isinstance(parameter, SourcePath) and
+               not isinstance(parameter, TargetPath)):
                 continue
 
             # Make sure this scanner can deal with this type of infilepath
@@ -83,28 +82,35 @@ class Scanner(object):
                                                     raise_error=raise_error)
                     continue
 
-            # Parse the infilepath
+            # Parse the infilepath, if it exists
+            if not parameter.is_file():
+                continue
             stubs = cls.scan_function(parameter.read_text())
 
             # Find the new, valid infilepaths. First, parse the source
             # infilepath.
-            project_root = parameter.project_root
+            if getattr(parameter, 'project_root', None) is not None:
+                root = parameter.project_root
+            if getattr(parameter, 'target_root', None) is not None:
+                root = parameter.target_root
+            if getattr(parameter, 'target', None) is not None:
+                root = root / parameter.target
             subpath = parameter.subpath.parent
 
             for stub in stubs:
                 # Strip leading slashes so that the stub is not an absolute path
                 stub = stub.strip('/')
 
-                test_paths = [SourcePath(project_root=project_root,
+                test_paths = [SourcePath(project_root=root,
                                          subpath=subpath / stub),
-                              SourcePath(project_root=project_root,
+                              SourcePath(project_root=root,
                                          subpath=stub)]
                 valid_paths = [p for p in test_paths if p.is_file()]
 
                 # If no files are found, raise an exception
                 if not valid_paths and raise_error:
-                    msg = "Could not find the file '{}'".format(stub)
-                    raise FileNotFoundError(msg)
+                    msg = "Could not find the file '{}' in paths: '{}'"
+                    raise FileNotFoundError(msg.format(stub, test_paths))
                 else:
                     new_infilepaths.append(valid_paths[0])
 

@@ -9,7 +9,7 @@ import pandas as pd
 from .tag import Tag
 from .utils import format_content
 from ..paths.utils import find_files
-from ..formats.html import html_tag
+from ..formats.xhtml import xhtml_tag
 from ..formats.tex import tex_cmd
 
 
@@ -19,8 +19,8 @@ class Cell(Tag):
     active = True
     html_name = 'td'
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
-        tex = super().tex_fmt(content, attributes, mathmode, level)
+    def tex_fmt(self, **kwargs):
+        tex = super().tex_fmt(**kwargs)
         tex = tex.replace('&', '\\&')
         return tex
 
@@ -31,18 +31,31 @@ class HeaderCell(Tag):
     active = True
     html_name = 'th'
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
-        tex = super().tex_fmt(content, attributes, mathmode, level)
+    def tex_fmt(self, **kwargs):
+        tex = super().tex_fmt(**kwargs)
         tex = tex.replace('&', '\\&')
         return tex
 
 
-
 class Data(Tag):
-    """A container for data."""
+    """A container for data.
+
+    Attributes
+    ----------
+    dataframe : :obj:`pandas.DataFrame`
+        The raw data parsed in a dataframe
+    processed_headers : Union[List[:obj:`tags.Tag`], None]
+        The headers processed into tags
+    processed_rows : List[List[:obj:`tags.tag`]]
+        The rows processed into tags
+    """
+
+    active = False
+    process_content = False
 
     dataframe = None
-    active = False
+    processed_headers = None
+    processed_rows = None
 
     def __init__(self, name, content, attributes, context):
         super().__init__(name=name, content=content, attributes=attributes,
@@ -52,26 +65,42 @@ class Data(Tag):
 
         if filepaths:
             # If it's a filepath, send that to the load function
-            self.dataframe = self.load(filepaths[0])
+            self.load(filepaths[0])
         else:
             # Otherwise consider that its data. Load that.
-            self.dataframe = self.load(StringIO(content))
+            self.load(StringIO(content))
 
     @abc.abstractmethod
     def load(self, filepath_or_buffer):
-        """Load the data from a filepath or a string buffer.
+        """Load the dataframe from a filepath or a string buffer.
 
         Parameters
         ----------
         filepath_or_buffer : Union[:obj:`pathlib.Path`, str, :obj:`io.StringIO`]
             The filename and path (filepath) or string buffer.
-
-        Returns
-        -------
-        dataframe : :obj:`pandas.DataFrame`
-            The processed dataframe
         """
         pass
+
+    def process_tags(self):
+        """Process the tags for the items in the dataframe."""
+        assert self.dataframe is not None, "Pandas dataframe not loaded."
+
+        # Process the headers, if needed
+        headers = self.headers
+        if self.processed_headers is None and headers:
+            hdrs = [HeaderCell(name='cell', content=str(header), attributes='',
+                               context=self.context) for header in headers]
+            self.processed_headers =  hdrs
+
+        # Process the rows, if needed
+        if self.processed_rows is None:
+            rows = []
+            for row in self.rows:
+                parsed = [Cell(name='cell', content=str(i), attributes='',
+                               context=self.context)
+                          for i in row[1:]]
+                rows.append((row[0],) + tuple(parsed))
+            self.processed_rows = rows
 
     @property
     def headers(self):
@@ -80,29 +109,9 @@ class Data(Tag):
                 list(self.dataframe.columns))
 
     @property
-    def parsed_headers(self):
-        """The list of the data headers in which the columns are formatted into
-        Cell tags."""
-        headers = self.headers
-        if headers is None:
-            return None
-        return [HeaderCell(name='cell', content=str(header), attributes='',
-                           context=self.context) for header in headers]
-
-    @property
     def rows(self):
         """An iterator for the data rows"""
         return self.dataframe.itertuples()
-
-    @property
-    def parsed_rows(self):
-        """An iterator for data rows in which columns are formatted into Cell
-        tags."""
-        for row in self.rows:
-            parsed = [Cell(name='cell', content=str(i), attributes='',
-                           context=self.context)
-                      for i in row[1:]]
-            yield (row[0],) + tuple(parsed)
 
     @property
     def num_cols(self):
@@ -124,62 +133,37 @@ class DelimData(Data):
     aliases = ('csv', 'tsv')
     delimiter = None
 
-    def __init__(self, name, content, attributes, context, delimiter=','):
+    def __init__(self, delimiter=',', *args, **kwargs):
         self.delimiter = delimiter
-        super().__init__(name=name, content=content, attributes=attributes,
-                         context=context)
+        super().__init__(*args, **kwargs)
 
     def load(self, filepath_or_buffer, delimiter=None):
-        delimiter = delimiter if delimiter is not None else self.delimiter
-        if 'noheader' in self.attributes:
-            return pd.read_csv(filepath_or_buffer, engine='c', header=None,
-                               skipinitialspace=True, delimiter=delimiter)
-        else:
-            return pd.read_csv(filepath_or_buffer, engine='c',
-                               skipinitialspace=True, delimiter=delimiter)
-
-    def html_table(self, content=None, attributes=None, level=1):
-        headers = self.parsed_headers
-
-        # Prepare the header row, if a header is available
-        elements = []
-        if headers is not None:
-            header_row = [format_content(cell, 'html_fmt', level=level)
-                          for cell in headers]
-
-            tr = html_tag('tr', formatted_content=header_row, level=level)
-            thead = html_tag('thead', formatted_content=tr,
-                             level=level)
-            elements.append(thead)
-
-        # Prepare each row individually. Each row is a named tuple with the
-        # first element as the index
-        rows = []
-        for row in self.parsed_rows:
-            body_row = [format_content(cell, 'html_fmt', level=level)
-                        for cell in row[1:]]
-
-            tr = html_tag('tr', formatted_content=body_row, level=level)
-            rows.append(tr)
-
-        tbody = html_tag('tbody', formatted_content=rows, level=level)
-        elements.append(tbody)
-
-        return elements
+        if self.dataframe is None:
+            delimiter = delimiter if delimiter is not None else self.delimiter
+            if 'noheader' in self.attributes:
+                self.dataframe = pd.read_csv(filepath_or_buffer, engine='c',
+                                             header=None, skipinitialspace=True,
+                                             delimiter=delimiter)
+            else:
+                self.dataframe = pd.read_csv(filepath_or_buffer, engine='c',
+                                             skipinitialspace=True,
+                                             delimiter=delimiter)
 
     def tex_table(self, content=None, attributes=None, mathmode=False, level=1):
-        headers = self.parsed_headers
+        # Load the tags
+        self.process_tags()
 
+        headers = self.processed_headers
         tex = tex_cmd('toprule') + "\n"
 
         if headers is not None:
             tex += " & ".join([format_content(cell, 'tex_fmt',
-                                               mathmode=mathmode, level=level)
+                                              mathmode=mathmode, level=level)
                                 for cell in headers]) + " \\\\\n"
             tex += tex_cmd('midrule') + "\n"
 
         rows = []
-        for row in self.parsed_rows:
+        for row in self.processed_rows:
             str = " & ".join([format_content(cell, 'tex_fmt', level=level,
                                                    mathmode=mathmode)
                                     for cell in row[1:]]) + " \\\\\n"
@@ -189,5 +173,38 @@ class DelimData(Data):
         tex += tex_cmd('bottomrule')
         return tex
 
+    def html_table(self, format_func='html_fmt', method='html', level=1,
+                   **kwargs):
+        # Load the tags
+        self.process_tags()
 
+        headers = self.processed_headers
 
+        # Prepare the header row, if a header is available
+        elements = []
+        if headers is not None:
+            header_row = [format_content(cell, format_func, level=level)
+                          for cell in headers]
+
+            tr = xhtml_tag('tr', formatted_content=header_row, method=method,
+                           level=level)
+            thead = xhtml_tag('thead', formatted_content=tr, method=method,
+                              level=level)
+            elements.append(thead)
+
+        # Prepare each row individually. Each row is a named tuple with the
+        # first element as the index
+        rows = []
+        for row in self.processed_rows:
+            body_row = [format_content(cell, format_func, level=level)
+                        for cell in row[1:]]
+
+            tr = xhtml_tag('tr', formatted_content=body_row, method=method,
+                           level=level)
+            rows.append(tr)
+
+        tbody = xhtml_tag('tbody', formatted_content=rows, method=method,
+                          level=level)
+        elements.append(tbody)
+
+        return elements

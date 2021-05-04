@@ -1,3 +1,6 @@
+.. role:: dm(code)
+   :language: dm
+
 Feature Box
 ===========
 
@@ -5,7 +8,9 @@ Feature boxes are text boxes that present additional, tangential information
 to the text. Feature boxes are used to present examples, tips or background on
 a subject.
 
-``@featurebox{...}``
+.. rst-class:: dl-parameter
+
+:dm:`@featurebox{...}`
     A general feature box
 
     .. index::
@@ -13,7 +18,7 @@ a subject.
 
     :examples:
 
-       ::
+       .. code-block:: dm
 
           @featurebox{
              This is a feature box.
@@ -22,7 +27,7 @@ a subject.
           }
 
 
-``@examplebox{...}``
+:dm:`@examplebox{...}`
     A feature box for presenting examples
 
     .. index::
@@ -30,7 +35,7 @@ a subject.
 
     :examples:
 
-       ::
+       .. code-block:: dm
 
           @examplebox{
              @b{Problem:} This is an example box. How is it used?
@@ -38,3 +43,16 @@ a subject.
              @b{Answer:} This is how.
           }
 
+:dm:`@problembox{...}`
+    A feature box for presenting problem questions
+
+    .. index::
+        single: tags; @problembox
+
+    :examples:
+
+       .. code-block:: dm
+
+          @problembox{
+             @b{Problem:} This is an example box. How is it used?
+          }

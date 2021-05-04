@@ -8,7 +8,7 @@ from .tag import Tag
 from .utils import content_to_str
 from ..utils.types import StringPositionalValue
 from ..paths.utils import find_files
-from ..formats import html_tag, tex_verb
+from ..formats import xhtml_tag, tex_verb
 
 
 class Code(Tag):
@@ -23,11 +23,11 @@ class Code(Tag):
 
     html_name = 'code'
 
-    def __init__(self, name, content, attributes, context):
-        super().__init__(name, content, attributes, context)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         # Load files, if needed
-        files = find_files(self.content, context)
+        files = find_files(self.content, self.context)
 
         if len(files) > 0:
             new_content = "\n".join([file.read_text() for file in files])
@@ -52,7 +52,8 @@ class Code(Tag):
         # Otherwise try to guess it from the code block contents
         return lexers.guess_lexer(self.content)
 
-    def html_fmt(self, content=None, attributes=None, level=1):
+    def html_fmt(self, content=None, attributes=None, format_func='html_fmt',
+                 method='html', level=1):
         # Format contents
         content = self.content if content is None else content
         content = content_to_str(content=content)
@@ -65,11 +66,13 @@ class Code(Tag):
             formatter = formatters.HtmlFormatter(cssclass=cssclass)
 
             html = highlight(content, lexer, formatter)
-            return html_tag('div', attributes='class="code"',
-                            formatted_content=Markup(html), level=level)
+            return xhtml_tag('div', attributes='class="code"',
+                             formatted_content=Markup(html), method=method,
+                             level=level)
         else:
-            return html_tag('code', attributes=self.attributes,
-                            formatted_content=content, level=level)
+            return xhtml_tag('code', attributes=self.attributes,
+                             formatted_content=content, method=method,
+                             level=level)
 
     def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
         # Format contents
@@ -121,3 +124,11 @@ class Javascript(Code):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.attributes['javascript'] = StringPositionalValue
+
+
+class Dm(Code):
+    """A tag for displaying dm code"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.attributes['dm'] = StringPositionalValue

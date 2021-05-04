@@ -1,0 +1,59 @@
+{% block menu %}
+<input type="checkbox" id="toggle-1" class="menu-toggle">
+<label for="toggle-1" class="menu-toggle">
+  <img src="{{ "/media/icons/menu_inactive.svg" | rewrite_path }}" id="menu-toggle-inactive">
+  <img src="{{ "/media/icons/menu_active.svg" | rewrite_path }}" id="menu-toggle-active">
+</label>
+<div class="menu">
+  <div id="menu-toolbar">
+    <ul class="functions list-group list-group-horizontal d-flex">
+      <!--  Link to root page  -->
+      <li class="list-group-item font-weight-bold mr-auto">
+        <a href="/">Disseminate</a>
+      </li>
+    </ul>
+  </div>
+  <div id="menu-content">
+    <ul class="docutils">
+      {%- if srclink is defined and srclink.html %}
+      <li class="src">
+        <a href="{{ srclink.html }}">
+          <img src="{{ "/media/icons/dm_icon.svg"  | rewrite_path }}">
+        </a>
+      </li>
+      {% endif %}
+      {%- if txtlink is defined and txtlink.html %}
+      <li>
+        <a href="{{ txtlink.html }}">
+          <img src="{{ "/media/icons/txt_icon.svg"  | rewrite_path }}">
+        </a>
+      </li>
+      {% endif %}
+      {%- if texlink is defined and texlink.html %}
+      <li>
+        <a href="{{ texlink.html }}">
+          <img src="{{ "/media/icons/tex_icon.svg"  | rewrite_path }}">
+        </a>
+      </li>
+      {% endif %}
+      {%- if pdflink is defined and pdflink.html %}
+      <li>
+        <a href="{{ pdflink.html }}">
+          <img src="{{ "/media/icons/pdf_icon.svg"  | rewrite_path }}">
+        </a>
+      </li>
+      {% endif %}
+      {%- if epublink is defined and epublink.html %}
+      <li>
+        <a href="{{ epublink.html }}">
+          <img src="{{ "/media/icons/epub_icon.svg"  | rewrite_path }}">
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+    {%- if toc %}
+    {{ toc.html }}
+    {%- endif %}
+  </div>
+</div>
+{% endblock %}

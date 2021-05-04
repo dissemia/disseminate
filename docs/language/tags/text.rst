@@ -1,10 +1,15 @@
+.. role:: dm(code)
+   :language: dm
+
 Text Formatting
 ===============
 
 Text formatting tags are used to emphasize text in different ways and
 to introduce special characters.
 
-``@bold{...}``
+.. rst-class:: dl-parameter
+
+:dm:`@bold{...}`
     Emphasize text by with bold
 
     .. index::
@@ -16,13 +21,13 @@ to introduce special characters.
 
     :examples:
 
-       ::
+       .. code-block:: dm
 
           @bold{This text is bold!}
           @b{This text is bold!}
           @textbf{This text is bold!}
 
-``@italics{...}``
+:dm:`@italics{...}`
     Emphasize text by with italics
 
     .. index::
@@ -34,13 +39,13 @@ to introduce special characters.
 
     :examples:
 
-       ::
+       .. code-block:: dm
        
            @italics{This text is in italics}
            @i{This text is in italics}
            @textit{This text is in italics}
 
-``@sup{...}``
+:dm:`@sup{...}`
     Superscript text
 
     .. index::
@@ -48,12 +53,12 @@ to introduce special characters.
         
     :examples:
 
-       ::
+       .. code-block:: dm
           
           @sup{1}H
 
 
-``@sub{...}``
+:dm:`@sub{...}`
     Subscript text
 
     .. index::
@@ -61,11 +66,30 @@ to introduce special characters.
 
     :examples:
 
-       ::
+       .. code-block:: dm
 
           H@sub{2}O
 
-``@symbol{...}``
+:dm:`@supsub{...}`
+    A superscript followed by a subscript text. This tag formats the superscript
+    directly above the subscript
+
+    .. index::
+        single: tags; @supsub
+
+    :content:
+
+        The superscript and the subscript are separated by two ampersands
+        (``&&``)
+
+    :examples:
+
+       .. code-block:: dm
+
+          @supsub{12 && 6}C
+
+
+:dm:`@symbol{...}`
     Add a symbol
 
     .. index::
@@ -75,11 +99,11 @@ to introduce special characters.
 
     :examples:
 
-       ::
+       .. code-block:: dm
           
           @symbol{alpha}-helix
 
-``@verb{...}``
+:dm:`@verb{...}`
     Mark text as verbatim--i.e. do not process the text and present
     the text without modification.
 
@@ -91,11 +115,11 @@ to introduce special characters.
     
     :examples:
 
-       ::
+       .. code-block:: dm
 
           My @v{@bold{bold}} tag.
 
-``verbatim{...}``
+:dm:`verbatim{...}`
     Mark a *block of text* as verbatim--*i.e.* do not process the
     text and present the text without modification.
 
@@ -107,6 +131,6 @@ to introduce special characters.
 
     :examples:
 
-       ::
+       .. code-block:: dm
 
           @verbatim{My verbatim text}

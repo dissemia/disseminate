@@ -4,7 +4,7 @@ Image tags
 import pathlib
 
 from .tag import Tag, TagError
-from .utils import format_attribute_width
+from .utils import xhtml_percentwidth, tex_percentwidth
 from ..signals import signal
 from ..paths.utils import find_files
 from ..formats import tex_cmd
@@ -48,9 +48,8 @@ class Img(Tag):
     _infilepath = None
     _outfilepaths = None
 
-    def __init__(self, name, content, attributes, context):
-        super().__init__(name=name, content=content, attributes=attributes,
-                         context=context)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._outfilepaths = dict()
 
     def content_as_filepath(self, content=None, context=None):
@@ -155,15 +154,14 @@ class Img(Tag):
 
         return outfilepath
 
-    def tex_fmt(self, content=None, attributes=None, context=None,
-                mathmode=False, level=1):
+    def tex_fmt(self, content=None, attributes=None, context=None, **kwargs):
         # Add the file dependency
         outfilepath = self.add_file(target='.tex', content=content,
                                     context=context, attributes=attributes)
 
         # Format the width
-        attributes = attributes or self.attributes
-        attrs = format_attribute_width(attributes, target='.tex')
+        attrs = attributes or self.attributes.copy()
+        attrs = tex_percentwidth(attrs, target='.tex')
 
         # Get the filename for the file.
         base = outfilepath.with_suffix('')
@@ -183,15 +181,18 @@ class Img(Tag):
         return tex_cmd(cmd='includegraphics', attributes=attrs,
                        formatted_content=str(dest_filepath))
 
-    def html_fmt(self, content=None, attributes=None, context=None, level=1):
+    def html_fmt(self, content=None, attributes=None, context=None,
+                 method='html', **kwargs):
         # Add the file dependency
-        outfilepath = self.add_file(target='.html', content=content,
+        target = '.' + method if not method.startswith('.') else method
+        outfilepath = self.add_file(target=target, content=content,
                                     context=context, attributes=attributes)
-        url = outfilepath.get_url(context=self.context, target='.html')
+        url = outfilepath.get_url(context=self.context, target=target)
 
         # Format the width and attributes
-        attrs = self.attributes.copy() if attributes is None else attributes
-        attrs = format_attribute_width(attrs, target='.html')
+        attrs = attributes or self.attributes.copy()
+        attrs = xhtml_percentwidth(attrs, target=target)
         attrs['src'] = url
 
-        return super().html_fmt(attributes=attrs, level=level)
+        return super().html_fmt(content='', attributes=attrs, method=method,
+                                **kwargs)

@@ -1,5 +1,5 @@
 """
-Tests for tex formatting functions for tags.
+Tests for tex formatting functions.
 """
 import pytest
 

@@ -119,191 +119,6 @@ def test_block_equation_paragraph(context):
     assert eq.tex == '\\ensuremath{y=x}'
 
 
-# html targets
-
-def test_simple_inline_equation_html(context):
-    """Test the rendering of simple inline equations for html."""
-
-    # setup the context
-    context['relative_links'] = False  # report absolute links
-
-    # 1. Setup a basic equation tag
-    eq = Eq(name='eq', content='y = x', attributes='', context=context)
-
-    # Check the rendered tag and that the asy and svg files were properly
-    # created
-    html = eq.html
-    assert html == '<img src="/html/media/eq_f07e7117e784.svg" class="eq">\n'
-    assert eq.html == html  # running twice should give same answer
-
-    # Check the build
-    build_env = context['environment']
-    html_builder = context['builders']['.html']
-
-    assert html_builder.build(complete=True) == 'done'
-    target_filepath = (build_env.target_root / 'html' / 'media' /
-                       'eq_f07e7117e784.svg')
-    assert target_filepath.exists()
-
-    # 2. Test tag with disseminate formatting
-    eq = Eq(name='eq', content='y = @termb{x}', attributes='',
-            context=context)
-
-    # Check the rendered tag and that the asy and svg files were properly
-    # created
-    assert (eq.html ==
-            '<img src="/html/media/eq_c2cf39c2508c.svg" class="eq">\n')
-
-    # Check the build
-    assert html_builder.build(complete=True) == 'done'
-
-    target_filepath = (build_env.target_root / 'html' / 'media' /
-                       'eq_c2cf39c2508c.svg')
-    assert target_filepath.exists()
-
-    # Make sure the @termb has been converted
-    tex = eq.tex
-    assert '@termb' not in tex
-    assert '\\ensuremath{y = \\boldsymbol{x}}' in tex
-
-    # 3. Test tag with extra attributes
-    eq = Eq(name='eq', content='y = @eq[env=alignat* 1]{x}', attributes='',
-            context=context)
-
-    # Make sure the tag has been converted
-    tex = eq.tex
-    assert '@termb' not in tex
-    assert '\\ensuremath{y = x}' in tex
-
-    # Check the rendered tag and that the asy and svg files were properly
-    # created
-    assert (eq.html ==
-            '<img src="/html/media/eq_0ab202fa3077.svg" class="eq">\n')
-
-
-def test_block_equation_html(context):
-    """Test the rendering of block equations for tex to ensure that the tex
-    text is well-formed."""
-    env = context['environment']
-    target_root = env.target_root
-
-    # # 1. Test a simple markup example
-    test = """
-    @eq[env=align*]{
-    y &= x + b \\
-    &= x + a
-    }
-    """
-    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
-    root = Tag(name='root', content=test, attributes='', context=context)
-    p = root.content
-    eq = p.content[1]
-
-    assert p.name == 'p'
-    assert eq.name == 'eq'
-
-    # Check the rendered content, which is used in making the rendered image
-    # for html
-    key = ('\\begin{align*} %\n'
-           'y &= x + b \\\n'
-           '    &= x + a\n'
-           '\\end{align*}')
-    assert eq.tex == key
-
-    # Check the image infilepath and that the contents are in the file
-    assert (eq.html ==
-            '<img src="media/eq_c97ec2ca544e.svg" class="eq blockeq">\n')
-
-    # Check the build
-    build_env = context['environment']
-    html_builder = context['builders']['.html']
-    assert html_builder.build(complete=True) == 'done'
-    assert (target_root / 'html' / 'media' / 'eq_c97ec2ca544e.svg').exists()
-
-    # 2. Test a markup example with a more complicated environment
-    test = """
-    @eq[env=alignat* 3]{
-    y &= x + b \\
-    &= x + a
-    }
-    """
-    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
-    root = Tag(name='root', content=test, attributes='', context=context)
-    p = root.content
-    eq = p.content[1]
-
-    assert p.name == 'p'
-    assert eq.name == 'eq'
-
-    # Check the rendered content, which is used in making the rendered image
-    # for html
-    key = ('\\begin{alignat*}{3} %\n'
-           'y &= x + b \\\n'
-           '    &= x + a\n'
-           '\\end{alignat*}')
-    assert eq.tex == key
-
-    # Check the image infilepath and that the contents are in the file
-    assert (eq.html ==
-            '<img src="media/eq_411045a5537c.svg" class="eq blockeq">\n')
-
-    # Check the build
-    assert html_builder.build(complete=True) == 'done'
-    assert (target_root / 'html' / 'media' / 'eq_411045a5537c.svg').exists()
-
-    # 3. Test an block equation in a paragraph in which the block equation
-    #    hasn't been specified.
-    test = """
-    @eq{
-    y &= x + b \\
-    &= x + a
-    }
-    """
-    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
-    root = Tag(name='root', content=test, attributes='', context=context)
-    p = root.content
-    eq = p.content[1]
-
-    assert p.name == 'p'
-    assert eq.name == 'eq'
-    assert eq.paragraph_role == 'block'
-
-    # Check the rendered content, which is used in making the rendered image
-    # for html
-    key = ('\\begin{align*} %\n'
-           'y &= x + b \\\n'
-           '    &= x + a\n'
-           '\\end{align*}')
-    assert eq.tex == key
-
-    # Check the image infilepath and that the contents are in the file
-    assert (eq.html ==
-            '<img src="media/eq_551f4e949221.svg" class="eq blockeq">\n')
-
-    # Check the build
-    assert html_builder.build(complete=True) == 'done'
-    assert (target_root / 'html' / 'media' / 'eq_551f4e949221.svg').exists()
-
-
-def test_equation_relative_absolute_links(context):
-    """Test rendered equation images with absolute and relative links."""
-
-    # setup the context
-    context['relative_links'] = False  # report absolute links
-
-    # 1. Setup a basic equation tag
-    eq = Eq(name='eq', content='y = x', attributes='', context=context)
-
-    # Check that the returned html uses absolute links
-    assert (eq.html ==
-            '<img src="/html/media/eq_f07e7117e784.svg" class="eq">\n')
-
-    # Switch to relative links
-    context['relative_links'] = True
-    assert (eq.html ==
-            '<img src="media/eq_f07e7117e784.svg" class="eq">\n')
-
-
 # tex targets
 
 def test_simple_inline_equation_tex(context):
@@ -354,6 +169,210 @@ def test_block_equation_tex(context):
                      '\\end{alignat*}\n    \n')
 
 
+# html targets
+
+def test_simple_inline_equation_html(context):
+    """Test the rendering of simple inline equations for html."""
+
+    # setup the context
+    context['relative_links'] = False  # report absolute links
+
+    # 1. Setup a basic equation tag
+    eq = Eq(name='eq', content='y = x', attributes='', context=context)
+
+    # Check the rendered tag and that the asy and svg files were properly
+    # created
+    html = eq.html
+    assert html == '<img src="/html/media/eq_b659cf87bb35.svg" class="eq">\n'
+    assert eq.html == html  # running twice should give same answer
+
+    # Check the build
+    build_env = context['environment']
+    html_builder = context['builders']['.html']
+
+    assert html_builder.build(complete=True) == 'done'
+    target_filepath = (build_env.target_root / 'html' / 'media' /
+                       'eq_b659cf87bb35.svg')
+    assert target_filepath.exists()
+
+    # 2. Test tag with disseminate formatting
+    eq = Eq(name='eq', content='y = @termb{x}', attributes='',
+            context=context)
+
+    # Check the rendered tag and that the asy and svg files were properly
+    # created
+    assert (eq.html ==
+            '<img src="/html/media/eq_4eab20b8766c.svg" class="eq">\n')
+
+    # Check the build
+    assert html_builder.build(complete=True) == 'done'
+
+    target_filepath = (build_env.target_root / 'html' / 'media' /
+                       'eq_4eab20b8766c.svg')
+    assert target_filepath.exists()
+
+    # Make sure the @termb has been converted
+    tex = eq.tex
+    assert '@termb' not in tex
+    assert '\\ensuremath{y = \\boldsymbol{x}}' in tex
+
+    # 3. Test tag with extra attributes
+    eq = Eq(name='eq', content='y = @eq[env=alignat* 1]{x}', attributes='',
+            context=context)
+
+    # Make sure the tag has been converted
+    tex = eq.tex
+    assert '@termb' not in tex
+    assert '\\ensuremath{y = x}' in tex
+
+    # Check the rendered tag and that the asy and svg files were properly
+    # created
+    assert (eq.html ==
+            '<img src="/html/media/eq_90bcd3fb5e1d.svg" class="eq">\n')
+
+
+def test_block_equation_html(context):
+    """Test the rendering of block equations for tex to ensure that the tex
+    text is well-formed."""
+    env = context['environment']
+    target_root = env.target_root
+
+    # # 1. Test a simple markup example
+    test = """
+    @eq[env=align*]{
+    y &= x + b \\
+    &= x + a
+    }
+    """
+    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
+    root = Tag(name='root', content=test, attributes='', context=context)
+    p = root.content
+    eq = p.content[1]
+
+    assert p.name == 'p'
+    assert eq.name == 'eq'
+
+    # Check the rendered content, which is used in making the rendered image
+    # for html
+    key = ('\\begin{align*} %\n'
+           'y &= x + b \\\n'
+           '    &= x + a\n'
+           '\\end{align*}')
+    assert eq.tex == key
+
+    # Check the image infilepath and that the contents are in the file
+    assert (eq.html ==
+            '<img src="media/eq_a5d76f56919f.svg" class="eq blockeq">\n')
+
+    # Check the build
+    build_env = context['environment']
+    html_builder = context['builders']['.html']
+    assert html_builder.build(complete=True) == 'done'
+    assert (target_root / 'html' / 'media' / 'eq_a5d76f56919f.svg').exists()
+
+    # 2. Test a markup example with a more complicated environment
+    test = """
+    @eq[env=alignat* 3]{
+    y &= x + b \\
+    &= x + a
+    }
+    """
+    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
+    root = Tag(name='root', content=test, attributes='', context=context)
+    p = root.content
+    eq = p.content[1]
+
+    assert p.name == 'p'
+    assert eq.name == 'eq'
+
+    # Check the rendered content, which is used in making the rendered image
+    # for html
+    key = ('\\begin{alignat*}{3} %\n'
+           'y &= x + b \\\n'
+           '    &= x + a\n'
+           '\\end{alignat*}')
+    assert eq.tex == key
+
+    # Check the image infilepath and that the contents are in the file
+    assert (eq.html ==
+            '<img src="media/eq_92d71e90a027.svg" class="eq blockeq">\n')
+
+    # Check the build
+    assert html_builder.build(complete=True) == 'done'
+    assert (target_root / 'html' / 'media' / 'eq_92d71e90a027.svg').exists()
+
+    # 3. Test an block equation in a paragraph in which the block equation
+    #    hasn't been specified.
+    test = """
+    @eq{
+    y &= x + b \\
+    &= x + a
+    }
+    """
+    context['process_paragraphs'] = ['root']  # process paragraphs for 'root'
+    root = Tag(name='root', content=test, attributes='', context=context)
+    p = root.content
+    eq = p.content[1]
+
+    assert p.name == 'p'
+    assert eq.name == 'eq'
+    assert eq.paragraph_role == 'block'
+
+    # Check the rendered content, which is used in making the rendered image
+    # for html
+    key = ('\\begin{align*} %\n'
+           'y &= x + b \\\n'
+           '    &= x + a\n'
+           '\\end{align*}')
+    assert eq.tex == key
+
+    # Check the image infilepath and that the contents are in the file
+    assert (eq.html ==
+            '<img src="media/eq_4b140ec236d7.svg" class="eq blockeq">\n')
+
+    # Check the build
+    assert html_builder.build(complete=True) == 'done'
+    assert (target_root / 'html' / 'media' / 'eq_4b140ec236d7.svg').exists()
+
+
+def test_equation_relative_absolute_links_html(context):
+    """Test rendered equation images with absolute and relative links."""
+
+    # setup the context
+    context['relative_links'] = False  # report absolute links
+
+    # 1. Setup a basic equation tag
+    eq = Eq(name='eq', content='y = x', attributes='', context=context)
+
+    # Check that the returned html uses absolute links
+    assert (eq.html ==
+            '<img src="/html/media/eq_b659cf87bb35.svg" class="eq">\n')
+
+    # Switch to relative links
+    context['relative_links'] = True
+    assert (eq.html ==
+            '<img src="media/eq_b659cf87bb35.svg" class="eq">\n')
+
+
+# xhtml target
+
+def test_simple_inline_equation_xhtml(context, is_xml):
+    """Test the rendering of simple inline equations for xhtml."""
+
+    # setup the context
+    context['relative_links'] = False  # report absolute links
+
+    # 1. Setup a basic equation tag
+    eq = Eq(name='eq', content='y = x', attributes='', context=context)
+
+    # Check the rendered tag and that the asy and svg files were properly
+    # created
+    xhtml = eq.xhtml
+    assert xhtml == '<img src="/xhtml/media/eq_b659cf87bb35.svg" class="eq"/>\n'
+    assert eq.xhtml == xhtml  # running twice should give same answer
+    assert is_xml(eq.xhtml)
+
+
 # Multiple targets
 
 def test_block_equation_multiple_targets(context):
@@ -387,7 +406,7 @@ def test_block_equation_multiple_targets(context):
     # Check the html target
     eq = p.content[1]
     assert (eq.html ==
-            '<img src="/html/media/eq_c97ec2ca544e.svg" class="eq blockeq">\n')
+            '<img src="/html/media/eq_a5d76f56919f.svg" class="eq blockeq">\n')
 
     # 2. Test a block equation with a custom math environment
     test = """
@@ -409,7 +428,7 @@ def test_block_equation_multiple_targets(context):
     # Check the html target
     eq = p.content[1]
     assert p.html == ('<p>\n'
-                      '    <img src="/html/media/eq_27f5243b4026.svg" '
+                      '    <img src="/html/media/eq_6eecb61fc4c2.svg" '
                       'class="eq blockeq">\n'
                       '    </p>\n')
     # Check the tex target

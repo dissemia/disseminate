@@ -5,7 +5,11 @@ import pathlib
 from collections import namedtuple
 
 from disseminate.builders.target_builders.txt_builder import TxtBuilder
-from disseminate.paths import SourcePath, TargetPath
+from disseminate.paths import TargetPath
+
+# Paths for examples
+ex3_root = pathlib.Path('tests') / 'builders' / 'examples' / 'ex3'
+ex3_srcdir = ex3_root / 'src'
 
 
 def test_txt_builder_setup_in_targets(env):
@@ -130,7 +134,7 @@ def test_txt_builder_simple(env):
 def test_txt_builder_simple_doc(load_example):
     """Test a simple build with the TxtBuilder."""
     # 1. example 1: tests/builders/examples/ex3
-    doc = load_example('tests/builders/examples/ex3/dummy.dm')
+    doc = load_example(ex3_srcdir / 'dummy.dm', cp_src=True)
     env = doc.context['environment']
 
     # Setup the builder
@@ -158,7 +162,7 @@ def test_txt_builder_simple_doc(load_example):
 def test_txt_builder_simple_doc_build(load_example):
     """Test a render of a simple document with the TxtBuilder."""
     # 1. example 1: tests/builders/examples/ex3
-    doc = load_example('tests/builders/examples/ex3/dummy.dm')
+    doc = load_example(ex3_srcdir / 'dummy.dm', cp_src=True)
     target_root = doc.target_root
 
     doc.build()

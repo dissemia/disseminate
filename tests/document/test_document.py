@@ -107,30 +107,47 @@ def test_document_src_filepaths(load_example):
     assert subdoc.src_filepath.subpath == Path("sub3") / "index.dm"
 
 
-def test_document_targets(load_example):
+def test_document_targets(doc):
     """Test the document targets method."""
-    doc = load_example("tests/document/examples/ex1/dummy.dm")
+    env = doc.context['environment']
     target_root = doc.target_root
+    cache_path = env.cache_path
 
-    # dummy.dm has the entry 'html, tex' set in the header.
+    # 1. Try an example with an 'html' target
+    doc.src_filepath.write_text("""
+    ---
+    targets: html
+    ---
+    Test1
+    """)
+    doc.load()
+
     targets = doc.targets
-
-    assert targets.keys() == {'.html', '.tex'}
+    assert targets.keys() == {'.html'}
 
     assert '.html' in targets
     assert isinstance(targets['.html'], TargetPath)
-    assert str(targets['.html'].target_root) == str(target_root)
-    assert str(targets['.html'].target) == 'html'
-    assert str(targets['.html'].subpath) == 'dummy.html'
+    assert targets['.html'] == target_root / 'html' / 'test.html'
 
-    assert '.tex' in targets
-    assert str(targets['.tex'].target_root) == str(target_root)
-    assert str(targets['.tex'].target) == 'tex'
-    assert str(targets['.tex'].subpath) == 'dummy.tex'
+    # 2. Try an example with a cached target
+    doc.src_filepath.write_text("""
+    ---
+    targets: pdf
+    ---
+    Test1
+    """)
+    doc.load()
 
-    # Test changing the targets from the context
-    doc.context['targets'] = set()
-    assert doc.targets.keys() == set()
+    targets = doc.targets
+    assert targets.keys() == {'.tex', '.pdf'}
+
+    assert '.tex' in targets  # located in the cache directory
+    assert isinstance(targets['.tex'], TargetPath)
+    assert targets['.tex'] == cache_path / 'tex' / 'test.tex'
+
+    assert '.pdf' in targets
+    assert isinstance(targets['.pdf'], TargetPath)
+    assert targets['.pdf'] == target_root / 'pdf' / 'test.pdf'
 
 
 def test_document_target_filepath(load_example):
@@ -229,9 +246,10 @@ def test_document_load_required(doctree, wait, caplog):
     assert len(caplog.record_tuples) == 2
     assert "tag has not been loaded yet" in caplog.record_tuples[-1][2]
 
-    # 1 load_required message
+    # 1 load_required message for each document, 1 "add target builder" message
+    # for each document
     assert doc.load() is True  # documents were loaded
-    assert len(caplog.record_tuples) == 3
+    assert len(caplog.record_tuples) == 6
     assert not doc.load_required()
 
     # 3. Test load required when the source file is newer than the mtime in
@@ -239,28 +257,29 @@ def test_document_load_required(doctree, wait, caplog):
     wait()  # sleep time offset needed for different mtimes
     doc.src_filepath.touch()
     assert doc.load_required()  # 1 load required message
-    assert len(caplog.record_tuples) == 4
+    assert len(caplog.record_tuples) == 7
     assert ("source file is newer than the loaded document" in
             caplog.record_tuples[-1][2])
 
-    # 3 load_required messages. The parent (test1.dm) is reloaded so the
-    # children (test2.dm, test3.dm) are reloaded because it has a later mtime.
+    # 3 load_required messages and 3 add target builder messages. The parent
+    # (test1.dm) is reloaded so the children (test2.dm, test3.dm) are reloaded
+    # because it has a later mtime.
     assert doc.load() is True  # documents were loaded
 
-    assert len(caplog.record_tuples) == 7
+    assert len(caplog.record_tuples) == 13
     assert ("source file is newer than the loaded document" in
-            caplog.record_tuples[-3][2])  # test1.dm
+            caplog.record_tuples[-6][2])  # test1.dm
     assert ("The parent document is newer than this document" in
-            caplog.record_tuples[-2][2])  # test2.dm
+            caplog.record_tuples[-5][2])  # test2.dm
     assert ("The parent document is newer than this document" in
-            caplog.record_tuples[-1][2])  # test3.dm
+            caplog.record_tuples[-4][2])  # test3.dm
     assert not doc.load_required()
 
     # 4. Test load required when the parent context's mtime is newer than the
     #    mtime in the context
     doc.context.parent_context['mtime'] = doc.context['mtime'] + 1.0
     assert doc.load_required()  # 1 load_required message
-    assert len(caplog.record_tuples) == 8
+    assert len(caplog.record_tuples) == 14
     assert ("The parent document is newer than this document" in
             caplog.record_tuples[-1][2])
 
@@ -271,7 +290,7 @@ def test_document_load_required(doctree, wait, caplog):
     #    context mtime for subdocuments
     assert not doc2.load_required()
     assert not doc3.load_required()
-    assert len(caplog.record_tuples) == 8  # same number of messages as before.
+    assert len(caplog.record_tuples) == 14  # same number of messages as before.
 
     # 6. Touch a subdocument, and it should be the only one that requires an
     #    update
@@ -280,7 +299,7 @@ def test_document_load_required(doctree, wait, caplog):
     assert not doc.load_required()
     assert doc2.load_required()  # 1 load_required message
     assert not doc3.load_required()
-    assert len(caplog.record_tuples) == 9
+    assert len(caplog.record_tuples) == 15
     assert ("source file is newer than the loaded document" in
             caplog.record_tuples[-1][2])
 
@@ -288,15 +307,15 @@ def test_document_load_required(doctree, wait, caplog):
     wait()  # sleep time offset needed for different mtimes
     doc.src_filepath.touch()
 
-    # 3 load required messages
+    # 3 load required messages, 3 target build added messages
     assert doc.load() is True  # documents were loaded
-    assert len(caplog.record_tuples) == 12
+    assert len(caplog.record_tuples) == 21
     assert ("source file is newer than the loaded document" in
-            caplog.record_tuples[-3][2])
+            caplog.record_tuples[-6][2])
     assert ("source file is newer than the loaded document" in
-            caplog.record_tuples[-2][2])
+            caplog.record_tuples[-5][2])
     assert ("The parent document is newer than this document" in
-            caplog.record_tuples[-1][2])
+            caplog.record_tuples[-4][2])
 
 
 def test_document_update_mtime(doctree):
@@ -402,7 +421,7 @@ def test_document_load_on_render(doc):
 
     # The initial document has the targets listed in the example document
     # created from the 'doc' fixture (conftest.py)
-    assert doc.targets.keys() == {'.html', '.tex', '.pdf'}
+    assert doc.targets.keys() == {'.html', '.tex', '.pdf', '.xhtml'}
 
     # Change the source file, and run the render function. The targets should
     # be updated to the new values in the updated header.
@@ -530,6 +549,11 @@ def test_document_unusual_filenames(load_example):
                 html_root / 'media' / 'css' / 'pygments.css',
                 html_root / 'media' / 'icons' / 'menu_inactive.svg',
                 html_root / 'media' / 'icons' / 'menu_active.svg',
+                html_root / 'media' / 'icons' / 'dm_icon.svg',
+                html_root / 'media' / 'icons' / 'txt_icon.svg',
+                html_root / 'media' / 'icons' / 'tex_icon.svg',
+                html_root / 'media' / 'icons' / 'pdf_icon.svg',
+                html_root / 'media' / 'icons' / 'epub_icon.svg',
                 }
 
     html_actual = set(html_root.glob('**/*'))
@@ -600,6 +624,11 @@ def test_document_multiple_dependency_locations(load_example):
                 html_root / 'media' / 'css' / 'pygments.css',
                 html_root / 'media' / 'icons' / 'menu_active.svg',
                 html_root / 'media' / 'icons' / 'menu_inactive.svg',
+                html_root / 'media' / 'icons' / 'dm_icon.svg',
+                html_root / 'media' / 'icons' / 'txt_icon.svg',
+                html_root / 'media' / 'icons' / 'tex_icon.svg',
+                html_root / 'media' / 'icons' / 'pdf_icon.svg',
+                html_root / 'media' / 'icons' / 'epub_icon.svg',
                 }
     html_actual = set(html_root.glob('**/*'))
     assert html_actual == html_key

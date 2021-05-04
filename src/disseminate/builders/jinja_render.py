@@ -3,7 +3,6 @@ A builder that renders a string to a file.
 """
 import pathlib
 import logging
-import asyncio
 
 import jinja2
 import jinja2.meta
@@ -95,7 +94,8 @@ class JinjaRender(Builder):
     action = 'render'
     priority = 1000
     active_requirements = ('priority',)
-    scan_parameters = False  # This is done after all parameters are loaded
+    scan_parameters_on_init = False  # This is done after all parameters are
+                                     # loaded
 
     context = weakattr()
 
@@ -131,10 +131,25 @@ class JinjaRender(Builder):
     def template(self):
         """Retrieve the template from the context"""
         context = self.context
-        template_filepath = context.get('template', 'default/template')
-        templates = [template_filepath + '/template' + self.render_ext,
-                     template_filepath + self.render_ext]
+        # Get the template filepath and convert to a pathlib.Path
+        template_filepath = context.get('template', 'default')
+        template_filepath = pathlib.Path(template_filepath)
 
+        # get the target extension without a period
+        target = self.render_ext.strip('.')
+
+        # create the list of template paths to search
+        # path1. ex: 'default '/ 'html' / 'template' '.html'
+        path1 = template_filepath / target / 'template'
+        path1 = path1.with_suffix('.' + target)
+
+        # path2. ex: 'default/xhtml/toc' / '.xhtml
+        path2 = template_filepath.with_suffix('.' + target)
+
+        # path3: ex: 'default/xhtml/toc.xhtml'
+        path3 = template_filepath
+
+        templates = list(map(str, [path1, path2, path3]))
         # Get the Jinja2 environment
         jinja_env = self.jinja_environment()
 
@@ -230,12 +245,16 @@ class JinjaRender(Builder):
         template = self.template()
         context = self.context
         outfilepath = self.outfilepath
+
+        logging.debug("Rendering '{}' with Jinja2 "
+                      "'{}'".format(outfilepath, template))
         if 'target' in context:
             rendered_string = template.render(**context,
                                               outfilepath=outfilepath)
         else:
             rendered_string = template.render(**context, target=self.render_ext,
                                               outfilepath=outfilepath)
+
         outfilepath.write_text(rendered_string)
         self.build_needed(reset=True)
         return self.status
@@ -330,8 +349,10 @@ def context_filepaths(template_filepaths):
     filepaths = []
     # Construct the context filepaths from the template_filepaths
     for filepath in template_filepaths:
-        # Construct a test context filename (ex: 'templates/context.txt')
-        context_fp = SourcePath(project_root=filepath.parent,
+        # Construct a test context filename1
+        # ex: filepath: 'templates/default/html'
+        #     context_fp: templates/default/context.txt
+        context_fp = SourcePath(project_root=filepath.parent.parent,
                                 subpath=settings.template_context_filename)
 
         # See if the test context filename exists and add it to the list

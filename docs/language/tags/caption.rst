@@ -1,9 +1,14 @@
+.. role:: dm(code)
+   :language: dm
+
 Captions
 ========
 
 Tags to insert captions for figures and tables
 
-``@caption{...}``
+.. rst-class:: dl-parameter
+
+:dm:`@caption{...}`
    Insert a caption
 
    .. index::
@@ -27,7 +32,7 @@ Tags to insert captions for figures and tables
       
    :examples:
 
-      ::
+      .. code-block:: dm
 
          @fig{@img{image.svg}
               @caption{My first figure}

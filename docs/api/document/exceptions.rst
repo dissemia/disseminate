@@ -2,6 +2,6 @@ Exceptions
 ----------
 
 .. automodule:: disseminate.document.exceptions
-    :members: DocumentException, MissingTargetException
+    :members: DocumentException, TargetNotFound
     :imported-members:
     :show-inheritance:

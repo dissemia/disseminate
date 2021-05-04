@@ -1,6 +1,8 @@
 """
 A builder for document targets.
 """
+import logging
+
 from ..jinja_render import JinjaRender
 from ..composite_builders import SequentialBuilder, ParallelBuilder
 from ..utils import generate_outfilepath
@@ -16,7 +18,7 @@ class TargetBuilder(SequentialBuilder):
         The build environment
     context: :obj:`.context.Context`
         The context dict for the document being rendered.
-    iparameters, args : Tuple[:obj:`pathlib.Path`, str, tuple, list]
+    parameters, args : Tuple[:obj:`pathlib.Path`, str, tuple, list]
         The input parameters (dependencies), including filepaths, for the build
     outfilepath : Optional[:obj:`pathlib.Path`]
         If specified, the path for the output file.
@@ -25,6 +27,8 @@ class TargetBuilder(SequentialBuilder):
 
     Attributes
     ----------
+    only_root : Optional[bool]
+        If True, only add the target builder for the root document.
     add_parallel_builder : Optional[bool]
         If True (default), create a parallel builder for adding dependencies for
         a target.
@@ -42,6 +46,7 @@ class TargetBuilder(SequentialBuilder):
     copy = False
     clear_done = False
 
+    only_root = False
     add_parallel_builder = True
     add_render_builder = True
 
@@ -51,7 +56,13 @@ class TargetBuilder(SequentialBuilder):
     _render_builder = None
 
     def __init__(self, env, context, parameters=None, outfilepath=None,
-                 subbuilders=None, **kwargs):
+                 subbuilders=None, use_cache=None, **kwargs):
+        if __debug__ and 'src_filepath' in context:
+            # log the creation of the target builder
+            msg = "Add target builder '{}' to document '{}'"
+            logging.debug(msg.format(self.__class__.__name__,
+                                     context['src_filepath']))
+
         # Configure the parameters
         self.context = context
         parameters = parameters if parameters is not None else []
@@ -86,27 +97,20 @@ class TargetBuilder(SequentialBuilder):
         parameters.insert(0, "build '{}'".format(self.__class__.__name__))
 
         # Determine if this target builder matches a document target
-        document = getattr(context, 'document', None)
-        is_document_target = (document is not None and
-                              self.outfilepath_ext in document.targets)
+        is_document_target = self.outfilepath_ext in context.targets
 
         # Only use cache for outfilepaths if this is not a document target
-        use_cache = False if is_document_target else True
+        if use_cache is None:
+            use_cache = False if is_document_target else True
 
         # Setup the outfilepath, if one isn't specified.
         if outfilepath is None:
-            if is_document_target:
-                # Use the document target as the outfilepath, if this target is
-                # listed in the document targets
-                outfilepath = document.targets[self.outfilepath_ext]
-            else:
-                # Otherwise create one from the src_filepath
-                outfilepath = generate_outfilepath(env=env,
-                                                   parameters=parameters,
-                                                   target=self.outfilepath_ext,
-                                                   ext=self.outfilepath_ext,
-                                                   use_cache=use_cache,
-                                                   use_media=self.use_media)
+            outfilepath = generate_outfilepath(env=env,
+                                               parameters=parameters,
+                                               target=self.outfilepath_ext,
+                                               ext=self.outfilepath_ext,
+                                               use_cache=use_cache,
+                                               use_media=self.use_media)
 
         # Add a parallel builder for dependencies
         if self.add_parallel_builder:

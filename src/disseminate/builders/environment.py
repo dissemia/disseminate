@@ -1,5 +1,5 @@
 """
-A build environment to determine which build to use.
+A build environment to manage and execute builders.
 """
 import pathlib
 from itertools import chain
@@ -240,5 +240,18 @@ class Environment(object):
                        for doc in documents])
 
     def build(self, complete=True):
+        """Run the build.
+
+        Parameters
+        ----------
+        complete : Optional[bool]
+            If True, run the build until it has completed
+            If False, start the build in the background.
+
+        Returns
+        -------
+        status : str
+            The current status of the build.
+        """
         root_builder = self.create_root_builder()
         return root_builder.build(complete=complete)

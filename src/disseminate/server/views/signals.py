@@ -13,7 +13,7 @@ def signals_to_dict(signal_namespace):
 
     Parameters
     ----------
-    signal_namespace : :obj:`.signals.signals.Namespace
+    signal_namespace : :obj:`.signals.signals.Namespace`
 
     """
     signals_list = []

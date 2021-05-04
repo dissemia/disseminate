@@ -1,158 +1,125 @@
+.. role:: dm(code)
+   :language: dm
+
 Headings
 ========
 
-Headings are used to group and demarcate parts of the document's text.
+Headings are used to group and demarcate parts of a document or project.
 
-``@chapter{...}``
+.. rst-class:: dl-parameter
+
+
+:dm:`@part{...}`
+    A part heading
+
+    .. index::
+        single: tags; @part
+        single: tags; @h1
+
+    :aliases: ``@h1``
+
+    :attributes:
+
+        .. include:: header_attributes.rst
+
+    :examples:
+
+        .. code-block:: dm
+
+           @chapter{Object Decorators}
+           @chapter[fmt="Chapter {label.tree_number}. '{label.short}'"]{Introduction}
+
+
+:dm:`@chapter{...}`
     A chapter heading
 
     .. index::
         single: tags; @chapter
-        single: tags; @h1
+        single: tags; @h2
 
-    :aliases: ``@h1``
+    :aliases: ``@h2``
               
     :attributes:
 
-        ``id=x``
-
-           The heading's marker label
-        
-        ``nolabel``
-
-           If specified, a label is not created with this heading for
-           TOC entries and links
-        
-        ``short=x``
-
-           The short title, which can be used in the TOC
-        
-        ``fmt=x``
-
-           The format for a tag’s label
+        .. include:: header_attributes.rst
 
     :examples:
 
-        ::
+        .. code-block:: dm
           
            @chapter{Object Decorators}
            @chapter[fmt="Chapter {label.tree_number}. '{label.short}'"]{Introduction}
 
 
-``@section{...}``
+:dm:`@section{...}`
     A section heading
 
     .. index::
         single: tags; @section
-        single: tags; @h2
-
-    :aliases: ``@h2``
-
-    :attributes:
-
-        ``id=x``
-
-           The heading's marker label
-        
-        ``nolabel``
-
-           If specified, a label is not created with this heading for
-           TOC entries and links
-        
-        ``short=x``
-
-           The short title, which can be used in the TOC
-        
-        ``fmt=x``
-
-           The format for a tag’s label
-       
-    :examples:
-
-       ::
-          
-          @section{Introduction}
-          @section[id="chapter1-introduction"]{Introduction}
-          @h2{Introduction}
-
-``@subsection{...}``
-    A subsection heading
-
-    .. index::
-        single: tags; @subsection
         single: tags; @h3
 
     :aliases: ``@h3``
 
     :attributes:
 
-        ``id=x``
-
-           The heading's marker label
-        
-        ``nolabel``
-
-           If specified, a label is not created with this heading for
-           TOC entries and links
-        
-        ``short=x``
-
-           The short title, which can be used in the TOC
-        
-        ``fmt=x``
-
-           The format for a tag’s label
+        .. include:: header_attributes.rst
        
     :examples:
 
-       ::
+       .. code-block:: dm
+          
+          @section{Introduction}
+          @section[id="chapter1-introduction"]{Introduction}
+          @h2{Introduction}
+
+:dm:`@subsection{...}`
+    A subsection heading
+
+    .. index::
+        single: tags; @subsection
+        single: tags; @h4
+
+    :aliases: ``@h4``
+
+    :attributes:
+
+        .. include:: header_attributes.rst
+       
+    :examples:
+
+       .. code-block:: dm
 
           @subsection{Methods}
           @h3{Methods}
 
-``@subsubsection{...}``
+:dm:`@subsubsection{...}`
     A subsubsection heading
 
     .. index::
         single: tags; @subsubsection
-        single: tags; @h4
+        single: tags; @h5
 
-    :aliases: ``@h4``
+    :aliases: ``@h5``
               
     :attributes:
 
-        ``id=x``
-
-           The heading's marker label
-        
-        ``nolabel``
-
-           If specified, a label is not created with this heading for
-           TOC entries and links
-        
-        ``short=x``
-
-           The short title, which can be used in the TOC
-        
-        ``fmt=x``
-
-           The format for a tag’s label
+        .. include:: header_attributes.rst
        
     :examples:
 
-       ::
+       .. code-block:: dm
 
           @subsubsection{Titration Procedure}
           @h4{Titration Procedure}
 
-``@paragraph{...}``
+:dm:`@paragraph{...}`
     A paragraph heading
 
     .. index::
         single: tags; @paragraph
-        single: tags; @h5
+        single: tags; @h6
 
-    :aliases: ``@h5``
+    :aliases: ``@h6``
               
     :attributes:
 
@@ -168,7 +135,7 @@ Headings are used to group and demarcate parts of the document's text.
 
     :examples:
 
-       ::
+       .. code-block:: dm
 
           @paragraph{Group A}. The first group ...
           @h5{Group A}. The first group ...
@@ -186,7 +153,7 @@ the heading will not be included in Tables of Content.
 
 Otherwise, it is recommended to use an identifier. An identifier is specified
 with the ``id=x`` attribute, and it should be *unique* for the project. If an
-identifier is not specified, an automated identifier will be generated.
+identifier is not specified, an identifier will be generated.
 
 Empty Contents
 --------------

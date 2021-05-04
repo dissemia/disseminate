@@ -111,9 +111,7 @@ def test_sequentialbuilder_basic_decider(env, caplog, wait):
     assert not outfilepath.exists()  # target file not created yet
 
     # Run the build
-    status = None
-    while status != "done":
-        status = pdf2svg.build()
+    assert pdf2svg.build(complete=True)
 
     # Only 4 commands should have been run (pdfcrop, pdf2svg, rsvg-convert)
     # Filter logging messages for the build command

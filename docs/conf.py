@@ -36,7 +36,9 @@ extensions = ['sphinx.ext.autodoc',
               'numpydoc',
               'sphinx.ext.todo',
               'sphinx.ext.mathjax',
-              'sphinx.ext.ifconfig']
+              'sphinx.ext.ifconfig',
+              'sphinx_click',
+              ]
 
 # numpydoc options
 numpydoc_show_inherited_class_members = False
@@ -58,7 +60,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'disseminate'
-copyright = '2018, Justin L Lorieau'
+copyright = '2018-2020, Justin L Lorieau'
 author = 'Justin L Lorieau'
 
 # The version info for the project you're documenting, acts as replacement for

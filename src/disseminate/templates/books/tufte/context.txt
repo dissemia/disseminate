@@ -14,3 +14,5 @@ label_fmts:
     ref_caption_figure: Fig. @label.chapter_number.@label.number
     caption_table: "@b{Table @label.chapter_number.@label.number}. "
     ref_caption_table: Table @label.chapter_number.@label.number
+epub:
+    layout: reflowable

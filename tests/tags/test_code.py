@@ -4,9 +4,8 @@ Test the @code tag
 from disseminate.tags import Tag
 
 
-def test_tag_code_sources(doc):
+def test_tag_code_sources(context):
     """Test the @code tag with code fragments or files."""
-    context = doc.context
 
     # 1. Setup a code tag with a specified lexer
     src = "@code[python]{print('test')}"
@@ -28,9 +27,8 @@ def test_tag_code_sources(doc):
                             "print('This is my file!')\n")
 
 
-def test_tag_code_lexer(doc):
+def test_tag_code_lexer(context):
     """Test the identification of the lexer for the code tag."""
-    context = doc.context
 
     # 1. Setup a code tag with a specified lexer
     src = "@code[python]{print('test')}"
@@ -53,10 +51,9 @@ def test_tag_code_lexer(doc):
     assert code.lexer.name == 'Python'
 
 
-def test_tag_code_paragraphs(doc):
+def test_tag_code_paragraphs(context):
     """Test the @code tag with paragraphs."""
     # Setup the context
-    context = doc.context
     context['process_paragraphs'] = 'root'
 
     # 1. Setup a code tag with a specified lexer
@@ -83,9 +80,8 @@ def test_tag_code_paragraphs(doc):
     assert root.content[2].content[2] == ' code.\n    '
 
 
-def test_tag_code_specific(doc):
+def test_tag_code_specific(context):
     """Test code tags for specific languages"""
-    context = doc.context
 
     for language in ('python', 'html', 'ruby', 'java', 'javascript'):
         src1 = "@code[{}]".format(language) + "{test}"
@@ -100,11 +96,37 @@ def test_tag_code_specific(doc):
         assert code1.tex == code2.tex
 
 
+# Tests for tex targets
+
+def test_tag_code_tex(context):
+    """Test the generation of tex from @code tags"""
+
+    # 1. Setup a code tag with a specified lexer
+    src = "@code[python]{print('test')}"
+    root = Tag(name='root', content=src, attributes='', context=context)
+
+    # Check the @code tag
+    code = root.content
+    code.paragraph_role = 'block'
+    assert code.tex == ('\\begin{Verbatim}[commandchars=\\\\\\{\\}]\n'
+                        '\\PY{n+nb}{print}\\PY{p}{(}\\PY{l+s+s1}{\\PYZsq{}}'
+                        '\\PY{l+s+s1}{test}\\PY{l+s+s1}{\\PYZsq{}}\\PY{p}{)}\n'
+                        '\\end{Verbatim}\n')
+    assert root.tex == ('\\begin{Verbatim}[commandchars=\\\\\\{\\}]\n'
+                        '\\PY{n+nb}{print}\\PY{p}{(}\\PY{l+s+s1}{\\PYZsq{}}'
+                        '\\PY{l+s+s1}{test}\\PY{l+s+s1}{\\PYZsq{}}\\PY{p}{)}\n'
+                        '\\end{Verbatim}\n')
+
+    # Test inline
+    code.paragraph_role = 'inline'
+    assert code.tex == "\\verb|print('test')|"
+    assert root.tex == "\\verb|print('test')|"
+
+
 # Tests for html targets
 
-def test_tag_code_html(doc):
+def test_tag_code_html(context):
     """Test the generation of html from @code tags"""
-    context = doc.context
 
     # 1. Setup a code tag with a specified lexer
     src = "@code[python]{print('test')}"
@@ -175,11 +197,10 @@ def test_tag_code_html(doc):
     assert code.html == '<code>&lt;script&gt;&lt;/script</code>\n'
 
 
-# Tests for tex targets
+# Tests for xhtml targets
 
-def test_tag_code_tex(doc):
-    """Test the generation of tex from @code tags"""
-    context = doc.context
+def test_tag_code_xhtml(context, is_xml):
+    """Test the generation of xhtml from @code tags"""
 
     # 1. Setup a code tag with a specified lexer
     src = "@code[python]{print('test')}"
@@ -188,16 +209,73 @@ def test_tag_code_tex(doc):
     # Check the @code tag
     code = root.content
     code.paragraph_role = 'block'
-    assert code.tex == ('\\begin{Verbatim}[commandchars=\\\\\\{\\}]\n'
-                        '\\PY{n+nb}{print}\\PY{p}{(}\\PY{l+s+s1}{\\PYZsq{}}'
-                        '\\PY{l+s+s1}{test}\\PY{l+s+s1}{\\PYZsq{}}\\PY{p}{)}\n'
-                        '\\end{Verbatim}\n')
-    assert root.tex == ('\\begin{Verbatim}[commandchars=\\\\\\{\\}]\n'
-                        '\\PY{n+nb}{print}\\PY{p}{(}\\PY{l+s+s1}{\\PYZsq{}}'
-                        '\\PY{l+s+s1}{test}\\PY{l+s+s1}{\\PYZsq{}}\\PY{p}{)}\n'
-                        '\\end{Verbatim}\n')
+    assert code.xhtml == ('<div class="code">\n'
+                          '  <div class="highlight block">\n'
+                          '    <pre>'
+                          '<span/>'
+                          '<span class="nb">print</span>'
+                          '<span class="p">(</span>'
+                          '<span class="s1">\'test\'</span>'
+                          '<span class="p">)</span>\n'
+                          '</pre>\n'
+                          '  </div>\n'
+                          '</div>\n')
+    assert is_xml(code.xhtml)
+
+    assert root.xhtml == ('<span class="root">\n'
+                          '  <div class="code">\n'
+                          '    <div class="highlight block">\n'
+                          '      <pre>'
+                          '<span/>'
+                          '<span class="nb">print</span>'
+                          '<span class="p">(</span>'
+                          '<span class="s1">\'test\'</span>'
+                          '<span class="p">)</span>\n'
+                          '</pre>\n'
+                          '    </div>\n'
+                          '  </div>\n'
+                          '</span>\n')
+    assert is_xml(root.xhtml)
 
     # Test inline
     code.paragraph_role = 'inline'
-    assert code.tex == "\\verb|print('test')|"
-    assert root.tex == "\\verb|print('test')|"
+    assert code.html == '<code>print(\'test\')</code>\n'
+
+    # 2. Test unsafe tags
+    src = "@code[html]{<script></script}"
+    root = Tag(name='root', content=src, attributes='', context=context)
+
+    # Check the @code tag
+    code = root.content
+    code.paragraph_role = 'block'
+
+    assert code.xhtml == ('<div class="code">\n'
+                          '  <div class="highlight block">\n'
+                          '    <pre>'
+                          '<span/>'
+                          '<span class="p">&lt;</span>'
+                          '<span class="nt">script</span>'
+                          '<span class="p">&gt;</span>'
+                          '<span class="err">&lt;/script</span>\n'
+                          '</pre>\n'
+                          '  </div>\n'
+                          '</div>\n')
+    assert is_xml(code.xhtml)
+    assert root.xhtml == ('<span class="root">\n'
+                          '  <div class="code">\n'
+                          '    <div class="highlight block">\n'
+                          '      <pre>'
+                          '<span/>'
+                          '<span class="p">&lt;</span>'
+                          '<span class="nt">script</span>'
+                          '<span class="p">&gt;</span>'
+                          '<span class="err">&lt;/script</span>\n'
+                          '</pre>\n'
+                          '    </div>\n'
+                          '  </div>\n'
+                          '</span>\n')
+
+    # Test inline
+    code.paragraph_role = 'inline'
+    assert code.xhtml == '<code>&lt;script&gt;&lt;/script</code>\n'
+    assert is_xml(code.xhtml)

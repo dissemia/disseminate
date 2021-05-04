@@ -59,9 +59,9 @@ def test_document_toc(env):
     # Make sure the 'toc' context entry is correct
     toc_tag = doc.context['toc']
     assert toc_tag.name == 'toc'
-    key = ('<ul class="toc">'
+    key = ('<ol class="toc">'
              '<li class="toc-level-1"><a href="" class="ref">My first title</a></li>'
-           '</ul>\n')
+           '</ol>\n')
     assert toc_tag.html == key
 
 

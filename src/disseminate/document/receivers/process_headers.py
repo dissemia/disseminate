@@ -2,6 +2,7 @@
 A receiver to process headers in a context
 """
 import regex
+import pathlib
 
 from ..signals import document_onload
 from ...context import BaseContext
@@ -65,7 +66,7 @@ def process_headers(context, **kwargs):
 
     # Now load the template paths and context values
     paths = context['paths']
-    paths[0:0] = template_paths  # insert at top of list w/o creating list
+    paths[0:0] = template_paths  # insert at top of list w/o creating new list
 
     # Copy over entries in the template_context, first, then those from the
     # header_context. Since the header_context contains entries from the headers
@@ -75,7 +76,7 @@ def process_headers(context, **kwargs):
 
 
 def find_template_paths(template_name):
-    """Load additional paths from the template into the context.
+    """Find template paths from a template name.
 
     Parameters
     ----------
@@ -122,19 +123,29 @@ def find_jinja2_parent_templates(template_path):
         A list of template path directories for the parent templates.
     """
     # Find all template files
-    template_files = template_path.glob('template*')
+    template_files = template_path.glob('**/template*')
 
     # Find "extends" statements. This regex will find items
     # like {% extends "default/template.html" %}
     matches = [_re_jinja2_extends.search(tf.read_text())
                for tf in template_files]
+
+    # Remove None enties
     matches = filter(bool, matches)  # remove None entries
 
     # Find the paths
     paths = []
     for match in matches:
+        # Format the template name: Strip the template filename and
+        # target directory
+        # ex: 'default/xhtml/template.xhtml' -> 'default'
         template_name = match.group(1)
-        paths += find_template_paths(template_name)
+        template_name = pathlib.Path(template_name).parent.parent
+
+        # Add the path as long as the above didn't return the current directory,
+        # which is not a template
+        if str(template_name) != '.':
+            paths += find_template_paths(template_name)
 
     return uniq(paths)
 

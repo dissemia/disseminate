@@ -1,0 +1,85 @@
+/* Tufte widths */
+
+article p, article ul, article ol {
+  width: 70%; /* width relative to parent 'body' (x)*/
+}
+
+h1, h2, h3, h4, h5, h6 {
+  width: 100%;
+}
+
+h2 .label {
+  display: block;
+  background: #cfe3fb;
+  padding: 3.5em 0.5em 1em 0.5em;
+  text-align: right;
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-bottom: 3em;
+}
+
+h2 .label span {
+  font-size: 4rem;
+  font-weight: 200;
+  font-family: "Times New Roman", "Palatino", serif;
+  font-style: italic;
+  color: #666666;
+  float: right;
+  margin-top: -1.2em;
+}
+
+/* TOC */
+
+ol.toc, ol.toc ol, ol.toc ol ol, ol.toc ol ol ol, ol.toc ol ol ol ol {
+    width: calc(100% - 1em);
+}
+
+/* captions */
+
+.sidenote, .marginfig, .table caption, .margintable {
+  overflow-x: hidden;
+  clear: right;
+  margin: 1em 0 0 0;
+  padding: 0.25em 0;
+  vertical-align: top;
+  position: relative;
+  float: right;
+
+}
+
+span.sidenote, table.table caption, table.margintable {
+  width: 40%;
+}
+
+span.sidenote {
+  margin-right: -43%;
+}
+
+figure.marginfig, figure.figure .caption {
+  width: 28%; /* width relative to parent 'p' (y=(1-x)/x) */
+}
+
+figure.figure img {
+  width: 70%;
+}
+
+/* tables */
+
+thead, tbody {
+  width: 70%;
+}
+
+table.table caption, table.margintable {
+  width: 28%; /* width relative to parent 'p' (y=(1-x)/x) */
+  text-align: left;
+}
+
+/* special elements */
+
+div.featurebox {
+  width: 70%;
+}
+
+.featurebox p, .featurebox ol, .featurebox ul {
+  width: calc(100% - 2em);
+}

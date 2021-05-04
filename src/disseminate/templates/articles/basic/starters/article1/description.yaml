@@ -1,0 +1,8 @@
+title: Article #1
+description:
+  A basic article template
+  An article is typically a single document for articles that may include the
+  following heading types\:
+  - @section
+  - @subsection
+  - @subsubsection

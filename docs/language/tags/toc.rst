@@ -1,10 +1,15 @@
+.. role:: dm(code)
+   :language: dm
+
 Table of Contents
 =================
 
 Table of contents are used to create links to headings, content or other
 documents.
 
-``@toc{...}``
+.. rst-class:: dl-parameter
+
+:dm:`@toc{...}`
     A table of contents
 
     .. index::
@@ -58,7 +63,7 @@ documents.
 
     :examples:
 
-        ::
+        .. code-block:: dm
 
            @toc{headings collapsed}
            @toc{all headings expanded}

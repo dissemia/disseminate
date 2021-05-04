@@ -1,0 +1,7 @@
+body {
+  max-width: 60em;
+}
+
+.body > p, .body > ul, .body > ol {
+  width: 70%; /* width relative to parent 'body' (x)*/
+}

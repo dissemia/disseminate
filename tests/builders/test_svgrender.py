@@ -8,11 +8,11 @@ from disseminate.tags import Tag
 from disseminate.paths import TargetPath
 
 
-hash_filename1 = lambda ext : 'template_a8931de28c22' + ext
-hash_filename2 = lambda ext : 'template_dbbfa2847deb' + ext
-hash_filename3 = lambda ext : 'template_bf27cdded91b' + ext
-hash_filename4 = lambda ext : 'template_9d847169a9c9' + ext
-hash_filename5 = lambda ext : 'template_6d4bdaabcda5' + ext
+hash_filename1 = lambda ext : 'template_f23df37446eb' + ext
+hash_filename2 = lambda ext : 'template_08d50158c948' + ext
+hash_filename3 = lambda ext : 'template_3fdf8003c816' + ext
+hash_filename4 = lambda ext : 'template_fb52fb79fce4' + ext
+hash_filename5 = lambda ext : 'template_f86ffcd7ea13' + ext
 
 
 def test_svgrender_with_find_builder_cls():
@@ -86,7 +86,7 @@ def test_svgrender_setup_without_outfilepath(env):
 
     assert svgrender.subbuilders[0].__class__.__name__ == 'PdfRender'
     assert svgrender.subbuilders[0].use_cache
-    assert len(svgrender.subbuilders[0].parameters) == 4
+    assert len(svgrender.subbuilders[0].parameters) == 5
     assert (svgrender.subbuilders[0].outfilepath ==
             cache_path / 'media' / hash_filename1('.pdf'))
 
@@ -174,7 +174,7 @@ def test_svgrender_setup_without_outfilepath_use_cache(env):
 
     assert svgrender.subbuilders[0].__class__.__name__ == 'PdfRender'
     assert svgrender.subbuilders[0].use_cache
-    assert len(svgrender.subbuilders[0].parameters) == 4
+    assert len(svgrender.subbuilders[0].parameters) == 5
     assert (svgrender.subbuilders[0].outfilepath ==
             cache_path / 'media' / hash_filename1('.pdf'))
 

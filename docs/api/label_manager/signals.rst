@@ -2,4 +2,5 @@ Signals
 -------
 
 .. automodule:: disseminate.label_manager.signals
-    :members: label_register
+
+.. autodata:: disseminate.label_manager.signals.label_register

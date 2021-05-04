@@ -1,0 +1,214 @@
+/* css for epub ebooks */
+
+/* headings */
+
+h1, h2, h3, h4, h5 {
+  font-family: sans-serif;
+}
+
+h1, h2 {
+  display: block;
+  margin-top: 1.0em;
+  margin-bottom: 1.0em;
+  font-weight: 400;
+}
+
+h1 {
+  font-size: 1.6em;
+  text-align: center;
+}
+
+h2 {
+  font-size: 1.5em;
+  margin-top: 1.0em;
+  margin-bottom: 0.75em;
+}
+
+h3 {
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+h3, h4, h5 {
+  font-size: 1.0em;
+  margin-top: 1.0em;
+  margin-bottom: 1.0em;
+}
+
+a.ref {
+  color: #444444;
+}
+
+/* Structural elements */
+
+.body {
+  font-size: 14pt;
+  font-family: Palatino, serif;
+  line-height: 1.42;
+}
+
+.w100 {
+  width: 100%;
+}
+
+.w75 {
+  width: 75%;
+}
+
+.w50 {
+  width: 50%;
+}
+
+.w25 {
+  width: 25%;
+}
+
+.w66 {
+  width: 66%;
+}
+
+.w33 {
+  width: 33%;
+}
+
+/* images and equations */
+img {
+  vertical-align: middle;
+  border-style: none;
+}
+
+img.eq {
+  max-width: 100%;  /* scale down images larger than the container */
+}
+
+/* text formatting */
+.supsub {
+    display: inline-block;
+    margin: -9em 0;
+    vertical-align: -0.1em;
+    line-height: 0.75em;
+    font-size: 70%;
+    text-align: left;
+}
+
+/* figures */
+.marginfig, .sidenote, .figure .caption, .table caption, .margintable {
+  display: block;
+  font-size: 11pt;
+  line-height: 14pt;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  background-color: #fcfcfc;
+}
+
+figure.fullfigure {
+  padding: 0.5rem 0;
+  display: flex;
+  width: 145%;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+figure.fullfigure img {
+  padding-right: 0.25rem;
+  flex-grow: 1.0;
+}
+
+figure.figure {
+  padding: 0.5rem 0;
+  display: flex;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+figure.figure img {
+  padding-right: 0.25rem;
+  flex-grow: 1.0;
+}
+
+
+/* captions */
+
+caption, figcaption {
+  display: block;
+  font-size: 11pt;
+  line-height: 13pt;
+  margin-top: 1em;
+}
+
+figure.figure .caption {
+  border: 0;
+  background: transparent;
+}
+
+span.panel {
+  font-size: 10pt;
+  line-height: 12pt;
+  padding-right: 0.25rem;
+  flex-grow: 1.0;
+}
+
+/* fix sub/superscripts in sidenotes and captions */
+.sidenote sup, .sidenote sub, .marginfig sup, .marginfig sub, .caption sup, .caption sub, .table caption sup, .table caption sub {
+  vertical-align: baseline;
+  position: relative;
+  top: -0.4em;
+}
+
+span.sidenote sub, .marginfig sub, .caption sub, .table caption sub {
+  top: 0.4em;
+}
+
+/* Tables */
+
+table {
+  display: block;
+  margin-bottom: 1em;
+}
+
+table thead {
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid #aaaaaa;
+}
+
+table tbody {
+  border-bottom: 1px solid #666666;
+}
+
+td, th {
+  padding: 0.25em 0.5em;
+}
+
+/* Special elements */
+
+div.featurebox {
+  display: block;
+  border-radius: 5px;
+  padding: 1em 1em 0 1em;
+  margin-bottom: 1em;
+  width: calc(70% - 1em);
+}
+
+div.featurebox h4 {
+  margin-top: 0;
+}
+
+div.featurebox.examplebox {
+  border: 2px solid #a1b0f7;
+  background: #f2f4fd;
+}
+
+div.examplebox >  h2, div.examplebox >  h3, div.examplebox >  h4 {
+  color: #405ff3;
+  margin-top: 0;
+}
+
+div.featurebox.problembox {
+  border: 2px solid #a4ca9d;
+  background: #f0feef;
+}
+
+div.problembox >  h2, div.problembox >  h3, div.problembox >  h4 {
+  color: #348625;
+  margin-top: 0;
+}

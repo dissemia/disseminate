@@ -2,6 +2,7 @@
 Terminal utilities in the CLI.
 """
 import shutil
+from textwrap import TextWrapper
 
 
 def term_width():
@@ -19,3 +20,10 @@ def fill_string(start, end, start_len=None, end_len=None, spacer=' ',
     return (start +
             spacer * (width - start_len - end_len) +
             end)
+
+
+def wrap_with_newlines(string, wrapper=None):
+    """Textwrap a string while preserving newlines."""
+    wrapper = wrapper or TextWrapper(width=min(80, term_width()))
+    return "\n".join([wrapper.fill(line) for line in string.splitlines()
+                      if line != ""])

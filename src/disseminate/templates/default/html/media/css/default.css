@@ -1,0 +1,413 @@
+/*
+ * CSS for templates/default/template.html
+ */
+
+body {
+  background: #f1f1f1;
+}
+
+article {
+  font-size: 14pt;
+  font-family: Palatino, serif;
+  line-height: 22pt;
+  color: #444444;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: sans-serif;
+}
+
+h1, h2 {
+  display: block;
+  margin-top: 1.0em;
+  margin-bottom: 1.0em;
+  font-weight: 400;
+}
+
+h1 {
+  font-size: 1.6em;
+  text-align: center;
+}
+
+h2 {
+  font-size: 1.5em;
+  margin-top: 1.0em;
+  margin-bottom: 0.75em;
+}
+
+h3, h4, h5 {
+  font-size: 1.0em;
+  margin-top: 1.0em;
+  margin-bottom: 1.0em;
+}
+
+h3 {
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+h4 {
+  font-weight: 400;
+  font-style: italic;
+}
+
+strong {
+  font-weight: 600;
+}
+
+a.ref {
+  color: #444444;
+}
+
+ul {/* Remove margin for all <ul>s */
+  margin-left: 0;
+  padding-left: 1em;
+}
+
+ul ul {/* Add a margin nested <ul> */
+  margin-left: 2em;
+}
+
+ol {/* Remove margin for all <ol>s */
+  margin-left: 0;
+  padding-left: 1em;
+}
+
+ol li {
+  margin-top: 1em;
+}
+
+ol ol {/* Add a margin nested <ol> */
+  margin-left: 1em;
+  list-style: lower-latin;
+}
+
+ol ol li {
+  margin-top: 0;
+}
+
+ol ol ol {
+  margin-left: 2em;
+}
+
+ol ol ol ol {
+  margin-left: 3em;
+}
+
+table {
+  border: 0;
+  display: block;
+}
+
+thead {
+  border-bottom: 1px solid #bbbbbb;
+}
+
+th {
+  padding: 0.1em 0.5em;
+}
+
+td {
+  padding: 0.1em 0.5em;
+}
+
+/* structural elements */
+
+.container {
+  padding: 1rem 2rem 1rem 3rem;
+  background: #fcfcfc;
+  border: 1px solid #CCCCCC;
+  border-top: 0px;
+  border-radius: 0 0 4px 4px;
+}
+
+.w100 {
+  width: 100%;
+}
+
+.w75 {
+  width: 75%;
+}
+
+.w50 {
+  width: 50%;
+}
+
+.w25 {
+  width: 25%;
+}
+
+.w66 {
+  width: 66%;
+}
+
+.w33 {
+  width: 33%;
+}
+
+/* span elements */
+
+.supsub {
+    display: inline-block;
+    margin: -9em 0;
+    vertical-align: -0.1em;
+    line-height: 0.75em;
+    font-size: 70%;
+    text-align: left;
+}
+
+/* TOC */
+
+article ol.toc {
+  border-width: 1px 0 1px 0;
+  border-style: solid;
+  border-color: #dddddd;
+  background: #f5f5f5;
+  padding: 0 1rem 1rem 1rem;
+  line-height: 18pt;
+  list-style: none;
+  font-family: sans-serif;
+}
+
+ol.toc ol {
+  margin-left: 0;
+  padding-left: 0;
+}
+
+ol.toc li.toc-level-0 { /* title */
+  font-size: 120%;
+  font-weight: 400;
+  padding: 0.5em 0 0.5em 0.5em;
+  list-style: none;
+}
+
+ol.toc li.toc-level-1 { /* part */
+  padding: 0.5em 0 0.5em 1em;
+  font-weight: 400;
+  list-style: none;
+}
+
+ol.toc li.toc-level-2 { /* chapter */
+  padding: 0.5em 0 0.0em 1em;
+  font-weight: 400;
+  font-size: 95%;
+  list-style: none;
+}
+
+ol.toc li.toc-level-3 { /* section */
+  padding-left: 2em;
+  font-size: 90%;
+  list-style: none;
+}
+
+ol.toc li.toc-level-4 { /* subsection */
+  padding-left: 3em;
+  font-size: 90%;
+  list-style: none;
+}
+
+ol.toc li.toc-level-5 { /* subsubsection */
+  padding-left: 4em;
+  font-size: 90%;
+  list-style: none;
+}
+
+ol.toc li.toc-level-6 { /* paragraph */
+  padding-left: 5em;
+  font-size: 90%;
+  list-style: none;
+}
+
+/* author listing */
+
+span.authors {
+  font-family: sans-serif;
+  text-align: right;
+  font-weight: 400;
+  margin: 14pt 0 28pt 14pt;
+}
+
+/* sidenotes, marginfigs and margin tables and caption */
+figure.marginfig, span.sidenote, figure.figure .caption, table.table caption, table.margintable {
+  overflow-x: hidden;
+  clear: right;
+  float: right;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  vertical-align: top;
+  position: relative;
+  font-size: 11pt;
+  line-height: 14pt;
+  padding: 0.2rem;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  background-color: #fcfcfc;
+}
+
+/* Tables */
+
+table thead {
+  border-top: 1px solid #666666;
+  border-bottom: 1px solid #aaaaaa;
+}
+
+.table table {
+  margin-bottom: 1em;
+}
+
+table tbody {
+  border-bottom: 1px solid #666666;
+}
+
+.table thead th { /* reset bootstrap values */
+  border: none;
+}
+
+.table td, .table th { /* reset bootstrap values */
+  border: none;
+  padding: 0.25em 0.5em;
+}
+
+/* figures */
+
+figure.fullfigure {
+  padding: 0.5rem 0;
+  display: flex;
+  width: 100%;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+figure.fullfigure img {
+  padding-right: 0.25rem;
+  flex-grow: 1.0;
+}
+
+figure.figure {
+  padding: 0.5rem 0;
+  display: flex;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+figure.figure img {
+  padding-right: 0.25rem;
+  flex-grow: 1.0;
+}
+
+
+/* captions */
+
+caption, figcaption {
+  display: block;
+  font-size: 11pt;
+  line-height: 13pt;
+  margin-top: 1em;
+}
+
+figure.figure .caption {
+  border: 0;
+  background: transparent;
+}
+
+span.panel {
+  font-size: 10pt;
+  line-height: 12pt;
+  padding-right: 0.25rem;
+  flex-grow: 1.0;
+}
+
+/* Tags */
+
+span.label::after {
+    content: " ";
+}
+
+img.eq {
+  max-width: 100%; /* scale down image if larger than container */
+  padding-bottom: 4px;
+}
+
+span.panel {
+  display: table-cell;
+}
+
+/* Special elements */
+
+div.featurebox {
+  display: block;
+  border-radius: 5px;
+  padding: 1em 1em 0 1em;
+  margin-bottom: 1em;
+}
+
+div.featurebox h4 {
+  margin-top: 0;
+}
+
+div.featurebox.examplebox {
+  border: 2px solid #a1b0f7;
+  background: #f2f4fd;
+}
+
+div.examplebox >  h2, div.examplebox >  h3, div.examplebox >  h4 {
+  color: #405ff3;
+  margin-top: 0;
+}
+
+div.featurebox.problembox {
+  border: 2px solid #a4ca9d;
+  background: #f0feef;
+}
+
+div.problembox >  h2, div.problembox >  h3, div.problembox >  h4 {
+  color: #348625;
+  margin-top: 0;
+}
+
+/* Footer - navigation */
+
+footer {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+footer span.prev {
+  display: block;
+  position: relative;
+  left: 0;
+}
+
+footer span.next {
+  display: block;
+  float: right;
+  margin-top: 1em;
+}
+
+footer a.ref {
+  color: #666666;
+  padding: 0.25rem;
+}
+
+footer span.prev a.ref::before {
+  content: "« ";
+}
+
+footer span.prev a.ref {
+  border: 1px solid #dddddd;
+  border-bottom: 0px;
+  border-right: 0px;
+  border-top-left-radius: 5px;
+}
+
+footer span.next a.ref::after {
+  content: " »";
+}
+
+footer span.next a.ref {
+  border: 1px solid #dddddd;
+  border-top: 0px;
+  border-left: 0px;
+  border-bottom-right-radius: 5px;
+}
+

@@ -1,0 +1,10 @@
+title: Report #1
+description:
+  A basic report template
+  A report is typically a single document that may include the following
+  heading types\:
+  - @part
+  - @chapter
+  - @section
+  - @subsection
+  - @subsubsection

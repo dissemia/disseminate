@@ -9,16 +9,15 @@ functions for disseminate.
    :caption: API Documentation
 
    attributes/index
+   builders/index
    checkers/index
    cli/index
    context/index
-   convert/index
-   dependency_manager/index
    document/index
    formats/index
    label_manager/index
    paths/index
+   server/index
    signals/index
-   renderers/index
    tags/index
    utils/index

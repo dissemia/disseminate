@@ -3,13 +3,14 @@ The pool executor for running multiple functions at once.
 """
 import logging
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from multiprocessing import cpu_count
 from collections import namedtuple
 import subprocess
 
 from .exceptions import BuildError
 
 # Setup a global pool for processes
-executor = ThreadPoolExecutor()
+executor = ThreadPoolExecutor(max_workers=cpu_count()*2)
 
 PopenResult = namedtuple('PopenResult', 'returncode args stdout stderr')
 

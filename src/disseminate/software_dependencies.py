@@ -6,15 +6,16 @@ from .checkers.types import All, Any, Optional
 
 python_deps = All('python',
                   Any('executables',
-                      'python3.6', 'python3.7'),
+                      'python3.6', 'python3.7', 'python3.8', 'python3.9'),
                   All('packages',
                       'regex>=2018.11.22', 'jinja2>=2.10', 'lxml>=4.3.0',
-                      'python-slugify>=2.0.1', 'click>=7.0',
-                      'pdfCropMargins>=0.1.4', 'sanic>=19.0', 'pandas>=0.25'))
+                      'python-slugify>=2.0.1', 'pdfCropMargins>=0.1.4',
+                      'click>=7.0', 'sanic>=19.0', 'pygments >=2.6',
+                      'pandas>=0.25', 'diskcache>=4.1', 'pathvalidate>=2.2'))
 
 image_deps = Optional('image external dependencies',
                       Optional('executables',
-                               'asy', 'convert','pdf2svg', 'pdf-crop-margins',
+                               'asy', 'convert', 'pdf2svg', 'pdf-crop-margins',
                                'rsvg-convert'))
 
 pdf_deps = All('pdf',

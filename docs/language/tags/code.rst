@@ -1,9 +1,15 @@
+.. role:: dm(code)
+   :language: dm
+
 Code Fragments
 ==============
 
-Code highlighting tags are used to represent source code in texts.
+Code highlighting tags are used to represent source code in texts using
+`pygments <http://pygments.org>`_.
 
-``@code{...}``
+.. rst-class:: dl-parameter
+
+:dm:`@code{...}`
     Highlight a code fragment
 
     .. index::
@@ -18,18 +24,33 @@ Code highlighting tags are used to represent source code in texts.
       ``language``
 
          The language to use in highlighting the source code fragment.
-         See the pygments `lexer <http://pygments.org/docs/lexers/>`_ lexer
+         See the pygments /docs/lexers/>`_ lexer
          listing.
 
    :examples:
 
-       ::
+       .. code-block:: dm
 
           @code[python]{print('hello!')}
 
+:dm:`@dm{...}`
+    Highlight *disseminate* code fragment
 
-``@python{...}``
-    Highlight a _python_ code fragment
+    .. index::
+        single: tags; @dm
+
+   :contents:
+
+      A code fragment or a path to a dm source file.
+
+   :examples:
+
+       .. code-block:: dm
+
+          @dm{@b{hello!')}
+
+:dm:`@python{...}`
+    Highlight a *python* code fragment
 
     .. index::
         single: tags; @python
@@ -40,13 +61,13 @@ Code highlighting tags are used to represent source code in texts.
 
    :examples:
 
-       ::
+       .. code-block:: dm
 
           @python{print('hello!')}
 
 
-``@html{...}``
-    Highlight an _html_ code fragment
+:dm:`@html{...}`
+    Highlight an *html* code fragment
 
     .. index::
         single: tags; @html
@@ -57,13 +78,13 @@ Code highlighting tags are used to represent source code in texts.
 
    :examples:
 
-       ::
+       .. code-block:: dm
 
           @html{<b>hello!</b>}
 
 
-``@ruby{...}``
-    Highlight a _ruby_ code fragment
+:dm:`@ruby{...}`
+    Highlight a *ruby* code fragment
 
     .. index::
         single: tags; @ruby
@@ -74,12 +95,12 @@ Code highlighting tags are used to represent source code in texts.
 
    :examples:
 
-       ::
+       .. code-block:: dm
 
           @ruby{print "hello!"}
 
-``@java{...}``
-    Highlight a _java_ code fragment
+:dm:`@java{...}`
+    Highlight a *java* code fragment
 
     .. index::
         single: tags; @java
@@ -90,12 +111,12 @@ Code highlighting tags are used to represent source code in texts.
 
    :examples:
 
-       ::
+       .. code-block:: dm
 
           @java{System.out.println("hello!" );}
 
-``@javascript{...}``
-    Highlight a _javascript_ code fragment
+:dm:`@javascript{...}`
+    Highlight a *javascript* code fragment
 
     .. index::
         single: tags; @javascript
@@ -106,7 +127,6 @@ Code highlighting tags are used to represent source code in texts.
 
    :examples:
 
-       ::
+       .. code-block:: dm
 
           @javascript{alert('Hello!');}
-

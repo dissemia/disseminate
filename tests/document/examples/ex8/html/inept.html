@@ -5,6 +5,7 @@
   <meta content="width=device-width, initial-scale=1" name="viewport" />
   <meta name="author" content="Justin Lorieau">
   <meta name="template" content="books/tufte">
+  <meta name="disseminate" content="2.2">
   <link rel="stylesheet" href="media/css/bootstrap.min.css">
   <link rel="stylesheet" href="media/css/base.css">
   <link rel="stylesheet" href="media/css/default.css">
@@ -30,23 +31,49 @@
     </ul>
   </div>
   <div id="menu-content">
-    
-    <ul class="toc">
+    <ul class="docutils">
+      <li class="src">
+        <a href="../src/inept.dm">
+          <img src="media/icons/dm_icon.svg">
+        </a>
+      </li>
+      
+      <li>
+        <a href="../tex/inept.tex">
+          <img src="media/icons/tex_icon.svg">
+        </a>
+      </li>
+      
+      <li>
+        <a href="../pdf/inept.pdf">
+          <img src="media/icons/pdf_icon.svg">
+        </a>
+      </li>
+      
+      <li>
+        <a href="../epub/inept.epub">
+          <img src="media/icons/epub_icon.svg">
+        </a>
+      </li>
+      
+    </ul>
+    <ol class="toc">
 <li class="toc-level-2"><a href="#ch:inept-dm-inept-and-signal-enhancement" class="ref">Chapter 1. INEPT and Signal Enhancement</a></li>
-<ul>
+<ol>
 <li class="toc-level-3"><a href="#sec:inept-dm-theory" class="ref">1.1. Theory</a></li>
-<ul><li class="toc-level-4"><a href="#subsec:inept-dm-methine-amide-and-the-ax-spin-systems" class="ref">1.1.1. Methine, Amide and the AX Spin Systems</a></li></ul>
-</ul>
-</ul>
+<ol><li class="toc-level-4"><a href="#subsec:inept-dm-methine-amide-and-the-ax-spin-systems" class="ref">1.1.1. Methine, Amide and the AX Spin Systems</a></li></ol>
+</ol>
+</ol>
 
   </div>
 </div>
 
 
     <article>
-  <span class="body"><h2 id="ch:inept-dm-inept-and-signal-enhancement"><span class="label"><span class="prefix">1</span> INEPT and Signal Enhancement</span></h2>
+  <div class="body">
+<h2 id="ch:inept-dm-inept-and-signal-enhancement"><span class="label"><span class="prefix">1</span> INEPT and Signal Enhancement</span></h2>
 <p>
-<div class="authors">Justin Lorieau</div></p>
+<span class="authors">Justin Lorieau</span></p>
 <p>The purpose of the <span class="abrv">INEPT</span> sequence<span class="cite">Morris1979</span> is to
 transfer the large magnetization from high-&gamma; nuclei, like <sup>1</sup>H or
 <sup>19</sup>F, to low-&gamma; nuclei (labeled &#8216;X&#8217;), like <sup>13</sup>C and <sup>15</sup>N. This transfer
@@ -57,19 +84,18 @@ times greater than <sup>15</sup>N. Additionally, the <sup>1</sup>H T<sub>1</sub>
 shorter than the T<sub>1</sub> for <sup>13</sup>C or <sup>15</sup>N, which allows a shorter recycle
 delay and the collection of a greater number of spectra.</p>
 <h3 id="sec:inept-dm-theory"><span class="label"><span class="prefix">1.1</span>. Theory</span></h3>
-<p><figure class="marginfig">
+<figure class="marginfig">
   <img src="media/inept_87560c6686dd.svg">
   <figcaption id="fig:inept-inept1" class="caption"><span class="label"><strong>Fig. 1.1</strong>. </span>The basic <span class="abrv">INEPT</span> sequence between nuclei <sup>1</sup>H
     and X.</figcaption>
-</figure></p>
-<p>The <span class="abrv">INEPT</span> sequence (<a href="#fig:inept-inept1" class="ref">Fig. 1.1</a>) transfers
+</figure><p>The <span class="abrv">INEPT</span> sequence (<a href="#fig:inept-inept1" class="ref">Fig. 1.1</a>) transfers
 magnetization from <sup>1</sup>H nuclei bonded the &#8216;X&#8217; nuclei. The two
 nuclei must be bonded, or at least connected through intermediary
 bonds with other atoms, because the nuclei must share a J-coupling.</p>
 <p>The <span class="abrv">INEPT</span> sequence comprises a set of 90<sup>&#9675;</sup> pulses (thin bars),
 180<sup>&#9675;</sup> pulses (thick bars) and delays (&Delta;).</p>
 <h4 id="subsec:inept-dm-methine-amide-and-the-ax-spin-systems"><span class="label"><span class="prefix">1.1.1</span>. Methine, Amide and the AX Spin Systems</span></h4>
-<p>The first 90<span class="supsub">&#9675;<br>x</span> (<sup>1</sup>H) pulse creates <img src="media/eq_e7377ca643a1.svg" class="eq"> <sup>1</sup>H magnetization.
+<p>The first 90<span class="supsub">&#9675;<br>x</span> (<sup>1</sup>H) pulse creates <img src="media/eq_382cb76552f8.svg" class="eq"> <sup>1</sup>H magnetization.
 <span class="sidenote">A 90<span class="supsub">&#9675;<br>x</span> pulse rotates the magnetization by 90<sup>&#9675;</sup> with a phase
 of &#8216;x&#8217;.</span>  Thereafter, the <sup>1</sup>H 180<sup>&#9675;</sup> pulse in the middle of the two
 &Delta; delays acts as a Hahn-echo to refocus the <sup>1</sup>H chemical
@@ -78,14 +104,15 @@ J-coupling between the <sup>1</sup>H and X nucleus would be refocused as
 well&#8212;and nothing would be accomplished. The 180<sup>&#9675;</sup> pulse on the &#8216;X&#8217;
 channel acts to <i>cancel</i> the refocusing effect of the <sup>1</sup>H 180<sup>&#9675;</sup>
 pulse for the J-coupling.</p>
-<p>During the first delta period, the <img src="media/eq_540144aca54d.svg" class="eq"> magnetization evolves
+<p>During the first delta period, the <img src="media/eq_b125983c4ac0.svg" class="eq"> magnetization evolves
 under the <sup>1</sup>H chemical shift (&omega;<sub>H</sub>) and the <sup>1</sup>H-X
 J-coupling. Since the chemical shift and J-coupling Hamiltonians
 commute, the rotations of each can be conducted sequentially.</p>
 <p>In the first step, the operators are propagated for the 90<span class="supsub">&#9675;<br>x</span> (<sup>1</sup>H) pulse
 and the first '&Delta;' period. We&#8217;ll use a <sup>15</sup>N nucleus as an example
 of an &#8216;X&#8217; nucleus.</p>
-<p><img src="media/eq_64f0a2d701c3.svg" class="eq blockeq"></p></span>
+<p><img src="media/eq_8b191ce25f98.svg" class="eq blockeq"></p>
+</div>
 
     </article>
     <footer>

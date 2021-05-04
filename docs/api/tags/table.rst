@@ -1,7 +1,7 @@
-Table Tags
-----------
+Table
+-----
 
 .. automodule:: disseminate.tags.table
-    :members: Table
+    :members: BaseTable, MarginTable, Table, FullTable
     :imported-members:
     :show-inheritance:

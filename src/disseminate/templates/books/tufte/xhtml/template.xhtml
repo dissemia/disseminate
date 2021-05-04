@@ -1,0 +1,9 @@
+{%- extends "default/xhtml/template.xhtml" %}
+{%- block extra_css %}
+  <link rel="stylesheet" href="{{ "/media/css/tufte.css" | rewrite_path }}"/>
+  <link rel="stylesheet" href="{{ "/media/css/tufte_epub.css" | rewrite_path }}"/>
+<!--  <link rel="stylesheet" media="all and (min-device-width: 90em)" href="{{ "/media/css/tufte_epub.css" | rewrite_path }}"/>-->
+{%- endblock %}
+{%- block body %}
+  {{ body.xhtml }}
+{%- endblock %}

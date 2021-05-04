@@ -46,13 +46,11 @@ class Eq(Img):
     #: to a file. This tag owns these sub-contexts.
     _target_context = None
 
-    def __init__(self, name, content, attributes, context,
-                 block_equation=False):
+    def __init__(self, *args, block_equation=False, **kwargs):
         self.block_equation = block_equation
         self._target_context = dict()
 
-        super().__init__(name=name, content=content, attributes=attributes,
-                         context=context)
+        super().__init__(*args, **kwargs)
 
         # Convert the content into a string formatted for latex
         content = content_to_str(self.content, target='.tex',
@@ -69,37 +67,8 @@ class Eq(Img):
     def block_equation(self, value):
         self._block_equation = value
 
-    def html_fmt(self, content=None, attributes=None, context=None, level=1):
-        # Create a context for the render. This context is owned by this
-        # tag
-        attrs = attributes or self.attributes.copy()
-
-        # Crop equation images created by the dependency manager. This
-        # removes white space around the image so that the equation images.
-        # Note: This crop command should not cut off baselines such that
-        # equation images won't line up properly with the surrounding text.
-        # ex: H vs Hy
-        attrs['crop'] = (100, 100, 0, 0)
-
-        if self.block_equation:
-            attrs['class'] = 'eq blockeq'
-        else:
-            attrs['class'] = 'eq'
-
-        if context is None and 'html' not in self._target_context:
-            # Create a special context for this tag specifically. This tag
-            # will own this context
-            context = self.context.filter(['paths', 'builders'])
-            context['eq'] = self
-            context['template'] = 'default/eq'
-            self._target_context['html'] = context
-
-        context = context or self._target_context['html']
-        return super(Eq, self).html_fmt(content=content, attributes=attrs,
-                                        context=context, level=level)
-
     def tex_fmt(self, content=None, attributes=None, mathmode=False,
-                context=None, level=1):
+                **kwargs):
         # Retrieve unspecified arguments
         attributes = attributes or self.attributes
         content = content or self.content
@@ -127,3 +96,33 @@ class Eq(Img):
             else:
                 return tex_cmd(cmd='ensuremath', attributes=attributes,
                                formatted_content=content)
+
+    def html_fmt(self, attributes=None, context=None, method='html',
+                 **kwargs):
+        # Create a context for the render. This context is owned by this
+        # tag
+        attrs = attributes or self.attributes.copy()
+
+        # Crop equation images build. This removes white space around the
+        # image so that the equation images. Note: This crop command should
+        # not cut off baselines such that equation images won't line up
+        # properly with the surrounding text. # ex: H vs Hy
+        attrs['crop'] = (100, 100, 0, 0)
+        attrs['offset'] = (0, 0, -1, 0)
+
+        if self.block_equation:
+            attrs['class'] = 'eq blockeq'
+        else:
+            attrs['class'] = 'eq'
+
+        if context is None and method not in self._target_context:
+            # Create a special context for this tag specifically. This tag
+            # will own this context
+            context = self.context.filter(['paths', 'builders'])
+            context['eq'] = self
+            context['template'] = 'default/tex/eq'
+            self._target_context[method] = context
+
+        context = context or self._target_context[method]
+        return super(Eq, self).html_fmt(attributes=attrs, context=context,
+                                        method=method, **kwargs)

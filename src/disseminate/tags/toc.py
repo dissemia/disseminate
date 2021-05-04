@@ -5,7 +5,7 @@ from .headings import toc_levels as heading_toc_levels, Heading
 from .ref import Ref
 from .tag import Tag
 from . import exceptions
-from ..formats import html_tag, html_list
+from ..formats import xhtml_tag, xhtml_list
 
 
 class TocError(Exception):
@@ -25,21 +25,25 @@ class TocRef(Ref):
 
     html_name = "li"
 
-    def html_fmt(self, content=None, attributes=None, cache=None, level=1):
-        # Wrap the tocref item in a list item
-        html = super().html_fmt(content=content, attributes=attributes,
-                                cache=cache, level=level)
-        tag_class = ('class="toc-level-{}"'.format(self.attributes['level'])
-                     if 'level' in self.attributes else '')
-        return html_tag('li', formatted_content=html, attributes=tag_class)
-
     def tex_fmt(self, content=None, attributes=None, mathmode=False, cache=None,
-                level=1):
+                level=1, **kwargs):
         list_level = self.attributes['level']
         tex_content = super().tex_fmt(content=content, attributes=attributes,
                                       mathmode=mathmode, cache=cache,
-                                      level=level)
+                                      level=level, **kwargs)
         return "§" * list_level + " " + tex_content + "\n"
+
+    def html_fmt(self, content=None, attributes=None, cache=None,
+                 format_func='html_fmt', method='html', level=1, **kwargs):
+        # Wrap the tocref item in a list item
+        html = super().html_fmt(content=content, attributes=attributes,
+                                cache=cache, format_func=format_func,
+                                method=method, level=level)
+
+        tag_class = ('class="toc-level-{}"'.format(self.attributes['level'])
+                     if 'level' in self.attributes else '')
+        return xhtml_tag('li', formatted_content=html, attributes=tag_class,
+                         method=method)
 
 
 class Toc(Tag):
@@ -75,7 +79,7 @@ class Toc(Tag):
 
     tex_env = "easylist"
     list_style = 'booktoc'
-    html_name = 'ul'
+    html_name = 'ol'
 
     process_typography = False
 
@@ -185,7 +189,14 @@ class Toc(Tag):
 
         return tags
 
-    def html_fmt(self, content=None, attributes=None, cache=None, level=1):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1,
+                **kwargs):
+        tags = list(self.reference_tags)
+        tags[0:0] = "\\ListProperties(Hide=2)\n"  # Add to front
+        return super().tex_fmt(content=tags, attributes=self.list_style)
+
+    def html_fmt(self, content=None, attributes=None, cache=None,
+                 format_func='html_fmt', method='html', level=1, **kwargs):
         tags = self.reference_tags
         elements = []
 
@@ -205,13 +216,9 @@ class Toc(Tag):
             cache['label'] = label
             cache['documents_by_id'] = documents_by_id
 
-            tag_html = tag.html_fmt(cache=cache, level=level + 1)
+            func = getattr(tag, format_func)
+            tag_html = func(cache=cache, method=method, level=level + 1)
             elements.append((listlevel, tag_html))
 
-        return html_list(*elements, attributes='class="toc"',
-                         listtype=self.html_name, level=level)
-
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, level=1):
-        tags = list(self.reference_tags)
-        tags[0:0] = "\\ListProperties(Hide=2)\n"  # Add to front
-        return super().tex_fmt(content=tags, attributes=self.list_style)
+        return xhtml_list(*elements, attributes='class="toc"',
+                          listtype=self.html_name, method=method, level=level)

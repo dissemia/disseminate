@@ -1,10 +1,6 @@
 """
 Test the img tag.
 """
-import pathlib
-
-import pytest
-
 from disseminate.tags import Tag
 from disseminate.paths import TargetPath
 
@@ -50,44 +46,9 @@ def test_img_attribute(load_example):
     assert img.attributes == {'width': '100'}
 
 
-# html target
-
-def test_img_html(load_example):
-    """Test the handling of html with the img tag."""
-    doc = load_example('tests/tags/examples/img_ex1/test.dm')
-    context = doc.context
-
-    # 1. Test tests/tags/img_example1
-    src = "@img{sample.pdf}"
-
-    # Generate a tag and compare the generated tex to the answer key
-    root = Tag(name='root', content=src, attributes='', context=context)
-    img = root.content
-
-    assert img.html == '<img src="media/sample.svg">\n'  # rel path by default
-
-    # Now test an html-specific attribute
-    src = "@img[width.html=100% height.tex=20%]{sample.pdf}"
-
-    # Generate a tag and compare the generated text to the answer key
-    root = Tag(name='root', content=src, attributes='', context=context)
-    img = root.content
-    assert img.html == '<img src="media/sample.svg" style="width: 100.0%">\n'
-
-    # Check the build
-    env = doc.context['environment']
-    img_filepath = TargetPath(target_root=doc.target_root, target='html',
-                              subpath="media/sample.svg")
-    assert not img_filepath.exists()
-
-    assert env.build() == 'done'
-    assert img_filepath.exists()
-    assert '<svg' in img_filepath.read_text()
-
-
 # tex targets
 
-def test_img_tex(load_example):
+def test_img_tex(load_example, is_pdf):
     """Test the handling of LaTeX with the img tag."""
     doc = load_example('tests/tags/examples/img_ex1/test.dm')
     context = doc.context
@@ -122,7 +83,7 @@ def test_img_tex(load_example):
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
 
-    assert img.tex == ("\\includegraphics[width=1.0\\textwidth]"
+    assert img.tex == ("\\includegraphics[width=0.99\\textwidth]"
                        "{{{}}}".format(filepath))
 
     # 3. Now test an tex-specific attribute
@@ -136,4 +97,76 @@ def test_img_tex(load_example):
     assert img.tex == "\\includegraphics[height=20]{{{}}}".format(filepath)
 
     # Check the build
-    assert b'%PDF' in img_filepath.read_bytes()
+    assert is_pdf(img_filepath)
+
+
+# html target
+
+def test_img_html(load_example):
+    """Test the handling of html with the img tag."""
+    doc = load_example('tests/tags/examples/img_ex1/test.dm')
+    context = doc.context
+
+    # 1. Test tests/tags/img_example1
+    src = "@img{sample.pdf}"
+
+    # Generate a tag and compare the generated tex to the answer key
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
+
+    assert img.html == '<img src="media/sample.svg">\n'  # rel path by default
+
+    # Now test an html-specific attribute
+    src = "@img[width.html=100% height.tex=20%]{sample.pdf}"
+
+    # Generate a tag and compare the generated text to the answer key
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
+    assert img.html == '<img src="media/sample.svg" class="w100">\n'
+
+    # Check the build
+    env = doc.context['environment']
+    img_filepath = TargetPath(target_root=doc.target_root, target='html',
+                              subpath="media/sample.svg")
+    assert not img_filepath.exists()
+
+    assert env.build() == 'done'
+    assert img_filepath.exists()
+    assert '<svg' in img_filepath.read_text()
+
+
+# xhtml target
+
+def test_img_xhtml(load_example, is_xml, is_svg):
+    """Test the handling of html with the img tag."""
+    doc = load_example('tests/tags/examples/img_ex1/test.dm')
+    context = doc.context
+
+    # 1. Test tests/tags/img_example1
+    src = "@img{sample.pdf}"
+
+    # Generate a tag and compare the generated tex to the answer key
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
+
+    assert img.xhtml == '<img src="media/sample.svg"/>\n'  # rel path by default
+    assert is_xml(img.xhtml)
+
+    # Now test an xhtml-specific attribute
+    src = "@img[width.xhtml=100% height.html=20%]{sample.pdf}"
+
+    # Generate a tag and compare the generated text to the answer key
+    root = Tag(name='root', content=src, attributes='', context=context)
+    img = root.content
+    assert img.xhtml == '<img src="media/sample.svg" class="w100"/>\n'
+    assert is_xml(img.xhtml)
+
+    # Check the build
+    env = doc.context['environment']
+    img_filepath = TargetPath(target_root=doc.target_root, target='xhtml',
+                              subpath="media/sample.svg")
+    assert not img_filepath.exists()
+
+    assert env.build() == 'done'
+    assert img_filepath.exists()
+    assert is_svg(img_filepath)

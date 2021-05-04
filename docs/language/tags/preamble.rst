@@ -1,26 +1,25 @@
+.. role:: dm(code)
+   :language: dm
+
 Preamble
 ========
 
-The preamble tags format and present the meta information for the
-title and author(s) for the document.
+The preamble tags format introductory material for a document or project.
 
-``@titlepage``
+.. rst-class:: dl-parameter
+
+:dm:`@titlepage`
   Render a title page for the document
   
   :Examples:
 
-     ::
+     .. code-block:: dm
         
         @titlepage{}
 
-Table-of-Contents
------------------
-
-The Table-of-Contents (TOC) tag is used to render the table of
-contents or site map of a project.
-
-``@toc{...}``
-    Render a table of contents
+:dm:`@toc{...}`
+    Render a table of contents. The table of contents behaves as a site map for
+    the project
 
     .. index::
         single: tags; @toc
@@ -73,25 +72,7 @@ contents or site map of a project.
 
     :examples:
 
-       ::
+       .. code-block:: dm
 
           @toc[header]{all documents}
           @toc{all documents collapsed}
-
-Collection
-----------
-
-Collection tags are used to group all the subdocuments in a project
-into a collection, like a book.
-
-``@collection{}``
-    A collection tag for a document and all its sub-documents.
-
-    .. index::
-       single: tags; @collection
-
-    :examples:
-
-       ::
-
-          @collection{}

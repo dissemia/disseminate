@@ -75,8 +75,9 @@ class Builder(metaclass=ABCMeta):
     decision : :obj:`.builders.deciders.decider.decision`
         The decision object for the build, instantiate from environment's
         decider, to evaluate whether a build is needed.
-    scan_parameters : bool
-        If True (default), scan the parameters for additional dependencies.
+    scan_parameters_on_init : bool
+        If True (default), scan the parameters for additional dependencies
+        during the __init__.
     priority : int
         If multiple viable builders are available, use the one with the highest
         priority.
@@ -104,7 +105,7 @@ class Builder(metaclass=ABCMeta):
     available = False
     active_requirements = ('priority', 'required_execs', 'all_execs')
     decision = None
-    scan_parameters = True
+    scan_parameters_on_init = True
 
     priority = None
     required_execs = None
@@ -147,8 +148,8 @@ class Builder(metaclass=ABCMeta):
         self.parameters = parameters
 
         # Scan for additional parameters, if desired
-        if self.scan_parameters:
-            self.parameters += env.scanner.scan(parameters=self.parameters)
+        if self.scan_parameters_on_init:
+            self.scan_parameters()
 
         # Load the outfilepath
         self.outfilepath = (outfilepath if isinstance(outfilepath, TargetPath)
@@ -210,14 +211,14 @@ class Builder(metaclass=ABCMeta):
         """The status of the builder.
 
         The builder can have the following states:
-        - 'ready': The builder is active and the parameters have been set
-        - 'inactive': The builder isn't active--see the active property
-        - 'missing (parameters)': All the required parameters have not been
-          specified or files for paths in the parameters do not exist
-        - 'missing (outfilepath)': The outfilepath was not created
-        - 'cancelled' : The build was cancelled.
-        - 'building': The builder is building
-        - 'done': The builder is done building
+          - 'ready': The builder is active and the parameters have been set
+          - 'inactive': The builder isn't active--see the active property
+          - 'missing (parameters)': All the required parameters have not been
+            specified or files for paths in the parameters do not exist
+          - 'missing (outfilepath)': The outfilepath was not created
+          - 'cancelled' : The build was cancelled.
+          - 'building': The builder is building
+          - 'done': The builder is done building
         """
         active = self.active
 
@@ -309,8 +310,9 @@ class Builder(metaclass=ABCMeta):
         parameters = self.parameters
         has_parameters = len(parameters) > 0
 
-        if (not has_parameters or
-            not all(i.exists() for i in parameters if hasattr(i, 'exists'))):
+        if not has_parameters:
+            return True
+        elif not all(i.exists() for i in parameters if hasattr(i, 'exists')):
             return True
         else:
             self._missing_parameters = False
@@ -356,6 +358,13 @@ class Builder(metaclass=ABCMeta):
                 parameters += list(flatten(rv))
 
         return list(sorted(parameters)) if sort else parameters
+
+    def scan_parameters(self):
+        """Use the environment scanners to find additional dependencies in files
+        specified by filepaths in the parameters."""
+        parameters = self.parameters
+        parameters += self.env.scanner.scan(parameters=parameters)
+        self.parameters = uniq(parameters)
 
     @property
     def infilepaths(self):

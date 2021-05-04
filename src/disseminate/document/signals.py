@@ -16,9 +16,9 @@ document_onload = signal('document_onload',
                          "parameter.")
 
 document_build = signal('document_build',
-                         doc="Signal sent when a document's targets are "
-                         "being built to their final target files. "
-                         "Receivers take a document parameter.")
+                        doc="Signal sent when a document's targets are "
+                        "being built to their final target files. "
+                        "Receivers take a document parameter.")
 
 document_build_needed = signal('document_build_needed',
                                doc="Signal sent to evaluate whether a build "
