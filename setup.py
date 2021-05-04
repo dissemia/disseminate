@@ -78,7 +78,8 @@ setup(
         'sanic>=19.0',               # MIT license
         # The following is needed for the @code tag
         'pygments >=2.6',             # BSD 2 license
-        'pandas>=0.25',               # 3-clause BSD
+        'numpy>=1.20',
+        'pandas>=1.2',                # 3-clause BSD
         'diskcache>=4.1',
         'pathvalidate>=2.2',
         ],
