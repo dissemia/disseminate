@@ -3,8 +3,8 @@ Setup the server
 """
 import secrets
 
-from sanic import Sanic
-from sanic.exceptions import NotFound
+from flask import Flask
+from werkzeug.exceptions import NotFound
 
 from .views.blueprints import system, tree, page, server_static_path
 from .views.exceptions import handle_500, handle_404
@@ -29,7 +29,7 @@ def create_app(in_path, out_dir=None, debug=False):
         If true, include debugging information.
     """
     # Setup the app
-    app = Sanic('disseminate')
+    app = Flask('disseminate')
 
     # Configure the app
     app.debug = debug
@@ -40,19 +40,19 @@ def create_app(in_path, out_dir=None, debug=False):
     app.config['RESPONSE_TIMEOUT'] = 300  # seconds
 
     # Add blueprints
-    app.blueprint(tree)
-    app.blueprint(system)
-    app.blueprint(page)
+    app.register_blueprint(tree)
+    app.register_blueprint(system)
+    app.register_blueprint(page)
 
     # Add error handlers
-    app.error_handler.add(NotFound, handle_404)
-    app.error_handler.add(Exception, handle_500)
+    app.register_error_handler(NotFound, handle_404)
+    app.register_error_handler(Exception, handle_500)
 
     # Add the the cwd for static files
-    app.static('/favicon.ico', str(server_static_path / 'favicon.ico'))
-    app.static('/media', str(server_static_path))
-    app.static('/', './', pattern="/?.+\.tex", content_type='text/plain')
-    app.static('/', './')
+    # app.static('/favicon.ico', str(server_static_path / 'favicon.ico'))
+    # app.static('/media', str(server_static_path))
+    # app.static('/', './', pattern="/?.+\.tex", content_type='text/plain')
+    # app.static('/', './')
 
     return app
 

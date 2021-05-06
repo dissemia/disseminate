@@ -1,8 +1,9 @@
 """
 View for checkers.
 """
+from flask import render_template
+
 from .blueprints import system
-from ..templates import render_template
 from ...checkers import Checker, All, Any, Optional
 
 
@@ -57,7 +58,7 @@ def checker_to_dict(item, required=True, level=1):
 
 
 @system.route('/check.html')
-async def render_checkers(request):
+def render_checkers():
     """Render the view for software dependency checkers."""
     # Get the checkers
     checker_subclses = Checker.checker_subclasses()
@@ -69,5 +70,4 @@ async def render_checkers(request):
     # Convert the checkers to a list of dicts
     checkers = map(checker_to_dict, checkers)
 
-    return render_template('server/checkers.html', request=request,
-                           checkers=checkers)
+    return render_template('server/checkers.html', checkers=checkers)

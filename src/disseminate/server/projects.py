@@ -1,11 +1,12 @@
 """
 Functions to load projects in a session.
 """
+from flask import current_app
 from .store import store
 from ..builders.environment import Environment
 
 
-def load_projects(request):
+def load_projects():
     """Retrieve the root documents from the store.
 
     Returns
@@ -14,7 +15,7 @@ def load_projects(request):
         The loaded root documents.
     """
     # Get the session and config
-    config = request.app.config
+    config = current_app.config
 
     # Make sure the project list is loaded
     if 'root_documents' not in store:

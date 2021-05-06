@@ -1,8 +1,9 @@
 """
 View for signals listing.
 """
+from flask import render_template
+
 from .blueprints import system
-from ..templates import render_template
 from ...signals.signals import signals
 from ...utils.string import stub
 
@@ -51,9 +52,8 @@ def signals_to_dict(signal_namespace):
 
 
 @system.route('/signals.html')
-async def render_signals(request):
+def render_signals():
     """Render the view for the different types of signals available."""
     signals_dict = signals_to_dict(signal_namespace=signals)
 
-    return render_template('server/signals.html', request=request,
-                           signals=signals_dict)
+    return render_template('server/signals.html', signals=signals_dict)

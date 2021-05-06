@@ -3,8 +3,9 @@ View for the document listing tree.
 """
 from datetime import datetime
 
+from flask import render_template, request
+
 from .blueprints import tree
-from ..templates import render_template
 from ..projects import load_projects
 
 
@@ -55,9 +56,9 @@ def tree_to_dict(docs, level=1):
 @tree.route('/')
 @tree.route('/index.html')
 @tree.route('/tree.html')
-async def render_tree(request):
+def render_tree():
     """Render the view for the source and target document files."""
     # Load the documents
-    docs = load_projects(request)
+    docs = load_projects()
     return render_template('server/tree.html', request=request,
                            docs=tree_to_dict(docs))
