@@ -7,6 +7,8 @@ from traceback import extract_tb, format_list
 from sys import executable as python_executable
 
 from tornado.web import RequestHandler
+
+from .projects import load_projects
 from ...__version__ import __version__
 
 
@@ -19,6 +21,11 @@ server_static_path = server_template_path / 'media'
 
 class ServerHandler(RequestHandler):
     """A request handler for server functions"""
+
+    def initialize(self, reload_projects=False, *args, **kwargs):
+        if reload_projects:
+            load_projects(self.application)
+        super().initialize(*args, **kwargs)
 
     def set_default_headers(self):
         # Disable mimetype sniffing/guessing to allow viewing of plain/text
@@ -51,8 +58,8 @@ class ServerHandler(RequestHandler):
             kwargs['exc_type'] = exc_type.__name__
             kwargs['exc_filename'] = getattr(exc, 'filename', '')
             kwargs['exc_lineno'] = getattr(exc, 'lineno', '')
-            kwargs['exc_msg'] = getattr(exc, 'message', '')
-
+            kwargs['exc_msg'] = exc.args[0]
+            kwargs['exc_args'] = exc.args
             # Parse the traceback
             kwargs['traceback'] = format_list(extract_tb(tb))
 
@@ -62,4 +69,3 @@ class ServerHandler(RequestHandler):
             self.render("500.html", status_code=status_code, **kwargs)
         else:
             self.render("error.html", status_code=status_code, **kwargs)
-
