@@ -75,7 +75,7 @@ setup(
         # The following are needed for the CLI
         'click>=7.0',                # 3-clause BSD license
         # The following are needed for the preview function
-        'sanic>=19.0',               # MIT license
+        'tornado>=6.1',
         # The following is needed for the @code tag
         'pygments >=2.6',             # BSD 2 license
         'numpy>=1.20',

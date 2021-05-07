@@ -12,6 +12,7 @@ import logging
 import pytest
 import regex
 import lxml.etree
+from sanic_testing import TestManager
 
 from disseminate.context import BaseContext
 from disseminate.attributes import Attributes
@@ -214,6 +215,7 @@ def app(tmpdir):
     shutil.copytree('tests/document/examples/ex7', project_path)
     app = create_app(in_path=str(project_path))
     app.config['PROJECTPATH'] = project_path
+    TestManager(app)
     yield app
 
 

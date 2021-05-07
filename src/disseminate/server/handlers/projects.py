@@ -1,27 +1,25 @@
 """
 Functions to load projects in a session.
 """
-from flask import current_app
 from .store import store
-from ..builders.environment import Environment
+from ...builders.environment import Environment
 
 
-def load_projects():
+def load_projects(app):
     """Retrieve the root documents from the store.
-
     Returns
     -------
     root_documents : List[:obj:`Document <.Document`]
         The loaded root documents.
     """
     # Get the session and config
-    config = current_app.config
+    settings = app.settings
 
     # Make sure the project list is loaded
     if 'root_documents' not in store:
         # Get project_filenames
-        in_path = config.get('in_path', '')
-        out_dir = config.get('out_dir', None)
+        in_path = settings.get('in_path', '')
+        out_dir = settings.get('out_dir', None)
 
         # Fetch the root documents
         envs = Environment.create_environments(root_path=in_path)

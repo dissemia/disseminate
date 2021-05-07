@@ -1,3 +1,4 @@
+{% comment Tornado template %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,26 +11,17 @@
   <link rel="stylesheet" type="text/css" href="/media/css/base.css">
   <link rel="stylesheet" type="text/css" href="/media/css/listing.css">
 </head>
-{%- macro recursetree(n) %}
-  <ol>
-    {%- for checker in n %}
-      <li class="level-{{ checker.level }}">
-        <span class="msg">{{ checker.msg }}</span>
-        <span class="status {{checker.status}}">{{ checker.status }}</span>
-      </li>
-    {%- if checker.subcheckers -%}
-      {{ recursetree(checker.subcheckers) }}
-    {%- endif %}
-    {%- endfor %}
-  </ol>
-{%- endmacro %}
 <body>
   <div class="container">
     <h2>Dependency Checks</h2>
     <div class="listing">
-      {{ recursetree(checkers) }}
+      <ol>
+      {% for checker in checkers %}
+      {% module Template("checker_item.html", checker=checker) %}
+      {% end %}
+      </ol>
     </div>
   </div>
-  {% include "server/footer.html" %}
+  {% include "footer.html" %}
 </body>
 </html>
