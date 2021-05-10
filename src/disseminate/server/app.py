@@ -17,6 +17,13 @@ class TornadoApp(tornado.web.Application):
         tornado.web.Application.__init__(self, url_patterns, **kwargs)
 
 
+def get_app(in_path, out_dir, debug=False, **kwargs):
+    app = TornadoApp(in_path=in_path, out_dir=out_dir, debug=debug,
+                     template_path=server_template_path,
+                     default_handler_class=ServerHandler)
+    return app
+
+
 def run_server(in_path, out_dir, port=settings.default_port,
                debug=False):
     """Create and run the web-server.
@@ -31,9 +38,8 @@ def run_server(in_path, out_dir, port=settings.default_port,
     debug : Optional[bool]
         If true, include debugging information.
     """
-    app = TornadoApp(in_path=in_path, out_dir=out_dir, debug=debug,
-                     template_path=server_template_path,
-                     default_handler_class=ServerHandler)
+    app = get_app(in_path=in_path, out_dir=out_dir, debug=debug)
+
     http_server = tornado.httpserver.HTTPServer(app)
     http_server.listen(port)
     tornado.ioloop.IOLoop.instance().start()

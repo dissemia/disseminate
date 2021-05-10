@@ -24,6 +24,7 @@ def load_projects(app):
         # Fetch the root documents
         envs = Environment.create_environments(root_path=in_path)
         docs = [env.root_document for env in envs]
+
         store['root_documents'] = docs
 
     # See if any of the docs need to be built

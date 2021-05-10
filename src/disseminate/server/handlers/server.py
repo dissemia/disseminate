@@ -58,7 +58,7 @@ class ServerHandler(RequestHandler):
             kwargs['exc_type'] = exc_type.__name__
             kwargs['exc_filename'] = getattr(exc, 'filename', '')
             kwargs['exc_lineno'] = getattr(exc, 'lineno', '')
-            kwargs['exc_msg'] = exc.args[0]
+            kwargs['exc_msg'] = exc.args[0] if len(exc.args) > 0 else ''
             kwargs['exc_args'] = exc.args
             # Parse the traceback
             kwargs['traceback'] = format_list(extract_tb(tb))
