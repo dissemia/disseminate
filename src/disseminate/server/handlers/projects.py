@@ -22,9 +22,10 @@ def load_projects(app):
         out_dir = settings.get('out_dir', None)
 
         # Fetch the root documents
-        envs = Environment.create_environments(root_path=in_path)
+        envs = Environment.create_environments(root_path=in_path,
+                                               #target_root=out_dir
+                                               )
         docs = [env.root_document for env in envs]
-
         store['root_documents'] = docs
 
     # See if any of the docs need to be built

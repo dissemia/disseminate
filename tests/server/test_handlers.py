@@ -1,49 +1,79 @@
 """
 Tornado unit tests for the handlers
 """
-import shutil, tempfile
+import shutil
+import tempfile
+import os
+from distutils.dir_util import copy_tree
 from pathlib import Path
 
 from tornado.testing import AsyncHTTPTestCase
 
 from disseminate.server.app import get_app
-from disseminate.server.store import store
+from disseminate.server.handlers.store import reset_store
+
+# Example path
+ex7 = Path('.') / 'tests' / 'document' / 'examples' / 'ex7'
 
 
 class HandlerTestCase(AsyncHTTPTestCase):
     """A unit testcase for Tornado handlers"""
 
     def setUp(self):
+        # Get the current working directory
+        self.cwd = os.getcwd()
+
         # Setup the source directory
-        self.in_path = str(Path('.') / 'tests' / 'document' / 'examples' /
-                           'ex7')
+        self.in_path = str(ex7)
 
         # Create temp directories
-        self.test_dir = tempfile.mkdtemp()
-        self.out_dir = self.test_dir
+        self.temp_dir = tempfile.mkdtemp()
+        self.out_dir = self.temp_dir
+
+        # Change to the temp directory
+        os.chdir(self.temp_dir)
+
         super().setUp()
 
     def tearDown(self):
         # Remove temp directory
-        shutil.rmtree(self.test_dir)
+        shutil.rmtree(self.temp_dir)
+
+        # Reset the current working directory
+        os.chdir(self.cwd)
+
         super().tearDown()
 
     def get_app(self):
         # Create temporary input/output directories
-        return get_app(in_path=self.in_path, out_dir=self.out_dir)
+        app = get_app(in_path=self.in_path, out_dir=self.out_dir)
+
+        # Load a temporary copy of example 7
+        self.load_example(example_path=ex7, create_temp=True)
+
+        # Set the app paths
+        app.settings['in_path'] = self.in_path
+        app.settings['out_dir'] = None
+
+        return app
 
     def load_example(self, example_path, create_temp=False):
         """Create a temporary copy of an example directory"""
+        example_path = Path(example_path)
+
+        # Translate the example_path to the test directory's cwd if needed
+        if not example_path.is_dir():
+            example_path = Path(self.cwd) / example_path
+
         # See if a copy of the example is needed
         if create_temp:
-            shutil.copytree(example_path, self.test_dir)
-            self.in_path = self.test_dir
+            copy_tree(str(example_path), self.temp_dir)
+            self.in_path = self.temp_dir
         else:
-            self.in_path = example_path
+            self.in_path = str(example_path)
 
-        # Reset the loaded documents
-        if 'root_documents' in store:
-            del store['store_documents']
+        # Reset the loaded documents in the store
+        reset_store()
 
     def test_tree_handler(self):
         """Tests for the tree handler"""
@@ -68,6 +98,10 @@ class HandlerTestCase(AsyncHTTPTestCase):
         assert 'file1.dm' in body
         assert 'sub1/file11.dm' in body
         assert 'sub1/subsub1/file111.dm' in body
+
+    def test_tree_handler_multiple_project(self):
+        """Test the tree handler with multiple projects"""
+        raise NotImplementedError
 
     def test_checkers_handler(self):
         """Tests for the checkers handler"""
@@ -114,12 +148,53 @@ class HandlerTestCase(AsyncHTTPTestCase):
     def test_project_page_handler(self):
         """Test for the loading of a project page"""
         # Get the url
-        url = '/tests/document/examples/ex7/html/file1.html'
+        url = '/html/file1.html'
 
-        # Fetch the response for the url
+        # Fetch the response for the url.
         response = self.fetch(url, raise_error=True)  # Status code 200
         body = response.body.decode('utf-8')  # decode binary
 
         # Check the page
         assert response.code == 200
         assert '<p>file1.dm</p>' in body
+
+    def test_project_reload(self):
+        """Test the rebuilding of project pages on change"""
+        # Check the tree listing
+        app = self.get_app()
+        tree_url = app.reverse_url('tree')
+        response = self.fetch(tree_url, raise_error=True)  # Status code 200
+        body = response.body.decode('utf-8')  # decode binary
+        assert response.code == 200
+        assert 'file1.dm' in body
+        assert 'sub1/file11.dm' in body
+        assert 'sub1/subsub1/file111.dm' in body
+
+        # Check that the root document was compiled (file1.dm)
+        url = '/html/file1.html'
+        response = self.fetch(url, raise_error=True)  # Status code 200
+        body = response.body.decode('utf-8')  # decode binary
+        assert response.code == 200
+        assert 'Updated file' not in body
+        assert '<p>file1.dm</p>' in body
+
+        # Change the file and see if if the project is updated.
+        root_doc = Path(self.in_path) / 'src' / 'file1.dm'
+        root_doc.write_text("""
+        Updated file
+        """)
+
+        # The tree now only includes the root doc. The tree is updated.
+        response = self.fetch(tree_url, raise_error=True)  # Status code 200
+        body = response.body.decode('utf-8')  # decode binary
+        assert response.code == 200
+        assert 'file1.dm' in body
+        assert 'sub1/file11.dm' not in body
+        assert 'sub1/subsub1/file111.dm' not in body
+
+        # The root document has been updated
+        response = self.fetch(url, raise_error=True)  # Status code 200
+        body = response.body.decode('utf-8')  # decode binary
+        assert response.code == 200
+        assert 'Updated file' in body
+
