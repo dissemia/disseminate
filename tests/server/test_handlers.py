@@ -13,6 +13,7 @@ from disseminate.server.app import get_app
 from disseminate.server.handlers.store import reset_store
 
 # Example path
+ex4 = Path('.') / 'tests' / 'document' / 'examples' / 'ex4'
 ex7 = Path('.') / 'tests' / 'document' / 'examples' / 'ex7'
 
 
@@ -51,9 +52,8 @@ class HandlerTestCase(AsyncHTTPTestCase):
         # Load a temporary copy of example 7
         self.load_example(example_path=ex7, create_temp=True)
 
-        # Set the app paths
-        app.settings['in_path'] = self.in_path
-        app.settings['out_dir'] = None
+        # Change the app path to the example directory
+        self.set_app_paths(app=app, in_path=self.in_path, out_dir=self.in_path)
 
         return app
 
@@ -67,13 +67,24 @@ class HandlerTestCase(AsyncHTTPTestCase):
 
         # See if a copy of the example is needed
         if create_temp:
-            copy_tree(str(example_path), self.temp_dir)
-            self.in_path = self.temp_dir
+            in_path = str(Path(self.temp_dir) / example_path.name)
+            copy_tree(str(example_path), in_path)
+            self.in_path = in_path
         else:
             self.in_path = str(example_path)
 
         # Reset the loaded documents in the store
         reset_store()
+
+    def set_app_paths(self, app, in_path=None, out_dir=None, chdir=True):
+        """Set the paths for the Tornado app"""
+        # Set the app paths
+        if in_path is not None:
+            app.settings['in_path'] = str(in_path)
+        if out_dir is not None:
+            app.settings['out_dir'] = str(out_dir)
+        if chdir:
+            os.chdir(str(in_path))
 
     def test_tree_handler(self):
         """Tests for the tree handler"""
@@ -99,9 +110,27 @@ class HandlerTestCase(AsyncHTTPTestCase):
         assert 'sub1/file11.dm' in body
         assert 'sub1/subsub1/file111.dm' in body
 
-    def test_tree_handler_multiple_project(self):
-        """Test the tree handler with multiple projects"""
-        raise NotImplementedError
+    # def test_tree_handler_multiple_project(self):
+    #     """Test the tree handler with multiple projects"""
+    #     # Load and create temporary copies of multiple projects. By default,
+    #     # ex7 is copied for all tests so ex4 is loaded as well.
+    #     self.load_example(ex4, create_temp=True)
+    #     self.load_example(ex7, create_temp=True)
+    #
+    #     # Switch the current directory to the root temp dir to include both
+    #     # projects
+    #     app = self.get_app()
+    #     in_path = Path(self.in_path).parent
+    #     self.set_app_paths(app=app, in_path=in_path, chdir=True)
+    #
+    #     # Try loading the tree
+    #     url = app.reverse_url('tree')
+    #
+    #     # Fetch the response for the url
+    #     response = self.fetch(url, raise_error=True)  # Status code 200
+    #     body = response.body.decode('utf-8')  # decode binary
+    #
+    #     assert response.code == 404
 
     def test_checkers_handler(self):
         """Tests for the checkers handler"""
