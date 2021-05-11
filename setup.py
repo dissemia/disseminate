@@ -82,7 +82,6 @@ setup(
         'pandas>=1.2',                # 3-clause BSD
         'diskcache>=4.1',
         'pathvalidate>=2.2',
-        'epubcheck',
         ],
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'sphinx-click', 'numpydoc',
