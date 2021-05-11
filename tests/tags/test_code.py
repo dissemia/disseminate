@@ -171,7 +171,6 @@ def test_tag_code_html(context):
     # Check the @code tag
     code = root.content
     code.paragraph_role = 'block'
-
     assert code.html == ('<div class="code">'
                          '<div class="highlight block">'
                            '<pre>'
@@ -179,7 +178,8 @@ def test_tag_code_html(context):
                              '<span class="p">&lt;</span>'
                              '<span class="nt">script</span>'
                              '<span class="p">&gt;</span>'
-                             '<span class="err">&lt;/script</span>\n'
+                             '<span class="o">&lt;</span>'
+                             '<span class="err">/script</span>\n'
                          '</pre></div></div>\n')
     assert root.html == ('<span class="root">'
                            '<div class="code">'
@@ -189,7 +189,8 @@ def test_tag_code_html(context):
                                '<span class="p">&lt;</span>'
                                '<span class="nt">script</span>'
                                '<span class="p">&gt;</span>'
-                               '<span class="err">&lt;/script</span>\n'
+                               '<span class="o">&lt;</span>'
+                               '<span class="err">/script</span>\n'
                          '</pre></div></div></span>\n')
 
     # Test inline
@@ -256,7 +257,8 @@ def test_tag_code_xhtml(context, is_xml):
                           '<span class="p">&lt;</span>'
                           '<span class="nt">script</span>'
                           '<span class="p">&gt;</span>'
-                          '<span class="err">&lt;/script</span>\n'
+                          '<span class="o">&lt;</span>'
+                          '<span class="err">/script</span>\n'
                           '</pre>\n'
                           '  </div>\n'
                           '</div>\n')
@@ -269,7 +271,8 @@ def test_tag_code_xhtml(context, is_xml):
                           '<span class="p">&lt;</span>'
                           '<span class="nt">script</span>'
                           '<span class="p">&gt;</span>'
-                          '<span class="err">&lt;/script</span>\n'
+                          '<span class="o">&lt;</span>'
+                          '<span class="err">/script</span>\n'
                           '</pre>\n'
                           '    </div>\n'
                           '  </div>\n'
