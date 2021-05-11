@@ -41,5 +41,5 @@ def run_server(in_path, out_dir, port=settings.default_port,
     app = get_app(in_path=in_path, out_dir=out_dir, debug=debug)
 
     http_server = tornado.httpserver.HTTPServer(app)
-    http_server.listen(port)
+    http_server.listen(port, '127.0.0.1')  # listen only to the localhost
     tornado.ioloop.IOLoop.instance().start()
