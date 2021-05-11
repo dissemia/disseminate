@@ -1,6 +1,8 @@
 """
 Functions to load projects in a session.
 """
+import logging
+
 from .store import store
 from ...builders.environment import Environment
 
@@ -26,6 +28,12 @@ def load_projects(app):
                                                #target_root=out_dir
                                                )
         docs = [env.root_document for env in envs]
+
+        # Log the loaded root documents
+        for doc in docs:
+            logging.debug("Loaded root document '{}'".format(doc))
+
+        # Store the root documents in the global store
         store['root_documents'] = docs
 
     # See if any of the docs need to be built
