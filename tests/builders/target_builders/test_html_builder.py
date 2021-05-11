@@ -167,7 +167,7 @@ def test_html_builder_simple(env):
     assert builder.status == 'done'
 
 
-def test_html_builder_simple_doc(load_example):
+def test_html_builder_simple_doc(load_example, html_update_version):
     """Test a simple build with the HtmlBuilder and a simple document."""
     # 1. example 1: tests/builders/examples/example3
     doc = load_example(ex3_srcdir / 'dummy.dm', cp_src=True)
@@ -189,7 +189,8 @@ def test_html_builder_simple_doc(load_example):
 
     # Check the answer key
     key = pathlib.Path(ex3_root / 'dummy.html')
-    assert doc.targets['.html'].read_text() == key.read_text()
+    assert (doc.targets['.html'].read_text() ==
+            html_update_version(key.read_text()))
 
     # Check the copied files
     assert TargetPath(target_root=target_root, target='html',
@@ -269,7 +270,7 @@ def test_html_builder_inherited(env):
     assert builder.status == 'done'
 
 
-def test_html_builder_inherited_doc(load_example):
+def test_html_builder_inherited_doc(load_example, html_update_version):
     """Test a build with the HtmlBuilder using an inherited template and a
     simple doc."""
     # 1. example 1: tests/builders/examples/ex4
@@ -296,7 +297,8 @@ def test_html_builder_inherited_doc(load_example):
     # Check the answer key
     key = ex4_root / 'dummy.html'
     print(doc.targets['.html'])
-    assert doc.targets['.html'].read_text() == key.read_text()
+    assert (doc.targets['.html'].read_text() ==
+            html_update_version(key.read_text()))
 
     # Check the copied files
     assert TargetPath(target_root=target_root, target='html',

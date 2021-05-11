@@ -18,6 +18,7 @@ from disseminate.attributes import Attributes
 from disseminate.paths import SourcePath, TargetPath
 from disseminate.document import Document
 from disseminate.builders import Environment
+from disseminate.__version__ import __version__
 
 
 def pytest_collection_modifyitems(config, items):
@@ -206,6 +207,24 @@ def a_in_b():
 
 
 # Tests for formats
+
+@pytest.fixture
+def html_update_version():
+    """Update an html string block to contain references to the current version
+    of disseminate.
+
+    This function is needed for html answer keys in the test directories that
+    may have been created by an older version of disseminate. This allows a
+    string comparison that doesn't fail when the version number is updated.
+    """
+    def _html_update_version(html):
+        return regex.sub(r'(meta\sname="disseminate"\scontent=")'
+                         r'([\d\.\w]+)'
+                         r'(")',
+                         r'\g<1>{version}\g<3>'.format(version=__version__),
+                         html)
+    return _html_update_version
+
 
 @pytest.fixture
 def is_pdf():
