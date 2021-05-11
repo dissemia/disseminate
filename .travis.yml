@@ -24,7 +24,6 @@ addons:
 before_install:
   - pip install --upgrade pip  # upgrade pip
 install:
-#  - pip install regex jinja2 lxml python-slugify click pdfCropMargins sanic numpy pandas pytest-sanic epubcheck cython
-  - make install
+  - pip install ".[test]" . # install package + test dependencies
 script:
   - pytest
