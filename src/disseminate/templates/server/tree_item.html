@@ -1,0 +1,21 @@
+{% comment Tornado template %}
+<tr class="level-{{ doc['level'] }}">
+  <td class="num">{{ doc['level'] }}-{{ doc['number'] }}</td>
+  <td class="src">
+    <a href="/{{ doc['src_filepath'] }}">{{ doc['src_filepath'].subpath }}</a>
+  </td>
+  <td class="tgt">
+    {% if doc['targets'] %}
+      ({% for i, (target, link) in enumerate(doc['targets'].items()) %}<a href="{{ link }}">{{ target.replace('.', '') }}</a>{% if i < len(doc['targets']) - 1 %}, {% end %}{% end %})
+    {% end %}
+  </td>
+  <td class="date">
+    {{ doc['date'].strftime('%b %d, %Y') }}
+    <div class="time">{{ doc['date'].strftime('(%I:%M%p)') }}</div>
+  </td>
+</tr>
+{% if doc['subdocs'] %}
+  {% for subdoc in doc['subdocs'] %}
+  {% module Template("tree_item.html", doc=subdoc)%}
+  {% end %}
+{% end %}

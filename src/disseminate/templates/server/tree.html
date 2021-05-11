@@ -1,3 +1,4 @@
+{% comment Tornado template %}
 <!doctype html>
 <html lang="en">
 <head>
@@ -20,12 +21,14 @@
     );
     </script>
 </head>
-{%- macro recursetree(n, depth=0) %}
-    {%- for doc in n %}
-        {%- if depth == 0 %}
+<body>
+  <div class="container">
+    <h2>Document Listing</h2>
+    <div class="tableset">
+      {% for project in projects %}
       <table class="tablesorter" id="index">
         <caption>
-          {{ doc.title }}
+          {{ project['title'] }}
         </caption>
         <tr>
           <thead>
@@ -35,40 +38,11 @@
           <th class="date">last saved</th>
           </thead>
         </tr>
-        {%- endif %}
-        <tr class="level-{{ doc.level }}">
-          <td class="num">{{ doc.level }}-{{ doc.number }}</td>
-          <td class="src">
-            <a href="/{{ doc.src_filepath }}">{{ doc.src_filepath.subpath }}</a>
-          </td>
-          <td class="tgt">
-            {%- if doc.targets %}
-            ({%- for target, link in doc.targets.items() -%}
-            <a href="{{ link }}">{{ target|replace('.', '') }}</a>
-              {%- if not loop.last %}, {% endif %}
-            {%- endfor %})
-            {%- endif %}
-          </td>
-          <td class="date">
-            {{ doc.date.strftime('%b %d, %Y') }}
-            <div class="time">{{ doc.date.strftime('(%I:%M%p)') }}</div>
-          </td>
-        </tr>
-      {%- if doc.subdocs -%}
-      {{ recursetree(doc.subdocs, depth + 1) }}
-      {%- endif %}
-      {%- if depth == 0 %}
+        {% module Template("tree_item.html", doc=project, level=1) %}
       </table>
-      {%- endif %}
-    {%- endfor %}
-{%- endmacro %}
-<body>
-  <div class="container">
-    <h2>Document Listing</h2>
-    <div class="tableset">
-        {{ recursetree(docs) }}
+      {% end %}
     </div>
   </div>
-  {% include "server/footer.html" %}
+  {% include "footer.html" %}
 </body>
 </html>

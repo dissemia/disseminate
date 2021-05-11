@@ -1,38 +1,39 @@
-{% extends "server/error.html" %}
+{% comment Tornado template %}
+{% extends "error.html" %}
 {% block message %}
-      <h3>{{ exception.__class__.__name__ }}</h3>
-      {% if exception.__doc__ %}
-        <p class="docstring">{{ exception.__doc__ }}</p>
-      {% endif %}
-
-      {%- if exception.args %}
-      {%- for arg in exception.args %}
-        <p>{{ arg }}</p>
-      {%- endfor %}
-      {%- endif %}
-
-      {%- if traceback %}
-      <input id="traceback-collapsible" class="toggle" type="checkbox">
-      <label for="traceback-collapsible" class="lbl-toggle btn btn-outline-primary">Traceback</label>
-      <div class="traceback">
-        {%- for frame in traceback %}
-        <div class="subbox frame">{{ frame }}</div>
-        {%- endfor %}
-      </div>
-      {%- endif %}
-
-      {% if exception.shell_out %}
-      <input id="shell-collapsible" class="toggle" type="checkbox">
-      <label for="shell-collapsible" class="lbl-toggle btn btn-outline-primary">Terminal Output</label>
-      <div class="shell">
-        <h4>Command</h4>
-        <div class="subbox">{{ exception.cmd }}</div>
-        <h4>Return code</h4>
-        <div class="subbox">{{ exception.returncode }}</div>
-        <h4>Shell output</h4>
-        <div class="subbox">{{ exception.shell_out | replace("\n", "<br/>") }}</div>
-        <h4>Shell error</h4>
-        <div class="subbox">{{ exception.shell_err | replace("\n", "<br/>") }}</div>
-      </div>
-      {% endif %}
-{% endblock %}
+  {% if exc_type %}<h3>{{ exc_type }} at {{ request.uri }}</h3>{% end %}
+  {% if exc_msg %}<h5>{{ exc_msg }}</h5>{% end %}
+  <dl class="row">
+    {% if version %}<dt class="col-sm-3">Disseminate Version:</dt><dd class="col-sm-9">{{ version }}</dd>{% end %}
+    <dt class="col-sm-3">Request URL:</dt><dd class="col-sm-9">{{ request.full_url() }}</dd>
+    {% if exc_type %}<dt class="col-sm-3">Exception Type:</dt><dd class="col-sm-9">{{ exc_type }}</dd>{% end %}
+    {% if exc_args %}<dt class="col-sm-3">Exception Arguments:</dt><dd class="col-sm-9">{{ exc_args }}</dd>{% end %}
+    {% if exc_filename and exc_lineno %}<dt class="col-sm-3">Exception Location:</dt><dd class="col-sm-9">{{ exc_filename }}, line {{ exc_lineno }}</dd>{% end %}
+    {% if python_version %}<dt class="col-sm-3">Python Version:</dt><dd class="col-sm-9">{{ python_version }}</dd>{% end %}
+    {% if python_executable %}<dt class="col-sm-3">Python Executable:</dt><dd class="col-sm-9">{{ python_executable }}</dd>{% end %}
+    {% if platform %}<dt class="col-sm-3">Platform:</dt><dd class="col-sm-9">{{ platform }}</dd>{% end %}
+  </dl>
+  {% if traceback %}
+  <input id="traceback-collapsible" class="toggle" type="checkbox">
+    <label for="traceback-collapsible" class="lbl-toggle btn btn-outline-primary">Traceback</label>
+    <div class="traceback">
+      {% for frame in traceback %}
+      <div class="subbox frame">{{ frame }}</div>
+      {% end %}
+    </div>
+  {% end %}
+  {% if exc and hasattr(exc, 'shell_out') %}
+  <input id="shell-collapsible" class="toggle" type="checkbox">
+  <label for="shell-collapsible" class="lbl-toggle btn btn-outline-primary">Terminal Output</label>
+  <div class="shell">
+    <h4>Command</h4>
+    <div class="subbox">{{ exc.cmd }}</div>
+    <h4>Return code</h4>
+    <div class="subbox">{{ exc.returncode }}</div>
+    <h4>Shell output</h4>
+    <div class="subbox">{{ exc.shell_out | replace("\n", "<br/>") }}</div>
+    <h4>Shell error</h4>
+    <div class="subbox">{{ exc.shell_err | replace("\n", "<br/>") }}</div>
+  </div>
+  {% end %}
+{% end %}
