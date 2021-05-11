@@ -12,7 +12,6 @@ import logging
 import pytest
 import regex
 import lxml.etree
-from sanic_testing import TestManager
 
 from disseminate.context import BaseContext
 from disseminate.attributes import Attributes
