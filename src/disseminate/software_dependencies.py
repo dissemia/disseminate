@@ -8,10 +8,10 @@ python_deps = All('python',
                   Any('executables',
                       'python3.6', 'python3.7', 'python3.8', 'python3.9'),
                   All('packages',
-                      'regex>=2018.11.22', 'jinja2>=2.10', 'lxml>=4.3.0',
+                      'regex>=2018.11.22', 'jinja2>=2.11', 'lxml>=4.3.0',
                       'python-slugify>=2.0.1', 'pdfCropMargins>=0.1.4',
-                      'click>=7.0', 'sanic>=19.0', 'pygments >=2.6',
-                      'pandas>=0.25', 'diskcache>=4.1', 'pathvalidate>=2.2'))
+                      'click>=7.0', 'tornado>=6.1', 'pygments >=2.6',
+                      'pandas>=1.2', 'diskcache>=4.1', 'pathvalidate>=2.2'))
 
 image_deps = Optional('image external dependencies',
                       Optional('executables',
