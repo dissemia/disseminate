@@ -2,50 +2,67 @@
 
 [![Build Status](https://travis-ci.com/jlorieau/disseminate.svg?token=4HVxi2sGcJHxUFriAmGB&branch=development)](https://travis-ci.com/jlorieau/disseminate)
 
-Disseminate is a document processing system for textbooks, articles and other 
-fiction and non-fiction writing. The Disseminate software is essentially a 
-static website builder with targets for html, txt, tex, pdf and, in future 
-releases, epub.
+Disseminate is a document processing system for textbooks, books, novels, 
+articles, reports and essays. 
 
-## Philosophy
-1. **Extensible language**. The disseminate language is a new markup language 
-   that implements basic and custom ``@tags``. New features are added by 
-   implementing new tags, and unimplemented tags are rendered as ``<span>`` html 
-   elements (html targets) or simple text (other targets). Additionally, users 
-   can produce their own macros to automate the repitition of text and tag 
-   fragments.
-2. **Consistent language**. Existing markup languages, like Markdown, Wikitext 
-   or REST, have simple markups for headings and text formatting (bold, 
-   italics), but more complicated markup text for most other operations. The 
-   Disseminate language consistently uses the @tag notion for all tags, and the 
-   ``[attributes]`` notation for all attributes. The contents of a tag dictate 
-   what will be displayed, while the attributes of a tag dictate how it will 
-   be displayed. The formatting of documents and document projects is 
-   controlled through a YAML header.
-3. **Clean, simple output**. Most of the web comprises webpages with elements 
-   that compete for your attention. Disseminate documents aim to have minimal 
-   distractions and to follow standard rules of good typography.
-4. **All-in-one dependencies**. Disseminate includes a software construction 
-   framework to automatically convert file dependencies and build 
-   the final site. The software construction framework tests for installed 
-   build and conversion tools like ``latexmk``, ``pdflatex``, ``pdf2svg`` and 
-   ``asymptote``.
-5. **Viewable without javascript**. The core functionality of a website should 
-   display correctly without javascript enabled.
-6. **Safe**. The produced contents of Disseminate projects should be safe from 
-   web vulnerabilities like XSS and should not depend on a database to produce 
-   the final site.
-7. **Easy publication, versioning and issue tracking**. Though Disseminate may 
-   be used to generate manuscript sites independently, it is designed to 
-   integrate seamlessly with the Dissemia service to publish manuscript 
-   projects like Github Pages through a git server backend, continuous 
-   integration and webservers.
+Disseminate is a markup language, 
+like [Markdown](https://daringfireball.net/projects/markdown/) or 
+[reStructuredText](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html), 
+written in disseminate text format (``.dm``)that aims to be simple to use, to 
+have a simple syntax and to contain useful functionality for academics. 
+Projects may contain a single document or a tree of interconnected documents 
+comprising chapters, raw data, figures and images in a source controlled 
+repository. The Disseminate software is coded in 
+[Python 3](https://www.python.org) and disseminate projects can be converted 
+to static website with ``.html``, ``.txt``, ``.tex``, ``.pdf`` and ``.epub`` 
+targets.
+
+## Features
+1. **Header and Body**. Disseminate documents may optionally contain a YAML
+   header to configure a document and a body written in disseminate syntax.
+2. **Document Trees**. Projects can be as simple as one document, or it can be 
+   a book comprising multiple parts and chapters.
+3. **Uniform Language**. All tags are written with a simple format
+   and all tags are allowed. Certain tags have enhanced typesetting 
+   functionality, and tags may optionally have attributes to format how a tag is
+   rendered. _ex_: ``This is @b{my} sentence.`` or 
+   ``@img[width40%]{src/figure-1.png}``.
+4. **Macros**. Macros allow users to generate their own tags for repetitive
+   code fragments. These are specified in the document header and are available
+   to all sub-documents.
+5. **Templates and Typography**. A top priority for disseminate is the 
+   production of documents that follow good typographical style. Templates are
+   available for textbooks with Tufte formatting, books, novels, reports and
+   articles.
+6. **Internal Labels**. Labels to other documents, chapters, sections, figures 
+   and tables are handled consistently and easily to create internal links.
+   The formatting of labels are either controlled by the template or, 
+   optionally, defined by the user in document headers.
+7. **Multiple Target Formats**. Disseminate projects can be rendered as websites
+   (``.html``), ``.pdf``, ``.epub``, ``.txt`` or ``.tex``.
+8. **Automatic Conversions**. The Disseminate processor includes a customized 
+   build automation system. This system creates build recipes for converting
+   files in the correct formats, and it includes features similar to other
+   build systems, like [Scons](https://scons.org), to detect build changes based
+   on source file signatures.
+9. **Inline Plots and Diagrams**. Tags can handle data and code 
+   to be rendered into images, figures and diagrams.
+10. **Equations**. Equation tags for rendering equations in LaTeX format.
+11. **Version Control**. Document projects are stored in source code 
+    repositories, which enable the tracking of changes, the contribution of
+    multiple authors and the inclusion of raw data.
+12. **Webserver**. A built-in webserver allows users to preview their processed 
+    document projects.
 
 ## Installation
 
+### Requirements
+
+
+
 ### From Github
 
-1. (*Optional*) Setup a virtual environment using python 3.6+
+1. (*Optional*) Setup a virtual environment using python 3.7+
 ```shell script
 $ mkvirtualenv -p python3.7 disseminate
 ```
