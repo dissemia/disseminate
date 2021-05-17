@@ -36,8 +36,8 @@ def test_xhtml2epub_setup_with_outfilepath(env):
     context = env.context
     target_root = context['target_root']
 
-    # 1. Setup the render build with a specified outfilepath. A default template
-    #    'templates/default' is used.
+    # 1. Setup the render build with a specified outfilepath. A default
+    #    template 'templates/default' is used.
     outfilepath = TargetPath(target_root=target_root, target='epub',
                              subpath='test.epub')
 

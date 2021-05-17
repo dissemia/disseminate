@@ -5,9 +5,17 @@ from disseminate.builders.pdfrender import PdfRender
 from disseminate.paths import TargetPath
 from disseminate.tags import Tag
 
-hash_filename1 = lambda ext : 'template_f23df37446eb' + ext
-hash_filename2 = lambda ext : 'template_08d50158c948' + ext
-hash_filename3 = lambda ext : 'template_fb52fb79fce4' + ext
+
+def hash_filename1(ext):
+    return 'template_f23df37446eb' + ext
+
+
+def hash_filename2(ext):
+    return 'template_08d50158c948' + ext
+
+
+def hash_filename3(ext):
+    return 'template_fb52fb79fce4' + ext
 
 
 def test_pdfrender_with_find_builder_cls():
@@ -104,9 +112,11 @@ def test_pdfrender_setup_without_outfilepath(env):
     assert pdfrender.outfilepath == (target_root / 'media' /
                                      hash_filename1('.pdf'))
 
-    # 2. Test an example with modification attributes. The final filename should
-    #    change.
-    pdfrender = PdfRender(parameters=[('scale', 2.0)], env=env, context=context)
+    # 2. Test an example with modification attributes. The final filename
+    #    should change.
+    pdfrender = PdfRender(parameters=[('scale', 2.0)],
+                          env=env,
+                          context=context)
     assert pdfrender.outfilepath.target_root == target_root
     assert pdfrender.outfilepath.name != hash_filename1('.pdf')
     assert pdfrender.outfilepath.name == hash_filename2('.pdf')
@@ -117,7 +127,6 @@ def test_pdfrender_setup_without_outfilepath_use_cache(env):
     with the use_cache flag set."""
     context = env.context
     cache_path = env.cache_path
-    target_root = env.target_root
 
     # Create a tag and template
     context['body'] = Tag(name='body', content='My test body', attributes='',
@@ -154,10 +163,10 @@ def test_pdfrender_setup_without_outfilepath_use_cache(env):
     assert (pdfrender.subbuilders[2].outfilepath ==
             cache_path / 'media' / hash_filename1('.pdf'))
 
-    # 2. Test an example with modification attributes. The final filename should
-    #    change.
-    pdfrender = PdfRender(parameters=[('scale', 2.0)], env=env, context=context,
-                          use_cache=True)
+    # 2. Test an example with modification attributes. The final filename
+    #    should change.
+    pdfrender = PdfRender(parameters=[('scale', 2.0)], env=env,
+                          context=context, use_cache=True)
     assert pdfrender.outfilepath.target_root == cache_path
     assert pdfrender.outfilepath.name != hash_filename1('.pdf')
     assert pdfrender.outfilepath.name == hash_filename2('.pdf')

@@ -37,8 +37,10 @@ def test_epub_builder_find_or_create_xhtml_builders(doctree):
 
     # Make sure the outfilepaths are correctly set
     assert xhtml_builders[0].outfilepath == cache_path / 'xhtml' / 'test.xhtml'
-    assert xhtml_builders[1].outfilepath == cache_path / 'xhtml' / 'test2.xhtml'
-    assert xhtml_builders[2].outfilepath == cache_path / 'xhtml' / 'test3.xhtml'
+    assert (xhtml_builders[1].outfilepath ==
+            cache_path / 'xhtml' / 'test2.xhtml')
+    assert (xhtml_builders[2].outfilepath ==
+            cache_path / 'xhtml' / 'test3.xhtml')
 
     # Retrieving the xhtml_builders again returns the same objects
     new_xhtml_builders = epub_builder.find_or_create_xhtml_builders()
@@ -109,10 +111,8 @@ def test_epub_builder_setup_epub_in_targets(env):
     context['targets'] |= {'epub'}
     context['builders'].clear()  # Reset the builders
 
-    target_cache_epub_filepath = TargetPath(target_root=target_root / '.cache',
-                                           target='epub', subpath='test.epub')
     target_epub_filepath = TargetPath(target_root=target_root,
-                                     target='epub', subpath='test.epub')
+                                      target='epub', subpath='test.epub')
     builder = EpubBuilder(env, context=context)
 
     # check the build
@@ -253,4 +253,3 @@ def test_epub_builder_doctree_build(load_example):
 
     # Check that the file is a valid epub
     assert epubcheck.validate(tgt_filepath)
-

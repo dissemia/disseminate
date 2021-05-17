@@ -38,7 +38,6 @@ def test_saveasy2svg_with_find_builder_cls():
 def test_asy2pdf_setup_with_outfilepath(env):
     """Test the setup of the Asy2pdf builder with an outfilepath."""
     target_root = env.context['target_root']
-    context = env.context
 
     # 1. Setup a build with an outfilepath
     infilepath = SourcePath(project_root='tests/builders/examples/ex7',
@@ -54,7 +53,6 @@ def test_asy2pdf_setup_with_outfilepath(env):
 def test_asy2pdf_setup_without_outfilepath(env):
     """Test the setup of the Asy2pdf builder without outfilepath."""
     target_root = env.context['target_root']
-    context = env.context
 
     # 1. Setup a build with an outfilepath
     infilepath = SourcePath(project_root='tests/builders/examples/ex7',
@@ -77,15 +75,14 @@ def test_saveaspdf_setup_with_outfilepath(env):
                  "draw(unitcircle);")
     outfilepath = TargetPath(target_root=target_root,
                              subpath='final.pdf')
-    asy2pdf = SaveAsyPdf(env=env, parameters=asystring, outfilepath=outfilepath,
-                         context=context)
+    asy2pdf = SaveAsyPdf(env=env, parameters=asystring,
+                         outfilepath=outfilepath, context=context)
 
     assert asy2pdf.outfilepath == outfilepath
 
 
 def test_saveaspdf_setup_without_outfilepath(env):
     """Test the setup of the SaveAsyPdf Builder without outfilepath."""
-    target_root = env.context['target_root']
     context = env.context
 
     # 1. Setup a build with an outfilepath
@@ -100,7 +97,6 @@ def test_saveaspdf_setup_without_outfilepath(env):
 def test_asy2svg_setup_with_outfilepath(env):
     """Test the setup of the Asy2svg builder with an outfilepath."""
     target_root = env.context['target_root']
-    context = env.context
 
     # 1. Setup a build with an outfilepath
     infilepath = SourcePath(project_root='tests/builders/examples/ex7',
@@ -116,7 +112,6 @@ def test_asy2svg_setup_with_outfilepath(env):
 def test_asy2svg_setup_without_outfilepath(env):
     """Test the setup of the Asy2svg builder without outfilepath."""
     target_root = env.context['target_root']
-    context = env.context
 
     # 1. Setup a build with an outfilepath
     infilepath = SourcePath(project_root='tests/builders/examples/ex7',
@@ -139,15 +134,14 @@ def test_saveassvg_setup_with_outfilepath(env):
                  "draw(unitcircle);")
     outfilepath = TargetPath(target_root=target_root,
                              subpath='final.svg')
-    asy2svg = SaveAsySvg(env=env, parameters=asystring, outfilepath=outfilepath,
-                         context=context)
+    asy2svg = SaveAsySvg(env=env, parameters=asystring,
+                         outfilepath=outfilepath, context=context)
 
     assert asy2svg.outfilepath == outfilepath
 
 
 def test_saveassvg_setup_without_outfilepath(env):
     """Test the setup of the SaveAsySvg Builder without outfilepath."""
-    target_root = env.context['target_root']
     context = env.context
 
     # 1. Setup a build with an outfilepath

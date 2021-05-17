@@ -11,12 +11,12 @@ def test_html_scan():
     html_scan = HtmlScanner.scan_function
 
     # Files work
-    assert (html_scan('<link rel="stylesheet" href="/media/css/default.css">')
-            == ['/media/css/default.css'])
+    assert (['/media/css/default.css'] ==
+            html_scan('<link rel="stylesheet" href="/media/css/default.css">'))
 
     # But urls with protocols don't
-    assert (html_scan('<link rel="stylesheet" href="https://test.com/">')
-            == [])
+    assert ([] ==
+            html_scan('<link rel="stylesheet" href="https://test.com/">'))
 
 
 def test_html_scanner_scan():
@@ -48,7 +48,8 @@ def test_html_scanner_scan():
     assert infilepaths[2].project_root.match('templates/default/html/')
     assert infilepaths[2].subpath.match('media/css/default.css')
 
-    assert infilepaths[3].match('templates/default/html/media/css/pygments.css')
+    assert infilepaths[3].match('templates/default/html/media/css/'
+                                'pygments.css')
     assert infilepaths[3].project_root.match('templates/default/html/')
     assert infilepaths[3].subpath.match('media/css/pygments.css')
 

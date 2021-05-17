@@ -15,7 +15,7 @@ def test_hashtxt(tmpdir):
     tmpdir = pathlib.Path(tmpdir)
 
     # 1. Test a simple string
-    assert 'b44117d75a' == hashtxt("My test hash")  # truncate to 10, be default
+    assert 'b44117d75a' == hashtxt("My test hash")  # default truncate to 10
     assert ('b44117d75a6aaf964ae1f583f39dd417' ==
             hashtxt("My test hash", truncate=None))
 
@@ -40,7 +40,8 @@ def test_titlelize():
     assert "Heading 4.1.3" == titlelize("Heading 4.1.3. The heading.")
     assert "Heading 4.1.3" == titlelize("Heading 4.1.3.\nThe heading.")
     assert "My sentence" == titlelize("My sentence.  Double space sentence")
-    assert "My sentence" == titlelize("My sentence.\n\n  Double space sentence")
+    assert ("My sentence" ==
+            titlelize("My sentence.\n\n  Double space sentence"))
     assert ("My First SubSection, and it "
             "has multiple lines") == titlelize("My First SubSection, and"
                                                "      it has multiple lines.")
@@ -84,20 +85,20 @@ def test_str_to_list():
     """Tests the parsing of strings into lists."""
 
     # Test new lines
-    l = str_to_list('  src/file1.tex\n  src/file2.tex\n  src/file 3.tex')
-    assert l == ['src/file1.tex', 'src/file2.tex', 'src/file 3.tex']
+    assert (['src/file1.tex', 'src/file2.tex', 'src/file 3.tex'] ==
+            str_to_list('  src/file1.tex\n  src/file2.tex\n  src/file 3.tex'))
 
     # Test commas
-    l = str_to_list('src/file1.tex,  src/file2.tex,  src/file 3.tex')
-    assert l == ['src/file1.tex', 'src/file2.tex', 'src/file 3.tex']
+    assert (['src/file1.tex', 'src/file2.tex', 'src/file 3.tex'] ==
+            str_to_list('src/file1.tex,  src/file2.tex,  src/file 3.tex'))
 
     # Test semicolons
-    l = str_to_list('src/file1.tex;  src/file2.tex;  src/file 3.tex')
-    assert l == ['src/file1.tex', 'src/file2.tex', 'src/file 3.tex']
+    assert (['src/file1.tex', 'src/file2.tex', 'src/file 3.tex'] ==
+            str_to_list('src/file1.tex;  src/file2.tex;  src/file 3.tex'))
 
     # Test semicolons with commas
-    l = str_to_list('Lorieau, J;  Author, B;  Author, C')
-    assert l == ['Lorieau, J', 'Author, B', 'Author, C']
+    assert (['Lorieau, J', 'Author, B', 'Author, C'] ==
+            str_to_list('Lorieau, J;  Author, B;  Author, C'))
 
 
 def test_str_to_dict():
@@ -108,8 +109,8 @@ def test_str_to_dict():
     assert str_to_dict("""entry: 1""") == {'entry': '1'}
 
     # Test simple multiple entries
-    assert (str_to_dict("entry: one\ntest:two")
-                            == {'entry': 'one', 'test': 'two'})
+    assert (str_to_dict("entry: one\ntest:two") ==
+            {'entry': 'one', 'test': 'two'})
     assert (str_to_dict("entry: one\n@macro:two") ==
             {'entry': 'one', '@macro': 'two'})
 
@@ -120,8 +121,7 @@ def test_str_to_dict():
     # Entries with tags
     assert (str_to_dict("toc: @toc{all documents}") ==
             {'toc': '@toc{all documents}'})
-    assert (str_to_dict("toc: @toc{all \n"
-                             "documents}") ==
+    assert (str_to_dict("toc: @toc{all \ndocuments}") ==
             {'toc': '@toc{all \ndocuments}'})
     assert (str_to_dict("""toc: @toc{all
                              documents}""") ==
@@ -159,9 +159,8 @@ def test_str_to_dict():
     # Target entries
     header = "targets: pdf, tex"
     d = str_to_dict(header)
-    assert (d == {'targets': 'pdf, tex'})
-    l = str_to_list(d['targets'])
-    assert l == ['pdf', 'tex']
+    assert d == {'targets': 'pdf, tex'}
+    assert str_to_list(d['targets']) == ['pdf', 'tex']
 
 
 def test_str_to_dict_with_quotes():

@@ -35,7 +35,6 @@ def test_find_builder(env):
     """Test the find_builder receiver."""
 
     # 1. Get the document targets
-    target_root = env.target_root
     context = env.root_document.context
     targets = context.targets
     assert targets == {'.html', '.pdf', '.tex', '.xhtml'}

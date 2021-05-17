@@ -1,9 +1,9 @@
 """
 Test the process_header processors.
 """
-from disseminate.document.receivers.process_headers import (process_headers,
-    find_template_paths, find_jinja2_parent_templates,
-    find_additional_context_filepaths)
+from disseminate.document.receivers.process_headers import process_headers, \
+    find_template_paths, find_jinja2_parent_templates, \
+    find_additional_context_filepaths
 from disseminate import settings
 
 

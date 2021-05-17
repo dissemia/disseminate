@@ -222,7 +222,8 @@ def test_document_load_required(doctree, wait, caplog):
     caplog.set_level(logging.DEBUG)
     caplog.clear()
 
-    # Setup the documents in the doctree. The setup has 3 load_required messages
+    # Setup the documents in the doctree. The setup has 3 load_required
+    # messages
     doc = doctree
     doc2, doc3 = doctree.documents_list(only_subdocuments=True,
                                         recursive=True)
@@ -290,7 +291,7 @@ def test_document_load_required(doctree, wait, caplog):
     #    context mtime for subdocuments
     assert not doc2.load_required()
     assert not doc3.load_required()
-    assert len(caplog.record_tuples) == 14  # same number of messages as before.
+    assert len(caplog.record_tuples) == 14  # same no. of messages as before
 
     # 6. Touch a subdocument, and it should be the only one that requires an
     #    update
@@ -323,7 +324,8 @@ def test_document_update_mtime(doctree):
 
     # Find the maximum mtime for all documents
     doc1 = doctree
-    doc2, doc3 = doctree.documents_list(recursive=False, only_subdocuments=True)
+    doc2, doc3 = doctree.documents_list(recursive=False,
+                                        only_subdocuments=True)
     mtime = max((doc1.mtime, doc2.mtime, doc3.mtime))
 
     # Increase the mtime and check that all documents are updated
@@ -443,7 +445,6 @@ def test_document_recursion(env_cls, tmpdir):
 
     # 1. Create a test document that references itself
     src_filepath1 = SourcePath(project_root=tmpdir, subpath='test1.dm')
-    target_root = TargetPath(target_root=tmpdir)
 
     src_filepath1.write_text("""
     ---
@@ -599,7 +600,6 @@ def test_document_multiple_dependency_locations(load_example):
     # Load the root document and subdocument
     doc = load_example(ex10_root / ex10_subpath)
     target_root = doc.target_root
-    subdoc = doc.documents_list(only_subdocuments=True)[0]
 
     # Build the document for the html, tex and pdf targets
     assert doc.build() == 'done'

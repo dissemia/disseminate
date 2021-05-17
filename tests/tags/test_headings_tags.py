@@ -16,14 +16,12 @@ def test_heading_labels(doc, context_cls):
     #    raise and exception
     with pytest.raises(AssertionError):
         # A 'doc_id' is needed to create the label id tag
-        ch1 = Chapter(name='chapter', content='', attributes='',
-                      context=context)
+        Chapter(name='chapter', content='', attributes='', context=context)
 
     # 2. Create a chapter heading without a label_manager
     context['doc_id'] = 'test'
     with pytest.raises(AssertionError):
-        ch2 = Chapter(name='chapter', content='', attributes='',
-                      context=context)
+        Chapter(name='chapter', content='', attributes='', context=context)
 
     # 3. Now create a heading label with a context that includes a 'doc_id'
     #    and a 'label_manager'.
@@ -158,7 +156,8 @@ def test_heading_labels_formatting(doc):
     """Test the formatting of labels for headings."""
 
     # 1. Test basic heading with new label format
-    doc.context['label_fmts']['heading_chapter'] = ("My Chapter @label.number! "
+    doc.context['label_fmts']['heading_chapter'] = ("My Chapter "
+                                                    "@label.number! "
                                                     "@label.title")
     root = Tag(name='root', content='@chapter{one}', attributes='',
                context=doc.context)
@@ -263,8 +262,7 @@ def test_heading_labels_tex(doc):
         '@chapter': '\\setcounter{chapter}{0}\n'
                     '\\chapter{Chapter 1. } \\label{ch:test-dm-1}',
         '@chapter{}': '\\setcounter{chapter}{0}\n'
-                      '\\chapter{Chapter 1. } \\label{ch:test-dm-1}',
-               }
+                      '\\chapter{Chapter 1. } \\label{ch:test-dm-1}'}
 
     # Generate a tag for each and compare the generated html to the answer key
     for src, tex in markups.items():
@@ -359,8 +357,7 @@ def test_heading_labels_html(doc):
                     '</h2>\n',
         '@chapter{}': '<h2 id="ch:test-dm-2">'
                       '<span class="label">Chapter 1. </span>'
-                      '</h2>\n',
-               }
+                      '</h2>\n'}
 
     # Generate a tag for each and compare the generated html to the answer key
     for src, html in markups.items():
@@ -459,8 +456,7 @@ def test_heading_labels_xhtml(doc, is_xml):
                     '</h2>\n',
         '@chapter{}': '<h2 id="ch:test-dm-2">\n'
                       '  <span class="label">Chapter 1. </span>\n'
-                      '</h2>\n',
-               }
+                      '</h2>\n'}
 
     # Generate a tag for each and compare the generated html to the answer key
     for src, xhtml in markups.items():

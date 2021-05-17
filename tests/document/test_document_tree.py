@@ -33,7 +33,7 @@ def test_documents_list(load_example):
     src_filepath2 = SourcePath(project_root=ex7_root,
                                subpath=Path("sub1") / "file11.dm")
     src_filepath3 = SourcePath(project_root=ex7_root,
-                               subpath=Path("sub1") / "subsub1"/ "file111.dm")
+                               subpath=Path("sub1") / "subsub1" / "file111.dm")
     doc = load_example(src_filepath1)
 
     # Get all files recursively, including the root document
@@ -140,11 +140,10 @@ def test_document_tree2(load_example):
     """Test the loading of trees and sub-documents from a document."""
 
     # Now test Example5. Example5 has a file in the root directory, a file in
-    # the 'sub1', 'sub2' and 'sub3' directories and a file in the 'sub2/subsub2'
-    # directory
+    # the 'sub1', 'sub2' and 'sub3' directories and a file in the
+    # 'sub2/subsub2' directory
     doc = load_example(ex5_root / ex5_subpath)
     project_root = doc.project_root
-    target_root = doc.target_root
 
     # Setup paths of subdocuments
     src_filepath1 = SourcePath(project_root=project_root,

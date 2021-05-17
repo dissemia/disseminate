@@ -35,7 +35,7 @@ def test_builder_filepaths(env):
     infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
     outfilepath = TargetPath(target_root=env.target_root,
-                            subpath='media/sample_crop.pdf')
+                             subpath='media/sample_crop.pdf')
     pdfcrop = PdfCrop(parameters=infilepath, env=env)
     assert pdfcrop.parameters == [infilepath]
     assert pdfcrop.outfilepath == outfilepath
@@ -99,6 +99,7 @@ def test_builder_parameters_from_signals(env):
     # Create a signal
     try:
         test_signal = signal("test_signal")
+
         @test_signal.connect_via(order=1000)
         def test(builder):
             return ['extra']
@@ -172,8 +173,8 @@ def test_run_cmd_args(env):
     builder = Builder(env=env, parameters=infilepath, outfilepath=targetpath)
     builder.action = ("My test with {builder.infilepaths} and "
                       "{builder.outfilepath}")
-    assert builder.run_cmd_args() == ('My', 'test', 'with', 'sample.pdf', 'and',
-                                      'out.pdf')
+    assert builder.run_cmd_args() == ('My', 'test', 'with', 'sample.pdf',
+                                      'and', 'out.pdf')
 
     # 2. Test an unsafe example with options and an unsafe option input as
     #    a filename

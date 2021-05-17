@@ -143,4 +143,3 @@ def test_csv_parsing_with_formatted_text_html(csv_tag3):
     # table by the @table tag
     html = csv_tag3.html_table()
     assert len(html) == 2  # 1 header row, 1 body row
-

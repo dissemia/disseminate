@@ -54,7 +54,7 @@ def test_pdf2svg_pdfcrop_with_outfilepath(env, svg_dims):
     outfilepath = TargetPath(target_root=env.context['target_root'],
                              subpath='sample.svg')
     pdf2svg = Pdf2SvgCropScale(parameters=[infilepath, ('crop', 20)],
-                               outfilepath=outfilepath,env=env)
+                               outfilepath=outfilepath, env=env)
 
     # Make sure pdfcrop is available and read
     assert pdf2svg.active

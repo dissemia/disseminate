@@ -5,8 +5,7 @@ import pytest
 
 from markupsafe import Markup
 
-from disseminate.formats.xhtml import (xml_tag, xml_entity, xhtml_list,
-                                       XHtmlFormatError)
+from disseminate.formats.xhtml import xml_tag, xml_entity, XHtmlFormatError
 
 
 def test_xml_tag():
@@ -25,12 +24,12 @@ def test_xml_tag():
             '<img src="~/mytest/test.png"/>\n')
 
     assert (xml_tag('img',
-                      attributes='src=~/mytest/test.png class=myclass')
-            == '<img src="~/mytest/test.png" class="myclass"/>\n')
+                    attributes='src=~/mytest/test.png class=myclass') ==
+            '<img src="~/mytest/test.png" class="myclass"/>\n')
 
     # 3. Test the formatting of a tag element with non-valid attributes
     assert (xml_tag('img',
-                      attributes='src=~/mytest/test.png null=myclass') ==
+                    attributes='src=~/mytest/test.png null=myclass') ==
             '<img src="~/mytest/test.png"/>\n')
 
     # 4. Test the formatting of a tag with an invalid tag type
@@ -67,22 +66,25 @@ def test_xml_escaping():
     # 1. Test basic html escaping
     assert (xml_tag('script', attributes='test',
                     formatted_content='<script>unsafe</script>') ==
-            '<span class="script">&lt;script&gt;unsafe&lt;/script&gt;</span>\n')
+            '<span class="script">&lt;script&gt;unsafe&lt;/script&gt;'
+            '</span>\n')
 
     # 2. Test basic html escaping with a list
     assert (xml_tag('script', attributes='test',
                     formatted_content=['<script>unsafe</script>']) ==
-            '<span class="script">&lt;script&gt;unsafe&lt;/script&gt;</span>\n')
+            '<span class="script">&lt;script&gt;unsafe&lt;/script&gt;'
+            '</span>\n')
 
 
 def test_html_safe_contents():
     """Test the xhtml_tag with safe contents."""
 
-    assert (xml_tag('span', attributes='', formatted_content='<b>test</b>')
-            == '<span>&lt;b&gt;test&lt;/b&gt;</span>\n')
+    assert (xml_tag('span',
+                    attributes='',
+                    formatted_content='<b>test</b>') ==
+            '<span>&lt;b&gt;test&lt;/b&gt;</span>\n')
 
-    assert (xml_tag('span', attributes='',
-                    formatted_content=Markup('<b>test</b>'))
-            == ('<span>\n'
-                '  <b>test</b>\n'
-                '</span>\n'))
+    assert (xml_tag('span',
+                    attributes='',
+                    formatted_content=Markup('<b>test</b>')) ==
+            '<span>\n  <b>test</b>\n</span>\n')

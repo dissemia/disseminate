@@ -163,7 +163,8 @@ default_context = {
         # New chapters reset the numbers on sections, subsections,
         # subsubsections
         'part': {'chapter', 'section', 'subsection', 'subsubsection'},
-        'chapter': {'section', 'subsection', 'subsubsection', 'figure', 'table'},
+        'chapter': {'section', 'subsection', 'subsubsection', 'figure',
+                    'table'},
         'section': {'subsection', 'subsubsection'},
         'subsection': {'subsubsection'},
     },
@@ -251,8 +252,7 @@ tracked_deps = {
     # tex (and pdf) target can use .pdf and .png images
     '.tex': ['.pdf', '.png'],
     # css files can include .css files
-    '.css': ['.css', ]
-    }
+    '.css': ['.css', ]}
 
 #: The default decider class
 default_decider = 'Md5Decider'
@@ -333,9 +333,9 @@ xhtml_tag_optionals = {'a': ('class', 'role', epub_type),
 #: listed here or in the tex_env_optionals, it cannot be used.
 #: The values are tuples that indicate the order of attributes for environments
 #: and commands
-tex_env_arguments = {'align': empty, # no required arguments
+tex_env_arguments = {'align': empty,  # no required arguments
                      'align*': empty,
-                     'alignat': (IntPositionalValue,),  # ex: \begin{alignat}{3}
+                     'alignat': (IntPositionalValue,),  # \begin{alignat}{3}
                      'alignat*': (IntPositionalValue,),  # \begin{alignat*}{3}
                      'center': empty,
                      'enumerate': empty,
@@ -354,10 +354,9 @@ tex_env_arguments = {'align': empty, # no required arguments
                      'verbatim': empty,
                      }
 
-tex_env_optionals = {# ex: \begin{enumerate}[I]
-                     'enumerate': (StringPositionalValue, 'label'),
+tex_env_optionals = {'enumerate': (StringPositionalValue, 'label'),
                      'easylist': (StringPositionalValue,),
-                     'figure': (StringPositionalValue,),  # ex:\begin{figure}[h]
+                     'figure': (StringPositionalValue,),  # \begin{figure}[h]
                      'figure*': (StringPositionalValue,),
                      'marginfigure': (StringPositionalValue,),
                      }

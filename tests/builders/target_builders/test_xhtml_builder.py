@@ -10,11 +10,10 @@ def test_xhtml_builder_setup(env):
     in the context['targets']"""
     context = env.context
     src_filepath = context['src_filepath']
-    target_root = env.target_root
     cache_path = env.cache_path
 
-    # 1. Setup the builder without an outfilepath. In this case, 'html' is *not*
-    #    listed in the targets, so the outfilepath will be in the cache
+    # 1. Setup the builder without an outfilepath. In this case, 'html' is
+    #    *not* listed in the targets, so the outfilepath will be in the cache
     #    directory
     context['targets'] -= {'xhtml'}
     target_filepath = TargetPath(target_root=cache_path,
@@ -64,7 +63,7 @@ def test_xhtml_builder_setup(env):
 
 
 def test_xhtml_builder_simple(env):
-    """Test a simple build with the HtmlBuilder """
+    """Test a simple build with the HtmlBuilder"""
     context = env.context
     cache_path = env.cache_path
 
