@@ -1,6 +1,4 @@
-"""
-Checkers for .tex targets.
-"""
+"""Checkers for .tex targets."""
 
 import subprocess
 
@@ -14,6 +12,7 @@ class PdfChecker(Checker):
     """Checker for pdf renderings from latex."""
 
     def __init__(self, pdf_deps=pdf_deps):
+        """Initialize checker for pdf rendering dependencies."""
         super().__init__('pdf', *pdf_deps.dependencies)
 
     def check_classes(self, classes=None):
@@ -26,7 +25,7 @@ class PdfChecker(Checker):
         """
         # Get a listing of 'check_classes' methods
         check_classes_meth_names = [meth for meth in dir(self)
-                                     if meth.startswith('check_classes_')]
+                                    if meth.startswith('check_classes_')]
 
         # Execute the methods
         for meth_name in check_classes_meth_names:
@@ -34,13 +33,13 @@ class PdfChecker(Checker):
             meth(classes)
 
     def check_kpsewhich(self, listing, ext):
-        """Check the availability of specific latex packages and classes using
-        kpsewhich.
+        """Check the availability of latex packages using kpsewhich.
 
         Parameters
         ----------
         listing : Union[List[str], Tuple[str]]
-            Base filenames for latex classes or packages to check. ex: 'article'
+            Base filenames for latex classes or packages to check.
+            ex: 'article'
         ext : str
             The extension to search. ex: '.sty' or '.cls'
         """
@@ -79,8 +78,7 @@ class PdfChecker(Checker):
                 item.available = (returncode == 0)  # succesfully found
 
     def check_packages_kpsewhich(self, packages=None):
-        """Check the available of latex packages (.sty files) using
-        kpsewhich.
+        """Check available latex packages (.sty) using kpsewhich.
 
         Parameters
         ----------
@@ -96,8 +94,7 @@ class PdfChecker(Checker):
         self.check_kpsewhich(packages, '.sty')
 
     def check_fonts(self, fonts=None):
-        """Check the available of latex fonts (.tfm files) using
-        kpsewhich.
+        """Check available of latex fonts (.tfm) using kpsewhich.
 
         Parameters
         ----------
@@ -113,8 +110,7 @@ class PdfChecker(Checker):
         self.check_kpsewhich(fonts, '.tfm')
 
     def check_classes_kpsewhich(self, classes=None):
-        """Check the available of latex classes (.cls files) using
-        kpsewhich.
+        """Check available latex classes (.cls) using kpsewhich.
 
         Parameters
         ----------

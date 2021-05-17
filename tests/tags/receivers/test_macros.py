@@ -14,12 +14,12 @@ test = """
       @caption{This is my @i{first} figure.}
     }
 
-    This is a @13C variable, an @15N, and a @H2O macro. but this is an email 
+    This is a @13C variable, an @15N, and a @H2O macro. but this is an email
     address: justin@lorieau.com
 
     Here is a new paragraph."""
 
-expected_result = """
+result = """
     This is my test document. It has multiple paragraphs.
 
     Here is a new one with @b{bolded} text as an example.
@@ -28,24 +28,24 @@ expected_result = """
       @caption{This is my @i{first} figure.}
     }
 
-    This is a @sup{13}C variable, an @sup{15}N, and a H@sub{2}O macro. but this is an email 
+    This is a @sup{13}C variable, an @sup{15}N, and a H@sub{2}O macro. but this is an email
     address: justin@lorieau.com
 
     Here is a new paragraph."""
 
-expected_result_txt = """
-    This is my test document. It has multiple paragraphs.
-
-    Here is a new one with bolded text as an example.
-    
-      media/files
-      This is my first figure.
-    
-
-    This is a 13C variable, an 15N, and a H2O macro. but this is an email 
-    address: justin.com
-
-    Here is a new paragraph."""
+result_txt = ('\n'
+              '    This is my test document. It has multiple paragraphs.\n'
+              '\n'
+              '    Here is a new one with bolded text as an example.\n'
+              '    \n'
+              '      media/files\n'
+              '      This is my first figure.\n'
+              '    \n'
+              '\n'
+              '    This is a 13C variable, an 15N, and a H2O macro. '
+              'but this is an email\n'
+              '    address: justin.com\n'
+              '\n    Here is a new paragraph.')
 
 
 def test_process_macros(context_cls):
@@ -58,7 +58,7 @@ def test_process_macros(context_cls):
 
     # Process the body tag and check it
     body = Tag(name='body', content=test, attributes='', context=context)
-    assert body.txt == expected_result_txt
+    assert body.txt == result_txt
 
     # 3. Try multiple substitutions
     test3 = "My @13C nucleus is the @13C isotope."

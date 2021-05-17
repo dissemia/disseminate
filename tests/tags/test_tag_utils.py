@@ -75,10 +75,10 @@ def test_repl_tags(context_cls):
     assert new_element == 'replaced'
 
     # 3. Test a list with a tag
-    l = [1, 2, i, '3']
-    new_element = repl_tags(element=l, tag_class=Italics,
+    lst = [1, 2, i, '3']
+    new_element = repl_tags(element=lst, tag_class=Italics,
                             replacement='replaced')
-    assert id(l) == id(new_element)  # same list
+    assert id(lst) == id(new_element)  # same list
     assert new_element == [1, 2, 'replaced', '3']
 
 
@@ -129,7 +129,7 @@ def test_tag_copy(context_cls):
                 root.attributes == root_cp.attributes and
                 id(root.content) != id(root_cp.content) and
                 root.content == root_cp.content and
-                id(root.context) == id(root_cp.context) and # same object
+                id(root.context) == id(root_cp.context) and  # same object
                 id(root.__weakrefattrs__) != id(root_cp.__weakrefattrs__))
 
     # the root tag and all its subtags
@@ -150,7 +150,6 @@ def test_tag_copy(context_cls):
         tag.context = other
 
     for tag1, tag2 in zip(root_flattened, root_cp_flattened):
-        print(tag1.__dict__); print(tag2.__dict__)
         assert id(tag1) != id(tag2)
         assert id(tag1.context) == id(context)
         assert id(tag2.context) == id(other)

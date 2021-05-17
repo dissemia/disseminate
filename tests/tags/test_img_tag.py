@@ -149,7 +149,8 @@ def test_img_xhtml(load_example, is_xml, is_svg):
     root = Tag(name='root', content=src, attributes='', context=context)
     img = root.content
 
-    assert img.xhtml == '<img src="media/sample.svg"/>\n'  # rel path by default
+    # rel path by default
+    assert img.xhtml == '<img src="media/sample.svg"/>\n'
     assert is_xml(img.xhtml)
 
     # Now test an xhtml-specific attribute

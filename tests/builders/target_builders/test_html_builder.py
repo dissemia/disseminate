@@ -3,7 +3,6 @@ Test the HtmlBuilder
 """
 import pathlib
 from collections import namedtuple
-from shutil import copytree
 
 import pytest
 
@@ -91,8 +90,8 @@ def test_html_builder_setup(env):
     src_filepath = context['src_filepath']
     target_root = context['target_root']
 
-    # 1. Setup the builder without an outfilepath. In this case, 'html' is *not*
-    #    listed in the targets, so the outfilepath will be in the cache
+    # 1. Setup the builder without an outfilepath. In this case, 'html' is
+    #    *not* listed in the targets, so the outfilepath will be in the cache
     #    directory
     context['targets'] -= {'html'}
     target_filepath = TargetPath(target_root=target_root / '.cache',
@@ -129,7 +128,7 @@ def test_html_builder_setup(env):
 
 
 def test_html_builder_simple(env):
-    """Test a simple build with the HtmlBuilder """
+    """Test a simple build with the HtmlBuilder"""
     context = env.context
     tmpdir = context['target_root']
 
@@ -321,7 +320,7 @@ def test_html_builder_inherited_doc(load_example, html_update_version):
 
 def test_html_builder_add_build_pdf2svg(load_example, svg_dims):
     """Test the HtmlBuilder with an added dependency through add_build
-     (Pdf2SvgCropScale)."""
+    (Pdf2SvgCropScale)."""
 
     # 1. Example 5 includes a media file that must be converted from pdf->svg
     #    for html
@@ -375,7 +374,7 @@ def test_html_builder_add_build_pdf2svg(load_example, svg_dims):
 
 def test_html_builder_add_build_pdf2svgcropscale(load_example, svg_dims):
     """Test the HtmlBuilder with an added dependency through add_build
-     (Pdf2SvgCropScale)."""
+    (Pdf2SvgCropScale)."""
 
     # 1. Example 5 includes a media file that must be converted from pdf->svg
     #    for html
@@ -435,7 +434,6 @@ def test_html_builder_add_build_pdf2svgcropscale(load_example, svg_dims):
 
     # Check that the files were created
     assert tp.is_file()
-    svg = tp.read_text()
 
     # Check that the svg file and dimensions
     assert svg_dims(tp, width='200', abs=3)
@@ -452,7 +450,6 @@ def test_html_builder_add_build_invalid(load_example):
     #    └── main.dm
     doc = load_example(ex8_root / 'main.dm')
     env = doc.context['environment']
-    target_root = doc.context['target_root']
 
     # Setup the builder
     html_builder = HtmlBuilder(env, context=doc.context)

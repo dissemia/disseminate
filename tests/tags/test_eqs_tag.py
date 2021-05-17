@@ -265,7 +265,6 @@ def test_block_equation_html(context):
             '<img src="media/eq_a5d76f56919f.svg" class="eq blockeq">\n')
 
     # Check the build
-    build_env = context['environment']
     html_builder = context['builders']['.html']
     assert html_builder.build(complete=True) == 'done'
     assert (target_root / 'html' / 'media' / 'eq_a5d76f56919f.svg').exists()
@@ -368,7 +367,8 @@ def test_simple_inline_equation_xhtml(context, is_xml):
     # Check the rendered tag and that the asy and svg files were properly
     # created
     xhtml = eq.xhtml
-    assert xhtml == '<img src="/xhtml/media/eq_b659cf87bb35.svg" class="eq"/>\n'
+    assert (xhtml ==
+            '<img src="/xhtml/media/eq_b659cf87bb35.svg" class="eq"/>\n')
     assert eq.xhtml == xhtml  # running twice should give same answer
     assert is_xml(eq.xhtml)
 

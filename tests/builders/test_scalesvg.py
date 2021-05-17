@@ -49,7 +49,7 @@ def test_scalesvg_build_without_outfilepath(env):
     # 2. Test an example without an outfilepath specified. The use_cache is
     #    False so the outfilepath will be stored in the target_root
     infilepath = SourcePath(project_root='tests/builders/examples/ex1',
-                           subpath='sample.pdf')
+                            subpath='sample.pdf')
     pdf2svg = Pdf2svg(parameters=infilepath, env=env)
 
     # Create the example svg

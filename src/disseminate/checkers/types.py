@@ -1,3 +1,4 @@
+"""Bases classes for checkers of software dependencies."""
 
 
 class SoftwareDependency(object):
@@ -16,9 +17,11 @@ class SoftwareDependency(object):
         True, if dependency is available, False otherwise.
         May also be None if the availability is not determined yet
     """
+
     __slots__ = ('name', 'path', 'available')
 
     def __init__(self, name, **kwargs):
+        """Initialize dependency with name and attributes."""
         kwargs['name'] = name
         if 'available' not in kwargs:
             kwargs['available'] = None
@@ -48,6 +51,7 @@ class SoftwareDependencyList(object):
     __slots__ = ('category', 'dependencies')
 
     def __init__(self, category, *dependencies):
+        """Initialize with category and sub-dependencies."""
         self.category = category
         # if (len(dependencies) == 1 and
         #    isinstance(dependencies[0], SoftwareDependencyList)):
@@ -83,8 +87,10 @@ class SoftwareDependencyList(object):
         return cls_name + '[' + items_str + ']'
 
     def flatten(self, items=None, level=1):
-        """A flattened list of SoftwareDependency and SoftwareDependencyList
-        objects.
+        """Return a flattened list of software dependency objects.
+
+        The flattened list includes SoftwareDependency and
+        SoftwareDependencyList objects.
 
         Returns
         -------
@@ -116,6 +122,7 @@ class SoftwareDependencyList(object):
         return flattened_list
 
     def keys(self):
+        """Name or category of sub-dependencies."""
         return [i.category if hasattr(i, 'category')
                 else i.name
                 for i in self.dependencies]
@@ -145,7 +152,7 @@ class All(SoftwareDependencyList):
 
 class Optional(SoftwareDependencyList):
     """A list for external programs and packages in why none of them are
-     required to be present."""
+    required to be present."""
 
     @property
     def available(self):

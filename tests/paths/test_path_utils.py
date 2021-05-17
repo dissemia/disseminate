@@ -7,7 +7,7 @@ from os import curdir
 import pytest
 
 from disseminate.paths.utils import find_files, find_file
-from disseminate.paths import SourcePath, TargetPath
+from disseminate.paths import SourcePath
 
 
 def test_find_files_example1(doc):
@@ -56,8 +56,8 @@ def test_find_files_example2(doc_cls, env, tmpdir):
     # Load the root document and subdocument
     env.project_root = SourcePath(project_root='tests/paths/'
                                                'find_files_example2/src')
-    src_filepath = SourcePath(project_root=env.project_root, subpath='index.dm')
-    target_root = TargetPath(target_root=env.target_root)
+    src_filepath = SourcePath(project_root=env.project_root,
+                              subpath='index.dm')
 
     doc = doc_cls(src_filepath=src_filepath, environment=env)
     subdoc = doc.documents_list(only_subdocuments=True)[0]
@@ -101,7 +101,7 @@ def test_find_file(context_cls):
     # 1. Test with simple strings
     paths = ['tests/paths/find_files_example2/src',
              'tests/paths/find_files_example2/src/chapter1',
-             'tests/paths/find_files_example2/src/chapter1/figures',]
+             'tests/paths/find_files_example2/src/chapter1/figures']
     context = context_cls(paths=paths)
 
     assert find_file('local_img.png', context).match('local_img.png')

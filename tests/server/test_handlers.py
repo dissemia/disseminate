@@ -226,4 +226,3 @@ class HandlerTestCase(AsyncHTTPTestCase):
         body = response.body.decode('utf-8')  # decode binary
         assert response.code == 200
         assert 'Updated file' in body
-

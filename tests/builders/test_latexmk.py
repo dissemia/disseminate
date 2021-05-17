@@ -72,7 +72,7 @@ def test_latexmk_setup_no_outfilepath_use_media_use_cache(env):
 
 def test_latexmk_setup_no_outfilepath_use_cache(env):
     """Test the setup of the Latexmk builder with the use_cache option and no
-     outfilepath specified."""
+    outfilepath specified."""
 
     infilepath = SourcePath(project_root='tests/builders/examples',
                             subpath='ex3/dummy.tex')

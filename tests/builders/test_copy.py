@@ -20,7 +20,8 @@ def test_copy_no_outfilepath(env):
 
     # If not outfilepath is specified, a file in the target_root is created
     # (use_cache is False by default)
-    targetpath = TargetPath(target_root=env.target_root, subpath='media/in.txt')
+    targetpath = TargetPath(target_root=env.target_root,
+                            subpath='media/in.txt')
 
     # 1. Test a build that copies the file
     infilepath.write_text('infile')
@@ -80,4 +81,3 @@ def test_copy_samefile(env):
     assert cp.status == 'done'
     assert cp.build(complete=True) == 'done'
     assert targetpath.read_text() == 'infile'
-

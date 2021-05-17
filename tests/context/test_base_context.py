@@ -29,7 +29,7 @@ def test_base_context_dict():
     assert context.get('not a', None) is None
 
     with pytest.raises(KeyError):
-        not_a = context['not a']
+        context['not a']
 
     # Test the set methods
     assert context.setdefault('d', 4) == 4
@@ -180,8 +180,8 @@ def test_base_context_do_not_inherit(context_cls):
         sub_child['a']
     assert sub_child['b'] == 2
 
-    # Now populate 'a' and 'b' for the sub_child, and these should be accessible
-    # as normal
+    # Now populate 'a' and 'b' for the sub_child, and these should be
+    # accessible as normal
     sub_child['a'] = 3
     sub_child['b'] = 4
 
@@ -215,7 +215,8 @@ def test_base_context_load(context_cls):
     context.load(test)
 
     assert 'contact' in context
-    assert context['contact'] == '  address: 1,2,3 lane\n  phone: 333-333-4123.'
+    assert (context['contact'] ==
+            '  address: 1,2,3 lane\n  phone: 333-333-4123.')
 
     assert 'name' in context
     assert context['name'] == 'Justin L Lorieau'
@@ -286,7 +287,7 @@ def test_base_context_is_valid(context_cls):
     assert not context.is_valid()
 
     # 3. test a context with the right types, but one missing.
-    context = context_cls(int=4, float=3.2, set={1,2,3})
+    context = context_cls(int=4, float=3.2, set={1, 2, 3})
     assert not context.is_valid()
     assert context.is_valid(must_exist=False)
 
@@ -429,7 +430,7 @@ def test_context_copy(context_cls):
     child_cp = copy.copy(child)
 
     # Check the parent_context and initial_valuues
-    assert id(child) != id (child_cp)
+    assert id(child) != id(child_cp)
     assert id(child.parent_context) == id(parent)
     assert child._parent_context == child_cp._parent_context
     assert id(child_cp.parent_context) == id(parent)
@@ -443,9 +444,9 @@ def test_context_copy(context_cls):
 def test_context_replace(context_cls):
     """Test that mutable entries from the parent_context are properly replaced.
     """
-    for child_value in ('.pdf', # string
-                        ['.pdf'], # list
-                         ):
+    for child_value in ('.pdf',  # string
+                        ['.pdf'],  # list
+                        ):
         # 1. First, try with 'targets' in the replace set
         context_cls.replace = {'targets'}
 

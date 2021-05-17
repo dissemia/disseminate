@@ -78,7 +78,7 @@ def test_pdf_crop_percentage(env):
     infilepath = SourcePath(project_root='tests/builders/examples/ex1',
                             subpath='sample.pdf')
     ref_outfilepath = TargetPath(target_root=env.context['target_root'],
-                             subpath='sample_ref.pdf')
+                                 subpath='sample_ref.pdf')
     pdfcrop = PdfCrop(parameters=infilepath, outfilepath=ref_outfilepath,
                       env=env)
     pdfcrop.build(complete=True)

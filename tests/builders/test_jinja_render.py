@@ -12,8 +12,12 @@ from disseminate.tags import Tag
 from disseminate.paths import TargetPath
 
 
-hash_filename1 = lambda ext: 'template_68c8b3e6dc51' + ext
-hash_filename2 = lambda ext: 'template_a471ff72af26' + ext
+def hash_filename1(ext):
+    return 'template_68c8b3e6dc51' + ext
+
+
+def hash_filename2(ext):
+    return 'template_a471ff72af26' + ext
 
 
 @pytest.fixture
@@ -40,8 +44,8 @@ def test_jinja_render_setup_with_outfilepath(env):
     context = env.context
     target_root = context['target_root']
 
-    # 1. Setup the render build with a specified outfilepath. A default template
-    #    'templates/default' is used.
+    # 1. Setup the render build with a specified outfilepath. A default
+    #    template 'templates/default' is used.
     outfilepath = TargetPath(target_root=target_root, target='html',
                              subpath='subpath.html')
     tag = Tag(name='body', content='My body', attributes='', context=context)
@@ -105,7 +109,6 @@ def test_jinja_render_setup_without_outfilepath(env):
     specified."""
 
     context = env.context
-    target_root = context['target_root']
 
     # 2. Test an example without an outfilepath. However, a target must be
     #    specified.
@@ -147,8 +150,8 @@ def test_jinja_render_setup_inherited(env):
     context = env.context
     target_root = context['target_root']
 
-    # 1. Setup the render build with a specified outfilepath. A default template
-    #    'templates/default' is used.
+    # 1. Setup the render build with a specified outfilepath. A default
+    #    template 'templates/default' is used.
     outfilepath = TargetPath(target_root=target_root, target='html',
                              subpath='subpath.html')
     tag = Tag(name='body', content='My body', attributes='', context=context)
@@ -202,8 +205,8 @@ def test_jinja_render(env):
     context = env.context
     target_root = context['target_root']
 
-    # 1. Setup the render build with a specified outfilepath. A default template
-    #    'templates/default' is used.
+    # 1. Setup the render build with a specified outfilepath. A default
+    #    template 'templates/default' is used.
     outfilepath = TargetPath(target_root=target_root, target='html',
                              subpath='subpath.html')
     tag = Tag(name='body', content='My body', attributes='', context=context)
@@ -285,7 +288,8 @@ def test_template_filepaths(jinja2_env):
     assert pl_path[0].match('disseminate/templates/default/tex/template.tex')
 
     # 2. Test an example with template inheritance
-    template = jinja2_env.get_or_select_template('books/tufte/tex/template.tex')
+    template = jinja2_env.get_or_select_template('books/tufte/tex/'
+                                                 'template.tex')
     pl_path = template_filepaths(template, environment=jinja2_env)
     assert len(pl_path) == 2
     assert pl_path[0].match('disseminate/templates/books/tufte/'
@@ -307,7 +311,8 @@ def test_context_filepaths(jinja2_env):
     assert fps[0].match('disseminate/templates/default/context.txt')
 
     # 2. Test a package template with inheritance
-    template = jinja2_env.get_or_select_template('books/tufte/tex/template.tex')
+    template = jinja2_env.get_or_select_template('books/tufte/tex/'
+                                                 'template.tex')
     template_fps = template_filepaths(template, environment=jinja2_env)
 
     # Get the context filepath for this template

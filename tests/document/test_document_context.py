@@ -322,13 +322,16 @@ def test_document_context_reset(doc):
         # Define the match function
         if key == 'builders':
             # Match the builder types
-            match = lambda v1, v2: ({k: type(v) for k, v in v1.items()} ==
-                                    {k: type(v) for k, v in v2.items()})
+            def match(v1, v2):
+                return ({k: type(v) for k, v in v1.items()} ==
+                        {k: type(v) for k, v in v2.items()})
         elif key == 'mtime':
             # New mtime is later than the first
-            match = lambda v1, v2: v2 >= v1
+            def match(v1, v2):
+                return v2 >= v1
         else:
-            match = lambda v1, v2: v1 == v2
+            def match(v1, v2):
+                return v1 == v2
 
         v1 = context_article[key]
         v2 = doc.context[key]

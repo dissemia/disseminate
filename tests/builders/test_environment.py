@@ -2,7 +2,6 @@
 Tests for the build environment.
 """
 import pathlib
-from shutil import copytree
 
 from disseminate.builders.environment import Environment
 from disseminate.paths import SourcePath, TargetPath
@@ -34,7 +33,7 @@ def test_environment_setup1(tmpdir):
     assert html_builders
 
     tex_builders = [b for b in target_builders
-                     if b.__class__.__name__ == 'TexBuilder']
+                    if b.__class__.__name__ == 'TexBuilder']
     assert tex_builders
 
     pdf_builders = [b for b in target_builders
@@ -191,4 +190,3 @@ def test_create_environments():
     src_filepath = env_ex6.root_document.src_filepath
     assert src_filepath.project_root == ex6_root
     assert src_filepath.subpath.name == 'index.dm'
-

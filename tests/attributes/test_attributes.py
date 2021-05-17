@@ -1,8 +1,6 @@
 """
 Test the attributes functions
 """
-import pytest
-
 from disseminate.attributes import Attributes
 from disseminate.utils.types import (PositionalValue, FloatPositionalValue,
                                      IntPositionalValue, StringPositionalValue)
@@ -216,7 +214,7 @@ def test_attributes_filter():
     assert attrs.filter(target='tex') == Attributes('class=basic '
                                                     '3.1416 2.718')
     assert attrs.filter(target='html') == Attributes('class=specific '
-                                                    '3.1416')
+                                                     '3.1416')
 
     # 4. Test examples for allowed attributes with equations
     attrs = Attributes('class=basic src=img.txt env=alignat* 3')

@@ -3,8 +3,6 @@ Test the label manager register functionality.
 """
 from collections import OrderedDict
 
-import pytest
-
 from disseminate.label_manager.types import ContentLabel, DocumentLabel
 from disseminate.label_manager.register_orders import register_orders
 from disseminate.label_manager.register_content_labels \

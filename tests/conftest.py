@@ -31,7 +31,7 @@ def pytest_collection_modifyitems(config, items):
     env_items = [item for item in items if
                  item.get_closest_marker('environment') is not None]
     nonenv_items = [item for item in items if
-                 item.get_closest_marker('environment') is None]
+                    item.get_closest_marker('environment') is None]
 
     items.clear()
     items += env_items + nonenv_items
@@ -292,6 +292,8 @@ def svg_dims():
 
 
 xml_parser = None
+
+
 @pytest.fixture
 def is_xml():
     """Tests a string for valid xml.

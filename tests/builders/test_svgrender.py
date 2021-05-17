@@ -8,11 +8,24 @@ from disseminate.tags import Tag
 from disseminate.paths import TargetPath
 
 
-hash_filename1 = lambda ext : 'template_f23df37446eb' + ext
-hash_filename2 = lambda ext : 'template_08d50158c948' + ext
-hash_filename3 = lambda ext : 'template_3fdf8003c816' + ext
-hash_filename4 = lambda ext : 'template_fb52fb79fce4' + ext
-hash_filename5 = lambda ext : 'template_f86ffcd7ea13' + ext
+def hash_filename1(ext):
+    return 'template_f23df37446eb' + ext
+
+
+def hash_filename2(ext):
+    return 'template_08d50158c948' + ext
+
+
+def hash_filename3(ext):
+    return 'template_3fdf8003c816' + ext
+
+
+def hash_filename4(ext):
+    return 'template_fb52fb79fce4' + ext
+
+
+def hash_filename5(ext):
+    return 'template_f86ffcd7ea13' + ext
 
 
 def test_svgrender_with_find_builder_cls():
@@ -112,16 +125,16 @@ def test_svgrender_setup_without_outfilepath_scale(env):
     """Test the setup of the SvgRender builder without an outfilepath and with
     scaling option."""
     context = env.context
-    cache_path = env.cache_path
     target_root = env.target_root
 
     # Create a tag and template
     context['body'] = Tag(name='body', content='My test body', attributes='',
                           context=context)
 
-    # 2. Test an example with modification attributes. The final filename should
-    #    change.
-    svgrender = SvgRender(parameters=[('scale', 2.0)], env=env, context=context)
+    # 2. Test an example with modification attributes. The final filename
+    #    should change.
+    svgrender = SvgRender(parameters=[('scale', 2.0)], env=env,
+                          context=context)
     assert svgrender.outfilepath.target_root == target_root
     assert (svgrender.outfilepath.subpath !=
             pathlib.Path('media') / hash_filename1('.svg'))
@@ -140,8 +153,8 @@ def test_svgrender_setup_without_outfilepath_crop(env):
     context['body'] = Tag(name='body', content='My test body', attributes='',
                           context=context)
 
-    # 2. Test an example with modification attributes. The final filename should
-    #    change.
+    # 2. Test an example with modification attributes. The final filename
+    #    should change.
     svgrender = SvgRender(parameters=[('crop', 0, 0, 0, 0)], env=env,
                           context=context)
     assert svgrender.outfilepath.target_root == target_root
@@ -156,7 +169,6 @@ def test_svgrender_setup_without_outfilepath_use_cache(env):
     with the use_cache flag set."""
     context = env.context
     cache_path = env.cache_path
-    target_root = env.target_root
 
     # Create a tag and template
     context['body'] = Tag(name='body', content='My test body', attributes='',
@@ -192,10 +204,10 @@ def test_svgrender_setup_without_outfilepath_use_cache(env):
     assert (svgrender.subbuilders[2].outfilepath ==
             cache_path / 'media' / hash_filename1('.svg'))
 
-    # 2. Test an example with modification attributes. The final filename should
-    #    change.
-    svgrender = SvgRender(parameters=[('scale', 2.0)], env=env, context=context,
-                          use_cache=True)
+    # 2. Test an example with modification attributes. The final filename
+    #    should change.
+    svgrender = SvgRender(parameters=[('scale', 2.0)], env=env,
+                          context=context, use_cache=True)
     assert svgrender.outfilepath.target_root == cache_path
     assert (svgrender.outfilepath.subpath !=
             pathlib.Path('media') / hash_filename1('.svg'))
@@ -270,7 +282,8 @@ def test_svgrender_simple(env):
 
 
 def test_svgrender_simple_without_outfilepath(env):
-    """Test a simple build with the SvgRender builder without an outfilepath."""
+    """Test a simple build with the SvgRender builder without an
+    outfilepath."""
     target_root = env.target_root
     context = env.context
 

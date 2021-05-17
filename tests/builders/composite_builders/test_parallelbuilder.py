@@ -92,7 +92,6 @@ def test_parallelbuilder_add_build_file_without_outfilepath(env):
     """Test the ParallelBuilder add_build method without an outfilepath
     specified"""
     tmpdir = env.context['target_root']
-    target_root = tmpdir
 
     # Add paths to the context
     paths = [SourcePath(project_root='tests/builders/examples/ex1')]
@@ -125,7 +124,6 @@ def test_parallelbuilder_add_build_file_without_outfilepath(env):
 def test_parallelbuilder_add_build_render(env):
     """Test the ParallelBuilder add_build method with render builder"""
     tmpdir = env.context['target_root']
-    target_root = tmpdir
 
     # Add paths to the context
     paths = [SourcePath(project_root='tests/builders/examples/ex1')]

@@ -23,11 +23,13 @@ def test_html_tag():
     assert (xhtml_tag('img', attributes='src=~/mytest/test.png') ==
             '<img src="~/mytest/test.png">\n')
 
-    assert (xhtml_tag('img', attributes='src=~/mytest/test.png class=myclass')
-            == '<img src="~/mytest/test.png" class="myclass">\n')
+    assert (xhtml_tag('img',
+                      attributes='src=~/mytest/test.png class=myclass') ==
+            '<img src="~/mytest/test.png" class="myclass">\n')
 
     # 3. Test the formatting of a tag element with non-valid attributes
-    assert (xhtml_tag('img', attributes='src=~/mytest/test.png null=myclass') ==
+    assert (xhtml_tag('img',
+                      attributes='src=~/mytest/test.png null=myclass') ==
             '<img src="~/mytest/test.png">\n')
 
     # 4. Test the formatting of a tag with an invalid tag type
@@ -80,12 +82,14 @@ def test_html_escaping():
 def test_html_safe_contents():
     """Test the xhtml_tag with safe contents."""
 
-    assert (xhtml_tag('span', attributes='', formatted_content='<b>test</b>')
-            == '<span>&lt;b&gt;test&lt;/b&gt;</span>\n')
+    assert (xhtml_tag('span',
+                      attributes='',
+                      formatted_content='<b>test</b>') ==
+            '<span>&lt;b&gt;test&lt;/b&gt;</span>\n')
 
     assert (xhtml_tag('span', attributes='',
-                      formatted_content=Markup('<b>test</b>'))
-            == '<span><b>test</b></span>\n')
+                      formatted_content=Markup('<b>test</b>')) ==
+            '<span><b>test</b></span>\n')
 
 
 def test_html_list():
@@ -102,17 +106,17 @@ def test_html_list():
 
     html = xhtml_list(*elements)
     assert html == ('<ol>\n'
-                      '<li>1</li>\n'
-                      '<ol>\n'
-                        '<li>1.1</li>\n'
-                        '<li>1.2</li>\n'
-                        '<ol>'
-                          '<li>1.2.3</li>'
-                        '</ol>\n'
-                      '</ol>\n'
-                      '<li>2</li>\n'
-                      '<li>3</li>\n'
-                      '<ol>'
-                        '<li>3.1</li>'
-                      '</ol>\n'
+                    '<li>1</li>\n'
+                    '<ol>\n'
+                    '<li>1.1</li>\n'
+                    '<li>1.2</li>\n'
+                    '<ol>'
+                    '<li>1.2.3</li>'
+                    '</ol>\n'
+                    '</ol>\n'
+                    '<li>2</li>\n'
+                    '<li>3</li>\n'
+                    '<ol>'
+                    '<li>3.1</li>'
+                    '</ol>\n'
                     '</ol>\n')

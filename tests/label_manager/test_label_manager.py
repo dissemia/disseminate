@@ -44,8 +44,9 @@ def test_label_manager_reset(context):
                                     context=context)
         label_man.add_content_label(id='test.dm::fig:two', kind='figures',
                                     title='2', context=context)
-        label_man.add_document_label(id='test2.dm::second-doc', kind='document',
-                                     title="3", context=context)
+        label_man.add_document_label(id='test2.dm::second-doc',
+                                     kind='document', title="3",
+                                     context=context)
         label_man.add_content_label(id='test2.dm::fig:three', kind='figure',
                                     title="4", context=context)
 
@@ -59,7 +60,8 @@ def test_label_manager_reset(context):
     create_labels()
     label_man.reset(doc_ids='test2.dm')
     assert len(label_man.labels) == 2  # 2 label remaining
-    assert all(l.doc_id == 'test.dm' for l in label_man.labels.values())
+    assert all(label.doc_id == 'test.dm'
+               for label in label_man.labels.values())
 
 
 def test_label_manager_get_label(doctree):
@@ -73,8 +75,9 @@ def test_label_manager_get_label(doctree):
     label2 = label_man.add_document_label(id='test2.dm::second-doc',
                                           kind='document', title="Second doc",
                                           context=context)
-    label3 = label_man.add_content_label(id='test3.dm::fig:one', kind='figures',
-                                         title='first fig', context=context)
+    label3 = label_man.add_content_label(id='test3.dm::fig:one',
+                                         kind='figures', title='first fig',
+                                         context=context)
 
     # Get label with doc_id
     assert label_man.get_label('test.dm::fig:one') == label1
@@ -86,7 +89,8 @@ def test_label_manager_get_label(doctree):
     assert label_man.get_label('fig:one') == label1
     assert label_man.get_label('second-doc') == label2
 
-    # Try cases with invalid doc_id, label_id, which should return LabelNotFound
+    # Try cases with invalid doc_id, label_id, which should return
+    # LabelNotFound
     for id in ('test.dm::fig:two', 'test4.dm::fig:one', 'fig:three'):
         with pytest.raises(LabelNotFound):
             label_man.get_label(id)
@@ -102,8 +106,9 @@ def test_label_manager_get_labels_by_id(doctree):
     label2 = label_man.add_document_label(id='test2.dm::second-doc',
                                           kind='document', title="Second doc",
                                           context=context)
-    label3 = label_man.add_content_label(id='test3.dm::fig:one', kind='figures',
-                                         title='first fig', context=context)
+    label3 = label_man.add_content_label(id='test3.dm::fig:one',
+                                         kind='figures', title='first fig',
+                                         context=context)
 
     # Try different ids with doc_id
     assert label_man.get_labels_by_id(ids='test.dm::fig:one') == [label1]
@@ -174,15 +179,17 @@ def test_label_manager_doc_basic_labels(doc):
     assert len(labels) == 3
 
     # There should be 2 ContentLabels (fig:one, fig:two) and 1 DocumentLabel
-    assert len([l for l in labels if isinstance(l, ContentLabel)]) == 2
-    assert len([l for l in labels if isinstance(l, DocumentLabel)]) == 1
+    assert len([label for label in labels
+                if isinstance(label, ContentLabel)]) == 2
+    assert len([label for label in labels
+                if isinstance(label, DocumentLabel)]) == 1
 
     # Now check the labels themselves
     label1 = labels[0]  # document label
     label2 = labels[1]  # figure label
     label3 = labels[2]  # figure label
 
-    assert all(l.doc_id == 'test.dm' for l in labels)
+    assert all(label.doc_id == 'test.dm' for label in labels)
     assert label1.id == 'doc:test-dm'
     assert label2.id == 'caption-2491d216e2'
     assert label3.id == 'caption-c5939d5d3a'
@@ -208,7 +215,8 @@ def test_label_manager_doc_basic_labels(doc):
     # Make sure the labels are properly assigned: 2 ContentLabels. The
     # DocumentLabel hasn't been registered because the document's
     # load/reset_context methods haven't been executed
-    assert len([l for l in labels if isinstance(l, ContentLabel)]) == 4
+    assert len([label for label in labels
+                if isinstance(label, ContentLabel)]) == 4
 
     # Check the new labels
     label3 = label_man.get_label('fig:image1')

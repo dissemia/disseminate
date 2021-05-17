@@ -31,12 +31,14 @@ def test_generate_label_id(mocktag_cls, context_cls):
     assert generate_label_id(tag3) == "tester-this-is-my-title"
 
     # 4. Test with short title
-    tag4 = mocktag_cls(name='label', content='This is my title. It has 2 lines,',
+    tag4 = mocktag_cls(name='label',
+                       content='This is my title. It has 2 lines,',
                        attributes='short="small title"', context=context)
     assert generate_label_id(tag4) == "tester-small-title"
 
     # 5. Test with a specific id
-    tag5 = mocktag_cls(name='label', content='This is my title. It has 2 lines,',
+    tag5 = mocktag_cls(name='label',
+                       content='This is my title. It has 2 lines,',
                        attributes='id=xrd13', context=context)
     assert generate_label_id(tag5) == "xrd13"
 

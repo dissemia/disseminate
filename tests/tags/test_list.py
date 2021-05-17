@@ -141,13 +141,14 @@ def test_list_tex(doc):
         multiple lines
     - Three
     """
-    l = List(name='list', content=src, attributes='', context=doc.context)
-    assert l.tex == ('\n'
-                     '\\begin{easylist}[itemize]\n'
-                     '§ One\n'
-                     '§§ Two with multiple lines\n'
-                     '§ Three\n'
-                     '\\end{easylist}\n')
+    tex_list = List(name='list', content=src, attributes='',
+                    context=doc.context)
+    assert tex_list.tex == ('\n'
+                            '\\begin{easylist}[itemize]\n'
+                            '§ One\n'
+                            '§§ Two with multiple lines\n'
+                            '§ Three\n'
+                            '\\end{easylist}\n')
 
     # 2. Test a simple (ordered) nested list
     src = """
@@ -156,15 +157,15 @@ def test_list_tex(doc):
            multiple lines
        - Three
        """
-    l = OrderedList(name='list', content=src, attributes='',
-                    context=doc.context)
+    tex_list = OrderedList(name='list', content=src, attributes='',
+                           context=doc.context)
 
-    assert l.tex == ('\n'
-                     '\\begin{easylist}[enumerate]\n'
-                     '§ One\n'
-                     '§§ Two with multiple lines\n'
-                     '§ Three\n'
-                     '\\end{easylist}\n')
+    assert tex_list.tex == ('\n'
+                            '\\begin{easylist}[enumerate]\n'
+                            '§ One\n'
+                            '§§ Two with multiple lines\n'
+                            '§ Three\n'
+                            '\\end{easylist}\n')
 
     # 3. Test a list with tags
     src = """
@@ -173,14 +174,15 @@ def test_list_tex(doc):
             @b{multiple} lines
         - Three
         """
-    l = List(name='list', content=src, attributes='', context=doc.context)
+    tex_list = List(name='list', content=src, attributes='',
+                    context=doc.context)
 
-    assert l.tex == ('\n'
-                     '\\begin{easylist}[itemize]\n'
-                     '§ One\n'
-                     '§§ Two with \\textbf{multiple} lines\n'
-                     '§ Three\n'
-                     '\\end{easylist}\n')
+    assert tex_list.tex == ('\n'
+                            '\\begin{easylist}[itemize]\n'
+                            '§ One\n'
+                            '§§ Two with \\textbf{multiple} lines\n'
+                            '§ Three\n'
+                            '\\end{easylist}\n')
 
 
 # html targets
@@ -195,14 +197,15 @@ def test_list_html(doc):
         multiple lines
     - Three
     """
-    l = List(name='list', content=src, attributes='', context=doc.context)
-    assert l.html == ('<ul>\n'
-                        '<li>One</li>\n'
-                        '<ul>'
-                          '<li>Two with multiple lines</li>'
-                        '</ul>\n'
-                        '<li>Three</li>\n'
-                      '</ul>\n')
+    html_list = List(name='list', content=src, attributes='',
+                     context=doc.context)
+    assert html_list.html == ('<ul>\n'
+                              '<li>One</li>\n'
+                              '<ul>'
+                              '<li>Two with multiple lines</li>'
+                              '</ul>\n'
+                              '<li>Three</li>\n'
+                              '</ul>\n')
 
     # 2. Test a simple (ordered) nested list
     src = """
@@ -211,14 +214,15 @@ def test_list_html(doc):
         multiple lines
     - Three
     """
-    l = OrderedList(name='list', content=src, attributes='', context=doc.context)
-    assert l.html == ('<ol>\n'
-                        '<li>One</li>\n'
-                        '<ol>'
-                        '<li>Two with multiple lines</li>'
-                        '</ol>\n'
-                        '<li>Three</li>\n'
-                      '</ol>\n')
+    html_list = OrderedList(name='list', content=src, attributes='',
+                            context=doc.context)
+    assert html_list.html == ('<ol>\n'
+                              '<li>One</li>\n'
+                              '<ol>'
+                              '<li>Two with multiple lines</li>'
+                              '</ol>\n'
+                              '<li>Three</li>\n'
+                              '</ol>\n')
 
     # 3. Test a list with tags
     src = """
@@ -227,14 +231,17 @@ def test_list_html(doc):
         @b{multiple} lines
     - Three
     """
-    l = List(name='list', content=src, attributes='', context=doc.context)
-    assert l.html == ('<ul>\n'
-                        '<li>One</li>\n'
-                        '<ul>'
-                          '<li>Two with <strong>multiple</strong> lines</li>'
-                        '</ul>\n'
-                        '<li>Three</li>\n'
-                      '</ul>\n')
+    html_list = List(name='list', content=src, attributes='',
+                     context=doc.context)
+    assert html_list.html == ('<ul>\n'
+                              '<li>One</li>\n'
+                              '<ul>'
+                              '<li>'
+                              'Two with <strong>multiple</strong> lines'
+                              '</li>'
+                              '</ul>\n'
+                              '<li>Three</li>\n'
+                              '</ul>\n')
 
 
 # xhtml targets
@@ -249,15 +256,16 @@ def test_list_xhtml(doc, is_xml):
             multiple lines
         - Three
         """
-    l = List(name='list', content=src, attributes='', context=doc.context)
-    assert l.xhtml == ('<ul>\n'
-                       '  <li>One</li>\n'
-                       '  <ul>\n'
-                       '    <li>Two with multiple lines</li>\n'
-                       '  </ul>\n'
-                       '  <li>Three</li>\n'
-                       '</ul>\n')
-    assert is_xml(l.xhtml)
+    xhtml_list = List(name='list', content=src, attributes='',
+                      context=doc.context)
+    assert xhtml_list.xhtml == ('<ul>\n'
+                                '  <li>One</li>\n'
+                                '  <ul>\n'
+                                '    <li>Two with multiple lines</li>\n'
+                                '  </ul>\n'
+                                '  <li>Three</li>\n'
+                                '</ul>\n')
+    assert is_xml(xhtml_list.xhtml)
 
     # 2. Test a simple (ordered) nested list
     src = """
@@ -266,16 +274,16 @@ def test_list_xhtml(doc, is_xml):
             multiple lines
         - Three
         """
-    l = OrderedList(name='list', content=src, attributes='',
-                    context=doc.context)
-    assert l.xhtml == ('<ol>\n'
-                       '  <li>One</li>\n'
-                       '  <ol>\n'
-                       '    <li>Two with multiple lines</li>\n'
-                       '  </ol>\n'
-                       '  <li>Three</li>\n'
-                       '</ol>\n')
-    assert is_xml(l.xhtml)
+    xhtml_list = OrderedList(name='list', content=src, attributes='',
+                             context=doc.context)
+    assert xhtml_list.xhtml == ('<ol>\n'
+                                '  <li>One</li>\n'
+                                '  <ol>\n'
+                                '    <li>Two with multiple lines</li>\n'
+                                '  </ol>\n'
+                                '  <li>Three</li>\n'
+                                '</ol>\n')
+    assert is_xml(xhtml_list.xhtml)
 
     # 3. Test a list with tags
     src = """
@@ -284,13 +292,15 @@ def test_list_xhtml(doc, is_xml):
             @b{multiple} lines
         - Three
         """
-    l = List(name='list', content=src, attributes='', context=doc.context)
-    assert l.xhtml == ('<ul>\n'
-                       '  <li>One</li>\n'
-                       '  <ul>\n'
-                       '    <li>Two with <strong>multiple</strong> lines</li>\n'
-                       '  </ul>\n'
-                       '  <li>Three</li>\n'
-                       '</ul>\n')
-    assert is_xml(l.xhtml)
-
+    xhtml_list = List(name='list', content=src, attributes='',
+                      context=doc.context)
+    assert xhtml_list.xhtml == ('<ul>\n'
+                                '  <li>One</li>\n'
+                                '  <ul>\n'
+                                '    <li>'
+                                'Two with <strong>multiple</strong> lines'
+                                '</li>\n'
+                                '  </ul>\n'
+                                '  <li>Three</li>\n'
+                                '</ul>\n')
+    assert is_xml(xhtml_list.xhtml)
