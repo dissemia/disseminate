@@ -208,17 +208,6 @@ class DocumentContext(BaseContext):
         -------
         target_list : List[str]
             A list of targets specified in the context.
-
-        Examples
-        --------
-        >>> DocumentContext(targets='html, pdf').targets
-        ['.html', '.pdf']
-        >>> DocumentContext(target='txt').targets
-        ['.txt']
-        >>> DocumentContext(target=' ').targets
-        []
-        >>> DocumentContext().targets
-        []
         """
         # Get the targets from the context.
         # In the default context, this is set as the 'targets' entry, which

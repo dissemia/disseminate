@@ -232,13 +232,13 @@ class BaseContext(dict):
 
         Examples
         --------
-        >>> l1, l2 = [], []
+        >>> l1, l2 = ['a'], ['b']
         >>> context = BaseContext(l1=l1)
         >>> context['l2'] = l2
         >>> context['l1'].append(1)
         >>> context['l2'].append(2)
         >>> context.reset()
-        >>> context['l1'] == [1]
+        >>> context['l1'] == ['a']  # reset to original l1
         True
         >>> 'l2' in context
         False
