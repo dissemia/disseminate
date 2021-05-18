@@ -27,7 +27,7 @@ class SaveTempFile(Builder):
     action = 'save'
     priority = 1000
     active_requirements = ('priority',)
-    scan_parameters_on_init = False  # This is done after all parameters are loaded
+    scan_parameters_on_init = False  # Scan after all parameters are loaded
 
     context = weakattr()
 
@@ -46,8 +46,8 @@ class SaveTempFile(Builder):
         # Check that the string to write is in the parameters
         strings = [f for f in self.parameters if isinstance(f, str)]
         if len(strings) == 0:
-            msg = ("The '{}' builder expects a single string as the infilepath "
-                   "to save the temporary file.")
+            msg = ("The '{}' builder expects a single string as the "
+                   "infilepath to save the temporary file.")
             raise BuildError(msg.format(self.__class__.__name__))
         string = strings[0]
 

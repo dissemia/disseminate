@@ -8,12 +8,10 @@ from ..exceptions import TagError
 from ...utils.string import group_strings
 from ... import settings
 
-re_open_tag = regex.compile(  # The character to use in identifying a tag. By
-                              # default, it's an '@' character.
-                                settings.tag_prefix +
-                                r'(?P<tag>[A-Za-z0-9][\w]*)'
-                                r'(?P<attributes>\[[^\]]+\])?'
-                                r'(?P<open>{)?')
+re_open_tag = regex.compile(settings.tag_prefix +  # tag character, '@'
+                            r'(?P<tag>[A-Za-z0-9][\w]*)'
+                            r'(?P<attributes>\[[^\]]+\])?'
+                            r'(?P<open>{)?')
 re_brace = regex.compile(r'[}{]')
 
 
@@ -59,10 +57,12 @@ def parse_tags(content, context, tag_factory, level=1):
         raise TagError(msg.format(settings.tag_max_depth))
 
     new_content = []
-    parse = lambda x: parse_tags(x, context, tag_factory, level + 1)
 
-    # Look at the element and process it depending on whether it's a string, tag
-    # or list
+    def parse(x):
+        return parse_tags(x, context, tag_factory, level + 1)
+
+    # Look at the element and process it depending on whether it's a string,
+    # tag or list
     if isinstance(content, str):
         pass
     elif isinstance(content, list):

@@ -21,12 +21,9 @@ def load_projects(app):
     if 'root_documents' not in store:
         # Get project_filenames
         in_path = settings.get('in_path', '')
-        out_dir = settings.get('out_dir', None)
 
         # Fetch the root documents
-        envs = Environment.create_environments(root_path=in_path,
-                                               #target_root=out_dir
-                                               )
+        envs = Environment.create_environments(root_path=in_path)
         docs = [env.root_document for env in envs]
 
         # Log the loaded root documents

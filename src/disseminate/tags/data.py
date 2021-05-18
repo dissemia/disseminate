@@ -76,7 +76,8 @@ class Data(Tag):
 
         Parameters
         ----------
-        filepath_or_buffer : Union[:obj:`pathlib.Path`, str, :obj:`io.StringIO`]
+        filepath_or_buffer : Union[:obj:`pathlib.Path`, str, \
+        :obj:`io.StringIO`]
             The filename and path (filepath) or string buffer.
         """
         pass
@@ -90,7 +91,7 @@ class Data(Tag):
         if self.processed_headers is None and headers:
             hdrs = [HeaderCell(name='cell', content=str(header), attributes='',
                                context=self.context) for header in headers]
-            self.processed_headers =  hdrs
+            self.processed_headers = hdrs
 
         # Process the rows, if needed
         if self.processed_rows is None:
@@ -142,14 +143,16 @@ class DelimData(Data):
             delimiter = delimiter if delimiter is not None else self.delimiter
             if 'noheader' in self.attributes:
                 self.dataframe = pd.read_csv(filepath_or_buffer, engine='c',
-                                             header=None, skipinitialspace=True,
+                                             header=None,
+                                             skipinitialspace=True,
                                              delimiter=delimiter)
             else:
                 self.dataframe = pd.read_csv(filepath_or_buffer, engine='c',
                                              skipinitialspace=True,
                                              delimiter=delimiter)
 
-    def tex_table(self, content=None, attributes=None, mathmode=False, level=1):
+    def tex_table(self, content=None, attributes=None, mathmode=False,
+                  level=1):
         # Load the tags
         self.process_tags()
 
@@ -159,14 +162,14 @@ class DelimData(Data):
         if headers is not None:
             tex += " & ".join([format_content(cell, 'tex_fmt',
                                               mathmode=mathmode, level=level)
-                                for cell in headers]) + " \\\\\n"
+                               for cell in headers]) + " \\\\\n"
             tex += tex_cmd('midrule') + "\n"
 
         rows = []
         for row in self.processed_rows:
             str = " & ".join([format_content(cell, 'tex_fmt', level=level,
                                                    mathmode=mathmode)
-                                    for cell in row[1:]]) + " \\\\\n"
+                              for cell in row[1:]]) + " \\\\\n"
             rows.append(str)
         tex += "".join(rows)
 

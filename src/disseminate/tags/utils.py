@@ -108,8 +108,8 @@ def replace_context(tag, new_context):
 def copy_tag(tag):
     """Create a copy of the given tag.
 
-    The tag, attributes and content are deep copies, and the context points to the
-    same context as the given tag.
+    The tag, attributes and content are deep copies, and the context points to
+    the same context as the given tag.
 
     Parameters
     ----------
@@ -216,12 +216,13 @@ def tex_percentwidth(attributes, target='.tex', use_positional=False):
     Examples
     --------
     >>> tex_percentwidth('width=50%')
-    Attributes{'width': '0.5\\\\textwidth'}
+    Attributes{'width': '0.49\\\\textwidth'}
     >>> tex_percentwidth('width=3.2in')
     Attributes{'width': '3.2in'}
     >>> tex_percentwidth('width=50%', use_positional=True)
-    Attributes{'width': '50%', '0.5\\\\textwidth': <class '...StringPositionalValue'>}
-    """
+    Attributes{'width': '50%', \
+'0.49\\\\textwidth': <class '...StringPositionalValue'>}
+    """  # noqa: D301
     attributes = (Attributes(attributes)
                   if not isinstance(attributes, Attributes) else attributes)
 
@@ -303,7 +304,7 @@ def xhtml_percentwidth(attributes, target='.html'):
         return attributes
 
     windows = {'w100': (75, 100),  # ]75, 100]
-               'w75':  (67, 75),
+               'w75': (67, 75),
                'w66': (50, 67),
                'w50': (34, 50),
                'w33': (25, 33),
@@ -312,7 +313,7 @@ def xhtml_percentwidth(attributes, target='.html'):
     for html_class, (range_min, range_max) in windows.items():
         if range_min < percent_width <= range_max:
             cls_str = (attributes['class'] + ' ' + html_class
-                      if 'class' in attributes else html_class)
+                       if 'class' in attributes else html_class)
             attributes['class'] = cls_str
             return attributes
 

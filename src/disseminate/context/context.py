@@ -1,5 +1,6 @@
 """
-The base class for Context objects that include functions to validate a context.
+The base class for Context objects that include functions to validate a
+context.
 """
 import logging
 from pprint import pprint
@@ -25,7 +26,8 @@ class BaseContext(dict):
     only manage the data and set of the context.
 
     The BaseContext is basically a heritable dict. It keeps track of dict
-    lineage and initial values so that it can be reset to its initialized state.
+    lineage and initial values so that it can be reset to its initialized
+    state.
 
     .. note:: I've tried different implementations, including a ChainMap-like
               inheritance. The problem with these is that key lookup and
@@ -63,9 +65,9 @@ class BaseContext(dict):
         A dict containing the initial values. Since this starts with an
         underscore, it is hidden when listing keys with the keys() function.
     _parent_context : :obj:`Type[BaseContext] <.BaseContext>`
-        A dict containing the parent context from which values may be inherited.
-        Since this starts with an underscore, it is hidden when listing keys
-        with the keys() function.
+        A dict containing the parent context from which values may be
+        inherited. Since this starts with an underscore, it is hidden when
+        listing keys with the keys() function.
 
     Examples
     --------
@@ -178,10 +180,11 @@ class BaseContext(dict):
         """Load context entries from a string.
 
         The load function interprets a string containing a dict in the format
-        processed by :func:`str_to_dict <disseminate.utils.string.str_to_dict>`.
-        Additionally, this function parses header portions of strings
-        delineated by 3 or more '-' characters, and only new entries entries
-        that match the types of existing entries are inserted.
+        processed by :func:`str_to_dict
+        <disseminate.utils.string.str_to_dict>`. Additionally, this function
+        parses header portions of strings delineated by 3 or more '-'
+        characters, and only new entries entries that match the types of
+        existing entries are inserted.
 
         Parameters
         ----------
@@ -308,8 +311,8 @@ class BaseContext(dict):
             if value_type is not None:
                 valid_entry = isinstance(self[key], value_type)
                 if value_type is not None and not valid_entry:
-                    msg = ("The key '{}' has a value '{}' that is not valid; a "
-                           "value type of '{}' is expected.")
+                    msg = ("The key '{}' has a value '{}' that is not valid; "
+                           "a value type of '{}' is expected.")
                     logging.debug(msg.format(key, self[key], value_type))
 
                     return False
@@ -353,9 +356,9 @@ class BaseContext(dict):
         2. Existing entries are converted to the type of the value in this
            context dict.
 
-           a. Lists, sets and dicts: A copy of the changes value is converted to
-              the respective type and appended to this context dict's list, set
-              or dict.
+           a. Lists, sets and dicts: A copy of the changes value is converted
+              to the respective type and appended to this context dict's list,
+              set or dict.
            b. Immutables are converted and added directly.
 
         Examples
@@ -498,7 +501,8 @@ class BaseContext(dict):
         Parameters
         ----------
         keys : Iterable[str]
-            The keys for entries to include in the returned filtered BaseContext
+            The keys for entries to include in the returned filtered
+            BaseContext
 
         Returns
         -------

@@ -24,7 +24,8 @@ def all_subclasses(cls):
     >>> class B(A): pass
     >>> class C(B): pass
     >>> all_subclasses(A)
-    [<class 'disseminate.utils.classes.B'>, <class 'disseminate.utils.classes.C'>]
+    [<class 'disseminate.utils.classes.B'>, \
+<class 'disseminate.utils.classes.C'>]
     """
     return cls.__subclasses__() + [g for s in cls.__subclasses__()
                                    for g in all_subclasses(s)]
@@ -49,7 +50,8 @@ def all_parent_classes(cls):
     >>> class B(A): pass
     >>> class C(B): pass
     >>> all_parent_classes(C)
-    [<class 'disseminate.utils.classes.B'>, <class 'disseminate.utils.classes.A'>]
+    [<class 'disseminate.utils.classes.B'>, \
+<class 'disseminate.utils.classes.A'>]
     """
     return list(cls.__bases__) + [g for s in list(cls.__bases__)
                                   for g in all_parent_classes(s)

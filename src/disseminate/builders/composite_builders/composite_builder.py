@@ -86,7 +86,7 @@ class CompositeBuilder(Builder):
                         continue
                     else:
                         break
-                        
+
                 else:
                     return status
 

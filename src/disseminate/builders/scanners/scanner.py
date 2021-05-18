@@ -58,8 +58,8 @@ class Scanner(object):
             A list of infilepath dependencies.
         """
         # Prepare the arguments
-        parameters = (parameters if isinstance(parameters, list)
-                      or isinstance(parameters, tuple) else [parameters])
+        parameters = (parameters if isinstance(parameters, list) or
+                      isinstance(parameters, tuple) else [parameters])
 
         new_infilepaths = []
 
@@ -98,7 +98,8 @@ class Scanner(object):
             subpath = parameter.subpath.parent
 
             for stub in stubs:
-                # Strip leading slashes so that the stub is not an absolute path
+                # Strip leading slashes so that the stub is not an absolute
+                # path
                 stub = stub.strip('/')
 
                 test_paths = [SourcePath(project_root=root,

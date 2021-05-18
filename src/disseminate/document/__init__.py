@@ -29,14 +29,14 @@ A document has the following responsibilities:
 
 Definitions
 -----------
-1. *Root document*. A document that is not included as a sub-document to another
-   document. The root document's context will have objects, like the
+1. *Root document*. A document that is not included as a sub-document to
+   another document. The root document's context will have objects, like the
    label manager, that are shared by its sub-documents in a project.
 2. *Project*. A root document and zero or more sub-documents forming a document
    tree. Sub-documents are included by ``include`` statements in the header of
    the root document.
-3. *doc_id*. The document identifier for a document. It is unique for a document
-   in a project.
+3. *doc_id*. The document identifier for a document. It is unique for a
+   document in a project.
 
 
 """
@@ -44,3 +44,5 @@ Definitions
 from .document import Document
 from .document_context import DocumentContext
 from . import exceptions, signals, receivers
+
+__all__ = ('Document', 'DocumentContext', 'exceptions', 'signals', 'receivers')

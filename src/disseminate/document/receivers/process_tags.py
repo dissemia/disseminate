@@ -13,10 +13,10 @@ def process_tags(context, **kwargs):
     This function converts tags for context entries identified by keys listed
     in the 'process_context_tags' context entry
 
-    .. note:: This function is designed to work with string macro entries. These
-              are identified by context entries with keys that start with the
-              settings.tag_prefix (e.g. '@test'). These *should not* be
-              converted into asts, as they are required for simple string
+    .. note:: This function is designed to work with string macro entries.
+              These are identified by context entries with keys that start
+              with the settings.tag_prefix (e.g. '@test'). These *should not*
+              be converted into asts, as they are required for simple string
               replacement.
     """
     assert context.is_valid('process_context_tags')

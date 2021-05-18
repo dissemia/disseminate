@@ -5,7 +5,6 @@ from .tag import Tag
 from .caption import Caption
 from .utils import xhtml_percentwidth, tex_percentwidth
 from ..utils.string import strip_multi_newlines
-from ..utils.types import StringPositionalValue
 from .. import settings
 
 
@@ -48,7 +47,6 @@ class BaseFigure(Tag):
 
     def html_fmt(self, attributes=None, method='html', **kwargs):
         attrs = attributes or self.attributes.copy()
-        target = '.html' if method == 'html' else 'xhtml'
 
         # Set the html class
         if self.html_class is not None:

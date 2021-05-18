@@ -58,7 +58,8 @@ class PythonChecker(Checker):
 
         if isinstance(packages, SoftwareDependency):
             # Convert the listings to tuples of name, operator, version.
-            # ex: 'python>=3.1' becomes 'python', <built-in function ge>, (3, 1)
+            # ex: 'python>=3.1' becomes 'python',
+            #     <built-in function ge>, (3, 1)
             rv = name_and_version(packages.name)
 
             if rv is None:
@@ -74,7 +75,8 @@ class PythonChecker(Checker):
             # See if the package name is available in the freeze tuple
             matching_packages = [i for i in self.freeze if i.startswith(name)]
 
-            # If there are no matching packages, return None and do nothing more
+            # If there are no matching packages, return None and do nothing
+            # more
             if len(matching_packages) == 0:
                 return None
 

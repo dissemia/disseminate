@@ -5,7 +5,6 @@ The Tornado main app
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
-from tornado.options import options
 
 from .urls import url_patterns
 from .handlers.server import server_template_path, ServerHandler

@@ -28,9 +28,9 @@ class Environment(object):
     target_root : Optional[Union[str, :obj:`pathlib.Path`]]
         The (optional) path for the output root directory.
     parent_context : Optional[:obj:`.context.BaseContext`]
-        The document context to use as the parent_context for the root document.
-        Typically, the default_context from the settings is used as the parent
-        context.
+        The document context to use as the parent_context for the root
+        document. Typically, the default_context from the settings is used as
+        the parent context.
     """
 
     decider = None
@@ -112,8 +112,8 @@ class Environment(object):
     def get_target_root(project_root):
         """Determine the target_root directory from the project_root."""
         if project_root.match(settings.document_src_directory):
-            # If the project_root is in a src directory, use the directory above
-            # this directory
+            # If the project_root is in a src directory, use the directory
+            # above this directory
             return TargetPath(target_root=project_root.parent)
         else:
             # Otherwise just use the same directory as the src directory
@@ -124,8 +124,8 @@ class Environment(object):
                            document_extension=settings.document_extension):
         """Find the root src_filepaths from a given root_path"""
         # Create a glob pattern to get all of the disseminate files in the path
-        # and remove the filenames to retain the unique paths. Convert the paths
-        # to strings so that they can be sorted more easily.
+        # and remove the filenames to retain the unique paths. Convert the
+        # paths to strings so that they can be sorted more easily.
         glob_pattern = pathlib.Path('**', '*' + document_extension)
         paths = {p.parent for p in root_path.glob(str(glob_pattern))}
 
@@ -152,7 +152,8 @@ class Environment(object):
             # Find the src_filepaths for the root documents (non-recursive)
             glob_pattern = pathlib.Path('*' + document_extension)
             glob = list(project_path.glob(str(glob_pattern)))
-            subpaths = [filepath.relative_to(project_path) for filepath in glob]
+            subpaths = [filepath.relative_to(project_path)
+                        for filepath in glob]
             src_filepaths += [SourcePath(project_root=project_path,
                                          subpath=subpath)
                               for subpath in subpaths]
@@ -161,7 +162,8 @@ class Environment(object):
     @staticmethod
     def create_environments(root_path='', target_root=None,
                             document_extension=settings.document_extension):
-        """Create environments from root documents found in the given root_path.
+        """Create environments from root documents found in the given
+        root_path.
 
         Parameters
         ----------

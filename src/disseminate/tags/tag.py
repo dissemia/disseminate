@@ -30,8 +30,8 @@ class Tag(object):
         settings.html_valid_attributes, settings.tex_valid_attributes and so
         on.
     context : :obj:`Type[BaseContext] <.BaseContext>`
-        The context with values for the document. The tag holds a weak reference
-        to the context, as it doesn't own the context.
+        The context with values for the document. The tag holds a weak
+        reference to the context, as it doesn't own the context.
 
     Attributes
     ----------
@@ -48,7 +48,8 @@ class Tag(object):
         If specified, use this name to render the tex environment.
     tex_paragraph_newlines : bool
         If True (default), block tags within paragraphs will be typeset with
-        a newline before and after. This is disable, for example, for equations.
+        a newline before and after. This is disable, for example, for
+        equations.
     active : bool
         If True, the Tag can be used by the TagFactory.
     process_content : bool
@@ -299,8 +300,8 @@ class Tag(object):
             Specify an alternative attributes dict from the tag's attributes.
             It can either be a string or an attributes dict.
         format_func : Optional[str]
-            The format function to use with by formatted_content when formatting
-            sub-tags.
+            The format function to use with by formatted_content when
+            formatting sub-tags.
         method : Optional[str]
             The rendering method for the string. ex: 'html' or 'xml'
         level : Optional[int]
@@ -346,8 +347,8 @@ class Tag(object):
 class TagFactory(object):
     """Generates the appropriate tag for a given tag type.
 
-    The tag factory instantiates tags based on loaded modules and initialization
-    parameters.
+    The tag factory instantiates tags based on loaded modules and
+    initialization parameters.
 
     Parameters
     ----------
@@ -365,7 +366,8 @@ class TagFactory(object):
 
         - A tag subclass with the tag_name (or with an alias) is available.
         - The tag subclass has an 'active' attribute that is True
-        - The tag's name isn't listed in the 'inactive_tags' set in the context.
+        - The tag's name isn't listed in the 'inactive_tags' set in the
+          context.
 
         Parameters
         ----------

@@ -37,7 +37,8 @@ class SignalHandler(ServerHandler):
                 d['doc'] = docstring
 
             # Get the receivers for the signal
-            receivers = list(enumerate(sorted(signal.receivers_dict().items())))
+            receiver_items = signal.receivers_dict().items()
+            receivers = list(enumerate(sorted(receiver_items)))
             receiver_list = d.setdefault('receivers', [])
 
             for count, (order, receiver) in receivers:

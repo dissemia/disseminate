@@ -29,7 +29,7 @@ def xml_tag(*args, **kwargs):
 def xhtml_tag(name, attributes=None, formatted_content=None, level=1,
               target=None, method='html', nsmap=None,
               pretty_print=settings.xhtml_pretty):
-    """Format an xhtml tag string.
+    r"""Format an xhtml tag string.
 
     Parameters
     ----------
@@ -65,9 +65,9 @@ def xhtml_tag(name, attributes=None, formatted_content=None, level=1,
     Examples
     --------
     >>> xhtml_tag('img', attributes="src='test.svg'")
-    Markup('<img src="test.svg">\\n')
+    Markup('<img src="test.svg">\n')
     >>> xhtml_tag('img', attributes="src='test.svg'", method='xml')
-    Markup('<img src="test.svg"/>\\n')
+    Markup('<img src="test.svg"/>\n')
     """
     method = 'xml' if method == 'xhtml' else method
 
@@ -94,7 +94,8 @@ def xhtml_tag(name, attributes=None, formatted_content=None, level=1,
         reqs = None
 
     # Make sure the correct number of required arguments were found
-    if reqs is not None and len(reqs) != len(settings.xhtml_tag_arguments[name]):
+    if (reqs is not None and
+       len(reqs) != len(settings.xhtml_tag_arguments[name])):
         msg = ("The html tag '{}' did not receive the correct "
                "required arguments. Required arguments received: {}")
         raise XHtmlFormatError(msg.format(name, reqs))
@@ -178,7 +179,7 @@ def xml_entity(*args, **kwargs):
 
 def xhtml_entity(entity, level=1, method='html',
                  pretty_print=settings.xhtml_pretty):
-    """Format an html entity string.
+    r"""Format an html entity string.
 
     Parameters
     ----------
@@ -206,7 +207,7 @@ def xhtml_entity(entity, level=1, method='html',
     Examples
     --------
     >>> xhtml_entity('alpha')
-    Markup('&alpha;\\n')
+    Markup('&alpha;\n')
     """
     method = 'xml' if method == 'xhtml' else method
 
@@ -287,10 +288,10 @@ def xhtml_list(*elements, attributes=None, listtype='ol', level=1,
 
         # If there are sub list items, add these as well
         if group[1:]:
-            l = xhtml_list(*group[1:], listtype=listtype, level=level + 1,
-                           target=target, method=method,
-                           pretty_print=pretty_print, inner=True)
-            current_elements.append(l)
+            lst = xhtml_list(*group[1:], listtype=listtype, level=level + 1,
+                             target=target, method=method,
+                             pretty_print=pretty_print, inner=True)
+            current_elements.append(lst)
 
     # Wrap current_elements in a list
     attributes = attributes if not inner else ''
@@ -303,5 +304,5 @@ def xhtml_list(*elements, attributes=None, listtype='ol', level=1,
         return Markup(s)  # Mark string as safe, since it's escaped by lxml
     else:
         return xhtml_tag(name=listtype, formatted_content=current_elements,
-                         attributes=attributes, level=level+1, target=target,
+                         attributes=attributes, level=level + 1, target=target,
                          method=method, pretty_print=pretty_print)

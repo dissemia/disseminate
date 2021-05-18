@@ -22,8 +22,8 @@ document_build = signal('document_build',
 
 document_build_needed = signal('document_build_needed',
                                doc="Signal sent to evaluate whether a build "
-                               "is needed. Takes a document as a parameter and "
-                               "returns True or False")
+                               "is needed. Takes a document as a parameter "
+                               "and returns True or False")
 
 document_tree_updated = signal('document_tree_updated',
                                doc="Signal sent when a root document or one "

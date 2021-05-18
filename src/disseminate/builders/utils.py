@@ -11,8 +11,8 @@ from ..paths.utils import rename
 def sort_key(parameter):
     """Sort key function for a series of parameters to give a consisting
     ordering."""
-    if (isinstance(parameter, tuple) or isinstance(parameter, list)
-       and parameter):
+    if (isinstance(parameter, tuple) or
+       isinstance(parameter, list) and parameter):
         return str(parameter[0])
     else:
         return str(parameter)
@@ -44,8 +44,8 @@ def generate_mock_parameters(env, parameters, project_root=None, subpath=None,
     """
     # Setup the parameters
     parameters = parameters or []
-    parameters = (parameters if isinstance(parameters, list)
-                  or isinstance(parameters, tuple) else [parameters])
+    parameters = (parameters if isinstance(parameters, list) or
+                  isinstance(parameters, tuple) else [parameters])
     subpath = pathlib.Path(subpath) if subpath is not None else None
 
     # First get the project root
@@ -84,7 +84,8 @@ def generate_mock_parameters(env, parameters, project_root=None, subpath=None,
         filename = filename.with_suffix(ext)
 
     if subpath:
-        return SourcePath(project_root=project_root, subpath=subpath / filename)
+        return SourcePath(project_root=project_root,
+                          subpath=subpath / filename)
     else:
         return SourcePath(project_root=project_root, subpath=filename)
 
@@ -100,7 +101,8 @@ def generate_outfilepath(env, parameters, target=None, append=None, ext=None,
     parameters : Tuple[:obj:`pathlib.Path`]
         The parameters for the builder. The first pathlib.Path will be used.
     target : Optional[str]
-        If specified, use the given target as a subdirectory in the target_root.
+        If specified, use the given target as a subdirectory in the
+        target_root.
     append : Optional[str]
         If specified, append the given string to the returned filename
     ext : Optional[str]
@@ -114,8 +116,8 @@ def generate_outfilepath(env, parameters, target=None, append=None, ext=None,
     Returns
     -------
     outfilepath : Union[:obj:`.paths.TargetPath`, None]
-        The outfilepath based on the parameters given, or None if no outfilepath
-        could be generated
+        The outfilepath based on the parameters given, or None if no
+        outfilepath could be generated
 
     .. note :: When dealing with absolute paths, only the filename is kept
                in formulating the subpath. So for

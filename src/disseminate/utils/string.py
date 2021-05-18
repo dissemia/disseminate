@@ -5,7 +5,7 @@ import hashlib
 from itertools import groupby
 
 import regex
-from slugify import slugify
+from slugify import slugify  # noqa: F401
 
 from .. import settings
 
@@ -92,7 +92,7 @@ def nicejoin(*items, sep=', ', term=' and '):
 
 
 def space_indent(s, number=4):
-    """Indent a text block by the specified number of spaces.
+    r"""Indent a text block by the specified number of spaces.
 
     Parameters
     ----------
@@ -110,7 +110,7 @@ def space_indent(s, number=4):
     --------
     >>> space_indent('my test')
     '    my test'
-    >>> t=space_indent("my block\\n of text\\nwith indents.")
+    >>> t=space_indent("my block\n of text\nwith indents.")
     >>> print(t)
         my block
          of text
@@ -149,7 +149,7 @@ _re_multilines = regex.compile(r'(?:\n{2,})')
 
 
 def strip_multi_newlines(s):
-    """Strip multiple consecutive newlines in a string.
+    r"""Strip multiple consecutive newlines in a string.
 
     Parameters
     ----------
@@ -164,17 +164,17 @@ def strip_multi_newlines(s):
 
     Examples
     --------
-    >>> strip_multi_newlines("This is my\\nfirst string.")
-    'This is my\\nfirst string.'
-    >>> strip_multi_newlines("This is my\\n\\nsecond string.")
-    'This is my\\nsecond string.'
+    >>> strip_multi_newlines("This is my\nfirst string.")
+    'This is my\nfirst string.'
+    >>> strip_multi_newlines("This is my\n\nsecond string.")
+    'This is my\nsecond string.'
     """
     return _re_multilines.sub("\n", s)
 
 
 def strip_end_quotes(s):
     """Strip matched quotes from the ends a string.
-    
+
     Parameters
     ----------
     s : str
@@ -202,7 +202,8 @@ def strip_end_quotes(s):
         if s.count(char) % 2 == 0:  # even number of quotes
             pieces = s.split(char)
             if pieces[0].strip() == '' and pieces[-1].strip() == '':
-                return ''.join((pieces[0], char.join(pieces[1:-1]), pieces[-1]))
+                return ''.join((pieces[0], char.join(pieces[1:-1]),
+                                pieces[-1]))
 
     return s
 
@@ -330,7 +331,7 @@ _re_entry = regex.compile(r'^(?P<space_level>\s*)'
 
 
 def str_to_dict(string, strip_quotes=True):
-    """Parse a string into a dict.
+    r"""Parse a string into a dict.
 
     Parameters
     ----------
@@ -354,7 +355,7 @@ def str_to_dict(string, strip_quotes=True):
     ... third: 3
     ... '''
     >>> d = str_to_dict(string)
-    >>> d == {'first': 'one', 'second': '  multiline\\n  entry', 'third': '3'}
+    >>> d == {'first': 'one', 'second': '  multiline\n  entry', 'third': '3'}
     True
     """
     d = dict()
@@ -413,12 +414,12 @@ def str_to_dict(string, strip_quotes=True):
     return d
 
 
-def group_strings(l):
+def group_strings(lst):
     """Group adjacent strings in a list and remove empty strings.
 
     Parameters
     ----------
-    l : Union[list, str or :obj:`Tag <.Tag>`]
+    lst : Union[list, str or :obj:`Tag <.Tag>`]
         An AST comprising a strings, tags or lists of both.
 
     Returns
@@ -428,35 +429,35 @@ def group_strings(l):
 
     Examples
     --------
-    >>> group_strings(l=['a', 'b', '', 3, '', 4, 5, 'f'])
+    >>> group_strings(lst=['a', 'b', '', 3, '', 4, 5, 'f'])
     ['ab', 3, 4, 5, 'f']
-    >>> group_strings(l=['a', 'b', 'c', 3, 'd', 'e', 4, 5, 'f'])
+    >>> group_strings(lst=['a', 'b', 'c', 3, 'd', 'e', 4, 5, 'f'])
     ['abc', 3, 'de', 4, 5, 'f']
     """
-    if hasattr(l, 'content'):
-        l.content = group_strings(l.content)
-    elif isinstance(l, list):
+    if hasattr(lst, 'content'):
+        lst.content = group_strings(lst.content)
+    elif isinstance(lst, list):
         # Remove empty strings
-        new_list = list(filter(bool, l))
-        l.clear()
-        l += new_list
+        new_list = list(filter(bool, lst))
+        lst.clear()
+        lst += new_list
 
         # Join consecutive string elements
         new_list = []
-        for cond, group in groupby(l, key=lambda x: isinstance(x, str)):
+        for cond, group in groupby(lst, key=lambda x: isinstance(x, str)):
             if cond:
                 new_list.append(''.join(group))
             else:
                 new_list += list(group)
-        l.clear()
-        l += new_list
+        lst.clear()
+        lst += new_list
 
         # Iterate over the items
-        for i, item in enumerate(l):
+        for i, item in enumerate(lst):
             if not isinstance(item, str):
-                l[i] = group_strings(item)
+                lst[i] = group_strings(item)
 
-    return l
+    return lst
 
 
 _re_macro = regex.compile(r"(?P<macro>" +
@@ -470,9 +471,9 @@ def replace_macros(s, *dicts):
     """Replace the macros and return a processed string.
 
     Macros are simple string replacements from context entries whose keys
-    start with the tag_prefix character (e.g. '@test'). The process_context_asts
-    will ignore macro context entries that have keys which start with this
-    prefix. This is to preserve macros as strings.
+    start with the tag_prefix character (e.g. '@test'). The
+    process_context_asts will ignore macro context entries that have keys
+    which start with this prefix. This is to preserve macros as strings.
 
     Parameters
     ----------

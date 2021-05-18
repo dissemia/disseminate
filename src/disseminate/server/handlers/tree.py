@@ -62,4 +62,3 @@ class TreeHandler(ServerHandler):
             doc_list.append(d)
 
         return doc_list
-

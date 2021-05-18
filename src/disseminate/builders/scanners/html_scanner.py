@@ -46,4 +46,3 @@ class HtmlScanner(Scanner):
 
                 filepaths.append(link)
         return filepaths
-

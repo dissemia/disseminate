@@ -1,5 +1,4 @@
 from .composite_builder import CompositeBuilder
-from ..builder import Builder
 from ..copy import Copy
 
 

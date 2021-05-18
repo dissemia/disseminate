@@ -8,7 +8,7 @@ import pathlib
 
 from .document_context import DocumentContext
 from . import exceptions, signals
-from ..paths import SourcePath, TargetPath
+from ..paths import SourcePath
 from .. import settings
 
 
@@ -63,7 +63,8 @@ class Document(object):
     #: A flag to determine whether the document was successfully loaded
     _succesfully_loaded = False
 
-    def __init__(self, src_filepath, environment, parent_context=None, level=1):
+    def __init__(self, src_filepath, environment, parent_context=None,
+                 level=1):
         logging.debug("Creating document: {}".format(src_filepath))
 
         # Populate attributes
@@ -227,7 +228,7 @@ class Document(object):
             if recursive:
                 subdoc_dict = subdoc.documents_dict(only_subdocuments=False,
                                                     recursive=recursive)
-                for k,v in subdoc_dict.items():
+                for k, v in subdoc_dict.items():
                     doc_dict[k] = v
             else:
                 doc_dict[subdoc.src_filepath] = subdoc
@@ -239,24 +240,24 @@ class Document(object):
         """Produce an ordered dict of a document and sub-documents entered by
         doc_id.
 
-       Parameters
-       ----------
-       document : Optional[:obj:`Document <.Document>`]
-           The document for which to create the document dict.
-           If None is specified, this document will be used.
-       only_subdocuments : Optional[bool]
-           If True, only the sub-documents will be returned (not this
-           document or the document specified.)
-       recursive : Optional[bool]
-           If True, the sub-documents of sub-documents are returned (
-           in order) in the ordered dict as well
+        Parameters
+        ----------
+        document : Optional[:obj:`Document <.Document>`]
+            The document for which to create the document dict.
+            If None is specified, this document will be used.
+        only_subdocuments : Optional[bool]
+            If True, only the sub-documents will be returned (not this
+            document or the document specified.)
+        recursive : Optional[bool]
+            If True, the sub-documents of sub-documents are returned (
+            in order) in the ordered dict as well
 
-       Returns
-       -------
-       document_dict : OrderedDict[str, :obj:`Document <.Document>`]
-           An ordered dict of documents. The keys are doc_ids
-           and the values are document objects.
-       """
+        Returns
+        -------
+        document_dict : OrderedDict[str, :obj:`Document <.Document>`]
+            An ordered dict of documents. The keys are doc_ids
+            and the values are document objects.
+        """
         doc_dict = self.documents_dict(document=document,
                                        only_subdocuments=only_subdocuments,
                                        recursive=recursive)
@@ -325,8 +326,8 @@ class Document(object):
         src_mtime = self.src_filepath.stat().st_mtime
         last_mtime = self.mtime
         if last_mtime is None or src_mtime > last_mtime:
-            logging.debug("Load required for {}: The '{}' source file is newer "
-                          "than the loaded "
+            logging.debug("Load required for {}: The '{}' source file is "
+                          "newer than the loaded "
                           "document.".format(self, self.src_filepath.subpath))
             return True
 
@@ -378,9 +379,9 @@ class Document(object):
                        "that exceeds the maximum setting size of {} kB.")
                 actual_filesize = filesize / 1024
                 max_filesize = settings.document_max_size / 1024
-                raise exceptions.DocumentException(msg.format(self.src_filepath,
-                                                   actual_filesize,
-                                                   max_filesize))
+                msg = msg.format(self.src_filepath, actual_filesize,
+                                 max_filesize)
+                raise exceptions.DocumentException(msg)
 
             # Emit the load signal
             signals.document_onload.emit(document=self, context=self.context)
@@ -464,7 +465,8 @@ class Document(object):
         # Get a dict with all documents owned by this document. This document
         # can control those documents, but it cannot control other documents in
         # the root_dict. This avoids recursion.
-        subs_dict = self.documents_dict(only_subdocuments=False, recursive=True)
+        subs_dict = self.documents_dict(only_subdocuments=False,
+                                        recursive=True)
 
         # Clear the subdocuments ordered dict and add new entries. Old entries
         # will automatically be deleted if the subdocument no longer holds a
@@ -480,8 +482,8 @@ class Document(object):
             if src_filepath == self.src_filepath:
                 continue
 
-            # If the document is already loaded and controlled by this document,
-            # copy it to the subdocuments ordered dict
+            # If the document is already loaded and controlled by this
+            # document, copy it to the subdocuments ordered dict
             elif src_filepath in subs_dict:
                 subdoc = subs_dict[src_filepath]
                 document_loaded |= subdoc.load(level=level + 1)
@@ -489,14 +491,14 @@ class Document(object):
                 if self.src_filepath not in subdoc.subdocuments:
                     self.subdocuments[src_filepath] = subdoc
 
-            # The document could not be found, at this point. Create it--as long
-            # as it's not controlled by another document--i.e. it's not already
-            # loaded in root_dict
+            # The document could not be found, at this point. Create it--as
+            # long as it's not controlled by another document--i.e. it's not
+            # already loaded in root_dict
             elif src_filepath not in root_dict:
                 subdoc = Document(src_filepath=src_filepath,
                                   environment=environment,
                                   parent_context=self.context,
-                                  level=level+1)
+                                  level=level + 1)
                 self.subdocuments[src_filepath] = subdoc
                 document_loaded |= True
             else:
@@ -525,5 +527,6 @@ class Document(object):
         self.load()
 
         # Send the 'document_build' signal
-        statuses = signals.document_build.emit(document=self, complete=complete)
+        statuses = signals.document_build.emit(document=self,
+                                               complete=complete)
         return statuses[0] if len(statuses) == 1 else statuses
