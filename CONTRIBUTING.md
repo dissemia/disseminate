@@ -161,6 +161,25 @@ code.
 
 2. **Line length**. Line length is limited to a maximum of 79 characters
 
+3. **Numpy docstrings**. Docstrings follow the [numpy docstring format] with
+   docstring types written using Python 3 annotations.
+   
+4. **Flake8**. Code commits should pass the flake8 tests.
+
+### Exceptions for Tests
+
+Tests follow the same guidelines but the following exceptions are allowed:
+
+1. **Line length**. Line length may be longer than 79 characters if needed.
+   This is helpful for checking against output strings in formats like html
+   (Flake8 E501 error)
+   
+2. **Code Complexity**. Code complexity is limited to a value of 10 by default.
+   Some tests may have an increased complexity from this limit (Flake8 C901
+   error)
+
+
+
 [documentation]: https://www.dissemia.dev/docs/disseminate/index.html
 [Disseminate Code of Conduct]: https://github.com/jlorieau/disseminate/blob/master/CODE_OF_CONDUCT.md
 [Contributor Code of Conduct v2.0]: https://www.contributor-covenant.org/version/2/0/code_of_conduct.html
@@ -174,3 +193,4 @@ code.
 [disseminate-usage]: https://groups.google.com/g/disseminate-usage
 [pull requests from forks]: https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork
 [PEP8]: https://www.python.org/dev/peps/pep-0008/
+[numpy docstring format]: ttps://numpydoc.readthedocs.io/en/latest/format.html
