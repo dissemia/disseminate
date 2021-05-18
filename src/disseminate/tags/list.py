@@ -122,9 +122,9 @@ def normalize_levels(parsed_list,
         The normalized list with levels fixed.
 
     >>> l = parse_string_list("- This is my first item.\n"
-    ...                   "  - This is my first subitem\n")
+    ...                       "  - This is my first subitem\n")
     >>> normalize_levels(l)
-    [(0, 'This is my first item.'), (2, 'This is my first subitem')]
+    [(0, 'This is my first item.'), (1, 'This is my first subitem')]
     """
     min_level = min(level for level, item in parsed_list) if parsed_list else 0
     return [(ceil((level - min_level) / list_level_spaces), item)
