@@ -38,8 +38,8 @@ class ScaleSvg(Builder):
         try:
             self.scale = float(scale)
         except (ValueError, TypeError):
-            msg = ("A scale parameter (float) should be specified for the '{}' "
-                   "Builder")
+            msg = ("A scale parameter (float) should be specified for the "
+                   "'{}' Builder")
             raise ValueError(msg.format(self.__class__.__name__))
 
     def run_cmd_args(self):

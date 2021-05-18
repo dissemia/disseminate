@@ -36,7 +36,7 @@ class SimpleTable(object):
 
     @property
     def width(self):
-        """The width (in cols) of the table"""
+        """The number of columns for the table"""
         return sum(self.col_widths)
 
     def print_hdr(self, *values):
@@ -91,9 +91,9 @@ class ProgressTable(SimpleTable):
         self.env_name = environment.name
         root_doc = environment.root_document
         if root_doc is not None:
-            self.num_docs = len(root_doc.documents_list(only_subdocuments=False,
-                                                        recursive=True))
-            self.num_docs = str(self.num_docs)
+            docs_list = root_doc.documents_list(only_subdocuments=False,
+                                                recursive=True)
+            self.num_docs = str(len(docs_list))
         else:
             self.num_docs = ''
 
@@ -114,6 +114,3 @@ class ProgressTable(SimpleTable):
         status_str = "{} / {} ({:.1f}%)".format(done, total, percent)
         rows = [self.env_name, self.num_docs, status_str]
         super().print_row(*rows)
-
-
-

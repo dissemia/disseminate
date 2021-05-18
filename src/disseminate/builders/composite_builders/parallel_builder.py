@@ -74,7 +74,8 @@ class ParallelBuilder(CompositeBuilder):
 
             # Get the output extension for the builder out_ext
             if out_ext is None:
-                if isinstance(outfilepath, str) and outfilepath.startswith('.'):
+                if (isinstance(outfilepath, str) and
+                   outfilepath.startswith('.')):
                     out_ext = outfilepath
                 elif hasattr(outfilepath, 'suffix'):
                     out_ext = outfilepath.suffix

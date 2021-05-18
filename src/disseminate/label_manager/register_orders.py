@@ -25,13 +25,14 @@ def reorder_and_purge_labels_by_doc_id(labels, root_context):
         doc_ids = root_doc.doc_ids if root_doc is not None else []
     else:
         # Use the doc_ids from the labels themselves
-        doc_ids = [l.doc_id for l in labels.values()]
+        doc_ids = [label.doc_id for label in labels.values()]
 
     # Remove labels that aren't listed in the doc_ids
     filtered_labels = filter(lambda l: l.doc_id in doc_ids, labels.values())
 
     # Sort filtered labels by doc_id
-    reordered_labels = sorted([(c, l) for c, l in enumerate(filtered_labels)],
+    reordered_labels = sorted([(count, label)
+                               for count, label in enumerate(filtered_labels)],
                               key=lambda k: (doc_ids.index(k[1].doc_id), k[0]))
 
     # Repopulate the labels dict (which should be an ordered dict)
@@ -63,8 +64,8 @@ def register_orders(labels, root_context, **kwargs):
       for the correct ordering of labels, even if the chapter/section/
       subsection counts are reset.
 
-    - This function uses reorder_and_purge_labels_by_doc_id, which removes labels with
-      a doc_id for documents that no longer exist.
+    - This function uses reorder_and_purge_labels_by_doc_id, which removes
+      labels with a doc_id for documents that no longer exist.
 
     Parameters
     ----------

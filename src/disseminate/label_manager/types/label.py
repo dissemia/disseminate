@@ -25,8 +25,8 @@ class Label(object):
         have an order of (3, 2) which would represent the 3rd 'heading' and
         2nd 'chapter' item. Some of the orders may be reset, but the first item
         should not--e.g. the 'heading' count should represent the running count
-        of all headings, while the chapter count may be reset. This ensures that
-        the order of labels is preserved when the counter of sub-kinds are
+        of all headings, while the chapter count may be reset. This ensures
+        that the order of labels is preserved when the counter of sub-kinds are
         reset.
         (see :class:`OrderLabels
         <disseminate.label_manager.processors.OrderLabels>`)
@@ -55,7 +55,7 @@ class Label(object):
         else:
             kind_str = ''
         msg = "{}(doc_id: '{}', id: '{}'{}".format(cls_name, self.doc_id,
-                                                     self.id, kind_str)
+                                                   self.id, kind_str)
         if params:
             attr_str = ", ".join(
                 "{}: '{}'".format(k, v) for k, v in sorted(params.items()))

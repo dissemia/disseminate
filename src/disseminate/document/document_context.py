@@ -68,10 +68,10 @@ class DocumentContext(BaseContext):
         # when the full context has been read in.
         'mtime',
 
-        # Paths are not inherited since we do not want to use paths for template
-        # directories from the parent if the parent's template is different.
-        # Also, the paths may be relative to the parent document and may be
-        # invalid for a subdocument in a subdirectory.
+        # Paths are not inherited since we do not want to use paths for
+        # template directories from the parent if the parent's template is
+        # different. Also, the paths may be relative to the parent document
+        # and may be invalid for a subdocument in a subdirectory.
         'paths',
 
         # Do not inherit builders. Each document and context has its own
@@ -80,7 +80,7 @@ class DocumentContext(BaseContext):
         #: The contents of the body (specified by body_attr) doesn't carry over
         #: because each body has its own body.
         settings.body_attr,
-        }
+    }
 
     #: The keys for context entries that should not be removed when the
     #: context is cleared. These are typically for entries setup in the
@@ -102,7 +102,7 @@ class DocumentContext(BaseContext):
         # parent 'reset' method. However, this reset method properly resets the
         # entry in the paths list without creating a new list object.
         'paths'
-        }
+    }
 
     # Replace the following mutable entries.
     # When a document or template specified these entries, their values

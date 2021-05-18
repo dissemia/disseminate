@@ -49,7 +49,8 @@ def print_signals(signal_namespace):
             msg += "\n" + wrap_desc.fill(rec_str) + "\n"
 
         for count, (order, receiver) in receivers:
-            rec_str = lowercase[count] if count < len(lowercase) else str(count)
+            rec_str = (lowercase[count] if count < len(lowercase) else
+                       str(count))
             rec_str += ". "
             rec_str += style("{}".format(receiver.__name__), fg='cyan')
 

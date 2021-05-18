@@ -70,7 +70,8 @@ class Builder(metaclass=ABCMeta):
         If a tuple of strings is specified, these conditions will be tested
         to see if the builder is active:
         - 'priority': test that the priority attribute is an int
-        - 'required_execs': tests that the required_execs attribute is specified
+        - 'required_execs': tests that the required_execs attribute is
+           specified
         - 'all_execs': tests that the required execs are available
     decision : :obj:`.builders.deciders.decider.decision`
         The decision object for the build, instantiate from environment's
@@ -95,7 +96,8 @@ class Builder(metaclass=ABCMeta):
         in formatting the TargetPath.
         ex: 'html' target will store built files in the 'html/' subdirectory.
     parameters_from_signals : Optional[List[str]]
-        A list of optional signal names to receive extra parameter dependencies.
+        A list of optional signal names to receive extra parameter
+        dependencies.
     future : Union[:obj:`concurrent.futures.Future`, None, str]
         The future object for the process for the externally run program.
         The future can also be None, if a process hasn't been run.
@@ -201,7 +203,8 @@ class Builder(metaclass=ABCMeta):
                                  if available is None]
                 logging.warning("Builder '{}' not active because the "
                                 "required executables could not be "
-                                "found: {}".format(cls.__name__, missing_execs))
+                                "found: {}".format(cls.__name__,
+                                                   missing_execs))
                 active = False
 
         return Builder._active.setdefault(cls_name, active)
@@ -360,8 +363,8 @@ class Builder(metaclass=ABCMeta):
         return list(sorted(parameters)) if sort else parameters
 
     def scan_parameters(self):
-        """Use the environment scanners to find additional dependencies in files
-        specified by filepaths in the parameters."""
+        """Use the environment scanners to find additional dependencies in
+        files specified by filepaths in the parameters."""
         parameters = self.parameters
         parameters += self.env.scanner.scan(parameters=parameters)
         self.parameters = uniq(parameters)
@@ -464,8 +467,8 @@ class Builder(metaclass=ABCMeta):
           - Each builder is atomic
           - When running a build, not all of the builders might be called in
             the first build--for example, subsequent builders may rely on the
-            results of previous builds. For this reason, builders should be used
-            in conjunction with an environment to make sure a set of
+            results of previous builds. For this reason, builders should be
+            used in conjunction with an environment to make sure a set of
             builds are completed or the build complete=True should be used.
         """
         if complete:

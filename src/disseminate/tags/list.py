@@ -19,7 +19,7 @@ re_multiline_items = regex.compile(r'\s*\n+\s+')
 
 
 def parse_string_list(s):
-    """Parse a string with lists.
+    r"""Parse a string with lists.
 
     Parameters
     ----------
@@ -32,8 +32,8 @@ def parse_string_list(s):
 
     Examples
     --------
-    >>> parse_string_list("- This is my first item.\\n"
-    ...                   "  - This is my first subitem\\n")
+    >>> parse_string_list("- This is my first item.\n"
+    ...                   "  - This is my first subitem\n")
     [(0, 'This is my first item.'), (2, 'This is my first subitem')]
     """
     parsed_list = []
@@ -78,23 +78,23 @@ def parse_string_list(s):
 
 
 def clean_string_list(parsed_list):
-    """Clean the string list created by parse_string_list.
+    r"""Clean the string list created by parse_string_list.
 
     Cleaning include removeing extra spaces and newlines in parse string line
     elements.
-    
+
     Parameters
     ----------
     parsed_list : List[Tuple[int, str]]
         The parsed list from parse_string_list.
-        
+
     Returns
     -------
     cleaned_list : List[Tuple[int, str]]
         The cleaned list.
 
-    >>> l = parse_string_list("- This is my first item.\\n"
-    ...                   "  - This is my first subitem\\n")
+    >>> l = parse_string_list("- This is my first item.\n"
+    ...                   "  - This is my first subitem\n")
     >>> clean_string_list(l)
     [(0, 'This is my first item.'), (2, 'This is my first subitem')]
     """
@@ -104,8 +104,9 @@ def clean_string_list(parsed_list):
             for level, s in parsed_list]
 
 
-def normalize_levels(parsed_list, list_level_spaces=settings.list_level_spaces):
-    """Normalize the levels from a parse_list so that the first level is 0,
+def normalize_levels(parsed_list,
+                     list_level_spaces=settings.list_level_spaces):
+    r"""Normalize the levels from a parse_list so that the first level is 0,
     and subsequent levels are properly incremented.
 
     Parameters
@@ -120,13 +121,13 @@ def normalize_levels(parsed_list, list_level_spaces=settings.list_level_spaces):
     normalized_list : List[Tuple[int, str]]
         The normalized list with levels fixed.
 
-    >>> l = parse_string_list("- This is my first item.\\n"
-    ...                   "  - This is my first subitem\\n")
+    >>> l = parse_string_list("- This is my first item.\n"
+    ...                   "  - This is my first subitem\n")
     >>> normalize_levels(l)
     [(0, 'This is my first item.'), (2, 'This is my first subitem')]
     """
     min_level = min(level for level, item in parsed_list) if parsed_list else 0
-    return [(ceil((level - min_level)/list_level_spaces), item)
+    return [(ceil((level - min_level) / list_level_spaces), item)
             for level, item in parsed_list]
 
 
@@ -244,7 +245,8 @@ class List(Tag):
         for tag in self.content:
             listlevel = tag.attributes['level']
 
-            tag_html = getattr(tag, format_func)(method=method, level=level+1)
+            tag_html = getattr(tag, format_func)(method=method,
+                                                 level=level + 1)
             elements.append((listlevel, tag_html))
         return xhtml_list(*elements, attributes=attributes,
                           listtype=self.html_name, method=method, level=level)

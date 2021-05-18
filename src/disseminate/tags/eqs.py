@@ -7,7 +7,7 @@ from ..formats import tex_cmd, tex_env
 
 
 class Eq(Img):
-    """The inline equation tag
+    r"""The inline equation tag
 
     Render an equation in native LaTeX (.tex targets) or into a rendered
     SVG image using LaTeX (.html targets).

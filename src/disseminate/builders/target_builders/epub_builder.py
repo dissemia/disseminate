@@ -149,7 +149,8 @@ class EpubBuilder(TargetBuilder):
             xhtml_filepaths.append(toc_builder.outfilepath)
 
         # 3. Create xhtml to epub builder
-        xhtml2epub_cls = self.find_builder_cls(in_ext='.xhtml', out_ext='.epub')
+        xhtml2epub_cls = self.find_builder_cls(in_ext='.xhtml',
+                                               out_ext='.epub')
         xhtml2epub = xhtml2epub_cls(env=env, parameters=xhtml_filepaths,
                                     context=context, target='epub',
                                     use_media=False, use_cache=True)
@@ -157,7 +158,8 @@ class EpubBuilder(TargetBuilder):
 
         # 4. Create a copy builder to be placed in the final epub directory
         copy_builder_cls = self.find_builder_cls(in_ext='.*', out_ext='.*')
-        copy_builder = copy_builder_cls(env=env, target='epub', use_cache=False)
+        copy_builder = copy_builder_cls(env=env, target='epub',
+                                        use_cache=False)
         self.subbuilders.append(copy_builder)
 
         # Setup the paths

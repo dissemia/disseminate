@@ -93,7 +93,8 @@ class XHtml2Epub(SequentialBuilder):
         # Setup a renderer for the content.opfs
         fps = [p for p in self.parameters if hasattr(p, 'suffix')]
 
-        # Place the title.xhtml and toc.xhtml file at the front of the filepaths
+        # Place the title.xhtml and toc.xhtml file at the front of the
+        # filepaths
         front_fps = ([fp for fp in fps if fp.name == 'title.xhtml'] +
                      [fp for fp in fps if fp.name == 'toc.xhtml'])
         fps = front_fps + [fp for fp in fps if fp not in front_fps]
@@ -192,8 +193,8 @@ class XHtml2Epub(SequentialBuilder):
             for filepath in filepaths:
                 # Rework the filepath for the archive. Use the subpath, if
                 # available
-                arcname = (filepath.subpath if hasattr(filepath, 'subpath') else
-                           filepath)
+                arcname = (filepath.subpath
+                           if hasattr(filepath, 'subpath') else filepath)
 
                 # Place the content in the package subdir (ex: 'xhtml/')
                 arcname = self.package_subdir / arcname

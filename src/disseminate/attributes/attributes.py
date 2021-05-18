@@ -57,7 +57,8 @@ def strip_attr(attr, sep=settings.attribute_target_sep):
             return attr
 
         # Check all available targets
-        targets = {target.strip('.') for target in settings.tracked_deps.keys()}
+        targets = {target.strip('.')
+                   for target in settings.tracked_deps.keys()}
         for target in targets:
             term = sep + target
             if attr.endswith(term):
@@ -385,8 +386,9 @@ class Attributes(dict):
             else:
                 self[stripped_key] = cp[key]
 
-    def filter(self, attrs=None, target=None, sep=settings.attribute_target_sep,
-               sort_by_attrs=False, strip=True):
+    def filter(self, attrs=None, target=None,
+               sep=settings.attribute_target_sep, sort_by_attrs=False,
+               strip=True):
         """Create an Attributes dict with target-specific entries.
 
         Parameters
@@ -401,7 +403,8 @@ class Attributes(dict):
             case it will be returned.
             For example, if entries for 'class' and 'class.tex' exist and
             target='tex', then the 'class.tex' entry will be returned as
-            'class'. If target is None, then the 'class' entry will be returned.
+            'class'. If target is None, then the 'class' entry will be
+            returned.
         sep : Optional[str]
             The separator character (or string) to use to separate the key
             and target.
@@ -449,7 +452,8 @@ class Attributes(dict):
         if not sort_by_attrs:
             # Sort the attrs so that they follow the same order as keys in
             # this dict. This ensures the results of filter are deterministic
-            # and not random, if the attrs are an unordered iterable, like a set
+            # and not random, if the attrs are an unordered iterable, like a
+            # set
             order = {k: num for num, k in enumerate(self.keys())}
             attrs = sorted(attrs, key=lambda x: order.get(x, len(order)))
 
@@ -467,8 +471,8 @@ class Attributes(dict):
                 # The following are entries when attr != stripped_attr, i.e.
                 # key had a target-specific terminator
                 if attr.endswith(sep + target):
-                    # The attr is a target-specific attr that matches the target
-                    # Remove the non-target-specific general entry
+                    # The attr is a target-specific attr that matches the
+                    # target. Remove the non-target-specific general entry
                     remove_attrs.add(stripped_attr)
                 else:
                     # The attr is a target-specific attr, but it matches a

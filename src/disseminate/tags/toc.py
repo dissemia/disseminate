@@ -25,8 +25,8 @@ class TocRef(Ref):
 
     html_name = "li"
 
-    def tex_fmt(self, content=None, attributes=None, mathmode=False, cache=None,
-                level=1, **kwargs):
+    def tex_fmt(self, content=None, attributes=None, mathmode=False,
+                cache=None, level=1, **kwargs):
         list_level = self.attributes['level']
         tex_content = super().tex_fmt(content=content, attributes=attributes,
                                       mathmode=mathmode, cache=cache,
@@ -97,8 +97,8 @@ class Toc(Tag):
         elif isinstance(content, Tag):
             self.toc_kind = content.txt
 
-        # If the TOC kind hasn't been assigned, the content could not be parsed.
-        # Raise an exception
+        # If the TOC kind hasn't been assigned, the content could not be
+        # parsed. Raise an exception
         if self.toc_kind is None:
             msg = "The {} tag could not parse the tag contents: {}"
             raise exceptions.TagError(msg.format(self.name, content))
@@ -206,7 +206,7 @@ class Toc(Tag):
 
         # Get the labels
         labels = self.get_labels()
-        labels_by_id = {l.id: l for l in labels}
+        labels_by_id = {label.id: label for label in labels}
 
         for tag in tags:
             listlevel = tag.attributes['level']

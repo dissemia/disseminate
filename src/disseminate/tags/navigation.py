@@ -31,8 +31,8 @@ def set_navigation_labels(root_document):
         doc_id = document.doc_id
 
         for target in targets:
-            l = doc_ids_by_target.setdefault(target, [])
-            l.append(doc_id)
+            lst = doc_ids_by_target.setdefault(target, [])
+            lst.append(doc_id)
 
     # Get all of the document labels
     label_manager = root_context.get('label_manager')
@@ -70,9 +70,9 @@ def set_navigation_labels(root_document):
                     document.context[key] = weakref.ref(other_label)
                 except (IndexError, KeyError, TypeError):
                     # If the other document could not be found, make sure this
-                    # entry isn't in the context. This can happen if the context
-                    # contains stale information from a previous invocation of
-                    # this function.
+                    # entry isn't in the context. This can happen if the
+                    # context contains stale information from a previous
+                    # invocation of this function.
 
                     if key in document.context:
                         del document.context[key]

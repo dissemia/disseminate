@@ -132,8 +132,9 @@ class Img(Tag):
 
         # Prepare the parameters. Either their a filepath of the contents
         # or the contents themselves.
-        content = (self.content_as_filepath(content=content, context=context)
-                   or content)
+        content = (self.content_as_filepath(content=content,
+                                            context=context) or
+                   content)
         parameters = [content] + list(attrs.filter(target=target).totuple())
 
         # Use the content's filepath suffix as the in_ext, if a file has
