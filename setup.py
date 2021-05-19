@@ -83,7 +83,7 @@ setup(
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'sphinx-click', 'numpydoc',
                 'asv'],
-        'test': ['pytest', 'tox', 'coverage', 'flake8', 'flake8-docstrings',
+        'test': ['pytest', 'pytest-cov', 'tox', 'coverage', 'flake8',
                  'epubcheck>=0.4'],
         'termcolor': ['termcolor']  # MIT license
     },
