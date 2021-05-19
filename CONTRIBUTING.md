@@ -157,14 +157,13 @@ code.
 
 ## Coding Style
 
-1. **PEP8**. Code should follow the [PEP8] style guide
+1. **PEP8 and flake8**. Code should follow the [PEP8] style guide and pass
+   flake8 tests (``tox -e flake8``)
 
 2. **Line length**. Line length is limited to a maximum of 79 characters
 
 3. **Numpy docstrings**. Docstrings follow the [numpy docstring format] with
    docstring types written using Python 3 annotations.
-   
-4. **Flake8**. Code commits should pass the flake8 tests.
 
 ### Exceptions for Tests
 
@@ -178,6 +177,15 @@ Tests follow the same guidelines but the following exceptions are allowed:
    Some tests may have an increased complexity from this limit (Flake8 C901
    error)
 
+## Versions
+
+Releases are identified using [semantic versioning] with the format
+``MAJOR.MINOR.PATCH[.dev#|a#|b#|rc#]``. Version updates includes the following
+steps:
+
+1. Update the ``VERSION`` variable in ``src/__version__.py``
+
+2. Tag a commit with the new version. _e.g._ v2.3
 
 
 [documentation]: https://www.dissemia.dev/docs/disseminate/index.html
@@ -194,3 +202,4 @@ Tests follow the same guidelines but the following exceptions are allowed:
 [pull requests from forks]: https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request-from-a-fork
 [PEP8]: https://www.python.org/dev/peps/pep-0008/
 [numpy docstring format]: ttps://numpydoc.readthedocs.io/en/latest/format.html
+[semantic versioning]: https://semver.org
