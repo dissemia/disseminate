@@ -48,11 +48,14 @@ jobs:
       run: |
         sudo apt install texlive-latex-base
         sudo apt install texlive-latex-extra  # provides 'enumitem'
-        sudo apt install texlive-fonts-recommended  # provides 'ecrm1200'
+        sudo apt install texlive-fonts-recommended cm-super  # needed fonts
         sudo apt install latexmk pdf2svg librsvg2-bin asymptote
     - name: Install python dependencies
       run: |
         python -m pip install --upgrade pip  # upgrade pip
         pip install ".[test]" . # install package + test dependencies
+    - name: Check installation
+      run: |
+        dm setup --check
     - name: Run tox
       run: python -m tox

@@ -29,7 +29,7 @@ pdf_deps = All('pdf',
                    'easylist', 'fancyvrb',
                    'hyperref', 'enumitem', 'geometry', 'xcolor'),
                Optional('fonts',
-                        'ecrm1200'),
+                        'ecrm1200', 'tcrm1200'),
                Optional('classes',
                         'article', 'report', 'tufte-book', ),
                )
