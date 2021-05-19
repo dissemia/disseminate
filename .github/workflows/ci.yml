@@ -52,6 +52,7 @@ jobs:
         pip install ".[test]" . # install package + test dependencies
     - name: Run pytest
       run: pytest
+<<<<<<< HEAD
 
 #  lint:
 #    runs-on: ubuntu-latest
@@ -85,3 +86,5 @@ jobs:
 #        if [[ "$TOXENV" == 'checkspelling' ]]; then sudo apt-get install aspell aspell-en; fi
 #    - name: Run tox
 #      run: python -m tox
+=======
+>>>>>>> development
