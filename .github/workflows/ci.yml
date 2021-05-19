@@ -15,7 +15,7 @@ on:
     - '**'
 
 jobs:
-  test:
+  tests:
 
     runs-on: ubuntu-latest
     strategy:
@@ -59,3 +59,27 @@ jobs:
         dm setup --check
     - name: Run tox
       run: python -m tox
+
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        tox-env: [flake8]
+
+    env:
+      TOXENV: ${{ matrix.tox-env }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python for flake8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip tox
+      - name: Run tox
+          run: python -m tox
+  
