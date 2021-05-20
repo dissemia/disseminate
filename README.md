@@ -1,7 +1,8 @@
 # Disseminate
 
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/dissemia/disseminate)
 [![CI](https://github.com/dissemia/disseminate/actions/workflows/ci_linux.yml/badge.svg)](https://github.com/dissemia/disseminate/actions/workflows/ci_linux.yml)
-
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 Disseminate is a document processing system for textbooks, books, novels, 
 articles, reports and essays. 
