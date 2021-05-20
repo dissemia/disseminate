@@ -7,7 +7,6 @@ Server
    :maxdepth: 2
    :caption: Server
 
-   projects
-   server
-   templates
-   views/index
+   app
+   urls
+   handlers

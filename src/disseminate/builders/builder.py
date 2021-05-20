@@ -69,10 +69,11 @@ class Builder(metaclass=ABCMeta):
         If False, the builder will be inactive
         If a tuple of strings is specified, these conditions will be tested
         to see if the builder is active:
-        - 'priority': test that the priority attribute is an int
-        - 'required_execs': tests that the required_execs attribute is
-           specified
-        - 'all_execs': tests that the required execs are available
+
+          - 'priority': test that the priority attribute is an int
+          - 'required_execs': tests that the required_execs attribute is
+             specified
+          - 'all_execs': tests that the required execs are available
     decision : :obj:`.builders.deciders.decider.decision`
         The decision object for the build, instantiate from environment's
         decider, to evaluate whether a build is needed.
