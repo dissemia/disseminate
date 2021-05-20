@@ -1,6 +1,7 @@
 # Disseminate
 
-[![CI](https://github.com/jlorieau/disseminate/actions/workflows/ci.yml/badge.svg)](https://github.com/jlorieau/disseminate/actions/workflows/ci.yml)
+[![CI](https://github.com/dissemia/disseminate/actions/workflows/ci_linux.yml/badge.svg)](https://github.com/dissemia/disseminate/actions/workflows/ci_linux.yml)
+
 
 Disseminate is a document processing system for textbooks, books, novels, 
 articles, reports and essays. 
