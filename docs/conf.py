@@ -40,6 +40,9 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx_click',
               ]
 
+# Autodoc mock imports for Readthedocs
+autodoc_mock_imports = ['numpydoc']
+
 # numpydoc options
 numpydoc_show_inherited_class_members = False
 numpydoc_class_members_toctree = False
