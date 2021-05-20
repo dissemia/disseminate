@@ -1,0 +1,3 @@
+sphinx-click
+numpydoc
+sphinx_rtd_theme
