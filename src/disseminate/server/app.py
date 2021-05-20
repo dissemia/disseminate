@@ -12,11 +12,13 @@ from .. import settings
 
 
 class TornadoApp(tornado.web.Application):
+    """The Tornado App for the built-in webserver"""
     def __init__(self, **kwargs):
         tornado.web.Application.__init__(self, url_patterns, **kwargs)
 
 
 def get_app(in_path, out_dir, debug=False, **kwargs):
+    """Create the Tornado app instance"""
     app = TornadoApp(in_path=in_path, out_dir=out_dir, debug=debug,
                      template_path=server_template_path,
                      default_handler_class=ServerHandler)
@@ -26,6 +28,7 @@ def get_app(in_path, out_dir, debug=False, **kwargs):
 def run_server(in_path, out_dir, port=settings.default_port,
                debug=False):
     """Create and run the web-server.
+
     Parameters
     ----------
     in_path : str
