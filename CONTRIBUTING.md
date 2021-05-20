@@ -39,11 +39,13 @@ codeofconduct {at} dissemia {dot} org.
    
 2. **``development``**. The ``development`` branch is used for pre-releases. It 
    should always pass all [pytest], [tox] and CI tests.
-    
-3. **git flow**. Additional branches should follow the [git flow] branching 
-   model with ``feature/``, ``release/`` and ``hotfix`` prefixes. When all new 
-   and old tests pass, these may be merged into the ``development`` branch 
-   before being merged to the ``master`` branch.
+
+### Git Flow
+
+Additional branches should follow the [git flow] branching model with 
+``feature/``, ``release/`` and ``hotfix`` prefixes. When all new and old 
+tests pass, these may be merged into the ``development`` branch before being 
+merged to the ``master`` branch.
 
 ### Feature Requests
 
