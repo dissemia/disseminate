@@ -20,8 +20,9 @@ def test_tex_environment(attributes_cls):
            '\\begin{alignat*}{3}\n'
            'y=x\n'
            '\\end{alignat*}\n')
-    assert (tex_env('alignat*', attributes_cls('3'), formatted_content='y=x') ==
-            key)
+    assert (tex_env('alignat*',
+                    attributes_cls('3'),
+                    formatted_content='y=x') == key)
 
     # 2. Test an environment with optional arguments
     key = ('\n'

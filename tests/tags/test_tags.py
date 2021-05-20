@@ -183,7 +183,7 @@ def test_tag_invalid_inputs(context_cls):
 
     # 2. Test invalid content types
     with pytest.raises(TagError):
-        root = Tag(name='root', content=set(), attributes=None, context=context)
+        Tag(name='root', content=set(), attributes=None, context=context)
 
 
 def test_tag_copy(context_cls):
@@ -302,19 +302,18 @@ def test_tag_default(context_cls):
 
     root = Tag(name='root', content=test, attributes='', context=context)
 
-    key = """
-    This is my test document. It has multiple paragraphs.
-
-    Here is a new one with bolded text as an example.
-    
-      media/files
-      This is my first figure.
-    
-
-    This is a  variable.
-
-    Here is a new paragraph."""
-
+    key = ('\n'
+           '    This is my test document. It has multiple paragraphs.\n'
+           '\n'
+           '    Here is a new one with bolded text as an example.\n'
+           '    \n'
+           '      media/files\n'
+           '      This is my first figure.\n'
+           '    \n'
+           '\n'
+           '    This is a  variable.\n'
+           '\n'
+           '    Here is a new paragraph.')
     assert root.txt == key
 
 
@@ -361,7 +360,8 @@ def test_tag_html_excluded_tag(context_cls):
 
     # The <script> tag is excluded in settings.html_excluded
     # Generate a simple root tag with an invalid tag in its content
-    eqn = Tag(name='script', content='my eqn', attributes=None, context=context)
+    eqn = Tag(name='script', content='my eqn', attributes=None,
+              context=context)
     elements = ["my first", eqn, "string"]
     root = Tag(name='root', content=elements, attributes=None, context=context)
     assert root.html == ('<span class="root">my first'
@@ -386,8 +386,8 @@ def test_tag_html_unsafe_tag(context_cls):
                          'string</span>\n')
 
     # 2. Test a body tag with html comments. These should be escaped.
-    body = Tag(name='body', content='<!-- My escaped text -->', attributes=None,
-               context=context)
+    body = Tag(name='body', content='<!-- My escaped text -->',
+               attributes=None, context=context)
     assert body.html == ('<span class="body">'
                          '&lt;!&#8211;My escaped text&#8211;&gt;'
                          '</span>\n')

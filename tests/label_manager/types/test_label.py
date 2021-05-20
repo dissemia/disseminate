@@ -1,7 +1,7 @@
 """
 Test the Label class.
 """
-from disseminate.label_manager.types import Label, ContentLabel, DocumentLabel
+from disseminate.label_manager.types import Label, ContentLabel
 
 
 def test_label_repr():

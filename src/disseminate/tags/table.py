@@ -92,7 +92,7 @@ class BaseTable(Tag):
             elif isinstance(item, Data):
                 # Process the data in the table
                 content_html += item.html_table(format_func=format_func,
-                                                method=method, level=level+1)
+                                                method=method, level=level + 1)
             elif isinstance(item, Tag):
                 # Process other tags like captions. Use either 'html_fmt' or
                 # 'xhtml_fmt' functions, as indicated by the format_func

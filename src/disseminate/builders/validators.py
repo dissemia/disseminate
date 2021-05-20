@@ -5,7 +5,8 @@ Functions to validate arguments
 
 def _raise_error(msg, exception, raise_error=True):
     """When an argument is not valid, raise a ValidationError with the
-    given message when the raise_error argument is True. Otherwise return False.
+    given message when the raise_error argument is True. Otherwise return
+    False.
     """
     if raise_error:
         raise exception(msg)

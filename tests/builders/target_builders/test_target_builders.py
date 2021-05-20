@@ -16,7 +16,7 @@ ex3_srcdir = ex3_root / 'src'
 
 
 def test_target_builder_setup(env):
-    """Test the setup of target builders """
+    """Test the setup of target builders."""
     context = env.context
     tmpdir = context['target_root']
     root_document = env.root_document
@@ -26,7 +26,8 @@ def test_target_builder_setup(env):
                                                (TexBuilder, 'test.tex'),):
         # 1. Setup the builder. At least an outfilepath is needed and a content
         #    is needed
-        target_filepath = TargetPath(target_root=tmpdir, subpath=target_subpath)
+        target_filepath = TargetPath(target_root=tmpdir,
+                                     subpath=target_subpath)
         context['body'] = 'My test'
 
         builder = targer_builder_cls(env, context=context,
@@ -61,7 +62,8 @@ def test_target_builder_setup_doc(load_example):
         assert (str(builder.parameters[1].subpath) ==
                 'dummy.dm')
         assert builder.outfilepath.match('{ext}/dummy.{ext}'.format(ext=ext))
-        assert str(builder.outfilepath.subpath) == 'dummy.{ext}'.format(ext=ext)
+        assert (str(builder.outfilepath.subpath) ==
+                'dummy.{ext}'.format(ext=ext))
 
 
 def test_target_builder_decision(env):
@@ -120,7 +122,8 @@ def test_target_builder_decision(env):
 
 
 def test_target_builder_ref_labels_html(env):
-    """Test target builders with ref label dependencies with the HtmlBuilder."""
+    """Test target builders with ref label dependencies with the
+    HtmlBuilder."""
 
     # Check that the signal is in place
     sig = signal("ref_label_dependencies")
@@ -135,8 +138,7 @@ def test_target_builder_ref_labels_html(env):
     context['body'] = 'My test'
 
     # 1. Setup the basic target builder
-    builder = HtmlBuilder(env, context=context,
-                                 outfilepath=target_filepath)
+    builder = HtmlBuilder(env, context=context, outfilepath=target_filepath)
     jinja_builder = builder.subbuilders[1]
 
     name = HtmlBuilder.__name__

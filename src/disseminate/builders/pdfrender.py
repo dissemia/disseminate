@@ -40,4 +40,5 @@ class PdfRender(SequentialBuilder):
         pdf_build = pdf_build_cls(env, use_cache=True, **kwargs)
         subbuilders.append(pdf_build)
         super().__init__(env, parameters=parameters, outfilepath=outfilepath,
-                         subbuilders=subbuilders, use_cache=use_cache, **kwargs)
+                         subbuilders=subbuilders, use_cache=use_cache,
+                         **kwargs)

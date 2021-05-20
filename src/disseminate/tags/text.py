@@ -1,7 +1,6 @@
 """
 Text formatting tags
 """
-from textwrap import wrap
 from html.entities import name2codepoint
 
 from .tag import Tag
@@ -203,8 +202,9 @@ class Supsub(Tag):
 
         # assert that the element separator, '&&', is in the contents
         if self.content.count('&&') != 1:
-            msg = ("The @supsub tag must contain only one element '&&' element "
-                   "separator. ex: @supsub{{superscript && subscript}}. The "
+            msg = ("The @supsub tag must contain only one element '&&' "
+                   "element separator. "
+                   "ex: @supsub{{superscript && subscript}}. The "
                    "tag given was: {}")
             raise TagError(msg.format(self))
 
@@ -259,13 +259,13 @@ class Symbol(Tag):
                 if not mathmode else
                 content)
 
-    def html_fmt(self, content=None, attributes=None,  method='html', level=1,
+    def html_fmt(self, content=None, attributes=None, method='html', level=1,
                  **kwargs):
         content = content or self.content
         return xhtml_entity(entity=content, method=method, level=level)
 
     def xhtml_fmt(self, content=None, attributes=None, method='xml', level=1,
-                 **kwargs):
+                  **kwargs):
         content = (content or self.content).strip()
 
         # Convert the entity name to a code point, needed for epub.

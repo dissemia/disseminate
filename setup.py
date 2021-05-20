@@ -34,18 +34,17 @@ else:
 
 
 classifiers += [
-          'Intended Audience :: End Users/Desktop',
-          'Intended Audience :: Science/Research',
-          'Operating System :: MacOS :: MacOS X',
-          'Operating System :: POSIX :: Linux',
-          'Programming Language :: Python',
-          'Programming Language :: Python :: 3',
-          'Programming Language :: Python :: 3.6',
-          'Topic :: Text Processing :: General',
-          'Topic :: Text Processing :: Markup',
-          'Topic :: Text Processing :: Markup :: HTML',
-          'Topic :: Text Processing :: Markup :: LaTeX',
-          ]
+    'Intended Audience :: End Users/Desktop',
+    'Intended Audience :: Science/Research',
+    'Operating System :: MacOS :: MacOS X',
+    'Operating System :: POSIX :: Linux',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.6',
+    'Topic :: Text Processing :: General',
+    'Topic :: Text Processing :: Markup',
+    'Topic :: Text Processing :: Markup :: HTML',
+    'Topic :: Text Processing :: Markup :: LaTeX']
 
 
 setup(
@@ -55,13 +54,12 @@ setup(
     long_description=long_description,
     # url='https://github.com/pypa/sampleproject',
     author='Justin L Lorieau',
-    classifiers=[  
+    classifiers=[
         'Development Status :: 3 - Alpha',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-    ],
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9'],
     keywords='document processor academic publishing',
     packages=find_packages("src"),
     package_dir={"": "src"},
@@ -75,25 +73,24 @@ setup(
         # The following are needed for the CLI
         'click>=7.0',                # 3-clause BSD license
         # The following are needed for the preview function
-        'sanic>=19.0',               # MIT license
+        'tornado>=6.1',
         # The following is needed for the @code tag
         'pygments >=2.6',             # BSD 2 license
-        'pandas>=0.25',               # 3-clause BSD
+        'numpy>=1.20',
+        'pandas>=1.2',                # 3-clause BSD
         'diskcache>=4.1',
-        'pathvalidate>=2.2',
-        ],
+        'pathvalidate>=2.2'],
     extras_require={  # Optional
         'dev': ['sphinx', 'sphinx_rtd_theme', 'sphinx-click', 'numpydoc',
                 'asv'],
-        'test': ['pytest', 'pytest-sanic>1.6', 'tox', 'coverage',
+        'test': ['pytest', 'pytest-cov', 'tox', 'coverage', 'flake8',
                  'epubcheck>=0.4'],
         'termcolor': ['termcolor']  # MIT license
     },
     scripts=['scripts/dm', ],
     entry_points={
         'console_scripts': [
-            'dm = disseminate.cli:main'
-          ],
+            'dm = disseminate.cli:main'],
         'pygments.lexers': [
             'dmlexer = disseminate.utils.pygments.dm:DmLexer'
         ]

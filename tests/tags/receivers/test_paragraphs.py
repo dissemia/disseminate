@@ -38,7 +38,7 @@ My final paragraph.
 
 test_paragraphs2 = """
   @section{A heading with leading spaces}
-  
+
   This is my paragraph.
 """
 
@@ -64,7 +64,8 @@ def test_group_paragraphs():
 
     group = group_paragraphs([1, 2, 'three', 'four\n\n\n\nfive', 6, '\n\n',
                               'seven\n\neight'])
-    assert group == [[1, 2, 'three', 'four'], ['five', 6], ['seven'], ['eight']]
+    assert group == [[1, 2, 'three', 'four'], ['five', 6], ['seven'],
+                     ['eight']]
 
     # 3. Test string objects with 'include_paragraphs' attributes
     class AltInt(int):
@@ -83,10 +84,12 @@ def test_group_paragraphs():
     ast[1].include_paragraphs = False
     ast[4].include_paragraphs = False
     group = group_paragraphs(ast)
-    assert group == [1, 2, ['three', 'four'], ['five'], 6, ['seven'], ['eight']]
+    assert group == [1, 2, ['three', 'four'], ['five'], 6, ['seven'],
+                     ['eight']]
 
     group = group_paragraphs(group)
-    assert group == [1, 2, ['three', 'four'], ['five'], 6, ['seven'], ['eight']]
+    assert group == [1, 2, ['three', 'four'], ['five'], 6, ['seven'],
+                     ['eight']]
 
 
 def test_group_paragraphs_with_tags(doc):
@@ -343,9 +346,9 @@ def test_process_paragraph_tags_subtags(context_cls):
 def test_process_paragraph_tags_newlines(context_cls):
     """Test the preservation of newlines in a parapgraph with macros."""
 
-    text = """The purpose of the @abrv{INEPT} sequenceMorris1979 is to 
-    transfer the large magnetization from high-@gamma nuclei, like @1H or
-    @19F, to low-@gamma nuclei (labeled 'X'), like @13C and @15N."""
+    text = """The purpose of the @abrv{INEPT} sequenceMorris1979 is to
+     transfer the large magnetization from high-@gamma nuclei, like @1H or
+     @19F, to low-@gamma nuclei (labeled 'X'), like @13C and @15N."""
 
     context = context_cls(**{'@1H': '@sup{1}H',
                              '@13C': '@sup{13}C', '@15N': '@sup{15}N',
@@ -359,9 +362,9 @@ def test_process_paragraph_tags_newlines(context_cls):
                            p_cls=P)
 
     root_html = root.html
-    assert 'is to \n    transfer' in root_html
+    assert 'is to\n     transfer' in root_html
     assert '<sup>1</sup>H or\n' in root_html
-    assert 'or\n    <sup>19</sup>F' in root_html
+    assert 'or\n     <sup>19</sup>F' in root_html
 
 
 def test_process_paragraphs_in_context(doc):
@@ -412,5 +415,3 @@ def test_process_paragraphs_in_context(doc):
 
     assert isinstance(tag[8], P)
     assert tag[8].content == 'My final paragraph.\n'
-    
-

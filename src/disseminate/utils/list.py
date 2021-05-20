@@ -5,13 +5,13 @@ import hashlib
 from itertools import filterfalse
 
 
-def uniq(l, key=None):
+def uniq(lst, key=None):
     """Find the unique items in the given list while preserving the order of
     the list and optionally using a key mapping function.
 
     Parameters
     ----------
-    l : list
+    lst : list
         The list to check for duplicates.
     key : Optional[Callable]
         A mapping function that takes a list item and returns an alternate
@@ -26,7 +26,7 @@ def uniq(l, key=None):
     >>> uniq([(1, 'a'), (2, 'a'), (3, 'b'), (4, 'c')], key=lambda i:i[0])
     [(1, 'a'), (2, 'a'), (3, 'b'), (4, 'c')]
     """
-    return list(unique_everseen(l, key=key))
+    return list(unique_everseen(lst, key=key))
 
 
 def unique_everseen(iterable, key=None):
@@ -48,12 +48,12 @@ def unique_everseen(iterable, key=None):
                 yield element
 
 
-def dupes(l, key=None):
+def dupes(lst, key=None):
     """Find duplicates in a list using, optionally, a key mapping function.
 
     Parameters
     ----------
-    l : list
+    lst : list
         The list to check for duplicates.
     key : Optional[Callable]
         A mapping function that takes a list item and returns an alternate
@@ -69,23 +69,22 @@ def dupes(l, key=None):
     []
     """
     counts = dict()
-    dupes = []
-    for item in l:
+    for item in lst:
         mapping = item if key is None else key(item)
         counts[mapping] = counts.setdefault(mapping, 0) + 1
 
     if key is None:
-        return [item for item in l if counts[item] > 1]
+        return [item for item in lst if counts[item] > 1]
     else:
-        return [item for item in l if counts[key(item)] > 1]
+        return [item for item in lst if counts[key(item)] > 1]
 
 
-def unwrap(l):
+def unwrap(lst):
     """Unwrap lists with only a single item.
 
     Parameters
     ----------
-    l : list
+    lst : list
         The list to unwrap
 
     Returns
@@ -104,13 +103,13 @@ def unwrap(l):
     >>> unwrap([[[3]]])
     3
     """
-    new_l = l[0] if isinstance(l, list) and len(l) == 1 else l
+    new_l = lst[0] if isinstance(lst, list) and len(lst) == 1 else lst
     if isinstance(new_l, list) and len(new_l) == 1:
         new_l = unwrap(new_l)
     return new_l
 
 
-def flatten(l):
+def flatten(lst):
     """Flatten a list of lists.
 
     Examples
@@ -122,19 +121,19 @@ def flatten(l):
     >>> list(flatten([[1,2], [3, [4, 5], 6]]))
     [1, 2, 3, 4, 5, 6]
     """
-    for element in l:
+    for element in lst:
         if isinstance(element, list):
             yield from flatten(element)
         else:
             yield element
 
 
-def chunks(l, N):
+def chunks(lst, N):
     """Return a generator in chunks of N.
 
     Parameters
     ----------
-    l : Union[List, Tuple]
+    lst : Union[List, Tuple]
         The iterable to break into chunks.
     N : int
         The size of chunks.
@@ -144,11 +143,11 @@ def chunks(l, N):
     Generator
         A generator with sublists of items from 'l' broken into chunks of 'N'.
     """
-    for i in range(0, len(l), N):
-        yield l[i:i + N]
+    for i in range(0, len(lst), N):
+        yield lst[i:i + N]
 
 
-def md5hash(l):
+def md5hash(lst):
     """Generates a hash of a list or tuple.
 
     Examples
@@ -163,5 +162,5 @@ def md5hash(l):
     '1c81219649292a2ef9240fc997353078'
     """
     s = ''.join(md5hash(i) if isinstance(i, list) or isinstance(i, tuple)
-                else str(i) for i in l).encode()
+                else str(i) for i in lst).encode()
     return hashlib.md5(s).hexdigest()

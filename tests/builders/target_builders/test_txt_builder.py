@@ -70,8 +70,8 @@ def test_txt_builder_setup_not_in_targets(env):
     src_filepath = context['src_filepath']
     target_root = context['target_root']
 
-    # 1. Setup the builder without an outfilepath.  In this case, 'tex' is *not*
-    #    listed in the targets, so the outfilepath will be in the
+    # 1. Setup the builder without an outfilepath.  In this case, 'tex' is
+    #    *not* listed in the targets, so the outfilepath will be in the
     #    cache directory
     context['targets'] -= {'txt'}
     target_filepath = TargetPath(target_root=target_root / '.cache',
@@ -95,7 +95,7 @@ def test_txt_builder_setup_not_in_targets(env):
 
 
 def test_txt_builder_simple(env):
-    """Test a simple build with the TxtBuilder """
+    """Test a simple build with the TxtBuilder"""
     context = env.context
     tmpdir = context['target_root']
 

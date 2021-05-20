@@ -30,8 +30,8 @@ class TargetBuilder(SequentialBuilder):
     only_root : Optional[bool]
         If True, only add the target builder for the root document.
     add_parallel_builder : Optional[bool]
-        If True (default), create a parallel builder for adding dependencies for
-        a target.
+        If True (default), create a parallel builder for adding dependencies
+        for a target.
     add_render_builder : Optional[bool]
         If True (default), create a render builder to render the target.
     """
@@ -131,7 +131,8 @@ class TargetBuilder(SequentialBuilder):
 
         # Initialize builder
         super().__init__(env, parameters=parameters, outfilepath=outfilepath,
-                         subbuilders=subbuilders, use_cache=use_cache, **kwargs)
+                         subbuilders=subbuilders, use_cache=use_cache,
+                         **kwargs)
 
     @property
     def outfilepath(self):

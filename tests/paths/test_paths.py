@@ -1,7 +1,6 @@
 """
 Tests for Paths objects.
 """
-import pathlib
 import copy
 
 from disseminate.paths import SourcePath, TargetPath
@@ -94,7 +93,8 @@ def test_path_target_get_url():
 
     # Custom
     context = {'base_url': 'https://app.disseminate.press/{target}/{subpath}'}
-    tgt_path = TargetPath(target_root='tgt', target='html', subpath='test.html')
+    tgt_path = TargetPath(target_root='tgt', target='html',
+                          subpath='test.html')
     key = 'https://app.disseminate.press/html/test.html'
     assert tgt_path.get_url(context) == key
 

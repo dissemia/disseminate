@@ -125,9 +125,9 @@ class LabelManager(object):
         Parameters
         ----------
         id : str
-            The unique identifier (within a project of documents) for the label.
-            The id includes the label_id and possibly the doc_id of the label.
-            'test.dm::intro'. (See parse_id for details)
+            The unique identifier (within a project of documents) for the
+            label. The id includes the label_id and possibly the doc_id of
+            the label. 'test.dm::intro'. (See parse_id for details)
             ex: 'ch:nmr-introduction'
         kind : Union[str, List[str], Tuple[str]]
             The kind of the label. ex: 'figure', ('heading', 'chapter'),
@@ -201,9 +201,9 @@ class LabelManager(object):
         Parameters
         ----------
         id : str
-            The unique identifier (within a project of documents) for the label.
-            The id includes the label_id and possibly the doc_id of the label.
-            'test.dm::intro'. (See parse_id for details)
+            The unique identifier (within a project of documents) for the
+            label. The id includes the label_id and possibly the doc_id of
+            the label. 'test.dm::intro'. (See parse_id for details)
             ex: 'ch:nmr-introduction'
         register : Optional[bool]
             If True, labels will be registered before doing the search
@@ -292,8 +292,8 @@ class LabelManager(object):
         Parameters
         ----------
         doc_id : Optional[str]
-            If specified, only label for the given document id will be returned.
-            (This is used an alternative to the context.)
+            If specified, only label for the given document id will be
+            returned. (This is used an alternative to the context.)
         kinds : Optional[Union[str, List[str], Tuple[str]]
             If None, all label kinds are returned.
             If string, all labels matching the kind string will be returned.
@@ -318,13 +318,14 @@ class LabelManager(object):
         # Filter labels by doc_id.
         labels = self.labels.values()
         if doc_id is not None:
-            labels = [l for l in labels if l.doc_id == doc_id]
+            labels = [label for label in labels if label.doc_id == doc_id]
 
         # Filter labels by kind
         returned_labels = []
         if kinds:
             for kind in kinds:
-                returned_labels += [l for l in labels if kind in l.kind]
+                returned_labels += [label for label in labels
+                                    if kind in label.kind]
         else:
             returned_labels = labels
 

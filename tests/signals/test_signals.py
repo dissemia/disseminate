@@ -34,7 +34,7 @@ def test_signal():
         d['received'] = 3
 
     test.connect(receiver2, 10)
-    test.connect(receiver3, 1000) # runs last, takes precedence
+    test.connect(receiver3, 1000)  # runs last, takes precedence
 
     assert {10, 100, 1000} == test.receivers.keys()
 
@@ -54,6 +54,7 @@ def test_signal_decorator():
 
     # Create a test receiver
     test = signal('test')
+
     @test.connect_via(1000)
     def receiver1(d):
         d['received'] = 1

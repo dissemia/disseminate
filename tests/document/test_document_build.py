@@ -90,7 +90,7 @@ def test_document_simple_tex_pdf(env, is_pdf):
     assert is_pdf(doc.targets['.pdf'])
 
 
-def test_document_template_books_tufte(load_example, cmp_epub):
+def test_document_template_books_tufte(load_example, html_update_version):
     """Test rendering in tex/pdf/html/xhtml/epub for the books/tufte template.
     (examples/ex8)
     """
@@ -131,7 +131,7 @@ def test_document_template_books_tufte(load_example, cmp_epub):
     # 3. Test the html target
     key = (ex8_root / "html" / "inept.html").read_text()
     print(doc.targets['.html'])
-    assert doc.targets['.html'].read_text() == key
+    assert doc.targets['.html'].read_text() == html_update_version(key)
 
     # Check the dependencies and paths
     html_root = target_root / 'html'
@@ -178,8 +178,7 @@ def test_document_template_books_tufte(load_example, cmp_epub):
                  xhtml_root / 'media' / 'inept_87560c6686dd.svg',
                  xhtml_root / 'media' / 'css' / 'epub.css',
                  xhtml_root / 'media' / 'css' / 'tufte.css',
-                 xhtml_root / 'media' / 'css' / 'tufte_epub.css',
-                }
+                 xhtml_root / 'media' / 'css' / 'tufte_epub.css'}
     print(target_root / 'xhtml')
     xhtml_actual = set(xhtml_root.glob('**/*'))
     assert xhtml_key == xhtml_actual

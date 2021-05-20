@@ -3,11 +3,11 @@ from disseminate.tags import Tag
 from disseminate.settings import default_context
 
 src1 = """This is a paragraph.
-    
+
     @featurebox{This is my featurebox.
-    
+
     It has 2 paragraphs.}
-    
+
     This is another paragraph.
     """
 

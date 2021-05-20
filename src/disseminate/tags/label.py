@@ -90,8 +90,8 @@ def create_label(tag, kind, label_id=None):
     content = tag.content
     context = tag.context
 
-    assert 'label_manager' in context, ("A label manager could not be found in "
-                                        "the tag's context")
+    assert 'label_manager' in context, ("A label manager could not be found "
+                                        "in the tag's context")
 
     # Generate the label_id, if needed
     label_id = label_id if label_id is not None else generate_label_id(tag=tag)
@@ -154,7 +154,8 @@ class LabelMixin(object):
         Returns
         -------
         kind : Tuple[str]
-            A tuple of strings for the kind of label. ex: ('heading', 'chapter')
+            A tuple of strings for the kind of label.
+            ex: ('heading', 'chapter')
         """
         return tuple()
 
@@ -231,8 +232,8 @@ class LabelTag(Tag):
     label_id = None
     label_manager = weakattr()
 
-    #: Do not convert typography characters. Conversion of typography characters
-    #: might cause issues with matching the label id.
+    #: Do not convert typography characters. Conversion of typography
+    #: characters might cause issues with matching the label id.
     process_content = False
     process_typography = False
 
@@ -263,8 +264,8 @@ class LabelTag(Tag):
 
         if all(i is not None for i in (label_manager, label_id, context)):
             format_str = label_manager.format_string(id=self.label_id)
-            processed_tag = Tag(name='label', content=format_str, attributes='',
-                                context=context)
+            processed_tag = Tag(name='label', content=format_str,
+                                attributes='', context=context)
             return content_to_str(processed_tag.content)
         else:
             return ''
@@ -280,8 +281,8 @@ class LabelTag(Tag):
                                                      target='.tex')
 
             # Process the tags and format the contents for tex
-            processed_tag = Tag(name='label', content=format_str, attributes='',
-                                context=context)
+            processed_tag = Tag(name='label', content=format_str,
+                                attributes='', context=context)
             content = format_content(content=processed_tag.content,
                                      format_func='tex_fmt', level=level + 1,
                                      mathmode=mathmode)
@@ -304,8 +305,8 @@ class LabelTag(Tag):
 
             # Process the tags and format the contents for html (html_fmt) or
             # xhtml (xhtml_fmt)
-            processed_tag = Tag(name='label', content=format_str, attributes='',
-                                context=context)
+            processed_tag = Tag(name='label', content=format_str,
+                                attributes='', context=context)
             content = format_content(content=processed_tag.content,
                                      format_func=format_func, level=level + 1)
 
@@ -320,4 +321,3 @@ class LabelTag(Tag):
 
     def xhtml_fmt(self, format_func='xhtml_fmt', method='xhtml', **kwargs):
         return self.html_fmt(format_func=format_func, method=method, **kwargs)
-

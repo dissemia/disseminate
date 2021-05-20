@@ -1,8 +1,6 @@
 """
 Test the SaveTempFile builder
 """
-import pytest
-
 from disseminate.builders.save_temp import SaveTempFile
 from disseminate.paths import SourcePath, TargetPath
 
@@ -37,7 +35,6 @@ def test_save_temp_file_setup_without_outfilepath(env):
     """Test the setup of the SaveTempFile builder without an outfilepath
     specified."""
     context = env.context
-    target_root = context['target_root']
 
     # 2. Test an example without an outfilepath. However, a target must be
     #    specified.

@@ -1,0 +1,12 @@
+{% comment Tornado template %}
+<li class="level-{{ checker['level'] }}">
+  <span class="msg">{{ checker['msg'] }}</span>
+  <span class="status {{ checker['status'] }}">{{ checker['status'] }}</span>
+</li>
+{% if 'subcheckers' in checker %}
+  <ol>
+  {% for subchecker in checker['subcheckers'] %}
+    {% module Template("checker_item.html", checker=subchecker) %}
+  {% end %}
+  </ol>
+{% end %}

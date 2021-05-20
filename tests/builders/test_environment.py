@@ -2,7 +2,6 @@
 Tests for the build environment.
 """
 import pathlib
-from shutil import copytree
 
 from disseminate.builders.environment import Environment
 from disseminate.paths import SourcePath, TargetPath
@@ -34,7 +33,7 @@ def test_environment_setup1(tmpdir):
     assert html_builders
 
     tex_builders = [b for b in target_builders
-                     if b.__class__.__name__ == 'TexBuilder']
+                    if b.__class__.__name__ == 'TexBuilder']
     assert tex_builders
 
     pdf_builders = [b for b in target_builders
@@ -77,7 +76,7 @@ def test_environment_setup1(tmpdir):
     assert epub_builders[0].outfilepath == tp_epub
 
 
-def test_environment_simple_build1(load_example):
+def test_environment_simple_build1(load_example, html_update_version):
     """Test an environment simple build from example 1"""
     # 1. tests/builders/examples/ex3/
     # ├── dummy.dm
@@ -93,10 +92,9 @@ def test_environment_simple_build1(load_example):
 
     tp_html = TargetPath(target_root=target_root, target='html',
                          subpath='dummy.html')
-    print(tp_html)
     tp_key = TargetPath(target_root=ex3_root, subpath='dummy.html')
     assert tp_html.is_file()
-    assert tp_html.read_text() == tp_key.read_text()
+    assert tp_html.read_text() == html_update_version(tp_key.read_text())
 
     tp_txt = TargetPath(target_root=target_root, target='txt',
                         subpath='dummy.txt')
@@ -192,4 +190,3 @@ def test_create_environments():
     src_filepath = env_ex6.root_document.src_filepath
     assert src_filepath.project_root == ex6_root
     assert src_filepath.subpath.name == 'index.dm'
-

@@ -6,7 +6,6 @@ from ...signals import signal
 
 add_file = signal('add_file')
 find_builder = signal('find_builder')
-#document_onload = signal('document_onload')
 document_tree_updated = signal('document_tree_updated')
 document_build = signal('document_build')
 document_build_needed = signal('document_build_needed')
@@ -58,7 +57,8 @@ def add_file(parameters, context, in_ext, target, use_cache=False):
 def add_target_builders(root_document):
     """Add target builders to a document context"""
     # Get the subdocuments in the tree
-    docs = root_document.documents_list(only_subdocuments=False, recursive=True)
+    docs = root_document.documents_list(only_subdocuments=False,
+                                        recursive=True)
 
     # Reset all of the builders
     for doc in docs:

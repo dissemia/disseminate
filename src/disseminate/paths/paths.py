@@ -211,7 +211,8 @@ class TargetPath(object):
         document = document or context.get('root_document', None)
 
         # Dereference the document, if it's a weakref
-        document = document() if isinstance(document, weakref.ref) else document
+        document = (document() if isinstance(document, weakref.ref) else
+                    document)
 
         if document is not None:
             target_filepath = document.target_filepath(target)

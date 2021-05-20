@@ -19,7 +19,6 @@ def reset_document(document, **kwargs):
 def delete_document(document, **kwargs):
     """Reset the context and managers for a document on document deletion."""
     context = document.context or dict()
-    src_filepath = context.get('src_filepath', None)
 
     # Reset the context
     del context

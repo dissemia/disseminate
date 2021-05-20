@@ -5,7 +5,7 @@ import re
 
 from pygments.lexer import RegexLexer, bygroups, using
 from pygments.lexers.data import YamlLexer
-from pygments.token import *
+from pygments.token import Punctuation, Name, Text
 
 
 class DmLexer(RegexLexer):
@@ -21,6 +21,7 @@ class DmLexer(RegexLexer):
             (r'(@)'
              r'(?P<tag>[A-Za-z0-9][\w]*)'
              r'(?P<attributes>\[[^\]]+\])?'
-             r'(?P<open>{)?', bygroups(Punctuation, Name.Tag, Name.Attribute, Text)),
+             r'(?P<open>{)?', bygroups(Punctuation, Name.Tag, Name.Attribute,
+                                       Text)),
         ],
     }

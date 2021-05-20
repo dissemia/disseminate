@@ -14,7 +14,7 @@ test = """
       @caption{This is my @i{first} figure.}
     }
 
-    This is a @13C variable, an @15N, and a @H2O macro. but this is an email 
+    This is a @13C variable, an @15N, and a @H2O macro. but this is an email
     address: justin@lorieau.com
 
     Here is a new paragraph."""
@@ -26,10 +26,10 @@ def test_process_hash(context):
     # 1. Test a reference example
     # Process the body tag and check it
     body = Tag(name='body', content=test, attributes='', context=context)
-    assert body.hash == 'ba4b750f25'
+    assert body.hash == 'e0ac309529'
 
     # The tag is otherwise accurately processed.
     assert isinstance(body.content, list)
 
     body = Tag(name='body', content=test + 'a', attributes='', context=context)
-    assert body.hash == '939b9e1907'
+    assert body.hash == '25a686d9f0'

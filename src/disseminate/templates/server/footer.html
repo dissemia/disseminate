@@ -1,3 +1,4 @@
+{% comment Tornado template %}
 <div class="footer container-fluid">
   <div class="row">
     <div class="col-2"></div>
@@ -5,26 +6,26 @@
       <hr>
       <ul class="list-group list-group-horizontal list-group-flush float-left">
         <li class="list-group-item border-0 py-1">
-          <a href="{{ url_for('tree.render_tree') }}">
+          <a href="{{ reverse_url('tree') }}">
             <img src="/media/icons/doctree.svg" width="16px">
             Document Listing
           </a>
         </li>
         <li class="list-group-item border-0 py-1">
-          <a href="{{ url_for('system.render_signals') }}">
-            <img src="/media/icons/signals.svg" width="16px">
-            Signals
-          </a>
-        </li>
-        <li class="list-group-item border-0 py-1">
-          <a href="{{ url_for('system.render_checkers') }}">
+          <a href="{{ reverse_url('checkers') }}">
             <img src="/media/icons/check.svg" width="16px">
             Checkers
           </a>
         </li>
+        <li class="list-group-item border-0 py-1">
+          <a href="{{ reverse_url('signals') }}">
+            <img src="/media/icons/signals.svg" width="16px">
+            Signals
+          </a>
+        </li>
       </ul>
       <div class="copyright float-right py-1">
-        © 2017-2020 Disseminate
+        © 2017-2021 Disseminate
       </div>
     </div>
     <div class="col-2"></div>

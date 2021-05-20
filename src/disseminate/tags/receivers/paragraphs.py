@@ -22,12 +22,12 @@ re_para = regex.compile(r'(?:\s*\n\s*\n\s*\n*)')
 
 
 def group_paragraphs(elements):
-    """Given a list, group the items into sublists based on strings with
+    r"""Given a list, group the items into sublists based on strings with
     newlines.
 
     .. note:: This function will not include items in the ast, including tags,
-              in paragraphs sublists that have an attribute 'include_paragraphs'
-              with a value of False.
+              in paragraphs sublists that have an attribute
+              'include_paragraphs' with a value of False.
 
     .. note:: The function is idempotent. It will reprocess the generated AST
               and not make changes.
@@ -44,10 +44,10 @@ def group_paragraphs(elements):
 
     Examples
     --------
-    >>> group_paragraphs([1, 2, 'three', 'four\\n\\nfive', 6,
-    ...                   'seven\\n\\neight'])
+    >>> group_paragraphs([1, 2, 'three', 'four\n\nfive', 6,
+    ...                   'seven\n\neight'])
     [[1, 2, 'three', 'four'], ['five', 6, 'seven'], ['eight']]
-    >>> group_paragraphs('This is my\\n\\ntest paragraph.')
+    >>> group_paragraphs('This is my\n\ntest paragraph.')
     [['This is my'], ['test paragraph.']]
     """
     # Wrap strings in a list
@@ -107,7 +107,7 @@ def group_paragraphs(elements):
 
 
 def clean_paragraphs(elements):
-    """Remove invalid paragraphs from the sublists in an ast created by
+    r"""Remove invalid paragraphs from the sublists in an ast created by
     group_paragraphs.
 
     This function will:
@@ -127,12 +127,12 @@ def clean_paragraphs(elements):
 
     Examples
     --------
-    >>> group = group_paragraphs([1, 2, 'three', 'four\\n\\nfive', 6,
-    ...                           'seven\\n\\neight'])
+    >>> group = group_paragraphs([1, 2, 'three', 'four\n\nfive', 6,
+    ...                           'seven\n\neight'])
     >>> clean_paragraphs(group)
     [[1, 2, 'three', 'four'], ['five', 6, 'seven'], ['eight']]
-    >>> group = group_paragraphs([1, 2, 'three', '\\n\\n', 6,
-    ...                           'seven\\n\\neight'])
+    >>> group = group_paragraphs([1, 2, 'three', '\n\n', 6,
+    ...                           'seven\n\neight'])
     >>> clean_paragraphs(group)
     [[1, 2, 'three'], [6, 'seven'], ['eight']]
     """

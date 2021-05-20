@@ -1,8 +1,6 @@
 """
 Test features for the reports/basic template.
 """
-from disseminate.document import Document
-from disseminate.paths import SourcePath, TargetPath
 
 
 def test_reports_basic_tag_availability(doc, wait):
@@ -40,8 +38,8 @@ def test_reports_basic_tag_availability(doc, wait):
                         '<h3 id="sec:test-dm-my-first-section">'),
                        ('subsection',
                         '<h4 id="subsec:test-dm-my-first-subsection">'),
-                        ('subsubsection',
-                         '<h5 id="subsubsec:test-dm-my-first-subsubsection">'),
+                       ('subsubsection',
+                        '<h5 id="subsubsec:test-dm-my-first-subsubsection">')
                        ):
 
         wait()  # sleep time offset needed for different mtimes

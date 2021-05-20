@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+v2.3
+----
+1. *Webserver*. Implementation of the Tornado library for the internal preview
+   webserver.
+
 v2.2
 ----
 1. *CLI*. Implementation of the cli *init* subcommand.

@@ -13,7 +13,7 @@ width = 80
 def print_single_check(msg, status, color=None, bold=False, spacer=' ',
                        level=1):
     """Print a single check line."""
-    msg = (' ' * spaces_per_level * level) + msg # indent
+    msg = (' ' * spaces_per_level * level) + msg  # indent
     status_str = '[{:^8}]  '.format(status)
     status_len = len(status_str)
 
@@ -45,7 +45,8 @@ def print_dependencies(item, required=True, level=1):
             print_dependencies(item=i, required=True, level=level + 1)
     elif isinstance(item, Any):
         # One is required are required
-        msg = "Checking alternative dependencies for '{}'".format(item.category)
+        msg = ("Checking alternative dependencies for "
+               "'{}'".format(item.category))
         msg = print_single_check(msg=msg, status=status_str, color=color,
                                  bold=bold, level=level, spacer=spacer)
         print(msg)
@@ -54,7 +55,8 @@ def print_dependencies(item, required=True, level=1):
     elif isinstance(item, Optional):
         # Optional
         # One is required are required
-        msg = "Checking alternative dependencies for '{}'".format(item.category)
+        msg = ("Checking alternative dependencies for "
+               "'{}'".format(item.category))
         msg = print_single_check(msg=msg, status=status_str, color=color,
                                  bold=bold, level=level, spacer=spacer)
         print(msg)

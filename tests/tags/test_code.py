@@ -58,9 +58,9 @@ def test_tag_code_paragraphs(context):
 
     # 1. Setup a code tag with a specified lexer
     src = """This is my code.
-    
+
     @code[python]{print('test')}
-    
+
     This is my @code{inline} code.
     """
     root = Tag(name='root', content=src, attributes='', context=context)
@@ -137,25 +137,25 @@ def test_tag_code_html(context):
     code.paragraph_role = 'block'
     assert code.html == ('<div class="code">'
                          '<div class="highlight block">'
-                            '<pre>'
-                                '<span></span>'
-                                '<span class="nb">print</span>'
-                                '<span class="p">(</span>'
-                                '<span class="s1">\'test\'</span>'
-                                '<span class="p">)</span>\n'
-                            '</pre>'
+                         '<pre>'
+                         '<span></span>'
+                         '<span class="nb">print</span>'
+                         '<span class="p">(</span>'
+                         '<span class="s1">\'test\'</span>'
+                         '<span class="p">)</span>\n'
+                         '</pre>'
                          '</div>'
                          '</div>\n')
     assert root.html == ('<span class="root">'
                          '<div class="code">'
                          '<div class="highlight block">'
-                            '<pre>'
-                                '<span></span>'
-                                '<span class="nb">print</span>'
-                                '<span class="p">(</span>'
-                                '<span class="s1">\'test\'</span>'
-                                '<span class="p">)</span>\n'
-                            '</pre>'
+                         '<pre>'
+                         '<span></span>'
+                         '<span class="nb">print</span>'
+                         '<span class="p">(</span>'
+                         '<span class="s1">\'test\'</span>'
+                         '<span class="p">)</span>\n'
+                         '</pre>'
                          '</div>'
                          '</div>'
                          '</span>\n')
@@ -171,25 +171,26 @@ def test_tag_code_html(context):
     # Check the @code tag
     code = root.content
     code.paragraph_role = 'block'
-
     assert code.html == ('<div class="code">'
                          '<div class="highlight block">'
-                           '<pre>'
-                             '<span></span>'
-                             '<span class="p">&lt;</span>'
-                             '<span class="nt">script</span>'
-                             '<span class="p">&gt;</span>'
-                             '<span class="err">&lt;/script</span>\n'
+                         '<pre>'
+                         '<span></span>'
+                         '<span class="p">&lt;</span>'
+                         '<span class="nt">script</span>'
+                         '<span class="p">&gt;</span>'
+                         '<span class="o">&lt;</span>'
+                         '<span class="err">/script</span>\n'
                          '</pre></div></div>\n')
     assert root.html == ('<span class="root">'
-                           '<div class="code">'
-                           '<div class="highlight block">'
-                             '<pre>'
-                               '<span></span>'
-                               '<span class="p">&lt;</span>'
-                               '<span class="nt">script</span>'
-                               '<span class="p">&gt;</span>'
-                               '<span class="err">&lt;/script</span>\n'
+                         '<div class="code">'
+                         '<div class="highlight block">'
+                         '<pre>'
+                         '<span></span>'
+                         '<span class="p">&lt;</span>'
+                         '<span class="nt">script</span>'
+                         '<span class="p">&gt;</span>'
+                         '<span class="o">&lt;</span>'
+                         '<span class="err">/script</span>\n'
                          '</pre></div></div></span>\n')
 
     # Test inline
@@ -256,7 +257,8 @@ def test_tag_code_xhtml(context, is_xml):
                           '<span class="p">&lt;</span>'
                           '<span class="nt">script</span>'
                           '<span class="p">&gt;</span>'
-                          '<span class="err">&lt;/script</span>\n'
+                          '<span class="o">&lt;</span>'
+                          '<span class="err">/script</span>\n'
                           '</pre>\n'
                           '  </div>\n'
                           '</div>\n')
@@ -269,7 +271,8 @@ def test_tag_code_xhtml(context, is_xml):
                           '<span class="p">&lt;</span>'
                           '<span class="nt">script</span>'
                           '<span class="p">&gt;</span>'
-                          '<span class="err">&lt;/script</span>\n'
+                          '<span class="o">&lt;</span>'
+                          '<span class="err">/script</span>\n'
                           '</pre>\n'
                           '    </div>\n'
                           '  </div>\n'

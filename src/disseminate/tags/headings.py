@@ -31,7 +31,7 @@ class Heading(Tag, LabelMixin):
                    'section': 'sec',
                    'subsection': 'subsec',
                    'subsubsection': 'subsubsec',
-                    }
+                   }
 
     def __init__(self, name, content, attributes, context, **kwargs):
 
@@ -44,7 +44,7 @@ class Heading(Tag, LabelMixin):
         Tag.__init__(self, name=name, content=content, attributes=attributes,
                      context=context, **kwargs)
 
-        if not 'nolabel' in self.attributes:
+        if 'nolabel' not in self.attributes:
             LabelMixin.__init__(self, name=name, content=content,
                                 attributes=attributes, context=context,
                                 **kwargs)

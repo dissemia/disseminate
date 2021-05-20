@@ -9,7 +9,6 @@ import jinja2.meta
 
 from .builder import Builder
 from .exceptions import BuildError
-from .executor import executor
 from .utils import generate_mock_parameters, generate_outfilepath
 from ..paths import SourcePath
 from ..paths.utils import find_file
@@ -94,8 +93,7 @@ class JinjaRender(Builder):
     action = 'render'
     priority = 1000
     active_requirements = ('priority',)
-    scan_parameters_on_init = False  # This is done after all parameters are
-                                     # loaded
+    scan_parameters_on_init = False  # Scan after all parameters are loaded
 
     context = weakattr()
 
@@ -108,7 +106,8 @@ class JinjaRender(Builder):
 
         # Checks
         assert render_ext or self.outfilepath, ("Either a render_ext or an "
-                                                "outfilepath must be specified")
+                                                "outfilepath must be "
+                                                "specified")
         self.render_ext = render_ext or self.outfilepath.suffix
         self.context = context
 
@@ -122,7 +121,6 @@ class JinjaRender(Builder):
             ae = jinja2.select_autoescape(['html', 'htm', 'xml'])
             env = jinja2.Environment(autoescape=ae, loader=dl,
                                      keep_trailing_newline=True,)
-                                     # enable_async=True)
             env.filters['rewrite_path'] = rewrite_path
 
             self.env._jinja_environment = env
@@ -252,7 +250,8 @@ class JinjaRender(Builder):
             rendered_string = template.render(**context,
                                               outfilepath=outfilepath)
         else:
-            rendered_string = template.render(**context, target=self.render_ext,
+            rendered_string = template.render(**context,
+                                              target=self.render_ext,
                                               outfilepath=outfilepath)
 
         outfilepath.write_text(rendered_string)

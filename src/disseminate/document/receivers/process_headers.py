@@ -43,9 +43,9 @@ def process_headers(context, **kwargs):
         header_context.match_update(d)
 
     # 2. Load the template paths and the 'context.txt' files
-    #    First load the template paths for the template and any parent templates
-    #    The template_name may be different from the header_context than the
-    #    one specified in this context.
+    #    First load the template paths for the template and any parent
+    #    templates. The template_name may be different from the header_context
+    #    than the one specified in this context.
     template_name = header_context.get('template') or context.get('template')
     template_paths = find_template_paths(template_name=template_name)
 
@@ -69,8 +69,8 @@ def process_headers(context, **kwargs):
     paths[0:0] = template_paths  # insert at top of list w/o creating new list
 
     # Copy over entries in the template_context, first, then those from the
-    # header_context. Since the header_context contains entries from the headers
-    # of source files, these take precedence over template values
+    # header_context. Since the header_context contains entries from the
+    # headers of source files, these take precedence over template values
     context.match_update(template_context, overwrite=True)
     context.match_update(header_context, overwrite=True)
 
@@ -142,8 +142,8 @@ def find_jinja2_parent_templates(template_path):
         template_name = match.group(1)
         template_name = pathlib.Path(template_name).parent.parent
 
-        # Add the path as long as the above didn't return the current directory,
-        # which is not a template
+        # Add the path as long as the above didn't return the current
+        # directory, which is not a template
         if str(template_name) != '.':
             paths += find_template_paths(template_name)
 

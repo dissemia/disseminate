@@ -70,8 +70,8 @@ def test_tex_builder_setup_not_in_targets(env):
     src_filepath = context['src_filepath']
     target_root = context['target_root']
 
-    # 1. Setup the builder without an outfilepath.  In this case, 'tex' is *not*
-    #    listed in the targets, so the outfilepath will be in the
+    # 1. Setup the builder without an outfilepath.  In this case, 'tex' is
+    #    *not* listed in the targets, so the outfilepath will be in the
     #    cache directory
     context['targets'] -= {'tex'}
     target_filepath = TargetPath(target_root=target_root / '.cache',
@@ -95,7 +95,7 @@ def test_tex_builder_setup_not_in_targets(env):
 
 
 def test_tex_builder_simple(env):
-    """Test a simple build with the TexBuilder """
+    """Test a simple build with the TexBuilder"""
     context = env.context
     tmpdir = context['target_root']
 
@@ -244,5 +244,6 @@ def test_tex_builder_add_build(load_example):
 
     # Check that the files were created
     assert tp.is_file()
-    assert sp.read_bytes() == tp.read_bytes()  # make sure it's the same as
-                                               # original
+
+    # make sure it's the same as original
+    assert sp.read_bytes() == tp.read_bytes()

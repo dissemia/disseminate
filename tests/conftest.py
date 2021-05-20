@@ -18,7 +18,7 @@ from disseminate.attributes import Attributes
 from disseminate.paths import SourcePath, TargetPath
 from disseminate.document import Document
 from disseminate.builders import Environment
-from disseminate.server.server import create_app
+from disseminate.__version__ import __version__
 
 
 def pytest_collection_modifyitems(config, items):
@@ -31,7 +31,7 @@ def pytest_collection_modifyitems(config, items):
     env_items = [item for item in items if
                  item.get_closest_marker('environment') is not None]
     nonenv_items = [item for item in items if
-                 item.get_closest_marker('environment') is None]
+                    item.get_closest_marker('environment') is None]
 
     items.clear()
     items += env_items + nonenv_items
@@ -206,23 +206,25 @@ def a_in_b():
     return _a_in_b
 
 
-# server fixtures
-
-@pytest.yield_fixture
-def app(tmpdir):
-    project_path = tmpdir.join('example7')
-    shutil.copytree('tests/document/examples/ex7', project_path)
-    app = create_app(in_path=str(project_path))
-    app.config['PROJECTPATH'] = project_path
-    yield app
-
+# Tests for formats
 
 @pytest.fixture
-def test_client(loop, app, sanic_client):
-    return loop.run_until_complete(sanic_client(app))
+def html_update_version():
+    """Update an html string block to contain references to the current version
+    of disseminate.
 
+    This function is needed for html answer keys in the test directories that
+    may have been created by an older version of disseminate. This allows a
+    string comparison that doesn't fail when the version number is updated.
+    """
+    def _html_update_version(html):
+        return regex.sub(r'(meta\sname="disseminate"\scontent=")'
+                         r'([\d\.\w]+)'
+                         r'(")',
+                         r'\g<1>{version}\g<3>'.format(version=__version__),
+                         html)
+    return _html_update_version
 
-# Tests for formats
 
 @pytest.fixture
 def is_pdf():
@@ -290,6 +292,8 @@ def svg_dims():
 
 
 xml_parser = None
+
+
 @pytest.fixture
 def is_xml():
     """Tests a string for valid xml.

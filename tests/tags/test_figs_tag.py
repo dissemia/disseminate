@@ -65,8 +65,8 @@ def test_figure_caption_with_id(doc):
     label_fmts = doc.context['label_fmts']
     label_fmts['caption_figure'] = "My Fig. @label.number. "
 
-    # Test two cases: one in which the id is in the figure tag, and one in which
-    # the id is in the caption tag
+    # Test two cases: one in which the id is in the figure tag, and one in
+    # which the id is in the caption tag
     for src in ("@marginfig[id=fig-1]{@caption{This is my caption}}",
                 "@marginfig{@caption[id=fig-1]{This is my caption}}"):
 
@@ -74,7 +74,8 @@ def test_figure_caption_with_id(doc):
         label_man.reset()
 
         # Generate a tag and compare the generated tex to the answer key
-        root = Tag(name='root', content=src, attributes='', context=doc.context)
+        root = Tag(name='root', content=src, attributes='',
+                   context=doc.context)
         fig = root.content
         caption = fig.content
 
@@ -121,8 +122,8 @@ def test_marginfig_caption_with_id_tex(doc):
     label_fmts = doc.context['label_fmts']
     label_fmts['caption_figure'] = "My Fig. @label.number. "
 
-    # Test two cases: one in which the id is in the figure tag, and one in which
-    # the id is in the caption tag
+    # Test two cases: one in which the id is in the figure tag, and one in
+    # which the id is in the caption tag
     srcs = ("@marginfig[id=fig-1]{@caption{This is my caption}}",
             "@marginfig{@caption[id=fig-1]{This is my caption}}")
     for count, src in enumerate(srcs):
@@ -130,7 +131,8 @@ def test_marginfig_caption_with_id_tex(doc):
         label_man.reset()
 
         # Generate a tag and compare the generated tex to the answer key
-        root = Tag(name='root', content=src, attributes='', context=doc.context)
+        root = Tag(name='root', content=src, attributes='',
+                   context=doc.context)
         fig = root.content
 
         assert fig.tex == ('\n'
@@ -245,8 +247,8 @@ def test_marginfig_caption_with_id_html(doc):
     label_fmts = doc.context['label_fmts']
     label_fmts['caption_figure'] = "My Fig. @label.number. "
 
-    # Test two cases: one in which the id is in the figure tag, and one in which
-    # the id is in the caption tag
+    # Test two cases: one in which the id is in the figure tag, and one in
+    # which the id is in the caption tag
     srcs = ("@marginfig[id=fig-1]{@caption{This is my caption}}",
             "@marginfig{@caption[id=fig-1]{This is my caption}}")
 
@@ -261,7 +263,8 @@ def test_marginfig_caption_with_id_html(doc):
         label_man.reset()
 
         # Generate a tag and compare the generated tex to the answer key
-        root = Tag(name='root', content=src, attributes='', context=doc.context)
+        root = Tag(name='root', content=src, attributes='',
+                   context=doc.context)
         fig = root.content
         assert fig.html == key
 

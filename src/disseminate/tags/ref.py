@@ -354,7 +354,8 @@ class Ref(Tag):
             content = format_content(content=processed_tag.content,
                                      format_func=format_func, level=level + 1)
 
-            attrs = self.attributes.copy() if attributes is None else attributes
+            attrs = (self.attributes.copy() if attributes is None else
+                     attributes)
             attrs['class'] = 'ref'
 
             # setup the url path and include the anchor if the label is not

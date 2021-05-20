@@ -23,7 +23,8 @@ template_path = pathlib.Path(__file__).parent.parent / 'templates'
               default=None,
               help="the directory to create the project starter")
 @click.option('--info', is_flag=True, default=False,
-              help="Show detailed information on the specified project starter")
+              help="Show detailed information on the specified project "
+                   "starter")
 @click.option('-l', '--list', 'show_list',
               is_flag=True, default=False,
               help="List the available project starters")
@@ -165,7 +166,6 @@ def print_starters_list(starters_dict):
     """
     twidth = min(80, term_width())
     name_clr = settings.cli_init_starter_name_color
-    heading_clr = settings.cli_init_starter_subheadind_color
 
     # Normalize the string length of starter names
     max_len = max(len(name) for name in starters_dict.keys())
@@ -230,8 +230,8 @@ def print_starter_info(name, starter):
 
     # Print the other fields
     fields = [field for field in starter.keys()
-              if field not in ('title', 'description')
-              and not field.startswith('_')]
+              if field not in ('title', 'description') and not
+              field.startswith('_')]
     for field in fields:
         block = "\n"
         block += click.style(field.title(), fg=heading_clr) + '\n'
@@ -266,10 +266,17 @@ def clone_starter(name, starter, out_dir):
 
     Parameters
     ----------
+    name : str
+        The project starter name.
+    starter : dict
+        A dict with entries on the project starter. These are the entries
+        (values) from the generate_starters_dict function.
+    out_dir : str
+        The directory to create the starter template copy.
     """
     twidth = min(80, term_width())
     name_clr = settings.cli_init_starter_name_color
-    heading_clr = settings.cli_init_starter_subheadind_color
+
     out_dir = (pathlib.Path(out_dir) if out_dir is not None else
                pathlib.Path('.'))
 
@@ -299,7 +306,8 @@ def clone_starter(name, starter, out_dir):
 
         # Colorize the text
         len_str = len(start + end)
-        start = "Copying {}{}".format(click.style(name + '/', fg=name_clr), src)
+        start = "Copying {}{}".format(click.style(name + '/', fg=name_clr),
+                                      src)
         start += " " * (max_filepath_len - len(str(src)) + 1)
 
         if len_str > twidth:

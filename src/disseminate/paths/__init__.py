@@ -5,3 +5,5 @@ targets.
 
 from .paths import SourcePath, TargetPath
 from . import utils
+
+__all__ = ('SourcePath', 'TargetPath', 'utils')

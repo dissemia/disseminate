@@ -68,4 +68,3 @@ class Copy(Builder):
 
             self.build_needed(reset=True)  # reset build flag
         return self.status
-

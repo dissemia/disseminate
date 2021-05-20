@@ -4,7 +4,7 @@ Tests the management of labels with documents.
 from pathlib import Path
 
 from disseminate.document import Document
-from disseminate import SourcePath, TargetPath
+from disseminate import SourcePath
 
 # Setup example paths
 ex4_root = Path("tests") / "document" / "examples" / "ex4" / "src"
@@ -25,8 +25,8 @@ def test_document_labels(env):
     doc = Document(src_filepath, environment=env)
 
     # 1. Test the label when the '_project_root' value is not assigned in the
-    #    global_context. In this case, the label is identified by the document's
-    #    src_filepath
+    #    global_context. In this case, the label is identified by the
+    #    document's src_filepath
 
     # The label should have been created on document creation
     man = doc.context['label_manager']
@@ -39,9 +39,7 @@ def test_document_labels(env):
 def test_document_toc(env):
     """Test the generation of a toc from the header of a document."""
     # Setup the paths
-    tmpdir = env.project_root
     src_filepath = SourcePath(project_root=ex4_root, subpath=ex4_subpath)
-    target_root = TargetPath(target_root=tmpdir)
 
     # Load example4, which has a file.dm with a 'toc' entry in the heading
     # for documents.
@@ -60,7 +58,9 @@ def test_document_toc(env):
     toc_tag = doc.context['toc']
     assert toc_tag.name == 'toc'
     key = ('<ol class="toc">'
-             '<li class="toc-level-1"><a href="" class="ref">My first title</a></li>'
+           '<li class="toc-level-1">'
+           '<a href="" class="ref">My first title</a>'
+           '</li>'
            '</ol>\n')
     assert toc_tag.html == key
 
@@ -71,7 +71,6 @@ def test_document_tree_updates_document_labels(env, wait):
     tmpdir = env.project_root
     project_root = tmpdir / 'src'
     project_root.mkdir()
-    target_root = TargetPath(tmpdir)
 
     src_filepath1 = SourcePath(project_root=project_root, subpath='file1.dm')
     src_filepath2 = SourcePath(project_root=project_root, subpath='file2.dm')

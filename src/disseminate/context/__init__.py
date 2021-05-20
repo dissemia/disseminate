@@ -17,9 +17,11 @@ The context has the following responsibilities:
    keeps a reference to the parent context, and when resetting the context,
    some (or all) of the parent context values are either copied over or
    referenced.
-4. *Intelligent resetting*. A context intelligently resets to its initial values
-   and the values of the parent_context on reset. These values can then be
-   overwritten when the document source is read in.
+4. *Intelligent resetting*. A context intelligently resets to its initial
+   values and the values of the parent_context on reset. These values can
+   then be overwritten when the document source is read in.
 """
 
 from .context import BaseContext
+
+__all__ = ('BaseContext',)
