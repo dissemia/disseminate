@@ -1,21 +1,28 @@
 # Disseminate
 
-![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/dissemia/disseminate)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/disseminate)
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/dissemia/disseminate)](https://github.com/dissemia/disseminate/releases/latest)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/disseminate)](https://pypi.org/project/disseminate/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![CI](https://github.com/dissemia/disseminate/actions/workflows/ci_linux.yml/badge.svg)](https://github.com/dissemia/disseminate/actions/workflows/ci_linux.yml)
+[![Documentation Status](https://readthedocs.org/projects/disseminate/badge/?version=latest)](https://disseminate.dissemia.org/en/latest/?badge=latest)
 
 Disseminate is a document processing system for textbooks, books, novels, 
 articles, reports and essays. 
 
 Disseminate is a markup language, like [Markdown] or [reStructuredText], 
-written in disseminate text format (``.dm``)that aims to be simple to use, 
+written in disseminate text format (``.dm``) that aims to be simple to use, 
 to have a simple syntax and to contain useful functionality for academics. 
 Projects may contain a single document or a tree of interconnected documents 
 comprising chapters, raw data, figures and images in a source controlled 
 repository. The Disseminate software is coded in [Python 3] and disseminate 
 projects can be converted  to static website with ``.html``, ``.txt``, 
 ``.tex``, ``.pdf`` and ``.epub`` targets.
+
+- **Documentation**: https://disseminate.dissemia.org
+- **Mailing list**: https://groups.google.com/g/disseminate-usage
+- **Source code**: https://github.com/dissemia/disseminate
+- **Bug reports**: https://github.com/dissemia/disseminate/issues
+
 
 ## Features
 1. **Header and Body**. Disseminate documents may optionally contain a YAML
@@ -169,3 +176,4 @@ $ dm preview
 [reStructuredText]: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
 [Python 3]: https://www.python.org
 [Scons]: https://scons.org
+[documentation]: https://disseminate.dissemia.org
