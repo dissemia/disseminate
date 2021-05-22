@@ -73,7 +73,7 @@ setup(
         # The following are needed for the preview function
         'tornado>=6.1',
         # The following is needed for the @code tag
-        'pygments >=2.6',             # BSD 2 license
+        'pygments>=2.6',             # BSD 2 license
         'numpy',
         'pandas',                     # 3-clause BSD
         'diskcache>=4.1',
