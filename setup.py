@@ -64,7 +64,7 @@ setup(
     include_package_data=True,  # include MANIFEST.in
     install_requires=[
         'regex>=2018.11.22',         # No license, replaced with re
-        'jinja2>=2.11,<3.0',         # 3-clause BSD
+        'jinja2>=3.0',               # 3-clause BSD
         'lxml>=4.3.0',               # BSD license
         'python-slugify>=2.0.1',     # MIT license
         'pdfCropMargins>=0.1.4',     # GPL v3
@@ -73,9 +73,9 @@ setup(
         # The following are needed for the preview function
         'tornado>=6.1',
         # The following is needed for the @code tag
-        'pygments >=2.6',             # BSD 2 license
-        'numpy>=1.20',
-        'pandas>=1.2',                # 3-clause BSD
+        'pygments>=2.6',             # BSD 2 license
+        'numpy',
+        'pandas',                     # 3-clause BSD
         'diskcache>=4.1',
         'pathvalidate>=2.2'],
     extras_require={  # Optional

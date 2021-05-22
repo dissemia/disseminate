@@ -30,7 +30,7 @@ def run(template, context, outfilepath, target):
     return outfilepath
 
 
-@jinja2.contextfilter
+@jinja2.pass_context
 def rewrite_path(context, stub):
     """A Jinja2 filter for rewriting paths, like css paths.
 

@@ -179,6 +179,29 @@ Tests follow the same guidelines but the following exceptions are allowed:
    Some tests may have an increased complexity from this limit (Flake8 C901
    error)
 
+## Testing
+
+Disseminate uses 3 kinds of tests:
+
+1. **pytest**. A pytest of all the tests can be executed from the root project
+   directory. It is recommended to develop disseminate in a virtual 
+   environment.
+   
+   ```shell script
+   $ pytest
+   ```
+
+2. **tox**. Tox is used to test against multiple versions of python. Tox 
+   tests are also run the the root project directory.
+
+    ```shell script
+    $ tox
+    ```
+   
+3. **CI**. Pushes to ``development`` and ``master`` will trigger a github
+   action to test on different platforms (linux) with tox. This occurs
+   automatically on pushes.
+
 ## Versions
 
 Releases are identified using [semantic versioning] with the format
