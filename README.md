@@ -18,7 +18,7 @@ repository. The Disseminate software is coded in [Python 3] and disseminate
 projects can be converted  to static website with ``.html``, ``.txt``, 
 ``.tex``, ``.pdf`` and ``.epub`` targets.
 
-- **Documentation**: https://disseminate.dissemia.org
+- **Documentation**: https://docs.dissemia.org/projects/disseminate/en/latest
 - **Mailing list**: https://groups.google.com/g/disseminate-usage
 - **Source code**: https://github.com/dissemia/disseminate
 - **Bug reports**: https://github.com/dissemia/disseminate/issues
