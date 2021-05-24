@@ -81,3 +81,17 @@ def csv_tag4(context_cls):
                             context=context)
 
     return data
+
+
+@pytest.fixture
+def csv_tag5(context_cls):
+    """A @csv tag from a file"""
+    paths = [pathlib.Path('.')]
+    context = context_cls(paths=paths)
+
+    content = (pathlib.Path('.') / 'tests' / 'tags' / 'examples' / 'data_ex1' /
+               'data.csv')
+    data = DelimDataFixture(name='csv', content=str(content), attributes='',
+                            context=context)
+
+    return data
