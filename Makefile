@@ -5,8 +5,8 @@ PYTHON ?= python
 PIP ?= pip
 
 test:  ## Test the package with the current python version
-	pip install 'pytest'
-	pytest
+	pip install pytest tox
+	tox
 
 test-cli:  ## Test the command-line interface
 	@$(MAKE) --no-print-directory -C tests/cli test
