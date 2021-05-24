@@ -74,8 +74,6 @@ setup(
         'tornado>=6.1',
         # The following is needed for the @code tag
         'pygments>=2.6',             # BSD 2 license
-        'numpy',
-        'pandas',                     # 3-clause BSD
         'diskcache>=4.1',
         'pathvalidate>=2.2'],
     extras_require={  # Optional

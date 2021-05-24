@@ -164,3 +164,18 @@ def md5hash(lst):
     s = ''.join(md5hash(i) if isinstance(i, list) or isinstance(i, tuple)
                 else str(i) for i in lst).encode()
     return hashlib.md5(s).hexdigest()
+
+
+def transpose(lst):
+    """Transpose a list of lists
+
+    Examples
+    --------
+    >>> transpose([[1, 2, 3], [4, 5, 6]])
+    [[1, 4], [2, 5], [3, 6]]
+    >>> transpose([[1, 2, 3], [4, 5]])  # Discard mismatched list entries
+    [[1, 4], [2, 5]]
+    >>> transpose([[1, 2], [4, 5, 6]])  # Discard mismatched list entries
+    [[1, 4], [2, 5]]
+    """
+    return list(map(list, zip(*lst)))
