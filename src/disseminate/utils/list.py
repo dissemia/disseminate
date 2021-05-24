@@ -175,5 +175,7 @@ def transpose(lst):
     [[1, 4], [2, 5], [3, 6]]
     >>> transpose([[1, 2, 3], [4, 5]])  # Discard mismatched list entries
     [[1, 4], [2, 5]]
+    >>> transpose([[1, 2], [4, 5, 6]])  # Discard mismatched list entries
+    [[1, 4], [2, 5]]
     """
     return list(map(list, zip(*lst)))
