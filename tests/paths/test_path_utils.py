@@ -1,12 +1,13 @@
 """
 Test path utilities
 """
+import io
 import pathlib
 from os import curdir
 
 import pytest
 
-from disseminate.paths.utils import find_files, find_file
+from disseminate.paths.utils import find_files, find_file, load_io_stream
 from disseminate.paths import SourcePath
 
 
@@ -148,3 +149,40 @@ def test_find_file_missing(context_cls):
                    ):
         with pytest.raises(FileNotFoundError):
             find_file(string, context)
+
+
+def test_load_io_stream(context_cls):
+    """Test the load_io_stream function with different inputs."""
+    context = context_cls(paths=[])
+
+    # Create test paths for existing and non-existing paths
+    test_path_exists = pathlib.Path(__file__)  # this file
+    test_path_missing = pathlib.Path('not_exists.missing')
+
+    # 1. Try file objects
+    assert isinstance(load_io_stream(open(test_path_exists), context=context),
+                      io.IOBase)  # exists
+
+    with pytest.raises(FileNotFoundError):
+        load_io_stream(open(test_path_missing), context=context)  # missing
+
+    # 2. Try pathlib objects
+    assert isinstance(load_io_stream(test_path_exists, context=context),
+                      io.IOBase)  # exists
+
+    with pytest.raises(FileNotFoundError):
+        load_io_stream(test_path_missing, context=context)  # missing
+
+    # 3. Test path strings
+    assert isinstance(load_io_stream(str(test_path_exists), context=context),
+                      io.IOBase)  # exists
+
+    # If a string doesn't have a valid path, this function assumes the string
+    # has content, and it will return an io.StringIO
+    stream = load_io_stream(str(test_path_missing), context=context)
+    assert isinstance(stream, io.StringIO)
+    assert stream.read() == 'not_exists.missing'
+
+    # 4. Test invalid arguments
+    with pytest.raises(ValueError):
+        load_io_stream(3423, context=context)

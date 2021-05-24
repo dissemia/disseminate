@@ -2,6 +2,7 @@
 Utilities for paths.
 """
 import pathlib
+import io
 
 
 def rename(path, filename=None, append=None, extension=None):
@@ -172,3 +173,48 @@ def find_file(path, context, raise_error=True):
         msg = "Could not find file '{}' in the paths: '{}'".format(path, paths)
         raise FileNotFoundError(msg)
     return None
+
+
+def load_io_stream(filepath_or_buffer, context):
+    """Convert a string, path or file stream into a string stream.
+
+    Parameters
+    ----------
+    filepath_or_buffer : Union[str, :obj:`pathlib.Path`, :obj:`io.BaseIO`]
+        A filepath, string or IO stream
+    context : :obj:`.context.Context`
+        The document's context with an entry of 'paths' to search.
+
+    Returns
+    -------
+    stream : :obj:`io.BaseIO`
+        An IO stream
+
+    Raises
+    ------
+    FileNotFoundError
+        Raised if the path is for a file that cannot be found
+    """
+    # See if it's already a file or string stream
+    if isinstance(filepath_or_buffer, io.IOBase):
+        return filepath_or_buffer
+
+    # See if it's a pathlib.Path. If so, return a text stream of its
+    # contents
+    if isinstance(filepath_or_buffer, pathlib.Path):
+        # Raises FileNotFound error if file not found
+        return io.StringIO(filepath_or_buffer.read_text())
+
+    # Otherwise try it as a string
+    if isinstance(filepath_or_buffer, str):
+        # See if it's a string that can be turned into a path
+        filepaths = find_files(filepath_or_buffer, context=context)
+        if len(filepaths) > 0:
+            return load_io_stream(filepaths[0], context=context)
+
+        # Otherwise return a text stream directory
+        return io.StringIO(filepath_or_buffer)
+
+    # I don't know what to do with filepath_or_buffer at this stage
+    raise ValueError("The filepath_or_buffer cannot be converted to a "
+                     "text stream")
