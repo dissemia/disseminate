@@ -3,7 +3,7 @@
 Quickstart
 ==========
 
-Follow the :ref:`installation` instructions to get disseminate working.
+Follow the installation instructions to get disseminate working.
 
 Terminal
 --------
