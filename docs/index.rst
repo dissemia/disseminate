@@ -16,10 +16,18 @@ extensive and extensible tag functions.
 .. toctree::
    :maxdepth: 2
 
-   overview/quickstart
-   overview/installation
    overview/features-basic
    overview/features-advanced
+   overview/quickstart
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Installation
+
+   installation/macos_homebrew
+   installation/macos_pip
+   installation/linux_pip
 
 .. toctree::
    :maxdepth: 2
