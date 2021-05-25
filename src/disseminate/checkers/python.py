@@ -1,6 +1,9 @@
 """
 Checkers for python packages.
 """
+import subprocess
+import sys
+
 from .checker import Checker
 from .utils import name_and_version
 from .types import SoftwareDependency, SoftwareDependencyList
@@ -24,17 +27,17 @@ class PythonChecker(Checker):
 
         # Setup pip freeze, if available
         try:
-            # This is the correct location for pip > 10.0
-            from pip._internal.operations import freeze
-        except ImportError:
-            try:
-                from pip.operations import freeze
-            except ImportError:
-                freeze = None
+            cmd = [sys.executable, '-m', 'pip', 'list', '--format=freeze']
+            reqs = subprocess.check_output(cmd)
+        except subprocess.CalledProcessError:
+            reqs = None
 
-        # Retrieve the the freeze list of strings, if available
-        self.freeze = (tuple(i.lower() for i in freeze.freeze())
-                       if freeze is not None else None)
+        # Format the reqs string
+        if reqs is not None:
+            reqs = reqs.decode('utf-8')  # decode from binary
+            self.freeze = tuple(i.lower() for i in reqs.split())
+        else:
+            self.freeze = None
 
     def check_packages_pip(self, packages=None):
         """Check the availability of specific python packages in pip.
