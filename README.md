@@ -11,12 +11,12 @@ articles, reports and essays.
 
 Disseminate is a markup language, like [Markdown] or [reStructuredText], 
 written in disseminate text format (``.dm``) that aims to be simple to use, 
-to have a simple syntax and to contain useful functionality for academics. 
-Projects may contain a single document or a tree of interconnected documents 
-comprising chapters, raw data, figures and images in a source controlled 
-repository. The Disseminate software is coded in [Python 3] and disseminate 
-projects can be converted  to static website with ``.html``, ``.txt``, 
-``.tex``, ``.pdf`` and ``.epub`` targets.
+to have a simple syntax and to contain useful functionality for academic
+and non-academics. Projects may contain a single document or a tree of 
+interconnected documents comprising chapters, raw data, figures and images in 
+a source controlled repository. The Disseminate software is coded in 
+[Python 3] and disseminate projects can be converted to a static website 
+with ``.html``, ``.txt``, ``.tex``, ``.pdf`` and ``.epub`` targets.
 
 - **Documentation**: https://docs.dissemia.org/projects/disseminate/en/latest
 - **Mailing list**: https://groups.google.com/g/disseminate-usage
@@ -34,7 +34,7 @@ projects can be converted  to static website with ``.html``, ``.txt``,
    and all tags are allowed. Certain tags have enhanced typesetting 
    functionality, and tags may optionally have attributes to format how a tag 
    is rendered. \
-   *ex*: ``This is @b{my} sentence.`` or ``@img[width40%]{src/figure-1.png}``.
+   *ex*: ``This is @b{my} sentence.`` or ``@img[width=40%]{src/figure-1.png}``.
 4. [**Macros**]. Macros allow users to generate their own tags for repetitive
    code fragments. These are specified in the document header and are available
    to all sub-documents.
@@ -53,9 +53,10 @@ projects can be converted  to static website with ``.html``, ``.txt``,
    files in the correct formats, and it includes features similar to other
    build systems, like [Scons], to detect build changes based
    on source file signatures.
-9. [**Inline Plots and Diagrams**]. Tags can handle data and code 
-   to be rendered into images, figures and diagrams.
-10. [**Equations**]. Equation tags for rendering equations in LaTeX format.
+9. [**Inline Plots and Diagrams**]. Tags can handle raw data and code, which
+   are then automatically rendered into images, figures and diagrams.
+10. [**Equations**]. Tags for rendering equations in LaTeX format. \
+    *ex*: ``This equation, @eq{y = mx + b}, is inline``
 11. [**Webserver**]. A built-in webserver allows users to preview their 
     processed document projects.
 12. **Version Control**. Document projects are stored in source code 
@@ -73,7 +74,7 @@ projects can be converted  to static website with ``.html``, ``.txt``,
    *ex:* ```@img[width=80% width.html=40%]{figures/fig1.png}```
 3. [**Label Formats**]. The rendering of label captions and reference links
    can be customized for a document or for a project in the root document.
-4. [**Signals**]. Processing functions used a built-in ordered signals
+4. [**Signals**]. Processing functions use a built-in ordered signals
    framework to easily insert processing steps and to create plug-ins. 
 
 
@@ -169,6 +170,11 @@ by Disseminate, type the following command.
 
 ```shell script
 dm setup --check
+```
+
+The output should be similar to the following:
+
+```shell script
   Checking required dependencies for 'python'                       [  PASS  ]  
     Checking alternative dependencies for 'executables'             [  PASS  ]  
       Checking dependency 'python3.6'                               [MISSING ]  
