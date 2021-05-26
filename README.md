@@ -6,8 +6,8 @@
 [![CI](https://github.com/dissemia/disseminate/actions/workflows/ci_linux.yml/badge.svg)](https://github.com/dissemia/disseminate/actions/workflows/ci_linux.yml)
 [![Documentation Status](https://readthedocs.org/projects/disseminate/badge/?version=latest)](https://docs.dissemia.org/projects/disseminate/en/latest/?badge=latest)
 
-Disseminate is a document processing system for textbooks, books, novels, 
-articles, reports and essays. 
+Disseminate is a document processing system and static site generator for 
+textbooks, books, novels, articles, reports and essays. 
 
 Disseminate is a markup language, like [Markdown] or [reStructuredText], 
 written in disseminate text format (``.dm``) that aims to be simple to use, 

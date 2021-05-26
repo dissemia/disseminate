@@ -1,4 +1,16 @@
-"""Disseminate is a document processor and generation engine.
+"""Disseminate
+
+A document processing system and static site generator for textbooks, books,
+novels, articles, reports and essays.
+
+Documentation: https://docs.dissemia.org/projects/disseminate/en/latest
+Github: https://github.com/dissemia/disseminate
+PyPI: https://pypi.org/project/disseminate/
+
+Copyright 2017-2021 Justin L Lorieau (v. 0.2-2.3)
+Copyright 2021 Dissemia Foundation (v. 2.3 and later)
+
+License: GPL v3
 """
 
 from setuptools import setup, find_packages
@@ -47,16 +59,26 @@ classifiers += [
     'Topic :: Text Processing :: General',
     'Topic :: Text Processing :: Markup',
     'Topic :: Text Processing :: Markup :: HTML',
-    'Topic :: Text Processing :: Markup :: LaTeX']
+    'Topic :: Text Processing :: Markup :: LaTeX',
+    'Internet :: WWW/HTTP :: Site Management',
+    'Software Development :: Documentation']
 
 
 setup(
     name='disseminate',  # Required
     version=__version__,
+    url='https://docs.dissemia.org/projects/disseminate/en/latest',
+    project_urls={
+        'Documentation': ('https://docs.dissemia.org/projects/'
+                          'disseminate/en/latest'),
+        'GitHub Project': 'https://github.com/dissemia/disseminate',
+        'Issue Tracker': 'https://github.com/dissemia/disseminate/issues'
+    },
     description='A document processor and generation engine',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    author='Justin L Lorieau',
+    author='Justin L Lorieau, Dissemia Foundation',
+    license='GPL v3',
     classifiers=classifiers,
     keywords='document processor academic publishing',
     packages=find_packages("src"),
