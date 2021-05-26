@@ -47,7 +47,9 @@ classifiers += [
     'Topic :: Text Processing :: General',
     'Topic :: Text Processing :: Markup',
     'Topic :: Text Processing :: Markup :: HTML',
-    'Topic :: Text Processing :: Markup :: LaTeX']
+    'Topic :: Text Processing :: Markup :: LaTeX',
+    'Internet :: WWW/HTTP :: Site Management',
+    'Software Development :: Documentation']
 
 
 setup(
