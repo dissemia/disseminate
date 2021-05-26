@@ -60,8 +60,8 @@ classifiers += [
     'Topic :: Text Processing :: Markup',
     'Topic :: Text Processing :: Markup :: HTML',
     'Topic :: Text Processing :: Markup :: LaTeX',
-    'Internet :: WWW/HTTP :: Site Management',
-    'Software Development :: Documentation']
+    'Topic :: Internet :: WWW/HTTP :: Site Management',
+    'Topic :: Software Development :: Documentation']
 
 
 setup(
