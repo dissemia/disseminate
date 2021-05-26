@@ -79,9 +79,11 @@ projects can be converted  to static website with ``.html``, ``.txt``,
 
 ## Installation
 
-Disseminate is installed with [pip], [Homebrew] or as a github clone (Step 1).
-The base Disseminate installation can render documents in ```html```, ```txt``` 
-and ```epub``` formats. 
+Disseminate is current available for *MacOS* and *Linux* operating systems.
+
+Disseminate can be  installed with [pip], [Homebrew] or as a github 
+clone (Step 1). The base Disseminate installation can render documents 
+in ```html```, ```txt``` and ```epub``` formats. 
 
 *Optional*, additional dependencies may be installed (Step 2) to render
 documents in ```pdf``` format and to include converters (builders) in 
