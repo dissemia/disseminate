@@ -2,7 +2,7 @@
 
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/dissemia/disseminate)](https://github.com/dissemia/disseminate/releases/latest)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/disseminate)](https://pypi.org/project/disseminate/)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![GitHub](https://img.shields.io/github/license/dissemia/disseminate)](https://www.gnu.org/licenses/agpl-3.0.en.html)
 [![CI](https://github.com/dissemia/disseminate/actions/workflows/ci_linux.yml/badge.svg)](https://github.com/dissemia/disseminate/actions/workflows/ci_linux.yml)
 [![Documentation Status](https://readthedocs.org/projects/disseminate/badge/?version=latest)](https://docs.dissemia.org/projects/disseminate/en/latest/?badge=latest)
 
