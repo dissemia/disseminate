@@ -106,7 +106,7 @@ brew install dissemia/dissemia/disseminate
 pip install disseminate
 ```
 
-_(Optional)_ To render in ``pdf`` format, install either [MacTeX], [TeX Live]
+_(Optional)_ To render in ``pdf`` format, install either [MacTeX], [TeXLive]
 or some other distribution. These and other dependencies can be installed with
 a package manager like [Homebrew] or ```apt get install```.
 
@@ -234,20 +234,20 @@ dependency is missing, we recommend installing it with [Homebrew] or
 
 ### Usage
 
-1. Create a project directory
+Create a project directory
 
 ```shell script
 mkdir -p ~/Documents/Disseminate/test-project/src
 cd ~/Documents/Disseminate/test-project
 ```
 
-2. Create a root document
+Create a root document
 
 ```shell script
 echo "@chapter{My First Chapter}" > src/index.dm
 ```
 
-3. Start the internal webserver
+Start the internal webserver
 
 ```shell script
 dm preview
@@ -255,7 +255,7 @@ dm preview
 [2020-04-22 13:36:08 -0500] [58827] [INFO] Starting worker [58827]
 ```
 
-4. Go to ``http://localhost:8899``
+Go to ``http://localhost:8899``
    
 [Markdown]: https://daringfireball.net/projects/markdown/
 [reStructuredText]: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
