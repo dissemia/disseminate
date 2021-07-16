@@ -54,6 +54,6 @@ def get_version(ver_tuple):
 #
 # - Item 4 is the release type number. ex: rc3 is the third release candidate.
 #   This number is only non-zero for 'alpha', 'beta' and 'rc' software.
-VERSION = (2, 3, 7, 'final', 0)
+VERSION = (2, 3, 8, 'final', 0)
 
 __version__ = get_version(VERSION)
