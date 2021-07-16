@@ -28,7 +28,7 @@ template_path = pathlib.Path(__file__).parent.parent / 'templates'
 @click.option('-l', '--list', 'show_list',
               is_flag=True, default=False,
               help="List the available project starters")
-@click.option('n', '--non-interactive',
+@click.option('-n', '--non-interactive',
               is_flag=True, default=False,
               help="Do not ask questions")
 def init(names=None, out_dir=None, info=False, show_list=False,
