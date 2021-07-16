@@ -28,7 +28,11 @@ template_path = pathlib.Path(__file__).parent.parent / 'templates'
 @click.option('-l', '--list', 'show_list',
               is_flag=True, default=False,
               help="List the available project starters")
-def init(names=None, out_dir=None, info=False, show_list=False):
+@click.option('n', '--non-interactive',
+              is_flag=True, default=False,
+              help="Do not ask questions")
+def init(names=None, out_dir=None, info=False, show_list=False,
+         non_interactive=False):
     """Initialize a new template project"""
     starters_dict = generate_starters_dict()
 
@@ -52,7 +56,8 @@ def init(names=None, out_dir=None, info=False, show_list=False):
         exit()
 
     # At this stage, try cloning the project starter
-    clone_starter(name=name, starter=starter, out_dir=out_dir)
+    clone_starter(name=name, starter=starter, out_dir=out_dir,
+                  non_interactive=non_interactive)
 
 
 def filepath_key(path):
@@ -261,7 +266,7 @@ def is_empty(path):
     return False
 
 
-def clone_starter(name, starter, out_dir):
+def clone_starter(name, starter, out_dir, non_interactive):
     """Clone the given project starter to the out_dir.
 
     Parameters
@@ -273,6 +278,8 @@ def clone_starter(name, starter, out_dir):
         (values) from the generate_starters_dict function.
     out_dir : str
         The directory to create the starter template copy.
+    non_interactive : bool
+        If False (default), interactively ask questions if there are problems.
     """
     twidth = min(80, term_width())
     name_clr = settings.cli_init_starter_name_color
@@ -283,11 +290,12 @@ def clone_starter(name, starter, out_dir):
     wrap = TextWrapper(width=twidth)
 
     # Check to see if the destination directory is empty
-    msg = ("The directory '{}' is not empty; do you still want to initialize "
-           "the project?")
-    msg = wrap.fill(msg.format(out_dir))
-    if not is_empty(out_dir) and not click.confirm(msg):
-        exit()
+    if not non_interactive:
+        msg = ("The directory '{}' is not empty; do you still want to "
+               "initialize the project?")
+        msg = wrap.fill(msg.format(out_dir))
+        if not is_empty(out_dir) and not click.confirm(msg):
+            exit()
 
     # Ok, we're good to clone the project starter
     filepaths = starter_filepaths(starter)
