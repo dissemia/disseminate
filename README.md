@@ -10,19 +10,24 @@ Disseminate is a document processing system and static site generator for
 textbooks, books, novels, articles, reports and essays. 
 
 Disseminate is a markup language, like [Markdown] or [reStructuredText], 
-written in disseminate text format (``.dm``) that aims to be simple to use, 
-to have a simple syntax and to contain useful functionality for academic
-and non-academics. Projects may contain a single document or a tree of 
-interconnected documents comprising chapters, raw data, figures and images in 
-a source controlled repository. The Disseminate software is coded in 
-[Python 3] and disseminate projects can be converted to a static website 
-with ``.html``, ``.txt``, ``.tex``, ``.pdf`` and ``.epub`` targets.
+written in disseminate text format (``.dm``) that aims to have a simple and
+consistent syntax, to produce clean and simple project structure and to contain 
+useful functionality for academic and non-academics. Projects may contain a 
+single document or a tree of interconnected documents comprising chapters, 
+raw data, figures and images in a source controlled repository. The Disseminate 
+software is coded in [Python 3] and disseminate projects can be converted to a 
+static website with ``.html``, ``.txt``, ``.tex``, ``.pdf`` and ``.epub`` targets.
 
 - **Documentation**: https://docs.dissemia.org/projects/disseminate/en/latest
 - **Mailing list**: https://groups.google.com/g/disseminate-usage
 - **Source code**: https://github.com/dissemia/disseminate
 - **Bug reports**: https://github.com/dissemia/disseminate/issues
 
+## Samples
+
+- [Anna Karenina] by Leo Tolstoy
+- [War and Peace] by Leo Tolstoy
+- [NMR Textbook] by Justin Lorieau
 
 ## Features
 
@@ -48,11 +53,13 @@ with ``.html``, ``.txt``, ``.tex``, ``.pdf`` and ``.epub`` targets.
    optionally, defined by the user in document headers.
 7. [**Multiple Target Formats**]. Disseminate projects can be rendered as 
    websites (``.html``), ``.pdf``, ``.epub``, ``.txt`` or ``.tex``.
-8. [**Automatic Conversions**]. The Disseminate processor includes a customized 
-   build automation system. This system creates build recipes for converting
-   files in the correct formats, and it includes features similar to other
-   build systems, like [Scons], to detect build changes based
-   on source file signatures.
+8. [**Automatic Conversions**]. The Disseminate includes a customized 
+   build automation system. Disseminate's custom builder is tightly integrated 
+   into Disseminate such that small changes are easily identified. This 
+   system creates build recipes for converting files in the correct formats, 
+   and it includes features similar to other build systems, like [Scons], to 
+   detect build changes based on source file signatures. The build system is 
+   extensible and pluggable such that new features can be easily implemented.
 9. [**Inline Plots and Diagrams**]. Tags can handle raw data and code, which
    are then automatically rendered into images, figures and diagrams.
 10. [**Equations**]. Tags for rendering equations in LaTeX format. \
@@ -77,6 +84,36 @@ with ``.html``, ``.txt``, ``.tex``, ``.pdf`` and ``.epub`` targets.
 4. [**Signals**]. Processing functions use a built-in ordered signals
    framework to easily insert processing steps and to create plug-ins. 
 
+## Project Comparisons
+
+### Sphinx and ReST
+
+[Sphinx] specializes in code documentation whereas Disseminate focuses on the
+general writing of books, articles, essays and reports.
+
+- Disseminate's syntax is simple, uniform, easy to read and understand
+- Disseminate's build system is integrated. Sphinx uses [Make], which can
+  miss rebuilds of documents when documents are inter-related--with chapter
+  numbers and references, for example.
+- Disseminate's build system is multithreaded, and its dependencies are built
+  implicitly. This means that a user doesn't have to worry about how
+  dependencies, like images or data, are converted or built.
+- Disseminate's project structures are simple. A document project can be a
+  single file or a complex book, like 'War and Peace'. The objective is to
+  make document projects accessible to non-coders.
+- Disseminate's templates focus on typography. Source code documentation
+  is designed to easily navigate between disparate pages and to present 
+  potentially complicated text structures. Books, articles and reports are 
+  long-form, and Disseminate focuses on readability and simplified,
+  non-obtrusive navigation.
+- The Disseminate parser is intentionally simple so that others can easily
+  contribute to the project.
+  
+### Pandoc
+
+### Jekyll and Hugo
+
+- 
 
 ## Installation
 
@@ -267,6 +304,8 @@ Go to ``http://localhost:8899``
 [Pip]: https://pypi.org/project/pip/
 [pip]: https://pypi.org/project/pip/
 [Homebrew]: https://brew.sh
+[Sphinx]: https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
+[Make]: https://www.gnu.org/software/make/
 [**Header and Body**]: https://docs.dissemia.org/projects/disseminate/en/latest/overview/features-basic.html#header-and-body
 [**Document Trees**]: https://docs.dissemia.org/projects/disseminate/en/latest/overview/features-basic.html#document-trees
 [**Uniform Language**]: https://docs.dissemia.org/projects/disseminate/en/latest/overview/features-basic.html#uniform-language 
@@ -282,3 +321,6 @@ Go to ``http://localhost:8899``
 [**Target Attributes**]: https://docs.dissemia.org/projects/disseminate/en/latest/overview/features-advanced.html#target-attributes
 [**Label Formats**]: https://docs.dissemia.org/projects/disseminate/en/latest/overview/features-advanced.html#label-formats
 [**Signals**]: https://docs.dissemia.org/projects/disseminate/en/latest/overview/features-advanced.html#signal-processing
+[Anna Karenina]: https://dissemia.github.io/books-anna-karenina/
+[War and Peace]: https://dissemia.github.io/books-war-and-peace/
+[NMR Textbook]: http://www.lorieau.com/books-nmr-sample/
